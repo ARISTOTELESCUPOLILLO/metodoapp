@@ -178,6 +178,10 @@ function buildImagePrompt(params: {
 NOTEBOOK / LAPTOP aberto sobre a mesa ou no colo:
 → ÂNGULO OBRIGATÓRIO: câmera posicionada FRONTALMENTE À TELA, 30°–50° na horizontal em relação ao eixo central da tela, altura dos olhos ou ligeiramente acima. Resultado: vê-se a TELA (com conteúdo real — gráfico, dashboard, app, planilha, texto), o TECLADO em perspectiva e UMA LATERAL. A tampa traseira é geometricamente INVISÍVEL porque a tela bloqueia o ângulo.
 → PROIBIDO: câmera posicionada atrás ou ao lado do monitor (que revelaria a tampa), top-down com laptop fechado, qualquer ângulo que mostre a superfície traseira da tampa.
+→ DEFEITO FÍSICO PROIBIDO — TAMPA DO NOTEBOOK: a tampa traseira é uma superfície física sólida (plástico, alumínio, couro). NÃO tem tela. NÃO emite luz. NÃO exibe conteúdo.
+  • PROIBIDO: brilho de tela ou emissão luminosa na tampa; imagem, interface, dashboard, ícone ou qualquer conteúdo visual sobre a tampa; duplicação ou espelho da tela frontal na parte externa; efeito "tela invertida" na tampa; aparência de monitor dos dois lados; qualquer elemento emissivo que simule display na carcaça traseira.
+  • PERMITIDO: a tampa pode aparecer PARCIALMENTE na cena como superfície neutra — o que NUNCA pode existir é conteúdo visual aplicado sobre ela.
+  • COMPORTAMENTO FÍSICO CORRETO: tampa sólida e neutra; tela exclusivamente na face interna; dispositivo fisicamente coerente; composição cinematográfica realista.
 
 CELULAR / SMARTPHONE na mão ou sobre superfície:
 → ÂNGULO OBRIGATÓRIO: tela voltada diretamente para a câmera, inclinado 20°–40° em relação à vertical (como alguém que segura o celular naturalmente para ver a tela). Resultado: vê-se apenas a TELA (com conteúdo real — app, mensagem, mapa, feed) e as bordas laterais. O verso é fisicamente oculto pela posição.
@@ -191,7 +195,7 @@ MONITOR / DESKTOP:
 → ÂNGULO OBRIGATÓRIO: câmera ao nível dos olhos, 0°–30° horizontal — visão frontal ou ligeiramente lateral. Vê-se apenas a TELA (com conteúdo real) e a moldura.
 → PROIBIDO: câmera atrás do monitor, mostrar a parte traseira ou os cabos como elemento principal.
 
-REGRA UNIVERSAL para todos os dispositivos: a TELA FRONTAL mostra SEMPRE conteúdo real e coerente com o contexto (gráfico, dashboard, app, texto, foto — NUNCA tela preta, tela espelhada ou tela em branco). A CARCAÇA / TAMPA / VERSO é superfície SÓLIDA e OPACA — ZERO interface, ZERO tela, ZERO reflexo de UI, ZERO brilho ou ícone renderizado na tampa ou verso.
+REGRA UNIVERSAL para todos os dispositivos: a TELA FRONTAL mostra SEMPRE conteúdo real e coerente com o contexto (gráfico, dashboard, app, texto, foto — NUNCA tela preta, tela espelhada ou tela em branco). A CARCAÇA / TAMPA / VERSO é superfície SÓLIDA e OPACA — ZERO interface, ZERO tela, ZERO reflexo de UI, ZERO brilho ou ícone renderizado na tampa ou verso. Todo dispositivo deve ter comportamento físico coerente com a realidade — um notebook NÃO É um monitor dos dois lados.
 
 `;
 
