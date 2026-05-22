@@ -1,7 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  "name": "metodo-op",
+  "account_id": "17247f43dbdfa8dc34da28ed25f8fe8c",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
+  "routes": [
+    {
+      "pattern": "metodoapp.oficinadepropaganda.com.br/*",
+      "zone_name": "oficinadepropaganda.com.br"
+    }
+  ]
 }
