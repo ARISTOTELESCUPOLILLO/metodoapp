@@ -19,6 +19,7 @@ export interface SlotInfo {
   label: string;
   plan: PlanInfo;
   inicio: string | null;
+  expiraEm: string | null;
   imgsUsadas: number;
   imgsLimite: number;
   rendersUsados: number;
@@ -40,6 +41,7 @@ export interface Profile {
   bonus_last_charged_at: string | null;
   plano1_id: string | null;
   plano1_inicio: string | null;
+  plano1_expira_em: string | null;
   plano1_imgs_usadas: number;
   plano1_imgs_limite: number;
   plano1_renders_usados: number;
@@ -48,6 +50,7 @@ export interface Profile {
   plano1_geracoes_limite: number;
   plano2_id: string | null;
   plano2_inicio: string | null;
+  plano2_expira_em: string | null;
   plano2_imgs_usadas: number;
   plano2_imgs_limite: number;
   plano2_renders_usados: number;
@@ -56,6 +59,7 @@ export interface Profile {
   plano2_geracoes_limite: number;
   bonus_id: string | null;
   bonus_inicio: string | null;
+  bonus_expira_em: string | null;
   bonus_imgs_usadas: number;
   bonus_imgs_limite: number;
   bonus_renders_usados: number;
@@ -123,20 +127,23 @@ export function useProfile(targetUserId?: string | null) {
         plansMap = Object.fromEntries((pls || []).map((pl: any) => [pl.id, pl]));
       }
       const built: SlotInfo[] = [];
-      const push = (key: SlotInfo['key'], label: string, planId: string | null, inicio: string | null,
-                    iu: number, il: number, ru: number, rl: number, gu: number, gl: number) => {
+      const push = (
+        key: SlotInfo['key'], label: string, planId: string | null,
+        inicio: string | null, expiraEm: string | null,
+        iu: number, il: number, ru: number, rl: number, gu: number, gl: number,
+      ) => {
         if (!planId || !plansMap[planId]) return;
-        built.push({ key, label, plan: plansMap[planId], inicio,
+        built.push({ key, label, plan: plansMap[planId], inicio, expiraEm,
           imgsUsadas: iu, imgsLimite: il, rendersUsados: ru, rendersLimite: rl,
           geracoesUsadas: gu, geracoesLimite: gl });
       };
-      push('plano1', 'Plano 1', p.plano1_id, p.plano1_inicio,
+      push('plano1', 'Plano 1', p.plano1_id, p.plano1_inicio, p.plano1_expira_em ?? null,
         p.plano1_imgs_usadas, p.plano1_imgs_limite, p.plano1_renders_usados, p.plano1_renders_limite,
         p.plano1_geracoes_usadas ?? 0, p.plano1_geracoes_limite ?? 0);
-      push('plano2', 'Plano 2', p.plano2_id, p.plano2_inicio,
+      push('plano2', 'Plano 2', p.plano2_id, p.plano2_inicio, p.plano2_expira_em ?? null,
         p.plano2_imgs_usadas, p.plano2_imgs_limite, p.plano2_renders_usados, p.plano2_renders_limite,
         p.plano2_geracoes_usadas ?? 0, p.plano2_geracoes_limite ?? 0);
-      push('bonus', 'Bônus', p.bonus_id, p.bonus_inicio,
+      push('bonus', 'Bônus', p.bonus_id, p.bonus_inicio, p.bonus_expira_em ?? null,
         p.bonus_imgs_usadas, p.bonus_imgs_limite, p.bonus_renders_usados, p.bonus_renders_limite,
         p.bonus_geracoes_usadas ?? 0, p.bonus_geracoes_limite ?? 0);
       setSlots(built);
