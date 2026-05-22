@@ -1,6 +1,7 @@
 // Helper de ciclo mensal de cobrança.
 // Regra: o ciclo de um slot vence no mesmo dia do mês seguinte ao `inicio`.
 // Sem bloqueio, sem reset — só sinalização visual no admin.
+// Se o banco já tiver `expira_em` persistido, use computeCycleFromExpiry.
 
 export type CycleStatus = 'ok' | 'due_soon' | 'overdue' | 'none';
 
@@ -12,6 +13,29 @@ export interface CycleInfo {
 
 const DUE_SOON_DAYS = 5;
 
+function daysLeftFromDue(due: Date, now: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDue   = new Date(due.getFullYear(),  due.getMonth(),  due.getDate());
+  return Math.round((startOfDue.getTime() - startOfToday.getTime()) / msPerDay);
+}
+
+function statusFromDays(daysLeft: number): CycleStatus {
+  if (daysLeft < 0) return 'overdue';
+  if (daysLeft <= DUE_SOON_DAYS) return 'due_soon';
+  return 'ok';
+}
+
+/** Usa a data de expiração já persistida no banco (plano*_expira_em). */
+export function computeCycleFromExpiry(expiraEm: string | null | undefined, now: Date = new Date()): CycleInfo {
+  if (!expiraEm) return { dueAt: null, daysLeft: 0, status: 'none' };
+  const due = new Date(expiraEm);
+  if (isNaN(due.getTime())) return { dueAt: null, daysLeft: 0, status: 'none' };
+  const daysLeft = daysLeftFromDue(due, now);
+  return { dueAt: due, daysLeft, status: statusFromDays(daysLeft) };
+}
+
+/** Calcula on-the-fly a partir de `inicio` (fallback quando expira_em não está disponível). */
 export function computeCycle(inicio: string | null | undefined, now: Date = new Date()): CycleInfo {
   if (!inicio) return { dueAt: null, daysLeft: 0, status: 'none' };
   const start = new Date(inicio);
@@ -21,18 +45,10 @@ export function computeCycle(inicio: string | null | undefined, now: Date = new 
   const due = new Date(start);
   const targetDay = start.getDate();
   due.setMonth(due.getMonth() + 1);
-  if (due.getDate() !== targetDay) due.setDate(0); // estourou → último dia do mês alvo
+  if (due.getDate() !== targetDay) due.setDate(0);
 
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfDue = new Date(due.getFullYear(), due.getMonth(), due.getDate());
-  const daysLeft = Math.round((startOfDue.getTime() - startOfToday.getTime()) / msPerDay);
-
-  let status: CycleStatus = 'ok';
-  if (daysLeft < 0) status = 'overdue';
-  else if (daysLeft <= DUE_SOON_DAYS) status = 'due_soon';
-
-  return { dueAt: due, daysLeft, status };
+  const daysLeft = daysLeftFromDue(due, now);
+  return { dueAt: due, daysLeft, status: statusFromDays(daysLeft) };
 }
 
 export function cycleLabel(c: CycleInfo): string {
