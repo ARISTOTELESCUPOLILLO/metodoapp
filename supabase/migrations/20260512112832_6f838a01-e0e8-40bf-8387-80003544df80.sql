@@ -1,0 +1,1 @@
+ALTER TABLE public.brand_kits ADD COLUMN IF NOT EXISTS logo_position text NOT NULL DEFAULT 'bottom-right';

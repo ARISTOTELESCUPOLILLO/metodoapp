@@ -1,0 +1,234 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.server';
+
+// Provedor: FAL (queue API).
+// Modelos:
+//  - openai/gpt-image-2        (sem referências — text-to-image)
+//  - openai/gpt-image-2/edit   (com referências do Kit Imagem / logo)
+
+const FAL_QUEUE = 'https://queue.fal.run';
+
+type StartBody = {
+  action?: 'start';
+  prompt: string;
+  format?: 'post' | 'reels';
+  logoDataUrl?: string;
+  referenceImages?: string[];
+};
+
+type StatusBody = {
+  action: 'status' | 'result';
+  statusUrl?: string;
+  responseUrl?: string;
+  requestId?: string;
+  modelPath?: string;
+};
+
+type AnyBody = StartBody | StatusBody;
+
+// Aceita data:image/* (jpeg/png/webp/gif) e http(s) com extensão raster.
+const SAFE_DATA = /^data:image\/(jpeg|png|webp|gif);base64,/i;
+const SAFE_URL_EXT = /\.(jpe?g|png|webp|gif)(\?|$)/i;
+function isSafeRef(u: unknown): u is string {
+  if (typeof u !== 'string' || !u) return false;
+  if (u.startsWith('data:')) return SAFE_DATA.test(u);
+  if (/^https?:\/\//i.test(u)) return SAFE_URL_EXT.test(u);
+  return false;
+}
+
+function imageSizeFor(format?: 'post' | 'reels'): 'portrait_4_3' | 'portrait_16_9' {
+  return format === 'reels' ? 'portrait_16_9' : 'portrait_4_3';
+}
+
+function falHeaders(falKey: string): HeadersInit {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Key ${falKey}`,
+  };
+}
+
+export const Route = createFileRoute('/api/generate-image')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        try {
+          const body = (await request.json()) as AnyBody;
+          const action = (body as StatusBody).action || 'start';
+
+          const falKey = process.env.FAL_KEY;
+          if (!falKey) {
+            return Response.json({ error: 'FAL_KEY não configurada' }, { status: 500 });
+          }
+
+          // === STATUS ===
+          if (action === 'status') {
+            const { statusUrl } = body as StatusBody;
+            if (!statusUrl) {
+              return Response.json({ error: 'statusUrl obrigatório' }, { status: 400 });
+            }
+            const res = await fetch(statusUrl, {
+              headers: { Authorization: `Key ${falKey}` },
+            });
+            const txt = await res.text();
+            if (!res.ok) {
+              return Response.json(
+                { error: `fal status ${res.status}: ${txt.slice(0, 300)}` },
+                { status: 502 },
+              );
+            }
+            let pj: { status?: string } = {};
+            try { pj = JSON.parse(txt); } catch { /* keep default */ }
+            return Response.json({ status: pj.status || 'IN_PROGRESS' });
+          }
+
+          // === RESULT ===
+          if (action === 'result') {
+            const { responseUrl } = body as StatusBody;
+            if (!responseUrl) {
+              return Response.json({ error: 'responseUrl obrigatório' }, { status: 400 });
+            }
+            const res = await fetch(responseUrl, {
+              headers: { Authorization: `Key ${falKey}` },
+            });
+            const txt = await res.text();
+            if (!res.ok) {
+              return Response.json(
+                { error: `fal result ${res.status}: ${txt.slice(0, 300)}` },
+                { status: 502 },
+              );
+            }
+            let payload: { images?: Array<{ url?: string; content_type?: string }> } = {};
+            try { payload = JSON.parse(txt); } catch { /* keep default */ }
+            const imgUrl = payload.images?.[0]?.url;
+            const contentType = payload.images?.[0]?.content_type || 'image/png';
+            if (!imgUrl) {
+              return Response.json(
+                { error: 'Imagem ausente na resposta do FAL.' },
+                { status: 502 },
+              );
+            }
+            // Baixa e converte pra data URL (mantém contrato com o cliente).
+            const imgRes = await fetch(imgUrl);
+            if (!imgRes.ok) {
+              return Response.json(
+                { error: `Falha ao baixar imagem do FAL (${imgRes.status}).` },
+                { status: 502 },
+              );
+            }
+            const buf = new Uint8Array(await imgRes.arrayBuffer());
+            // Converte em chunks pra não estourar o stack.
+            let binary = '';
+            const CHUNK = 8192;
+            for (let i = 0; i < buf.length; i += CHUNK) {
+              binary += String.fromCharCode.apply(
+                null,
+                Array.from(buf.subarray(i, Math.min(i + CHUNK, buf.length))),
+              );
+            }
+            const dataUrl = `data:${contentType};base64,${btoa(binary)}`;
+
+            // Debita 1 imagem (não bloqueia entrega).
+            try {
+              const userId = await getUserIdFromRequest(request);
+              if (userId) {
+                await debitUsage(userId, 1, 0, {
+                  evento: 'image.generate',
+                  modulo: 'metodo-op',
+                  payload: { provider: 'fal' },
+                });
+              }
+            } catch (e) {
+              console.warn('[debit_usage image]', (e as Error).message);
+            }
+
+            return Response.json({ dataUrl });
+          }
+
+          // === START ===
+          const { prompt, format, logoDataUrl, referenceImages } = body as StartBody;
+          if (!prompt) {
+            return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
+          }
+
+          // Pré-checagem de saldo.
+          try {
+            const userId = await getUserIdFromRequest(request);
+            if (userId) {
+              const { ok } = await checkBalance(userId, 1, 0);
+              if (!ok) {
+                return Response.json(
+                  { error: 'Limite de imagens atingido em todos os seus planos.' },
+                  { status: 402 },
+                );
+              }
+            }
+          } catch (e) {
+            console.warn('[balance pre-check image]', (e as Error).message);
+          }
+
+          const refsRaw: string[] = Array.isArray(referenceImages)
+            ? referenceImages.filter(isSafeRef)
+            : [];
+          const safeLogo = isSafeRef(logoDataUrl) ? (logoDataUrl as string) : null;
+          const allRefs = [...refsRaw, ...(safeLogo ? [safeLogo] : [])].slice(0, 16);
+
+          const useEdit = allRefs.length > 0;
+          const modelPath = useEdit
+            ? 'openai/gpt-image-2/edit'
+            : 'openai/gpt-image-2';
+
+          const submitBody: Record<string, unknown> = {
+            prompt,
+            image_size: imageSizeFor(format),
+            num_images: 1,
+            quality: 'medium',
+          };
+          if (useEdit) submitBody.image_urls = allRefs;
+
+          console.info('[generate-image] start fal', {
+            model: modelPath,
+            refs: allRefs.length,
+            promptChars: prompt.length,
+          });
+
+          const res = await fetch(`${FAL_QUEUE}/${modelPath}`, {
+            method: 'POST',
+            headers: falHeaders(falKey),
+            body: JSON.stringify(submitBody),
+          });
+          const txt = await res.text();
+          if (!res.ok) {
+            console.error('[generate-image] fal submit error', res.status, txt.slice(0, 300));
+            return Response.json(
+              { error: `fal submit ${res.status}: ${txt.slice(0, 300)}` },
+              { status: 502 },
+            );
+          }
+          let submit: {
+            request_id?: string;
+            status_url?: string;
+            response_url?: string;
+          } = {};
+          try { submit = JSON.parse(txt); } catch { /* keep default */ }
+          if (!submit.request_id || !submit.status_url || !submit.response_url) {
+            return Response.json(
+              { error: 'Resposta do FAL sem request_id/status_url/response_url.' },
+              { status: 502 },
+            );
+          }
+
+          return Response.json({
+            requestId: submit.request_id,
+            modelPath: `fal:${modelPath}`,
+            statusUrl: submit.status_url,
+            responseUrl: submit.response_url,
+          });
+        } catch (e) {
+          const msg = (e as Error).message || 'Erro inesperado.';
+          console.error('[generate-image]', msg);
+          return Response.json({ error: msg }, { status: 500 });
+        }
+      },
+    },
+  },
+});

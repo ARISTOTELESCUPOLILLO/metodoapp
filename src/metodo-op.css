@@ -1,0 +1,324 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Raleway:wght@400;600;700;800&family=Roboto+Slab:wght@400;600;700&family=Playfair+Display:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&display=swap');
+
+:root { font-family: Inter, system-ui, sans-serif; color: #111827; background: #f3f4f6; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input, textarea, select { font: inherit; }
+
+.appShell { max-width: 1440px; margin: 0 auto; padding: 32px; }
+.hero { background: linear-gradient(135deg, #0f172a, #123a63); color: white; padding: 28px 42px; border-radius: 28px; margin-bottom: 24px; box-shadow: 0 20px 60px rgba(15,23,42,.18); }
+.hero h1 { font-size: clamp(42px,6vw,84px); letter-spacing:-.06em; margin: 4px 0 0; }
+.hero p { max-width: 760px; font-size: 19px; color: rgba(255,255,255,.82); }
+.heroActions { display: flex; gap: 10px; margin-top: 20px; }
+.saveBtn { background: #f4b000; color: #111827; border: none; border-radius: 12px; padding: 10px 20px; font-weight: 800; font-size: 14px; cursor: pointer; transition: background .15s; }
+.saveBtn:hover { background: #e0a000; }
+.clearBtn { background: rgba(255,255,255,.12); color: white; border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 10px 20px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background .15s; }
+.clearBtn:hover { background: rgba(255,255,255,.2); }
+.eyebrow { text-transform: uppercase; letter-spacing:.16em; font-size: 12px; font-weight: 800; color: #f4b000; }
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 460px; gap: 22px; align-items: start; }
+.leftCol, .rightCol { display: grid; gap: 22px; }
+.panel { background: white; border: 1px solid #e5e7eb; border-radius: 24px; padding: 24px; box-shadow: 0 14px 40px rgba(15,23,42,.06); }
+.sectionHeader { display: flex; justify-content: space-between; gap: 20px; align-items: start; margin-bottom: 20px; }
+.sectionHeader h2 { margin: 4px 0 0; font-size: 24px; letter-spacing:-.03em; }
+.sectionHeader p { max-width: 360px; color: #64748b; margin: 0; font-size: 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+label { display: grid; gap: 7px; margin-bottom: 16px; font-weight: 700; }
+input, textarea, select { width: 100%; border: 1px solid #cbd5e1; border-radius: 14px; padding: 12px 14px; background: #fff; }
+input[type='color'] { height: 48px; padding: 4px; }
+small, .note { color: #64748b; font-weight: 500; font-size: 12px; }
+.checkRow { display: flex; align-items: center; gap: 10px; font-weight: 600; margin: 0; }
+.checkRow input { width: auto; }
+.formatBox { border: 1px dashed #cbd5e1; border-radius: 18px; padding: 16px; margin-bottom: 16px; }
+.formatBox > strong { display: block; margin-bottom: 12px; }
+.primaryBtn, .secondaryBtn { border: 0; border-radius: 16px; padding: 14px 18px; font-weight: 800; cursor: pointer; }
+.primaryBtn { background: #123a63; color: white; width: 100%; }
+.secondaryBtn { background: #f4b000; color: #111827; }
+.primaryBtn:disabled, .secondaryBtn:disabled { opacity: .55; cursor: not-allowed; }
+.errorBox { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 16px; border-radius: 18px; }
+.resultBlock { border-top: 1px solid #e5e7eb; padding-top: 18px; margin-top: 18px; }
+.resultBlock h3 { margin: 0 0 12px; font-size: 18px; letter-spacing: -.02em; }
+
+.radioRow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.radioLabel { display: flex; align-items: center; gap: 8px; font-weight: 600; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; cursor: pointer; transition: all .15s; }
+.radioLabel:has(input:checked) { background: #eff6ff; border-color: #123a63; color: #123a63; }
+.radioLabel input { width: auto; border: none; padding: 0; }
+
+.subFormatBox { background: #f8fafc; border-radius: 14px; padding: 14px; margin-top: 4px; border: 1px solid #e2e8f0; }
+.subFormatLabel { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #64748b; display: block; margin-bottom: 10px; }
+
+.sequenceGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
+.sequenceCard { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px 10px; background: white; cursor: pointer; text-align: center; transition: all .15s; }
+.sequenceCard:hover { border-color: #94a3b8; }
+.sequenceCard.active { border-color: #123a63; outline: 2px solid #123a63; background: #eff6ff; }
+.sequenceNum { font-size: 16px; font-weight: 800; color: #111827; }
+
+.contentCard { border: 1px solid #e5e7eb; border-radius: 18px; overflow: hidden; margin-bottom: 10px; }
+.cardHeader { width: 100%; background: #f8fafc; border: none; padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; text-align: left; transition: background .15s; }
+.cardHeader:hover { background: #f1f5f9; }
+.cardHeaderLeft { display: grid; gap: 4px; }
+.cardTag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #64748b; }
+.cardTitle { font-size: 15px; font-weight: 700; color: #111827; }
+.cardChevron { font-size: 12px; color: #94a3b8; }
+.cardBody { padding: 16px; background: white; display: grid; gap: 12px; }
+.cardField { display: grid; gap: 4px; }
+.fieldLabel { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; }
+.cardField p { margin: 0; color: #334155; font-size: 14px; line-height: 1.6; }
+.imageHint { color: #64748b !important; font-size: 13px !important; font-style: italic; }
+.cardActions { display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; }
+.generateBtn { background: #123a63; color: white; border: none; border-radius: 12px; padding: 11px 18px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background .15s; }
+.generateBtn:hover { background: #1a4a7a; }
+.generateBtn:disabled { opacity: .55; cursor: not-allowed; }
+.downloadBtn { background: #f4b000; color: #111827; border: none; border-radius: 12px; padding: 11px 18px; font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; transition: background .15s; }
+.downloadBtn:hover { background: #e0a000; }
+
+.previewWrapper { border-radius: 12px; overflow: hidden; margin-top: 4px; }
+.previewImg { width: 100%; max-width: 280px; border-radius: 12px; display: block; aspect-ratio: 4/5; object-fit: cover; }
+.previewImgReels { width: 100%; max-width: 160px; border-radius: 12px; display: block; aspect-ratio: 9/16; object-fit: cover; }
+.carouselPreviews { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0; }
+.carouselPreviewImg { width: 100px; flex-shrink: 0; border-radius: 10px; aspect-ratio: 4/5; object-fit: cover; }
+
+.carouselCard { background: #f8fafc; border-radius: 12px; padding: 12px; display: grid; gap: 4px; margin-bottom: 8px; }
+.carouselCard p { margin: 4px 0; font-size: 13px; color: #334155; }
+
+.storyItem { background: #f8fafc; border-radius: 12px; padding: 12px; margin-bottom: 6px; }
+.storyTag { font-size: 11px; font-weight: 800; color: #64748b; display: block; margin-bottom: 4px; }
+.storyItem p { margin: 0; font-size: 14px; color: #334155; }
+
+.loadingBox { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 18px; padding: 24px; display: flex; align-items: center; gap: 16px; }
+.spinner { width: 28px; height: 28px; border: 3px solid #bfdbfe; border-top-color: #123a63; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loadingBox p { margin: 0; font-weight: 700; color: #123a63; }
+
+.moodGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.moodCard { text-align: left; border: 1px solid #e5e7eb; border-radius: 18px; padding: 14px; background: #fff; display: grid; gap: 7px; cursor: pointer; }
+.moodCard.active { outline: 3px solid #f4b000; border-color: #f4b000; }
+.moodMini { width: 100%; height: 48px; border-radius: 10px; display: block; }
+.moodCard em { color: #123a63; font-size: 12px; font-style: normal; font-weight: 800; }
+
+.colorSection { margin-bottom: 16px; }
+.colorLabel { display: block; font-weight: 700; margin-bottom: 12px; }
+.colorGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.colorItem { display: grid; gap: 6px; }
+.colorName { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; }
+.colorRow { display: flex; gap: 8px; align-items: center; }
+.colorPicker { width: 48px !important; height: 40px; padding: 2px; border-radius: 10px; flex-shrink: 0; }
+.colorHex { font-size: 13px; font-family: monospace; }
+.colorPresets { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.colorDot { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; padding: 0; transition: transform .1s; }
+.colorDot:hover { transform: scale(1.2); }
+
+.fontSection { margin-bottom: 16px; }
+.fontLabel { display: block; font-weight: 700; margin-bottom: 12px; }
+.fontCategories { display: grid; gap: 16px; }
+.fontCategory { display: grid; gap: 8px; }
+.fontCategoryLabel { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; }
+.fontGrid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.fontCard { border: 1px solid #e5e7eb; border-radius: 14px; padding: 10px 8px; background: white; cursor: pointer; display: grid; gap: 4px; text-align: center; transition: all .15s; }
+.fontCard:hover { border-color: #94a3b8; }
+.fontCard.active { border-color: #f4b000; outline: 2px solid #f4b000; background: #fffbeb; }
+.fontSample { font-size: 24px; font-weight: 700; color: #111827; line-height: 1; }
+.fontName { font-size: 10px; font-weight: 600; color: #64748b; }
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .appShell { padding: 12px; }
+  .hero { padding: 18px 16px; border-radius: 20px; }
+  .hero h1 { font-size: clamp(32px, 8vw, 84px); }
+  .modoSwitch { display: flex; width: 100%; }
+  .modoBtn { padding: 8px 10px; font-size: 12px; flex: 1; }
+  .previewImg { max-width: 100%; }
+}
+/* Client selector */
+.clientSelector { position: relative; }
+.clientBtn { background: rgba(255,255,255,.15); color: white; border: 1px solid rgba(255,255,255,.3); border-radius: 12px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background .15s; }
+.clientBtn:hover { background: rgba(255,255,255,.25); }
+.clientDropdown { position: absolute; top: calc(100% + 8px); left: 0; background: white; border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,.15); min-width: 220px; z-index: 100; overflow: hidden; }
+.clientItem { display: block; width: 100%; text-align: left; border: none; background: none; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #111827; cursor: pointer; transition: background .1s; }
+.clientItem:hover { background: #f8fafc; }
+.carouselPreviewItem { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.downloadBtnSmall { background: #f4b000; color: #111827; border: none; border-radius: 8px; padding: 5px 8px; font-weight: 700; font-size: 11px; cursor: pointer; width: 100%; }
+.pdfBtn { background: #123a63; color: white; border: none; border-radius: 12px; padding: 10px 18px; font-weight: 700; font-size: 14px; cursor: pointer; }
+.pdfBtn:hover { background: #1a4a7a; }
+.carouselPreviewItem { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.downloadBtnSmall { background: #f4b000; color: #111827; border: none; border-radius: 8px; padding: 5px 8px; font-weight: 700; font-size: 11px; cursor: pointer; width: 100%; }
+/* ============================================
+   Trilha narrativa — seletor visual da Fase 2
+   ============================================ */
+
+.trackGrid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .trackGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.trackCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 14px 14px 12px;
+  min-height: 96px;
+  gap: 6px;
+}
+
+.trackCard .sequenceNum {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.trackDescription {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.trackCard.active .sequenceNum {
+  color: #0f2942;
+  font-weight: 700;
+}
+
+.trackCard.active .trackDescription {
+  color: #1e3a5f;
+}
+
+.trackBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.trackCard.active .trackBadge {
+  background: rgba(18, 58, 99, 0.12);
+  color: #123a63;
+}
+
+.trackCard.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.trackCard.disabled:hover {
+  background: inherit;
+  border-color: inherit;
+}
+/* ============================================
+   Experimentação — dois períodos (Fase 3)
+   ============================================ */
+
+.trackNote {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-left: 3px solid #f4b000;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.trackNote strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.periodBtnRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .periodBtnRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.periodBtn {
+  width: 100%;
+}
+/* ============================================
+   Estado dos botões de período (rodando vs espera)
+   — Adicionado para diferenciar visualmente o botão
+   que está executando da contraparte em espera.
+   ============================================ */
+
+/* Botão em espera (Período não clicado, enquanto outro roda):
+   aparência clareada, neutra, sinaliza "aguarde". */
+.periodBtn:disabled:not(.periodBtn--running) {
+  opacity: 0.45;
+  background: #cbd5e1;
+  color: #475569;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Botão rodando (Período que você clicou):
+   mantém aparência ativa, com indicador de movimento. */
+.periodBtn--running:disabled {
+  opacity: 1;
+  background: #1e293b;
+  color: #ffffff;
+  cursor: progress;
+  box-shadow: 0 0 0 2px rgba(244, 176, 0, 0.4);
+  position: relative;
+}
+
+/* Pulse sutil no botão rodando — feedback visual de atividade. */
+.periodBtn--running:disabled::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 rgba(244, 176, 0, 0.6);
+  animation: periodPulse 1.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes periodPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(244, 176, 0, 0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(244, 176, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(244, 176, 0, 0); }
+}
+
+/* Switch Método OP / Post Único */
+.modoSwitch {
+  display: inline-flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.08);
+  padding: 4px;
+  border-radius: 14px;
+  margin: 16px 0 8px;
+}
+.modoBtn {
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.modoBtn:hover { color: white; }
+.modoBtn.active {
+  background: white;
+  color: #123a63;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+}

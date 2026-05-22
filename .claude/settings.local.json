@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Command *)",
+      "PowerShell(cmd /c \"git log --oneline --all -- .env 2>&1\" 2>&1)",
+      "PowerShell(supabase *)",
+      "PowerShell(supabase db *)",
+      "PowerShell(supabase migration *)",
+      "WebFetch(domain:fal.ai)"
+    ]
+  }
+}
