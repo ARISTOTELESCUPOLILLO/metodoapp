@@ -1,19 +1,19 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Download, Trash2, Copy, FileText, Play } from 'lucide-react';
 import { TopBar } from '@/components/app/TopBar';
-import { supabase } from '@/integrations/supabase/client';
+import { AuthGate } from '@/components/app/AuthGate';
 import { listMyGenerations, deleteGeneration } from '@/lib/assets.functions';
 import { useImpersonation } from '@/hooks/useImpersonation';
 
 export const Route = createFileRoute('/historico')({
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: '/login' });
-  },
-  component: HistoricoPage,
+  component: () => (
+    <AuthGate>
+      <HistoricoPage />
+    </AuthGate>
+  ),
 });
 
 type Gen = Awaited<ReturnType<typeof listMyGenerations>>[number];
