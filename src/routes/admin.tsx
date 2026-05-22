@@ -9,6 +9,7 @@ import { SettingsTab } from '@/components/admin/SettingsTab';
 import { InvitesTab } from '@/components/admin/InvitesTab';
 import { CobrancasTab } from '@/components/admin/CobrancasTab';
 import { TestUsersTab } from '@/components/admin/TestUsersTab';
+import { CustosTab } from '@/components/admin/CustosTab';
 
 export const Route = createFileRoute('/admin')({
   component: () => (
@@ -19,7 +20,7 @@ export const Route = createFileRoute('/admin')({
   ),
 });
 
-type Tab = 'users' | 'invites' | 'tests' | 'plans' | 'usage' | 'cobrancas' | 'settings';
+type Tab = 'users' | 'invites' | 'tests' | 'plans' | 'usage' | 'custos' | 'cobrancas' | 'settings';
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>('users');
@@ -29,6 +30,7 @@ function AdminPage() {
     { id: 'tests', label: 'Testes' },
     { id: 'plans', label: 'Planos' },
     { id: 'usage', label: 'Consumo' },
+    { id: 'custos', label: 'Custos' },
     { id: 'cobrancas', label: 'Cobranças' },
     { id: 'settings', label: 'Ajustes de custo' },
   ];
@@ -59,6 +61,7 @@ function AdminPage() {
       {tab === 'tests' && <TestUsersTab />}
       {tab === 'plans' && <PlansTab />}
       {tab === 'usage' && <UsageTab />}
+      {tab === 'custos' && <CustosTab />}
       {tab === 'cobrancas' && <CobrancasTab />}
       {tab === 'settings' && <SettingsTab />}
     </div>

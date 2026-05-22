@@ -70,7 +70,7 @@ export async function debitUsage(
   userId: string,
   imgs: number,
   renders: number,
-  meta: { evento: string; modulo?: string; payload?: Record<string, unknown>; geracoes?: number },
+  meta: { evento: string; modulo?: string; payload?: Record<string, unknown>; geracoes?: number; custoUsd?: number },
 ): Promise<{ slot: string }> {
   const geracoes = meta.geracoes ?? 0;
   const { data: slot, error } = await supabaseAdmin.rpc('debit_usage', {
@@ -90,6 +90,7 @@ export async function debitUsage(
       qtd_imagens: imgs,
       qtd_renders: renders,
       qtd_geracoes: geracoes,
+      custo_usd: meta.custoUsd ?? 0,
       slot: slot ?? null,
       payload: (meta.payload ?? null) as never,
     } as any);

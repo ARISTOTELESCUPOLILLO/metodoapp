@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { checkBalance, debitUsage, getUserIdFromRequest } from '@/lib/usage.server';
+import { COST_USD } from '@/lib/costs';
 
 export const Route = createFileRoute('/api/generate-content')({
   server: {
@@ -115,7 +116,7 @@ export const Route = createFileRoute('/api/generate-content')({
                 // Debita só depois do sucesso real do stream.
                 if (!balance.isAdmin) {
                   try {
-                    await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1 });
+                    await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: COST_USD.content });
                   } catch (e) {
                     console.warn('[generate-content] debit failed', e);
                   }

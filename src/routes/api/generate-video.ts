@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.server';
+import { COST_USD } from '@/lib/costs';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
 // Veo3 exige HTTP URL (não aceita base64). Faz upload temporário no bucket
@@ -283,6 +284,7 @@ export const Route = createFileRoute('/api/generate-video')({
                 evento: 'video.generate',
                 modulo: 'metodo-op',
                 payload: { videoUrl: String(videoUrl).slice(0, 200), clonedVoice: lipsyncOk },
+                custoUsd: COST_USD.video,
               });
             } catch (e) {
               console.warn('[debit_usage video]', (e as Error).message);

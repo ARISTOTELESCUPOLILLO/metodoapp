@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.server';
+import { COST_USD } from '@/lib/costs';
 
 // Provedor: FAL (queue API).
 // Modelos:
@@ -131,10 +132,12 @@ export const Route = createFileRoute('/api/generate-image')({
             try {
               const userId = await getUserIdFromRequest(request);
               if (userId) {
+                const isEdit = (body as StatusBody).modelPath?.includes('/edit') ?? false;
                 await debitUsage(userId, 1, 0, {
                   evento: 'image.generate',
                   modulo: 'metodo-op',
                   payload: { provider: 'fal' },
+                  custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
                 });
               }
             } catch (e) {
