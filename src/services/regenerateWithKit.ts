@@ -199,10 +199,11 @@ export async function regenerateWithKit(
 
   const baseScene = (imagePrompt || keyInfo || '').slice(0, 600);
   const deviceRule =
-    'REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL:\n' +
+    '⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:\n' +
     '- TELA FRONTAL de notebook/tablet/celular/monitor/TV mostra conteúdo REAL coerente com o tema (gráfico, dashboard, app, planilha, mensagem, foto). PROIBIDO tela apagada, preta, branca, lockscreen, wallpaper de fábrica, logo de SO, blur, placeholder.\n' +
-    '- TAMPA TRASEIRA, VERSO, CARCAÇA do aparelho é superfície SÓLIDA e OPACA. PROIBIDO renderizar ali qualquer UI, gráfico, dashboard, ícone, app, brilho de tela, reflexo de interface, segunda tela, logo de SO ou vazamento do conteúdo da tela frontal. A tampa NUNCA repete a tela.\n' +
-    '- ENQUADRAMENTO: ângulo que esconda ou minimize a tampa traseira (perfil/diagonal sobre a mesa, na mão em uso, por cima do ombro). PROIBIDO top-down de laptop fechado, foto frontal do verso de tablet/celular como elemento central, mockup plano da tampa.\n\n';
+    '- TAMPA / VERSO / CARCAÇA — DEFEITO FÍSICO PROIBIDO: tampa traseira do notebook e verso de qualquer dispositivo são superfícies SÓLIDAS e OPACAS (plástico, alumínio, couro). NÃO têm tela. NÃO emitem luz. NÃO exibem conteúdo. PROIBIDO: brilho de tela na tampa; imagem, interface, ícone ou conteúdo visual sobre a tampa; duplicação ou espelho da tela frontal na carcaça traseira; efeito "tela invertida" na tampa; aparência de monitor dos dois lados; elemento emissivo simulando display no verso. A tampa PODE aparecer parcialmente como superfície neutra — NUNCA com conteúdo visual aplicado.\n' +
+    '- ENQUADRAMENTO: câmera FRONTALMENTE À TELA (perfil/diagonal sobre a mesa, na mão em uso, no colo). PROIBIDO câmera atrás do aparelho, top-down de laptop fechado, foto frontal do verso como elemento central.\n' +
+    '- COMPORTAMENTO FÍSICO CORRETO: tampa sólida e neutra; tela exclusivamente na face interna; dispositivo fisicamente coerente; composição cinematográfica realista.\n\n';
   const anchoredPrompt = (anchorPrefix + deviceRule + baseScene).slice(0, 1800);
 
   if (isReels) {

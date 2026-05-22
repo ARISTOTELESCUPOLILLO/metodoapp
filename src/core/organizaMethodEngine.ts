@@ -319,6 +319,10 @@ DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
 - A cena deve traduzir literalmente o título e o texto, nunca decorar genericamente o tema.
 - Pessoas em cena são regra quando houver cliente, profissional, decisor, problema vivido ou ação humana; para Reels, isso significa exatamente UMA pessoa, nunca grupo.
 - Proibido: distorções anatômicas, texto dentro da imagem, logomarca inventada, interfaces irreais, gráficos flutuantes, lâmpadas, engrenagens e handshake genérico.
+- ⚠️ REGRA ABSOLUTA DE DISPOSITIVOS no imagePrompt e na leituraCenica: Quando notebook, laptop, tablet, celular, monitor ou qualquer dispositivo digital aparecer na cena, OBRIGATÓRIO:
+  1. O imagePrompt E o campo "composicao" DEVEM especificar câmera FRONTALMENTE À TELA — incluir a frase "câmera frontal à tela" ou equivalente.
+  2. PROIBIDO descrever a cena por trás do aparelho, por cima do ombro mostrando a tampa, ou qualquer ângulo que coloque a carcaça traseira no plano principal.
+  3. DEFEITO FÍSICO PROIBIDO na tampa do notebook — NÃO descrever nem sugerir: brilho de tela na tampa; imagem ou interface sobre a tampa; duplicação da tela frontal na carcaça externa; efeito "tela invertida"; monitor dos dois lados; elemento emissivo no verso. A tampa é superfície sólida e neutra — PODE aparecer parcialmente como objeto físico, mas NUNCA com conteúdo visual aplicado sobre ela.
 - Estático e Carrossel: composição vertical 1080x1350.
 - Estático Final: composição vertical 1080x1350, com mais respiro, menos ruído e foco centralizado.
 ${!isVisualOrExperimentacao ? '- Reels: composição vertical 1080x1920, imagem pura sem texto, sem logo, sem colagem e com somente uma pessoa no quadro.' : ''}
