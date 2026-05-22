@@ -75,11 +75,8 @@ export function PlanCard({ slot }: Props) {
       {/* ── Barra de imagens (USO EXTENDIDO) ── */}
       {slot.imgsLimite > 0 && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ marginBottom: 4 }}>
             <span style={{ color: 'rgba(255,255,255,.45)', fontSize: 10 }}>Imagens</span>
-            <span style={{ color: 'rgba(255,255,255,.65)', fontSize: 10, fontWeight: 600 }}>
-              {slot.imgsUsadas} / {slot.imgsLimite}
-            </span>
           </div>
 
           {/* Trilho + preenchimento */}
@@ -118,27 +115,6 @@ export function PlanCard({ slot }: Props) {
         </div>
       )}
 
-      {/* ── Contadores secundários ── */}
-      {(slot.geracoesLimite > 0 || slot.rendersLimite > 0) && (
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-          {slot.geracoesLimite > 0 && (
-            <span style={{
-              background: 'rgba(255,255,255,.06)', borderRadius: 4,
-              padding: '2px 7px', fontSize: 10, color: 'rgba(255,255,255,.50)',
-            }}>
-              Conteúdos {slot.geracoesUsadas}/{slot.geracoesLimite}
-            </span>
-          )}
-          {slot.rendersLimite > 0 && (
-            <span style={{
-              background: 'rgba(255,255,255,.06)', borderRadius: 4,
-              padding: '2px 7px', fontSize: 10, color: 'rgba(255,255,255,.50)',
-            }}>
-              Vídeos {slot.rendersUsados}/{slot.rendersLimite}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
