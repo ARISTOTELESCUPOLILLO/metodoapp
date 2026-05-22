@@ -20,6 +20,7 @@ import { useAuth } from './hooks/useAuth';
 import { useProfile } from './hooks/useProfile';
 import { useImpersonation, stopImpersonation } from './hooks/useImpersonation';
 import { buildPlanAccess } from './lib/planAccess';
+import { PlanCard } from './components/metodo-op/PlanCard';
 import './metodo-op.css';
 
 const defaultKit: BrandKit = {
@@ -453,40 +454,20 @@ export default function App() {
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-          <span style={{ color: 'rgba(255,255,255,.65)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>
-            Seus planos:
-          </span>
+        {/* ── Cards de plano ── */}
+        <div style={{ marginTop: 10 }}>
           {effectiveAdmin ? (
-            <span style={{ background: '#f4b000', color: '#0f213f', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
+            <span style={{ background: '#f4b000', color: '#0f213f', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
               Ilimitado (admin)
             </span>
           ) : slots.length === 0 ? (
-            <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
+            <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
               Sem plano ativo — fale com o admin
             </span>
           ) : (
-            slots.map((s) => {
-              const labelPrefix = s.key === 'bonus' ? 'Bônus · ' : '';
-              const tooltip = `${s.plan.nome}${s.imgsLimite > 0 ? ` · imgs ${s.imgsUsadas}/${s.imgsLimite}` : ''}${s.geracoesLimite > 0 ? ` · ger ${s.geracoesUsadas}/${s.geracoesLimite}` : ''}`;
-              return (
-                <span
-                  key={s.key}
-                  title={tooltip}
-                  style={{
-                    background: s.key === 'bonus' ? 'rgba(244,176,0,.18)' : 'rgba(255,255,255,.12)',
-                    color: '#fff',
-                    border: `1px solid ${s.key === 'bonus' ? 'rgba(244,176,0,.55)' : 'rgba(255,255,255,.25)'}`,
-                    padding: '3px 10px',
-                    borderRadius: 999,
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
-                >
-                  {labelPrefix}{s.plan.codigo} · {s.plan.nome}
-                </span>
-              );
-            })
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {slots.map((s) => <PlanCard key={s.key} slot={s} />)}
+            </div>
           )}
         </div>
 
