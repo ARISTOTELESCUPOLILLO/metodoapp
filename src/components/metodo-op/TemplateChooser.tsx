@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { getRecommendedMoods, templateMoods } from '../../data/templateCatalog';
 import { MoodCode, Segment } from '../../types';
 
@@ -9,6 +10,11 @@ interface Props {
 
 export default function TemplateChooser({ segment, selected, onSelect }: Props) {
   const moods = getRecommendedMoods(segment);
+
+  useEffect(() => {
+    const first = moods.find(m => m.recommendedFor.includes(segment));
+    if (first) onSelect(first.code);
+  }, [segment]);
   return (
     <section className="panel">
       <div className="sectionHeader">
