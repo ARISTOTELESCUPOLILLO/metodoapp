@@ -25,7 +25,23 @@ interface Row {
   bonus_imgs_usadas: number; bonus_imgs_limite: number;
   bonus_renders_usados: number; bonus_renders_limite: number;
 }
-interface Plan { id: string; nome: string; codigo: string; elegivel_bonus: boolean }
+interface Plan { id: string; nome: string; codigo: string; elegivel_bonus: boolean; tipo: string }
+
+function planPeriodo(inicio: string | null, tipo: string): string {
+  if (!inicio) return '';
+  const start = new Date(inicio);
+  const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  if (tipo === 'mensal') {
+    const end = new Date(start); end.setMonth(end.getMonth() + 1);
+    return `${fmt(start)} → ${fmt(end)} · 1 mês`;
+  }
+  if (tipo === 'anual') {
+    const end = new Date(start); end.setFullYear(end.getFullYear() + 1);
+    return `${fmt(start)} → ${fmt(end)} · 12 meses`;
+  }
+  if (tipo === 'vitalicio') return `${fmt(start)} · vitalício`;
+  return fmt(start);
+}
 
 type SlotKey = 'plano1' | 'plano2' | 'bonus';
 
@@ -49,7 +65,7 @@ export function UsersTab() {
     setLoading(true);
     const [{ data: profs }, { data: pls }, { data: roles }] = await Promise.all([
       supabase.from('profiles').select('*').eq('is_test', false).order('ultimo_login', { ascending: false, nullsFirst: false }),
-      supabase.from('plans').select('id,nome,codigo,elegivel_bonus').eq('ativo', true).order('nome'),
+      supabase.from('plans').select('id,nome,codigo,elegivel_bonus,tipo').eq('ativo', true).order('nome'),
       supabase.from('user_roles').select('user_id,role'),
     ]);
     const adminSet = new Set((roles || []).filter((r: any) => r.role === 'admin').map((r: any) => r.user_id));
@@ -170,8 +186,8 @@ export function UsersTab() {
                 <div style={{ color: '#64748b', fontSize: 12, wordBreak: 'break-all' }}>{r.email}</div>
                 {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: 2 }}>{r.client_code}</div>}
               </div>
-              <MRow k="Plano 1"><PlanSelect value={r.plano1_id} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} /></MRow>
-              <MRow k="Plano 2"><PlanSelect value={r.plano2_id} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} /></MRow>
+              <MRow k="Plano 1"><PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} /></MRow>
+              <MRow k="Plano 2"><PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} /></MRow>
               <MRow k="Bônus"><PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} /></MRow>
               <MRow k="Segmento"><SegmentoSelect value={r.segmento} onChange={(v) => changeSegmento(r, v)} /></MRow>
               <MRow k="Status">
@@ -216,8 +232,8 @@ export function UsersTab() {
                     <div style={{ color: '#64748b', fontSize: 12 }}>{r.email}</div>
                     {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: 2 }}>{r.client_code}</div>}
                   </Td>
-                  <Td><PlanSelect value={r.plano1_id} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} /></Td>
-                  <Td><PlanSelect value={r.plano2_id} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} /></Td>
+                  <Td><PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} /></Td>
+                  <Td><PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} /></Td>
                   <Td><PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} /></Td>
                   <Td><SegmentoSelect value={r.segmento} onChange={(v) => changeSegmento(r, v)} /></Td>
                   <Td><SlotsConsumption row={r} onRenew={(slot) => renewSlot(r, slot)} /></Td>
@@ -269,6 +285,19 @@ function PlanSelect({ value, options, onChange }: { value: string | null; option
       <option value="">— vazio —</option>
       {options.map((p) => <option key={p.id} value={p.id}>{p.codigo}</option>)}
     </select>
+  );
+}
+
+function PlanCell({ planId, inicio, options, onChange }: { planId: string | null; inicio: string | null; options: Plan[]; onChange: (v: string) => void }) {
+  const plan = options.find(p => p.id === planId);
+  const periodo = plan ? planPeriodo(inicio, plan.tipo) : '';
+  return (
+    <div>
+      <PlanSelect value={planId} options={options} onChange={onChange} />
+      {periodo && (
+        <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, lineHeight: 1.3 }}>{periodo}</div>
+      )}
+    </div>
   );
 }
 

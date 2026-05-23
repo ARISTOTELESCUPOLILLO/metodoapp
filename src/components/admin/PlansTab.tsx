@@ -19,16 +19,23 @@ interface Plan {
   base_reels: number;
 }
 
+interface Costs { imageRef: number; video: number; content: number }
+
 const empty: Omit<Plan, 'id'> = {
   codigo: '', nome: '', tipo: 'mensal', valor_plano: 0, custo_total_usd: 0,
   limite_imagens: 0, limite_renders: 0, limite_geracoes: 0, ativo: true,
   base_estatico: 0, base_carrossel: 0, base_estatico_final: 0, base_reels: 0,
 };
 
+function calcCusto(p: Pick<Plan, 'limite_imagens' | 'limite_renders' | 'limite_geracoes'>, costs: Costs) {
+  return p.limite_imagens * costs.imageRef + p.limite_renders * costs.video + p.limite_geracoes * costs.content;
+}
+
 export function PlansTab() {
   const isMobile = useIsMobile();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usdRate, setUsdRate] = useState(5);
+  const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.50, content: 0.003 });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Plan | (Omit<Plan, 'id'> & { id?: string }) | null>(null);
   const [saving, setSaving] = useState(false);
@@ -38,10 +45,17 @@ export function PlansTab() {
     setLoading(true);
     const [{ data: p }, { data: s }] = await Promise.all([
       supabase.from('plans').select('*').order('nome'),
-      supabase.from('app_settings').select('usd_brl_rate').eq('id', true).maybeSingle(),
+      supabase.from('app_settings').select('usd_brl_rate,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
     ]);
     setPlans((p as Plan[]) || []);
-    if (s) setUsdRate(Number(s.usd_brl_rate) || 5);
+    if (s) {
+      setUsdRate(Number(s.usd_brl_rate) || 5);
+      setCosts({
+        imageRef: Number((s as any).image_price_usd) || 0.058,
+        video: Number((s as any).render_price_usd) || 1.50,
+        content: Number((s as any).geracao_price_usd) || 0.003,
+      });
+    }
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -121,19 +135,25 @@ export function PlansTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead style={{ background: '#f8fafc' }}>
               <tr>
-                <Th>Código</Th><Th>Nome</Th><Th>Tipo</Th><Th>Custo USD</Th><Th>Custo R$</Th><Th>Preço R$</Th>
+                <Th>Código</Th><Th>Nome</Th><Th>Tipo</Th>
+                <Th title="imgs × ref + renders × vídeo + conteúdos × text">Custo calc. USD</Th>
+                <Th>Custo R$</Th><Th>Preço mín. R$ (×4)</Th>
                 <Th>Imgs</Th><Th>Renders</Th><Th>Gerações</Th><Th>Ativo</Th><Th>Ações</Th>
               </tr>
             </thead>
             <tbody>
-              {plans.map((p) => (
+              {plans.map((p) => {
+                const custoUsd = calcCusto(p, costs);
+                const custoBrl = custoUsd * usdRate;
+                const precoMin = custoBrl * 4;
+                return (
                 <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                   <Td>{p.codigo}</Td>
                   <Td>{p.nome}</Td>
                   <Td>{p.tipo}</Td>
-                  <Td>US$ {Number(p.custo_total_usd).toFixed(2)}</Td>
-                  <Td>R$ {(Number(p.custo_total_usd) * usdRate).toFixed(2)}</Td>
-                  <Td>R$ {(Number(p.custo_total_usd) * usdRate * 3).toFixed(2)}</Td>
+                  <Td style={{ color: '#b45309', fontWeight: 600 }}>US$ {custoUsd.toFixed(3)}</Td>
+                  <Td style={{ color: '#0369a1', fontWeight: 600 }}>R$ {custoBrl.toFixed(2)}</Td>
+                  <Td style={{ color: '#15803d', fontWeight: 600 }}>R$ {precoMin.toFixed(2)}</Td>
                   <Td>{p.limite_imagens}</Td>
                   <Td>{p.limite_renders}</Td>
                   <Td>{p.limite_geracoes}</Td>
@@ -143,7 +163,8 @@ export function PlansTab() {
                     <button onClick={() => remove(p)} style={{ ...btn, color: '#b91c1c' }}>Excluir</button>
                   </Td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -211,7 +232,7 @@ const Th = ({ children }: any) => <th style={{ padding: '8px 10px', textAlign: '
 const Td = ({ children }: any) => <td style={{ padding: '8px 10px' }}>{children}</td>;
 const btn: React.CSSProperties = { background: 'transparent', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer' };
 const overlay: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 };
-const modal: React.CSSProperties = { background: '#fff', borderRadius: 8, padding: 20, width: '100%', maxWidth: 420 };
+const modal: React.CSSProperties = { background: '#fff', borderRadius: 8, padding: 20, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto' };
 const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#0f172a' };
 const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14, background: '#fff' };
 const Inp = ({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) => (

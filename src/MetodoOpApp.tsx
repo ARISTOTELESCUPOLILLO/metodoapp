@@ -48,8 +48,9 @@ const defaultForm: ContentFormData = {
   storiesDays: 3,
   storiesQuantity: 3,
   outputFormats: ['feed', 'carrossel', 'reels'],
-  track: 'cinematica',
+  track: 'visual',
   mood: 'OP-01',
+  sequenceSize: 3,
 };
 
 const defaultPostUnico: PostUnicoFormData = {

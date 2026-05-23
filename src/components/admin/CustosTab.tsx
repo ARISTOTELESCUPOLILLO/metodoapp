@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { COST_USD } from '@/lib/costs';
 
 interface Log {
   user_id: string | null;
@@ -37,6 +36,10 @@ interface AppSettings {
   usd_brl_rate: number;
   falai_balance_usd: number;
   openai_balance_usd: number;
+  image_base_price_usd: number;
+  image_price_usd: number;
+  render_price_usd: number;
+  geracao_price_usd: number;
 }
 
 export function CustosTab() {
@@ -44,7 +47,10 @@ export function CustosTab() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
-  const [settings, setSettings] = useState<AppSettings>({ usd_brl_rate: 5.5, falai_balance_usd: 0, openai_balance_usd: 0 });
+  const [settings, setSettings] = useState<AppSettings>({
+    usd_brl_rate: 5.5, falai_balance_usd: 0, openai_balance_usd: 0,
+    image_base_price_usd: 0.046, image_price_usd: 0.058, render_price_usd: 1.50, geracao_price_usd: 0.003,
+  });
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
   // Preço máximo editável inline por plano
@@ -64,7 +70,7 @@ export function CustosTab() {
       supabase.from('usage_logs').select('user_id,evento,qtd_imagens,qtd_renders,qtd_geracoes,custo_usd,created_at').gte('created_at', since),
       supabase.from('plans').select('id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl').eq('ativo', true),
       supabase.from('profiles').select('id,email,nome,is_test,plano1_id,plano2_id'),
-      supabase.from('app_settings').select('usd_brl_rate,falai_balance_usd,openai_balance_usd').eq('id', true).maybeSingle(),
+      supabase.from('app_settings').select('usd_brl_rate,falai_balance_usd,openai_balance_usd,image_base_price_usd,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
       supabase.from('user_roles').select('user_id').eq('role', 'admin'),
     ]);
     setLogs((ls as Log[]) || []);
@@ -75,6 +81,10 @@ export function CustosTab() {
         usd_brl_rate: Number(cfg.usd_brl_rate) || 5.5,
         falai_balance_usd: Number((cfg as any).falai_balance_usd) || 0,
         openai_balance_usd: Number((cfg as any).openai_balance_usd) || 0,
+        image_base_price_usd: Number((cfg as any).image_base_price_usd) || 0.046,
+        image_price_usd: Number((cfg as any).image_price_usd) || 0.058,
+        render_price_usd: Number((cfg as any).render_price_usd) || 1.50,
+        geracao_price_usd: Number((cfg as any).geracao_price_usd) || 0.003,
       });
     }
     const aids = new Set<string>((roles || []).map((r: any) => r.user_id as string));
@@ -95,7 +105,7 @@ export function CustosTab() {
   const totalGeracoes = logs.reduce((s, l) => s + (l.qtd_geracoes || 0), 0);
 
   // ── Breakdown por tipo ──
-  const isEdit = (l: Log) => l.evento === 'image.generate' && Number(l.custo_usd) > COST_USD.image_base + 0.001;
+  const isEdit = (l: Log) => l.evento === 'image.generate' && Number(l.custo_usd) > settings.image_base_price_usd + 0.001;
   const custoImgBase = logs.filter(l => l.evento === 'image.generate' && !isEdit(l)).reduce((s, l) => s + Number(l.custo_usd || 0), 0);
   const custoImgEdit = logs.filter(l => isEdit(l)).reduce((s, l) => s + Number(l.custo_usd || 0), 0);
   const custoVideo = logs.filter(l => l.evento === 'video.generate').reduce((s, l) => s + Number(l.custo_usd || 0), 0);
@@ -133,8 +143,8 @@ export function CustosTab() {
   const clienteFinanceiro = realProfiles.map(p => {
     const p1 = p.plano1_id ? planMap[p.plano1_id] : null;
     const p2 = p.plano2_id ? planMap[p.plano2_id] : null;
-    const custoProj1 = p1 ? (p1.limite_imagens * COST_USD.image_edit + p1.limite_renders * COST_USD.video + p1.limite_geracoes * COST_USD.content) : 0;
-    const custoProj2 = p2 ? (p2.limite_imagens * COST_USD.image_edit + p2.limite_renders * COST_USD.video + p2.limite_geracoes * COST_USD.content) : 0;
+    const custoProj1 = p1 ? (p1.limite_imagens * settings.image_price_usd + p1.limite_renders * settings.render_price_usd + p1.limite_geracoes * settings.geracao_price_usd) : 0;
+    const custoProj2 = p2 ? (p2.limite_imagens * settings.image_price_usd + p2.limite_renders * settings.render_price_usd + p2.limite_geracoes * settings.geracao_price_usd) : 0;
     const custoProjTotal = (custoProj1 + custoProj2) * rate;
     const precoMax1 = p1 ? Number(p1.preco_maximo_brl || 0) : 0;
     const precoMax2 = p2 ? Number(p2.preco_maximo_brl || 0) : 0;
@@ -155,8 +165,8 @@ export function CustosTab() {
     const imgs = totalClientes * p.limite_imagens;
     const renders = totalClientes * p.limite_renders;
     const geracoes = totalClientes * p.limite_geracoes;
-    const custoFalaiPrev = (imgs * COST_USD.image_edit + renders * COST_USD.video);
-    const custoOpenaiPrev = geracoes * COST_USD.content;
+    const custoFalaiPrev = (imgs * settings.image_price_usd + renders * settings.render_price_usd);
+    const custoOpenaiPrev = geracoes * settings.geracao_price_usd;
     const totalUsdPrev = custoFalaiPrev + custoOpenaiPrev;
     return { planId: p.id, codigo: p.codigo, nome: p.nome, totalClientes, imgs, renders, geracoes, custoFalaiPrev, custoOpenaiPrev, totalUsdPrev };
   }).filter(r => r.totalClientes > 0);
@@ -173,7 +183,7 @@ export function CustosTab() {
     const userIds = new Set(users.map(u => u.id));
     const planLogs = logs.filter(l => l.user_id && userIds.has(l.user_id));
     const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
-    const projecao = p.limite_imagens * COST_USD.image_edit + p.limite_renders * COST_USD.video + p.limite_geracoes * COST_USD.content;
+    const projecao = p.limite_imagens * settings.image_price_usd + p.limite_renders * settings.render_price_usd + p.limite_geracoes * settings.geracao_price_usd;
     const precoMin = projecao * rate * 4;
     const precoMax = Number(p.preco_maximo_brl || 0);
     const margemMin = precoMin > 0 ? ((precoMin - projecao * rate) / precoMin) * 100 : null;
@@ -308,22 +318,22 @@ export function CustosTab() {
                 <tr style={tRow}>
                   <Td><b>fal.ai</b> — Imagem base</Td>
                   <Td>{logs.filter(l => l.evento === 'image.generate' && !isEdit(l)).reduce((s, l) => s + l.qtd_imagens, 0)}</Td>
-                  <Td>${COST_USD.image_base}</Td><Td>{usdFmt(custoImgBase)}</Td><Td>{brl(custoImgBase)}</Td>
+                  <Td>${settings.image_base_price_usd.toFixed(4)}</Td><Td>{usdFmt(custoImgBase)}</Td><Td>{brl(custoImgBase)}</Td>
                 </tr>
                 <tr style={tRow}>
                   <Td><b>fal.ai</b> — Imagem c/ refs</Td>
                   <Td>{logs.filter(l => isEdit(l)).reduce((s, l) => s + l.qtd_imagens, 0)}</Td>
-                  <Td>${COST_USD.image_edit}</Td><Td>{usdFmt(custoImgEdit)}</Td><Td>{brl(custoImgEdit)}</Td>
+                  <Td>${settings.image_price_usd.toFixed(4)}</Td><Td>{usdFmt(custoImgEdit)}</Td><Td>{brl(custoImgEdit)}</Td>
                 </tr>
                 <tr style={tRow}>
                   <Td><b>fal.ai</b> — Vídeo + render</Td>
                   <Td>{totalRenders}</Td>
-                  <Td>${COST_USD.video}</Td><Td>{usdFmt(custoVideo)}</Td><Td>{brl(custoVideo)}</Td>
+                  <Td>${settings.render_price_usd.toFixed(3)}</Td><Td>{usdFmt(custoVideo)}</Td><Td>{brl(custoVideo)}</Td>
                 </tr>
                 <tr style={tRow}>
                   <Td><b>OpenAI</b> — Conteúdo</Td>
                   <Td>{totalGeracoes}</Td>
-                  <Td>${COST_USD.content}</Td><Td>{usdFmt(custoConteudo)}</Td><Td>{brl(custoConteudo)}</Td>
+                  <Td>${settings.geracao_price_usd.toFixed(4)}</Td><Td>{usdFmt(custoConteudo)}</Td><Td>{brl(custoConteudo)}</Td>
                 </tr>
                 <tr style={{ background: '#f1f5f9', fontWeight: 700 }}>
                   <Td>TOTAL</Td><Td>—</Td><Td>—</Td><Td>{usdFmt(totalUsd)}</Td><Td>{brl(totalUsd)}</Td>
@@ -469,18 +479,19 @@ export function CustosTab() {
           <Section title="Preços unitários configurados">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {[
-                { label: 'Imagem base', value: COST_USD.image_base },
-                { label: 'Imagem c/ refs', value: COST_USD.image_edit },
-                { label: 'Vídeo + render', value: COST_USD.video },
-                { label: 'Conteúdo texto', value: COST_USD.content },
+                { label: 'Imagem base', value: settings.image_base_price_usd },
+                { label: 'Imagem c/ refs', value: settings.image_price_usd },
+                { label: 'Vídeo + render', value: settings.render_price_usd },
+                { label: 'Conteúdo texto', value: settings.geracao_price_usd },
               ].map(({ label, value }) => (
                 <div key={label} style={{ background: '#f1f5f9', borderRadius: 8, padding: '8px 14px', fontSize: 12 }}>
                   <div style={{ color: '#64748b', marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontWeight: 700, color: '#0f172a' }}>${value} / un</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a' }}>${value.toFixed(4)} / un</div>
                   <div style={{ color: '#94a3b8' }}>{brl(value)} / un</div>
                 </div>
               ))}
             </div>
+            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>Altere em <strong>Ajustes de custo</strong> — os valores refletem aqui em tempo real.</p>
           </Section>
         </>
       )}
