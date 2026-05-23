@@ -88,6 +88,62 @@ async function falWaitResult<T = unknown>(
   return JSON.parse(finalText) as T;
 }
 
+/**
+ * Pré-processa o script antes de enviar ao TTS para melhorar pronúncia em pt-BR.
+ *
+ * Problemas observados no MiniMax speech-02-hd:
+ * - Palavras em ALL CAPS são lidas como siglas (ex.: "FIRME" → "F-I-R-M-E")
+ * - Grupos consonantais iniciais (fr, fl, pr, br, cl, cr, dr, tr…) perdem sílabas
+ *
+ * Estratégia:
+ * 1. Converte ALL CAPS (≥3 chars) para Title Case → modelo lê como palavra normal
+ * 2. Hifenização explícita de padrões problemáticos conhecidos em pt-BR
+ */
+function preprocessTTSScript(text: string): string {
+  // 1. ALL CAPS → Title Case (evita leitura como sigla)
+  let out = text.replace(/\b([A-ZÀÁÂÃÄÉÊÍÓÔÕÚÇ]{3,})\b/g, (w) =>
+    w.charAt(0) + w.slice(1).toLowerCase()
+  );
+
+  // 2. Hifenização de sílabas problemáticas para pt-BR
+  //    O hífen ajuda o modelo a separar sílabas sem mudar o texto visível.
+  const fixes: Array<[RegExp, string]> = [
+    // grupos consonantais iniciais (fr, fl, br, bl, cr, cl, dr, gr, pr, tr)
+    [/\bfirme\b/gi,        'fir-me'],
+    [/\bforte\b/gi,        'for-te'],
+    [/\bfrente\b/gi,       'fren-te'],
+    [/\bfluir\b/gi,        'flu-ir'],
+    [/\bpronto\b/gi,       'pron-to'],
+    [/\bproposta\b/gi,     'pro-posta'],
+    [/\bprecisa\b/gi,      'pre-ci-sa'],
+    [/\bpróximo\b/gi,      'pró-xi-mo'],
+    [/\bpresente\b/gi,     'pre-sen-te'],
+    [/\bproblema\b/gi,     'pro-ble-ma'],
+    [/\bprograma\b/gi,     'pro-gra-ma'],
+    [/\bprocesso\b/gi,     'pro-ces-so'],
+    [/\bproduto\b/gi,      'pro-du-to'],
+    [/\bprojeto\b/gi,      'pro-je-to'],
+    [/\bprofissional\b/gi, 'pro-fis-sio-nal'],
+    [/\bcriar\b/gi,        'cri-ar'],
+    [/\bcrescimento\b/gi,  'cres-ci-men-to'],
+    [/\bclaro\b/gi,        'cla-ro'],
+    [/\bcliente\b/gi,      'cli-en-te'],
+    [/\bbloco\b/gi,        'blo-co'],
+    [/\bsempre\b/gi,       'sem-pre'],
+    [/\btrabalho\b/gi,     'tra-ba-lho'],
+    [/\btransforma\b/gi,   'trans-for-ma'],
+    [/\bdrena\b/gi,        'dre-na'],
+    [/\bgraças\b/gi,       'gra-ças'],
+    [/\bgrande\b/gi,       'gran-de'],
+  ];
+
+  for (const [pattern, replacement] of fixes) {
+    out = out.replace(pattern, replacement);
+  }
+
+  return out;
+}
+
 export const Route = createFileRoute('/api/generate-video')({
   server: {
     handlers: {
@@ -237,10 +293,13 @@ export const Route = createFileRoute('/api/generate-video')({
           if (willLipsync && clonedVoiceId) {
             try {
               console.log('[generate-video] step=tts');
+              const ttsText = preprocessTTSScript(script);
+              console.log('[generate-video] tts original=%d chars preprocessed=%d chars', script.length, ttsText.length);
               const ttsSubmit = await falSubmit('fal-ai/minimax/speech-02-hd', falKey, {
-                text: script,
-                voice_setting: { voice_id: clonedVoiceId, speed: 1, vol: 1, pitch: 0 },
+                text: ttsText,
+                voice_setting: { voice_id: clonedVoiceId, speed: 0.95, vol: 1, pitch: 0 },
                 audio_setting: { sample_rate: 32000, format: 'mp3', bitrate: 128000, channel: 1 },
+                language_boost: 'Portuguese',
               });
               const tts = await falWaitResult<{ audio?: { url?: string } }>(
                 ttsSubmit,
