@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useServerFn } from '@tanstack/react-start';
+import { migrateImageKitFor } from '@/lib/imageKit.functions';
 
 interface Invite {
   id: string;
@@ -12,31 +14,41 @@ interface Invite {
   bonus_id: string | null;
   accepted_at: string | null;
   created_at: string;
+  source_test_profile_id: string | null;
+  kit_migrated_at: string | null;
 }
 interface Plan { id: string; codigo: string; nome: string; elegivel_bonus: boolean }
+interface TestProfile { id: string; nome: string | null; email: string }
 
 export function InvitesTab() {
   const isMobile = useIsMobile();
   const [rows, setRows] = useState<Invite[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [testProfiles, setTestProfiles] = useState<TestProfile[]>([]);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [plano1Id, setPlano1Id] = useState('');
   const [plano2Id, setPlano2Id] = useState('');
   const [bonusId, setBonusId] = useState('');
+  const [sourceTestProfileId, setSourceTestProfileId] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [migrating, setMigrating] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+
+  const migrateKitFn = useServerFn(migrateImageKitFor);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: inv }, { data: pls }] = await Promise.all([
+    const [{ data: inv }, { data: pls }, { data: tp }] = await Promise.all([
       supabase.from('invited_emails').select('*').order('created_at', { ascending: false }),
       supabase.from('plans').select('id,codigo,nome,elegivel_bonus').eq('ativo', true).order('nome'),
+      supabase.from('profiles').select('id,nome,email').eq('is_test', true).order('nome'),
     ]);
     setRows((inv as Invite[]) || []);
     setPlans((pls as Plan[]) || []);
+    setTestProfiles((tp as TestProfile[]) || []);
     setLoading(false);
   }, []);
 
@@ -56,13 +68,30 @@ export function InvitesTab() {
       plano1_id: plano1Id || null,
       plano2_id: plano2Id || null,
       bonus_id: bonusId || null,
+      source_test_profile_id: sourceTestProfileId || null,
       invited_by: user?.id || null,
-    });
+    } as any);
     setBusy(false);
     if (error) { setMsg(error.code === '23505' ? 'Este e-mail já foi convidado.' : `Erro: ${error.message}`); return; }
-    setNome(''); setEmail(''); setPlano1Id(''); setPlano2Id(''); setBonusId('');
+    setNome(''); setEmail(''); setPlano1Id(''); setPlano2Id(''); setBonusId(''); setSourceTestProfileId('');
     setMsg(`Convite criado. Envie o link de cadastro para ${cleanEmail}.`);
     load();
+  }
+
+  async function migrateKit(r: Invite) {
+    if (!r.source_test_profile_id) return;
+    if (!confirm(`Copiar o Kit Imagem do perfil de teste para ${r.nome || r.email}?\n\nOs arquivos do kit serão copiados para a conta do cliente.`)) return;
+    setMigrating(r.id);
+    setMsg(null);
+    try {
+      const result = await migrateKitFn({ data: { inviteId: r.id, sourceProfileId: r.source_test_profile_id } });
+      const { copied } = result as any;
+      setMsg(`Kit migrado: ${copied.avatar ? '1 avatar' : 'sem avatar'}, ${copied.cenarios} cenário(s), ${copied.produtos} produto(s).`);
+      load();
+    } catch (e: any) {
+      setMsg(`Erro na migração: ${e.message}`);
+    }
+    setMigrating(null);
   }
 
   async function setStatus(r: Invite, status: string) {
@@ -92,8 +121,38 @@ export function InvitesTab() {
   const bonusPlans = plans.filter((p) => p.elegivel_bonus);
   const mainPlans = plans.filter((p) => !p.elegivel_bonus);
   const labelFor = (id: string | null) => id ? (plans.find((p) => p.id === id)?.codigo || '—') : '—';
+  const testNameFor = (id: string | null) => id ? (testProfiles.find((t) => t.id === id)?.nome || testProfiles.find((t) => t.id === id)?.email || '—') : null;
   const statusColor = (s: string) => s === 'aceito' ? '#15803d' : s === 'revogado' ? '#b91c1c' : '#0f213f';
   const statusLabel = (s: string) => s === 'aceito' ? 'Ativo' : s === 'revogado' ? 'Bloqueado' : 'Convidado';
+
+  function KitBadge({ r }: { r: Invite }) {
+    if (!r.source_test_profile_id) return null;
+    const testName = testNameFor(r.source_test_profile_id);
+    if (r.kit_migrated_at) {
+      return (
+        <div style={{ fontSize: 10, color: '#15803d', marginTop: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <span>✓ Kit migrado</span>
+          <span style={{ color: '#94a3b8' }}>({new Date(r.kit_migrated_at).toLocaleDateString('pt-BR')})</span>
+        </div>
+      );
+    }
+    if (r.status === 'aceito') {
+      return (
+        <button
+          onClick={() => migrateKit(r)}
+          disabled={migrating === r.id}
+          style={{ marginTop: 4, background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', opacity: migrating === r.id ? .6 : 1, display: 'block' }}
+        >
+          {migrating === r.id ? 'Migrando…' : `⬆ Migrar Kit (${testName})`}
+        </button>
+      );
+    }
+    return (
+      <div style={{ fontSize: 10, color: '#d97706', marginTop: 3 }}>
+        Kit de: {testName} — aguarda cadastro
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'grid', gap: 20 }}>
@@ -124,6 +183,14 @@ export function InvitesTab() {
               {bonusPlans.map((p) => <option key={p.id} value={p.id}>{p.codigo} — {p.nome}</option>)}
             </select>
           </Field>
+          <Field label="Migrar Kit Imagem de teste (opcional)">
+            <select value={sourceTestProfileId} onChange={(e) => setSourceTestProfileId(e.target.value)} style={{ ...inp, background: '#fff' }}>
+              <option value="">— Sem migração de kit —</option>
+              {testProfiles.map((t) => (
+                <option key={t.id} value={t.id}>{t.nome || t.email}</option>
+              ))}
+            </select>
+          </Field>
           <div style={{ display: 'flex', alignItems: 'flex-end' }}>
             <button type="submit" disabled={busy} style={{
               background: '#2563eb', color: '#fff', border: 'none',
@@ -131,6 +198,11 @@ export function InvitesTab() {
             }}>{busy ? 'Adicionando…' : '＋ Adicionar convite'}</button>
           </div>
         </form>
+        {sourceTestProfileId && (
+          <div style={{ marginTop: 8, padding: '8px 10px', background: '#fef9c3', border: '1px solid #fde68a', borderRadius: 6, fontSize: 12, color: '#713f12' }}>
+            O Kit Imagem de <strong>{testNameFor(sourceTestProfileId)}</strong> será copiado para o novo cliente após o cadastro. O botão "Migrar Kit" aparecerá na lista abaixo assim que ele se cadastrar.
+          </div>
+        )}
         {msg && (
           <p style={{
             fontSize: 13, marginTop: 12, marginBottom: 0,
@@ -153,6 +225,7 @@ export function InvitesTab() {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14 }}>{r.nome || '—'}</div>
                     <div style={{ color: '#475569', fontSize: 12, wordBreak: 'break-all' }}>{r.email}</div>
+                    <KitBadge r={r} />
                   </div>
                   <span style={{ background: statusColor(r.status), color: '#fff', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, height: 'fit-content' }}>{statusLabel(r.status)}</span>
                 </div>
@@ -178,7 +251,7 @@ export function InvitesTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ color: '#64748b', fontSize: 12 }}>
-                  <Th>Nome</Th><Th>E-mail</Th><Th>P1</Th><Th>P2</Th><Th>Bônus</Th><Th>Status</Th><Th>Cadastrado em</Th><Th>Ação</Th>
+                  <Th>Nome</Th><Th>E-mail</Th><Th>P1</Th><Th>P2</Th><Th>Bônus</Th><Th>Kit</Th><Th>Status</Th><Th>Cadastrado em</Th><Th>Ação</Th>
                 </tr>
               </thead>
               <tbody>
@@ -189,6 +262,7 @@ export function InvitesTab() {
                     <Td>{labelFor(r.plano1_id)}</Td>
                     <Td>{labelFor(r.plano2_id)}</Td>
                     <Td>{labelFor(r.bonus_id)}</Td>
+                    <Td><KitBadge r={r} /></Td>
                     <Td>
                       <span style={{
                         background: statusColor(r.status), color: '#fff',
@@ -210,7 +284,7 @@ export function InvitesTab() {
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={8} style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>Nenhum convite.</td></tr>
+                  <tr><td colSpan={9} style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>Nenhum convite.</td></tr>
                 )}
               </tbody>
             </table>

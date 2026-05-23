@@ -7,6 +7,18 @@ import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
+// Copia um arquivo dentro do bucket; fallback download+reupload se copy() falhar
+async function copyStorageFile(src: string, dest: string): Promise<boolean> {
+  const { error } = await supabaseAdmin.storage.from(BUCKET).copy(src, dest);
+  if (!error) return true;
+  // fallback
+  const { data: blob } = await supabaseAdmin.storage.from(BUCKET).download(src);
+  if (!blob) return false;
+  const { error: upErr } = await supabaseAdmin.storage
+    .from(BUCKET).upload(dest, blob, { upsert: true });
+  return !upErr;
+}
+
 const BUCKET = 'image-kits';
 const SIGNED_URL_TTL = 60 * 60; // 1h é suficiente — o front segura em memória
 
@@ -107,6 +119,97 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
       avatar2: avatar2Url,
       cenarios: cenariosUrls,
       produtos: produtosUrls,
+    };
+  });
+
+// ---------- MIGRATE (copia kit de perfil de teste para usuário real) ----------
+
+export const migrateImageKitFor = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      inviteId: z.string().uuid(),
+      sourceProfileId: z.string().uuid(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const callerId = context.userId;
+
+    // Só admin pode executar
+    const { data: roles } = await supabaseAdmin
+      .from('user_roles').select('role').eq('user_id', callerId).eq('role', 'admin');
+    if (!roles || roles.length === 0) throw new Error('Acesso negado.');
+
+    // Encontra o e-mail do convite
+    const { data: invite } = await supabaseAdmin
+      .from('invited_emails').select('email').eq('id', data.inviteId).maybeSingle();
+    if (!invite) throw new Error('Convite não encontrado.');
+
+    // Encontra o perfil do novo usuário pelo e-mail
+    const { data: targetProfile } = await supabaseAdmin
+      .from('profiles').select('id').eq('email', invite.email).maybeSingle();
+    if (!targetProfile) throw new Error('Usuário ainda não realizou o cadastro.');
+
+    const sourceId = data.sourceProfileId;
+    const targetId = targetProfile.id as string;
+
+    // Carrega os paths do kit de origem
+    const { data: sourceKit } = await supabaseAdmin
+      .from('user_image_kits')
+      .select('avatar_path, avatar_path_2, cenarios_paths, produtos_paths')
+      .eq('user_id', sourceId).maybeSingle();
+    if (!sourceKit) throw new Error('Perfil de teste não possui Kit Imagem.');
+
+    const cenariosArr = (sourceKit.cenarios_paths || []) as string[];
+    const produtosArr = (sourceKit.produtos_paths || []) as string[];
+
+    // Substitui o prefixo userId nos paths
+    const swapId = (p: string | null | undefined) =>
+      p ? p.replace(sourceId, targetId) : null;
+
+    async function copySlot(src: string | null | undefined): Promise<string | null> {
+      if (!src) return null;
+      const dest = swapId(src)!;
+      const ok = await copyStorageFile(src, dest);
+      return ok ? dest : null;
+    }
+
+    const newAvatar  = await copySlot(sourceKit.avatar_path);
+    const newAvatar2 = await copySlot((sourceKit as any).avatar_path_2);
+    const newCenarios = await Promise.all(
+      Array.from({ length: 3 }, (_, i) => copySlot(cenariosArr[i] || null)),
+    );
+    const newProdutos = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => copySlot(produtosArr[i] || null)),
+    );
+
+    // Salva os novos paths no banco
+    await supabaseAdmin.from('user_image_kits').upsert(
+      {
+        user_id: targetId,
+        avatar_path: newAvatar,
+        avatar_path_2: newAvatar2,
+        cenarios_paths: newCenarios.map((p) => p || ''),
+        produtos_paths: newProdutos.map((p) => p || ''),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    );
+
+    // Marca o convite como migrado
+    await supabaseAdmin
+      .from('invited_emails')
+      .update({ kit_migrated_at: new Date().toISOString() } as any)
+      .eq('id', data.inviteId);
+
+    return {
+      ok: true,
+      targetId,
+      copied: {
+        avatar: !!newAvatar,
+        cenarios: newCenarios.filter(Boolean).length,
+        produtos: newProdutos.filter(Boolean).length,
+      },
     };
   });
 
