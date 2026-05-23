@@ -10,7 +10,9 @@ interface Props {
 }
 
 export default function PostUnicoComposicaoVisual({ imageKit, selection, onChange }: Props) {
-  const hasAvatar = !!imageKit.avatar;
+  const hasAvatar1 = !!imageKit.avatar;
+  const hasAvatar2 = !!imageKit.avatar2;
+  const hasAvatar = hasAvatar1 || hasAvatar2;
   const cenarios = cenariosDisponiveis(imageKit);
   const hasCenario = cenarios.length > 0;
   const produtos = produtosDisponiveis(imageKit);
@@ -19,12 +21,16 @@ export default function PostUnicoComposicaoVisual({ imageKit, selection, onChang
   const effectiveCenario = selection.cenarioSelecionado ?? null;
 
   const refsAtivas =
-    (selection.useAvatar && hasAvatar ? 1 : 0) +
+    (selection.useAvatar ? 1 : 0) +
     (selection.useCenario && hasCenario && effectiveCenario ? 1 : 0) +
     (selection.useProdutos && hasProdutos ? selection.produtosSelecionados.length : 0);
 
-  function toggleAvatar() {
-    onChange({ ...selection, useAvatar: !selection.useAvatar });
+  function pickAvatar(slot: 1 | 2) {
+    if (selection.useAvatar && selection.avatarSelecionado === slot) {
+      onChange({ ...selection, useAvatar: false });
+    } else {
+      onChange({ ...selection, useAvatar: true, avatarSelecionado: slot });
+    }
   }
   function pickCenario(num: number) {
     const isCurrent = effectiveCenario === num && selection.useCenario;
@@ -64,12 +70,20 @@ export default function PostUnicoComposicaoVisual({ imageKit, selection, onChang
         gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))',
         gap: 6,
       }}>
-        {hasAvatar && (
+        {hasAvatar1 && (
           <Tile
-            checked={selection.useAvatar}
-            onToggle={toggleAvatar}
+            checked={selection.useAvatar && selection.avatarSelecionado === 1}
+            onToggle={() => pickAvatar(1)}
             url={imageKit.avatar || undefined}
-            label="Avatar"
+            label="Avatar 1"
+          />
+        )}
+        {hasAvatar2 && (
+          <Tile
+            checked={selection.useAvatar && selection.avatarSelecionado === 2}
+            onToggle={() => pickAvatar(2)}
+            url={imageKit.avatar2 || undefined}
+            label="Avatar 2"
           />
         )}
         {cenarios.map((num) => (
@@ -98,7 +112,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, selection, onChang
           color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
         }}>
           ⚠️ {!hasAvatar && 'Adicione um avatar no Kit Imagem para usar. '}
-          {!hasCenario && 'Adicione cenários no Kit Imagem para usar. '}
+          {!hasCenario && 'Adicione cenários (até 3) no Kit Imagem para usar. '}
           {!hasProdutos && 'Adicione produtos no Kit Imagem para usar.'}
         </div>
       )}

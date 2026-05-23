@@ -77,6 +77,7 @@ type Modo = 'metodo' | 'postUnico' | 'imageKit';
 
 const defaultVisualSelection: PostUnicoVisualSelection = {
   useAvatar: false,
+  avatarSelecionado: 1,
   useCenario: false,
   useProdutos: false,
   produtosSelecionados: [],
@@ -400,7 +401,10 @@ export default function App() {
     try {
       // Constrói as referências visuais a partir do Kit Imagem + seleção.
       const references: PostUnicoReferences = {};
-      if (visualSelection.useAvatar && imageKit.avatar) references.avatar = imageKit.avatar;
+      if (visualSelection.useAvatar) {
+        const av = visualSelection.avatarSelecionado === 2 ? imageKit.avatar2 : imageKit.avatar;
+        if (av) references.avatar = av;
+      }
       if (visualSelection.useCenario) {
         const idx = (visualSelection.cenarioSelecionado ?? 1) - 1;
         const c = imageKit.cenarios[idx] || imageKit.cenarios.find((x) => !!x) || null;
@@ -602,7 +606,7 @@ export default function App() {
               <span className="eyebrow">Como usar</span>
               <h2 style={{ marginTop: 4 }}>Kit Imagem</h2>
               <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.5 }}>
-                Suba até 1 avatar, 2 cenários e 8 produtos. As imagens ficam salvas na sua conta
+                Suba até 2 avatares, 3 cenários e 8 produtos. As imagens ficam salvas na sua conta
                 e ficam disponíveis em qualquer dispositivo onde você entrar. Depois, na aba <strong>Post Único</strong>,
                 marque quais delas a IA deve usar como referência visual ao montar a peça. A numeração dos produtos
                 é fixa: apagar o produto 3 deixa o slot vazio até você subir outro.

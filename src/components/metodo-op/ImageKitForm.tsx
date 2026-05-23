@@ -32,7 +32,7 @@ interface Props {
   saved?: boolean;
 }
 
-type SlotKind = 'avatar' | { tipo: 'cenario'; index: number } | { tipo: 'produto'; index: number };
+type SlotKind = 'avatar' | 'avatar2' | { tipo: 'cenario'; index: number } | { tipo: 'produto'; index: number };
 
 export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: Props) {
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +60,8 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
   function applySlot(slot: SlotKind, dataUrl: string | null) {
     if (slot === 'avatar') {
       onChange({ ...kit, avatar: dataUrl || undefined });
+    } else if (slot === 'avatar2') {
+      onChange({ ...kit, avatar2: dataUrl || undefined });
     } else if (slot.tipo === 'cenario') {
       const next = [...kit.cenarios];
       next[slot.index] = dataUrl;
@@ -97,9 +99,9 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
       )}
 
       <div className="formatBox">
-        <strong>Avatar</strong>
+        <strong>Avatar 1</strong>
         <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#64748b' }}>
-          Pessoa principal, profissional, vendedor ou personagem da marca. 1 imagem.
+          Pessoa principal, profissional ou personagem da marca.
         </p>
         <SlotCard
           dataUrl={kit.avatar}
@@ -107,13 +109,27 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
           onPick={(f) => handleFile('avatar', f)}
           onClear={() => clearSlot('avatar')}
         />
-        <VoiceBlock />
+        <VoiceBlock avatarSlot={1} />
+      </div>
+
+      <div className="formatBox">
+        <strong>Avatar 2</strong>
+        <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#64748b' }}>
+          Segundo personagem, sócio, vendedor ou perfil adicional da marca.
+        </p>
+        <SlotCard
+          dataUrl={kit.avatar2}
+          busy={busySlot === slotKey('avatar2')}
+          onPick={(f) => handleFile('avatar2', f)}
+          onClear={() => clearSlot('avatar2')}
+        />
+        <VoiceBlock avatarSlot={2} />
       </div>
 
       <div className="formatBox">
         <strong>Cenários</strong>
         <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#64748b' }}>
-          Até 2 cenários numerados (loja, escritório, fachada, ambiente, atmosfera).
+          Até 3 cenários numerados (loja, escritório, fachada, ambiente, atmosfera).
           A numeração é fixa.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
@@ -169,7 +185,7 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
 }
 
 function slotKey(slot: SlotKind): string {
-  if (typeof slot === 'string') return slot;
+  if (slot === 'avatar' || slot === 'avatar2') return slot;
   return `${slot.tipo}-${slot.index}`;
 }
 
@@ -269,7 +285,7 @@ function smallBtn(primary: boolean): React.CSSProperties {
 
 type VoiceUiState = 'loading' | 'idle' | 'recording' | 'preview' | 'training' | 'awaiting_approval' | 'confirming' | 'ready' | 'testing';
 
-function VoiceBlock() {
+function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
   const { user } = useAuth();
   const impersonation = useImpersonation();
   const effectiveUserId = impersonation?.userId ?? user?.id;
@@ -334,7 +350,7 @@ function VoiceBlock() {
     setState('loading');
     setVoice(null);
     setVoicePreviewUrl(null);
-    loadVoiceForUser(effectiveUserId)
+    loadVoiceForUser(effectiveUserId, avatarSlot)
       .then(async (v) => {
         if (!alive) return;
         if (v && v.status === 'ready') {
@@ -358,7 +374,7 @@ function VoiceBlock() {
     return () => {
       alive = false;
     };
-  }, [effectiveUserId]);
+  }, [effectiveUserId, avatarSlot]);
 
   useEffect(() => {
     return () => {
@@ -439,7 +455,7 @@ function VoiceBlock() {
     setState('training');
     try {
       const dataUrl = await audioBlobToDataUrl(previewBlob);
-      const { voice: v, previewAudioUrl } = await cloneVoiceFromSample({ sampleDataUrl: dataUrl, durationS: previewDuration });
+      const { voice: v, previewAudioUrl } = await cloneVoiceFromSample({ sampleDataUrl: dataUrl, durationS: previewDuration, avatarSlot });
       downloadBlobToDevice(previewBlob, 'webm');
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewBlob(null);
@@ -457,7 +473,7 @@ function VoiceBlock() {
     setErrorMsg(null);
     setState('confirming');
     try {
-      const v = await confirmVoice('aprovar');
+      const v = await confirmVoice('aprovar', avatarSlot);
       if (v) setVoice(v);
       setVoicePreviewUrl(null);
       setState('ready');
@@ -471,7 +487,7 @@ function VoiceBlock() {
     setErrorMsg(null);
     setState('confirming');
     try {
-      await confirmVoice('descartar');
+      await confirmVoice('descartar', avatarSlot);
       setVoice(null);
       setVoicePreviewUrl(null);
       setState('idle');
@@ -485,7 +501,7 @@ function VoiceBlock() {
     setErrorMsg(null);
     setState('testing');
     try {
-      const url = await ttsWithUserVoice('Olá! Esta é a minha voz, pronta para narrar os vídeos da marca.');
+      const url = await ttsWithUserVoice('Olá! Esta é a minha voz, pronta para narrar os vídeos da marca.', avatarSlot);
       if (testAudioRef.current) {
         testAudioRef.current.pause();
       }
@@ -505,7 +521,7 @@ function VoiceBlock() {
     if (!effectiveUserId || isImpersonating) return;
     setErrorMsg(null);
     try {
-      await deleteVoiceForUser(effectiveUserId);
+      await deleteVoiceForUser(effectiveUserId, avatarSlot);
       setVoice(null);
       setState('idle');
     } catch (e) {
@@ -534,7 +550,7 @@ function VoiceBlock() {
 
   return (
     <div style={wrap}>
-      <span style={title}>🎙 Voz do avatar</span>
+      <span style={title}>🎙 Voz do Avatar {avatarSlot}</span>
 
       {!!impersonation && !impersonation.isTest && (
         <div style={{ marginBottom: 10, padding: 10, borderRadius: 8, background: '#fef3c7', border: '1px solid #fcd34d', fontSize: 12, color: '#78350f' }}>

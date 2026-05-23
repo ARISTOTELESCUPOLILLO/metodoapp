@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface VoiceClone {
   id: string;
   user_id: string;
+  avatar_slot: number;
   external_voice_id: string;
   sample_path: string;
   duration_s: number;
@@ -15,7 +16,7 @@ export interface VoiceClone {
   created_at: string;
 }
 
-export async function ttsWithUserVoice(text: string): Promise<string> {
+export async function ttsWithUserVoice(text: string, avatarSlot = 1): Promise<string> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   const res = await fetch('/api/tts-voice', {
@@ -24,7 +25,7 @@ export async function ttsWithUserVoice(text: string): Promise<string> {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, avatarSlot }),
   });
   const j = await res.json();
   if (!res.ok) throw new Error(j.error || 'Falha no TTS.');
@@ -39,11 +40,12 @@ export async function getVoiceSampleUrl(samplePath: string): Promise<string> {
   return data.signedUrl;
 }
 
-export async function loadVoiceForUser(userId: string): Promise<VoiceClone | null> {
+export async function loadVoiceForUser(userId: string, avatarSlot = 1): Promise<VoiceClone | null> {
   const { data, error } = await supabase
     .from('voice_clones' as any)
     .select('*')
     .eq('user_id', userId)
+    .eq('avatar_slot', avatarSlot)
     .maybeSingle();
   if (error) {
     console.warn('[loadVoiceForUser]', error.message);
@@ -52,17 +54,16 @@ export async function loadVoiceForUser(userId: string): Promise<VoiceClone | nul
   return (data as unknown as VoiceClone) || null;
 }
 
-export async function deleteVoiceForUser(userId: string): Promise<void> {
-  // Apaga o registro; a amostra no bucket é apagada server-side se possível,
-  // mas RLS permite o owner remover diretamente também.
-  const existing = await loadVoiceForUser(userId);
+export async function deleteVoiceForUser(userId: string, avatarSlot = 1): Promise<void> {
+  const existing = await loadVoiceForUser(userId, avatarSlot);
   if (existing?.sample_path) {
     try { await supabase.storage.from('voice-samples').remove([existing.sample_path]); } catch {}
   }
   const { error } = await supabase
     .from('voice_clones' as any)
     .delete()
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .eq('avatar_slot', avatarSlot);
   if (error) throw new Error(error.message);
 }
 
@@ -76,6 +77,7 @@ export async function cloneVoiceFromSample(params: {
   sampleDataUrl: string;
   durationS: number;
   name?: string;
+  avatarSlot?: number;
 }): Promise<{ voice: VoiceClone; previewAudioUrl: string }> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
@@ -85,7 +87,7 @@ export async function cloneVoiceFromSample(params: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(params),
+    body: JSON.stringify({ ...params, avatarSlot: params.avatarSlot ?? 1 }),
   });
   const j = await res.json();
   if (!res.ok) throw new Error(j.message || j.error || 'Falha ao clonar voz.');
@@ -95,7 +97,7 @@ export async function cloneVoiceFromSample(params: {
 /**
  * Aprova ou descarta a voz que está pendente. Aprovar consome 1 render.
  */
-export async function confirmVoice(decisao: 'aprovar' | 'descartar'): Promise<VoiceClone | null> {
+export async function confirmVoice(decisao: 'aprovar' | 'descartar', avatarSlot = 1): Promise<VoiceClone | null> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   const res = await fetch('/api/confirm-voice', {
@@ -104,7 +106,7 @@ export async function confirmVoice(decisao: 'aprovar' | 'descartar'): Promise<Vo
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ decisao }),
+    body: JSON.stringify({ decisao, avatarSlot }),
   });
   const j = await res.json();
   if (!res.ok) throw new Error(j.message || j.error || 'Falha ao confirmar voz.');

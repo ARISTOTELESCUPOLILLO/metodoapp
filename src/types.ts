@@ -130,7 +130,8 @@ export interface TemplateMood {
 // até receber outra imagem.
 export interface ImageKit {
   avatar?: string;
-  // Tamanho fixo 2; cada posição é dataURL ou null.
+  avatar2?: string;
+  // Tamanho fixo 3; cada posição é dataURL ou null.
   cenarios: (string | null)[];
   // Tamanho fixo 8; cada posição é dataURL ou null.
   produtos: (string | null)[];
@@ -140,12 +141,14 @@ export interface ImageKit {
 // devem ser enviados como referência para a geração desta peça específica.
 export interface PostUnicoVisualSelection {
   useAvatar: boolean;
+  // Qual avatar usar: 1 = principal, 2 = avatar 2.
+  avatarSelecionado: 1 | 2;
   useCenario: boolean;
   // Marca o bloco "Usar Produtos". Se true mas a lista estiver vazia, o usuário
   // ainda não escolheu quais produtos — o envio ignora a categoria.
   useProdutos: boolean;
   // Lista de números (1..8) dos produtos selecionados.
   produtosSelecionados: number[];
-  // Número (1..2) do cenário escolhido. Apenas 1 cenário por peça.
+  // Número (1..3) do cenário escolhido. Apenas 1 cenário por peça.
   cenarioSelecionado: number | null;
 }

@@ -74,7 +74,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
 
     const { data: row, error } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, cenarios_paths, produtos_paths')
+      .select('avatar_path, avatar_path_2, cenarios_paths, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -83,7 +83,8 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
       return {
         userId: targetId,
         avatar: null,
-        cenarios: [null, null] as (string | null)[],
+        avatar2: null,
+        cenarios: [null, null, null] as (string | null)[],
         produtos: [null, null, null, null, null, null, null, null] as (string | null)[],
       };
     }
@@ -91,9 +92,10 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
     const cenariosArr = (row.cenarios_paths || []) as string[];
     const produtosArr = (row.produtos_paths || []) as string[];
 
-    const [avatarUrl, ...cenariosUrls] = await Promise.all([
+    const [avatarUrl, avatar2Url, ...cenariosUrls] = await Promise.all([
       signPath(row.avatar_path),
-      ...Array.from({ length: 2 }, (_, i) => signPath(cenariosArr[i] || null)),
+      signPath((row as any).avatar_path_2 || null),
+      ...Array.from({ length: 3 }, (_, i) => signPath(cenariosArr[i] || null)),
     ]);
     const produtosUrls = await Promise.all(
       Array.from({ length: 8 }, (_, i) => signPath(produtosArr[i] || null)),
@@ -102,6 +104,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
     return {
       userId: targetId,
       avatar: avatarUrl,
+      avatar2: avatar2Url,
       cenarios: cenariosUrls,
       produtos: produtosUrls,
     };
@@ -121,7 +124,8 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     z.object({
       userId: z.string().uuid().optional(),
       avatar: SlotInput,
-      cenarios: z.array(SlotInput).max(2).optional(),
+      avatar2: SlotInput,
+      cenarios: z.array(SlotInput).max(3).optional(),
       produtos: z.array(SlotInput).max(8).optional(),
     }).parse(d),
   )
@@ -149,7 +153,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     const oldCenarios = (existing?.cenarios_paths || []) as string[];
     const oldProdutos = (existing?.produtos_paths || []) as string[];
 
-    // Avatar
+    // Avatar 1
     let newAvatar: string | null = oldAvatar;
     if (data.avatar === null) {
       await removePath(oldAvatar);
@@ -160,10 +164,24 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       newAvatar = path;
     }
 
-    // Cenários (2 slots)
-    const newCenarios: (string | null)[] = [oldCenarios[0] || null, oldCenarios[1] || null];
+    // Avatar 2
+    const oldAvatar2 = (existing as any)?.avatar_path_2 || null;
+    let newAvatar2: string | null = oldAvatar2;
+    if (data.avatar2 === null) {
+      await removePath(oldAvatar2);
+      newAvatar2 = null;
+    } else if (typeof data.avatar2 === 'string' && data.avatar2.length > 0) {
+      const path = `${targetId}/avatar2.webp`;
+      await uploadImage(path, data.avatar2);
+      newAvatar2 = path;
+    }
+
+    // Cenários (3 slots)
+    const newCenarios: (string | null)[] = [
+      oldCenarios[0] || null, oldCenarios[1] || null, oldCenarios[2] || null,
+    ];
     if (data.cenarios) {
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 3; i++) {
         const v = data.cenarios[i];
         if (v === null) {
           await removePath(newCenarios[i]);
@@ -196,7 +214,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     }
 
     // Compacta cenários/produtos pra arrays (mantendo a posição via length).
-    const cenariosForDb = newCenarios.map((c) => c || '').slice(0, 2);
+    const cenariosForDb = newCenarios.map((c) => c || '').slice(0, 3);
     const produtosForDb = newProdutos.map((p) => p || '').slice(0, 8);
     // Array do Postgres não aceita null direto em text[] sem definir explicitamente,
     // então usamos string vazia como sentinela e o leitor trata como null.
@@ -209,6 +227,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
         {
           user_id: targetId,
           avatar_path: newAvatar,
+          avatar_path_2: newAvatar2,
           cenarios_paths: cenariosForDb,
           produtos_paths: produtosForDb,
           updated_at: new Date().toISOString(),
@@ -218,8 +237,9 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     if (upErr) throw new Error(upErr.message);
 
     // Re-sign para devolver URLs prontos
-    const [avatarUrl, ...cenariosUrls] = await Promise.all([
+    const [avatarUrl, avatar2Url, ...cenariosUrls] = await Promise.all([
       signPath(newAvatar),
+      signPath(newAvatar2),
       ...newCenarios.map((p) => signPath(p)),
     ]);
     const produtosUrls = await Promise.all(newProdutos.map((p) => signPath(p)));
@@ -227,6 +247,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     return {
       userId: targetId,
       avatar: avatarUrl,
+      avatar2: avatar2Url,
       cenarios: cenariosUrls,
       produtos: produtosUrls,
     };

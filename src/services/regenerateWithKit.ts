@@ -200,10 +200,8 @@ export async function regenerateWithKit(
   const baseScene = (imagePrompt || keyInfo || '').slice(0, 600);
   const deviceRule =
     '⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:\n' +
-    '- TELA FRONTAL de notebook/tablet/celular/monitor/TV mostra conteúdo REAL coerente com o tema (gráfico, dashboard, app, planilha, mensagem, foto). PROIBIDO tela apagada, preta, branca, lockscreen, wallpaper de fábrica, logo de SO, blur, placeholder.\n' +
-    '- TAMPA / VERSO / CARCAÇA — DEFEITO FÍSICO PROIBIDO (vale para notebook, tablet, celular, smartphone, monitor e desktop): a carcaça traseira, tampa e verso de QUALQUER dispositivo são superfícies SÓLIDAS e OPACAS (plástico, alumínio, vidro, couro). NÃO têm tela. NÃO emitem luz. NÃO exibem conteúdo. PROIBIDO: imagem de área de trabalho, display, interface, app, dashboard, ícone ou qualquer conteúdo visual de tela LCD/OLED renderizado sobre a carcaça traseira, tampa ou verso de qualquer dispositivo; duplicação ou espelho da tela frontal na carcaça traseira; brilho ou emissão luminosa simulando display no verso; efeito "tela invertida"; aparência de monitor dos dois lados. A carcaça traseira PODE aparecer parcialmente como superfície neutra — NUNCA com conteúdo visual de tela aplicado.\n' +
-    '- ENQUADRAMENTO: câmera FRONTALMENTE À TELA (perfil/diagonal sobre a mesa, na mão em uso, no colo). PROIBIDO câmera atrás do aparelho, top-down de laptop fechado.\n' +
-    '- COMPORTAMENTO FÍSICO CORRETO: tampa sólida e neutra; tela exclusivamente na face interna; dispositivo fisicamente coerente; composição cinematográfica realista.\n\n';
+    'PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — notebook, laptop, tablet, iPad, celular, computador ou monitor. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.\n' +
+    'CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.\n\n';
   const anchoredPrompt = (anchorPrefix + deviceRule + baseScene).slice(0, 1800);
 
   if (isReels) {

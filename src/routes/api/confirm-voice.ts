@@ -20,11 +20,13 @@ export const Route = createFileRoute('/api/confirm-voice')({
           if (decisao !== 'aprovar' && decisao !== 'descartar') {
             return Response.json({ code: 'bad_request', message: 'decisao inválida.' }, { status: 400 });
           }
+          const avatarSlot = Number(body?.avatarSlot ?? 1) === 2 ? 2 : 1;
 
           const { data: existing, error: selErr } = await supabaseAdmin
             .from('voice_clones' as any)
             .select('*')
             .eq('user_id', userId)
+            .eq('avatar_slot', avatarSlot)
             .maybeSingle();
           if (selErr) {
             return Response.json({ code: 'load_failed', message: 'Não encontramos sua voz.' }, { status: 500 });
@@ -41,7 +43,8 @@ export const Route = createFileRoute('/api/confirm-voice')({
             const { error: delErr } = await supabaseAdmin
               .from('voice_clones' as any)
               .delete()
-              .eq('user_id', userId);
+              .eq('user_id', userId)
+              .eq('avatar_slot', avatarSlot);
             if (delErr) {
               return Response.json({ code: 'delete_failed', message: 'Não conseguimos descartar.' }, { status: 500 });
             }
@@ -81,6 +84,7 @@ export const Route = createFileRoute('/api/confirm-voice')({
             .from('voice_clones' as any)
             .update({ status: 'ready', updated_at: new Date().toISOString() })
             .eq('user_id', userId)
+            .eq('avatar_slot', avatarSlot)
             .select('*')
             .single();
           if (updErr) {

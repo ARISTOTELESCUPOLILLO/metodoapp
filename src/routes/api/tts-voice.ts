@@ -53,11 +53,12 @@ export const Route = createFileRoute('/api/tts-voice')({
           if (!text || text.length > 2000) {
             return Response.json({ error: 'text obrigatório (até 2000 chars).' }, { status: 400 });
           }
-
+          const avatarSlot = Number(body?.avatarSlot ?? 1) === 2 ? 2 : 1;
           const { data: vc } = await supabaseAdmin
             .from('voice_clones' as any)
             .select('external_voice_id, status')
             .eq('user_id', userId)
+            .eq('avatar_slot', avatarSlot)
             .maybeSingle();
 
           const voiceId = (vc as any)?.external_voice_id as string | undefined;

@@ -8,7 +8,7 @@ import { ImageKit } from '../types';
 
 export const IMAGE_KIT_KEY = 'metodo-op-image-kit-v1';
 export const PRODUTO_SLOTS = 8;
-export const CENARIO_SLOTS = 2;
+export const CENARIO_SLOTS = 3;
 
 export const emptyImageKit: ImageKit = {
   avatar: undefined,
@@ -26,7 +26,7 @@ function normalize(kit: any): ImageKit {
   if (Array.isArray(kit?.cenarios)) {
     cenarios = kit.cenarios.slice(0, CENARIO_SLOTS);
   } else if (typeof kit?.cenario === 'string' && kit.cenario) {
-    cenarios = [kit.cenario, null];
+    cenarios = [kit.cenario, null, null];
   } else {
     cenarios = [];
   }
@@ -111,6 +111,7 @@ import { loadImageKitFor, saveImageKitFor } from '../lib/imageKit.functions';
 
 function normalizeRemote(remote: {
   avatar?: string | null;
+  avatar2?: string | null;
   cenarios?: (string | null)[] | null;
   produtos?: (string | null)[] | null;
 }): _ImageKit {
@@ -120,6 +121,7 @@ function normalizeRemote(remote: {
   while (produtos.length < PRODUTO_SLOTS) produtos.push(null);
   return {
     avatar: remote.avatar || undefined,
+    avatar2: remote.avatar2 || undefined,
     cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
     produtos: produtos.map((p) => (typeof p === 'string' && p ? p : null)),
   };
@@ -162,6 +164,7 @@ function diffSlots(prev: (string | null)[], next: (string | null)[]): (string | 
 export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): Promise<ImageKit> {
   const prev = loadImageKit(userId);
   const avatarPayload = slotPayload(prev.avatar, kit.avatar);
+  const avatar2Payload = slotPayload(prev.avatar2, kit.avatar2);
   const cenariosPayload = diffSlots(prev.cenarios, kit.cenarios);
   const produtosPayload = diffSlots(prev.produtos, kit.produtos);
 
@@ -169,6 +172,7 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
     data: {
       ...(userId ? { userId } : {}),
       avatar: avatarPayload,
+      avatar2: avatar2Payload,
       cenarios: cenariosPayload as any,
       produtos: produtosPayload as any,
     },

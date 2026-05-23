@@ -84,6 +84,7 @@ export const Route = createFileRoute('/api/clone-voice')({
 
           const body = await request.json();
           const sampleDataUrl = String(body?.sampleDataUrl || '');
+          const avatarSlot = Number(body?.avatarSlot ?? 1) === 2 ? 2 : 1;
 
           if (!sampleDataUrl.startsWith('data:audio/')) {
             return Response.json(
@@ -156,7 +157,7 @@ export const Route = createFileRoute('/api/clone-voice')({
           }
 
           const ext = mimeToExt(mime);
-          const samplePath = `${userId}/sample.${ext}`;
+          const samplePath = `${userId}/sample${avatarSlot === 2 ? '-2' : ''}.${ext}`;
 
           // Sobe amostra no bucket privado
           const upload = await supabaseAdmin.storage
@@ -239,6 +240,7 @@ export const Route = createFileRoute('/api/clone-voice')({
           // Upsert voice_clones como pendente_aprovacao (não cobra ainda).
           const row = {
             user_id: userId,
+            avatar_slot: avatarSlot,
             external_voice_id: externalVoiceId,
             sample_path: samplePath,
             duration_s: probedDuration,
@@ -248,7 +250,7 @@ export const Route = createFileRoute('/api/clone-voice')({
           };
           const { data: saved, error: upsertErr } = await supabaseAdmin
             .from('voice_clones' as any)
-            .upsert(row, { onConflict: 'user_id' })
+            .upsert(row, { onConflict: 'user_id,avatar_slot' })
             .select('*')
             .single();
           if (upsertErr) {
