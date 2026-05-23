@@ -123,11 +123,22 @@ small, .note { color: #64748b; font-weight: 500; font-size: 12px; }
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; }
   .appShell { padding: 12px; }
+  .panel { padding: 16px; }
   .hero { padding: 18px 16px; border-radius: 20px; }
   .hero h1 { font-size: clamp(32px, 8vw, 84px); }
+  .hero p { font-size: 16px; }
+  .heroActions { flex-wrap: wrap; gap: 8px; }
+  .sectionHeader { flex-direction: column; gap: 10px; }
+  .sectionHeader p { max-width: 100%; }
+  .grid2 { grid-template-columns: 1fr; }
+  .grid3 { grid-template-columns: 1fr; }
+  .sequenceGrid { grid-template-columns: repeat(2, 1fr); }
+  .fontGrid { grid-template-columns: repeat(2, 1fr); }
+  .colorGrid { grid-template-columns: 1fr 1fr; }
   .modoSwitch { display: flex; width: 100%; }
   .modoBtn { padding: 8px 10px; font-size: 12px; flex: 1; }
   .previewImg { max-width: 100%; }
+  .previewImgReels { max-width: 120px; }
 }
 /* Client selector */
 .clientSelector { position: relative; }

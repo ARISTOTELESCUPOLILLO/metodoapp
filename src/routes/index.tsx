@@ -47,17 +47,8 @@ export const Route = createFileRoute('/')({
 type LegalKey = 'privacy' | 'cookies' | null;
 
 function LandingPage() {
-  const [isMobile, setIsMobile] = useState(false);
   const [legalOpen, setLegalOpen] = useState<LegalKey>(null);
   const [bannerVisible, setBannerVisible] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    const apply = () => setIsMobile(mq.matches);
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, []);
 
   // Mostra o banner apenas se ainda não houver decisão salva.
   useEffect(() => {
@@ -94,7 +85,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0a1326] text-white antialiased">
       <Header />
-      <Hero isMobile={isMobile} />
+      <Hero />
       <Diferenciais />
       <FAQ />
       <ChamadaFinal />
@@ -175,16 +166,21 @@ function Header() {
   );
 }
 
-function Hero({ isMobile }: { isMobile: boolean }) {
+function Hero() {
   return (
     <section id="topo" className="relative overflow-hidden">
-      {/* Background art = imagem fornecida pelo cliente. Desktop = banner full-bleed.
-          Mobile = arte vertical de capa que já contém o logo + claim. */}
+      {/* Desktop e mobile são imagens distintas — trocadas via CSS, sem JS, sem flash. */}
       <div className="relative w-full">
         <img
-          src={isMobile ? heroMobile : heroDesktop}
+          src={heroDesktop}
           alt="Método OP — comunicação digital com direção"
-          className="w-full h-auto block select-none"
+          className="w-full h-auto block select-none hidden md:block"
+          draggable={false}
+        />
+        <img
+          src={heroMobile}
+          alt="Método OP — comunicação digital com direção"
+          className="w-full h-auto block select-none md:hidden"
           draggable={false}
         />
         {/* Sombra suave na base pra emendar com o conteúdo abaixo */}

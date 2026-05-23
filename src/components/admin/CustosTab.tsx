@@ -271,7 +271,7 @@ export function CustosTab() {
 
           {/* ── Previsão de consumo por plano ativo ── */}
           <Section title="Previsão de consumo — planos ativos (1 ciclo)">
-            <table style={tbl}>
+            <div style={tblWrap}><table style={tbl}>
               <thead style={{ background: '#f8fafc' }}>
                 <tr>
                   <Th>Plano</Th><Th>Clientes</Th><Th>Imgs</Th><Th>Vídeos</Th><Th>Conteúdos</Th>
@@ -302,7 +302,7 @@ export function CustosTab() {
                   <Td>{brl(prevTotal)}</Td>
                 </tr>
               </tbody>
-            </table>
+            </table></div>
             <p style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
               Saldo cobre aprox. <b>{mesesFalai} ciclos</b> fal.ai · <b>{mesesOpenai} ciclos</b> OpenAI (assumindo 100% de uso por ciclo).
             </p>
@@ -310,7 +310,7 @@ export function CustosTab() {
 
           {/* ── Breakdown por tipo ── */}
           <Section title="Breakdown por tipo de operação">
-            <table style={tbl}>
+            <div style={tblWrap}><table style={tbl}>
               <thead style={{ background: '#f8fafc' }}>
                 <tr><Th>Tipo</Th><Th>Qtd</Th><Th>Custo unit.</Th><Th>USD</Th><Th>R$</Th></tr>
               </thead>
@@ -339,12 +339,12 @@ export function CustosTab() {
                   <Td>TOTAL</Td><Td>—</Td><Td>—</Td><Td>{usdFmt(totalUsd)}</Td><Td>{brl(totalUsd)}</Td>
                 </tr>
               </tbody>
-            </table>
+            </table></div>
           </Section>
 
           {/* ── Por plano (preço mínimo/máximo) ── */}
           <Section title="Planos ativos — custo e preços">
-            <table style={tbl}>
+            <div style={tblWrap}><table style={tbl}>
               <thead style={{ background: '#f8fafc' }}>
                 <tr>
                   <Th>Plano</Th><Th>Clientes</Th>
@@ -393,7 +393,7 @@ export function CustosTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
             <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
               Preço mín. = custo projetado × câmbio × 4. Margem calculada sobre projeção de 100% de uso.
             </p>
@@ -404,7 +404,7 @@ export function CustosTab() {
             {clienteFinanceiro.length === 0
               ? <p style={{ color: '#94a3b8', fontSize: 13 }}>Sem clientes ativos.</p>
               : (
-                <table style={tbl}>
+                <div style={tblWrap}><table style={tbl}>
                   <thead style={{ background: '#f8fafc' }}>
                     <tr>
                       <Th>Cliente</Th>
@@ -433,14 +433,14 @@ export function CustosTab() {
                       <Td><span style={{ color: margemColor(margemGeral) }}>{margemGeral !== null ? `${margemGeral.toFixed(0)}%` : '—'}</span></Td>
                     </tr>
                   </tbody>
-                </table>
+                </table></div>
               )}
           </Section>
 
           {/* ── Consumo de testes ── */}
           {testRows.length > 0 && (
             <Section title="Consumo de contas de teste">
-              <table style={tbl}>
+              <div style={tblWrap}><table style={tbl}>
                 <thead style={{ background: '#f8fafc' }}>
                   <tr><Th>Nome teste</Th><Th>Imgs</Th><Th>Vídeos</Th><Th>Conteúdos</Th><Th>USD</Th><Th>R$</Th></tr>
                 </thead>
@@ -452,14 +452,14 @@ export function CustosTab() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </Section>
           )}
 
           {/* ── Consumo de admins (hoje) ── */}
           {adminRows.length > 0 && (
             <Section title="Consumo de admins — hoje">
-              <table style={tbl}>
+              <div style={tblWrap}><table style={tbl}>
                 <thead style={{ background: '#f8fafc' }}>
                   <tr><Th>Admin</Th><Th>Imgs</Th><Th>Vídeos</Th><Th>Conteúdos</Th><Th>USD</Th><Th>R$</Th></tr>
                 </thead>
@@ -471,7 +471,7 @@ export function CustosTab() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </Section>
           )}
 
@@ -521,7 +521,8 @@ function SummaryCard({ label, value, sub, dark, warn, highlight }: { label: stri
   );
 }
 
-const tbl: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' };
+const tblWrap: React.CSSProperties = { border: '1px solid #e2e8f0', borderRadius: 8, overflowX: 'auto' };
+const tbl: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 13 };
 const tRow: React.CSSProperties = { borderTop: '1px solid #e2e8f0' };
 const Th = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) =>
   <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: 12, color: '#475569', fontWeight: 600, ...style }}>{children}</th>;

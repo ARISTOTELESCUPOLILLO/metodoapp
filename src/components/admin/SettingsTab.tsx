@@ -128,7 +128,7 @@ export function SettingsTab() {
           <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
             Custo calculado em tempo real com base nos valores acima. Usa o custo de <strong>imagem com referência</strong> para todas as imagens (custo maior).
           </p>
-          <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead style={{ background: '#f8fafc' }}>
                 <tr>

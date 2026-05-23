@@ -131,7 +131,7 @@ export function PlansTab() {
           ))}
         </div>
       ) : (
-        <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead style={{ background: '#f8fafc' }}>
               <tr>
