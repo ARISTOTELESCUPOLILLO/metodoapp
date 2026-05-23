@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Settings {
   usd_brl_rate: number;
@@ -185,6 +186,7 @@ export function ProjecaoTab() {
 
   useEffect(() => { load(); }, [load]);
 
+  const isMobile = useIsMobile();
   const agg = aggregate(projs);
 
   // Acumulados para janelas de compra
@@ -247,94 +249,158 @@ export function ProjecaoTab() {
             ↻ Atualizar
           </button>
         </div>
-        <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead style={{ background: '#f8fafc' }}>
-              <tr>
-                <Th>Janela de vencimento</Th>
-                <Th style={{ color: '#6d28d9' }}>fal.ai (imgs + renders)</Th>
-                <Th style={{ color: '#0369a1' }}>OpenAI (conteúdo)</Th>
-                <Th>Custo USD</Th>
-                <Th>Custo R$</Th>
-                <Th style={{ color: '#15803d' }}>Receita R$</Th>
-                <Th style={{ color: '#0f213f' }}>Lucro R$</Th>
-                <Th style={{ fontSize: 11, color: '#94a3b8' }}>Planos</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {BUCKETS.map(b => {
-                const t = agg[b];
-                const tot = t.fal + t.openai;
-                const custoBrl = tot * settings.usd_brl_rate;
-                const lucro = t.revenue - custoBrl;
-                if (t.slots === 0) return null;
-                return (
-                  <tr key={b} style={{ borderTop: '1px solid #e2e8f0' }}>
-                    <Td style={{ fontWeight: 600 }}>{BUCKET_LABEL[b]}</Td>
-                    <Td style={{ color: '#6d28d9', fontWeight: 600 }}>{usd(t.fal)}</Td>
-                    <Td style={{ color: '#0369a1', fontWeight: 600 }}>{usd(t.openai)}</Td>
-                    <Td style={{ fontWeight: 700 }}>{usd(tot)}</Td>
-                    <Td style={{ color: '#64748b' }}>{brl(custoBrl)}</Td>
-                    <Td style={{ color: '#15803d', fontWeight: 600 }}>{t.revenue > 0 ? brl(t.revenue) : '—'}</Td>
-                    <Td style={{ fontWeight: 700, color: lucro >= 0 ? '#15803d' : '#dc2626' }}>{t.revenue > 0 ? brl(lucro) : '—'}</Td>
-                    <Td style={{ color: '#94a3b8', fontSize: 11 }}>{t.slots}</Td>
-                  </tr>
-                );
-              })}
-            </tbody>
-            <tfoot style={{ background: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
-              <tr>
-                <Td style={{ fontWeight: 700, color: '#0f213f' }}>TOTAL PREVISTO</Td>
-                <Td style={{ fontWeight: 700, color: '#6d28d9' }}>{usd(totalFal)}</Td>
-                <Td style={{ fontWeight: 700, color: '#0369a1' }}>{usd(totalOai)}</Td>
-                <Td style={{ fontWeight: 700 }}>{usd(totalFal + totalOai)}</Td>
-                <Td style={{ fontWeight: 600, color: '#64748b' }}>{brl((totalFal + totalOai) * settings.usd_brl_rate)}</Td>
-                <Td style={{ fontWeight: 700, color: '#15803d' }}>{totalRev > 0 ? brl(totalRev) : '—'}</Td>
-                <Td style={{ fontWeight: 700, color: (totalRev - (totalFal + totalOai) * settings.usd_brl_rate) >= 0 ? '#15803d' : '#dc2626' }}>
-                  {totalRev > 0 ? brl(totalRev - (totalFal + totalOai) * settings.usd_brl_rate) : '—'}
-                </Td>
-                <Td style={{ color: '#94a3b8', fontSize: 11 }}>{projs.length}</Td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+        {isMobile ? (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {BUCKETS.map(b => {
+              const t = agg[b];
+              if (t.slots === 0) return null;
+              const tot = t.fal + t.openai;
+              const custoBrl = tot * settings.usd_brl_rate;
+              const lucro = t.revenue - custoBrl;
+              return (
+                <div key={b} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>{BUCKET_LABEL[b]}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <ProjCell label="fal.ai" value={usd(t.fal)} color="#6d28d9" />
+                    <ProjCell label="OpenAI" value={usd(t.openai)} color="#0369a1" />
+                    <ProjCell label="Custo R$" value={brl(custoBrl)} />
+                    <ProjCell label="Receita R$" value={t.revenue > 0 ? brl(t.revenue) : '—'} color="#15803d" />
+                    <ProjCell label="Lucro R$" value={t.revenue > 0 ? brl(lucro) : '—'} color={lucro >= 0 ? '#15803d' : '#dc2626'} />
+                    <ProjCell label="Planos" value={String(t.slots)} />
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontWeight: 800, fontSize: 13, color: '#0f213f', marginBottom: 10 }}>TOTAL PREVISTO</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <ProjCell label="fal.ai" value={usd(totalFal)} color="#6d28d9" />
+                <ProjCell label="OpenAI" value={usd(totalOai)} color="#0369a1" />
+                <ProjCell label="Custo R$" value={brl((totalFal + totalOai) * settings.usd_brl_rate)} />
+                <ProjCell label="Receita R$" value={totalRev > 0 ? brl(totalRev) : '—'} color="#15803d" />
+                <ProjCell label="Lucro R$" value={totalRev > 0 ? brl(totalRev - (totalFal + totalOai) * settings.usd_brl_rate) : '—'} color={(totalRev - (totalFal + totalOai) * settings.usd_brl_rate) >= 0 ? '#15803d' : '#dc2626'} />
+                <ProjCell label="Planos" value={String(projs.length)} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead style={{ background: '#f8fafc' }}>
+                <tr>
+                  <Th>Janela de vencimento</Th>
+                  <Th style={{ color: '#6d28d9' }}>fal.ai (imgs + renders)</Th>
+                  <Th style={{ color: '#0369a1' }}>OpenAI (conteúdo)</Th>
+                  <Th>Custo USD</Th>
+                  <Th>Custo R$</Th>
+                  <Th style={{ color: '#15803d' }}>Receita R$</Th>
+                  <Th style={{ color: '#0f213f' }}>Lucro R$</Th>
+                  <Th style={{ fontSize: 11, color: '#94a3b8' }}>Planos</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {BUCKETS.map(b => {
+                  const t = agg[b];
+                  const tot = t.fal + t.openai;
+                  const custoBrl = tot * settings.usd_brl_rate;
+                  const lucro = t.revenue - custoBrl;
+                  if (t.slots === 0) return null;
+                  return (
+                    <tr key={b} style={{ borderTop: '1px solid #e2e8f0' }}>
+                      <Td style={{ fontWeight: 600 }}>{BUCKET_LABEL[b]}</Td>
+                      <Td style={{ color: '#6d28d9', fontWeight: 600 }}>{usd(t.fal)}</Td>
+                      <Td style={{ color: '#0369a1', fontWeight: 600 }}>{usd(t.openai)}</Td>
+                      <Td style={{ fontWeight: 700 }}>{usd(tot)}</Td>
+                      <Td style={{ color: '#64748b' }}>{brl(custoBrl)}</Td>
+                      <Td style={{ color: '#15803d', fontWeight: 600 }}>{t.revenue > 0 ? brl(t.revenue) : '—'}</Td>
+                      <Td style={{ fontWeight: 700, color: lucro >= 0 ? '#15803d' : '#dc2626' }}>{t.revenue > 0 ? brl(lucro) : '—'}</Td>
+                      <Td style={{ color: '#94a3b8', fontSize: 11 }}>{t.slots}</Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot style={{ background: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
+                <tr>
+                  <Td style={{ fontWeight: 700, color: '#0f213f' }}>TOTAL PREVISTO</Td>
+                  <Td style={{ fontWeight: 700, color: '#6d28d9' }}>{usd(totalFal)}</Td>
+                  <Td style={{ fontWeight: 700, color: '#0369a1' }}>{usd(totalOai)}</Td>
+                  <Td style={{ fontWeight: 700 }}>{usd(totalFal + totalOai)}</Td>
+                  <Td style={{ fontWeight: 600, color: '#64748b' }}>{brl((totalFal + totalOai) * settings.usd_brl_rate)}</Td>
+                  <Td style={{ fontWeight: 700, color: '#15803d' }}>{totalRev > 0 ? brl(totalRev) : '—'}</Td>
+                  <Td style={{ fontWeight: 700, color: (totalRev - (totalFal + totalOai) * settings.usd_brl_rate) >= 0 ? '#15803d' : '#dc2626' }}>
+                    {totalRev > 0 ? brl(totalRev - (totalFal + totalOai) * settings.usd_brl_rate) : '—'}
+                  </Td>
+                  <Td style={{ color: '#94a3b8', fontSize: 11 }}>{projs.length}</Td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* ── Compras necessárias ── */}
       <section>
         <SectionTitle>Compras necessárias (previsto − saldo atual)</SectionTitle>
-        <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead style={{ background: '#f8fafc' }}>
-              <tr>
-                <Th>Horizonte de cobertura</Th>
-                <Th style={{ color: '#6d28d9' }}>fal.ai a comprar</Th>
-                <Th style={{ color: '#0369a1' }}>OpenAI a comprar</Th>
-                <Th>Total USD</Th>
-                <Th>Total R$</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { label: 'Cobrir próximos 30 dias', fal: buy30fal, oai: buy30oai },
-                { label: 'Cobrir próximos 60 dias', fal: buy60fal, oai: buy60oai },
-                { label: 'Cobrir próximos 90 dias', fal: buy90fal, oai: buy90oai },
-              ].map(({ label, fal, oai }) => {
-                const tot = fal + oai;
-                const ok = tot === 0;
-                return (
-                  <tr key={label} style={{ borderTop: '1px solid #e2e8f0', background: ok ? '#f0fdf4' : undefined }}>
-                    <Td style={{ fontWeight: 600 }}>{label}</Td>
-                    <Td style={{ color: fal === 0 ? '#15803d' : '#dc2626', fontWeight: 700 }}>{fal === 0 ? '✓ coberto' : usd(fal)}</Td>
-                    <Td style={{ color: oai === 0 ? '#15803d' : '#dc2626', fontWeight: 700 }}>{oai === 0 ? '✓ coberto' : usd(oai)}</Td>
-                    <Td style={{ fontWeight: 700, color: ok ? '#15803d' : '#dc2626' }}>{ok ? '✓ coberto' : usd(tot)}</Td>
-                    <Td style={{ color: '#64748b' }}>{ok ? '—' : `R$ ${(tot * settings.usd_brl_rate).toFixed(2)}`}</Td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        {isMobile ? (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[
+              { label: 'Próximos 30 dias', fal: buy30fal, oai: buy30oai },
+              { label: 'Próximos 60 dias', fal: buy60fal, oai: buy60oai },
+              { label: 'Próximos 90 dias', fal: buy90fal, oai: buy90oai },
+            ].map(({ label, fal, oai }) => {
+              const tot = fal + oai;
+              const ok = tot === 0;
+              return (
+                <div key={label} style={{ background: ok ? '#f0fdf4' : '#fff', border: `1px solid ${ok ? '#bbf7d0' : '#e2e8f0'}`, borderRadius: 10, padding: 14 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: ok ? 6 : 10, color: ok ? '#15803d' : '#0f213f' }}>{label}</div>
+                  {ok ? (
+                    <div style={{ color: '#15803d', fontWeight: 700, fontSize: 13 }}>✓ coberto pelo saldo atual</div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <ProjCell label="fal.ai" value={fal === 0 ? '✓ coberto' : usd(fal)} color={fal === 0 ? '#15803d' : '#dc2626'} />
+                      <ProjCell label="OpenAI" value={oai === 0 ? '✓ coberto' : usd(oai)} color={oai === 0 ? '#15803d' : '#dc2626'} />
+                      <ProjCell label="Total USD" value={usd(tot)} color="#dc2626" />
+                      <ProjCell label="Total R$" value={`R$ ${(tot * settings.usd_brl_rate).toFixed(2)}`} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead style={{ background: '#f8fafc' }}>
+                <tr>
+                  <Th>Horizonte de cobertura</Th>
+                  <Th style={{ color: '#6d28d9' }}>fal.ai a comprar</Th>
+                  <Th style={{ color: '#0369a1' }}>OpenAI a comprar</Th>
+                  <Th>Total USD</Th>
+                  <Th>Total R$</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { label: 'Cobrir próximos 30 dias', fal: buy30fal, oai: buy30oai },
+                  { label: 'Cobrir próximos 60 dias', fal: buy60fal, oai: buy60oai },
+                  { label: 'Cobrir próximos 90 dias', fal: buy90fal, oai: buy90oai },
+                ].map(({ label, fal, oai }) => {
+                  const tot = fal + oai;
+                  const ok = tot === 0;
+                  return (
+                    <tr key={label} style={{ borderTop: '1px solid #e2e8f0', background: ok ? '#f0fdf4' : undefined }}>
+                      <Td style={{ fontWeight: 600 }}>{label}</Td>
+                      <Td style={{ color: fal === 0 ? '#15803d' : '#dc2626', fontWeight: 700 }}>{fal === 0 ? '✓ coberto' : usd(fal)}</Td>
+                      <Td style={{ color: oai === 0 ? '#15803d' : '#dc2626', fontWeight: 700 }}>{oai === 0 ? '✓ coberto' : usd(oai)}</Td>
+                      <Td style={{ fontWeight: 700, color: ok ? '#15803d' : '#dc2626' }}>{ok ? '✓ coberto' : usd(tot)}</Td>
+                      <Td style={{ color: '#64748b' }}>{ok ? '—' : `R$ ${(tot * settings.usd_brl_rate).toFixed(2)}`}</Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
           <SupplierLink href="https://fal.ai/dashboard/billing" color="#6d28d9" label="Recarregar fal.ai ↗" />
           <SupplierLink href="https://platform.openai.com/settings/organization/billing" color="#0369a1" label="Recarregar OpenAI ↗" />
@@ -460,8 +526,16 @@ function SectionTitle({ children, style }: { children: React.ReactNode; style?: 
 }
 
 const Th = ({ children, style }: any) => (
-  <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: 12, color: '#475569', fontWeight: 600, ...style }}>{children}</th>
+  <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: 12, color: '#475569', fontWeight: 600, whiteSpace: 'nowrap', ...style }}>{children}</th>
 );
 const Td = ({ children, style }: any) => (
   <td style={{ padding: '8px 10px', verticalAlign: 'middle', ...style }}>{children}</td>
 );
+function ProjCell({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px' }}>
+      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: color ?? '#111827' }}>{value}</div>
+    </div>
+  );
+}

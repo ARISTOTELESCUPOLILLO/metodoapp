@@ -10,6 +10,9 @@ import { InvitesTab } from '@/components/admin/InvitesTab';
 import { CobrancasTab } from '@/components/admin/CobrancasTab';
 import { TestUsersTab } from '@/components/admin/TestUsersTab';
 import { CustosTab } from '@/components/admin/CustosTab';
+import { ProjecaoTab } from '@/components/admin/ProjecaoTab';
+import { PrecosTab } from '@/components/admin/PrecosTab';
+import { DivulgacaoTab } from '@/components/admin/DivulgacaoTab';
 
 export const Route = createFileRoute('/admin')({
   component: () => (
@@ -20,7 +23,7 @@ export const Route = createFileRoute('/admin')({
   ),
 });
 
-type Tab = 'users' | 'invites' | 'tests' | 'plans' | 'usage' | 'custos' | 'cobrancas' | 'settings';
+type Tab = 'users' | 'invites' | 'tests' | 'plans' | 'usage' | 'custos' | 'projecao' | 'precos' | 'divulgacao' | 'cobrancas' | 'settings';
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>('users');
@@ -31,6 +34,9 @@ function AdminPage() {
     { id: 'plans', label: 'Planos' },
     { id: 'usage', label: 'Consumo' },
     { id: 'custos', label: 'Custos' },
+    { id: 'projecao', label: 'Projeção de compras' },
+    { id: 'precos', label: 'Tabela de Preços' },
+    { id: 'divulgacao', label: 'Divulgação' },
     { id: 'cobrancas', label: 'Cobranças' },
     { id: 'settings', label: 'Ajustes de custo' },
   ];
@@ -62,6 +68,9 @@ function AdminPage() {
       {tab === 'plans' && <PlansTab />}
       {tab === 'usage' && <UsageTab />}
       {tab === 'custos' && <CustosTab />}
+      {tab === 'projecao' && <ProjecaoTab />}
+      {tab === 'precos' && <PrecosTab />}
+      {tab === 'divulgacao' && <DivulgacaoTab />}
       {tab === 'cobrancas' && <CobrancasTab />}
       {tab === 'settings' && <SettingsTab />}
     </div>

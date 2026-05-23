@@ -18,14 +18,22 @@ interface Row {
   plano1_id: string | null; plano1_inicio: string | null;
   plano1_imgs_usadas: number; plano1_imgs_limite: number;
   plano1_renders_usados: number; plano1_renders_limite: number;
+  plano1_preco_brl: number | null;
   plano2_id: string | null; plano2_inicio: string | null;
   plano2_imgs_usadas: number; plano2_imgs_limite: number;
   plano2_renders_usados: number; plano2_renders_limite: number;
+  plano2_preco_brl: number | null;
   bonus_id: string | null; bonus_inicio: string | null;
   bonus_imgs_usadas: number; bonus_imgs_limite: number;
   bonus_renders_usados: number; bonus_renders_limite: number;
+  bonus_preco_brl: number | null;
 }
-interface Plan { id: string; nome: string; codigo: string; elegivel_bonus: boolean; tipo: string }
+interface Plan {
+  id: string; nome: string; codigo: string; elegivel_bonus: boolean; tipo: string;
+  limite_imagens: number; limite_renders: number; limite_geracoes: number;
+  preco_maximo_brl: number;
+}
+interface Costs { imageRef: number; video: number; content: number }
 
 function planPeriodo(inicio: string | null, tipo: string): string {
   if (!inicio) return '';
@@ -52,6 +60,9 @@ export function UsersTab() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState<{ id: string; val: string } | null>(null);
+  const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.50, content: 0.003 });
+  const [usdRate, setUsdRate] = useState(5.5);
   
   const navigate = useNavigate();
 
@@ -63,18 +74,47 @@ export function UsersTab() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: profs }, { data: pls }, { data: roles }] = await Promise.all([
+    const [{ data: profs }, { data: pls }, { data: roles }, { data: s }] = await Promise.all([
       supabase.from('profiles').select('*').eq('is_test', false).order('ultimo_login', { ascending: false, nullsFirst: false }),
-      supabase.from('plans').select('id,nome,codigo,elegivel_bonus,tipo').eq('ativo', true).order('nome'),
+      supabase.from('plans').select('id,nome,codigo,elegivel_bonus,tipo,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl').eq('ativo', true).order('nome'),
       supabase.from('user_roles').select('user_id,role'),
+      supabase.from('app_settings').select('usd_brl_rate,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
     ]);
     const adminSet = new Set((roles || []).filter((r: any) => r.role === 'admin').map((r: any) => r.user_id));
     setRows((profs || []).map((p: any) => ({ ...p, is_admin: adminSet.has(p.id) })));
     setPlans((pls as Plan[]) || []);
+    if (s) {
+      setUsdRate(Number((s as any).usd_brl_rate) || 5.5);
+      setCosts({ imageRef: Number((s as any).image_price_usd) || 0.058, video: Number((s as any).render_price_usd) || 1.50, content: Number((s as any).geracao_price_usd) || 0.003 });
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  async function changeNome(userId: string, nome: string) {
+    setBusy(userId);
+    await supabase.from('profiles').update({ nome: nome.trim() || null }).eq('id', userId);
+    setEditNome(null);
+    await load();
+    setBusy(null);
+  }
+
+  async function changePreco(userId: string, slot: SlotKey, val: number | null) {
+    const col = slot === 'bonus' ? 'bonus_preco_brl' : `${slot}_preco_brl`;
+    await supabase.from('profiles').update({ [col]: val } as any).eq('id', userId);
+    await load();
+  }
+
+  async function changePlanInicio(userId: string, slot: SlotKey, dateStr: string) {
+    if (!dateStr) return;
+    const col = slot === 'bonus' ? 'bonus_inicio' : `${slot}_inicio`;
+    const iso = new Date(dateStr + 'T12:00:00').toISOString();
+    setBusy(userId);
+    await supabase.from('profiles').update({ [col]: iso } as any).eq('id', userId);
+    await load();
+    setBusy(null);
+  }
 
   async function changeSlot(userId: string, slot: SlotKey, planId: string) {
     const label = slot === 'plano1' ? 'Plano 1' : slot === 'plano2' ? 'Plano 2' : 'Bônus';
@@ -180,15 +220,44 @@ export function UsersTab() {
             <div key={r.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, opacity: busy === r.id ? .5 : 1 }}>
               <div style={{ marginBottom: 10 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                  {r.nome || '—'}
+                  {editNome?.id === r.id ? (
+                    <>
+                      <input autoFocus value={editNome.val} onChange={(e) => setEditNome({ id: r.id, val: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === 'Enter') changeNome(r.id, editNome.val); if (e.key === 'Escape') setEditNome(null); }}
+                        style={{ fontSize: 14, fontWeight: 700, padding: '2px 6px', border: '1px solid #0f213f', borderRadius: 4, width: 140 }} />
+                      <button onClick={() => changeNome(r.id, editNome.val)} style={miniSave}>✓</button>
+                      <button onClick={() => setEditNome(null)} style={miniCancel}>✕</button>
+                    </>
+                  ) : (
+                    <span onClick={() => setEditNome({ id: r.id, val: r.nome || '' })} title="Clique para editar nome"
+                      style={{ cursor: 'pointer', borderBottom: '1px dashed #cbd5e1' }}>
+                      {r.nome || '—'}
+                    </span>
+                  )}
                   {r.is_admin && <span style={{ background: '#0f213f', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>ADMIN</span>}
                 </div>
                 <div style={{ color: '#64748b', fontSize: 12, wordBreak: 'break-all' }}>{r.email}</div>
                 {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: 2 }}>{r.client_code}</div>}
               </div>
-              <MRow k="Plano 1"><PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} /></MRow>
-              <MRow k="Plano 2"><PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} /></MRow>
-              <MRow k="Bônus"><PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} /></MRow>
+              <MRow k="Plano 1">
+                <div>
+                  <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} onInicio={(d) => changePlanInicio(r.id, 'plano1', d)} />
+                  {r.plano1_id && <PlanPriceField planId={r.plano1_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano1_preco_brl} onChange={(v) => changePreco(r.id, 'plano1', v)} />}
+                </div>
+              </MRow>
+              <MRow k="Plano 2">
+                <div>
+                  <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} onInicio={(d) => changePlanInicio(r.id, 'plano2', d)} />
+                  {r.plano2_id && <PlanPriceField planId={r.plano2_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano2_preco_brl} onChange={(v) => changePreco(r.id, 'plano2', v)} />}
+                </div>
+              </MRow>
+              <MRow k="Bônus">
+                <div>
+                  <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} onInicio={(d) => changePlanInicio(r.id, 'bonus', d)} />
+                  {r.bonus_id && <PlanPriceField planId={r.bonus_id} plans={bonusPlans} costs={costs} usdRate={usdRate} value={r.bonus_preco_brl} onChange={(v) => changePreco(r.id, 'bonus', v)} />}
+                </div>
+              </MRow>
+              <MRow k="Faturamento"><FaturamentoCell row={r} plans={[...mainPlans, ...bonusPlans]} costs={costs} usdRate={usdRate} /></MRow>
               <MRow k="Segmento"><SegmentoSelect value={r.segmento} onChange={(v) => changeSegmento(r, v)} /></MRow>
               <MRow k="Status">
                 <button onClick={() => toggleStatus(r)} style={pill(r.status === 'ativo' ? '#15803d' : '#b91c1c')}>
@@ -217,8 +286,9 @@ export function UsersTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead style={{ background: '#f8fafc' }}>
               <tr>
-                <Th>Usuário</Th><Th>Plano 1</Th><Th>Plano 2</Th><Th>Bônus</Th><Th>Segmento</Th>
-                <Th>Consumo</Th><Th>Status</Th><Th>Admin</Th><Th>Ações</Th>
+                <Th>Usuário</Th><Th>Plano 1</Th><Th>Plano 2</Th><Th>Bônus</Th>
+                <Th title="Soma dos preços aplicados nos slots ativos">Faturamento</Th>
+                <Th>Segmento</Th><Th>Consumo</Th><Th>Status</Th><Th>Admin</Th><Th>Ações</Th>
               </tr>
             </thead>
             <tbody>
@@ -226,15 +296,38 @@ export function UsersTab() {
                 <tr key={r.id} style={{ borderTop: '1px solid #e2e8f0', opacity: busy === r.id ? .5 : 1 }}>
                   <Td>
                     <div style={{ fontWeight: 600, display: 'flex', gap: 6, alignItems: 'center' }}>
-                      {r.nome || '—'}
+                      {editNome?.id === r.id ? (
+                        <>
+                          <input autoFocus value={editNome.val} onChange={(e) => setEditNome({ id: r.id, val: e.target.value })}
+                            onKeyDown={(e) => { if (e.key === 'Enter') changeNome(r.id, editNome.val); if (e.key === 'Escape') setEditNome(null); }}
+                            style={{ fontSize: 13, fontWeight: 600, padding: '2px 6px', border: '1px solid #0f213f', borderRadius: 4, width: 130 }} />
+                          <button onClick={() => changeNome(r.id, editNome.val)} style={miniSave}>✓</button>
+                          <button onClick={() => setEditNome(null)} style={miniCancel}>✕</button>
+                        </>
+                      ) : (
+                        <span onClick={() => setEditNome({ id: r.id, val: r.nome || '' })} title="Clique para editar nome"
+                          style={{ cursor: 'pointer', borderBottom: '1px dashed #cbd5e1' }}>
+                          {r.nome || '—'}
+                        </span>
+                      )}
                       {r.is_admin && <span style={{ background: '#0f213f', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>ADMIN</span>}
                     </div>
                     <div style={{ color: '#64748b', fontSize: 12 }}>{r.email}</div>
                     {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: 2 }}>{r.client_code}</div>}
                   </Td>
-                  <Td><PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} /></Td>
-                  <Td><PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} /></Td>
-                  <Td><PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} /></Td>
+                  <Td>
+                    <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} onInicio={(d) => changePlanInicio(r.id, 'plano1', d)} />
+                    {r.plano1_id && <PlanPriceField planId={r.plano1_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano1_preco_brl} onChange={(v) => changePreco(r.id, 'plano1', v)} />}
+                  </Td>
+                  <Td>
+                    <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} onInicio={(d) => changePlanInicio(r.id, 'plano2', d)} />
+                    {r.plano2_id && <PlanPriceField planId={r.plano2_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano2_preco_brl} onChange={(v) => changePreco(r.id, 'plano2', v)} />}
+                  </Td>
+                  <Td>
+                    <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} onInicio={(d) => changePlanInicio(r.id, 'bonus', d)} />
+                    {r.bonus_id && <PlanPriceField planId={r.bonus_id} plans={bonusPlans} costs={costs} usdRate={usdRate} value={r.bonus_preco_brl} onChange={(v) => changePreco(r.id, 'bonus', v)} />}
+                  </Td>
+                  <Td><FaturamentoCell row={r} plans={[...mainPlans, ...bonusPlans]} costs={costs} usdRate={usdRate} /></Td>
                   <Td><SegmentoSelect value={r.segmento} onChange={(v) => changeSegmento(r, v)} /></Td>
                   <Td><SlotsConsumption row={r} onRenew={(slot) => renewSlot(r, slot)} /></Td>
                   <Td>
@@ -288,14 +381,49 @@ function PlanSelect({ value, options, onChange }: { value: string | null; option
   );
 }
 
-function PlanCell({ planId, inicio, options, onChange }: { planId: string | null; inicio: string | null; options: Plan[]; onChange: (v: string) => void }) {
+function PlanCell({ planId, inicio, options, onChange, onInicio }: {
+  planId: string | null; inicio: string | null; options: Plan[];
+  onChange: (v: string) => void; onInicio?: (d: string) => void;
+}) {
+  const [editDate, setEditDate] = useState(false);
+  const [dateVal, setDateVal] = useState('');
   const plan = options.find(p => p.id === planId);
   const periodo = plan ? planPeriodo(inicio, plan.tipo) : '';
+
+  function startEditDate() {
+    setDateVal(inicio ? inicio.split('T')[0] : '');
+    setEditDate(true);
+  }
+  function saveDate() {
+    if (dateVal && onInicio) onInicio(dateVal);
+    setEditDate(false);
+  }
+
   return (
     <div>
       <PlanSelect value={planId} options={options} onChange={onChange} />
-      {periodo && (
-        <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, lineHeight: 1.3 }}>{periodo}</div>
+      {planId && (
+        editDate ? (
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 3 }}>
+            <input type="date" value={dateVal} onChange={(e) => setDateVal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveDate(); if (e.key === 'Escape') setEditDate(false); }}
+              style={{ fontSize: 11, padding: '2px 4px', border: '1px solid #cbd5e1', borderRadius: 3 }} />
+            <button onClick={saveDate} style={miniSave}>✓</button>
+            <button onClick={() => setEditDate(false)} style={miniCancel}>✕</button>
+          </div>
+        ) : periodo ? (
+          <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, lineHeight: 1.3, display: 'flex', gap: 4, alignItems: 'center' }}>
+            <span>{periodo}</span>
+            {onInicio && (
+              <button onClick={startEditDate} title="Editar data de início"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 9, padding: 0, lineHeight: 1 }}>✎</button>
+            )}
+          </div>
+        ) : onInicio ? (
+          <button onClick={startEditDate} style={{ fontSize: 10, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', marginTop: 2 }}>
+            + definir data início
+          </button>
+        ) : null
       )}
     </div>
   );
@@ -363,6 +491,78 @@ const pill = (color: string): React.CSSProperties => ({
   background: color, color: '#fff', border: 'none', padding: '3px 10px',
   borderRadius: 999, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'lowercase',
 });
+
+function PlanPriceField({ planId, plans, costs, usdRate, value, onChange }: {
+  planId: string | null; plans: Plan[]; costs: Costs; usdRate: number;
+  value: number | null; onChange: (v: number | null) => void;
+}) {
+  const [inp, setInp] = useState(value != null ? String(value) : '');
+  useEffect(() => { setInp(value != null ? String(value) : ''); }, [value]);
+  const plan = plans.find(p => p.id === planId);
+  if (!plan) return null;
+  const costUsd = plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + plan.limite_geracoes * costs.content;
+  const minBrl = costUsd * usdRate * 4;
+  const maxBrl = plan.preco_maximo_brl || 0;
+  const applied = parseFloat(inp);
+  const belowMin = !isNaN(applied) && applied > 0 && applied < minBrl;
+  function commit() {
+    const v = parseFloat(inp);
+    onChange(isNaN(v) || inp.trim() === '' ? null : v);
+  }
+  return (
+    <div style={{ marginTop: 4 }}>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>R$</span>
+        <input type="number" min="0" step="1" value={inp}
+          onChange={e => setInp(e.target.value)}
+          onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') commit(); }}
+          placeholder={minBrl.toFixed(0)}
+          style={{ width: 72, padding: '2px 4px', fontSize: 12, fontWeight: 700, border: `1px solid ${belowMin ? '#dc2626' : '#cbd5e1'}`, borderRadius: 4, color: belowMin ? '#dc2626' : '#0f172a', background: belowMin ? '#fef2f2' : '#fff' }}
+        />
+        {belowMin && <span title={`Abaixo do mínimo (R$ ${minBrl.toFixed(2)})`} style={{ color: '#dc2626', fontSize: 12, fontWeight: 800 }}>⚠</span>}
+      </div>
+      <div style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.3, marginTop: 1 }}>
+        mín R$ {minBrl.toFixed(0)}{maxBrl > 0 ? ` · máx R$ ${maxBrl.toFixed(0)}` : ''}
+      </div>
+    </div>
+  );
+}
+
+function FaturamentoCell({ row, plans, costs, usdRate }: { row: Row; plans: Plan[]; costs: Costs; usdRate: number }) {
+  if (row.is_admin) return <span style={{ color: '#94a3b8', fontSize: 11 }}>—</span>;
+  let total = 0;
+  let hasWarning = false;
+  const slots = [
+    { planId: row.plano1_id, preco: row.plano1_preco_brl },
+    { planId: row.plano2_id, preco: row.plano2_preco_brl },
+    { planId: row.bonus_id,  preco: row.bonus_preco_brl  },
+  ];
+  for (const s of slots) {
+    if (!s.planId) continue;
+    const plan = plans.find(p => p.id === s.planId);
+    if (!plan) continue;
+    const cost = plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + plan.limite_geracoes * costs.content;
+    const min = cost * usdRate * 4;
+    const preco = s.preco || 0;
+    total += preco;
+    if (preco > 0 && preco < min) hasWarning = true;
+  }
+  if (total === 0) return <span style={{ color: '#94a3b8', fontSize: 11 }}>sem preço</span>;
+  return (
+    <div style={{ fontWeight: 700, fontSize: 13, color: hasWarning ? '#dc2626' : '#15803d' }}>
+      {hasWarning && '⚠ '}R$ {total.toFixed(0)}<span style={{ fontSize: 10, fontWeight: 400, color: '#64748b' }}>/mês</span>
+    </div>
+  );
+}
+
+const miniSave: React.CSSProperties = {
+  background: '#15803d', color: '#fff', border: 'none', padding: '1px 6px',
+  borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+};
+const miniCancel: React.CSSProperties = {
+  background: '#94a3b8', color: '#fff', border: 'none', padding: '1px 6px',
+  borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+};
 
 const MRow = ({ k, children }: { k: string; children: React.ReactNode }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: '1px solid #f1f5f9', fontSize: 13, gap: 8 }}>

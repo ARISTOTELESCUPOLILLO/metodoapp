@@ -1044,7 +1044,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       let finalVideoUrl = falUrl;
 
       if (videoMode === 'sinalizacao') {
-        const titleText = (screenText || hook).trim();
+        const titleText = hook.trim();
         if (titleText) {
           try {
             setBurnProgress('Aplicando sinalização visual…');

@@ -79,7 +79,7 @@ export function SettingsTab() {
       <form onSubmit={save} style={{ display: 'grid', gap: 14 }}>
         <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#0f213f', marginBottom: 10 }}>Custos unitários — fal.ai</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="settingsGrid2">
             <Field label="Imagem simples (US$ / img)" value={imageBasePrice} onChange={setImageBasePrice} />
             <Field label="Imagem c/ referência (US$ / img)" value={imageRefPrice} onChange={setImageRefPrice} />
             <Field label="Vídeo + render (US$ / render)" value={renderPrice} onChange={setRenderPrice} />
@@ -93,7 +93,7 @@ export function SettingsTab() {
 
         <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#0f213f', marginBottom: 10 }}>Saldos disponíveis</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="settingsGrid2">
             <Field label="Saldo fal.ai (US$)" value={falaiBalance} onChange={setFalaiBalance} />
             <Field label="Saldo OpenAI (US$)" value={openaiBalance} onChange={setOpenaiBalance} />
           </div>

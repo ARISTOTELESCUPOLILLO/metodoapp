@@ -50,7 +50,6 @@ const defaultForm: ContentFormData = {
   outputFormats: ['feed', 'carrossel', 'reels'],
   track: 'visual',
   mood: 'OP-01',
-  sequenceSize: 3,
 };
 
 const defaultPostUnico: PostUnicoFormData = {

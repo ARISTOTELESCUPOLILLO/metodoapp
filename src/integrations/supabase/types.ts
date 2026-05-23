@@ -16,25 +16,34 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          falai_balance_usd: number
           geracao_price_usd: number
           id: boolean
+          image_base_price_usd: number
           image_price_usd: number
+          openai_balance_usd: number
           render_price_usd: number
           updated_at: string
           usd_brl_rate: number
         }
         Insert: {
+          falai_balance_usd?: number
           geracao_price_usd?: number
           id?: boolean
+          image_base_price_usd?: number
           image_price_usd?: number
+          openai_balance_usd?: number
           render_price_usd?: number
           updated_at?: string
           usd_brl_rate?: number
         }
         Update: {
+          falai_balance_usd?: number
           geracao_price_usd?: number
           id?: boolean
+          image_base_price_usd?: number
           image_price_usd?: number
+          openai_balance_usd?: number
           render_price_usd?: number
           updated_at?: string
           usd_brl_rate?: number
@@ -106,10 +115,12 @@ export type Database = {
           email: string
           id: string
           invited_by: string | null
+          kit_migrated_at: string | null
           nome: string | null
           plano_id: string | null
           plano1_id: string | null
           plano2_id: string | null
+          source_test_profile_id: string | null
           status: string
         }
         Insert: {
@@ -119,10 +130,12 @@ export type Database = {
           email: string
           id?: string
           invited_by?: string | null
+          kit_migrated_at?: string | null
           nome?: string | null
           plano_id?: string | null
           plano1_id?: string | null
           plano2_id?: string | null
+          source_test_profile_id?: string | null
           status?: string
         }
         Update: {
@@ -132,10 +145,12 @@ export type Database = {
           email?: string
           id?: string
           invited_by?: string | null
+          kit_migrated_at?: string | null
           nome?: string | null
           plano_id?: string | null
           plano1_id?: string | null
           plano2_id?: string | null
+          source_test_profile_id?: string | null
           status?: string
         }
         Relationships: [
@@ -178,12 +193,14 @@ export type Database = {
           base_reels: number
           codigo: string
           created_at: string
+          custo_total_usd: number
           elegivel_bonus: boolean
           id: string
           limite_geracoes: number
           limite_imagens: number
           limite_renders: number
           nome: string
+          preco_maximo_brl: number
           tipo: string
           updated_at: string
           valor_plano: number
@@ -196,12 +213,14 @@ export type Database = {
           base_reels?: number
           codigo: string
           created_at?: string
+          custo_total_usd?: number
           elegivel_bonus?: boolean
           id?: string
           limite_geracoes?: number
           limite_imagens?: number
           limite_renders?: number
           nome: string
+          preco_maximo_brl?: number
           tipo: string
           updated_at?: string
           valor_plano?: number
@@ -214,12 +233,14 @@ export type Database = {
           base_reels?: number
           codigo?: string
           created_at?: string
+          custo_total_usd?: number
           elegivel_bonus?: boolean
           id?: string
           limite_geracoes?: number
           limite_imagens?: number
           limite_renders?: number
           nome?: string
+          preco_maximo_brl?: number
           tipo?: string
           updated_at?: string
           valor_plano?: number
@@ -560,6 +581,7 @@ export type Database = {
       user_image_kits: {
         Row: {
           avatar_path: string | null
+          avatar_path_2: string | null
           cenarios_paths: string[]
           created_at: string
           produtos_paths: string[]
@@ -568,6 +590,7 @@ export type Database = {
         }
         Insert: {
           avatar_path?: string | null
+          avatar_path_2?: string | null
           cenarios_paths?: string[]
           created_at?: string
           produtos_paths?: string[]
@@ -576,6 +599,7 @@ export type Database = {
         }
         Update: {
           avatar_path?: string | null
+          avatar_path_2?: string | null
           cenarios_paths?: string[]
           created_at?: string
           produtos_paths?: string[]

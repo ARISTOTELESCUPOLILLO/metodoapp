@@ -120,6 +120,8 @@ small, .note { color: #64748b; font-weight: 500; font-size: 12px; }
 .fontSample { font-size: 24px; font-weight: 700; color: #111827; line-height: 1; }
 .fontName { font-size: 10px; font-weight: 600; color: #64748b; }
 
+.settingsGrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; }
   .appShell { padding: 12px; }
@@ -139,6 +141,7 @@ small, .note { color: #64748b; font-weight: 500; font-size: 12px; }
   .modoBtn { padding: 8px 10px; font-size: 12px; flex: 1; }
   .previewImg { max-width: 100%; }
   .previewImgReels { max-width: 120px; }
+  .settingsGrid2 { grid-template-columns: 1fr; }
 }
 /* Client selector */
 .clientSelector { position: relative; }
