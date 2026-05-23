@@ -456,7 +456,8 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
   const [open, setOpen] = useState(false);
   const [previews, setPreviews] = useState<(string | null)[]>(cards.map(() => null));
   const [busyIndex, setBusyIndex] = useState<number | null>(null);
-  const [busyAll, setBusyAll] = useState(false);
+  const [busyAllMode, setBusyAllMode] = useState<'refs' | 'noref' | null>(null);
+  const busyAll = busyAllMode !== null;
   const [allProgress, setAllProgress] = useState<{ done: number; total: number } | null>(null);
   const isMobile = useIsMobile();
   const blockStorageKey = `uso-ref:carrossel:${dayNumber}:bloco`;
@@ -552,10 +553,58 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
     finally { setBusyIndex(null); }
   }
 
+  // Gera os N cards em sequência SEM imagens de referência.
+  async function runGenerateAll() {
+    const ok = window.confirm(
+      `Gerar todos os ${cards.length} cards sem imagens de referência?\n\n` +
+      `⚠️ Antes de confirmar: revise e ajuste os títulos e textos de cada card — ` +
+      `eles serão usados exatamente como estão na geração.\n\n` +
+      `Você ainda poderá regerar cards individualmente depois.`
+    );
+    if (!ok) return;
+    setBusyAllMode('noref');
+    const total = cards.length;
+    const failures: number[] = [];
+    setAllProgress({ done: 0, total });
+    try {
+      for (let i = 0; i < total; i++) {
+        setAllProgress({ done: i, total });
+        setBusyIndex(i);
+        const card = cards[i];
+        try {
+          const url = await generatePostImage({
+            imagePrompt: card.imagePrompt,
+            titulo: titulos[i], texto: textos[i],
+            companyName: kit.companyName,
+            primaryColor: kit.primaryColor,
+            accentColor: kit.accentColor || '#f4b000',
+            fontFamily: kit.fontPair || 'Montserrat',
+            mood, vertical: 'post', logoPosition: kit.logoPosition,
+            leituraCenica: (card as any).leituraCenica,
+          });
+          const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[i], texto: textos[i], legenda: '', imagem: card.imagePrompt };
+          const final = await composeFeedPng(kit, item, url);
+          setPreviews(prev => prev.map((p, j) => j === i ? final : p));
+        } catch (err) {
+          console.error(`Falha card ${i + 1}:`, err);
+          failures.push(i + 1);
+        }
+      }
+      setAllProgress({ done: total, total });
+      if (failures.length) {
+        alert(`${failures.length} de ${total} card(s) falharam (cards ${failures.join(', ')}). Use "⬇ Gerar card" no card para tentar de novo.`);
+      }
+    } finally {
+      setBusyIndex(null);
+      setBusyAllMode(null);
+      setTimeout(() => setAllProgress(null), 1500);
+    }
+  }
+
   // Gera os N cards em sequência usando refs consolidadas do bloco.
   async function runGenerateAllWithRefs() {
     if (!blockSel.hasAny) return;
-    setBusyAll(true);
+    setBusyAllMode('refs');
     const total = cards.length;
     const failures: number[] = [];
     setAllProgress({ done: 0, total });
@@ -591,7 +640,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       }
     } finally {
       setBusyIndex(null);
-      setBusyAll(false);
+      setBusyAllMode(null);
       setTimeout(() => setAllProgress(null), 1500);
     }
   }
@@ -626,8 +675,24 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             compact
             onGerou={() => { /* disparo vem do botão "Gerar X cards com refs" */ }}
           />
+          {/* Botão: Gerar todos sem refs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 6px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="generateBtn"
+              onClick={runGenerateAll}
+              disabled={busyAll || busyIndex !== null}
+              title="Gera todos os cards em sequência sem imagem de referência. Revise os títulos e textos antes."
+            >
+              {busyAllMode === 'noref'
+                ? `Gerando ${(allProgress?.done ?? 0) + 1}/${allProgress?.total ?? cards.length}…`
+                : `✨ Gerar todos os ${cards.length} cards (sem refs)`}
+            </button>
+            <span style={{ fontSize: 11, color: '#64748b' }}>Revise títulos e textos antes de confirmar.</span>
+          </div>
+
           {blockSel.hasAny && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="generateBtn"
@@ -635,7 +700,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
                 disabled={busyAll || busyIndex !== null}
                 title="Gera os cards em sequência: card 1 com produto 1, card 2 com produto 2, e assim por diante"
               >
-                {busyAll
+                {busyAllMode === 'refs'
                   ? `Gerando ${(allProgress?.done ?? 0) + 1}/${allProgress?.total ?? cards.length}…`
                   : `✨ Gerar ${cards.length} cards com refs`}
               </button>
@@ -752,6 +817,13 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       }
     };
   }, []);
+
+  // Garante que o modo kit-voz só fica ativo quando há voz treinada.
+  useEffect(() => {
+    if (!hasClonedVoice && videoMode === 'kit-voz') {
+      setVideoMode('portugues');
+    }
+  }, [hasClonedVoice, videoMode]);
 
   // Tick simulado de progresso enquanto o vídeo gera.
   useEffect(() => {

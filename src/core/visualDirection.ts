@@ -221,7 +221,7 @@ A imagePrompt DEVE evocar a referência concreta acima e DEVE evitar literalment
   // em geração real (modelo ignorando instruções da Camada 2).
   const moodRules: Partial<Record<MoodCode, string>> = {
     'OP-01':
-      'CLAREZA exige EXATAMENTE 1 acento de cor saturada presente em UM único elemento da cena (objeto, peça de roupa, detalhe gráfico). Não 0, não 2. A peça inteira monocromática NÃO é CLAREZA — vira SILÊNCIO. Verifique antes de finalizar a imagePrompt.',
+      'CLAREZA exige EXATAMENTE 1 acento de cor saturada presente em UM único elemento da cena (objeto, peça de roupa, detalhe gráfico). Não 0, não 2. A peça inteira monocromática NÃO é CLAREZA — vira SILÊNCIO. Verifique antes de finalizar a imagePrompt. PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para a câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena, integre como detalhe lateral, desfocado em primeiro plano, ou em ângulo plongée.',
     'OP-02':
       'IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo low-key dominado por preto/grafite. Sem essa única explosão cromática, a peça não para o scroll.',
     'OP-05':
@@ -251,6 +251,7 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - TELA FRONTAL de notebook, laptop, tablet, iPad, celular, computador ou monitor deve mostrar SEMPRE conteúdo real e coerente com o tema (gráfico, dashboard, app, mensagem, foto, planilha). Proibido: tela apagada, preta, branca, lockscreen, wallpaper de fábrica, placeholder. A imagePrompt DEVE descrever literalmente o que aparece na tela.
 - PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.
+- POSICIONAMENTO DE NOTEBOOK/LAPTOP — PROIBIDO ABSOLUTO: a composição onde o laptop está aberto com tela E teclado ambos voltados frontalmente para o observador, com o personagem posicionado ATRÁS do equipamento. Essa pose genérica de "pessoa atrás do notebook" é banida em TODOS os moods. Se houver notebook em cena: (a) mostrar em ângulo lateral ou vista superior (plongée) de forma que tela e teclado não fiquem simultaneamente na linha de visão do observador, OU (b) mostrar apenas a tela OU apenas o teclado/base no quadro, com personagem ao lado ou em primeiro plano. O personagem NUNCA fica aprisionado atrás do laptop como se fosse uma barreira entre ele e a câmera.
 
 Os campos "clima" e "composicao" da leituraCenica DEVEM derivar diretamente da Tensão Dondis e da Gramática Visual acima — não são livres.
 Os campos "intencao", "personagem", "ambiente" e "expressao" continuam vindo da progressão psicológica da Matriz; a gramática visual apenas determina COMO a cena é fotografada, não O QUE ela diz.
