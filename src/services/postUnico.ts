@@ -185,16 +185,25 @@ NOTEBOOK / LAPTOP aberto sobre a mesa ou no colo:
   • COMPORTAMENTO FÍSICO CORRETO: tampa sólida e neutra; tela exclusivamente na face interna; dispositivo fisicamente coerente; composição cinematográfica realista.
 
 CELULAR / SMARTPHONE na mão ou sobre superfície:
-→ ÂNGULO OBRIGATÓRIO: tela voltada diretamente para a câmera, inclinado 20°–40° em relação à vertical. Resultado: vê-se apenas a TELA (com conteúdo real — app, mensagem, mapa, feed) e as bordas laterais. O verso é fisicamente oculto.
-→ PROIBIDO: celular com verso à mostra, câmera traseira voltada para quem fotografa.
+→ ÂNGULO OBRIGATÓRIO: tela voltada diretamente para a câmera, inclinado 20°–40° em relação à vertical. Resultado: vê-se apenas a TELA (com conteúdo real — app, mensagem, mapa, feed) e as bordas laterais.
+→ PROIBIDO (ângulo): câmera traseira ou microfones como elemento principal da composição.
+→ DEFEITO FÍSICO PROIBIDO — CARCAÇA DO CELULAR: a tampa traseira e a carcaça são superfícies físicas sólidas (plástico, alumínio, vidro). NÃO têm tela. NÃO emitem luz. NÃO exibem conteúdo.
+  • PROIBIDO: imagem de área de trabalho, display, interface, app, dashboard, ícone ou qualquer conteúdo visual de tela LCD/OLED renderizado sobre a carcaça traseira ou tampa do celular; duplicação ou espelho da tela frontal no verso; brilho ou emissão luminosa simulando display na carcaça traseira.
+  • PERMITIDO: a carcaça traseira pode aparecer como superfície neutra (câmera, logotipo em relevo, material) — NUNCA com conteúdo visual de tela aplicado.
 
 TABLET sobre mesa ou na mão:
 → ÂNGULO OBRIGATÓRIO: tela inclinada 50°–70° em relação à horizontal, voltada para a câmera. Resultado: vê-se apenas a TELA (com conteúdo real) e as bordas.
-→ PROIBIDO: tablet com verso à mostra, câmera atrás ou abaixo do aparelho.
+→ PROIBIDO (ângulo): câmera posicionada atrás ou abaixo do aparelho como elemento principal da cena.
+→ DEFEITO FÍSICO PROIBIDO — CARCAÇA DO TABLET: a tampa traseira e a carcaça são superfícies físicas sólidas (plástico, alumínio). NÃO têm tela. NÃO emitem luz. NÃO exibem conteúdo.
+  • PROIBIDO: imagem de área de trabalho, display, interface, app, dashboard, ícone ou qualquer conteúdo visual de tela LCD renderizado sobre a carcaça traseira ou tampa do tablet; duplicação ou espelho da tela frontal no verso; brilho ou emissão luminosa simulando display na carcaça traseira.
+  • PERMITIDO: a carcaça traseira pode aparecer como superfície neutra (câmera, logotipo) — NUNCA com conteúdo visual de tela aplicado.
 
 MONITOR / DESKTOP:
 → ÂNGULO OBRIGATÓRIO: câmera ao nível dos olhos, 0°–30° horizontal — visão frontal. Vê-se apenas a TELA (com conteúdo real) e a moldura.
-→ PROIBIDO: câmera atrás do monitor, mostrar a parte traseira como elemento principal.
+→ PROIBIDO (ângulo): câmera posicionada atrás do monitor ou gabinete como elemento principal da cena.
+→ DEFEITO FÍSICO PROIBIDO — CARCAÇA DO MONITOR/DESKTOP: o painel traseiro, carcaça e gabinete são superfícies físicas sólidas. NÃO têm tela. NÃO emitem luz. NÃO exibem conteúdo.
+  • PROIBIDO: imagem de área de trabalho, display, interface ou qualquer conteúdo visual de tela renderizado sobre o painel traseiro, carcaça ou gabinete do monitor/desktop; brilho ou emissão luminosa simulando display na parte traseira.
+  • PERMITIDO: a parte traseira pode aparecer como superfície neutra (cabos, entradas, ventilação) — NUNCA com conteúdo visual de tela aplicado.
 
 REGRA UNIVERSAL: a TELA FRONTAL mostra SEMPRE conteúdo real (gráfico, dashboard, app, texto, foto — NUNCA tela preta ou em branco). A CARCAÇA / TAMPA / VERSO é superfície SÓLIDA e OPACA — ZERO interface, ZERO tela, ZERO reflexo de UI na tampa ou verso. Todo dispositivo deve ter comportamento físico coerente com a realidade — um notebook NÃO É um monitor dos dois lados.
 
