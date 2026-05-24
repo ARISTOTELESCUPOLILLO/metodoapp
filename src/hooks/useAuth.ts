@@ -32,5 +32,25 @@ export function useAuth(): AuthState {
 }
 
 export async function signOut() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const userId = data.session?.user?.id;
+    const keysToRemove = [
+      'metodo-op-kit-v1',
+      'metodo-op-form-v1',
+      'metodo-op-logo-v1',
+      'metodo-op-postunico-v1',
+      'metodo-op-modo',
+    ];
+    if (userId) {
+      keysToRemove.push(
+        `metodo-op-result-v1:${userId}`,
+        `metodo-op-postunico-img-v1:${userId}`,
+        `metodo-op-postunico-caption-v1:${userId}`,
+        `metodo-op-postunico-started-v1:${userId}`,
+      );
+    }
+    keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+  } catch {}
   await supabase.auth.signOut();
 }

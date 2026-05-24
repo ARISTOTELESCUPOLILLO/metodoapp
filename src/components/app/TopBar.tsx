@@ -1,14 +1,16 @@
 import { Link } from '@tanstack/react-router';
-import { Home, Moon, History, Users, LogOut, UserX, Image as ImageIcon } from 'lucide-react';
+import { Home, Moon, Sun, History, Users, LogOut, UserX, Image as ImageIcon } from 'lucide-react';
 import { useAuth, signOut } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useImpersonation, stopImpersonation } from '@/hooks/useImpersonation';
+import { useDarkMode } from '@/hooks/useDarkMode';
 import logoOp from '@/assets/lp-logo-op.png';
 
 export function TopBar() {
   const { user } = useAuth();
   const { isAdmin } = useProfile();
   const impersonation = useImpersonation();
+  const [isDark, toggleDark] = useDarkMode();
   if (!user) return null;
 
   const iconBtn: React.CSSProperties = {
@@ -64,8 +66,8 @@ export function TopBar() {
       <Link to="/app" style={iconBtn} title="Início" aria-label="Voltar para a home">
         <Home size={16} />
       </Link>
-      <button type="button" style={iconBtn} title="Tema (em breve)" aria-label="Alternar tema">
-        <Moon size={16} />
+      <button type="button" style={iconBtn} title={isDark ? 'Modo claro' : 'Modo escuro'} aria-label="Alternar tema" onClick={toggleDark}>
+        {isDark ? <Sun size={16} /> : <Moon size={16} />}
       </button>
       <Link to="/conta" style={iconBtn} title="Minha conta" aria-label="Minha conta">
         <History size={16} />

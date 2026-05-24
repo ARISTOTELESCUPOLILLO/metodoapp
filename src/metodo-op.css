@@ -336,3 +336,84 @@ small, .note { color: #64748b; font-weight: 500; font-size: 12px; }
   color: #123a63;
   box-shadow: 0 4px 12px rgba(0,0,0,.18);
 }
+
+/* ============================================================
+   Dark mode overrides
+   ============================================================ */
+.dark { background: #0f172a; color: #e2e8f0; }
+.dark body { background: #0f172a; }
+
+.dark .panel { background: #1e293b; border-color: rgba(255,255,255,.09); }
+.dark .sectionHeader h2 { color: #f1f5f9; }
+.dark label { color: #cbd5e1; }
+.dark small, .dark .note { color: #94a3b8; }
+
+.dark input, .dark textarea, .dark select {
+  background: #0f172a;
+  border-color: rgba(255,255,255,.14);
+  color: #e2e8f0;
+}
+
+.dark .contentCard { border-color: rgba(255,255,255,.09); }
+.dark .cardHeader { background: #1e293b; }
+.dark .cardHeader:hover { background: #253348; }
+.dark .cardTag { color: #94a3b8; }
+.dark .cardTitle { color: #f1f5f9; }
+.dark .cardBody { background: #0f172a; }
+.dark .cardField p { color: #cbd5e1; }
+.dark .fieldLabel { color: #64748b; }
+.dark .resultBlock { border-color: rgba(255,255,255,.09); }
+.dark .imageHint { color: #64748b !important; }
+.dark .cardActions { border-color: rgba(255,255,255,.07); }
+
+.dark .formatBox { border-color: rgba(255,255,255,.14); }
+.dark .subFormatBox { background: #1e293b; border-color: rgba(255,255,255,.09); }
+.dark .subFormatLabel { color: #94a3b8; }
+
+.dark .radioLabel { background: #1e293b; border-color: rgba(255,255,255,.09); color: #cbd5e1; }
+.dark .radioLabel:has(input:checked) { background: #1a3050; border-color: #4a7aa7; color: #93c5fd; }
+
+.dark .sequenceCard { background: #1e293b; border-color: rgba(255,255,255,.09); }
+.dark .sequenceCard:hover { border-color: rgba(255,255,255,.25); }
+.dark .sequenceCard.active { background: #1a3050; border-color: #4a7aa7; outline-color: #4a7aa7; }
+.dark .sequenceNum { color: #f1f5f9; }
+
+.dark .moodCard { background: #1e293b; border-color: rgba(255,255,255,.09); }
+.dark .moodCard.active { outline-color: #f4b000; border-color: #f4b000; }
+.dark .moodCard em { color: #93c5fd; }
+
+.dark .fontCard { background: #1e293b; border-color: rgba(255,255,255,.09); }
+.dark .fontCard:hover { border-color: rgba(255,255,255,.3); }
+.dark .fontCard.active { background: #2a2010; border-color: #f4b000; outline-color: #f4b000; }
+.dark .fontSample { color: #f1f5f9; }
+.dark .fontName { color: #94a3b8; }
+.dark .fontCategoryLabel { color: #64748b; }
+.dark .colorLabel { color: #cbd5e1; }
+.dark .colorName { color: #94a3b8; }
+
+.dark .carouselCard { background: #1e293b; }
+.dark .carouselCard p { color: #cbd5e1; }
+.dark .storyItem { background: #1e293b; }
+.dark .storyTag { color: #94a3b8; }
+.dark .storyItem p { color: #cbd5e1; }
+
+.dark .loadingBox { background: #1a2f4a; border-color: #1e3a5c; }
+.dark .loadingBox p { color: #93c5fd; }
+.dark .spinner { border-color: #1e3a5c; border-top-color: #93c5fd; }
+.dark .errorBox { background: #3b1212; color: #fca5a5; border-color: #7f1d1d; }
+
+.dark .clientDropdown { background: #1e293b; border-color: rgba(255,255,255,.09); }
+.dark .clientItem { color: #f1f5f9; }
+.dark .clientItem:hover { background: #253348; }
+
+.dark .trackCard { background: #1e293b; border-color: rgba(255,255,255,.09); }
+.dark .trackCard.active { background: #1a3050; border-color: #4a7aa7; outline-color: #4a7aa7; }
+.dark .trackCard.active .sequenceNum { color: #93c5fd; }
+.dark .trackCard.active .trackDescription { color: #bfdbfe; }
+.dark .trackDescription { color: #94a3b8; }
+.dark .trackBadge { background: #253348; color: #94a3b8; }
+.dark .trackCard.active .trackBadge { background: rgba(18,58,99,.5); color: #93c5fd; }
+.dark .trackNote { background: #1e293b; color: #94a3b8; }
+.dark .trackNote strong { color: #f1f5f9; }
+
+.dark .periodBtn:disabled:not(.periodBtn--running) { background: #253348; color: #64748b; }
