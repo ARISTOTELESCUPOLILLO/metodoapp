@@ -21,6 +21,7 @@ export function UsageTab() {
   const [days, setDays] = useState(30);
   const [usdRate, setUsdRate] = useState(5);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,10 +41,18 @@ export function UsageTab() {
 
   useEffect(() => { load(); }, [load]);
 
-  const totalImgs = logs.reduce((s, l) => s + (l.qtd_imagens || 0), 0);
-  const totalRenders = logs.reduce((s, l) => s + (l.qtd_renders || 0), 0);
-  const totalGeracoes = logs.reduce((s, l) => s + (l.qtd_geracoes || 0), 0);
-  const totalUsd = logs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
+  const q = search.toLowerCase().trim();
+  const filteredLogs = q
+    ? logs.filter(l => {
+        const email = l.user_id ? (emails[l.user_id] || l.user_id) : '';
+        return email.toLowerCase().includes(q) || (l.modulo || '').toLowerCase().includes(q) || l.evento.toLowerCase().includes(q);
+      })
+    : logs;
+
+  const totalImgs = filteredLogs.reduce((s, l) => s + (l.qtd_imagens || 0), 0);
+  const totalRenders = filteredLogs.reduce((s, l) => s + (l.qtd_renders || 0), 0);
+  const totalGeracoes = filteredLogs.reduce((s, l) => s + (l.qtd_geracoes || 0), 0);
+  const totalUsd = filteredLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
   const totalBrl = totalUsd * usdRate;
 
   return (
@@ -57,6 +66,12 @@ export function UsageTab() {
           <option value={90}>Últimos 90 dias</option>
         </select>
         <span style={{ fontSize: 12, color: '#64748b' }}>câmbio US$ 1 = R$ {usdRate.toFixed(2)}</span>
+        <input
+          placeholder="Buscar por usuário, evento ou módulo"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ marginLeft: 'auto', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13, minWidth: 220 }}
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
@@ -69,7 +84,7 @@ export function UsageTab() {
 
       {loading ? <p>Carregando…</p> : isMobile ? (
         <div style={{ display: 'grid', gap: 8 }}>
-          {logs.map((l) => (
+          {filteredLogs.map((l) => (
             <div key={l.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12, fontSize: 13 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <strong>{l.evento}</strong>
@@ -87,7 +102,7 @@ export function UsageTab() {
               </div>
             </div>
           ))}
-          {logs.length === 0 && <p style={{ textAlign: 'center', color: '#64748b' }}>Sem registros no período.</p>}
+          {filteredLogs.length === 0 && <p style={{ textAlign: 'center', color: '#64748b' }}>Sem registros no período.</p>}
         </div>
       ) : (
         <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: 8 }}>
@@ -99,7 +114,7 @@ export function UsageTab() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((l) => (
+              {filteredLogs.map((l) => (
                 <tr key={l.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                   <Td>{new Date(l.created_at).toLocaleString('pt-BR')}</Td>
                   <Td>{l.user_id ? (emails[l.user_id] || l.user_id.slice(0, 8)) : '—'}</Td>
@@ -112,7 +127,7 @@ export function UsageTab() {
                   <Td>{(Number(l.custo_usd) * usdRate).toFixed(2)}</Td>
                 </tr>
               ))}
-              {logs.length === 0 && (
+              {filteredLogs.length === 0 && (
                 <tr><td colSpan={9} style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>Sem registros no período.</td></tr>
               )}
             </tbody>

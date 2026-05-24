@@ -30,6 +30,9 @@ interface Profile {
   is_test: boolean;
   plano1_id: string | null;
   plano2_id: string | null;
+  plano1_preco_brl: number | null;
+  plano2_preco_brl: number | null;
+  bonus_preco_brl: number | null;
 }
 
 interface AppSettings {
@@ -71,7 +74,7 @@ export function CustosTab() {
     ] = await Promise.all([
       supabase.from('usage_logs').select('user_id,evento,qtd_imagens,qtd_renders,qtd_geracoes,custo_usd,created_at').gte('created_at', since),
       supabase.from('plans').select('id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl').eq('ativo', true),
-      supabase.from('profiles').select('id,email,nome,is_test,plano1_id,plano2_id'),
+      supabase.from('profiles').select('id,email,nome,is_test,plano1_id,plano2_id,plano1_preco_brl,plano2_preco_brl,bonus_preco_brl'),
       supabase.from('app_settings').select('usd_brl_rate,falai_balance_usd,openai_balance_usd,image_base_price_usd,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
       supabase.from('user_roles').select('user_id').eq('role', 'admin'),
       supabase.from('usage_logs').select('evento,custo_usd').in('evento', ['image.generate','video.generate','gerar_conteudo_mop']),
@@ -79,7 +82,7 @@ export function CustosTab() {
     setLogs((ls as Log[]) || []);
     setAllTimeLogs((allLogs as { evento: string; custo_usd: number }[]) || []);
     setPlans((ps as unknown as Plan[]) || []);
-    setProfiles((profs as Profile[]) || []);
+    setProfiles((profs as unknown as Profile[]) || []);
     if (cfg) {
       setSettings({
         usd_brl_rate: Number(cfg.usd_brl_rate) || 5.5,
@@ -149,18 +152,18 @@ export function CustosTab() {
     clientMap[l.user_id].custoUsd += Number(l.custo_usd || 0);
   });
 
-  // ── Financeiro por cliente (com planos e preço máximo) ──
+  // ── Financeiro por cliente (valor vendido real por cliente) ──
   const clienteFinanceiro = realProfiles.map(p => {
     const p1 = p.plano1_id ? planMap[p.plano1_id] : null;
     const p2 = p.plano2_id ? planMap[p.plano2_id] : null;
     const custoProj1 = p1 ? (p1.limite_imagens * settings.image_price_usd + p1.limite_renders * settings.render_price_usd + p1.limite_geracoes * settings.geracao_price_usd) : 0;
     const custoProj2 = p2 ? (p2.limite_imagens * settings.image_price_usd + p2.limite_renders * settings.render_price_usd + p2.limite_geracoes * settings.geracao_price_usd) : 0;
     const custoProjTotal = (custoProj1 + custoProj2) * rate;
-    const precoMax1 = p1 ? Number(p1.preco_maximo_brl || 0) : 0;
-    const precoMax2 = p2 ? Number(p2.preco_maximo_brl || 0) : 0;
-    const totalVenda = precoMax1 + precoMax2;
+    const precoVenda1 = Number((p as any).plano1_preco_brl || 0);
+    const precoVenda2 = Number((p as any).plano2_preco_brl || 0);
+    const totalVenda = precoVenda1 + precoVenda2;
     const margem = totalVenda > 0 ? ((totalVenda - custoProjTotal) / totalVenda) * 100 : null;
-    return { id: p.id, email: p.email, nome: p.nome, p1, p2, precoMax1, precoMax2, totalVenda, custoProjTotal, margem };
+    return { id: p.id, email: p.email, nome: p.nome, p1, p2, precoVenda1, precoVenda2, totalVenda, custoProjTotal, margem };
   }).filter(r => r.p1 || r.p2);
 
   const totalVendaGeral = clienteFinanceiro.reduce((s, r) => s + r.totalVenda, 0);
@@ -194,7 +197,7 @@ export function CustosTab() {
     const planLogs = logs.filter(l => l.user_id && userIds.has(l.user_id));
     const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
     const projecao = p.limite_imagens * settings.image_price_usd + p.limite_renders * settings.render_price_usd + p.limite_geracoes * settings.geracao_price_usd;
-    const precoMin = projecao * rate * 4;
+    const precoMin = projecao * rate * 3;
     const precoMax = Number(p.preco_maximo_brl || 0);
     const margemMin = precoMin > 0 ? ((precoMin - projecao * rate) / precoMin) * 100 : null;
     const margemMax = precoMax > 0 ? ((precoMax - projecao * rate) / precoMax) * 100 : null;
@@ -443,7 +446,7 @@ export function CustosTab() {
               </tbody>
             </table></div>
             <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-              Preço mín. = custo projetado × câmbio × 4. Margem calculada sobre projeção de 100% de uso.
+              Preço mín. = custo projetado × câmbio × 3. Margem calculada sobre projeção de 100% de uso.
             </p>
           </Section>
 
@@ -456,9 +459,9 @@ export function CustosTab() {
                   <thead style={{ background: '#f8fafc' }}>
                     <tr>
                       <Th>Cliente</Th>
-                      <Th>Plano 1</Th><Th>Preço P1</Th>
-                      <Th>Plano 2</Th><Th>Preço P2</Th>
-                      <Th>Total venda</Th><Th>Custo proj. R$</Th><Th>Margem</Th>
+                      <Th>Plano 1</Th><Th>Vendido P1</Th>
+                      <Th>Plano 2</Th><Th>Vendido P2</Th>
+                      <Th>Total vendido</Th><Th>Custo proj. R$</Th><Th>Margem</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -466,9 +469,9 @@ export function CustosTab() {
                       <tr key={r.id} style={tRow}>
                         <Td><div style={{ fontWeight: 600, fontSize: 12 }}>{r.nome || r.email}</div><div style={{ color: '#94a3b8', fontSize: 10 }}>{r.email}</div></Td>
                         <Td>{r.p1 ? <b>{r.p1.codigo}</b> : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
-                        <Td>{r.precoMax1 ? `R$ ${r.precoMax1.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
+                        <Td>{r.precoVenda1 ? `R$ ${r.precoVenda1.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
                         <Td>{r.p2 ? <b>{r.p2.codigo}</b> : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
-                        <Td>{r.precoMax2 ? `R$ ${r.precoMax2.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
+                        <Td>{r.precoVenda2 ? `R$ ${r.precoVenda2.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
                         <Td style={{ fontWeight: 700 }}>{r.totalVenda ? `R$ ${r.totalVenda.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
                         <Td style={{ color: '#64748b' }}>R$ {r.custoProjTotal.toFixed(2)}</Td>
                         <Td><span style={{ fontWeight: 700, color: margemColor(r.margem) }}>{r.margem !== null ? `${r.margem.toFixed(0)}%` : '—'}</span></Td>

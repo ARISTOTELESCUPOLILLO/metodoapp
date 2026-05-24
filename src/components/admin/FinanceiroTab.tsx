@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { CustosTab } from './CustosTab';
 import { ProjecaoTab } from './ProjecaoTab';
+import { ClientesFinanceiroTab } from './ClientesFinanceiroTab';
 
-type Sub = 'custos' | 'projecao';
+type Sub = 'custos' | 'projecao' | 'clientes';
 
 const SUB_TABS: { id: Sub; label: string }[] = [
-  { id: 'custos',   label: 'Custos e Consumo' },
-  { id: 'projecao', label: 'Projeção de Compras' },
+  { id: 'custos',    label: 'Custos e Consumo' },
+  { id: 'projecao',  label: 'Projeção de Compras' },
+  { id: 'clientes',  label: 'Clientes' },
 ];
 
 const subStyle = (active: boolean): React.CSSProperties => ({
@@ -32,8 +34,9 @@ export function FinanceiroTab() {
           </button>
         ))}
       </div>
-      {sub === 'custos'   && <CustosTab />}
-      {sub === 'projecao' && <ProjecaoTab />}
+      {sub === 'custos'    && <CustosTab />}
+      {sub === 'projecao'  && <ProjecaoTab />}
+      {sub === 'clientes'  && <ClientesFinanceiroTab />}
     </div>
   );
 }
