@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getImpersonation } from '@/hooks/useImpersonation';
 import { BrandKit, CarouselCard, FeedItem, ImageKit, MethodOpResult, MoodCode, ReelsGuide, StoriesSequence } from '../../types';
 import { downloadDataUrl, downloadBlob, composeFeedPng, composeFinalPng, composeReelsPng, composeReelsTitlePng } from '../../utils/canvasComposer';
 import { burnTitleIntoVideo } from '../../utils/burnTitleIntoVideo';
@@ -188,6 +189,7 @@ function EditableField(props: {
 function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard'] } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [busyRefs, setBusyRefs] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const storageKey = `uso-ref:estatico:${item.dia}`;
@@ -223,7 +225,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
 
   async function runGenerateWithRefs() {
     if (!sel.hasAny) return;
-    setBusy(true);
+    setBusyRefs(true);
     try {
       const url = await regenerateWithKit({
         slot: { formato: 'estatico', posicao: dayNumber, elemento: 'avatar', motivo: '' },
@@ -236,8 +238,10 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       setPreview(final);
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
-    finally { setBusy(false); }
+    finally { setBusyRefs(false); }
   }
+
+  function handleGenerateWithRefs() { guard({ hasPreview: true, tipo: 'Estático', run: runGenerateWithRefs }); }
 
 
 
@@ -290,12 +294,12 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
           )}
           {preview && <div className="previewWrapper"><img src={preview} alt="Preview" className="previewImg" /></div>}
           <div className="cardActions">
-            <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy}>
+            <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar post'}
             </button>
             {preview && sel.hasAny && (
-              <button className="generateBtn" type="button" onClick={runGenerateWithRefs} disabled={busy} title="Gerar outra usando as referências marcadas acima">
-                {busy ? 'Gerando...' : '↻ Gerar outra com refs'}
+              <button className="generateBtn" type="button" onClick={handleGenerateWithRefs} disabled={busy || busyRefs} title="Gerar outra usando as referências marcadas acima">
+                {busyRefs ? 'Gerando...' : '↻ Gerar outra com refs'}
               </button>
             )}
             {preview && (
@@ -322,6 +326,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
 function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard'] } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [busyRefs, setBusyRefs] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const storageKey = `uso-ref:estatico_final:${item.dia}`;
@@ -356,7 +361,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
 
   async function runGenerateWithRefs() {
     if (!sel.hasAny) return;
-    setBusy(true);
+    setBusyRefs(true);
     try {
       const url = await regenerateWithKit({
         slot: { formato: 'estatico_final', posicao: dayNumber, elemento: 'avatar', motivo: '' },
@@ -369,8 +374,10 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
       setPreview(final);
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
-    finally { setBusy(false); }
+    finally { setBusyRefs(false); }
   }
+
+  function handleGenerateWithRefs() { guard({ hasPreview: true, tipo: 'Estático Final', run: runGenerateWithRefs }); }
 
 
   const ctx = (kind: RegenKind) => ({
@@ -422,12 +429,12 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
           )}
           {preview && <div className="previewWrapper"><img src={preview} alt="Preview" className="previewImg" /></div>}
           <div className="cardActions">
-            <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy}>
+            <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar fechamento'}
             </button>
             {preview && sel.hasAny && (
-              <button className="generateBtn" type="button" onClick={runGenerateWithRefs} disabled={busy} title="Gerar outra usando as referências marcadas acima">
-                {busy ? 'Gerando...' : '↻ Gerar outra com refs'}
+              <button className="generateBtn" type="button" onClick={handleGenerateWithRefs} disabled={busy || busyRefs} title="Gerar outra usando as referências marcadas acima">
+                {busyRefs ? 'Gerando...' : '↻ Gerar outra com refs'}
               </button>
             )}
             {preview && (
@@ -456,6 +463,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
   const [open, setOpen] = useState(false);
   const [previews, setPreviews] = useState<(string | null)[]>(cards.map(() => null));
   const [busyIndex, setBusyIndex] = useState<number | null>(null);
+  const [busyMode, setBusyMode] = useState<'noref' | 'refs' | null>(null);
   const [busyAllMode, setBusyAllMode] = useState<'refs' | 'noref' | null>(null);
   const busyAll = busyAllMode !== null;
   const [allProgress, setAllProgress] = useState<{ done: number; total: number } | null>(null);
@@ -473,6 +481,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 
   async function runGenerate(index: number) {
     setBusyIndex(index);
+    setBusyMode('noref');
     try {
       const card = cards[index];
       const url = await generatePostImage({
@@ -489,11 +498,15 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       const final = await composeFeedPng(kit, item, url);
       setPreviews(prev => prev.map((p, i) => i === index ? final : p));
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
-    finally { setBusyIndex(null); }
+    finally { setBusyIndex(null); setBusyMode(null); }
   }
 
   function handleGenerate(index: number) {
     guard({ hasPreview: !!previews[index], tipo: 'Carrossel', run: () => runGenerate(index) });
+  }
+
+  function handleGenerateWithRefs(index: number) {
+    guard({ hasPreview: true, tipo: 'Carrossel', run: () => runGenerateWithRefs(index) });
   }
 
   // Lê seleção efetiva para um card: prefere storage do bloco (consolidado)
@@ -535,6 +548,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
     if (!s) return;
     const card = cards[index];
     setBusyIndex(index);
+    setBusyMode('refs');
     try {
       const url = await regenerateWithKit({
         slot: { formato: 'carrossel', posicao: dayNumber, elemento: 'avatar', cardCarrossel: card.card, motivo: '' },
@@ -550,7 +564,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       const final = await composeFeedPng(kit, item, url);
       setPreviews(prev => prev.map((p, i) => i === index ? final : p));
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
-    finally { setBusyIndex(null); }
+    finally { setBusyIndex(null); setBusyMode(null); }
   }
 
   // Gera os N cards em sequência SEM imagens de referência.
@@ -604,6 +618,12 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
   // Gera os N cards em sequência usando refs consolidadas do bloco.
   async function runGenerateAllWithRefs() {
     if (!blockSel.hasAny) return;
+    const ok = window.confirm(
+      `Gerar todos os ${cards.length} cards com as referências selecionadas?\n\n` +
+      `⚠️ Antes de confirmar: revise os títulos e textos — eles serão usados exatamente como estão na geração.\n\n` +
+      `Você ainda poderá regerar cards individualmente depois.`
+    );
+    if (!ok) return;
     setBusyAllMode('refs');
     const total = cards.length;
     const failures: number[] = [];
@@ -734,14 +754,14 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
                 )}
                 <div className="cardActions">
                   <button className="generateBtn" type="button" onClick={() => handleGenerate(index)} disabled={busyIndex !== null || busyAll}>
-                    {busyIndex === index && !busyAll ? 'Gerando...' : previews[index] ? '↻ Gerar outra (sem refs)' : '⬇ Gerar card'}
+                    {busyIndex === index && busyMode === 'noref' && !busyAll ? 'Gerando...' : previews[index] ? '↻ Gerar outra (sem refs)' : '⬇ Gerar card'}
                   </button>
                   {previews[index] && (
                     <RefsRegenButton
                       storageKey={`uso-ref:carrossel:${dayNumber}:c${card.card}`}
                       fallbackKey={blockStorageKey}
-                      busy={busyIndex === index || busyAll}
-                      onRun={() => runGenerateWithRefs(index)}
+                      busy={(busyIndex === index && busyMode === 'refs') || busyAll}
+                      onRun={() => handleGenerateWithRefs(index)}
                     />
                   )}
                   {previews[index] && (
@@ -780,6 +800,7 @@ type VideoMode = 'portugues' | 'kit-voz' | 'sinalizacao';
 function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard'] } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [busyRefs, setBusyRefs] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   // previewBase = mesma imagem do preview SEM a logo aplicada pelo canvas.
   // É o que mandamos para o gpt-image-2/edit como referência da capa, para
@@ -960,7 +981,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         produtosNums: Array.isArray(j.produtosNums) ? j.produtosNums : [],
       };
     } catch { return; }
-    setBusy(true);
+    setBusyRefs(true);
     try {
       const url = await regenerateWithKit({
         slot: { formato: 'reels', posicao: dayNumber, elemento: 'avatar', motivo: '' },
@@ -978,18 +999,22 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       setVideoUrl(null);
       setCoverPng(null);
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
-    finally { setBusy(false); }
+    finally { setBusyRefs(false); }
   }
+
+  function handleGenerateWithRefs() { guard({ hasPreview: true, tipo: 'Reels', run: runGenerateWithRefs }); }
 
 
   async function submitVideoRequest(): Promise<{ videoUrl: string; usedClonedVoice: boolean; requestedClonedVoice: boolean }> {
     const { data: sess } = await supabase.auth.getSession();
     const token = sess.session?.access_token;
+    const imp = getImpersonation();
     const res = await fetch('/api/generate-video', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(imp ? { 'X-Impersonate-User-Id': imp.userId } : {}),
       },
       body: JSON.stringify({
         imageBase64: preview,
@@ -1250,14 +1275,14 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
 
           {preview && <div className="previewWrapper"><img src={preview} alt="Reels" className="previewImgReels" /></div>}
           <div className="cardActions">
-            <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyVideo}>
+            <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs || busyVideo}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar novamente (sem refs)' : '⬇ Gerar imagem pura'}
             </button>
             {preview && (
               <RefsRegenButton
                 storageKey={`uso-ref:reels:${dayNumber}`}
-                busy={busy || busyVideo}
-                onRun={runGenerateWithRefs}
+                busy={busyRefs || busyVideo}
+                onRun={handleGenerateWithRefs}
               />
             )}
             {preview && (() => {

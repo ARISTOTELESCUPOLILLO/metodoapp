@@ -31,6 +31,7 @@ interface Props {
   loading?: boolean;
   saving?: boolean;
   saved?: boolean;
+  lockedSegment?: Segment;
 }
 
 const FONTS: { value: FontPair; label: string; sample: string }[] = [
@@ -44,7 +45,7 @@ const COLORS_PRESET = [
   '#d97706','#f4b000','#e5e7eb','#ffffff',
 ];
 
-export default function BrandKitForm({ kit, onChange, onSave, onLoad, loading, saving, saved }: Props) {
+export default function BrandKitForm({ kit, onChange, onSave, onLoad, loading, saving, saved, lockedSegment }: Props) {
   const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false);
   const update = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) => onChange({ ...kit, [key]: value });
   const changeSegment = (segment: Segment) => onChange({ ...kit, segment, brandVoice: defaultVoice(segment) });
@@ -75,11 +76,18 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, loading, s
           <input value={kit.companyName} onChange={(e) => update('companyName', e.target.value)} placeholder="Oficina de Propaganda" />
         </label>
         <label>Segmento
-          <select value={kit.segment} onChange={(e) => changeSegment(e.target.value as Segment)}>
-            <option value="SERVIÇOS">Serviços</option>
-            <option value="VAREJO">Varejo</option>
-            <option value="MARCA">Marca</option>
-          </select>
+          {lockedSegment ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
+              <span style={{ fontWeight: 700, color: '#1d4ed8', fontSize: 13 }}>{lockedSegment}</span>
+              <span style={{ fontSize: 11, color: '#64748b' }}>— definido pelo administrador</span>
+            </div>
+          ) : (
+            <select value={kit.segment} onChange={(e) => changeSegment(e.target.value as Segment)}>
+              <option value="SERVIÇOS">Serviços</option>
+              <option value="VAREJO">Varejo</option>
+              <option value="MARCA">Marca</option>
+            </select>
+          )}
         </label>
       </div>
 

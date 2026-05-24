@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { detectEditorialProfile } from '@/data/editorialProfiles';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -21,11 +22,51 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const mode = String(body.mode || 'postunico') as 'postunico' | 'metodo';
           const attempt = Number(body.attempt || 0);
           const angulo: 'tensao' | 'motivacao' = attempt >= 1 ? 'motivacao' : 'tensao';
+
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
           const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment) ? (body.segment as Seg) : 'SERVIÇOS';
+
+          const AUDIENCES = ['B2C', 'B2B'] as const;
+          type Aud = typeof AUDIENCES[number];
+          const audience: Aud = (AUDIENCES as readonly string[]).includes(body.audience) ? (body.audience as Aud) : 'B2C';
+          const isB2C = audience === 'B2C';
+
           const preservaHint = hint
             ? `REGRA CRÍTICA DA PISTA: preserve o SENTIDO da pista do usuário (positivo, neutro ou crítico). Refine a FORMA, NUNCA inverta a intenção. Se a pista é positiva (ex.: "20 anos fazendo parte da vida da cidade"), NÃO transforme em dor/estagnação/crítica. Se é neutra, mantenha neutra. Se já carrega tensão, pode aprofundar.`
+            : '';
+
+          // ── Público-alvo — regra crítica para B2C vs B2B ──────────────────
+          const audienceDirective = isB2C
+            ? `PÚBLICO-ALVO: CONSUMIDOR FINAL (B2C).
+A Informação-chave deve falar com a PESSOA, não com o empresário.
+PROIBIDO no texto gerado: "empreendedor", "empresário", "empresária", "gestor", "gestora", "decisor", "liderança", "equipe", "time", "empresa cliente", "negócio" como sujeito.
+Escreva como se estivesse falando com alguém que usa o produto/serviço na própria vida.`
+            : `PÚBLICO-ALVO: DECISOR EMPRESARIAL (B2B).
+A Informação-chave deve falar com o gestor, diretor ou responsável pela área.
+Foque em eficiência, previsibilidade, risco operacional e resultado para o negócio.`;
+
+          // ── Progressão do Método OP ────────────────────────────────────────
+          const progressaoMetodo = isB2C
+            ? `PROGRESSÃO DO MÉTODO (B2C): ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR.
+A Informação-chave é a SEMENTE da sequência. Ela deve carregar uma tensão ou aspiração que NATURALMENTE alimenta essa progressão: o público primeiro se entende no post (entendimento), depois vê que outros passaram pelo mesmo (segurança), depois confia no profissional/marca (confiança), depois reconhece autoridade (autoridade), e no último post toma ação (agir).`
+            : `PROGRESSÃO DO MÉTODO (B2B): ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR.
+A Informação-chave deve revelar um risco, ineficiência ou oportunidade estratégica que o decisor reconhece como real. A progressão constrói credibilidade antes de segurança — o empresário precisa confiar que você entende o cenário dele antes de sentir que pode confiar na solução.`;
+
+          // ── Perfil Editorial ──────────────────────────────────────────────
+          const editorialProfile = mode === 'metodo'
+            ? detectEditorialProfile(mainActivity, segment, audience)
+            : null;
+
+          const editorialBlock = editorialProfile
+            ? `PERFIL EDITORIAL DETECTADO: ${editorialProfile.nome}
+TERRITÓRIO: ${editorialProfile.territorio}
+${angulo === 'tensao'
+  ? `ÂNGULOS DE TENSÃO para este perfil: ${editorialProfile.angulosTensao.join(' / ')}`
+  : `ÂNGULOS DE MOTIVAÇÃO para este perfil: ${editorialProfile.angulosMotivacao.join(' / ')}`}
+VOCABULÁRIO PROIBIDO adicional: ${editorialProfile.vocabularioProibido.join(', ')}
+EXEMPLO de boa Informação-chave (${angulo === 'tensao' ? 'tensão' : 'motivação'}) para este perfil: "${angulo === 'tensao' ? editorialProfile.exemploTensao : editorialProfile.exemploMotivacao}"
+NOTA DO MÉTODO: ${editorialProfile.notaMetodo}`
             : '';
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
@@ -35,11 +76,19 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
 
+          // ── Prompts do Método ─────────────────────────────────────────────
+
           const metodoTensao = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 ${hint ? `PISTA DO USUÁRIO (refine/melhore): "${hint}"` : 'O usuário não deu pista — invente algo plausível para a atividade.'}
+
+${audienceDirective}
+
+${progressaoMetodo}
+
+${editorialBlock}
 
 ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
 REGRA OP — escreva em 1 LINHA CURTA contendo 4 camadas implícitas:
@@ -62,6 +111,12 @@ Retorne JSON EXATAMENTE assim:
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 ${hint ? `PISTA DO USUÁRIO (refine/melhore): "${hint}"` : 'O usuário não deu pista — invente algo plausível para a atividade.'}
+
+${audienceDirective}
+
+${progressaoMetodo}
+
+${editorialBlock}
 
 ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
 IMPORTANTE: NÃO "implique" com o público. Não aponte erro, falha ou falta. Fale do que ele QUER alcançar, do próximo nível, da transformação positiva — como quem reconhece o esforço e mostra o caminho.
@@ -90,6 +145,8 @@ ${hint ? `PISTA DO USUÁRIO (refine/melhore PRESERVANDO o sentido): "${hint}"` :
 
 ${preservaHint}
 
+${editorialBlock}
+
 ÂNGULO: IDENTIDADE / POSICIONAMENTO.
 A Informação-chave deve revelar QUEM a marca é, o que ela representa, como quer ser percebida no território/categoria. Sem dor do cliente, sem promessa comercial, sem CTA, sem urgência, sem gatilho de venda.
 
@@ -115,6 +172,8 @@ ${hint ? `PISTA DO USUÁRIO (refine/melhore PRESERVANDO o sentido): "${hint}"` :
 
 ${preservaHint}
 
+${editorialBlock}
+
 ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
 Foco em história, repertório, tempo de mercado, vínculo afetivo com clientes, evolução da marca, presença no território. Tom de orgulho calmo, sem auto-elogio comercial.
 
@@ -135,7 +194,6 @@ Retorne JSON EXATAMENTE assim:
           if (segment === 'MARCA') {
             metodoPrompt = attempt >= 1 ? marcaLegado : marcaIdentidade;
           } else {
-            // Reforça preservação da pista também em VAREJO/SERVIÇOS
             const base = angulo === 'motivacao' ? metodoMotivacao : metodoTensao;
             metodoPrompt = preservaHint ? `${base}\n\n${preservaHint}` : base;
           }

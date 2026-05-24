@@ -339,11 +339,13 @@ export const Route = createFileRoute('/api/generate-video')({
           // Debita 1 render do plano do usuário.
           if (userId) {
             try {
+              const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
               await debitUsage(userId, 0, 1, {
                 evento: 'video.generate',
                 modulo: 'metodo-op',
                 payload: { videoUrl: String(videoUrl).slice(0, 200), clonedVoice: lipsyncOk },
                 custoUsd: COST_USD.video,
+                impersonatedBy,
               });
             } catch (e) {
               console.warn('[debit_usage video]', (e as Error).message);

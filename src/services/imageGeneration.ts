@@ -3,6 +3,7 @@
 // evitando o "upstream request timeout" da plataforma.
 
 import { supabase } from '@/integrations/supabase/client';
+import { getImpersonation } from '@/hooks/useImpersonation';
 import { prepareReferenceImage, prepareReferenceImages } from '@/utils/prepareReference';
 
 type StartResp = { requestId?: string; modelPath?: string; statusUrl?: string; responseUrl?: string; error?: string };
@@ -13,7 +14,11 @@ async function authHeader(): Promise<Record<string, string>> {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    const imp = getImpersonation();
+    return {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(imp ? { 'X-Impersonate-User-Id': imp.userId } : {}),
+    };
   } catch {
     return {};
   }

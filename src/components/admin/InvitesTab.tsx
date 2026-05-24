@@ -27,6 +27,7 @@ export function InvitesTab() {
   const [testProfiles, setTestProfiles] = useState<TestProfile[]>([]);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [segment, setSegment] = useState<'SERVIÇOS' | 'VAREJO' | 'MARCA' | ''>('');
   const [plano1Id, setPlano1Id] = useState('');
   const [plano2Id, setPlano2Id] = useState('');
   const [bonusId, setBonusId] = useState('');
@@ -61,10 +62,12 @@ export function InvitesTab() {
     const cleanNome = nome.trim();
     if (!cleanEmail.includes('@')) { setMsg('E-mail inválido.'); return; }
     if (!cleanNome) { setMsg('Informe o nome do cliente.'); return; }
+    if (!segment) { setMsg('Escolha o segmento do cliente.'); return; }
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from('invited_emails').insert({
       nome: cleanNome, email: cleanEmail,
+      segment,
       plano1_id: plano1Id || null,
       plano2_id: plano2Id || null,
       bonus_id: bonusId || null,
@@ -73,7 +76,7 @@ export function InvitesTab() {
     } as any);
     setBusy(false);
     if (error) { setMsg(error.code === '23505' ? 'Este e-mail já foi convidado.' : `Erro: ${error.message}`); return; }
-    setNome(''); setEmail(''); setPlano1Id(''); setPlano2Id(''); setBonusId(''); setSourceTestProfileId('');
+    setNome(''); setEmail(''); setSegment(''); setPlano1Id(''); setPlano2Id(''); setBonusId(''); setSourceTestProfileId('');
     setMsg(`Convite criado. Envie o link de cadastro para ${cleanEmail}.`);
     load();
   }
@@ -165,6 +168,32 @@ export function InvitesTab() {
           <Field label="E-mail">
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@cliente.com" style={inp} />
           </Field>
+          <Field label="Segmento (obrigatório)">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+              {(['SERVIÇOS', 'VAREJO', 'MARCA'] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSegment(s)}
+                  style={{
+                    padding: '8px 4px',
+                    borderRadius: 6,
+                    border: `2px solid ${segment === s ? '#2563eb' : '#cbd5e1'}`,
+                    background: segment === s ? '#eff6ff' : '#fff',
+                    color: segment === s ? '#1d4ed8' : '#0f172a',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, color: '#64748b', marginTop: 4, marginBottom: 0 }}>
+              Fixado após o cadastro — só admin pode alterar. Define o método de geração do conteúdo.
+            </p>
+          </Field>
           <Field label="Plano 1 (opcional)">
             <select value={plano1Id} onChange={(e) => setPlano1Id(e.target.value)} style={{ ...inp, background: '#fff' }}>
               <option value="">— Sem plano —</option>
@@ -251,7 +280,7 @@ export function InvitesTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ color: '#64748b', fontSize: 12 }}>
-                  <Th>Nome</Th><Th>E-mail</Th><Th>P1</Th><Th>P2</Th><Th>Bônus</Th><Th>Kit</Th><Th>Status</Th><Th>Cadastrado em</Th><Th>Ação</Th>
+                  <Th>Nome</Th><Th>E-mail</Th><Th>Seg.</Th><Th>P1</Th><Th>P2</Th><Th>Bônus</Th><Th>Kit</Th><Th>Status</Th><Th>Cadastrado em</Th><Th>Ação</Th>
                 </tr>
               </thead>
               <tbody>
@@ -259,6 +288,7 @@ export function InvitesTab() {
                   <tr key={r.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                     <Td><strong>{r.nome || '—'}</strong></Td>
                     <Td style={{ color: '#475569' }}>{r.email}</Td>
+                    <Td><span style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8' }}>{(r as any).segment || '—'}</span></Td>
                     <Td>{labelFor(r.plano1_id)}</Td>
                     <Td>{labelFor(r.plano2_id)}</Td>
                     <Td>{labelFor(r.bonus_id)}</Td>

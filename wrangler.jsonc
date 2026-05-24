@@ -5,6 +5,10 @@
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
+  "alias": {
+    "tanstack-start-injected-head-scripts:v": "./src/lib/empty.ts",
+    "tanstack-start-manifest:v": "./src/lib/empty.ts"
+  },
   "routes": [
     {
       "pattern": "metodoapp.oficinadepropaganda.com.br/*",

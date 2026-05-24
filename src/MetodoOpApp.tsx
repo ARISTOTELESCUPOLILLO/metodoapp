@@ -44,7 +44,7 @@ const defaultForm: ContentFormData = {
   keyInfo: '',
   brandVoice: defaultVoice('SERVIÇOS'),
   outputMode: 'feed',
-  sequenceSize: 6,
+  sequenceSize: 3,
   storiesDays: 3,
   storiesQuantity: 3,
   outputFormats: ['feed', 'carrossel', 'reels'],
@@ -228,6 +228,18 @@ export default function App() {
     try { localStorage.setItem(k, postUnicoStarted ? 'true' : 'false'); } catch {}
   }, [postUnicoStarted, effectiveUserId]);
 
+
+  // Segmento fixado pelo admin — não-admin não pode alterar.
+  const lockedSegment = !effectiveAdmin && profile?.segmento ? profile.segmento as typeof defaultKit.segment : undefined;
+
+  // Quando o profile chega (ou muda), sincroniza o segment do kit com o do perfil.
+  useEffect(() => {
+    if (!lockedSegment) return;
+    if (kit.segment === lockedSegment) return;
+    const voice = defaultVoice(lockedSegment);
+    setKit((prev) => ({ ...prev, segment: lockedSegment, brandVoice: voice }));
+    setForm((prev) => ({ ...prev, segment: lockedSegment, brandVoice: voice }));
+  }, [lockedSegment]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Espelha sempre os dados do Kit de Marca no Post Único (campos travados)
   useEffect(() => {
@@ -525,7 +537,7 @@ export default function App() {
 
       <div className="layout">
         <div className="leftCol">
-          <BrandKitForm kit={kit} onChange={handleKitChange} onSave={handleSave} onLoad={handleLoadKit} loading={loadingKit} saving={saving} saved={saved} />
+          <BrandKitForm kit={kit} onChange={handleKitChange} onSave={handleSave} onLoad={handleLoadKit} loading={loadingKit} saving={saving} saved={saved} lockedSegment={lockedSegment} />
           {modo === 'metodo' && (
             <ContentForm
               data={form}

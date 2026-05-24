@@ -2,16 +2,12 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { AuthGate } from '@/components/app/AuthGate';
 import { TopBar } from '@/components/app/TopBar';
-import { UsersTab } from '@/components/admin/UsersTab';
-import { PlansTab } from '@/components/admin/PlansTab';
-import { UsageTab } from '@/components/admin/UsageTab';
-import { SettingsTab } from '@/components/admin/SettingsTab';
+import { ClientesTab } from '@/components/admin/ClientesTab';
 import { InvitesTab } from '@/components/admin/InvitesTab';
-import { CobrancasTab } from '@/components/admin/CobrancasTab';
-import { TestUsersTab } from '@/components/admin/TestUsersTab';
-import { CustosTab } from '@/components/admin/CustosTab';
-import { ProjecaoTab } from '@/components/admin/ProjecaoTab';
-import { PrecosTab } from '@/components/admin/PrecosTab';
+import { PlanosCompletoTab } from '@/components/admin/PlanosCompletoTab';
+import { UsageTab } from '@/components/admin/UsageTab';
+import { FinanceiroTab } from '@/components/admin/FinanceiroTab';
+import { SettingsTab } from '@/components/admin/SettingsTab';
 import { DivulgacaoTab } from '@/components/admin/DivulgacaoTab';
 
 export const Route = createFileRoute('/admin')({
@@ -23,22 +19,18 @@ export const Route = createFileRoute('/admin')({
   ),
 });
 
-type Tab = 'users' | 'invites' | 'tests' | 'plans' | 'usage' | 'custos' | 'projecao' | 'precos' | 'divulgacao' | 'cobrancas' | 'settings';
+type Tab = 'clientes' | 'convites' | 'planos' | 'consumo' | 'financeiro' | 'configuracoes' | 'divulgacao';
 
 function AdminPage() {
-  const [tab, setTab] = useState<Tab>('users');
+  const [tab, setTab] = useState<Tab>('clientes');
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'users', label: 'Usuários' },
-    { id: 'invites', label: 'Convites' },
-    { id: 'tests', label: 'Testes' },
-    { id: 'plans', label: 'Planos' },
-    { id: 'usage', label: 'Consumo' },
-    { id: 'custos', label: 'Custos' },
-    { id: 'projecao', label: 'Projeção de compras' },
-    { id: 'precos', label: 'Tabela de Preços' },
-    { id: 'divulgacao', label: 'Divulgação' },
-    { id: 'cobrancas', label: 'Cobranças' },
-    { id: 'settings', label: 'Ajustes de custo' },
+    { id: 'clientes',      label: 'Clientes' },
+    { id: 'convites',      label: 'Convites' },
+    { id: 'planos',        label: 'Planos' },
+    { id: 'consumo',       label: 'Consumo' },
+    { id: 'financeiro',    label: 'Financeiro' },
+    { id: 'configuracoes', label: 'Configurações' },
+    { id: 'divulgacao',    label: 'Divulgação' },
   ];
 
   return (
@@ -62,17 +54,13 @@ function AdminPage() {
         ))}
       </div>
 
-      {tab === 'users' && <UsersTab />}
-      {tab === 'invites' && <InvitesTab />}
-      {tab === 'tests' && <TestUsersTab />}
-      {tab === 'plans' && <PlansTab />}
-      {tab === 'usage' && <UsageTab />}
-      {tab === 'custos' && <CustosTab />}
-      {tab === 'projecao' && <ProjecaoTab />}
-      {tab === 'precos' && <PrecosTab />}
-      {tab === 'divulgacao' && <DivulgacaoTab />}
-      {tab === 'cobrancas' && <CobrancasTab />}
-      {tab === 'settings' && <SettingsTab />}
+      {tab === 'clientes'      && <ClientesTab />}
+      {tab === 'convites'      && <InvitesTab />}
+      {tab === 'planos'        && <PlanosCompletoTab />}
+      {tab === 'consumo'       && <UsageTab />}
+      {tab === 'financeiro'    && <FinanceiroTab />}
+      {tab === 'configuracoes' && <SettingsTab />}
+      {tab === 'divulgacao'    && <DivulgacaoTab />}
     </div>
   );
 }

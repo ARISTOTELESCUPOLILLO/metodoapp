@@ -113,13 +113,12 @@ export const Route = createFileRoute('/api/generate-content')({
                 }
                 console.info('[generate-content] openai_ms=' + (Date.now() - t0) + ' chars=' + fullContent.length);
 
-                // Debita só depois do sucesso real do stream.
-                if (!balance.isAdmin) {
-                  try {
-                    await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: COST_USD.content });
-                  } catch (e) {
-                    console.warn('[generate-content] debit failed', e);
-                  }
+                // Debita sempre (admins inclusos, para rastreio de custo).
+                try {
+                  const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
+                  await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: COST_USD.content, impersonatedBy });
+                } catch (e) {
+                  console.warn('[generate-content] debit failed', e);
                 }
               } catch (e) {
                 console.error('[generate-content] stream error', (e as Error).message);

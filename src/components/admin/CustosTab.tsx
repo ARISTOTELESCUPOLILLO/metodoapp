@@ -44,6 +44,7 @@ interface AppSettings {
 
 export function CustosTab() {
   const [logs, setLogs] = useState<Log[]>([]);
+  const [allTimeLogs, setAllTimeLogs] = useState<{ evento: string; custo_usd: number }[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
@@ -66,14 +67,17 @@ export function CustosTab() {
       { data: profs },
       { data: cfg },
       { data: roles },
+      { data: allLogs },
     ] = await Promise.all([
       supabase.from('usage_logs').select('user_id,evento,qtd_imagens,qtd_renders,qtd_geracoes,custo_usd,created_at').gte('created_at', since),
       supabase.from('plans').select('id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl').eq('ativo', true),
       supabase.from('profiles').select('id,email,nome,is_test,plano1_id,plano2_id'),
       supabase.from('app_settings').select('usd_brl_rate,falai_balance_usd,openai_balance_usd,image_base_price_usd,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
       supabase.from('user_roles').select('user_id').eq('role', 'admin'),
+      supabase.from('usage_logs').select('evento,custo_usd').in('evento', ['image.generate','video.generate','gerar_conteudo_mop']),
     ]);
     setLogs((ls as Log[]) || []);
+    setAllTimeLogs((allLogs as { evento: string; custo_usd: number }[]) || []);
     setPlans((ps as unknown as Plan[]) || []);
     setProfiles((profs as Profile[]) || []);
     if (cfg) {
@@ -113,9 +117,15 @@ export function CustosTab() {
   const custoFalai = custoImgBase + custoImgEdit + custoVideo;
   const custoOpenai = custoConteudo;
 
-  // ── Saldo restante ──
-  const saldoFalai = Math.max(0, settings.falai_balance_usd - custoFalai);
-  const saldoOpenai = Math.max(0, settings.openai_balance_usd - custoOpenai);
+  // ── Saldo restante (sempre desde o início, independente do filtro de período) ──
+  const allTimeCustoFalai = allTimeLogs
+    .filter(l => l.evento === 'image.generate' || l.evento === 'video.generate')
+    .reduce((s, l) => s + Number(l.custo_usd || 0), 0);
+  const allTimeCustoOpenai = allTimeLogs
+    .filter(l => l.evento === 'gerar_conteudo_mop')
+    .reduce((s, l) => s + Number(l.custo_usd || 0), 0);
+  const saldoFalai = Math.max(0, settings.falai_balance_usd - allTimeCustoFalai);
+  const saldoOpenai = Math.max(0, settings.openai_balance_usd - allTimeCustoOpenai);
 
   // ── Por cliente (usuários reais, não-teste, não-admin) ──
   const emailMap: Record<string, string> = {};
@@ -249,13 +259,51 @@ export function CustosTab() {
         <>
           {/* ── Saldos disponíveis ── */}
           <Section title="Saldo disponível nas APIs">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginBottom: 10 }}>
-              <SummaryCard label="fal.ai — saldo inicial" value={`$${settings.falai_balance_usd.toFixed(2)}`} sub={brl(settings.falai_balance_usd)} />
-              <SummaryCard label="fal.ai — consumido" value={`-$${custoFalai.toFixed(3)}`} sub={brl(custoFalai)} warn />
-              <SummaryCard label="fal.ai — restante" value={`$${saldoFalai.toFixed(2)}`} sub={brl(saldoFalai)} highlight={saldoFalai < settings.falai_balance_usd * 0.3} />
-              <SummaryCard label="OpenAI — saldo inicial" value={`$${settings.openai_balance_usd.toFixed(2)}`} sub={brl(settings.openai_balance_usd)} />
-              <SummaryCard label="OpenAI — consumido" value={`-$${custoOpenai.toFixed(3)}`} sub={brl(custoOpenai)} warn />
-              <SummaryCard label="OpenAI — restante" value={`$${saldoOpenai.toFixed(2)}`} sub={brl(saldoOpenai)} highlight={saldoOpenai < settings.openai_balance_usd * 0.3} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: 10, marginBottom: 10 }}>
+              <SummaryCard
+                label="fal.ai — saldo inicial"
+                value={`$${settings.falai_balance_usd.toFixed(2)}`}
+                sub={brl(settings.falai_balance_usd)}
+                description="Valor total que você depositou na fal.ai. Defina em Ajustes de custo."
+              />
+              <SummaryCard
+                label="fal.ai — consumido"
+                value={`-$${allTimeCustoFalai.toFixed(3)}`}
+                sub={brl(allTimeCustoFalai)}
+                warn
+                description="Total gasto em imagens e vídeos desde o início — não muda com o filtro de período."
+              />
+              <SummaryCard
+                label="fal.ai — restante"
+                value={`$${saldoFalai.toFixed(2)}`}
+                sub={brl(saldoFalai)}
+                highlight={saldoFalai < settings.falai_balance_usd * 0.3}
+                description={saldoFalai < settings.falai_balance_usd * 0.3
+                  ? `Saldo inicial menos tudo consumido. Abaixo de 30% — considere recarregar a conta fal.ai.`
+                  : `Saldo inicial menos tudo consumido desde o início. Disponível para próximas gerações.`}
+              />
+              <SummaryCard
+                label="OpenAI — saldo inicial"
+                value={`$${settings.openai_balance_usd.toFixed(2)}`}
+                sub={brl(settings.openai_balance_usd)}
+                description="Valor disponível na sua conta OpenAI. Defina em Ajustes de custo."
+              />
+              <SummaryCard
+                label="OpenAI — consumido"
+                value={`-$${allTimeCustoOpenai.toFixed(3)}`}
+                sub={brl(allTimeCustoOpenai)}
+                warn
+                description="Total gasto em gerações de conteúdo de texto desde o início — não muda com o filtro."
+              />
+              <SummaryCard
+                label="OpenAI — restante"
+                value={`$${saldoOpenai.toFixed(2)}`}
+                sub={brl(saldoOpenai)}
+                highlight={saldoOpenai < settings.openai_balance_usd * 0.3}
+                description={saldoOpenai < settings.openai_balance_usd * 0.3
+                  ? `Saldo inicial menos tudo consumido. Abaixo de 30% — considere recarregar a conta OpenAI.`
+                  : `Saldo inicial menos tudo consumido desde o início. Disponível para próximas gerações.`}
+              />
             </div>
           </Section>
 
@@ -508,7 +556,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function SummaryCard({ label, value, sub, dark, warn, highlight }: { label: string; value: string; sub?: string; dark?: boolean; warn?: boolean; highlight?: boolean }) {
+function SummaryCard({ label, value, sub, description, dark, warn, highlight }: { label: string; value: string; sub?: string; description?: string; dark?: boolean; warn?: boolean; highlight?: boolean }) {
   const bg = dark ? '#0f213f' : highlight ? '#fef2f2' : warn ? '#fffbeb' : '#f1f5f9';
   const col = dark ? '#fff' : '#0f172a';
   const subCol = dark ? 'rgba(255,255,255,.5)' : warn ? '#92400e' : '#94a3b8';
@@ -517,6 +565,7 @@ function SummaryCard({ label, value, sub, dark, warn, highlight }: { label: stri
       <div style={{ fontSize: 11, color: dark ? 'rgba(255,255,255,.6)' : '#64748b', marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 800, color: col }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: subCol, marginTop: 1 }}>{sub}</div>}
+      {description && <div style={{ fontSize: 10, color: dark ? 'rgba(255,255,255,.4)' : '#94a3b8', marginTop: 6, lineHeight: 1.4 }}>{description}</div>}
     </div>
   );
 }

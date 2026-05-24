@@ -1,8 +1,16 @@
-// Custo unitário por operação (USD).
-// Fonte: preços reais fal.ai + estimativa OpenAI gpt-4.1-mini.
+// Custo unitário por operação (USD) — preços reais cobrados ao cliente.
 export const COST_USD = {
-  image_base: 0.0457,   // GPT Image 2 sem referências
-  image_edit: 0.0584,   // GPT Image 2 com referências (edit)
-  video:      1.50,     // VEO 3 fast + render
-  content:    0.003,    // gpt-4.1-mini por geração (estimativa média)
+  image_base: 0.0600,  // GPT Image 2 — geração base
+  image_edit: 0.0800,  // GPT Image 2 — edição com referências
+  video:      1.6000,  // VEO 3 fast + render
+  content:    0.0130,  // gpt-4.1-mini por geração
+} as const;
+
+// Custo nominal (preço de tabela dos provedores — fal.ai / OpenAI).
+// Usado para cálculo de margem no painel admin.
+export const COST_NOMINAL_USD = {
+  image_base: 0.0500,
+  image_edit: 0.0600,
+  video:      1.5000,
+  content:    0.0100,
 } as const;

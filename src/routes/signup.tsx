@@ -51,9 +51,21 @@ function SignupPage() {
       }
       return;
     }
-    // Persistir segmento no profile (handle_new_user já criou a linha)
+    // Persistir segmento no profile. O segment do convite tem prioridade sobre o picker.
     if (data.user) {
-      await supabase.from('profiles').update({ segmento } as any).eq('id', data.user.id);
+      let effectiveSegmento: Segmento = segmento as Segmento;
+      try {
+        const { data: inviteRow } = await supabase
+          .from('invited_emails')
+          .select('segment')
+          .eq('email', email.trim().toLowerCase())
+          .maybeSingle();
+        const invSeg = (inviteRow as any)?.segment;
+        if (invSeg && ['SERVIÇOS', 'VAREJO', 'MARCA'].includes(invSeg)) {
+          effectiveSegmento = invSeg as Segmento;
+        }
+      } catch { /* fallback para picker */ }
+      await supabase.from('profiles').update({ segmento: effectiveSegmento } as any).eq('id', data.user.id);
     }
     if (data.session) {
       navigate({ to: '/' });

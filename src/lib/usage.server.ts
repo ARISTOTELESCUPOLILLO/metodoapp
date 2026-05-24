@@ -70,7 +70,14 @@ export async function debitUsage(
   userId: string,
   imgs: number,
   renders: number,
-  meta: { evento: string; modulo?: string; payload?: Record<string, unknown>; geracoes?: number; custoUsd?: number },
+  meta: {
+    evento: string;
+    modulo?: string;
+    payload?: Record<string, unknown>;
+    geracoes?: number;
+    custoUsd?: number;
+    impersonatedBy?: string;
+  },
 ): Promise<{ slot: string }> {
   const geracoes = meta.geracoes ?? 0;
   const { data: slot, error } = await supabaseAdmin.rpc('debit_usage', {
@@ -93,6 +100,7 @@ export async function debitUsage(
       custo_usd: meta.custoUsd ?? 0,
       slot: slot ?? null,
       payload: (meta.payload ?? null) as never,
+      ...(meta.impersonatedBy ? { impersonated_by: meta.impersonatedBy } : {}),
     } as any);
   } catch (e) {
     console.warn('[usage_logs] insert failed', e);

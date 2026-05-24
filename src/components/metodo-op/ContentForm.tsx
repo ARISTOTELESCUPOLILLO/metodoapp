@@ -101,6 +101,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           mainActivity: (data as any).mainActivity || '',
           objetivo: 'promocao',
           segment,
+          audience: data.audience,
           hint: (data.keyInfo || '').trim(),
           mode: 'metodo',
           attempt,
