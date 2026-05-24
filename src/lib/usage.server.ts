@@ -77,6 +77,7 @@ export async function debitUsage(
     geracoes?: number;
     custoUsd?: number;
     impersonatedBy?: string;
+    preferredSlot?: 'plano1' | 'plano2' | 'bonus';
   },
 ): Promise<{ slot: string }> {
   const geracoes = meta.geracoes ?? 0;
@@ -98,6 +99,7 @@ export async function debitUsage(
       _imgs: imgs,
       _renders: renders,
       _geracoes: geracoes,
+      ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
     } as any);
     slot = (slotData as string) || 'admin';
   } else {
@@ -106,6 +108,7 @@ export async function debitUsage(
       _imgs: imgs,
       _renders: renders,
       _geracoes: geracoes,
+      ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
     } as any);
     if (error) {
       // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.

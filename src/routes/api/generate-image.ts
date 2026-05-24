@@ -143,6 +143,7 @@ export const Route = createFileRoute('/api/generate-image')({
                   payload: { provider: 'fal' },
                   custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
                   impersonatedBy,
+                  preferredSlot: moduloReq === 'pu' ? 'plano2' : undefined,
                 });
               }
             } catch (e) {

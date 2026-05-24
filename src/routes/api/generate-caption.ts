@@ -127,7 +127,7 @@ Regras:
 
           if (debit && userId) {
             try {
-              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined });
+              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined, preferredSlot: 'plano2' });
             } catch (e) {
               console.warn('[generate-caption] debit failed', e);
             }
