@@ -11,6 +11,49 @@ interface Plan {
   preco_maximo_brl: number;
 }
 
+const CARD_INFO: Record<string, { titulo: string; subtitulo: string }> = {
+  EX01: {
+    titulo: 'CONHEÇA O MÉTODO OP - 3 POSTAGENS',
+    subtitulo: 'Criação de uma sequência com conteúdo e imagem pronta para postar no Instagram.',
+  },
+  PU2: {
+    titulo: 'DUAS POSTAGENS PARA VOCÊ TESTAR',
+    subtitulo: 'Passo a passo que traz facilidade e qualidade.',
+  },
+  PU4: {
+    titulo: 'QUATRO IDEIAS PARA MOVIMENTAR O FEED',
+    subtitulo: 'Conteúdos rápidos para variar temas, reforçar presença e manter sua marca em circulação.',
+  },
+  PU8: {
+    titulo: 'OITO POSTAGENS PARA DAR CORPO À PRESENÇA',
+    subtitulo: 'Mais fôlego para testar abordagens, organizar mensagens e deixar o Instagram mais vivo.',
+  },
+  S3V: {
+    titulo: 'TRÊS SEQUÊNCIAS VISUAIS COM COMEÇO, MEIO E AÇÃO',
+    subtitulo: 'Conteúdos conectados para apresentar ideias, fortalecer confiança e conduzir o público.',
+  },
+  S3C: {
+    titulo: 'TRÊS SEQUÊNCIAS COM MOVIMENTO E RITMO',
+    subtitulo: 'Posts, carrosséis e reels para transformar uma ideia em experiência mais envolvente.',
+  },
+  S6V: {
+    titulo: 'SEIS SEQUÊNCIAS PARA ORGANIZAR A COMUNICAÇÃO',
+    subtitulo: 'Um percurso visual mais completo para trabalhar clareza, confiança, autoridade e ação.',
+  },
+  S6C: {
+    titulo: 'SEIS SEQUÊNCIAS COM FORÇA DE CAMPANHA',
+    subtitulo: 'Conteúdo visual e reels para ampliar percepção, ritmo e impacto da comunicação.',
+  },
+  S9V: {
+    titulo: 'NOVE PASSOS VISUAIS PARA CONSTRUIR DECISÃO',
+    subtitulo: 'Uma jornada de conteúdo para educar, aproximar, reforçar valor e estimular o próximo passo.',
+  },
+  S9C: {
+    titulo: 'NOVE PASSOS COM IMAGEM, MOVIMENTO E INTENÇÃO',
+    subtitulo: 'Uma experiência completa para transformar atenção em interesse, confiança e ação.',
+  },
+};
+
 const USO_NORMAL: Record<string, { imgs: number; renders: number }> = {
   EX01: { imgs: 7,  renders: 0 },
   PU2:  { imgs: 2,  renders: 0 },
@@ -84,36 +127,34 @@ async function generateCard(plan: Plan): Promise<void> {
 
   // Text area starts after image + gradient
   const t = imgH + 70;
+  const info = CARD_INFO[plan.codigo];
+  const titulo = info?.titulo ?? plan.nome.toUpperCase();
+  const subtitulo = info?.subtitulo ?? 'geração de imagem e conteúdo para sua comunicação nas redes sociais.';
 
   // Orange decorative line
   ctx.fillStyle = '#f97316';
   ctx.fillRect(80, t + 12, 48, 4);
 
-  // "PLANO PERSONALIZADO" — eyebrow
-  const ctxT = ctx as CanvasRenderingContext2D & { letterSpacing: string };
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.font = '22px "Inter", Arial, sans-serif';
-  ctxT.letterSpacing = '6px';
-  ctx.fillText('PLANO PERSONALIZADO', 80, t + 55);
-  ctxT.letterSpacing = '0px';
+  // Plan code — small, right side
+  ctx.fillStyle = 'rgba(255,255,255,0.30)';
+  ctx.font = 'bold 28px "Inter", Arial, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(plan.codigo, 1000, t + 40);
+  ctx.textAlign = 'left';
 
-  // Plan code — large bold
+  // Title — bold, wrapped
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 108px "Inter", Arial, sans-serif';
-  ctx.fillText(plan.codigo, 80, t + 186);
+  ctx.font = 'bold 52px "Inter", Arial, sans-serif';
+  const titleEndY = wrapText(ctx, titulo, 80, t + 80, 880, 64);
 
   // Thin separator
   ctx.fillStyle = 'rgba(255,255,255,0.14)';
-  ctx.fillRect(80, t + 212, 920, 1);
+  ctx.fillRect(80, titleEndY + 24, 920, 1);
 
   // Subtitle
-  ctx.fillStyle = 'rgba(255,255,255,0.76)';
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
   ctx.font = '28px "Inter", Arial, sans-serif';
-  const subEndY = wrapText(
-    ctx,
-    'geração de imagem e conteúdo para sua comunicação nas redes sociais.',
-    80, t + 262, 920, 44,
-  );
+  const subEndY = wrapText(ctx, subtitulo, 80, titleEndY + 60, 920, 44);
 
   // Price line
   const priceY = Math.max(subEndY + 60, t + 355);
@@ -202,6 +243,7 @@ export function DivulgacaoTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
         {active.map(plan => {
           const uso = USO_NORMAL[plan.codigo];
+          const info = CARD_INFO[plan.codigo];
           const isDown = downloading === plan.id;
           return (
             <div key={plan.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
@@ -213,13 +255,15 @@ export function DivulgacaoTab() {
               {/* Text preview */}
               <div style={{ background: '#0f213f', padding: '10px 18px 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div>
-                  <div style={{ width: 28, height: 3, background: '#f97316', borderRadius: 2, marginBottom: 8 }} />
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.42)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 3 }}>
-                    Plano Personalizado
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                    <div style={{ width: 28, height: 3, background: '#f97316', borderRadius: 2, marginTop: 4 }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)', letterSpacing: 1 }}>{plan.codigo}</span>
                   </div>
-                  <div style={{ fontSize: 30, fontWeight: 800, color: '#fff' }}>{plan.codigo}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.60)', marginTop: 5, lineHeight: 1.4 }}>
-                    geração de imagem e conteúdo para sua comunicação nas redes sociais.
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginBottom: 6 }}>
+                    {info?.titulo ?? plan.nome.toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
+                    {info?.subtitulo ?? 'geração de imagem e conteúdo para sua comunicação nas redes sociais.'}
                   </div>
                 </div>
                 <div style={{ marginTop: 8 }}>
