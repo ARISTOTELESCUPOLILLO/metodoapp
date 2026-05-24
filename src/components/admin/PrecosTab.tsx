@@ -112,7 +112,7 @@ export function PrecosTab() {
           {plans.map(p => {
             const custoUsd  = calcCusto(p, settings);
             const custoBrl  = custoUsd * settings.usd_brl_rate;
-            const minBrl    = custoBrl * 4;
+            const minBrl    = custoBrl * 3;
             const maxBrl    = p.preco_maximo_brl || 0;
             const isEditing = editMax[p.id] !== undefined;
             const uso       = USO_NORMAL[p.codigo];
@@ -137,7 +137,7 @@ export function PrecosTab() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <PCell label="Custo USD" value={usd(custoUsd)} color="#b45309" />
                   <PCell label="Custo R$" value={brl(custoBrl)} color="#0369a1" />
-                  <PCell label="Preço mín (×4)" value={brl(minBrl)} color="#15803d" />
+                  <PCell label="Preço mín (×3)" value={brl(minBrl)} color="#15803d" />
                   <div style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px' }}>
                     <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Preço máx</div>
                     {isEditing ? (
@@ -176,7 +176,7 @@ export function PrecosTab() {
                 <Th title="Imagens e renders por mês — uso normal liberado (PDF col. 2)">Uso Normal</Th>
                 <Th title="Custo de API para produzir o plano completo">Custo USD</Th>
                 <Th>Custo R$</Th>
-                <Th title="Custo × câmbio × 4 — ponto de entrada mínimo">Preço mín R$ (×4)</Th>
+                <Th title="Custo × câmbio × 3 — ponto de entrada mínimo">Preço mín R$ (×3)</Th>
                 <Th title="Clique para editar">Preço máx R$</Th>
                 <Th>Margem mín</Th>
                 <Th>Ativo</Th>
@@ -186,7 +186,7 @@ export function PrecosTab() {
               {plans.map(p => {
                 const custoUsd  = calcCusto(p, settings);
                 const custoBrl  = custoUsd * settings.usd_brl_rate;
-                const minBrl    = custoBrl * 4;
+                const minBrl    = custoBrl * 3;
                 const maxBrl    = p.preco_maximo_brl || 0;
                 const isEditing = editMax[p.id] !== undefined;
                 return (
@@ -243,7 +243,7 @@ export function PrecosTab() {
       )}
 
       <div style={{ fontSize: 12, color: '#64748b' }}>
-        Clique no valor de <strong>Preço máx</strong> para editar diretamente na tabela. O preço mínimo é calculado automaticamente como <strong>4× o custo de API</strong>.
+        Clique no valor de <strong>Preço máx</strong> para editar diretamente na tabela. O preço mínimo é calculado automaticamente como <strong>3× o custo de API</strong>.
       </div>
     </div>
   );

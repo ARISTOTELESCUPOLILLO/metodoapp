@@ -23,6 +23,7 @@ type StatusBody = {
   responseUrl?: string;
   requestId?: string;
   modelPath?: string;
+  modulo?: string;
 };
 
 type AnyBody = StartBody | StatusBody;
@@ -132,11 +133,13 @@ export const Route = createFileRoute('/api/generate-image')({
             try {
               const userId = await getUserIdFromRequest(request);
               if (userId) {
-                const isEdit = (body as StatusBody).modelPath?.includes('/edit') ?? false;
+                const statusBody = body as StatusBody;
+                const isEdit = statusBody.modelPath?.includes('/edit') ?? false;
+                const moduloReq = statusBody.modulo || 'metodo-op';
                 const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
                 await debitUsage(userId, 1, 0, {
                   evento: 'image.generate',
-                  modulo: 'metodo-op',
+                  modulo: moduloReq,
                   payload: { provider: 'fal' },
                   custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
                   impersonatedBy,

@@ -53,19 +53,16 @@ export async function generateImageAsync(params: {
   prompt: string;
   format?: 'post' | 'reels';
   logoDataUrl?: string;
-  // Imagens de referência adicionais (avatar, cenário, produtos do Kit Imagem).
-  // Quando informadas, o servidor força o uso do modelo de edição com referências.
   referenceImages?: string[];
-  // Tempo total máximo em ms (default 4 minutos — gerador costuma levar 30-90s)
+  modulo?: string;
   maxMs?: number;
-  // Intervalo entre polls em ms
   pollMs?: number;
   onProgress?: (status: string) => void;
 }): Promise<string> {
   // Com Kit Imagem (referenceImages) o modelo gpt-image-2/edit costuma levar bem mais tempo.
   // Default sem refs: 4min. Com refs: 6min.
   const hasRefs = Array.isArray(params.referenceImages) && params.referenceImages.length > 0;
-  const { prompt, format, logoDataUrl, referenceImages, maxMs = hasRefs ? 360_000 : 240_000, pollMs = 2500, onProgress } = params;
+  const { prompt, format, logoDataUrl, referenceImages, modulo, maxMs = hasRefs ? 360_000 : 240_000, pollMs = 2500, onProgress } = params;
 
   // Compacta refs + logo (lado <=1024, JPEG q=0.85) antes do POST.
   // Reduz drasticamente o payload base64 enviado ao /api/generate-image
@@ -91,6 +88,7 @@ export async function generateImageAsync(params: {
     format,
     logoDataUrl: logoSmall || undefined,
     referenceImages: refsSmall.length ? refsSmall : undefined,
+    modulo: modulo || 'metodo-op',
   });
   if (!start.ok || !start.data.requestId) {
     throw new Error(
@@ -143,6 +141,7 @@ export async function generateImageAsync(params: {
     responseUrl,
     requestId,
     modelPath,
+    modulo: modulo || 'metodo-op',
   });
   if (!rr.ok || !rr.data.dataUrl) {
     throw new Error(

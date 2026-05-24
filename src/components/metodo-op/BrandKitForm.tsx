@@ -91,9 +91,18 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
         </label>
         <label>Segmento
           {lockedSegment ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
-              <span style={{ fontWeight: 700, color: '#1d4ed8', fontSize: 13 }}>{lockedSegment}</span>
-              <span style={{ fontSize: 11, color: '#64748b' }}>— definido pelo administrador</span>
+            <div>
+              <select
+                value={lockedSegment}
+                onChange={() => {}}
+                title="Segmento definido no perfil do usuário — não pode ser alterado aqui"
+                style={{ width: '100%' }}
+              >
+                <option value="SERVIÇOS" disabled={lockedSegment !== 'SERVIÇOS'} style={{ color: lockedSegment !== 'SERVIÇOS' ? '#b0b8c1' : undefined }}>Serviços</option>
+                <option value="VAREJO" disabled={lockedSegment !== 'VAREJO'} style={{ color: lockedSegment !== 'VAREJO' ? '#b0b8c1' : undefined }}>Varejo</option>
+                <option value="MARCA" disabled={lockedSegment !== 'MARCA'} style={{ color: lockedSegment !== 'MARCA' ? '#b0b8c1' : undefined }}>Marca</option>
+              </select>
+              <span style={{ fontSize: 11, color: '#64748b', marginTop: 3, display: 'block' }}>Definido no perfil — altere na aba de usuário</span>
             </div>
           ) : (
             <select value={kit.segment} onChange={(e) => changeSegment(e.target.value as Segment)}>

@@ -20,6 +20,7 @@ export const Route = createFileRoute('/api/generate-pu-copy')({
           const objetivo = String(body.objetivo || 'promocao');
           const keyInfo = String(body.keyInfo || '').slice(0, 1000);
           const brandVoice = String(body.brandVoice || '').slice(0, 80);
+          const segment = String(body.segment || '').slice(0, 30);
 
 
           if (!keyInfo.trim()) {
@@ -45,11 +46,20 @@ Proibido mencionar literalmente o nome da voz no texto final.
 `
             : '';
 
+          const segmentLabel: Record<string, string> = {
+            VAREJO: 'Varejo — comercialização de produtos ao consumidor final',
+            MARCA: 'Marca — construção de identidade e posicionamento',
+            'SERVIÇOS': 'Serviços — prestação de serviços especializados',
+          };
+          const segmentBlock = segment
+            ? `SEGMENTO: ${segmentLabel[segment] || segment} — adapte vocabulário, estilo e apelo do texto ao perfil deste tipo de negócio.\n`
+            : '';
+
           const userPrompt = `Você cria o título e o texto de apoio que aparecerão TIPOGRAFADOS dentro de uma peça publicitária para Instagram.
 
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
-${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
+${segmentBlock}${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
 INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:

@@ -125,9 +125,9 @@ Regras:
             ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean).slice(0, 3)
             : [];
 
-          if (debit && userId && !isAdmin) {
+          if (debit && userId) {
             try {
-              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1 });
+              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined });
             } catch (e) {
               console.warn('[generate-caption] debit failed', e);
             }

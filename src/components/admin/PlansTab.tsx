@@ -119,7 +119,7 @@ export function PlansTab() {
                 </span>
               </div>
               <Row k="Tipo" v={p.tipo} />
-              <Row k="Valor" v={`USD ${Number(p.valor_plano).toFixed(2)}`} />
+              <Row k="Valor" v={`R$ ${Number(p.valor_plano).toFixed(2)}`} />
               <Row k="Imagens" v={String(p.limite_imagens)} />
               <Row k="Renders" v={String(p.limite_renders)} />
               <Row k="Gerações" v={String(p.limite_geracoes)} />
@@ -137,7 +137,7 @@ export function PlansTab() {
               <tr>
                 <Th>Código</Th><Th>Nome</Th><Th>Tipo</Th>
                 <Th title="imgs × ref + renders × vídeo + conteúdos × text">Custo calc. USD</Th>
-                <Th>Custo R$</Th><Th>Preço mín. R$ (×4)</Th>
+                <Th>Custo R$</Th><Th>Preço mín. R$ (×3)</Th>
                 <Th>Imgs</Th><Th>Renders</Th><Th>Gerações</Th><Th>Ativo</Th><Th>Ações</Th>
               </tr>
             </thead>
@@ -145,7 +145,7 @@ export function PlansTab() {
               {plans.map((p) => {
                 const custoUsd = calcCusto(p, costs);
                 const custoBrl = custoUsd * usdRate;
-                const precoMin = custoBrl * 4;
+                const precoMin = custoBrl * 3;
                 return (
                 <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                   <Td>{p.codigo}</Td>
@@ -188,7 +188,7 @@ export function PlansTab() {
                   <option value="vitalicio">vitalicio</option>
                 </select>
               </label>
-              <Inp label="Valor USD" type="number" value={String(editing.valor_plano)} onChange={(v) => setEditing({ ...editing, valor_plano: Number(v) })} />
+              <Inp label="Valor R$" type="number" value={String(editing.valor_plano)} onChange={(v) => setEditing({ ...editing, valor_plano: Number(v) })} />
               <Inp label="Limite imagens" type="number" value={String(editing.limite_imagens)} onChange={(v) => setEditing({ ...editing, limite_imagens: Number(v) })} />
               <Inp label="Limite renders" type="number" value={String(editing.limite_renders)} onChange={(v) => setEditing({ ...editing, limite_renders: Number(v) })} />
               <Inp label="Limite gerações" type="number" value={String(editing.limite_geracoes)} onChange={(v) => setEditing({ ...editing, limite_geracoes: Number(v) })} />

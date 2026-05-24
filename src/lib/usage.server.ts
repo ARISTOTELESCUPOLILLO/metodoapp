@@ -80,15 +80,44 @@ export async function debitUsage(
   },
 ): Promise<{ slot: string }> {
   const geracoes = meta.geracoes ?? 0;
-  const { data: slot, error } = await supabaseAdmin.rpc('debit_usage', {
-    _user_id: userId,
-    _imgs: imgs,
-    _renders: renders,
-    _geracoes: geracoes,
-  } as any);
-  if (error) throw new Error(error.message || 'Falha ao debitar consumo.');
 
-  // Log (não bloqueia se falhar).
+  // Admins não têm cota de plano — skip do RPC de débito mas registra o consumo.
+  const { data: adminCheck } = await supabaseAdmin.rpc('has_role', {
+    _user_id: userId,
+    _role: 'admin',
+  });
+  const isAdmin = adminCheck === true;
+
+  let slot: string | null = null;
+  let rpcError: Error | null = null;
+
+  if (isAdmin) {
+    // Admin: tenta debitar (se tiver plano, barra atualiza); swallow error se não tiver plano.
+    const { data: slotData } = await supabaseAdmin.rpc('debit_usage', {
+      _user_id: userId,
+      _imgs: imgs,
+      _renders: renders,
+      _geracoes: geracoes,
+    } as any);
+    slot = (slotData as string) || 'admin';
+  } else {
+    const { data: slotData, error } = await supabaseAdmin.rpc('debit_usage', {
+      _user_id: userId,
+      _imgs: imgs,
+      _renders: renders,
+      _geracoes: geracoes,
+    } as any);
+    if (error) {
+      // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.
+      rpcError = new Error(error.message || 'Falha ao debitar consumo.');
+      slot = 'sem-plano';
+    } else {
+      slot = (slotData as string) ?? null;
+    }
+  }
+
+  // Log SEMPRE — inclusive quando plano esgotado ou inexistente (slot='sem-plano').
+  // Nunca cancela o log por causa de falha no RPC.
   try {
     await supabaseAdmin.from('usage_logs').insert({
       user_id: userId,
@@ -106,5 +135,8 @@ export async function debitUsage(
     console.warn('[usage_logs] insert failed', e);
   }
 
-  return { slot: (slot as string) || 'desconhecido' };
+  // Re-lança após o log para que o caller saiba que não há plano elegível.
+  if (rpcError) throw rpcError;
+
+  return { slot: slot || 'desconhecido' };
 }

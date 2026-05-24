@@ -121,7 +121,17 @@ export function UsersTab() {
     if (!confirm(`Alterar ${label} vai zerar o consumo deste slot. Continuar?`)) return;
     setBusy(userId);
     const col = slot === 'bonus' ? 'bonus_id' : `${slot}_id`;
-    const patch: Record<string, string | null> = { [col]: planId || null };
+    const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
+    const patch: Record<string, string | number | null> = {
+      [col]: planId || null,
+      [`${slot}_imgs_usadas`]: 0,
+      [`${slot}_renders_usados`]: 0,
+      [`${slot}_geracoes_usadas`]: 0,
+      [`extra_${extraPrefix}_estatico`]: 0,
+      [`extra_${extraPrefix}_carrossel`]: 0,
+      [`extra_${extraPrefix}_estatico_final`]: 0,
+      [`extra_${extraPrefix}_reels`]: 0,
+    };
     const { error } = await supabase.from('profiles').update(patch as any).eq('id', userId);
     if (error) alert(`Erro: ${error.message}`);
     await load();
@@ -179,10 +189,10 @@ export function UsersTab() {
     if (!confirm(`Zerar contadores de ${r.email} (todos os slots)?`)) return;
     setBusy(r.id);
     await supabase.from('profiles').update({
-      plano1_imgs_usadas: 0, plano1_renders_usados: 0,
-      plano2_imgs_usadas: 0, plano2_renders_usados: 0,
-      bonus_imgs_usadas: 0, bonus_renders_usados: 0,
-    }).eq('id', r.id);
+      plano1_imgs_usadas: 0, plano1_renders_usados: 0, plano1_geracoes_usadas: 0,
+      plano2_imgs_usadas: 0, plano2_renders_usados: 0, plano2_geracoes_usadas: 0,
+      bonus_imgs_usadas: 0, bonus_renders_usados: 0, bonus_geracoes_usadas: 0,
+    } as any).eq('id', r.id);
     await load();
     setBusy(null);
   }
@@ -275,7 +285,7 @@ export function UsersTab() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
                 <button onClick={() => actAs(r)} style={{ ...actionBtn, background: '#0f213f', color: '#fff', borderColor: '#0f213f', fontWeight: 700 }} disabled={r.is_admin}>Atuar como</button>
-                <button onClick={() => resetCounters(r)} style={actionBtn} disabled={r.is_admin}>Zerar</button>
+                <button onClick={() => resetCounters(r)} style={actionBtn}>Zerar</button>
                 <button onClick={() => resetPassword(r)} style={actionBtn}>Senha</button>
               </div>
             </div>
@@ -344,7 +354,7 @@ export function UsersTab() {
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       <button onClick={() => actAs(r)} style={{ ...actionBtn, background: '#0f213f', color: '#fff', borderColor: '#0f213f', fontWeight: 700 }} disabled={r.is_admin} title={r.is_admin ? 'Não é necessário para admin' : 'Entrar no contexto deste usuário'}>Atuar como</button>
                       
-                      <button onClick={() => resetCounters(r)} style={actionBtn} disabled={r.is_admin} title={r.is_admin ? 'Admin é ilimitado' : ''}>Zerar</button>
+                      <button onClick={() => resetCounters(r)} style={actionBtn}>Zerar</button>
                       <button onClick={() => resetPassword(r)} style={actionBtn}>Senha</button>
                     </div>
                   </Td>
@@ -430,13 +440,15 @@ function PlanCell({ planId, inicio, options, onChange, onInicio }: {
 }
 
 function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey) => void }) {
-  if (row.is_admin) return <span style={{ color: '#0f213f', fontWeight: 600, fontSize: 12 }}>Ilimitado</span>;
   const slots = ([
     { label: 'P1', key: 'plano1' as SlotKey, planId: row.plano1_id, inicio: row.plano1_inicio, iu: row.plano1_imgs_usadas, il: row.plano1_imgs_limite, ru: row.plano1_renders_usados, rl: row.plano1_renders_limite },
     { label: 'P2', key: 'plano2' as SlotKey, planId: row.plano2_id, inicio: row.plano2_inicio, iu: row.plano2_imgs_usadas, il: row.plano2_imgs_limite, ru: row.plano2_renders_usados, rl: row.plano2_renders_limite },
     { label: 'B',  key: 'bonus'  as SlotKey, planId: row.bonus_id,  inicio: row.bonus_inicio,  iu: row.bonus_imgs_usadas,  il: row.bonus_imgs_limite,  ru: row.bonus_renders_usados,  rl: row.bonus_renders_limite },
   ]).filter((s) => s.planId);
-  if (!slots.length) return <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>;
+  if (!slots.length) {
+    if (row.is_admin) return <span style={{ color: '#f4b000', fontWeight: 600, fontSize: 12 }}>Ilimitado (admin)</span>;
+    return <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>;
+  }
   return (
     <div style={{ display: 'grid', gap: 4, minWidth: 160 }}>
       {slots.map((s, i) => {
@@ -501,7 +513,7 @@ function PlanPriceField({ planId, plans, costs, usdRate, value, onChange }: {
   const plan = plans.find(p => p.id === planId);
   if (!plan) return null;
   const costUsd = plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + plan.limite_geracoes * costs.content;
-  const minBrl = costUsd * usdRate * 4;
+  const minBrl = costUsd * usdRate * 3;
   const maxBrl = plan.preco_maximo_brl || 0;
   const applied = parseFloat(inp);
   const belowMin = !isNaN(applied) && applied > 0 && applied < minBrl;
@@ -542,7 +554,7 @@ function FaturamentoCell({ row, plans, costs, usdRate }: { row: Row; plans: Plan
     const plan = plans.find(p => p.id === s.planId);
     if (!plan) continue;
     const cost = plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + plan.limite_geracoes * costs.content;
-    const min = cost * usdRate * 4;
+    const min = cost * usdRate * 3;
     const preco = s.preco || 0;
     total += preco;
     if (preco > 0 && preco < min) hasWarning = true;

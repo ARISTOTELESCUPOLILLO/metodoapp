@@ -132,7 +132,7 @@ export function SettingsTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead style={{ background: '#f8fafc' }}>
                 <tr>
-                  {['Código','Nome','Imgs','Renders','Conteúdos','Custo USD','Custo R$','Preço mín. R$ (×4)'].map((h) => (
+                  {['Código','Nome','Imgs','Renders','Conteúdos','Custo USD','Custo R$','Preço mín. R$ (×3)'].map((h) => (
                     <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 12, color: '#475569', fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
@@ -141,7 +141,7 @@ export function SettingsTab() {
                 {plans.map((p) => {
                   const custoUsd = p.limite_imagens * imgRef + p.limite_renders * render + p.limite_geracoes * geracao;
                   const custoBrl = custoUsd * rate;
-                  const precoMin = custoBrl * 4;
+                  const precoMin = custoBrl * 3;
                   return (
                     <tr key={p.codigo} style={{ borderTop: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '8px 10px', fontWeight: 700 }}>{p.codigo}</td>
@@ -159,7 +159,7 @@ export function SettingsTab() {
             </table>
           </div>
           <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-            Fórmula: imgs × custo_ref + renders × custo_render + conteúdos × custo_texto. Preço mín. = custo R$ × 4.
+            Fórmula: imgs × custo_ref + renders × custo_render + conteúdos × custo_texto. Preço mín. = custo R$ × 3.
           </p>
         </div>
       )}

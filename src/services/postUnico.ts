@@ -79,7 +79,7 @@ export interface PostUnicoCopy {
   texto: string;
 }
 
-export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?: string): Promise<PostUnicoCopy> {
+export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?: string, segment?: string): Promise<PostUnicoCopy> {
   const res = await fetch('/api/generate-pu-copy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -89,6 +89,7 @@ export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?
       objetivo: data.objetivo,
       keyInfo: data.keyInfo,
       brandVoice: brandVoice || '',
+      segment: segment || '',
     }),
   });
   if (!res.ok) {
@@ -110,12 +111,12 @@ export interface PostUnicoReferences {
 
 function segmentRules(segment?: string): string {
   if (segment === 'VAREJO') {
-    return 'SEGMENTO VAREJO: produtos são protagonistas quando presentes (com destaque visual sem virar catálogo); cenário cria ambiente de loja/experiência; avatar pode ser vendedor, atendente ou cliente em apoio.';
+    return 'CONTEXTO — SEGMENTO VAREJO: negócio de comercialização de produtos ao consumidor. Quando presentes, produtos comunicam desejo de compra e benefícios (apresentar de forma atraente, não como catálogo técnico); cenário cria atmosfera de experiência de compra ou lifestyle; avatar contextualiza atendimento ou uso do produto. O tom visual e textual é convidativo e orientado ao consumo.';
   }
   if (segment === 'MARCA') {
-    return 'SEGMENTO MARCA: cenário e avatar constroem percepção, identidade e atmosfera; cenário reforça posicionamento; avatar é personagem representativo da marca.';
+    return 'CONTEXTO — SEGMENTO MARCA: construção de identidade e posicionamento. Cenário e avatar transmitem percepção, estilo de vida e valores da marca; a composição reforça aspiração e propósito; produtos, se presentes, são ícones da identidade. O tom visual e textual é aspiracional e alinhado ao posicionamento da marca.';
   }
-  return 'SEGMENTO SERVIÇOS: avatar é o elemento mais importante quando presente — transmite autoridade, presença e confiança; cenário é apoio de contexto profissional; produtos, se houver, são materiais de apoio (não catálogo).';
+  return 'CONTEXTO — SEGMENTO SERVIÇOS: prestação de serviços especializados. Avatar (quando presente) transmite autoridade, competência e confiança do profissional ou da equipe; cenário reforça o contexto profissional; a composição comunica expertise, credibilidade e entrega de valor. O tom visual e textual é confiante e orientado ao resultado.';
 }
 
 function referencesBlock(refs?: PostUnicoReferences, segment?: string): string {
@@ -162,17 +163,18 @@ export function buildPostUnicoPrompt(params: {
   const typographyBlock = buildTypographyBlock(kit.fontPair);
   const typographyShort = buildTypographyShortRule(kit.fontPair);
 
-  const copyBlock = copy && (copy.titulo || copy.texto)
+  const hasCopy = copy && (copy.titulo || copy.texto);
+  const copyBlock = hasCopy
     ? `TÍTULO E TEXTO OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
 TÍTULO: "${copy.titulo}"
 TEXTO DE APOIO: "${copy.texto}"
 
 Hierarquia tipográfica: título dominante e texto de apoio menor — mas a POSIÇÃO do bloco é livre. Pode estar no topo, na lateral esquerda, na lateral direita, na base, sobreposto à imagem, em barra inferior, dividido em duas zonas da peça, ou ancorado em um canto. EVITE a fórmula default "bloco amarelo+branco encostado na borda esquerda ocupando metade da peça" se ela não for a melhor para esta composição específica — explore outras ancoragens.`
-    : `TEXTO LIVRE — OBRIGATÓRIO (criado pela IA a partir da informação-chave):
-A IA DEVE criar lettering na peça — texto É OBRIGATÓRIO, peça sem texto não é permitida.
-Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + um TEXTO DE APOIO breve (1-2 frases) inspirados na informação-chave "${data.keyInfo.trim()}".
+    : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
+A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
+Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave "${data.keyInfo.trim()}" e no objetivo ${OBJETIVO_LABEL[data.objetivo]}.
 NÃO copie a informação-chave literalmente — interprete-a criativamente com tom publicitário.
-A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco — pode estar em qualquer região da peça, em qualquer peso/fonte dentro da tipografia da marca. Explore ancoragens além do "bloco encostado na borda esquerda".`;
+A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, em qualquer peso/fonte dentro da tipografia da marca. Explore ancoragens além do "bloco encostado na borda esquerda".`;
 
   return `⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:
 PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — notebook, laptop, tablet, iPad, celular, computador ou monitor. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.
@@ -288,6 +290,7 @@ export async function generatePostUnico(params: {
       prompt,
       format: 'post',
       referenceImages: referenceImages.length ? referenceImages : undefined,
+      modulo: 'pu',
     });
   } catch (e) {
     // Se falhou com avatar + downstream_service_error (GPT Image 2 recusa rostos),
@@ -301,6 +304,7 @@ export async function generatePostUnico(params: {
         prompt,
         format: 'post',
         referenceImages: refsWithoutAvatar.length ? refsWithoutAvatar : undefined,
+        modulo: 'pu',
       });
     } else {
       throw e;

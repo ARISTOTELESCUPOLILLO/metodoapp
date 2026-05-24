@@ -245,7 +245,7 @@ export default function App() {
 
 
   // Segmento fixado pelo admin — não-admin não pode alterar.
-  const lockedSegment = !effectiveAdmin && profile?.segmento ? profile.segmento as typeof defaultKit.segment : undefined;
+  const lockedSegment = profile?.segmento ? profile.segmento as typeof defaultKit.segment : undefined;
 
   // Quando o profile chega (ou muda), sincroniza o segment do kit com o do perfil.
   useEffect(() => {
@@ -448,6 +448,7 @@ export default function App() {
       const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length);
       const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined });
       setPostUnicoImg(dataUrl);
+      refreshProfile();
     } catch (e) {
       setError(String((e as Error).message || e));
     } finally {
@@ -487,18 +488,24 @@ export default function App() {
 
         {/* ── Cards de plano ── */}
         <div style={{ marginTop: 10 }}>
-          {effectiveAdmin ? (
-            <span style={{ background: '#f4b000', color: '#0f213f', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
-              Ilimitado (admin)
-            </span>
-          ) : slots.length === 0 ? (
+          {slots.length > 0 ? (
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              {effectiveAdmin && (
+                <span style={{ background: '#f4b000', color: '#0f213f', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
+                  Admin
+                </span>
+              )}
+              {slots.map((s) => <PlanCard key={s.key} slot={s} />)}
+            </div>
+          ) : effectiveAdmin ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ background: '#f4b000', color: '#0f213f', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>Admin</span>
+              <span style={{ background: '#1e293b', color: '#94a3b8', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>Sem plano</span>
+            </div>
+          ) : (
             <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
               Sem plano ativo — fale com o admin
             </span>
-          ) : (
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {slots.map((s) => <PlanCard key={s.key} slot={s} />)}
-            </div>
           )}
         </div>
 

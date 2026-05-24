@@ -95,7 +95,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         ...data,
         companyName: data.companyName || kit.companyName,
         mainActivity: data.mainActivity || kit.mainActivity || '',
-      }, kit.brandVoice);
+      }, kit.brandVoice, kit.segment);
       setCopy(result);
       copyKeyInfoRef.current = data.keyInfo;
       if (isRegen) setCopyRegenCount((c) => c + 1);
