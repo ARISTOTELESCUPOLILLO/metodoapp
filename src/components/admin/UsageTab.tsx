@@ -18,6 +18,7 @@ export function UsageTab() {
   const isMobile = useIsMobile();
   const [logs, setLogs] = useState<Log[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
+  const [names, setNames] = useState<Record<string, string>>({});
   const [days, setDays] = useState(30);
   const [usdRate, setUsdRate] = useState(5);
   const [loading, setLoading] = useState(true);
@@ -28,13 +29,15 @@ export function UsageTab() {
     const since = new Date(Date.now() - days * 86400000).toISOString();
     const [{ data: ls }, { data: profs }, { data: settings }] = await Promise.all([
       supabase.from('usage_logs').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(500),
-      supabase.from('profiles').select('id,email'),
+      supabase.from('profiles').select('id,email,nome'),
       supabase.from('app_settings').select('usd_brl_rate').eq('id', true).maybeSingle(),
     ]);
     setLogs((ls as Log[]) || []);
-    const map: Record<string, string> = {};
-    (profs || []).forEach((p: any) => { map[p.id] = p.email; });
-    setEmails(map);
+    const emailMap: Record<string, string> = {};
+    const nameMap: Record<string, string> = {};
+    (profs || []).forEach((p: any) => { emailMap[p.id] = p.email; if (p.nome) nameMap[p.id] = p.nome; });
+    setEmails(emailMap);
+    setNames(nameMap);
     if (settings) setUsdRate(Number(settings.usd_brl_rate));
     setLoading(false);
   }, [days]);
@@ -44,8 +47,10 @@ export function UsageTab() {
   const q = search.toLowerCase().trim();
   const filteredLogs = q
     ? logs.filter(l => {
-        const email = l.user_id ? (emails[l.user_id] || l.user_id) : '';
-        return email.toLowerCase().includes(q) || (l.modulo || '').toLowerCase().includes(q) || l.evento.toLowerCase().includes(q);
+        const email = l.user_id ? (emails[l.user_id] || '') : '';
+        const nome = l.user_id ? (names[l.user_id] || '') : '';
+        return email.toLowerCase().includes(q) || nome.toLowerCase().includes(q)
+          || (l.modulo || '').toLowerCase().includes(q) || l.evento.toLowerCase().includes(q);
       })
     : logs;
 
@@ -66,12 +71,20 @@ export function UsageTab() {
           <option value={90}>Últimos 90 dias</option>
         </select>
         <span style={{ fontSize: 12, color: '#64748b' }}>câmbio US$ 1 = R$ {usdRate.toFixed(2)}</span>
-        <input
-          placeholder="Buscar por usuário, evento ou módulo"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ marginLeft: 'auto', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13, minWidth: 220 }}
-        />
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
+          <input
+            placeholder="Buscar por nome, e-mail, evento ou módulo"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13, minWidth: 240 }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')}
+              style={{ padding: '5px 10px', border: '1px solid #cbd5e1', borderRadius: 6, background: '#f1f5f9', fontSize: 12, cursor: 'pointer', color: '#475569' }}>
+              ✕ Limpar
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
