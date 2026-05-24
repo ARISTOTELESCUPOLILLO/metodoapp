@@ -40,6 +40,16 @@ interface Props {
   onClear?: () => void;
   imageKit?: ImageKit;
   sequenceSize?: 3 | 6 | 9;
+  onImageGenerated?: () => void;
+}
+
+// Verifica se o kit tem imagens relevantes para o formato dado.
+// Estático/Estático Final/Reels: precisa de avatar ou cenário.
+// Carrossel: precisa de produto.
+function kitHasRefsForFormat(imageKit: ImageKit | undefined, formato: 'estatico' | 'carrossel' | 'estatico_final' | 'reels'): boolean {
+  if (!imageKit) return false;
+  if (formato === 'carrossel') return imageKit.produtos.some(p => !!p);
+  return !!(imageKit.avatar) || imageKit.cenarios.some(c => !!c);
 }
 
 const REGEN_MAX = 1;
@@ -52,14 +62,13 @@ interface RefSelectorProps {
   extrasCarrossel: number;
 }
 
-// Botão "Gerar outra com refs" — só aparece se há seleção marcada.
-// Aceita storageKey principal e opcionalmente uma fallbackKey (ex.: o storage
-// consolidado do bloco do carrossel) usada quando o storage principal está vazio.
-function RefsRegenButton({ storageKey, fallbackKey, busy, onRun }: { storageKey: string; fallbackKey?: string; busy: boolean; onRun: () => void }) {
+// Botão "Gerar outra com refs" — só aparece se há seleção marcada E o kit tem imagens do tipo certo.
+function RefsRegenButton({ storageKey, fallbackKey, busy, onRun, imageKit, formato }: { storageKey: string; fallbackKey?: string; busy: boolean; onRun: () => void; imageKit?: ImageKit; formato?: 'estatico' | 'carrossel' | 'estatico_final' | 'reels' }) {
   const sel = useRefSelection(storageKey);
   const selFb = useRefSelection(fallbackKey || storageKey);
   const has = sel.hasAny || selFb.hasAny;
   if (!has) return null;
+  if (!kitHasRefsForFormat(imageKit, formato || 'estatico')) return null;
   return (
     <button className="generateBtn" type="button" onClick={onRun} disabled={busy} title="Gerar outra usando as referências marcadas acima">
       {busy ? 'Gerando...' : '↻ Gerar outra com refs'}
@@ -186,7 +195,7 @@ function EditableField(props: {
   );
 }
 
-function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard'] } & RefSelectorProps) {
+function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -217,6 +226,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       setPreview(final);
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusy(false); }
   }
@@ -237,6 +247,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       setPreview(final);
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyRefs(false); }
   }
@@ -297,7 +308,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
             <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar post'}
             </button>
-            {preview && sel.hasAny && (
+            {preview && sel.hasAny && kitHasRefsForFormat(imageKit, 'estatico') && (
               <button className="generateBtn" type="button" onClick={handleGenerateWithRefs} disabled={busy || busyRefs} title="Gerar outra usando as referências marcadas acima">
                 {busyRefs ? 'Gerando...' : '↻ Gerar outra com refs'}
               </button>
@@ -323,7 +334,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
   );
 }
 
-function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard'] } & RefSelectorProps) {
+function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -354,6 +365,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
       setPreview(final);
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusy(false); }
   }
@@ -373,6 +385,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
       setPreview(final);
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyRefs(false); }
   }
@@ -432,7 +445,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
             <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar fechamento'}
             </button>
-            {preview && sel.hasAny && (
+            {preview && sel.hasAny && kitHasRefsForFormat(imageKit, 'estatico_final') && (
               <button className="generateBtn" type="button" onClick={handleGenerateWithRefs} disabled={busy || busyRefs} title="Gerar outra usando as referências marcadas acima">
                 {busyRefs ? 'Gerando...' : '↻ Gerar outra com refs'}
               </button>
@@ -459,7 +472,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
 }
 
 
-function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard'] } & RefSelectorProps) {
+function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [previews, setPreviews] = useState<(string | null)[]>(cards.map(() => null));
   const [busyIndex, setBusyIndex] = useState<number | null>(null);
@@ -497,6 +510,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[index], texto: textos[index], legenda: '', imagem: card.imagePrompt };
       const final = await composeFeedPng(kit, item, url);
       setPreviews(prev => prev.map((p, i) => i === index ? final : p));
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyIndex(null); setBusyMode(null); }
   }
@@ -563,6 +577,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[index], texto: textos[index], legenda: '', imagem: card.imagePrompt };
       const final = await composeFeedPng(kit, item, url);
       setPreviews(prev => prev.map((p, i) => i === index ? final : p));
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyIndex(null); setBusyMode(null); }
   }
@@ -607,6 +622,8 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       setAllProgress({ done: total, total });
       if (failures.length) {
         alert(`${failures.length} de ${total} card(s) falharam (cards ${failures.join(', ')}). Use "⬇ Gerar card" no card para tentar de novo.`);
+      } else {
+        onImageGenerated?.();
       }
     } finally {
       setBusyIndex(null);
@@ -657,6 +674,8 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       setAllProgress({ done: total, total });
       if (failures.length) {
         alert(`Geração com referências: ${failures.length} de ${total} card(s) falharam (cards ${failures.join(', ')}). Use o botão "↻ Gerar outra com refs" no card para tentar de novo.`);
+      } else {
+        onImageGenerated?.();
       }
     } finally {
       setBusyIndex(null);
@@ -711,7 +730,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             <span style={{ fontSize: 11, color: '#64748b' }}>Revise títulos e textos antes de confirmar.</span>
           </div>
 
-          {blockSel.hasAny && (
+          {blockSel.hasAny && kitHasRefsForFormat(imageKit, 'carrossel') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', flexWrap: 'wrap' }}>
               <button
                 type="button"
@@ -762,6 +781,8 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
                       fallbackKey={blockStorageKey}
                       busy={(busyIndex === index && busyMode === 'refs') || busyAll}
                       onRun={() => handleGenerateWithRefs(index)}
+                      imageKit={imageKit}
+                      formato="carrossel"
                     />
                   )}
                   {previews[index] && (
@@ -797,7 +818,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 // 'sinalizacao' → Veo3 gera vídeo silencioso + título queimado no canvas via FFmpeg
 type VideoMode = 'portugues' | 'kit-voz' | 'sinalizacao';
 
-function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard'] } & RefSelectorProps) {
+function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -964,6 +985,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       setPreviewBase(url);
       setVideoUrl(null);
       setCoverPng(null);
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusy(false); }
   }
@@ -998,6 +1020,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       setPreviewBase(url);
       setVideoUrl(null);
       setCoverPng(null);
+      onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyRefs(false); }
   }
@@ -1283,6 +1306,8 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
                 storageKey={`uso-ref:reels:${dayNumber}`}
                 busy={busyRefs || busyVideo}
                 onRun={handleGenerateWithRefs}
+                imageKit={imageKit}
+                formato="reels"
               />
             )}
             {preview && (() => {
@@ -1554,7 +1579,7 @@ function StoriesBlock({ seq }: { seq: StoriesSequence }) {
   );
 }
 
-export default function ResultsView({ result, kit, mood, onClear, imageKit, sequenceSize }: Props) {
+export default function ResultsView({ result, kit, mood, onClear, imageKit, sequenceSize, onImageGenerated }: Props) {
   const [savingPdf, setSavingPdf] = useState(false);
   const { guard, dialog } = useImageGenAlert();
   const { cotaPersonalizados, isAdmin, refresh: refreshProfile } = useProfile();
@@ -1664,16 +1689,16 @@ export default function ResultsView({ result, kit, mood, onClear, imageKit, sequ
           )}
           {sequence.map((item) => {
             if (item.type === 'feed') {
-              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} />;
+              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
             }
             if (item.type === 'final') {
-              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} />;
+              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
             }
             if (item.type === 'carousel') {
-              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} />;
+              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
             }
             if (item.type === 'reels') {
-              return <ReelsCard key={`reels-${item.day}`} reels={item.reels} kit={kit} mood={mood} dayNumber={item.day} track={(result as any).track} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} />;
+              return <ReelsCard key={`reels-${item.day}`} reels={item.reels} kit={kit} mood={mood} dayNumber={item.day} track={(result as any).track} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
             }
             return null;
           })}

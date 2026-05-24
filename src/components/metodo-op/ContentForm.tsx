@@ -179,7 +179,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     <section className="panel">
       <div className="sectionHeader">
         <div>
-          <span className="eyebrow">Motor preservado</span>
+          <span className="eyebrow">Motor criativo</span>
           <h2>Geração de conteúdo</h2>
         </div>
         

@@ -28,6 +28,7 @@ interface Props {
   onChange: (kit: BrandKit) => void;
   onSave?: () => void;
   onLoad?: () => void;
+  onClear?: () => void;
   loading?: boolean;
   saving?: boolean;
   saved?: boolean;
@@ -45,7 +46,7 @@ const COLORS_PRESET = [
   '#d97706','#f4b000','#e5e7eb','#ffffff',
 ];
 
-export default function BrandKitForm({ kit, onChange, onSave, onLoad, loading, saving, saved, lockedSegment }: Props) {
+export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, loading, saving, saved, lockedSegment }: Props) {
   const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false);
   const update = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) => onChange({ ...kit, [key]: value });
   const changeSegment = (segment: Segment) => onChange({ ...kit, segment, brandVoice: defaultVoice(segment) });
@@ -59,15 +60,28 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, loading, s
           <h2>Kit de Marca</h2>
         </div>
         {onLoad && (
-          <button
-            type="button"
-            onClick={onLoad}
-            disabled={loading || saving}
-            style={{ marginLeft: 24, background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 10, padding: '0 16px', minHeight: 40, fontWeight: 700, fontSize: 14, cursor: loading || saving ? 'not-allowed' : 'pointer' }}
-            title="Carregar o Kit de Marca que você já salvou"
-          >
-            {loading ? 'Carregando...' : '↺ Carregar meu Kit'}
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 24, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={onLoad}
+              disabled={loading || saving}
+              style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 10, padding: '0 16px', minHeight: 40, fontWeight: 700, fontSize: 14, cursor: loading || saving ? 'not-allowed' : 'pointer' }}
+              title="Carregar o Kit de Marca que você já salvou"
+            >
+              {loading ? 'Carregando...' : '↺ Carregar meu Kit'}
+            </button>
+            {onClear && (
+              <button
+                type="button"
+                onClick={onClear}
+                disabled={loading || saving}
+                style={{ background: '#f8fafc', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 10, padding: '0 16px', minHeight: 40, fontWeight: 700, fontSize: 14, cursor: loading || saving ? 'not-allowed' : 'pointer' }}
+                title="Limpar Kit de Marca e dados locais"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
         )}
       </div>
 

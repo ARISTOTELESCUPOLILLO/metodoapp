@@ -35,12 +35,13 @@ export function PlanCard({ slot }: Props) {
       background: isBonus ? 'rgba(244,176,0,.10)' : 'rgba(255,255,255,.08)',
       border: `1px solid ${isBonus ? 'rgba(244,176,0,.35)' : 'rgba(255,255,255,.14)'}`,
       borderRadius: 10,
-      padding: '11px 13px',
-      minWidth: 180,
-      flex: '1 1 180px',
+      padding: '9px 11px',
+      minWidth: 130,
+      maxWidth: 200,
+      flex: '0 1 160px',
       display: 'flex',
       flexDirection: 'column',
-      gap: 8,
+      gap: 6,
     }}>
 
       {/* ── Cabeçalho ── */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import BrandKitForm from './components/metodo-op/BrandKitForm';
 import ConfirmDialog from './components/metodo-op/ConfirmDialog';
 import ContentForm from './components/metodo-op/ContentForm';
@@ -153,6 +153,21 @@ export default function App() {
   useEffect(() => { saveForm(form as any); }, [form]);
   useEffect(() => { savePostUnico(postUnico); }, [postUnico]);
   useEffect(() => { localStorage.setItem('metodo-op-modo', modo); }, [modo]);
+
+  // Auto-seleciona o modo de acordo com o plano1 do usuário ao logar.
+  const modeInitializedForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!effectiveUserId || !slots.length) return;
+    if (modeInitializedForRef.current === effectiveUserId) return;
+    modeInitializedForRef.current = effectiveUserId;
+    const plano1 = slots.find(s => s.key === 'plano1');
+    if (!plano1) return;
+    if (/^PU/i.test(plano1.plan.codigo)) {
+      setModo('postUnico');
+    } else {
+      setModo('metodo');
+    }
+  }, [effectiveUserId, slots]);
 
   // Quando o usuário (ou impersonação) muda, carrega o kit dele do banco
   // e restaura o conteúdo gerado persistido em localStorage daquele usuário.
@@ -517,8 +532,8 @@ export default function App() {
           </button>
         </div>
 
-        <div className="heroActions">
-          {impersonation && (
+        {impersonation && (
+          <div className="heroActions">
             <button
               className="clientBtn"
               type="button"
@@ -528,16 +543,13 @@ export default function App() {
             >
               ⏻ Sair de "atuando como {impersonation.nome}"
             </button>
-          )}
-          <button className="clearBtn" type="button" onClick={handleClear}>
-            Limpar
-          </button>
-        </div>
+          </div>
+        )}
       </header>
 
       <div className="layout">
         <div className="leftCol">
-          <BrandKitForm kit={kit} onChange={handleKitChange} onSave={handleSave} onLoad={handleLoadKit} loading={loadingKit} saving={saving} saved={saved} lockedSegment={lockedSegment} />
+          <BrandKitForm kit={kit} onChange={handleKitChange} onSave={handleSave} onLoad={handleLoadKit} onClear={handleClear} loading={loadingKit} saving={saving} saved={saved} lockedSegment={lockedSegment} />
           {modo === 'metodo' && (
             <ContentForm
               data={form}
@@ -596,9 +608,10 @@ export default function App() {
               <p>{loadingMessage}</p>
             </div>
           ) : null}
-          {modo === 'metodo' && (
-            <ResultsView result={result} kit={kit} mood={mood} onClear={handleClearMethodResult} imageKit={imageKit} sequenceSize={form.sequenceSize} />
-          )}
+          {/* ResultsView fica sempre montado para não perder imagens geradas ao trocar de aba */}
+          <div style={{ display: modo === 'metodo' ? undefined : 'none' }}>
+            <ResultsView result={result} kit={kit} mood={mood} onClear={handleClearMethodResult} imageKit={imageKit} sequenceSize={form.sequenceSize} onImageGenerated={refreshProfile} />
+          </div>
           {modo === 'postUnico' && (
             <PostUnicoResult
               imageDataUrl={postUnicoImg}
