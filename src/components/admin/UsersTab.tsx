@@ -72,6 +72,11 @@ export function UsersTab() {
     navigate({ to: '/app' });
   }
 
+  function verGeracoes(r: Row) {
+    startImpersonation({ userId: r.id, nome: r.nome || r.email, email: r.email });
+    navigate({ to: '/historico' });
+  }
+
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: profs }, { data: pls }, { data: roles }, { data: s }] = await Promise.all([
@@ -285,6 +290,7 @@ export function UsersTab() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
                 <button onClick={() => actAs(r)} style={{ ...actionBtn, background: '#0f213f', color: '#fff', borderColor: '#0f213f', fontWeight: 700 }} disabled={r.is_admin}>Atuar como</button>
+                <button onClick={() => verGeracoes(r)} style={{ ...actionBtn, background: '#0f172a', color: '#fff', borderColor: '#0f172a' }}>Gerações</button>
                 <button onClick={() => resetCounters(r)} style={actionBtn}>Zerar</button>
                 <button onClick={() => resetPassword(r)} style={actionBtn}>Senha</button>
               </div>
@@ -353,7 +359,7 @@ export function UsersTab() {
                   <Td>
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       <button onClick={() => actAs(r)} style={{ ...actionBtn, background: '#0f213f', color: '#fff', borderColor: '#0f213f', fontWeight: 700 }} disabled={r.is_admin} title={r.is_admin ? 'Não é necessário para admin' : 'Entrar no contexto deste usuário'}>Atuar como</button>
-                      
+                      <button onClick={() => verGeracoes(r)} style={{ ...actionBtn, background: '#0f172a', color: '#fff', borderColor: '#0f172a' }} title="Ver histórico de gerações arquivadas deste usuário">Gerações</button>
                       <button onClick={() => resetCounters(r)} style={actionBtn}>Zerar</button>
                       <button onClick={() => resetPassword(r)} style={actionBtn}>Senha</button>
                     </div>

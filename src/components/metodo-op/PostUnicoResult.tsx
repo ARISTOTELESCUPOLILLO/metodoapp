@@ -1,12 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { useServerFn } from '@tanstack/react-start';
+import { useEffect, useState } from 'react';
 import { downloadDataUrl } from '../../utils/canvasComposer';
 import { mopName } from '../../utils/file';
 import { useIsMobile } from '../../hooks/use-mobile';
 import { useImageGenAlert } from './PreImageAlert';
-import { useProfile } from '../../hooks/useProfile';
-import { saveGeneration } from '../../lib/assets.functions';
-import { dataUrlToWebpBase64 } from '../../utils/toWebp';
 import { ArchiveButton } from './ArchiveButton';
 import type { PostUnicoCaption } from '../../services/postUnico';
 
@@ -21,6 +17,8 @@ interface Props {
   onRegenerateCaption?: () => void;
   onClear?: () => void;
   started?: boolean;
+  /** Slot do plano que será usado ao arquivar (plano1 | plano2 | bonus). */
+  slot?: 'plano1' | 'plano2' | 'bonus';
 }
 
 export default function PostUnicoResult({
@@ -34,6 +32,7 @@ export default function PostUnicoResult({
   onRegenerateCaption,
   onClear,
   started,
+  slot,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const [captionRegens, setCaptionRegens] = useState(0);
@@ -44,45 +43,6 @@ export default function PostUnicoResult({
   const { guard, dialog } = useImageGenAlert();
   const CAPTION_MAX = 1;
   const captionExhausted = captionRegens >= CAPTION_MAX;
-  const { slots } = useProfile();
-  const saveFn = useServerFn(saveGeneration);
-  const [savedFor, setSavedFor] = useState<string | null>(null);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
-  const saveRef = useRef(false);
-
-  // Auto-salva no histórico quando a imagem fica pronta.
-  useEffect(() => {
-    if (!imageDataUrl || savedFor === imageDataUrl || saveRef.current) return;
-    const slot = slots[0]?.key;
-    if (!slot) return; // sem plano ativo → nada a salvar
-    saveRef.current = true;
-    (async () => {
-      try {
-        const base64 = await dataUrlToWebpBase64(imageDataUrl, 0.88, 1920);
-        const res = await saveFn({
-          data: {
-            tipo: 'PU',
-            slot,
-            formato: 'estatico',
-            legenda: caption?.full || '',
-            titulo: companyName ? `Post Único — ${companyName}` : 'Post Único',
-            images: [{ base64, ordem: 1 }],
-          },
-        });
-        setSavedFor(imageDataUrl);
-        if (res.evicted > 0) {
-          setSaveMsg('Imagem mais antiga foi substituída no histórico (limite de 3 por plano).');
-        } else {
-          setSaveMsg('Salvo no histórico (30 dias).');
-        }
-        setTimeout(() => setSaveMsg(null), 4500);
-      } catch (e) {
-        console.warn('[historico] save PU falhou', e);
-      } finally {
-        saveRef.current = false;
-      }
-    })();
-  }, [imageDataUrl, savedFor, slots, saveFn, companyName]);
 
   // Mantém histórico de até 2 legendas (inicial + 1 regerada).
   useEffect(() => {
@@ -147,11 +107,6 @@ export default function PostUnicoResult({
         </div>
         <p>1080×1350 com respiro de 110px e logo aplicada. Pronta para o feed.</p>
       </div>
-      {saveMsg && (
-        <div style={{ background: '#ecfeff', border: '1px solid #67e8f9', color: '#0e7490', padding: '8px 12px', borderRadius: 10, fontSize: 13, margin: '6px 0' }}>
-          💾 {saveMsg}
-        </div>
-      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
         {imageDataUrl && (
           <img
@@ -259,6 +214,7 @@ export default function PostUnicoResult({
                     <ArchiveButton
                       tipo="PU"
                       formato="estatico"
+                      slot={slot}
                       legenda={captionText}
                       titulo={companyName ? `Post Único — ${companyName}` : 'Post Único'}
                       imageDataUrls={[imageDataUrl]}

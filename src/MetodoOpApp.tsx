@@ -119,8 +119,9 @@ export default function App() {
   const { profile, slots, isAdmin, isSelfAdmin, refresh: refreshProfile } = useProfile(impersonation?.userId || null);
   const loadKitServerFn = useServerFn(loadKitServer);
   const saveKitServerFn = useServerFn(saveKitServer);
-  // Se o admin logado está atuando como outro usuário, mantém acesso total
-  const effectiveAdmin = isSelfAdmin || isAdmin;
+  // Quando impersonando: usa só o status do usuário alvo (não o do admin logado).
+  // Assim o admin vê as mesmas restrições de plano que o cliente vê.
+  const effectiveAdmin = impersonation ? isAdmin : (isSelfAdmin || isAdmin);
   const rendersTotal = slots.reduce((s, sl) => s + (sl.rendersLimite || 0), 0);
   const rendersUsadosSum = slots.reduce((s, sl) => s + (sl.rendersUsados || 0), 0);
   const rendersRestantes = Math.max(0, rendersTotal - rendersUsadosSum);
@@ -133,6 +134,8 @@ export default function App() {
   const semPlano = slots.length === 0 && !effectiveAdmin;
   const planAccess = buildPlanAccess(slots, effectiveAdmin);
   const effectiveUserId = impersonation?.userId || user?.id || null;
+  // Slot que será usado para arquivar gerações PU: preferência ao slot com plano PU.
+  const puSlot = (slots.find(s => /^PU\d+/i.test(s.plan.codigo)) || slots[0])?.key;
   const greetingName = impersonation?.nome || profile?.nome || user?.email || '';
   const ultimoLoginFmt = profile?.ultimo_login
     ? new Date(profile.ultimo_login).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
@@ -631,6 +634,7 @@ export default function App() {
               onRegenerateCaption={handleGenerateCaption}
               onClear={handleClearPostUnico}
               started={postUnicoStarted}
+              slot={puSlot}
             />
           )}
           {modo === 'imageKit' && (
