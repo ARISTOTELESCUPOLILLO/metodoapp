@@ -28,6 +28,7 @@ import { Route as ApiGeneratePuCopyRouteImport } from './routes/api/generate-pu-
 import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
 import { Route as ApiGenerateContentRouteImport } from './routes/api/generate-content'
 import { Route as ApiGenerateCaptionRouteImport } from './routes/api/generate-caption'
+import { Route as ApiFalStatusRouteImport } from './routes/api/fal-status'
 import { Route as ApiDeleteVoiceRouteImport } from './routes/api/delete-voice'
 import { Route as ApiConfirmVoiceRouteImport } from './routes/api/confirm-voice'
 import { Route as ApiCloneVoiceRouteImport } from './routes/api/clone-voice'
@@ -128,6 +129,11 @@ const ApiGenerateCaptionRoute = ApiGenerateCaptionRouteImport.update({
   path: '/api/generate-caption',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiFalStatusRoute = ApiFalStatusRouteImport.update({
+  id: '/api/fal-status',
+  path: '/api/fal-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDeleteVoiceRoute = ApiDeleteVoiceRouteImport.update({
   id: '/api/delete-voice',
   path: '/api/delete-voice',
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
+  '/api/fal-status': typeof ApiFalStatusRoute
   '/api/generate-caption': typeof ApiGenerateCaptionRoute
   '/api/generate-content': typeof ApiGenerateContentRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
+  '/api/fal-status': typeof ApiFalStatusRoute
   '/api/generate-caption': typeof ApiGenerateCaptionRoute
   '/api/generate-content': typeof ApiGenerateContentRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
+  '/api/fal-status': typeof ApiFalStatusRoute
   '/api/generate-caption': typeof ApiGenerateCaptionRoute
   '/api/generate-content': typeof ApiGenerateContentRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/api/clone-voice'
     | '/api/confirm-voice'
     | '/api/delete-voice'
+    | '/api/fal-status'
     | '/api/generate-caption'
     | '/api/generate-content'
     | '/api/generate-image'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/api/clone-voice'
     | '/api/confirm-voice'
     | '/api/delete-voice'
+    | '/api/fal-status'
     | '/api/generate-caption'
     | '/api/generate-content'
     | '/api/generate-image'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/api/clone-voice'
     | '/api/confirm-voice'
     | '/api/delete-voice'
+    | '/api/fal-status'
     | '/api/generate-caption'
     | '/api/generate-content'
     | '/api/generate-image'
@@ -318,6 +330,7 @@ export interface RootRouteChildren {
   ApiCloneVoiceRoute: typeof ApiCloneVoiceRoute
   ApiConfirmVoiceRoute: typeof ApiConfirmVoiceRoute
   ApiDeleteVoiceRoute: typeof ApiDeleteVoiceRoute
+  ApiFalStatusRoute: typeof ApiFalStatusRoute
   ApiGenerateCaptionRoute: typeof ApiGenerateCaptionRoute
   ApiGenerateContentRoute: typeof ApiGenerateContentRoute
   ApiGenerateImageRoute: typeof ApiGenerateImageRoute
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerateCaptionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/fal-status': {
+      id: '/api/fal-status'
+      path: '/api/fal-status'
+      fullPath: '/api/fal-status'
+      preLoaderRoute: typeof ApiFalStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/delete-voice': {
       id: '/api/delete-voice'
       path: '/api/delete-voice'
@@ -510,6 +530,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCloneVoiceRoute: ApiCloneVoiceRoute,
   ApiConfirmVoiceRoute: ApiConfirmVoiceRoute,
   ApiDeleteVoiceRoute: ApiDeleteVoiceRoute,
+  ApiFalStatusRoute: ApiFalStatusRoute,
   ApiGenerateCaptionRoute: ApiGenerateCaptionRoute,
   ApiGenerateContentRoute: ApiGenerateContentRoute,
   ApiGenerateImageRoute: ApiGenerateImageRoute,

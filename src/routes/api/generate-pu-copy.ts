@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getVoiceProfile } from '@/data/brandVoice';
+import { getUserIdFromRequest, debitUsage } from '@/lib/usage.server';
+import { COST_USD } from '@/lib/costs';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -64,12 +66,12 @@ INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
 {
-  "titulo": "título curto, no MÁXIMO 6 palavras, impactante, em português brasileiro",
+  "titulo": "título curto, no MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas, impactante, em português brasileiro",
   "texto": "texto de apoio curto, no MÁXIMO 14 palavras, complementa o título sem repetir, em português brasileiro"
 }
 
 Regras:
-- "titulo" no máximo 6 palavras, sem ponto final, sem aspas, sem emoji, sem hashtag
+- "titulo" no máximo 6 palavras, cada palavra com no máximo 3 sílabas (ex.: "negócio" 3 sílabas ✓, "resultado" 4 sílabas ✗ — use "ganho", "retorno"), sem ponto final, sem aspas, sem emoji, sem hashtag
 - "texto" no máximo 14 palavras, frase completa, sem hashtag, sem emoji
 - Português brasileiro, sem inglês, sem markdown
 - Interprete a informação-chave com criatividade — NÃO copie literal
@@ -102,6 +104,24 @@ Regras:
 
           let parsed: { titulo?: string; texto?: string };
           try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
+
+          const userId = await getUserIdFromRequest(request).catch(() => null);
+          if (userId) {
+            try {
+              const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
+              await debitUsage(userId, 0, 0, {
+                evento: 'gerar_copia_pu',
+                modulo: 'metodo-op',
+                payload: { objetivo },
+                geracoes: 1,
+                custoUsd: COST_USD.content,
+                preferredSlot: 'plano2',
+                impersonatedBy,
+              });
+            } catch (e) {
+              console.warn('[debit_usage pu-copy]', (e as Error).message);
+            }
+          }
 
           return Response.json({
             titulo: String(parsed.titulo || '').trim(),

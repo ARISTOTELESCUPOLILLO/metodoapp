@@ -21,6 +21,7 @@ interface Plan {
   limite_renders: number;
   limite_geracoes: number;
   preco_maximo_brl: number;
+  ativo: boolean;
 }
 
 interface Profile {
@@ -73,7 +74,7 @@ export function CustosTab() {
       { data: allLogs },
     ] = await Promise.all([
       supabase.from('usage_logs').select('user_id,evento,qtd_imagens,qtd_renders,qtd_geracoes,custo_usd,created_at').gte('created_at', since),
-      supabase.from('plans').select('id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl').eq('ativo', true),
+      supabase.from('plans').select('id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl,ativo'),
       supabase.from('profiles').select('id,email,nome,is_test,plano1_id,plano2_id,plano1_preco_brl,plano2_preco_brl,bonus_preco_brl'),
       supabase.from('app_settings').select('usd_brl_rate,falai_balance_usd,openai_balance_usd,image_base_price_usd,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
       supabase.from('user_roles').select('user_id').eq('role', 'admin'),
@@ -137,6 +138,8 @@ export function CustosTab() {
   const planMap: Record<string, Plan> = {};
   plans.forEach(p => { planMap[p.id] = p; });
 
+  const activePlans = plans.filter(p => p.ativo);
+
   const realProfiles = profiles.filter(p => !p.is_test && !adminIds.has(p.id));
 
   // ── Consumo por cliente ──
@@ -171,7 +174,7 @@ export function CustosTab() {
   const margemGeral = totalVendaGeral > 0 ? ((totalVendaGeral - totalCustoProjGeral) / totalVendaGeral) * 100 : null;
 
   // ── Previsão de consumo por plano ativo ──
-  const previsao = plans.map(p => {
+  const previsao = activePlans.map(p => {
     const users1 = profiles.filter(u => u.plano1_id === p.id);
     const users2 = profiles.filter(u => u.plano2_id === p.id);
     const totalClientes = new Set([...users1.map(u => u.id), ...users2.map(u => u.id)]).size;
@@ -191,17 +194,22 @@ export function CustosTab() {
   const mesesOpenai = prevTotalOpenai > 0 ? (settings.openai_balance_usd / prevTotalOpenai).toFixed(1) : '∞';
 
   // ── Por plano (custo real + projeção + preços) ──
-  const planRows = plans.map(p => {
+  const planRows = activePlans.map(p => {
     const users = profiles.filter(u => u.plano1_id === p.id || u.plano2_id === p.id);
     const userIds = new Set(users.map(u => u.id));
     const planLogs = logs.filter(l => l.user_id && userIds.has(l.user_id));
     const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
     const projecao = p.limite_imagens * settings.image_price_usd + p.limite_renders * settings.render_price_usd + p.limite_geracoes * settings.geracao_price_usd;
-    const precoMin = projecao * rate * 3;
+    const realPrices = users.flatMap(u => [
+      u.plano1_id === p.id ? Number(u.plano1_preco_brl || 0) : 0,
+      u.plano2_id === p.id ? Number(u.plano2_preco_brl || 0) : 0,
+    ]).filter(v => v > 0);
+    const precoMinReal = realPrices.length > 0 ? Math.min(...realPrices) : null;
+    const precoMedReal = realPrices.length > 0 ? realPrices.reduce((a, b) => a + b, 0) / realPrices.length : null;
     const precoMax = Number(p.preco_maximo_brl || 0);
-    const margemMin = precoMin > 0 ? ((precoMin - projecao * rate) / precoMin) * 100 : null;
+    const margemMin = precoMinReal && precoMinReal > 0 ? ((precoMinReal - projecao * rate) / precoMinReal) * 100 : null;
     const margemMax = precoMax > 0 ? ((precoMax - projecao * rate) / precoMax) * 100 : null;
-    return { planId: p.id, codigo: p.codigo, nome: p.nome, usuarios: users.length, custoRealUsd: custoReal, projecaoUsd: projecao, precoMin, precoMax, margemMin, margemMax };
+    return { planId: p.id, codigo: p.codigo, nome: p.nome, usuarios: users.length, custoRealUsd: custoReal, projecaoUsd: projecao, precoMinReal, precoMedReal, precoMax, margemMin, margemMax };
   }).filter(r => r.usuarios > 0 || r.custoRealUsd > 0);
 
   // ── Consumo de testes ──
@@ -229,6 +237,12 @@ export function CustosTab() {
     return { aid, email, imgs, renders, geracoes, custoUsd };
   }).filter(Boolean) as { aid: string; email: string; imgs: number; renders: number; geracoes: number; custoUsd: number }[];
 
+  async function zerarConsumo() {
+    if (!confirm('ATENÇÃO: Isso vai deletar TODOS os logs de consumo e zerar os contadores de uso de todos os perfis. Esta ação não pode ser desfeita. Continuar?')) return;
+    await supabase.rpc('reset_all_usage' as any);
+    load();
+  }
+
   async function savePrecoMax(planId: string) {
     const val = Number(precoMaxEdit[planId]);
     if (isNaN(val)) return;
@@ -253,9 +267,14 @@ export function CustosTab() {
           <option value={90}>Últimos 90 dias</option>
         </select>
         <span style={{ fontSize: 11, color: '#94a3b8' }}>US$ 1 = R$ {rate.toFixed(2)}</span>
-        <button onClick={load} style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid #cbd5e1', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer' }}>
-          ↻ Atualizar
-        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button onClick={load} style={{ background: 'transparent', border: '1px solid #cbd5e1', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer' }}>
+            ↻ Atualizar
+          </button>
+          <button onClick={zerarConsumo} style={{ background: '#fff1f2', border: '1px solid #fca5a5', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', color: '#b91c1c', fontWeight: 600 }}>
+            Zerar Consumo
+          </button>
+        </div>
       </div>
 
       {loading ? <p style={{ color: '#64748b' }}>Carregando…</p> : (
@@ -400,7 +419,7 @@ export function CustosTab() {
                 <tr>
                   <Th>Plano</Th><Th>Clientes</Th>
                   <Th>Custo real R$</Th><Th>Custo proj. R$</Th>
-                  <Th>Preço mín. R$</Th>
+                  <Th>Preço mín. real</Th><Th>Preço méd. real</Th>
                   <Th>Preço máx. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(editável)</span></Th>
                   <Th>Marg. mín.</Th><Th>Marg. máx.</Th>
                 </tr>
@@ -412,7 +431,8 @@ export function CustosTab() {
                     <Td>{r.usuarios}</Td>
                     <Td>{brl(r.custoRealUsd)}</Td>
                     <Td style={{ color: '#64748b' }}>{brl(r.projecaoUsd)}</Td>
-                    <Td style={{ color: '#0f172a', fontWeight: 600 }}>R$ {r.precoMin.toFixed(2)}</Td>
+                    <Td style={{ color: '#0f172a', fontWeight: 600 }}>{r.precoMinReal !== null ? `R$ ${r.precoMinReal.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
+                    <Td style={{ color: '#0f172a' }}>{r.precoMedReal !== null ? `R$ ${r.precoMedReal.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
                     <Td>
                       {precoMaxEdit[r.planId] !== undefined ? (
                         <div style={{ display: 'flex', gap: 4 }}>
@@ -446,7 +466,7 @@ export function CustosTab() {
               </tbody>
             </table></div>
             <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-              Preço mín. = custo projetado × câmbio × 3. Margem calculada sobre projeção de 100% de uso.
+              Preço mín./méd. = menor/média dos preços cobrados nos perfis dos clientes vinculados ao plano. Margem calculada sobre projeção de 100% de uso.
             </p>
           </Section>
 

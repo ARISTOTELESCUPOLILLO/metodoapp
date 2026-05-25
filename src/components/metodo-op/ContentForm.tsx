@@ -156,9 +156,9 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const currentTrack: Track = data.track || 'cinematica';
   const isExperimentacao = currentTrack === 'experimentacao';
 
-  // Auto-corrige seleção atual se ficou fora dos planos
+  // Auto-corrige seleção atual se ficou fora dos planos (vale para todos, incluindo admin)
   useEffect(() => {
-    if (!planAccess || isAdmin) return;
+    if (!planAccess) return;
     const validTracks: Track[] = (['cinematica', 'visual', 'experimentacao'] as Track[]).filter(trackAllowed);
     if (validTracks.length === 0) return;
     if (!trackAllowed(currentTrack)) {
@@ -172,7 +172,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planAccess, currentTrack, data.sequenceSize, isAdmin]);
+  }, [planAccess, currentTrack, data.sequenceSize]);
 
 
   return (

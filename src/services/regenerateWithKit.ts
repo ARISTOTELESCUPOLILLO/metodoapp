@@ -201,7 +201,8 @@ export async function regenerateWithKit(
   const deviceRule =
     '⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:\n' +
     'PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — notebook, laptop, tablet, iPad, celular, computador ou monitor. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.\n' +
-    'CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.\n\n';
+    'CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.\n' +
+    'PESSOA FÍSICA NA CENA: o porta-voz aparece como PESSOA REAL dentro do ambiente — NUNCA como imagem exibida na tela ou tampa de dispositivo algum.\n\n';
   const anchoredPrompt = (anchorPrefix + deviceRule + baseScene).slice(0, 1800);
 
   if (isReels) {

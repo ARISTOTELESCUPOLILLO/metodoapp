@@ -166,7 +166,7 @@ function buildImagePrompt(params: {
   const finalModifier = isFinal ? `\n${ESTATICO_FINAL_MODIFIER}\n` : '';
 
   const coverRefBlock = (isCover && hasRefs)
-    ? `\nREFERÊNCIA VISUAL OBRIGATÓRIA — A imagem de referência enviada é o PRIMEIRO FRAME do reels (o porta-voz na cena real, SEM logo aplicada). USE essa pessoa e esse cenário como BASE da capa: mesmo rosto (idade, etnia, barba, cabelo, óculos, expressão), mesma roupa, mesmo enquadramento aproximado, mesmo ambiente, mesma iluminação. NÃO invente outra pessoa, outro figurino, outro cenário. A capa é literalmente o frame do reels com o lettering do título aplicado por cima — não um novo conceito visual. Preserve a composição da referência e só adicione o título conforme as regras de tipografia e mood abaixo. NÃO desenhe logo, marca d'água, símbolo ou ícone gráfico — a logomarca será aplicada depois por composição (canvas), fora da IA.\n`
+    ? `\nREFERÊNCIA VISUAL OBRIGATÓRIA — A imagem de referência enviada é o PRIMEIRO FRAME do reels (o porta-voz na cena). USE essa pessoa e esse cenário como BASE da capa: mesmo rosto (idade, etnia, barba, cabelo, óculos, expressão), mesma roupa, mesmo enquadramento aproximado, mesmo ambiente, mesma iluminação e mesmo clima visual. NÃO invente outra pessoa, outro figurino, outro cenário. A capa é literalmente o frame do reels com o lettering do título aplicado por cima — não um novo conceito visual. Preserve integralmente o estilo de luz, contraste e temperatura de cor da referência (incluindo cenas escuras ou de alto contraste quando for o estilo do mood). Preserve a composição da referência e só adicione o título conforme as regras de tipografia e mood abaixo. NÃO desenhe logo, marca d'água, símbolo ou ícone gráfico — a logomarca será aplicada depois por composição (canvas), fora da IA.\n`
     : '';
 
   // Bloco anti-paráfrase: gpt-image-2 tende a "reescrever" o título em PT-BR
@@ -299,14 +299,13 @@ export async function generatePostImage(params: {
   const isCover = vertical === 'reels_cover';
   const isFinal = vertical === 'estatico_final';
   const moodInstructions = moodVisualInstructions[mood] || moodVisualInstructions['OP-01'];
-  // Frame do reels: gpt-image-2 já incorpora a logo via referência (sem canvas).
-  // Em todos os casos, se logoDataUrl foi enviado, ele entra como referência na geração
-  // (frame do reels, post estático e estático final).
-  // EXCEÇÃO — Capa do Reels: a logo é aplicada por canvas (composeReelsPng) no chamador,
-  // respeitando kit.logoPosition. Mas a capa AGORA aceita referenceImages (frame do reels)
-  // para ficar coerente com o porta-voz, rodando em fal-ai/gpt-image-2/edit.
+  // Frame do reels: logo aplicada por canvas (composeReelsPng) no chamador — NÃO via IA.
+  // Quando logoDataUrl é passado por paths legados (posts estáticos), entra como referência.
+  // Capa do Reels: logo aplicada por canvas; NÃO passa referenceImages — o modelo de edição
+  // ignorava o título quando recebia o frame como referência. Usa text-to-image puro.
   const hasLogo = !isCover && !!logoDataUrl;
-  const coverHasRefs = isCover && !!(referenceImages && referenceImages.length);
+  // coverHasRefs sempre false: capa usa text-to-image para renderizar título corretamente.
+  const coverHasRefs = false;
 
   // Instrução de logo embutida no frame do reels (não há mais composição canvas).
   const reelsLogoLine = (() => {
@@ -321,12 +320,16 @@ export async function generatePostImage(params: {
 
   const frameHasRefs = isReels && !!(referenceImages && referenceImages.length);
   // Reforço extra de refs — só quando há imagens de referência para não repetir a regra base.
+  // IMPORTANTE: NÃO mencionar "mesma roupa" pois o anchor do avatar já instrui "IGNORE a roupa".
   const frameRefsReinforcement = frameHasRefs
-    ? `\n\nREFORÇO COM REFERÊNCIAS: USE a pessoa e o cenário da imagem de referência como BASE. Mesmo rosto, mesma roupa, mesmo ambiente, mesma iluminação.`
+    ? `\n\nREFORÇO COM REFERÊNCIAS: A pessoa da imagem de referência deve aparecer como SUJEITO FÍSICO E REAL da cena — em pé, sentada ou em movimento na locação descrita, jamais como imagem projetada/exibida na tela ou tampa de qualquer dispositivo. Preserve exatamente: rosto, traços faciais, etnia, cabelo, barba, óculos — mantendo a identidade visual da pessoa. Mesmo ambiente e iluminação da cena. NÃO copie a roupa da referência — vista a pessoa com roupa coerente com o contexto da cena.`
     : '';
 
   // Regra de dispositivos digitais com ângulos prescritos — obrigatória em TODOS os frames do reels.
-  const DEVICE_RULE_REELS = `\n\nDISPOSITIVOS DIGITAIS — ÂNGULOS OBRIGATÓRIOS: NOTEBOOK: câmera frontal à tela 30°–50° horizontal, olho a olho — tela com conteúdo real visível, tampa traseira geometricamente oculta pela própria tela. CELULAR: tela voltada para a câmera 20°–40° da vertical — verso oculto. TABLET: tela inclinada 50°–70° da horizontal voltada para a câmera — verso oculto. PROIBIDO em qualquer dispositivo: tampa/verso/carcaça com tela, interface, gráfico ou reflexo de UI. TELA FRONTAL sempre com conteúdo real (app, dashboard, texto — nunca tela preta).`;
+  const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRAS ABSOLUTAS PARA O REELS:
+PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela, na capa ou na tampa traseira de qualquer dispositivo. É TERMINANTEMENTE PROIBIDO mostrar a pessoa (ou qualquer foto de rosto) como conteúdo na tela de notebook, celular, tablet ou monitor.
+ÂNGULOS OBRIGATÓRIOS: NOTEBOOK: câmera frontal à tela 30°–50° horizontal — tela com conteúdo real visível, tampa traseira oculta pela própria tela. CELULAR: tela voltada para a câmera 20°–40° da vertical — verso oculto. TABLET: tela inclinada 50°–70° da horizontal voltada para a câmera — verso oculto.
+PROIBIDO em qualquer dispositivo: tampa/verso/carcaça com tela, interface, gráfico ou rosto projetado. TELA FRONTAL sempre com conteúdo real (app, dashboard, texto — nunca tela preta ou tela escura).`;
 
   const prompt = isReels
     ? `REGRAS INVIOLÁVEIS PARA A IMAGEM DO REELS (PRIMEIRO FRAME DO VÍDEO):
@@ -334,7 +337,7 @@ export async function generatePostImage(params: {
 - APENAS UMA PESSOA adulta visível em todo o quadro. Proibido grupo, reunião, plateia, cliente ao lado, reflexo de pessoa, silhueta humana ou corpo parcial no fundo.
 - Se a cena pedir várias pessoas, reunião ou atendimento, converta para UMA pessoa porta-voz sozinha, olhando para a câmera.
 - Enquadramento close-up ou meio-corpo, rosto bem visível, boca claramente enquadrada para fala.
-- Imagem pura: SEM TÍTULO, sem legendas, sem letras, sem números, sem palavras desenhadas em parte alguma do quadro (a única exceção permitida é a logomarca aplicada conforme instrução abaixo).
+- Imagem pura: SEM TÍTULO, sem legendas, sem letras, sem números, sem palavras desenhadas em parte alguma do quadro${reelsLogoLine ? ' (a única exceção é a logomarca — veja instrução abaixo)' : ''}.
 - Composição vertical 9:16 cinematográfica (canvas 1080x1920), alta qualidade, foco nítido no rosto.
 
 ZONA DE RESPIRO INVIOLÁVEL: 150 px de margem livre nas QUATRO bordas (topo, base, esquerda, direita) — nada importante (rosto, olhos, boca, mãos, produto-foco, gráfico) entra nesse perímetro. Bordas são continuação natural do fundo.
@@ -362,8 +365,8 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
   return generateImageAsync({
     prompt,
     format: (isReels || isCover) ? 'reels' : 'post',
-    // Capa: continua sem logo via IA (canvas faz isso). Refs (frame do reels) entram
-    // quando informadas, levando a chamada para fal-ai/gpt-image-2/edit.
+    // Capa: sem logo via IA (canvas aplica). Callers de capa não passam referenceImages
+    // (edit model ignorava o título com frame de referência).
     logoDataUrl: isCover ? undefined : (hasLogo ? logoDataUrl : undefined),
     referenceImages: (referenceImages && referenceImages.length) ? referenceImages : undefined,
   });

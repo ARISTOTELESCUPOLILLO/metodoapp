@@ -19,12 +19,16 @@ interface Invite {
 }
 interface Plan { id: string; codigo: string; nome: string; elegivel_bonus: boolean }
 interface TestProfile { id: string; nome: string | null; email: string }
+interface ProfileSlots { email: string; plano1_id: string | null; plano2_id: string | null; bonus_id: string | null }
+interface DirectProfile { id: string; email: string; nome: string | null; plano1_id: string | null; plano2_id: string | null; bonus_id: string | null }
 
 export function InvitesTab() {
   const isMobile = useIsMobile();
   const [rows, setRows] = useState<Invite[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [testProfiles, setTestProfiles] = useState<TestProfile[]>([]);
+  const [profByEmail, setProfByEmail] = useState<Record<string, ProfileSlots>>({});
+  const [directProfs, setDirectProfs] = useState<DirectProfile[]>([]);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [segment, setSegment] = useState<'SERVIÇOS' | 'VAREJO' | 'MARCA' | ''>('');
@@ -42,14 +46,23 @@ export function InvitesTab() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: inv }, { data: pls }, { data: tp }] = await Promise.all([
+    const [{ data: inv }, { data: pls }, { data: tp }, { data: profs }] = await Promise.all([
       supabase.from('invited_emails').select('*').order('created_at', { ascending: false }),
       supabase.from('plans').select('id,codigo,nome,elegivel_bonus').eq('ativo', true).order('nome'),
       supabase.from('profiles').select('id,nome,email').eq('is_test', true).order('nome'),
+      supabase.from('profiles').select('id,nome,email,plano1_id,plano2_id,bonus_id'),
     ]);
     setRows((inv as Invite[]) || []);
     setPlans((pls as Plan[]) || []);
     setTestProfiles((tp as TestProfile[]) || []);
+    const pbe: Record<string, ProfileSlots> = {};
+    ((profs as any[]) || []).forEach((p: any) => { if (p.email) pbe[p.email.toLowerCase()] = p; });
+    setProfByEmail(pbe);
+    const invitedSet = new Set(((inv as Invite[]) || []).map((r: Invite) => r.email.toLowerCase()));
+    const directs = ((profs as any[]) || []).filter(
+      (p: any) => p.email && !invitedSet.has(p.email.toLowerCase()) && (p.plano1_id || p.plano2_id || p.bonus_id)
+    );
+    setDirectProfs(directs as DirectProfile[]);
     setLoading(false);
   }, []);
 
@@ -124,6 +137,15 @@ export function InvitesTab() {
   const bonusPlans = plans.filter((p) => p.elegivel_bonus);
   const mainPlans = plans.filter((p) => !p.elegivel_bonus);
   const labelFor = (id: string | null) => id ? (plans.find((p) => p.id === id)?.codigo || '—') : '—';
+  const slotsFor = (r: Invite) => {
+    const p = profByEmail[r.email.toLowerCase()];
+    return {
+      p1: p?.plano1_id ?? r.plano1_id,
+      p2: p?.plano2_id ?? r.plano2_id,
+      bonus: p?.bonus_id ?? r.bonus_id,
+      synced: !!p,
+    };
+  };
   const testNameFor = (id: string | null) => id ? (testProfiles.find((t) => t.id === id)?.nome || testProfiles.find((t) => t.id === id)?.email || '—') : null;
   const statusColor = (s: string) => s === 'aceito' ? '#15803d' : s === 'revogado' ? '#b91c1c' : '#0f213f';
   const statusLabel = (s: string) => s === 'aceito' ? 'Ativo' : s === 'revogado' ? 'Bloqueado' : 'Convidado';
@@ -258,9 +280,9 @@ export function InvitesTab() {
                   </div>
                   <span style={{ background: statusColor(r.status), color: '#fff', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, height: 'fit-content' }}>{statusLabel(r.status)}</span>
                 </div>
-                <IRow k="P1" v={labelFor(r.plano1_id)} />
-                <IRow k="P2" v={labelFor(r.plano2_id)} />
-                <IRow k="Bônus" v={labelFor(r.bonus_id)} />
+                <IRow k="P1" v={labelFor(slotsFor(r).p1)} />
+                <IRow k="P2" v={labelFor(slotsFor(r).p2)} />
+                <IRow k="Bônus" v={labelFor(slotsFor(r).bonus)} />
                 <IRow k="Cadastrado" v={new Date(r.created_at).toLocaleDateString('pt-BR')} />
                 <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
                   <button style={{ ...btn, flex: 1 }} onClick={() => copyLink(r)}>Link</button>
@@ -273,7 +295,21 @@ export function InvitesTab() {
                 </div>
               </div>
             ))}
-            {filtered.length === 0 && <p style={{ textAlign: 'center', color: '#64748b' }}>Nenhum convite.</p>}
+            {filtered.length === 0 && directProfs.length === 0 && <p style={{ textAlign: 'center', color: '#64748b' }}>Nenhum convite.</p>}
+            {directProfs.map((dp) => (
+              <div key={dp.id} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{dp.nome || '—'}</div>
+                    <div style={{ color: '#475569', fontSize: 12, wordBreak: 'break-all' }}>{dp.email}</div>
+                  </div>
+                  <span style={{ background: '#15803d', color: '#fff', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, height: 'fit-content' }}>Direto</span>
+                </div>
+                <IRow k="P1" v={labelFor(dp.plano1_id)} />
+                <IRow k="P2" v={labelFor(dp.plano2_id)} />
+                <IRow k="Bônus" v={labelFor(dp.bonus_id)} />
+              </div>
+            ))}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -289,9 +325,9 @@ export function InvitesTab() {
                     <Td><strong>{r.nome || '—'}</strong></Td>
                     <Td style={{ color: '#475569' }}>{r.email}</Td>
                     <Td><span style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8' }}>{(r as any).segment || '—'}</span></Td>
-                    <Td>{labelFor(r.plano1_id)}</Td>
-                    <Td>{labelFor(r.plano2_id)}</Td>
-                    <Td>{labelFor(r.bonus_id)}</Td>
+                    <Td>{labelFor(slotsFor(r).p1)}</Td>
+                    <Td>{labelFor(slotsFor(r).p2)}</Td>
+                    <Td>{labelFor(slotsFor(r).bonus)}</Td>
                     <Td><KitBadge r={r} /></Td>
                     <Td>
                       <span style={{
@@ -313,9 +349,23 @@ export function InvitesTab() {
                     </Td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
-                  <tr><td colSpan={9} style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>Nenhum convite.</td></tr>
+                {filtered.length === 0 && directProfs.length === 0 && (
+                  <tr><td colSpan={10} style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>Nenhum convite.</td></tr>
                 )}
+                {directProfs.map((dp) => (
+                  <tr key={dp.id} style={{ borderTop: '1px solid #e2e8f0', background: '#f0fdf4' }}>
+                    <Td><strong>{dp.nome || '—'}</strong></Td>
+                    <Td style={{ color: '#475569' }}>{dp.email}</Td>
+                    <Td>—</Td>
+                    <Td>{labelFor(dp.plano1_id)}</Td>
+                    <Td>{labelFor(dp.plano2_id)}</Td>
+                    <Td>{labelFor(dp.bonus_id)}</Td>
+                    <Td>—</Td>
+                    <Td><span style={{ background: '#15803d', color: '#fff', padding: '3px 12px', borderRadius: 999, fontSize: 11, fontWeight: 600 }}>Direto</span></Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

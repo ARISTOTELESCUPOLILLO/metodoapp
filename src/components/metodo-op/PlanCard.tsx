@@ -9,11 +9,20 @@ export function PlanCard({ slot }: Props) {
   const isBonus = slot.key === 'bonus';
   const cycle = computeCycleFromExpiry(slot.expiraEm);
 
-  const pct = slot.imgsLimite > 0
-    ? Math.min(100, Math.round((slot.imgsUsadas / slot.imgsLimite) * 100))
-    : 0;
-
+  // Régua principal: gerações → imagens → renders (fallback em cadeia).
+  const usedVal = slot.geracoesLimite > 0 ? slot.geracoesUsadas
+    : slot.imgsLimite > 0 ? slot.imgsUsadas
+    : slot.rendersUsados;
+  const limitVal = slot.geracoesLimite > 0 ? slot.geracoesLimite
+    : slot.imgsLimite > 0 ? slot.imgsLimite
+    : slot.rendersLimite;
+  const pct = limitVal > 0 ? Math.min(100, Math.round((usedVal / limitVal) * 100)) : 0;
   const barColor = pct >= 90 ? '#ef4444' : pct >= 50 ? '#f59e0b' : '#22c55e';
+
+  // Barra secundária de renders (quando o plano tem tanto conteúdo/imagem quanto renders).
+  const hasSecondBar = slot.rendersLimite > 0 && limitVal !== slot.rendersLimite;
+  const renderPct = slot.rendersLimite > 0 ? Math.min(100, Math.round((slot.rendersUsados / slot.rendersLimite) * 100)) : 0;
+  const renderBarColor = renderPct >= 90 ? '#ef4444' : renderPct >= 50 ? '#f59e0b' : '#6366f1';
 
   const expiryColor =
     cycle.status === 'overdue' ? '#ef4444' :
@@ -73,45 +82,50 @@ export function PlanCard({ slot }: Props) {
         </div>
       </div>
 
-      {/* ── Barra de imagens (USO EXTENDIDO) ── */}
-      {slot.imgsLimite > 0 && (
+      {/* ── Régua de consumo principal (gerações / imagens) ── */}
+      {limitVal > 0 && (
         <div>
-          <div style={{ marginBottom: 4 }}>
-            <span style={{ color: 'rgba(255,255,255,.45)', fontSize: 10 }}>Imagens</span>
-          </div>
-
-          {/* Trilho + preenchimento */}
+          {hasSecondBar && (
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,.40)', marginBottom: 2 }}>conteúdo / img</div>
+          )}
           <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
             <div style={{
               position: 'absolute', inset: 0, right: `${100 - pct}%`,
               borderRadius: 3, background: barColor,
               transition: 'right .3s ease',
             }} />
-
-            {/* Marcador 50% — metade */}
-            <div style={{
-              position: 'absolute', left: '50%', top: -3, height: 12,
-              width: 1.5, background: 'rgba(255,255,255,.45)',
-              transform: 'translateX(-50%)',
-            }} />
-            {/* Marcador 90% — fase crítica */}
-            <div style={{
-              position: 'absolute', left: '90%', top: -3, height: 12,
-              width: 1.5, background: 'rgba(239,68,68,.65)',
-              transform: 'translateX(-50%)',
-            }} />
+            <div style={{ position: 'absolute', left: '50%', top: -3, height: 12, width: 1.5, background: 'rgba(255,255,255,.45)', transform: 'translateX(-50%)' }} />
+            <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
           </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 1 }}>
+            <div style={{ position: 'relative', height: 10, flex: 1 }}>
+              <span style={{ position: 'absolute', left: 'calc(50% - 4px)', fontSize: 8, color: 'rgba(255,255,255,.30)', userSelect: 'none' }}>½</span>
+              <span style={{ position: 'absolute', left: 'calc(90% - 4px)', fontSize: 8, color: 'rgba(239,68,68,.55)', userSelect: 'none' }}>!</span>
+            </div>
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)', flexShrink: 0 }}>{usedVal}/{limitVal}</span>
+          </div>
+        </div>
+      )}
 
-          {/* Legendas dos marcadores */}
-          <div style={{ position: 'relative', height: 12, marginTop: 1 }}>
-            <span style={{
-              position: 'absolute', left: 'calc(50% - 4px)',
-              fontSize: 8, color: 'rgba(255,255,255,.30)', userSelect: 'none',
-            }}>½</span>
-            <span style={{
-              position: 'absolute', left: 'calc(90% - 4px)',
-              fontSize: 8, color: 'rgba(239,68,68,.55)', userSelect: 'none',
-            }}>!</span>
+      {/* ── Barra secundária de vídeos (renders) ── */}
+      {hasSecondBar && (
+        <div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.40)', marginBottom: 2 }}>vídeos</div>
+          <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
+            <div style={{
+              position: 'absolute', inset: 0, right: `${100 - renderPct}%`,
+              borderRadius: 3, background: renderBarColor,
+              transition: 'right .3s ease',
+            }} />
+            <div style={{ position: 'absolute', left: '50%', top: -3, height: 12, width: 1.5, background: 'rgba(255,255,255,.45)', transform: 'translateX(-50%)' }} />
+            <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 1 }}>
+            <div style={{ position: 'relative', height: 10, flex: 1 }}>
+              <span style={{ position: 'absolute', left: 'calc(50% - 4px)', fontSize: 8, color: 'rgba(255,255,255,.30)', userSelect: 'none' }}>½</span>
+              <span style={{ position: 'absolute', left: 'calc(90% - 4px)', fontSize: 8, color: 'rgba(239,68,68,.55)', userSelect: 'none' }}>!</span>
+            </div>
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)', flexShrink: 0 }}>{slot.rendersUsados}/{slot.rendersLimite}</span>
           </div>
         </div>
       )}

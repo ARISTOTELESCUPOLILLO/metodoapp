@@ -49,8 +49,11 @@ export function UsageTab() {
     ? logs.filter(l => {
         const email = l.user_id ? (emails[l.user_id] || '') : '';
         const nome = l.user_id ? (names[l.user_id] || '') : '';
-        return email.toLowerCase().includes(q) || nome.toLowerCase().includes(q)
-          || (l.modulo || '').toLowerCase().includes(q) || l.evento.toLowerCase().includes(q);
+        return email.toLowerCase().includes(q)
+          || nome.toLowerCase().includes(q)
+          || (l.user_id || '').toLowerCase().startsWith(q)
+          || (l.modulo || '').toLowerCase().includes(q)
+          || l.evento.toLowerCase().includes(q);
       })
     : logs;
 

@@ -18,15 +18,23 @@ function AjustesPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [imagePrice, setImagePrice] = useState('');
+  const [imagePriceBase, setImagePriceBase] = useState('');
   const [renderPrice, setRenderPrice] = useState('');
+  const [geracaoPrice, setGeracaoPrice] = useState('');
   const [usdRate, setUsdRate] = useState('');
+  const [falaiBalance, setFalaiBalance] = useState('');
+  const [openaiBalance, setOpenaiBalance] = useState('');
 
   useEffect(() => {
     supabase.from('app_settings').select('*').eq('id', true).maybeSingle().then(({ data }) => {
       if (data) {
         setImagePrice(String(data.image_price_usd));
+        setImagePriceBase(String((data as any).image_base_price_usd || ''));
         setRenderPrice(String(data.render_price_usd));
+        setGeracaoPrice(String((data as any).geracao_price_usd || ''));
         setUsdRate(String(data.usd_brl_rate));
+        setFalaiBalance(String((data as any).falai_balance_usd || ''));
+        setOpenaiBalance(String((data as any).openai_balance_usd || ''));
       }
       setLoading(false);
     });
@@ -40,9 +48,13 @@ function AjustesPage() {
       .from('app_settings')
       .update({
         image_price_usd: Number(imagePrice),
+        image_base_price_usd: Number(imagePriceBase),
         render_price_usd: Number(renderPrice),
+        geracao_price_usd: Number(geracaoPrice),
         usd_brl_rate: Number(usdRate),
-      })
+        falai_balance_usd: Number(falaiBalance),
+        openai_balance_usd: Number(openaiBalance),
+      } as any)
       .eq('id', true);
     setSaving(false);
     setMsg(error ? `Erro: ${error.message}` : 'Valores salvos.');
@@ -58,17 +70,44 @@ function AjustesPage() {
       </p>
 
       <form onSubmit={save} style={{ display: 'grid', gap: 14 }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: '#475569', margin: 0, textTransform: 'uppercase', letterSpacing: 0.5 }}>Saldos das APIs</p>
         <Field
-          label="Imagem (US$ por imagem)"
+          label="Saldo depositado na fal.ai (US$)"
+          value={falaiBalance}
+          onChange={setFalaiBalance}
+          hint="Total disponível na conta fal.ai. Atualizar quando fizer recarga."
+        />
+        <Field
+          label="Saldo disponível na OpenAI (US$)"
+          value={openaiBalance}
+          onChange={setOpenaiBalance}
+          hint="Total disponível na conta OpenAI. Atualizar quando fizer recarga."
+        />
+
+        <p style={{ fontSize: 12, fontWeight: 700, color: '#475569', margin: '8px 0 0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Preços unitários</p>
+        <Field
+          label="Imagem c/ refs (US$ por imagem)"
           value={imagePrice}
           onChange={setImagePrice}
-          hint="Custo unitário de cada imagem gerada."
+          hint="Custo de imagem gerada com referências (gpt-image-2/edit)."
+        />
+        <Field
+          label="Imagem base (US$ por imagem)"
+          value={imagePriceBase}
+          onChange={setImagePriceBase}
+          hint="Custo de imagem gerada sem referências (text-to-image)."
         />
         <Field
           label="Render vídeo + áudio (US$ por render)"
           value={renderPrice}
           onChange={setRenderPrice}
-          hint="Custo unitário de cada render de vídeo (com áudio)."
+          hint="Custo unitário de cada render de vídeo."
+        />
+        <Field
+          label="Conteúdo/texto (US$ por geração)"
+          value={geracaoPrice}
+          onChange={setGeracaoPrice}
+          hint="Custo de cada geração de conteúdo de texto (gpt-4.1-mini)."
         />
         <Field
           label="Câmbio do dólar (R$ por US$ 1)"
@@ -80,9 +119,8 @@ function AjustesPage() {
         <div style={{
           background: '#f1f5f9', padding: 12, borderRadius: 8, fontSize: 13, color: '#334155',
         }}>
-          Preview: 1 imagem = US$ {Number(imagePrice || 0).toFixed(2)} ·
-          {' '}1 render = US$ {Number(renderPrice || 0).toFixed(2)} ·
-          {' '}US$ 1 = R$ {Number(usdRate || 0).toFixed(2)}
+          fal.ai: US$ {Number(falaiBalance || 0).toFixed(2)} · OpenAI: US$ {Number(openaiBalance || 0).toFixed(2)} ·
+          {' '}Câmbio: R$ {Number(usdRate || 0).toFixed(2)}/US$
         </div>
 
         {msg && <p style={{ fontSize: 13, color: msg.startsWith('Erro') ? '#b91c1c' : '#15803d' }}>{msg}</p>}

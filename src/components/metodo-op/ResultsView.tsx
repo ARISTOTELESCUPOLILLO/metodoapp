@@ -812,10 +812,10 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 }
 
 
-// Modos de renderização de vídeo:
-// 'portugues'   → Veo3 gera vídeo com áudio TTS em pt-BR nativo
-// 'kit-voz'     → Veo3 gera vídeo silencioso + TTS voz clonada + lipsync
-// 'sinalizacao' → Veo3 gera vídeo silencioso + título queimado no canvas via FFmpeg
+// Modos de renderização de vídeo (Veo3.1 Lite):
+// 'portugues'   → áudio nativo do modelo em pt-BR
+// 'kit-voz'     → TTS com voz clonada sincronizada via audio_url
+// 'sinalizacao' → vídeo silencioso + título queimado no canvas via FFmpeg
 type VideoMode = 'portugues' | 'kit-voz' | 'sinalizacao';
 
 function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
@@ -860,7 +860,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
     };
   }, []);
 
-  // Garante que o modo kit-voz só fica ativo quando há voz treinada.
+  // Garante que modos com voz clonada só ficam ativos quando há voz treinada.
   useEffect(() => {
     if (!hasClonedVoice && videoMode === 'kit-voz') {
       setVideoMode('portugues');
@@ -879,20 +879,15 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
   const videoStepLabel = (() => {
     if (!busyVideo) return null;
     if (burnProgress) return burnProgress;
-    if (videoMode === 'kit-voz') {
-      if (videoElapsed < 90) return 'Etapa 1/3: Gerando o vídeo (Veo)…';
-      if (videoElapsed < 130) return 'Etapa 2/3: Sintetizando sua voz…';
-      return 'Etapa 3/3: Sincronizando a boca com o áudio…';
-    }
     if (videoMode === 'sinalizacao') {
-      return videoElapsed > 60 ? 'Etapa 2/2: Aplicando sinalização visual…' : 'Etapa 1/2: Gerando vídeo (Veo)…';
+      return videoElapsed > 60 ? 'Aplicando sinalização visual…' : 'Gerando vídeo…';
     }
     return 'Gerando vídeo…';
   })();
   const videoProgressPct = (() => {
     if (!busyVideo) return 0;
     if (videoMode === 'kit-voz') {
-      return Math.min(95, Math.round((videoElapsed / 180) * 95));
+      return Math.min(95, Math.round((videoElapsed / 120) * 95));
     }
     if (videoMode === 'sinalizacao') {
       return Math.min(95, Math.round((videoElapsed / 120) * 95));
@@ -968,6 +963,8 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
   async function runGenerate() {
     setBusy(true);
     try {
+      // Logo NÃO vai para a IA — gpt-image-2/edit com logo como referência ignorava o prompt
+      // da cena. Logo é aplicada por canvas (igual ao path com refs do Kit Imagem).
       const url = await generatePostImage({
         imagePrompt: reels.imagePrompt,
         titulo: '', texto: '',
@@ -976,13 +973,11 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         accentColor: kit.accentColor || '#f4b000',
         fontFamily: kit.fontPair || 'Montserrat',
         mood, vertical: 'reels',
-        logoDataUrl: kit.logoDataUrl,
         logoPosition: kit.logoPosition,
       });
-      setPreview(url);
-      // Sem refs: o frame do reels já vem com a logo embutida pela IA, então
-      // o frame "sem logo" não existe separado — usamos o mesmo como base.
-      setPreviewBase(url);
+      const final = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
+      setPreview(final);
+      setPreviewBase(url);  // frame limpo (sem logo) = base ideal para a capa
       setVideoUrl(null);
       setCoverPng(null);
       onImageGenerated?.();
@@ -1043,12 +1038,36 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         imageBase64: preview,
         script,
         videoMode,
-        // Backward compat para versões anteriores do backend.
         useClonedVoice: videoMode === 'kit-voz',
       }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao gerar vídeo');
+
+    // Backend submete o job (Kling AI Avatar) e retorna imediatamente com statusUrl/responseUrl.
+    // O frontend faz o poll via /api/fal-status a cada 5s até receber o vídeo.
+    if (data.phase === 'pending' && data.statusUrl && data.responseUrl) {
+      const deadline = Date.now() + 10 * 60 * 1000;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 5000));
+        const statusRes = await fetch(
+          `/api/fal-status?statusUrl=${encodeURIComponent(data.statusUrl)}&responseUrl=${encodeURIComponent(data.responseUrl)}`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+        );
+        const s = await statusRes.json() as { status: string; videoUrl?: string; error?: string };
+        if (s.status === 'done' && s.videoUrl) {
+          return {
+            videoUrl: s.videoUrl,
+            usedClonedVoice: data.usedClonedVoice === true,
+            requestedClonedVoice: data.requestedClonedVoice === true,
+          };
+        }
+        if (s.status === 'failed') throw new Error(s.error || 'Geração falhou.');
+        // status === 'processing': continua polling
+      }
+      throw new Error('Geração de vídeo não completou em 10 minutos. Tente novamente.');
+    }
+
     return {
       videoUrl: data.videoUrl as string,
       usedClonedVoice: data.usedClonedVoice === true,
@@ -1074,6 +1093,9 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       const coverRefImage = previewBase || preview;
 
       // Só gera nova capa se ainda não há uma — em retries reutiliza a capa existente.
+      // SEM referenceImages: gpt-image-2/edit com o frame como ref ignorava o título.
+      // Text-to-image puro renderiza o título corretamente; coerência visual vem do mesmo
+      // imagePrompt + mood. Logo aplicada por canvas após geração.
       const coverPromise: Promise<string> = coverPng
         ? Promise.resolve(coverPng)
         : generatePostImage({
@@ -1088,7 +1110,6 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
             vertical: 'reels_cover',
             logoDataUrl: kit.logoDataUrl,
             logoPosition: kit.logoPosition,
-            referenceImages: coverRefImage ? [coverRefImage] : undefined,
           }).then(async (url) => (kit.logoDataUrl ? composeReelsPng(kit, url) : url));
 
       const videoPromise = submitVideoRequest();
@@ -1143,6 +1164,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       }
 
       setVideoUrl(finalVideoUrl);
+      onImageGenerated?.();
     } finally {
       setBusyVideo(false);
       setVideoStartedAt(null);
@@ -1184,6 +1206,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       setVideoUrl(finalVideoUrl);
       setUsedClonedVoice(r.usedClonedVoice);
       setRequestedClonedVoice(r.requestedClonedVoice);
+      onImageGenerated?.();
     } catch (e) {
       const msg = (e as Error)?.message || 'erro desconhecido';
       console.error('[retryVideoOnly]', e);
@@ -1203,6 +1226,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
     try {
       // Título da capa = hook/título do reels.
       const titleText = hook.trim();
+      // SEM referenceImages: text-to-image renderiza o título; logo aplicada por canvas.
       const url = await generatePostImage({
         imagePrompt: reels.imagePrompt,
         titulo: titleText,
@@ -1215,9 +1239,6 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         vertical: 'reels_cover',
         logoDataUrl: kit.logoDataUrl,
         logoPosition: kit.logoPosition,
-        // Ref = frame sem logo quando disponível; fallback = preview com logo.
-        // Logo é reaplicada por canvas após o /edit retornar.
-        referenceImages: (previewBase || preview) ? [(previewBase || preview) as string] : undefined,
       });
       const withLogo = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
       setCoverPng(withLogo);
@@ -1322,26 +1343,26 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
           </div>
           {preview && (
             <div className="cardActions" style={{ marginTop: 8, flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
-              {/* Seletor dos 2 modos de renderização de vídeo */}
+              {/* Seletor dos modos de renderização de vídeo */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 {(
                   [
                     {
                       mode: 'portugues' as VideoMode,
                       icon: '🎙️',
-                      label: 'Voz aplicativo',
-                      desc: 'Áudio automático',
+                      label: 'Voz nativa',
+                      desc: '',
                       disabled: false,
-                      title: 'Gera vídeo com voz do aplicativo em português.',
+                      title: 'Gera vídeo com voz automática em português.',
                     },
                     {
                       mode: 'kit-voz' as VideoMode,
                       icon: '🎤',
                       label: 'Kit de Voz',
-                      desc: hasClonedVoice ? 'Voz clonada' : 'Configure no Kit',
+                      desc: hasClonedVoice ? '' : 'Configure no Kit',
                       disabled: !hasClonedVoice,
                       title: hasClonedVoice
-                        ? 'Gera vídeo com sua voz clonada + sincronia labial (~3 min).'
+                        ? 'Gera vídeo com sua voz clonada.'
                         : 'Treine e aprove sua voz no Kit Imagem primeiro.',
                     },
                   ] as Array<{ mode: VideoMode; icon: string; label: string; desc: string; disabled: boolean; title: string }>
@@ -1366,18 +1387,12 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
                     >
                       <span style={{ fontSize: 18 }}>{icon}</span>
                       <span>{label}</span>
-                      <span style={{ fontSize: 10, opacity: 0.75 }}>{desc}</span>
+                      {desc && <span style={{ fontSize: 10, opacity: 0.75 }}>{desc}</span>}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Dica por modo */}
-              {!busyVideo && videoMode === 'kit-voz' && hasClonedVoice && (
-                <div style={{ fontSize: 12, color: '#64748b' }}>
-                  ⏱️ Com voz clonada: ~3 min (vídeo + voz + sincronia da boca).
-                </div>
-              )}
 
               <button className="generateBtn" type="button" onClick={handleGenerateVideo} disabled={busyVideo || busy}>
                 {busyVideo
@@ -1386,7 +1401,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
                   ? '↻ Gerar vídeo novamente'
                   : videoMode === 'kit-voz'
                   ? '🎤 Gerar vídeo com minha voz'
-                  : '🎙️ Gerar vídeo (voz aplicativo)'}
+                  : '🎙️ Gerar vídeo'}
               </button>
 
               {busyVideo && videoMode === 'kit-voz' && (

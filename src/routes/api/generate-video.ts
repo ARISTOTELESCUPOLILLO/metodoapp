@@ -3,9 +3,9 @@ import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.serv
 import { COST_USD } from '@/lib/costs';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
-// Veo3 exige HTTP URL (não aceita base64). Faz upload temporário no bucket
-// image-kits e gera uma signed URL de 1 hora para o FAL acessar.
-async function uploadFrameForVeo(base64DataUrl: string, userId: string | null): Promise<string> {
+// Kling Avatar exige HTTP URL (não aceita base64). Faz upload temporário no bucket
+// image-kits e gera uma signed URL de 1 hora para o fal.ai acessar.
+async function uploadFrame(base64DataUrl: string, userId: string | null): Promise<string> {
   const m = base64DataUrl.match(/^data:([^;]+);base64,(.+)$/s);
   if (!m) throw new Error('Frame inválido (esperado data URL base64).');
   const mime = m[1];
@@ -19,11 +19,76 @@ async function uploadFrameForVeo(base64DataUrl: string, userId: string | null): 
   const { data, error: signErr } = await supabaseAdmin.storage
     .from('image-kits')
     .createSignedUrl(path, 3600);
-  if (signErr || !data?.signedUrl) throw new Error('Não foi possível gerar URL do frame para o Veo.');
+  if (signErr || !data?.signedUrl) throw new Error('Não foi possível gerar URL do frame.');
   return data.signedUrl;
 }
 
 const FAL_QUEUE = 'https://queue.fal.run';
+
+// TTS voz nativa: ElevenLabs Multilingual v2 — alta qualidade em pt-BR com vozes preset.
+const TTS_MODEL = 'fal-ai/elevenlabs/tts/multilingual-v2';
+
+const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
+
+// Vídeo: Kling AI Avatar v2 Pro — animação mais natural, inclui gestos e movimento corporal.
+const AVATAR_MODEL = 'fal-ai/kling-video/ai-avatar/v2/pro';
+
+// Fallback quando a detecção de gênero/idade falha.
+const NATIVE_VOICE_FALLBACK = 'Rachel';
+
+// Mapeamento gênero+faixa → voz ElevenLabs profissional em pt-BR.
+const VOICE_MAP: Record<string, string> = {
+  'male-young':   'Adam',    // masculino jovem (18–35) — articulado, moderno
+  'male-adult':   'George',  // masculino adulto (36–60) — maduro, autoridade
+  'male-senior':  'George',  // masculino sênior (60+)   — maduro, confiável
+  'female-young': 'Bella',   // feminino jovem (18–35)   — calorosa, expressiva
+  'female-adult': 'Rachel',  // feminino adulto (36–60)  — calma, profissional
+  'female-senior':'Rachel',  // feminino sênior (60+)    — calma, confiável
+};
+
+// Usa GPT-4o mini vision para detectar gênero e faixa etária do avatar na imagem.
+// Resposta em texto simples ("male senior") — evita falhas de parse de JSON.
+async function detectNativeVoice(imageBase64: string, openaiKey: string): Promise<string> {
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 10,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Look at the person in this photo. Reply with exactly two words: their gender (male or female) and age group (young for 18-35, adult for 36-60, senior for 60+). Example: "male senior"',
+            },
+            { type: 'image_url', image_url: { url: imageBase64, detail: 'low' } },
+          ],
+        }],
+      }),
+    });
+    if (!res.ok) {
+      console.warn('[generate-video] vision API error', res.status);
+      return NATIVE_VOICE_FALLBACK;
+    }
+    const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const content = (data.choices?.[0]?.message?.content ?? '').toLowerCase();
+    console.log('[generate-video] vision response: "%s"', content);
+
+    // Extrai gênero e faixa etária via regex — robusto a qualquer formato de resposta.
+    const isMale = /\bmale\b/.test(content) && !/\bfemale\b/.test(content);
+    const age = /\bsenior\b/.test(content) ? 'senior' : /\byoung\b/.test(content) ? 'young' : 'adult';
+    const gender = isMale ? 'male' : 'female';
+
+    const voice = VOICE_MAP[`${gender}-${age}`] ?? NATIVE_VOICE_FALLBACK;
+    console.log('[generate-video] detected gender=%s age=%s → voice=%s', gender, age, voice);
+    return voice;
+  } catch (e) {
+    console.warn('[generate-video] voice detection falhou:', (e as Error).message);
+    return NATIVE_VOICE_FALLBACK;
+  }
+}
 
 async function falSubmit(modelPath: string, falKey: string, payload: unknown) {
   const res = await fetch(`${FAL_QUEUE}/${modelPath}`, {
@@ -75,7 +140,7 @@ async function falWaitResult<T = unknown>(
   }
   if (status !== 'COMPLETED') {
     throw new Error(
-      `fal ${label} ainda em processamento (status=${status ?? 'desconhecido'}). A fila está demorando mais que o esperado — tente novamente em alguns minutos.`,
+      `fal ${label} ainda em processamento (status=${status ?? 'desconhecido'}). Tente novamente em alguns minutos.`,
     );
   }
   const finalRes = await fetch(submit.response_url, {
@@ -88,74 +153,23 @@ async function falWaitResult<T = unknown>(
   return JSON.parse(finalText) as T;
 }
 
-/**
- * Pré-processa o script antes de enviar ao TTS para melhorar pronúncia em pt-BR.
- *
- * Problemas observados no MiniMax speech-02-hd:
- * - Palavras em ALL CAPS são lidas como siglas (ex.: "FIRME" → "F-I-R-M-E")
- * - Grupos consonantais iniciais (fr, fl, pr, br, cl, cr, dr, tr…) perdem sílabas
- *
- * Estratégia:
- * 1. Converte ALL CAPS (≥3 chars) para Title Case → modelo lê como palavra normal
- * 2. Hifenização explícita de padrões problemáticos conhecidos em pt-BR
- */
-function preprocessTTSScript(text: string): string {
-  // 1. ALL CAPS → Title Case (evita leitura como sigla)
-  let out = text.replace(/\b([A-ZÀÁÂÃÄÉÊÍÓÔÕÚÇ]{3,})\b/g, (w) =>
-    w.charAt(0) + w.slice(1).toLowerCase()
-  );
-
-  // 2. Hifenização de sílabas problemáticas para pt-BR
-  //    O hífen ajuda o modelo a separar sílabas sem mudar o texto visível.
-  const fixes: Array<[RegExp, string]> = [
-    // grupos consonantais iniciais (fr, fl, br, bl, cr, cl, dr, gr, pr, tr)
-    [/\bfirme\b/gi,        'fir-me'],
-    [/\bforte\b/gi,        'for-te'],
-    [/\bfrente\b/gi,       'fren-te'],
-    [/\bfluir\b/gi,        'flu-ir'],
-    [/\bpronto\b/gi,       'pron-to'],
-    [/\bproposta\b/gi,     'pro-posta'],
-    [/\bprecisa\b/gi,      'pre-ci-sa'],
-    [/\bpróximo\b/gi,      'pró-xi-mo'],
-    [/\bpresente\b/gi,     'pre-sen-te'],
-    [/\bproblema\b/gi,     'pro-ble-ma'],
-    [/\bprograma\b/gi,     'pro-gra-ma'],
-    [/\bprocesso\b/gi,     'pro-ces-so'],
-    [/\bproduto\b/gi,      'pro-du-to'],
-    [/\bprojeto\b/gi,      'pro-je-to'],
-    [/\bprofissional\b/gi, 'pro-fis-sio-nal'],
-    [/\bcriar\b/gi,        'cri-ar'],
-    [/\bcrescimento\b/gi,  'cres-ci-men-to'],
-    [/\bclaro\b/gi,        'cla-ro'],
-    [/\bcliente\b/gi,      'cli-en-te'],
-    [/\bbloco\b/gi,        'blo-co'],
-    [/\bsempre\b/gi,       'sem-pre'],
-    [/\btrabalho\b/gi,     'tra-ba-lho'],
-    [/\btransforma\b/gi,   'trans-for-ma'],
-    [/\bdrena\b/gi,        'dre-na'],
-    [/\bgraças\b/gi,       'gra-ças'],
-    [/\bgrande\b/gi,       'gran-de'],
-  ];
-
-  for (const [pattern, replacement] of fixes) {
-    out = out.replace(pattern, replacement);
-  }
-
-  return out;
-}
-
 export const Route = createFileRoute('/api/generate-video')({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          // videoMode: 'portugues' | 'kit-voz' | 'sinalizacao'
-          // Backward compat: se não informado, usa useClonedVoice para derivar o modo.
-          const { script, imageBase64, useClonedVoice, videoMode: videoModeRaw } = await request.json();
+          const { script, imageBase64, videoMode: videoModeRaw } = await request.json();
+
+          // Modos suportados. Modos legados são mapeados para os novos.
           type VideoMode = 'portugues' | 'kit-voz' | 'sinalizacao';
-          const videoMode: VideoMode = (['portugues', 'kit-voz', 'sinalizacao'] as const).includes(videoModeRaw)
-            ? videoModeRaw as VideoMode
-            : (useClonedVoice === true ? 'kit-voz' : 'portugues');
+          const legacyMap: Record<string, VideoMode> = {
+            'omnihuman-native': 'portugues',
+            'omnihuman-cloned': 'kit-voz',
+          };
+          const rawNormalized = legacyMap[videoModeRaw] ?? videoModeRaw;
+          const videoMode: VideoMode = (['portugues', 'kit-voz', 'sinalizacao'] as const).includes(rawNormalized)
+            ? rawNormalized as VideoMode
+            : 'portugues';
 
           if (!script || typeof script !== 'string') {
             return Response.json({ error: 'script obrigatório' }, { status: 400 });
@@ -167,6 +181,7 @@ export const Route = createFileRoute('/api/generate-video')({
           if (!falKey) {
             return Response.json({ error: 'FAL_KEY não configurada' }, { status: 500 });
           }
+
           console.info('[generate-video] mode=%s image_bytes=%d', videoMode, imageBase64.length);
 
           // Pré-checagem de saldo (1 render).
@@ -185,23 +200,35 @@ export const Route = createFileRoute('/api/generate-video')({
             }
           }
 
-          // Resolve voz clonada apenas no modo kit-voz.
+          // Resolve voz clonada para o modo kit-voz.
+          // provider='chatterbox': usa sample_path como referência de áudio (zero-shot).
+          // provider legado: usa external_voice_id como voice name/ID do ElevenLabs.
           let clonedVoiceId: string | null = null;
+          let clonedSamplePath: string | null = null;
           if (videoMode === 'kit-voz' && userId) {
             try {
               const { data: vc } = await supabaseAdmin
                 .from('voice_clones' as any)
-                .select('external_voice_id, status')
+                .select('external_voice_id, sample_path, provider, status')
                 .eq('user_id', userId)
                 .maybeSingle();
               const row = vc as any;
-              if (row?.status === 'ready' && row.external_voice_id) {
-                clonedVoiceId = String(row.external_voice_id);
+              if (row?.status === 'ready') {
+                if (row.provider === 'elevenlabs') {
+                  // ElevenLabs: external_voice_id é o voice_id da conta → chamada direta à API.
+                  clonedSamplePath = String(row.external_voice_id);
+                } else if (row.provider === 'chatterbox') {
+                  // Legado Chatterbox: sample_path como referência de áudio.
+                  clonedSamplePath = row.sample_path || row.external_voice_id;
+                } else if (row.external_voice_id) {
+                  // Legado MiniMax: voice_id vai via fal.ai (ElevenLabs preset path).
+                  clonedVoiceId = String(row.external_voice_id);
+                }
               }
             } catch (e) {
               console.warn('[generate-video] load voice', (e as Error).message);
             }
-            if (!clonedVoiceId) {
+            if (!clonedSamplePath && !clonedVoiceId) {
               return Response.json(
                 { error: 'Nenhuma voz clonada disponível. Configure sua voz no Kit Imagem primeiro.' },
                 { status: 400 },
@@ -209,141 +236,92 @@ export const Route = createFileRoute('/api/generate-video')({
             }
           }
 
-          const willLipsync = videoMode === 'kit-voz' && !!clonedVoiceId;
-          // Sinalizacao = vídeo silencioso (sem fala, sem áudio gerado pelo Veo).
-          // O título visual é queimado no frontend com FFmpeg.
-          const isSinalizacao = videoMode === 'sinalizacao';
-
-          // Prompts por modo:
-          // kit-voz  → silencioso pro lipsync (boca articulada mas sem fala)
-          // sinalizacao → silencioso, olhar direto, sem articulação de fala
-          // portugues   → com fala em pt-BR
-          const promptParts = willLipsync
-            ? [
-                'Vertical 9:16 reels-style video. Professional business presentation.',
-                'A single adult person in frame, medium close-up, making direct eye contact with the camera,',
-                'speaking with natural, expressive mouth movements and a confident, professional demeanor.',
-                'Static camera, soft professional lighting, background coherent with the reference image.',
-                'Natural facial expressions matching an engaged, authoritative spoken delivery.',
-              ]
-            : isSinalizacao
-            ? [
-                'Vertical 9:16 reels-style video. Professional business content.',
-                'A single adult person in frame, medium close-up, holding direct, confident eye contact with the camera.',
-                'The person maintains a calm, composed professional expression. No speaking.',
-                'Static camera, soft professional lighting, background coherent with the reference image.',
-              ]
-            : [
-                'Vertical 9:16 reels-style video. Professional business presentation in Brazilian Portuguese.',
-                'A single adult person in frame, medium close-up, speaking directly to the camera',
-                'with clear, confident, natural Brazilian Portuguese delivery.',
-                'Business content message: ' + script.slice(0, 300).replace(/["""]/g, ''),
-                'Static camera, soft professional lighting, background coherent with the reference image.',
-              ];
-
-          // Gera áudio nativo do Veo apenas no modo 'portugues'.
-          const generateAudio = videoMode === 'portugues';
-
-          // Veo3 exige HTTP URL — converte base64 para URL assinada via Supabase.
+          // Upload do frame de referência para o Kling Avatar acessar via URL.
           console.log('[generate-video] step=upload_frame');
-          const frameUrl = await uploadFrameForVeo(imageBase64, userId);
+          const frameUrl = await uploadFrame(imageBase64, userId);
 
-          console.log('[generate-video] step=video mode=%s willLipsync=%s', videoMode, willLipsync);
-          const veoPayload = {
-            prompt: promptParts.join(' '),
+          // TTS — ramifica conforme modo e provider da voz clonada.
+          // kit-voz + chatterbox → Chatterbox com áudio de referência do usuário (zero-shot)
+          // kit-voz + legado     → ElevenLabs com voice_id armazenado no DB
+          // portugues/sinalizacao → ElevenLabs com voz preset detectada por visão
+          let audioUrl: string;
+
+          if (clonedSamplePath) {
+            // ElevenLabs TTS direto com voice_id clonado — gera bytes e faz upload para URL acessível pelo Kling.
+            console.log('[generate-video] step=tts provider=elevenlabs-cloned voice=%s', clonedSamplePath.slice(0, 20));
+            const elKey = process.env.ELEVENLABS_API_KEY;
+            if (!elKey) throw new Error('ELEVENLABS_API_KEY não configurada.');
+            const ttsRes = await fetch(`${ELEVENLABS_API}/text-to-speech/${clonedSamplePath}`, {
+              method: 'POST',
+              headers: { 'xi-api-key': elKey, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                text: script,
+                model_id: 'eleven_multilingual_v2',
+                language_code: 'pt',
+                voice_settings: { stability: 0.35, similarity_boost: 0.8, style: 0.25 },
+              }),
+            });
+            if (!ttsRes.ok) {
+              const err = await ttsRes.text();
+              throw new Error(`ElevenLabs TTS clonada ${ttsRes.status}: ${err.slice(0, 200)}`);
+            }
+            const audioBytes = Buffer.from(await ttsRes.arrayBuffer());
+            const audioPath = `_temp_veo/${userId || 'anon'}/${Date.now()}.mp3`;
+            const { error: upErr } = await supabaseAdmin.storage
+              .from('image-kits')
+              .upload(audioPath, audioBytes, { contentType: 'audio/mpeg', upsert: true });
+            if (upErr) throw new Error(`Upload áudio TTS falhou: ${upErr.message}`);
+            const { data: audioSigned, error: signErr } = await supabaseAdmin.storage
+              .from('image-kits')
+              .createSignedUrl(audioPath, 3600);
+            if (signErr || !audioSigned?.signedUrl) throw new Error('Não foi possível gerar URL do áudio TTS.');
+            audioUrl = audioSigned.signedUrl;
+            console.log('[generate-video] elevenlabs cloned tts ok');
+          } else {
+            // ElevenLabs TTS — voz preset (nativa) ou voice_id legado (clonada antiga).
+            let ttsVoice: string;
+            if (clonedVoiceId) {
+              ttsVoice = clonedVoiceId;
+            } else {
+              const openaiKey = process.env.OPENAI_API_KEY_CONTENT;
+              ttsVoice = openaiKey
+                ? await detectNativeVoice(imageBase64, openaiKey)
+                : NATIVE_VOICE_FALLBACK;
+            }
+            console.log('[generate-video] step=tts provider=elevenlabs voice=%s', ttsVoice.slice(0, 30));
+            const ttsSubmit = await falSubmit(TTS_MODEL, falKey, {
+              text: script,
+              voice: ttsVoice,
+              language_code: 'pt',
+              stability: 0.55,
+              similarity_boost: 0.75,
+              speed: 1.0,
+            });
+            const tts = await falWaitResult<{ audio?: { url?: string } }>(ttsSubmit, falKey, 90_000, 'tts');
+            audioUrl = tts?.audio?.url ?? '';
+            if (!audioUrl) throw new Error('ElevenLabs TTS não retornou áudio.');
+            console.log('[generate-video] elevenlabs tts ok audio_url=%s', audioUrl.slice(0, 60));
+          }
+
+          // Kling AI Avatar v2 Pro — imagem + áudio + prompt → vídeo lip-syncado com animação natural.
+          // O prompt guia o modelo para movimentos expressivos além de boca/cabeça.
+          // Duração do vídeo segue o áudio automaticamente.
+          // Job assíncrono: backend retorna imediatamente, frontend faz polling via /api/fal-status.
+          console.log('[generate-video] step=submit_avatar mode=%s', videoMode);
+          const submit = await falSubmit(AVATAR_MODEL, falKey, {
             image_url: frameUrl,
-            aspect_ratio: '9:16',
-            duration: '8s',
-            resolution: '720p',
-            generate_audio: generateAudio,
-          };
+            audio_url: audioUrl,
+            prompt: 'Professional speaker talking naturally, subtle head movement, calm and confident posture, minimal hand gestures, steady and composed.',
+          });
 
-          // Veo3 pode falhar ocasionalmente na 1ª tentativa (fila, filtro de conteúdo).
-          // Faz até 2 tentativas antes de retornar erro ao usuário.
-          let videoUrl: string | undefined;
-          let lastVeoError = '';
-          for (let attempt = 1; attempt <= 2; attempt++) {
-            try {
-              console.log(`[generate-video] veo attempt=${attempt}`);
-              const submit = await falSubmit('fal-ai/veo3/fast/image-to-video', falKey, veoPayload);
-              const result = await falWaitResult<{ video?: { url?: string } }>(
-                submit, falKey, 600_000, 'video',
-              );
-              videoUrl = result?.video?.url;
-              if (videoUrl) break;
-              lastVeoError = 'Veo não retornou URL de vídeo';
-            } catch (e) {
-              lastVeoError = (e as Error).message;
-              console.warn(`[generate-video] veo attempt=${attempt} failed:`, lastVeoError.slice(0, 200));
-              if (attempt < 2) await new Promise((r) => setTimeout(r, 3000));
-            }
-          }
-
-          if (!videoUrl) {
-            return Response.json(
-              { error: `Falha ao gerar vídeo (2 tentativas): ${lastVeoError.slice(0, 200)}` },
-              { status: 502 },
-            );
-          }
-
-          // Se temos voz clonada, gera TTS e faz lipsync.
-          // lipsyncOk acompanha o resultado real: só fica true se TTS + lipsync
-          // produzirem um vídeo com áudio dublado de fato.
-          let lipsyncOk = false;
-          if (willLipsync && clonedVoiceId) {
-            try {
-              console.log('[generate-video] step=tts');
-              const ttsText = preprocessTTSScript(script);
-              console.log('[generate-video] tts original=%d chars preprocessed=%d chars', script.length, ttsText.length);
-              const ttsSubmit = await falSubmit('fal-ai/minimax/speech-02-hd', falKey, {
-                text: ttsText,
-                voice_setting: { voice_id: clonedVoiceId, speed: 0.95, vol: 1, pitch: 0 },
-                audio_setting: { sample_rate: 32000, format: 'mp3', bitrate: 128000, channel: 1 },
-                language_boost: 'Portuguese',
-              });
-              const tts = await falWaitResult<{ audio?: { url?: string } }>(
-                ttsSubmit,
-                falKey,
-                180_000,
-                'tts',
-              );
-              const audioUrl = tts?.audio?.url;
-              if (!audioUrl) throw new Error('TTS vazio');
-
-              console.log('[generate-video] step=lipsync');
-              // sync-lipsync v1: preserva melhor o timbre da voz clonada (v2 reencodava
-              // o áudio e mudava o timbre percebido — usuários relataram a voz "diferente").
-              const lipsyncSubmit = await falSubmit('fal-ai/sync-lipsync', falKey, {
-                video_url: videoUrl,
-                audio_url: audioUrl,
-              });
-              const lip = await falWaitResult<{ video?: { url?: string } }>(
-                lipsyncSubmit,
-                falKey,
-                600_000,
-                'lipsync',
-              );
-              const finalUrl = lip?.video?.url;
-              if (finalUrl) {
-                videoUrl = finalUrl;
-                lipsyncOk = true;
-              } else {
-                console.warn('[generate-video] lipsync vazio, retornando vídeo sem áudio');
-              }
-            } catch (e) {
-              console.warn('[generate-video] lipsync falhou:', (e as Error).message);
-              // segue com o vídeo silencioso — não bloqueia o usuário.
-            }
-          }
-
-          // Debita 1 render do plano do usuário.
+          // Debita imediatamente após submit bem-sucedido.
+          const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
           if (userId) {
             try {
-              const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
               await debitUsage(userId, 0, 1, {
                 evento: 'video.generate',
                 modulo: 'metodo-op',
-                payload: { videoUrl: String(videoUrl).slice(0, 200), clonedVoice: lipsyncOk },
+                payload: { videoMode, hasClonedVoice: !!(clonedVoiceId || clonedSamplePath), requestId: submit.request_id },
                 custoUsd: COST_USD.video,
                 impersonatedBy,
               });
@@ -352,15 +330,15 @@ export const Route = createFileRoute('/api/generate-video')({
             }
           }
 
-          // usedClonedVoice reflete o resultado REAL (não a intenção).
-          // Se o usuário pediu voz clonada mas o lipsync falhou, devolve false.
-          // videoMode permite ao frontend distinguir os 3 modos na UI.
           return Response.json({
-            videoUrl,
-            usedClonedVoice: lipsyncOk,
-            requestedClonedVoice: willLipsync,
+            phase: 'pending',
+            statusUrl: submit.status_url,
+            responseUrl: submit.response_url,
             videoMode,
+            usedClonedVoice: videoMode === 'kit-voz',
+            requestedClonedVoice: videoMode === 'kit-voz',
           });
+
         } catch (e) {
           console.error('[generate-video] fail:', (e as Error).message);
           return Response.json({ error: (e as Error).message }, { status: 500 });
