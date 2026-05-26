@@ -106,17 +106,22 @@ export async function debitUsage(
 
     if (adminRpcErr || !slotData) {
       // RPC falhou ou retornou vazio — fallback: incremento direto no perfil.
+      // Respeita preferredSlot para que PU (plano2) e MOP (plano1) debitam no slot certo.
       console.error('[debit_usage admin RPC]', adminRpcErr?.message ?? 'sem retorno');
+      const s = meta.preferredSlot ?? 'plano1';
+      const iCol = `${s}_imgs_usadas`;
+      const rCol = `${s}_renders_usados`;
+      const gCol = `${s}_geracoes_usadas`;
       const { data: p } = await supabaseAdmin
         .from('profiles')
-        .select('plano1_imgs_usadas,plano1_renders_usados,plano1_geracoes_usadas')
+        .select(`${iCol},${rCol},${gCol}`)
         .eq('id', userId)
         .maybeSingle();
       if (p) {
         await supabaseAdmin.from('profiles').update({
-          plano1_imgs_usadas: ((p as any).plano1_imgs_usadas ?? 0) + imgs,
-          plano1_renders_usados: ((p as any).plano1_renders_usados ?? 0) + renders,
-          plano1_geracoes_usadas: ((p as any).plano1_geracoes_usadas ?? 0) + geracoes,
+          [iCol]: ((p as any)[iCol] ?? 0) + imgs,
+          [rCol]: ((p as any)[rCol] ?? 0) + renders,
+          [gCol]: ((p as any)[gCol] ?? 0) + geracoes,
         } as any).eq('id', userId);
       }
     }
