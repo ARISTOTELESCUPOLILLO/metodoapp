@@ -35,6 +35,12 @@ interface Plan {
 }
 interface Costs { imageRef: number; video: number; content: number }
 
+interface AssignModal {
+  userId: string; userName: string; slot: SlotKey;
+  originalPlanId: string | null; options: Plan[];
+  selectedPlanId: string; dateVal: string; resetCounters: boolean;
+}
+
 function planPeriodo(inicio: string | null, tipo: string): string {
   if (!inicio) return '';
   const start = new Date(inicio);
@@ -61,9 +67,10 @@ export function UsersTab() {
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [editNome, setEditNome] = useState<{ id: string; val: string } | null>(null);
+  const [assignModal, setAssignModal] = useState<AssignModal | null>(null);
   const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.50, content: 0.003 });
   const [usdRate, setUsdRate] = useState(5.5);
-  
+
   const navigate = useNavigate();
 
   function actAs(r: Row) {
@@ -111,34 +118,65 @@ export function UsersTab() {
     await load();
   }
 
-  async function changePlanInicio(userId: string, slot: SlotKey, dateStr: string) {
-    if (!dateStr) return;
-    const col = slot === 'bonus' ? 'bonus_inicio' : `${slot}_inicio`;
-    const iso = new Date(dateStr + 'T12:00:00').toISOString();
+  function openAssignModal(r: Row, slot: SlotKey, options: Plan[], forceReset = false) {
+    const originalPlanId = slot === 'plano1' ? r.plano1_id : slot === 'plano2' ? r.plano2_id : r.bonus_id;
+    const today = new Date().toISOString().split('T')[0];
+    setAssignModal({
+      userId: r.id, userName: r.nome || r.email, slot,
+      originalPlanId, options,
+      selectedPlanId: originalPlanId || '',
+      dateVal: today,
+      resetCounters: forceReset,
+    });
+  }
+
+  async function removeSlot(userId: string, slot: SlotKey) {
+    const label = slot === 'plano1' ? 'Plano 1' : slot === 'plano2' ? 'Plano 2' : 'Bônus';
+    if (!confirm(`Remover ${label}? Isso vai zerar os contadores deste slot.`)) return;
     setBusy(userId);
-    await supabase.from('profiles').update({ [col]: iso } as any).eq('id', userId);
+    const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
+    const patch: Record<string, any> = {
+      [`${slot}_id`]: null, [`${slot}_inicio`]: null,
+      [`${slot}_imgs_limite`]: 0, [`${slot}_renders_limite`]: 0, [`${slot}_geracoes_limite`]: 0,
+      [`${slot}_imgs_usadas`]: 0, [`${slot}_renders_usados`]: 0, [`${slot}_geracoes_usadas`]: 0,
+      [`extra_${extraPrefix}_estatico`]: 0, [`extra_${extraPrefix}_carrossel`]: 0,
+      [`extra_${extraPrefix}_estatico_final`]: 0, [`extra_${extraPrefix}_reels`]: 0,
+    };
+    await supabase.from('profiles').update(patch as any).eq('id', userId);
     await load();
     setBusy(null);
   }
 
-  async function changeSlot(userId: string, slot: SlotKey, planId: string) {
-    const label = slot === 'plano1' ? 'Plano 1' : slot === 'plano2' ? 'Plano 2' : 'Bônus';
-    if (!confirm(`Alterar ${label} vai zerar o consumo deste slot. Continuar?`)) return;
+  async function assignSlot() {
+    if (!assignModal || !assignModal.selectedPlanId || !assignModal.dateVal) return;
+    const { userId, slot, selectedPlanId, dateVal, resetCounters } = assignModal;
     setBusy(userId);
-    const col = slot === 'bonus' ? 'bonus_id' : `${slot}_id`;
     const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
-    const patch: Record<string, string | number | null> = {
-      [col]: planId || null,
-      [`${slot}_imgs_usadas`]: 0,
-      [`${slot}_renders_usados`]: 0,
-      [`${slot}_geracoes_usadas`]: 0,
-      [`extra_${extraPrefix}_estatico`]: 0,
-      [`extra_${extraPrefix}_carrossel`]: 0,
-      [`extra_${extraPrefix}_estatico_final`]: 0,
-      [`extra_${extraPrefix}_reels`]: 0,
+
+    const { data: plan } = await supabase
+      .from('plans').select('limite_imagens,limite_renders,limite_geracoes')
+      .eq('id', selectedPlanId).maybeSingle();
+
+    const patch: Record<string, any> = {
+      [`${slot}_id`]: selectedPlanId,
+      [`${slot}_inicio`]: new Date(dateVal + 'T12:00:00').toISOString(),
+      [`${slot}_imgs_limite`]: (plan as any)?.limite_imagens ?? 0,
+      [`${slot}_renders_limite`]: (plan as any)?.limite_renders ?? 0,
+      [`${slot}_geracoes_limite`]: (plan as any)?.limite_geracoes ?? 0,
+      ...(resetCounters ? {
+        [`${slot}_imgs_usadas`]: 0,
+        [`${slot}_renders_usados`]: 0,
+        [`${slot}_geracoes_usadas`]: 0,
+        [`extra_${extraPrefix}_estatico`]: 0,
+        [`extra_${extraPrefix}_carrossel`]: 0,
+        [`extra_${extraPrefix}_estatico_final`]: 0,
+        [`extra_${extraPrefix}_reels`]: 0,
+      } : {}),
     };
+
     const { error } = await supabase.from('profiles').update(patch as any).eq('id', userId);
     if (error) alert(`Erro: ${error.message}`);
+    setAssignModal(null);
     await load();
     setBusy(null);
   }
@@ -167,43 +205,6 @@ export function UsersTab() {
   async function changeSegmento(r: Row, seg: string) {
     setBusy(r.id);
     await supabase.from('profiles').update({ segmento: (seg || null) as any }).eq('id', r.id);
-    await load();
-    setBusy(null);
-  }
-  async function renewSlot(r: Row, slot: SlotKey) {
-    const label = slot === 'plano1' ? 'Plano 1' : slot === 'plano2' ? 'Plano 2' : 'Bônus';
-    if (!confirm(`Renovar ciclo de ${label} para ${r.nome || r.email}?\n\nIsso zera contadores e reinicia o ciclo (data = agora).`)) return;
-    setBusy(r.id);
-    const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
-
-    const planId = slot === 'plano1' ? r.plano1_id : slot === 'plano2' ? r.plano2_id : r.bonus_id;
-    let limitesPatch: Record<string, number> = {};
-    if (planId) {
-      const { data: plan } = await supabase
-        .from('plans')
-        .select('limite_imagens,limite_renders,limite_geracoes')
-        .eq('id', planId)
-        .maybeSingle();
-      if (plan) limitesPatch = {
-        [`${slot}_imgs_limite`]: (plan as any).limite_imagens ?? 0,
-        [`${slot}_renders_limite`]: (plan as any).limite_renders ?? 0,
-        [`${slot}_geracoes_limite`]: (plan as any).limite_geracoes ?? 0,
-      };
-    }
-
-    const patch: Record<string, any> = {
-      ...limitesPatch,
-      [`${slot}_inicio`]: new Date().toISOString(),
-      [`${slot}_imgs_usadas`]: 0,
-      [`${slot}_renders_usados`]: 0,
-      [`${slot}_geracoes_usadas`]: 0,
-      [`extra_${extraPrefix}_estatico`]: 0,
-      [`extra_${extraPrefix}_carrossel`]: 0,
-      [`extra_${extraPrefix}_estatico_final`]: 0,
-      [`extra_${extraPrefix}_reels`]: 0,
-    };
-    const { error } = await supabase.from('profiles').update(patch as never).eq('id', r.id);
-    if (error) alert(`Erro: ${error.message}`);
     await load();
     setBusy(null);
   }
@@ -273,19 +274,25 @@ export function UsersTab() {
               </div>
               <MRow k="Plano 1">
                 <div>
-                  <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} onInicio={(d) => changePlanInicio(r.id, 'plano1', d)} />
+                  <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans}
+                    onAssign={() => openAssignModal(r, 'plano1', mainPlans)}
+                    onRemove={() => removeSlot(r.id, 'plano1')} />
                   {r.plano1_id && <PlanPriceField planId={r.plano1_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano1_preco_brl} onChange={(v) => changePreco(r.id, 'plano1', v)} />}
                 </div>
               </MRow>
               <MRow k="Plano 2">
                 <div>
-                  <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} onInicio={(d) => changePlanInicio(r.id, 'plano2', d)} />
+                  <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans}
+                    onAssign={() => openAssignModal(r, 'plano2', mainPlans)}
+                    onRemove={() => removeSlot(r.id, 'plano2')} />
                   {r.plano2_id && <PlanPriceField planId={r.plano2_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano2_preco_brl} onChange={(v) => changePreco(r.id, 'plano2', v)} />}
                 </div>
               </MRow>
               <MRow k="Bônus">
                 <div>
-                  <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} onInicio={(d) => changePlanInicio(r.id, 'bonus', d)} />
+                  <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans}
+                    onAssign={() => openAssignModal(r, 'bonus', bonusPlans)}
+                    onRemove={() => removeSlot(r.id, 'bonus')} />
                   {r.bonus_id && <PlanPriceField planId={r.bonus_id} plans={bonusPlans} costs={costs} usdRate={usdRate} value={r.bonus_preco_brl} onChange={(v) => changePreco(r.id, 'bonus', v)} />}
                 </div>
               </MRow>
@@ -303,7 +310,7 @@ export function UsersTab() {
               </MRow>
               <div style={{ padding: '8px 0', borderTop: '1px solid #f1f5f9' }}>
                 <div style={{ fontSize: 11, color: '#64748b', marginBottom: 6, fontWeight: 600 }}>CONSUMO</div>
-                <SlotsConsumption row={r} onRenew={(slot) => renewSlot(r, slot)} />
+                <SlotsConsumption row={r} onRenew={(slot) => openAssignModal(r, slot, slot === 'bonus' ? bonusPlans : mainPlans, true)} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
                 <button onClick={() => actAs(r)} style={{ ...actionBtn, background: '#0f213f', color: '#fff', borderColor: '#0f213f', fontWeight: 700 }} disabled={r.is_admin}>Atuar como</button>
@@ -349,20 +356,26 @@ export function UsersTab() {
                     {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: 2 }}>{r.client_code}</div>}
                   </Td>
                   <Td>
-                    <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano1', v)} onInicio={(d) => changePlanInicio(r.id, 'plano1', d)} />
+                    <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans}
+                      onAssign={() => openAssignModal(r, 'plano1', mainPlans)}
+                      onRemove={() => removeSlot(r.id, 'plano1')} />
                     {r.plano1_id && <PlanPriceField planId={r.plano1_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano1_preco_brl} onChange={(v) => changePreco(r.id, 'plano1', v)} />}
                   </Td>
                   <Td>
-                    <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans} onChange={(v) => changeSlot(r.id, 'plano2', v)} onInicio={(d) => changePlanInicio(r.id, 'plano2', d)} />
+                    <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans}
+                      onAssign={() => openAssignModal(r, 'plano2', mainPlans)}
+                      onRemove={() => removeSlot(r.id, 'plano2')} />
                     {r.plano2_id && <PlanPriceField planId={r.plano2_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano2_preco_brl} onChange={(v) => changePreco(r.id, 'plano2', v)} />}
                   </Td>
                   <Td>
-                    <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans} onChange={(v) => changeSlot(r.id, 'bonus', v)} onInicio={(d) => changePlanInicio(r.id, 'bonus', d)} />
+                    <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans}
+                      onAssign={() => openAssignModal(r, 'bonus', bonusPlans)}
+                      onRemove={() => removeSlot(r.id, 'bonus')} />
                     {r.bonus_id && <PlanPriceField planId={r.bonus_id} plans={bonusPlans} costs={costs} usdRate={usdRate} value={r.bonus_preco_brl} onChange={(v) => changePreco(r.id, 'bonus', v)} />}
                   </Td>
                   <Td><FaturamentoCell row={r} plans={[...mainPlans, ...bonusPlans]} costs={costs} usdRate={usdRate} /></Td>
                   <Td><SegmentoSelect value={r.segmento} onChange={(v) => changeSegmento(r, v)} /></Td>
-                  <Td><SlotsConsumption row={r} onRenew={(slot) => renewSlot(r, slot)} /></Td>
+                  <Td><SlotsConsumption row={r} onRenew={(slot) => openAssignModal(r, slot, slot === 'bonus' ? bonusPlans : mainPlans, true)} /></Td>
                   <Td>
                     <button onClick={() => toggleStatus(r)} style={pill(r.status === 'ativo' ? '#15803d' : '#b91c1c')}>
                       {r.status === 'ativo' ? 'bloquear' : 'desbloquear'}
@@ -388,6 +401,62 @@ export function UsersTab() {
         </div>
       )}
 
+      {assignModal && (
+        <div style={overlay} onClick={() => setAssignModal(null)}>
+          <div style={modal} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
+              Atribuir {assignModal.slot === 'plano1' ? 'Plano 1' : assignModal.slot === 'plano2' ? 'Plano 2' : 'Bônus'}
+            </h3>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>{assignModal.userName}</div>
+            <div style={{ display: 'grid', gap: 12 }}>
+              <label style={{ display: 'grid', gap: 4 }}>
+                <span style={lbl}>Plano</span>
+                <select
+                  value={assignModal.selectedPlanId}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setAssignModal({ ...assignModal, selectedPlanId: newId, resetCounters: newId !== (assignModal.originalPlanId || '') });
+                  }}
+                  style={inp}
+                >
+                  <option value="">— selecione —</option>
+                  {assignModal.options.map((p) => (
+                    <option key={p.id} value={p.id}>{p.codigo} — {p.nome}</option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: 'grid', gap: 4 }}>
+                <span style={lbl}>Data de início</span>
+                <input type="date" value={assignModal.dateVal}
+                  onChange={(e) => setAssignModal({ ...assignModal, dateVal: e.target.value })}
+                  style={inp} />
+              </label>
+              <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}>
+                <input type="checkbox" checked={assignModal.resetCounters}
+                  onChange={(e) => setAssignModal({ ...assignModal, resetCounters: e.target.checked })} />
+                <span>Zerar contadores de consumo</span>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                  {assignModal.selectedPlanId !== (assignModal.originalPlanId || '') ? '(plano diferente)' : '(mesmo plano)'}
+                </span>
+              </label>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+                <button onClick={() => setAssignModal(null)} style={actionBtn}>Cancelar</button>
+                <button
+                  onClick={assignSlot}
+                  disabled={!assignModal.selectedPlanId || !assignModal.dateVal}
+                  style={{
+                    background: '#0f213f', color: '#fff', border: 'none', padding: '8px 16px',
+                    borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13,
+                    opacity: (!assignModal.selectedPlanId || !assignModal.dateVal) ? .5 : 1,
+                  }}
+                >
+                  Salvar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -404,59 +473,35 @@ function SegmentoSelect({ value, onChange }: { value: 'SERVIÇOS' | 'VAREJO' | '
   );
 }
 
-function PlanSelect({ value, options, onChange }: { value: string | null; options: Plan[]; onChange: (v: string) => void }) {
-  return (
-    <select value={value || ''} onChange={(e) => onChange(e.target.value)}
-      style={{ padding: '4px 6px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 12, maxWidth: 150 }}>
-      <option value="">— vazio —</option>
-      {options.map((p) => <option key={p.id} value={p.id}>{p.codigo}</option>)}
-    </select>
-  );
-}
-
-function PlanCell({ planId, inicio, options, onChange, onInicio }: {
+function PlanCell({ planId, inicio, options, onAssign, onRemove }: {
   planId: string | null; inicio: string | null; options: Plan[];
-  onChange: (v: string) => void; onInicio?: (d: string) => void;
+  onAssign: () => void; onRemove: () => void;
 }) {
-  const [editDate, setEditDate] = useState(false);
-  const [dateVal, setDateVal] = useState('');
-  const plan = options.find(p => p.id === planId);
+  const plan = options.find((p) => p.id === planId);
   const periodo = plan ? planPeriodo(inicio, plan.tipo) : '';
-
-  function startEditDate() {
-    setDateVal(inicio ? inicio.split('T')[0] : '');
-    setEditDate(true);
-  }
-  function saveDate() {
-    if (dateVal && onInicio) onInicio(dateVal);
-    setEditDate(false);
-  }
-
   return (
     <div>
-      <PlanSelect value={planId} options={options} onChange={onChange} />
-      {planId && (
-        editDate ? (
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 3 }}>
-            <input type="date" value={dateVal} onChange={(e) => setDateVal(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveDate(); if (e.key === 'Escape') setEditDate(false); }}
-              style={{ fontSize: 11, padding: '2px 4px', border: '1px solid #cbd5e1', borderRadius: 3 }} />
-            <button onClick={saveDate} style={miniSave}>✓</button>
-            <button onClick={() => setEditDate(false)} style={miniCancel}>✕</button>
+      {plan ? (
+        <>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <button onClick={onAssign}
+              style={{ background: 'none', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: 4, fontSize: 12, cursor: 'pointer', color: '#0f213f', fontWeight: 600 }}>
+              {plan.codigo}
+            </button>
+            <button onClick={onRemove} title="Remover plano"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 12, padding: '0 2px', lineHeight: 1 }}>
+              ✕
+            </button>
           </div>
-        ) : periodo ? (
-          <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, lineHeight: 1.3, display: 'flex', gap: 4, alignItems: 'center' }}>
-            <span>{periodo}</span>
-            {onInicio && (
-              <button onClick={startEditDate} title="Editar data de início"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 9, padding: 0, lineHeight: 1 }}>✎</button>
-            )}
-          </div>
-        ) : onInicio ? (
-          <button onClick={startEditDate} style={{ fontSize: 10, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', marginTop: 2 }}>
-            + definir data início
-          </button>
-        ) : null
+          {periodo && (
+            <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, lineHeight: 1.3 }}>{periodo}</div>
+          )}
+        </>
+      ) : (
+        <button onClick={onAssign}
+          style={{ fontSize: 11, color: '#2563eb', background: 'none', border: '1px dashed #cbd5e1', padding: '2px 8px', borderRadius: 4, cursor: 'pointer' }}>
+          + Atribuir
+        </button>
       )}
     </div>
   );
@@ -494,7 +539,7 @@ function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey
                   <button
                     type="button"
                     onClick={() => onRenew(s.key)}
-                    title="Zerar contadores e reiniciar ciclo agora"
+                    title="Atribuir plano / renovar ciclo"
                     style={{
                       background: '#0f213f', color: '#fff', border: 'none',
                       padding: '1px 6px', borderRadius: 3, fontSize: 9, fontWeight: 700,
@@ -526,30 +571,39 @@ const pill = (color: string): React.CSSProperties => ({
   background: color, color: '#fff', border: 'none', padding: '3px 10px',
   borderRadius: 999, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'lowercase',
 });
+const overlay: React.CSSProperties = {
+  position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16,
+};
+const modal: React.CSSProperties = {
+  background: '#fff', borderRadius: 8, padding: 20, width: '100%', maxWidth: 380, maxHeight: '90vh', overflowY: 'auto',
+};
+const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#0f172a' };
+const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14, background: '#fff' };
 
 function PlanPriceField({ planId, plans, costs, usdRate, value, onChange }: {
   planId: string | null; plans: Plan[]; costs: Costs; usdRate: number;
   value: number | null; onChange: (v: number | null) => void;
 }) {
-  const [inp, setInp] = useState(value != null ? String(value) : '');
-  useEffect(() => { setInp(value != null ? String(value) : ''); }, [value]);
+  const [inp2, setInp2] = useState(value != null ? String(value) : '');
+  useEffect(() => { setInp2(value != null ? String(value) : ''); }, [value]);
   const plan = plans.find(p => p.id === planId);
   if (!plan) return null;
   const costUsd = plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + plan.limite_geracoes * costs.content;
   const minBrl = costUsd * usdRate * 3;
   const maxBrl = plan.preco_maximo_brl || 0;
-  const applied = parseFloat(inp);
+  const applied = parseFloat(inp2);
   const belowMin = !isNaN(applied) && applied > 0 && applied < minBrl;
   function commit() {
-    const v = parseFloat(inp);
-    onChange(isNaN(v) || inp.trim() === '' ? null : v);
+    const v = parseFloat(inp2);
+    onChange(isNaN(v) || inp2.trim() === '' ? null : v);
   }
   return (
     <div style={{ marginTop: 4 }}>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <span style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>R$</span>
-        <input type="number" min="0" step="1" value={inp}
-          onChange={e => setInp(e.target.value)}
+        <input type="number" min="0" step="1" value={inp2}
+          onChange={e => setInp2(e.target.value)}
           onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') commit(); }}
           placeholder={minBrl.toFixed(0)}
           style={{ width: 72, padding: '2px 4px', fontSize: 12, fontWeight: 700, border: `1px solid ${belowMin ? '#dc2626' : '#cbd5e1'}`, borderRadius: 4, color: belowMin ? '#dc2626' : '#0f172a', background: belowMin ? '#fef2f2' : '#fff' }}
