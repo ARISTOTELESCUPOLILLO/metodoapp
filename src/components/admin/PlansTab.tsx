@@ -12,6 +12,7 @@ interface Plan {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
+  preco_maximo_brl: number;
   ativo: boolean;
   base_estatico: number;
   base_carrossel: number;
@@ -23,7 +24,7 @@ interface Costs { imageRef: number; video: number; content: number }
 
 const empty: Omit<Plan, 'id'> = {
   codigo: '', nome: '', tipo: 'mensal', valor_plano: 0, custo_total_usd: 0,
-  limite_imagens: 0, limite_renders: 0, limite_geracoes: 0, ativo: true,
+  limite_imagens: 0, limite_renders: 0, limite_geracoes: 0, preco_maximo_brl: 0, ativo: true,
   base_estatico: 0, base_carrossel: 0, base_estatico_final: 0, base_reels: 0,
 };
 
@@ -70,6 +71,7 @@ export function PlansTab() {
       custo_total_usd: Number(editing.custo_total_usd || 0),
       limite_imagens: Number(editing.limite_imagens),
       limite_renders: Number(editing.limite_renders), limite_geracoes: Number(editing.limite_geracoes),
+      preco_maximo_brl: Number(editing.preco_maximo_brl || 0),
       ativo: editing.ativo,
       base_estatico: Number(editing.base_estatico || 0),
       base_carrossel: Number(editing.base_carrossel || 0),
@@ -137,7 +139,7 @@ export function PlansTab() {
               <tr>
                 <Th>Código</Th><Th>Nome</Th><Th>Tipo</Th>
                 <Th title="imgs × ref + renders × vídeo + conteúdos × text">Custo calc. USD</Th>
-                <Th>Custo R$</Th><Th>Preço mín. R$ (×3)</Th>
+                <Th>Custo R$</Th><Th>Preço mín. R$ (×3)</Th><Th>Preço máx. R$</Th>
                 <Th>Imgs</Th><Th>Renders</Th><Th>Gerações</Th><Th>Ativo</Th><Th>Ações</Th>
               </tr>
             </thead>
@@ -154,6 +156,7 @@ export function PlansTab() {
                   <Td style={{ color: '#b45309', fontWeight: 600 }}>US$ {custoUsd.toFixed(3)}</Td>
                   <Td style={{ color: '#0369a1', fontWeight: 600 }}>R$ {custoBrl.toFixed(2)}</Td>
                   <Td style={{ color: '#15803d', fontWeight: 600 }}>R$ {precoMin.toFixed(2)}</Td>
+                  <Td style={{ color: '#0f172a', fontWeight: 600 }}>{p.preco_maximo_brl ? `R$ ${Number(p.preco_maximo_brl).toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
                   <Td>{p.limite_imagens}</Td>
                   <Td>{p.limite_renders}</Td>
                   <Td>{p.limite_geracoes}</Td>
@@ -192,6 +195,7 @@ export function PlansTab() {
               <Inp label="Limite imagens" type="number" value={String(editing.limite_imagens)} onChange={(v) => setEditing({ ...editing, limite_imagens: Number(v) })} />
               <Inp label="Limite renders" type="number" value={String(editing.limite_renders)} onChange={(v) => setEditing({ ...editing, limite_renders: Number(v) })} />
               <Inp label="Limite gerações" type="number" value={String(editing.limite_geracoes)} onChange={(v) => setEditing({ ...editing, limite_geracoes: Number(v) })} />
+              <Inp label="Preço máx. R$ (tabela de preços)" type="number" value={String(editing.preco_maximo_brl ?? 0)} onChange={(v) => setEditing({ ...editing, preco_maximo_brl: Number(v) })} />
 
               <div style={{ marginTop: 6, padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#0f213f', marginBottom: 6 }}>

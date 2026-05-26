@@ -58,9 +58,7 @@ export function CustosTab() {
   });
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
-  // Apenas precoMax é editável (mín. e méd. são calculados)
-  const [precoMaxEdit, setPrecoMaxEdit] = useState<Record<string, string>>({});
-  const [savingMax, setSavingMax] = useState<string | null>(null);
+  // precoMax vem da tabela de preços (PlansTab) — leitura apenas
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -245,15 +243,6 @@ export function CustosTab() {
     load();
   }
 
-  async function savePrecoMax(planId: string) {
-    const val = Number(precoMaxEdit[planId]);
-    if (isNaN(val)) return;
-    setSavingMax(planId);
-    await supabase.from('plans').update({ preco_maximo_brl: val } as any).eq('id', planId);
-    setSavingMax(null);
-    setPrecoMaxEdit(prev => { const n = { ...prev }; delete n[planId]; return n; });
-    load();
-  }
 
   const margemColor = (m: number | null) => m === null ? '#94a3b8' : m >= 50 ? '#16a34a' : m >= 0 ? '#d97706' : '#dc2626';
 
@@ -423,7 +412,7 @@ export function CustosTab() {
                   <Th>Custo real R$</Th><Th>Custo proj. R$</Th>
                   <Th>Preço mín. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(custo×3)</span></Th>
                   <Th>Preço méd. real <span style={{ fontWeight: 400, fontSize: 10 }}>(média cobrada)</span></Th>
-                  <Th>Preço máx. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(editável)</span></Th>
+                  <Th>Preço máx. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(tabela de preços)</span></Th>
                   <Th>Marg. mín.</Th><Th>Marg. máx.</Th>
                 </tr>
               </thead>
@@ -436,26 +425,8 @@ export function CustosTab() {
                     <Td style={{ color: '#64748b' }}>{brl(r.projecaoUsd)}</Td>
                     <Td style={{ color: '#15803d', fontWeight: 600 }}>R$ {r.precoMin.toFixed(2)}</Td>
                     <Td style={{ color: '#0f172a' }}>{r.precoMed !== null ? `R$ ${r.precoMed.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
-                    <Td>
-                      {precoMaxEdit[r.planId] !== undefined ? (
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <input type="number" value={precoMaxEdit[r.planId]}
-                            onChange={e => setPrecoMaxEdit(prev => ({ ...prev, [r.planId]: e.target.value }))}
-                            style={{ width: 80, padding: '3px 6px', borderRadius: 6, border: '1px solid #0891b2', fontSize: 12 }} />
-                          <button onClick={() => savePrecoMax(r.planId)} disabled={savingMax === r.planId}
-                            style={{ padding: '3px 8px', borderRadius: 6, background: '#0f172a', color: '#fff', border: 'none', fontSize: 12, cursor: 'pointer' }}>
-                            {savingMax === r.planId ? '…' : '✓'}
-                          </button>
-                          <button onClick={() => setPrecoMaxEdit(prev => { const n = { ...prev }; delete n[r.planId]; return n; })}
-                            style={{ padding: '3px 6px', borderRadius: 6, background: '#fff', border: '1px solid #cbd5e1', fontSize: 12, cursor: 'pointer' }}>✕</button>
-                        </div>
-                      ) : (
-                        <span onClick={() => setPrecoMaxEdit(prev => ({ ...prev, [r.planId]: String(r.precoMax || '') }))}
-                          style={{ cursor: 'pointer', color: r.precoMax ? '#0f172a' : '#94a3b8', fontWeight: r.precoMax ? 600 : 400 }}
-                          title="Clique para editar">
-                          {r.precoMax ? `R$ ${r.precoMax.toFixed(2)}` : '— definir'}
-                        </span>
-                      )}
+                    <Td style={{ color: r.precoMax ? '#0f172a' : '#94a3b8', fontWeight: r.precoMax ? 600 : 400 }}>
+                      {r.precoMax ? `R$ ${r.precoMax.toFixed(2)}` : '—'}
                     </Td>
                     <Td><span style={{ color: margemColor(r.margemMin), fontWeight: 700 }}>{r.margemMin !== null ? `${r.margemMin.toFixed(0)}%` : '—'}</span></Td>
                     <Td><span style={{ color: margemColor(r.margemMax), fontWeight: 700 }}>{r.margemMax !== null ? `${r.margemMax.toFixed(0)}%` : '—'}</span></Td>
@@ -464,7 +435,7 @@ export function CustosTab() {
               </tbody>
             </table></div>
             <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-              Preço mín. = custo projetado R$ × 3. Preço méd. = média dos preços cobrados nos perfis dos clientes. Preço máx. = editável (clique). Margem calculada sobre projeção de 100% de uso.
+              Preço mín. = custo projetado R$ × 3 (automático). Preço méd. = média dos preços cobrados nos perfis dos clientes (automático). Preço máx. = definido na aba Planos (tabela de preços). Margem calculada sobre projeção de 100% de uso.
             </p>
           </Section>
 
