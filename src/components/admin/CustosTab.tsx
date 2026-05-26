@@ -20,8 +20,6 @@ interface Plan {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
-  preco_minimo_brl: number;
-  preco_medio_brl: number;
   preco_maximo_brl: number;
   ativo: boolean;
 }
@@ -60,11 +58,9 @@ export function CustosTab() {
   });
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
-  // Preços editáveis inline por plano (min / med / max)
-  const [precoMinEdit, setPrecoMinEdit] = useState<Record<string, string>>({});
-  const [precoMedEdit, setPrecoMedEdit] = useState<Record<string, string>>({});
+  // Apenas precoMax é editável (mín. e méd. são calculados)
   const [precoMaxEdit, setPrecoMaxEdit] = useState<Record<string, string>>({});
-  const [savingPrice, setSavingPrice] = useState<string | null>(null);
+  const [savingMax, setSavingMax] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,7 +74,7 @@ export function CustosTab() {
       { data: allLogs },
     ] = await Promise.all([
       supabase.from('usage_logs').select('user_id,evento,qtd_imagens,qtd_renders,qtd_geracoes,custo_usd,created_at').gte('created_at', since),
-      supabase.from('plans').select('id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_minimo_brl,preco_medio_brl,preco_maximo_brl,ativo'),
+      supabase.from('plans').select('id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl,ativo'),
       supabase.from('profiles').select('id,email,nome,is_test,plano1_id,plano2_id,plano1_preco_brl,plano2_preco_brl,bonus_preco_brl'),
       supabase.from('app_settings').select('usd_brl_rate,falai_balance_usd,openai_balance_usd,image_base_price_usd,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
       supabase.from('user_roles').select('user_id').eq('role', 'admin'),
@@ -204,8 +200,14 @@ export function CustosTab() {
     const planLogs = logs.filter(l => l.user_id && userIds.has(l.user_id));
     const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
     const projecao = p.limite_imagens * settings.image_price_usd + p.limite_renders * settings.render_price_usd + p.limite_geracoes * settings.geracao_price_usd;
-    const precoMin = Number(p.preco_minimo_brl || 0);
-    const precoMed = Number(p.preco_medio_brl || 0);
+    // precoMin = tabela de preços: custo projetado em R$ × 3 (piso comercial)
+    const precoMin = projecao * rate * 3;
+    // precoMed = média dos preços efetivamente cobrados nos perfis dos clientes deste plano
+    const realPrices = users.flatMap(u => [
+      u.plano1_id === p.id ? Number(u.plano1_preco_brl || 0) : 0,
+      u.plano2_id === p.id ? Number(u.plano2_preco_brl || 0) : 0,
+    ]).filter(v => v > 0);
+    const precoMed = realPrices.length > 0 ? realPrices.reduce((a, b) => a + b, 0) / realPrices.length : null;
     const precoMax = Number(p.preco_maximo_brl || 0);
     const margemMin = precoMin > 0 ? ((precoMin - projecao * rate) / precoMin) * 100 : null;
     const margemMax = precoMax > 0 ? ((precoMax - projecao * rate) / precoMax) * 100 : null;
@@ -243,41 +245,14 @@ export function CustosTab() {
     load();
   }
 
-  async function savePrecoField(planId: string, field: 'preco_minimo_brl' | 'preco_medio_brl' | 'preco_maximo_brl', val: number) {
-    setSavingPrice(planId + field);
-    await supabase.from('plans').update({ [field]: val } as any).eq('id', planId);
-    setSavingPrice(null);
+  async function savePrecoMax(planId: string) {
+    const val = Number(precoMaxEdit[planId]);
+    if (isNaN(val)) return;
+    setSavingMax(planId);
+    await supabase.from('plans').update({ preco_maximo_brl: val } as any).eq('id', planId);
+    setSavingMax(null);
+    setPrecoMaxEdit(prev => { const n = { ...prev }; delete n[planId]; return n; });
     load();
-  }
-
-  function InlinePreco({ planId, field, value, editState, setEditState }: {
-    planId: string; field: 'preco_minimo_brl' | 'preco_medio_brl' | 'preco_maximo_brl';
-    value: number; editState: Record<string, string>; setEditState: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  }) {
-    const key = planId + field;
-    if (editState[planId] !== undefined) {
-      return (
-        <div style={{ display: 'flex', gap: 4 }}>
-          <input type="number" value={editState[planId]}
-            onChange={e => setEditState(prev => ({ ...prev, [planId]: e.target.value }))}
-            style={{ width: 80, padding: '3px 6px', borderRadius: 6, border: '1px solid #0891b2', fontSize: 12 }} />
-          <button onClick={() => { const v = Number(editState[planId]); if (!isNaN(v)) { savePrecoField(planId, field, v); setEditState(prev => { const n = { ...prev }; delete n[planId]; return n; }); }}}
-            disabled={savingPrice === key}
-            style={{ padding: '3px 8px', borderRadius: 6, background: '#0f172a', color: '#fff', border: 'none', fontSize: 12, cursor: 'pointer' }}>
-            {savingPrice === key ? '…' : '✓'}
-          </button>
-          <button onClick={() => setEditState(prev => { const n = { ...prev }; delete n[planId]; return n; })}
-            style={{ padding: '3px 6px', borderRadius: 6, background: '#fff', border: '1px solid #cbd5e1', fontSize: 12, cursor: 'pointer' }}>✕</button>
-        </div>
-      );
-    }
-    return (
-      <span onClick={() => setEditState(prev => ({ ...prev, [planId]: String(value || '') }))}
-        style={{ cursor: 'pointer', color: value ? '#0f172a' : '#94a3b8', fontWeight: value ? 600 : 400 }}
-        title="Clique para editar">
-        {value ? `R$ ${value.toFixed(2)}` : '— definir'}
-      </span>
-    );
   }
 
   const margemColor = (m: number | null) => m === null ? '#94a3b8' : m >= 50 ? '#16a34a' : m >= 0 ? '#d97706' : '#dc2626';
@@ -446,8 +421,8 @@ export function CustosTab() {
                 <tr>
                   <Th>Plano</Th><Th>Clientes</Th>
                   <Th>Custo real R$</Th><Th>Custo proj. R$</Th>
-                  <Th>Preço mín. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(editável)</span></Th>
-                  <Th>Preço méd. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(editável)</span></Th>
+                  <Th>Preço mín. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(custo×3)</span></Th>
+                  <Th>Preço méd. real <span style={{ fontWeight: 400, fontSize: 10 }}>(média cobrada)</span></Th>
                   <Th>Preço máx. R$ <span style={{ fontWeight: 400, fontSize: 10 }}>(editável)</span></Th>
                   <Th>Marg. mín.</Th><Th>Marg. máx.</Th>
                 </tr>
@@ -459,9 +434,29 @@ export function CustosTab() {
                     <Td>{r.usuarios}</Td>
                     <Td>{brl(r.custoRealUsd)}</Td>
                     <Td style={{ color: '#64748b' }}>{brl(r.projecaoUsd)}</Td>
-                    <Td><InlinePreco planId={r.planId} field="preco_minimo_brl" value={r.precoMin} editState={precoMinEdit} setEditState={setPrecoMinEdit} /></Td>
-                    <Td><InlinePreco planId={r.planId} field="preco_medio_brl" value={r.precoMed} editState={precoMedEdit} setEditState={setPrecoMedEdit} /></Td>
-                    <Td><InlinePreco planId={r.planId} field="preco_maximo_brl" value={r.precoMax} editState={precoMaxEdit} setEditState={setPrecoMaxEdit} /></Td>
+                    <Td style={{ color: '#15803d', fontWeight: 600 }}>R$ {r.precoMin.toFixed(2)}</Td>
+                    <Td style={{ color: '#0f172a' }}>{r.precoMed !== null ? `R$ ${r.precoMed.toFixed(2)}` : <span style={{ color: '#94a3b8' }}>—</span>}</Td>
+                    <Td>
+                      {precoMaxEdit[r.planId] !== undefined ? (
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <input type="number" value={precoMaxEdit[r.planId]}
+                            onChange={e => setPrecoMaxEdit(prev => ({ ...prev, [r.planId]: e.target.value }))}
+                            style={{ width: 80, padding: '3px 6px', borderRadius: 6, border: '1px solid #0891b2', fontSize: 12 }} />
+                          <button onClick={() => savePrecoMax(r.planId)} disabled={savingMax === r.planId}
+                            style={{ padding: '3px 8px', borderRadius: 6, background: '#0f172a', color: '#fff', border: 'none', fontSize: 12, cursor: 'pointer' }}>
+                            {savingMax === r.planId ? '…' : '✓'}
+                          </button>
+                          <button onClick={() => setPrecoMaxEdit(prev => { const n = { ...prev }; delete n[r.planId]; return n; })}
+                            style={{ padding: '3px 6px', borderRadius: 6, background: '#fff', border: '1px solid #cbd5e1', fontSize: 12, cursor: 'pointer' }}>✕</button>
+                        </div>
+                      ) : (
+                        <span onClick={() => setPrecoMaxEdit(prev => ({ ...prev, [r.planId]: String(r.precoMax || '') }))}
+                          style={{ cursor: 'pointer', color: r.precoMax ? '#0f172a' : '#94a3b8', fontWeight: r.precoMax ? 600 : 400 }}
+                          title="Clique para editar">
+                          {r.precoMax ? `R$ ${r.precoMax.toFixed(2)}` : '— definir'}
+                        </span>
+                      )}
+                    </Td>
                     <Td><span style={{ color: margemColor(r.margemMin), fontWeight: 700 }}>{r.margemMin !== null ? `${r.margemMin.toFixed(0)}%` : '—'}</span></Td>
                     <Td><span style={{ color: margemColor(r.margemMax), fontWeight: 700 }}>{r.margemMax !== null ? `${r.margemMax.toFixed(0)}%` : '—'}</span></Td>
                   </tr>
@@ -469,7 +464,7 @@ export function CustosTab() {
               </tbody>
             </table></div>
             <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-              Preço mín./méd./máx. definidos na tabela de preços do plano (clique para editar). Margem calculada sobre projeção de 100% de uso.
+              Preço mín. = custo projetado R$ × 3. Preço méd. = média dos preços cobrados nos perfis dos clientes. Preço máx. = editável (clique). Margem calculada sobre projeção de 100% de uso.
             </p>
           </Section>
 
