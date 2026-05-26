@@ -84,7 +84,8 @@ Regras:
 - "texto" no máximo 14 palavras, frase completa, sem hashtag, sem emoji
 - Português brasileiro, sem inglês, sem markdown
 - Interprete a informação-chave com criatividade — NÃO copie literal
-- PROIBIDO ABSOLUTO usar as palavras: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". Use sinônimos.`;
+- PROIBIDO ABSOLUTO usar as palavras: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". Use sinônimos.
+- PROIBIDO repetir a mesma palavra em frases próximas ou consecutivas. Use sinônimos ou reformule. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."`;
 
           const res = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
