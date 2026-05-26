@@ -16,10 +16,10 @@ function getRule(kind: Kind, formato: string): { label: string; rule: string; ma
   }
 
   if (kind === 'titulo') {
-    const max = isCarrossel ? 6 : 7; // estático, estático final, reels (hook) = 7; carrossel = 6
+    const max = 6; // máximo 6 palavras em todas as trilhas
     return {
       label: 'título',
-      rule: `MÁXIMO ${max} palavras. NUNCA exceda esse limite — conte mentalmente as palavras antes de responder. Direto, com tensão ou benefício claro. Sem emoji, sem hashtag, sem aspas.`,
+      rule: `MÁXIMO ${max} palavras, cada palavra com NO MÁXIMO 3 sílabas (ex.: "negócio" ✓, "resultado" ✗ → use "ganho"; "prioridade" ✗ → use "foco"; "comunicação" ✗ → use "mensagem"). NUNCA exceda esses limites — conte as palavras e as sílabas antes de responder. Direto, com tensão ou benefício claro. Sem emoji, sem hashtag, sem aspas.`,
       max,
     };
   }

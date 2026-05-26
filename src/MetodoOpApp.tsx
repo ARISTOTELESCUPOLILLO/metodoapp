@@ -427,7 +427,7 @@ export default function App() {
     // Legenda em paralelo com a imagem — não bloqueia a peça.
     // Aqui debita 1 geração no plano (clique inicial do Post Único).
     setCaptionLoading(true);
-    generatePostUnicoCaption(data, { debit: true, brandVoice: kit.brandVoice })
+    generatePostUnicoCaption(data, { debit: true, brandVoice: kit.brandVoice, preferredSlot: puSlot })
       .then((c) => { setCaption(c); refreshProfile(); })
       .catch((e) => setCaptionError(String((e as Error).message || e)))
       .finally(() => setCaptionLoading(false));
@@ -452,7 +452,7 @@ export default function App() {
         if (lista.length) references.produtos = lista;
       }
       const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length);
-      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined });
+      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: puSlot });
       setPostUnicoImg(dataUrl);
       refreshProfile();
     } catch (e) {
@@ -598,6 +598,7 @@ export default function App() {
               geracoesTotal={geracoesTotal}
               semPlano={semPlano}
               hasPostPlano={planAccess.hasPostUnico}
+              puSlot={puSlot}
             />
           )}
           {modo === 'imageKit' && (

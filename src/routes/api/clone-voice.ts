@@ -1,5 +1,5 @@
-// Treino de voz via fal.ai MiniMax Voice Clone.
-// Fluxo: validar áudio server-side -> clonar -> gerar prévia -> salvar como pendente_aprovacao.
+// Treino de voz via ElevenLabs Instant Voice Clone (API direta).
+// Fluxo: validar áudio -> upload Supabase -> ElevenLabs clone -> TTS prévia -> salvar pendente_aprovacao.
 // SEM debitar render aqui. O débito acontece em confirm-voice.ts quando o usuário aprova.
 
 import { createFileRoute } from '@tanstack/react-router';
@@ -7,7 +7,7 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server';
 import { getUserIdFromRequest, checkBalance } from '@/lib/usage.server';
 import { probeAudio } from '@/lib/audioProbe.server';
 
-const FAL_QUEUE = 'https://queue.fal.run';
+const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
 
 const VOICE_MIN_SECONDS = 30;
 const VOICE_MAX_SECONDS = 180;
@@ -32,39 +32,47 @@ function mimeToExt(mime: string): string {
   return 'webm';
 }
 
-async function falRun<T = unknown>(
-  modelPath: string,
-  falKey: string,
-  payload: unknown,
-  timeoutMs = 180_000,
-): Promise<T> {
-  const submitRes = await fetch(`${FAL_QUEUE}/${modelPath}`, {
+// Clona voz via ElevenLabs IVC — retorna o voice_id gerado.
+async function elevenLabsClone(
+  audioBuffer: Buffer,
+  mimeType: string,
+  fileName: string,
+  userId: string,
+  elKey: string,
+): Promise<string> {
+  const form = new FormData();
+  form.append('name', `metodo-op-${userId.slice(0, 8)}`);
+  const ab = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength) as ArrayBuffer;
+  form.append('files', new Blob([ab], { type: mimeType }), fileName);
+  const res = await fetch(`${ELEVENLABS_API}/voices/add`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Key ${falKey}` },
-    body: JSON.stringify(payload),
+    headers: { 'xi-api-key': elKey },
+    body: form,
   });
-  const submitText = await submitRes.text();
-  if (!submitRes.ok) throw new Error(`fal submit ${modelPath} ${submitRes.status}: ${submitText.slice(0, 400)}`);
-  const submit = JSON.parse(submitText) as { status_url: string; response_url: string; status?: string };
+  const text = await res.text();
+  if (!res.ok) throw new Error(`ElevenLabs clone ${res.status}: ${text.slice(0, 300)}`);
+  const json = JSON.parse(text) as { voice_id?: string };
+  if (!json.voice_id) throw new Error('ElevenLabs não retornou voice_id.');
+  return json.voice_id;
+}
 
-  const deadline = Date.now() + timeoutMs;
-  let status = submit.status;
-  while (status !== 'COMPLETED' && Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, 2000));
-    const pollRes = await fetch(submit.status_url, { headers: { Authorization: `Key ${falKey}` } });
-    const txt = await pollRes.text();
-    if (!pollRes.ok) throw new Error(`fal poll ${pollRes.status}: ${txt.slice(0, 400)}`);
-    let pj: { status?: string };
-    try { pj = JSON.parse(txt); } catch { pj = {}; }
-    status = pj.status;
-    if (status === 'FAILED' || status === 'ERROR') throw new Error(`fal ${modelPath} falhou: ${txt.slice(0, 400)}`);
+// TTS via ElevenLabs — retorna bytes MP3.
+async function elevenLabsTTS(text: string, voiceId: string, elKey: string): Promise<Buffer> {
+  const res = await fetch(`${ELEVENLABS_API}/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': elKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_multilingual_v2',
+      language_code: 'pt',
+      voice_settings: { stability: 0.55, similarity_boost: 0.75, style: 0 },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`ElevenLabs TTS ${res.status}: ${err.slice(0, 300)}`);
   }
-  if (status !== 'COMPLETED') throw new Error(`fal ${modelPath} timeout (status=${status ?? '?'}).`);
-
-  const finalRes = await fetch(submit.response_url, { headers: { Authorization: `Key ${falKey}` } });
-  const finalText = await finalRes.text();
-  if (!finalRes.ok) throw new Error(`fal result ${finalRes.status}: ${finalText.slice(0, 400)}`);
-  return JSON.parse(finalText) as T;
+  return Buffer.from(await res.arrayBuffer());
 }
 
 export const Route = createFileRoute('/api/clone-voice')({
@@ -77,8 +85,8 @@ export const Route = createFileRoute('/api/clone-voice')({
             return Response.json({ code: 'unauthorized', message: 'Faça login para treinar sua voz.' }, { status: 401 });
           }
 
-          const falKey = process.env.FAL_KEY;
-          if (!falKey) {
+          const elKey = process.env.ELEVENLABS_API_KEY;
+          if (!elKey) {
             return Response.json({ code: 'unknown', message: 'Algo deu errado. Tente de novo.' }, { status: 500 });
           }
 
@@ -156,10 +164,49 @@ export const Route = createFileRoute('/api/clone-voice')({
             );
           }
 
+          // Deleta vozes anteriores do ElevenLabs para este usuário (DB + órfãs pelo nome).
+          try {
+            // 1. Via DB (registro existente).
+            const { data: prev } = await supabaseAdmin
+              .from('voice_clones' as any)
+              .select('external_voice_id, provider')
+              .eq('user_id', userId)
+              .eq('avatar_slot', avatarSlot)
+              .maybeSingle();
+            const prevRow = prev as any;
+            if (prevRow?.provider === 'elevenlabs' && prevRow.external_voice_id) {
+              await fetch(`https://api.elevenlabs.io/v1/voices/${prevRow.external_voice_id}`, {
+                method: 'DELETE',
+                headers: { 'xi-api-key': elKey },
+              });
+              console.log('[clone-voice] deleted db voice_id=%s', prevRow.external_voice_id);
+            }
+
+            // 2. Varredura: deleta vozes órfãs com nome metodo-op-{userId slice} (DB deletado antes).
+            const voicePrefix = `metodo-op-${userId.slice(0, 8)}`;
+            const listRes = await fetch('https://api.elevenlabs.io/v1/voices', {
+              headers: { 'xi-api-key': elKey },
+            });
+            if (listRes.ok) {
+              const listJson = await listRes.json() as { voices?: Array<{ voice_id: string; name: string }> };
+              for (const v of listJson.voices ?? []) {
+                if (v.name === voicePrefix) {
+                  await fetch(`https://api.elevenlabs.io/v1/voices/${v.voice_id}`, {
+                    method: 'DELETE',
+                    headers: { 'xi-api-key': elKey },
+                  });
+                  console.log('[clone-voice] deleted orphan voice_id=%s name=%s', v.voice_id, v.name);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[clone-voice] delete old voice', (e as Error).message);
+          }
+
           const ext = mimeToExt(mime);
           const samplePath = `${userId}/sample${avatarSlot === 2 ? '-2' : ''}.${ext}`;
 
-          // Sobe amostra no bucket privado
+          // Sobe amostra no bucket privado (backup permanente).
           const upload = await supabaseAdmin.storage
             .from('voice-samples')
             .upload(samplePath, buf, { contentType: mime, upsert: true });
@@ -171,34 +218,12 @@ export const Route = createFileRoute('/api/clone-voice')({
             );
           }
 
-          // Signed URL temporária pro fal baixar
-          const signed = await supabaseAdmin.storage
-            .from('voice-samples')
-            .createSignedUrl(samplePath, 60 * 60);
-          if (signed.error || !signed.data?.signedUrl) {
-            console.warn('[clone-voice] signed url', signed.error?.message);
-            return Response.json(
-              { code: 'upload_failed', message: 'Não conseguimos enviar sua amostra. Tente de novo.' },
-              { status: 500 },
-            );
-          }
-
-          // fal.ai MiniMax voice clone
+          // ElevenLabs IVC — cria o modelo de voz e obtém o voice_id.
           let externalVoiceId: string | undefined;
           try {
-            const result = await falRun<{ custom_voice_id?: string }>(
-              'fal-ai/minimax/voice-clone',
-              falKey,
-              {
-                audio_url: signed.data.signedUrl,
-                noise_reduction: true,
-                need_volume_normalization: true,
-                accuracy: 0.95,
-              },
-            );
-            externalVoiceId = result?.custom_voice_id;
+            externalVoiceId = await elevenLabsClone(buf, mime, `sample.${mimeToExt(mime)}`, userId, elKey);
           } catch (e) {
-            console.warn('[clone-voice] fal', (e as Error).message);
+            console.warn('[clone-voice] elevenlabs clone', (e as Error).message);
           }
           if (!externalVoiceId) {
             return Response.json(
@@ -209,21 +234,22 @@ export const Route = createFileRoute('/api/clone-voice')({
               { status: 502 },
             );
           }
+          console.log('[clone-voice] voice_id=%s', externalVoiceId);
 
-          // Gera a prévia ANTES de salvar — assim só persiste se MiniMax conseguir falar.
+          // ElevenLabs TTS — prévia com a voz clonada. Upload do áudio para URL acessível.
           let previewAudioUrl: string | undefined;
           try {
-            const tts = await falRun<{ audio?: { url?: string } }>(
-              'fal-ai/minimax/speech-02-hd',
-              falKey,
-              {
-                text: VOICE_PREVIEW_TEXT,
-                voice_setting: { voice_id: externalVoiceId, speed: 1, vol: 1, pitch: 0 },
-                audio_setting: { sample_rate: 32000, format: 'mp3', bitrate: 128000, channel: 1 },
-              },
-              120_000,
-            );
-            previewAudioUrl = tts?.audio?.url;
+            const audioBytes = await elevenLabsTTS(VOICE_PREVIEW_TEXT, externalVoiceId, elKey);
+            const previewPath = `${userId}/preview${avatarSlot === 2 ? '-2' : ''}.mp3`;
+            const { error: prevErr } = await supabaseAdmin.storage
+              .from('voice-samples')
+              .upload(previewPath, audioBytes, { contentType: 'audio/mpeg', upsert: true });
+            if (!prevErr) {
+              const { data: prevSigned } = await supabaseAdmin.storage
+                .from('voice-samples')
+                .createSignedUrl(previewPath, 60 * 60 * 2);
+              previewAudioUrl = prevSigned?.signedUrl;
+            }
           } catch (e) {
             console.warn('[clone-voice] preview tts', (e as Error).message);
           }
@@ -244,7 +270,7 @@ export const Route = createFileRoute('/api/clone-voice')({
             external_voice_id: externalVoiceId,
             sample_path: samplePath,
             duration_s: probedDuration,
-            provider: 'fal-minimax',
+            provider: 'elevenlabs',
             status: 'pendente_aprovacao',
             updated_at: new Date().toISOString(),
           };

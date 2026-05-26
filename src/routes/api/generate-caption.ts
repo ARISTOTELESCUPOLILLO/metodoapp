@@ -22,6 +22,7 @@ export const Route = createFileRoute('/api/generate-caption')({
           const keyInfo = String(body.keyInfo || '').slice(0, 1000);
           const brandVoice = String(body.brandVoice || '').slice(0, 80);
           const debit = body.debit === true;
+          const preferredSlot = ['plano1', 'plano2', 'bonus'].includes(body.preferredSlot) ? body.preferredSlot as 'plano1' | 'plano2' | 'bonus' : undefined;
 
           if (!keyInfo.trim()) {
             return Response.json({ error: 'keyInfo obrigatório' }, { status: 400 });
@@ -127,7 +128,7 @@ Regras:
 
           if (debit && userId) {
             try {
-              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined, preferredSlot: 'plano2' });
+              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined, preferredSlot });
             } catch (e) {
               console.warn('[generate-caption] debit failed', e);
             }

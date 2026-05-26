@@ -24,6 +24,7 @@ type StatusBody = {
   requestId?: string;
   modelPath?: string;
   modulo?: string;
+  preferredSlot?: string;
 };
 
 type AnyBody = StartBody | StatusBody;
@@ -137,13 +138,14 @@ export const Route = createFileRoute('/api/generate-image')({
                 const isEdit = statusBody.modelPath?.includes('/edit') ?? false;
                 const moduloReq = statusBody.modulo || 'metodo-op';
                 const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
+                const slotPref = (statusBody.preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined;
                 await debitUsage(userId, 1, 0, {
                   evento: 'image.generate',
                   modulo: moduloReq,
                   payload: { provider: 'fal' },
                   custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
                   impersonatedBy,
-                  preferredSlot: moduloReq === 'pu' ? 'plano2' : undefined,
+                  preferredSlot: slotPref,
                 });
               }
             } catch (e) {

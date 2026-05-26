@@ -54,17 +54,21 @@ export async function loadVoiceForUser(userId: string, avatarSlot = 1): Promise<
   return (data as unknown as VoiceClone) || null;
 }
 
-export async function deleteVoiceForUser(userId: string, avatarSlot = 1): Promise<void> {
-  const existing = await loadVoiceForUser(userId, avatarSlot);
-  if (existing?.sample_path) {
-    try { await supabase.storage.from('voice-samples').remove([existing.sample_path]); } catch {}
+export async function deleteVoiceForUser(_userId: string, avatarSlot = 1): Promise<void> {
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  const res = await fetch('/api/delete-voice', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ avatarSlot }),
+  });
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error((j as any).error || 'Não foi possível apagar a voz.');
   }
-  const { error } = await supabase
-    .from('voice_clones' as any)
-    .delete()
-    .eq('user_id', userId)
-    .eq('avatar_slot', avatarSlot);
-  if (error) throw new Error(error.message);
 }
 
 /**

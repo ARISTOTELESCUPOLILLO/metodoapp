@@ -258,7 +258,7 @@ export const Route = createFileRoute('/api/generate-video')({
                 text: script,
                 model_id: 'eleven_multilingual_v2',
                 language_code: 'pt',
-                voice_settings: { stability: 0.35, similarity_boost: 0.8, style: 0.25 },
+                voice_settings: { stability: 0.55, similarity_boost: 0.75, style: 0 },
               }),
             });
             if (!ttsRes.ok) {

@@ -79,7 +79,7 @@ export interface PostUnicoCopy {
   texto: string;
 }
 
-export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?: string, segment?: string): Promise<PostUnicoCopy> {
+export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?: string, segment?: string, preferredSlot?: string): Promise<PostUnicoCopy> {
   const res = await fetch('/api/generate-pu-copy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -90,6 +90,7 @@ export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?
       keyInfo: data.keyInfo,
       brandVoice: brandVoice || '',
       segment: segment || '',
+      ...(preferredSlot ? { preferredSlot } : {}),
     }),
   });
   if (!res.ok) {
@@ -224,7 +225,7 @@ export interface PostUnicoCaption {
 
 export async function generatePostUnicoCaption(
   data: PostUnicoFormData,
-  opts?: { debit?: boolean; brandVoice?: string },
+  opts?: { debit?: boolean; brandVoice?: string; preferredSlot?: string },
 ): Promise<PostUnicoCaption> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (opts?.debit) {
@@ -245,6 +246,7 @@ export async function generatePostUnicoCaption(
       keyInfo: data.keyInfo,
       brandVoice: opts?.brandVoice || '',
       debit: opts?.debit === true,
+      ...(opts?.preferredSlot ? { preferredSlot: opts.preferredSlot } : {}),
     }),
   });
   if (!res.ok) {
@@ -265,8 +267,9 @@ export async function generatePostUnico(params: {
   kit: BrandKit;
   copy?: PostUnicoCopy;
   references?: PostUnicoReferences;
+  preferredSlot?: string;
 }): Promise<string> {
-  const { data, kit, copy, references } = params;
+  const { data, kit, copy, references, preferredSlot } = params;
   const prompt = buildPostUnicoPrompt({ data, kit, copy, references });
 
   // Coleta refs ordenadas: avatar -> cenário -> produtos por número.
@@ -291,6 +294,7 @@ export async function generatePostUnico(params: {
       format: 'post',
       referenceImages: referenceImages.length ? referenceImages : undefined,
       modulo: 'pu',
+      preferredSlot,
     });
   } catch (e) {
     // Se falhou com avatar + downstream_service_error (GPT Image 2 recusa rostos),
@@ -305,6 +309,7 @@ export async function generatePostUnico(params: {
         format: 'post',
         referenceImages: refsWithoutAvatar.length ? refsWithoutAvatar : undefined,
         modulo: 'pu',
+        preferredSlot,
       });
     } else {
       throw e;

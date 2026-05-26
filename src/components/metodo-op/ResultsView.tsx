@@ -1093,9 +1093,8 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
       const coverRefImage = previewBase || preview;
 
       // Só gera nova capa se ainda não há uma — em retries reutiliza a capa existente.
-      // SEM referenceImages: gpt-image-2/edit com o frame como ref ignorava o título.
-      // Text-to-image puro renderiza o título corretamente; coerência visual vem do mesmo
-      // imagePrompt + mood. Logo aplicada por canvas após geração.
+      // Frame (previewBase sem logo) como referência → gpt-image-2/edit preserva cena + aplica título.
+      // Logo aplicada por canvas após geração (não vai para a IA).
       const coverPromise: Promise<string> = coverPng
         ? Promise.resolve(coverPng)
         : generatePostImage({
@@ -1110,6 +1109,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
             vertical: 'reels_cover',
             logoDataUrl: kit.logoDataUrl,
             logoPosition: kit.logoPosition,
+            referenceImages: coverRefImage ? [coverRefImage] : undefined,
           }).then(async (url) => (kit.logoDataUrl ? composeReelsPng(kit, url) : url));
 
       const videoPromise = submitVideoRequest();
@@ -1226,7 +1226,8 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
     try {
       // Título da capa = hook/título do reels.
       const titleText = hook.trim();
-      // SEM referenceImages: text-to-image renderiza o título; logo aplicada por canvas.
+      // Frame (previewBase sem logo) como referência → gpt-image-2/edit preserva cena + aplica título.
+      // Logo aplicada por canvas após geração.
       const url = await generatePostImage({
         imagePrompt: reels.imagePrompt,
         titulo: titleText,
@@ -1239,6 +1240,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         vertical: 'reels_cover',
         logoDataUrl: kit.logoDataUrl,
         logoPosition: kit.logoPosition,
+        referenceImages: (previewBase || preview) ? [(previewBase || preview) as string] : undefined,
       });
       const withLogo = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
       setCoverPng(withLogo);

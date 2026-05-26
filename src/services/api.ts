@@ -301,11 +301,10 @@ export async function generatePostImage(params: {
   const moodInstructions = moodVisualInstructions[mood] || moodVisualInstructions['OP-01'];
   // Frame do reels: logo aplicada por canvas (composeReelsPng) no chamador — NÃO via IA.
   // Quando logoDataUrl é passado por paths legados (posts estáticos), entra como referência.
-  // Capa do Reels: logo aplicada por canvas; NÃO passa referenceImages — o modelo de edição
-  // ignorava o título quando recebia o frame como referência. Usa text-to-image puro.
+  // Capa do Reels: logo aplicada por canvas (composeReelsPng) no chamador.
+  // Capa aceita referenceImages (frame sem logo) → ativa gpt-image-2/edit automaticamente.
   const hasLogo = !isCover && !!logoDataUrl;
-  // coverHasRefs sempre false: capa usa text-to-image para renderizar título corretamente.
-  const coverHasRefs = false;
+  const coverHasRefs = isCover && !!(referenceImages && referenceImages.length);
 
   // Instrução de logo embutida no frame do reels (não há mais composição canvas).
   const reelsLogoLine = (() => {

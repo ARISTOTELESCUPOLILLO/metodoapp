@@ -18,6 +18,7 @@ interface Props {
   semPlano?: boolean;
   isAdmin?: boolean;
   hasPostPlano?: boolean;
+  puSlot?: string;
 }
 
 const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
@@ -37,7 +38,7 @@ const MOODS: { code: MoodCode; label: string }[] = [
   { code: 'OP-06', label: 'Silêncio' },
 ];
 
-export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, semPlano, isAdmin, hasPostPlano }: Props) {
+export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, semPlano, isAdmin, hasPostPlano, puSlot }: Props) {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
@@ -95,7 +96,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         ...data,
         companyName: data.companyName || kit.companyName,
         mainActivity: data.mainActivity || kit.mainActivity || '',
-      }, kit.brandVoice, kit.segment);
+      }, kit.brandVoice, kit.segment, puSlot);
       setCopy(result);
       copyKeyInfoRef.current = data.keyInfo;
       if (isRegen) setCopyRegenCount((c) => c + 1);

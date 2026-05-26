@@ -23,6 +23,7 @@ export const Route = createFileRoute('/api/generate-pu-copy')({
           const keyInfo = String(body.keyInfo || '').slice(0, 1000);
           const brandVoice = String(body.brandVoice || '').slice(0, 80);
           const segment = String(body.segment || '').slice(0, 30);
+          const preferredSlot = ['plano1', 'plano2', 'bonus'].includes(body.preferredSlot) ? body.preferredSlot as 'plano1' | 'plano2' | 'bonus' : undefined;
 
 
           if (!keyInfo.trim()) {
@@ -111,12 +112,12 @@ Regras:
               const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
               await debitUsage(userId, 0, 0, {
                 evento: 'gerar_copia_pu',
-                modulo: 'metodo-op',
+                modulo: 'pu',
                 payload: { objetivo },
                 geracoes: 1,
                 custoUsd: COST_USD.content,
-                preferredSlot: 'plano2',
                 impersonatedBy,
+                preferredSlot,
               });
             } catch (e) {
               console.warn('[debit_usage pu-copy]', (e as Error).message);

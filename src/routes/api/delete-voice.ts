@@ -1,9 +1,21 @@
-// Remove a voz clonada do usuário: apaga registro voice_clones e amostra do bucket.
-// Não precisa chamar API externa — fal MiniMax expira voice_id em 7 dias sozinho.
+// Remove a voz clonada do usuário: apaga da API ElevenLabs, bucket e tabela.
 
 import { createFileRoute } from '@tanstack/react-router';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 import { getUserIdFromRequest } from '@/lib/usage.server';
+
+const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
+
+async function deleteElevenLabsVoice(voiceId: string, elKey: string): Promise<void> {
+  const res = await fetch(`${ELEVENLABS_API}/voices/${voiceId}`, {
+    method: 'DELETE',
+    headers: { 'xi-api-key': elKey },
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    console.warn('[delete-voice] elevenlabs delete', res.status, txt.slice(0, 200));
+  }
+}
 
 export const Route = createFileRoute('/api/delete-voice')({
   server: {
@@ -13,17 +25,36 @@ export const Route = createFileRoute('/api/delete-voice')({
           const userId = await getUserIdFromRequest(request);
           if (!userId) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
 
+          const body = await request.json().catch(() => ({}));
+          const avatarSlot = Number((body as any)?.avatarSlot ?? 1) === 2 ? 2 : 1;
+
           const { data: existing } = await supabaseAdmin
             .from('voice_clones' as any)
-            .select('sample_path')
+            .select('sample_path, external_voice_id, provider')
             .eq('user_id', userId)
+            .eq('avatar_slot', avatarSlot)
             .maybeSingle();
 
-          const samplePath = (existing as any)?.sample_path as string | undefined;
-          if (samplePath) {
-            try { await supabaseAdmin.storage.from('voice-samples').remove([samplePath]); } catch {}
+          const row = existing as any;
+
+          // Apaga da ElevenLabs se for provider elevenlabs.
+          if (row?.provider === 'elevenlabs' && row.external_voice_id) {
+            const elKey = process.env.ELEVENLABS_API_KEY;
+            if (elKey) {
+              try { await deleteElevenLabsVoice(row.external_voice_id, elKey); } catch {}
+            }
           }
-          await supabaseAdmin.from('voice_clones' as any).delete().eq('user_id', userId);
+
+          // Apaga amostra do bucket.
+          if (row?.sample_path) {
+            try { await supabaseAdmin.storage.from('voice-samples').remove([row.sample_path]); } catch {}
+          }
+
+          await supabaseAdmin
+            .from('voice_clones' as any)
+            .delete()
+            .eq('user_id', userId)
+            .eq('avatar_slot', avatarSlot);
 
           return Response.json({ ok: true });
         } catch (e) {

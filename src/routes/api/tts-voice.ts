@@ -1,4 +1,5 @@
-// TTS usando a voz clonada do usuário via fal.ai MiniMax speech-02-hd.
+// TTS usando a voz clonada do usuário.
+// provider='chatterbox': zero-shot com áudio de referência. Legado: MiniMax.
 // Não debita renders (o débito acontece no treino e/ou no cinemático que usa a voz).
 
 import { createFileRoute } from '@tanstack/react-router';
@@ -6,6 +7,7 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 
 const FAL_QUEUE = 'https://queue.fal.run';
+const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
 
 async function falRun<T = unknown>(modelPath: string, falKey: string, payload: unknown, timeoutMs = 180_000): Promise<T> {
   const submitRes = await fetch(`${FAL_QUEUE}/${modelPath}`, {
@@ -56,27 +58,64 @@ export const Route = createFileRoute('/api/tts-voice')({
           const avatarSlot = Number(body?.avatarSlot ?? 1) === 2 ? 2 : 1;
           const { data: vc } = await supabaseAdmin
             .from('voice_clones' as any)
-            .select('external_voice_id, status')
+            .select('external_voice_id, sample_path, provider, status')
             .eq('user_id', userId)
             .eq('avatar_slot', avatarSlot)
             .maybeSingle();
 
-          const voiceId = (vc as any)?.external_voice_id as string | undefined;
-          const status = (vc as any)?.status as string | undefined;
-          if (!voiceId || status !== 'ready') {
+          const row = vc as any;
+          if (!row || row.status !== 'ready') {
             return Response.json({ error: 'Voz do avatar ainda não foi treinada.' }, { status: 400 });
           }
 
-          const result = await falRun<{ audio?: { url?: string } }>(
-            'fal-ai/minimax/speech-02-hd',
-            falKey,
-            {
-              text,
-              voice_setting: { voice_id: voiceId, speed: 1, vol: 1, pitch: 0 },
-              audio_setting: { sample_rate: 32000, format: 'mp3', bitrate: 128000, channel: 1 },
-            },
-          );
-          const audioUrl = result?.audio?.url;
+          let audioUrl: string | undefined;
+
+          if (row.provider === 'elevenlabs') {
+            const elKey = process.env.ELEVENLABS_API_KEY;
+            if (!elKey) return Response.json({ error: 'ELEVENLABS_API_KEY não configurada.' }, { status: 500 });
+            const voiceId: string = row.external_voice_id;
+            const ttsRes = await fetch(`${ELEVENLABS_API}/text-to-speech/${voiceId}`, {
+              method: 'POST',
+              headers: { 'xi-api-key': elKey, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                text,
+                model_id: 'eleven_multilingual_v2',
+                language_code: 'pt',
+                voice_settings: { stability: 0.55, similarity_boost: 0.75, style: 0 },
+              }),
+            });
+            if (!ttsRes.ok) {
+              const err = await ttsRes.text();
+              return Response.json({ error: `ElevenLabs TTS ${ttsRes.status}: ${err.slice(0, 200)}` }, { status: 502 });
+            }
+            const audioBytes = Buffer.from(await ttsRes.arrayBuffer());
+            const previewPath = `${userId}/tts-test.mp3`;
+            const { error: upErr } = await supabaseAdmin.storage
+              .from('voice-samples')
+              .upload(previewPath, audioBytes, { contentType: 'audio/mpeg', upsert: true });
+            if (!upErr) {
+              const { data: s } = await supabaseAdmin.storage
+                .from('voice-samples')
+                .createSignedUrl(previewPath, 3600);
+              audioUrl = s?.signedUrl;
+            }
+          } else if (row.provider === 'chatterbox') {
+            return Response.json({ error: 'Voz Chatterbox não suportada. Reconfigure no Kit Imagem.' }, { status: 400 });
+          } else {
+            // Legado MiniMax
+            const voiceId = row.external_voice_id as string;
+            const result = await falRun<{ audio?: { url?: string } }>(
+              'fal-ai/minimax/speech-02-hd',
+              falKey,
+              {
+                text,
+                voice_setting: { voice_id: voiceId, speed: 1, vol: 1, pitch: 0 },
+                audio_setting: { sample_rate: 32000, format: 'mp3', bitrate: 128000, channel: 1 },
+              },
+            );
+            audioUrl = result?.audio?.url;
+          }
+
           if (!audioUrl) return Response.json({ error: 'fal não retornou áudio.' }, { status: 502 });
 
           // Marca último uso (não bloqueia)
