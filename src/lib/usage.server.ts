@@ -41,27 +41,30 @@ export async function checkBalance(
   const { data: p, error } = await supabaseAdmin
     .from('profiles')
     .select(
-      'plano1_id, plano1_imgs_limite, plano1_imgs_usadas, plano1_renders_limite, plano1_renders_usados, plano1_geracoes_limite, plano1_geracoes_usadas, plano2_id, plano2_imgs_limite, plano2_imgs_usadas, plano2_renders_limite, plano2_renders_usados, plano2_geracoes_limite, plano2_geracoes_usadas, bonus_id, bonus_imgs_limite, bonus_imgs_usadas, bonus_renders_limite, bonus_renders_usados, bonus_geracoes_limite, bonus_geracoes_usadas',
+      'plano1_id, plano1_imgs_limite, plano1_imgs_usadas, plano1_renders_limite, plano1_renders_usados, plano1_geracoes_limite, plano1_geracoes_usadas, plano1_expira_em, plano2_id, plano2_imgs_limite, plano2_imgs_usadas, plano2_renders_limite, plano2_renders_usados, plano2_geracoes_limite, plano2_geracoes_usadas, plano2_expira_em, bonus_id, bonus_imgs_limite, bonus_imgs_usadas, bonus_renders_limite, bonus_renders_usados, bonus_geracoes_limite, bonus_geracoes_usadas, bonus_expira_em',
     )
     .eq('id', userId)
     .maybeSingle();
   if (error || !p) return { ok: false, isAdmin: false };
 
   const fits = (lim: number, used: number, need: number) => lim - used >= need;
+  const notExpired = (expiraEm: string | null) => expiraEm == null || new Date(expiraEm) > new Date();
   const slotOk = (
     id: string | null,
     iLim: number, iUsed: number,
     rLim: number, rUsed: number,
     gLim: number, gUsed: number,
+    expiraEm: string | null,
   ) => !!id
+    && notExpired(expiraEm)
     && fits(iLim, iUsed, imgs)
     && fits(rLim, rUsed, renders)
     && fits(gLim, gUsed, geracoes);
 
   const ok =
-    slotOk(p.plano1_id, p.plano1_imgs_limite, p.plano1_imgs_usadas, p.plano1_renders_limite, p.plano1_renders_usados, (p as any).plano1_geracoes_limite ?? 0, (p as any).plano1_geracoes_usadas ?? 0) ||
-    slotOk(p.plano2_id, p.plano2_imgs_limite, p.plano2_imgs_usadas, p.plano2_renders_limite, p.plano2_renders_usados, (p as any).plano2_geracoes_limite ?? 0, (p as any).plano2_geracoes_usadas ?? 0) ||
-    slotOk(p.bonus_id, p.bonus_imgs_limite, p.bonus_imgs_usadas, p.bonus_renders_limite, p.bonus_renders_usados, (p as any).bonus_geracoes_limite ?? 0, (p as any).bonus_geracoes_usadas ?? 0);
+    slotOk(p.plano1_id, p.plano1_imgs_limite, p.plano1_imgs_usadas, p.plano1_renders_limite, p.plano1_renders_usados, (p as any).plano1_geracoes_limite ?? 0, (p as any).plano1_geracoes_usadas ?? 0, (p as any).plano1_expira_em ?? null) ||
+    slotOk(p.plano2_id, p.plano2_imgs_limite, p.plano2_imgs_usadas, p.plano2_renders_limite, p.plano2_renders_usados, (p as any).plano2_geracoes_limite ?? 0, (p as any).plano2_geracoes_usadas ?? 0, (p as any).plano2_expira_em ?? null) ||
+    slotOk(p.bonus_id, p.bonus_imgs_limite, p.bonus_imgs_usadas, p.bonus_renders_limite, p.bonus_renders_usados, (p as any).bonus_geracoes_limite ?? 0, (p as any).bonus_geracoes_usadas ?? 0, (p as any).bonus_expira_em ?? null);
 
   return { ok, isAdmin: false };
 }

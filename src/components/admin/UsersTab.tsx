@@ -175,7 +175,24 @@ export function UsersTab() {
     if (!confirm(`Renovar ciclo de ${label} para ${r.nome || r.email}?\n\nIsso zera contadores e reinicia o ciclo (data = agora).`)) return;
     setBusy(r.id);
     const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
+
+    const planId = slot === 'plano1' ? r.plano1_id : slot === 'plano2' ? r.plano2_id : r.bonus_id;
+    let limitesPatch: Record<string, number> = {};
+    if (planId) {
+      const { data: plan } = await supabase
+        .from('plans')
+        .select('limite_imagens,limite_renders,limite_geracoes')
+        .eq('id', planId)
+        .maybeSingle();
+      if (plan) limitesPatch = {
+        [`${slot}_imgs_limite`]: (plan as any).limite_imagens ?? 0,
+        [`${slot}_renders_limite`]: (plan as any).limite_renders ?? 0,
+        [`${slot}_geracoes_limite`]: (plan as any).limite_geracoes ?? 0,
+      };
+    }
+
     const patch: Record<string, any> = {
+      ...limitesPatch,
       [`${slot}_inicio`]: new Date().toISOString(),
       [`${slot}_imgs_usadas`]: 0,
       [`${slot}_renders_usados`]: 0,

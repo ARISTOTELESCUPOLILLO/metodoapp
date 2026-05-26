@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getVoiceProfile } from '@/data/brandVoice';
-import { getUserIdFromRequest, debitUsage } from '@/lib/usage.server';
+import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -33,6 +33,14 @@ export const Route = createFileRoute('/api/generate-pu-copy')({
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
             return Response.json({ error: 'OPENAI_API_KEY_CONTENT não configurada' }, { status: 500 });
+          }
+
+          const userId = await getUserIdFromRequest(request).catch(() => null);
+          if (userId) {
+            const bal = await checkBalance(userId, 0, 0, 1);
+            if (!bal.ok) {
+              return Response.json({ error: 'Limite de gerações atingido.' }, { status: 402 });
+            }
           }
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
@@ -106,22 +114,17 @@ Regras:
           let parsed: { titulo?: string; texto?: string };
           try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
 
-          const userId = await getUserIdFromRequest(request).catch(() => null);
           if (userId) {
-            try {
-              const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
-              await debitUsage(userId, 0, 0, {
-                evento: 'gerar_copia_pu',
-                modulo: 'pu',
-                payload: { objetivo },
-                geracoes: 1,
-                custoUsd: COST_USD.content,
-                impersonatedBy,
-                preferredSlot,
-              });
-            } catch (e) {
-              console.warn('[debit_usage pu-copy]', (e as Error).message);
-            }
+            const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
+            await debitUsage(userId, 0, 0, {
+              evento: 'gerar_copia_pu',
+              modulo: 'pu',
+              payload: { objetivo },
+              geracoes: 1,
+              custoUsd: COST_USD.content,
+              impersonatedBy,
+              preferredSlot,
+            });
           }
 
           return Response.json({
