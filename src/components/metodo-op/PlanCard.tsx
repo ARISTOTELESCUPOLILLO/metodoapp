@@ -19,6 +19,11 @@ export function PlanCard({ slot }: Props) {
   const pct = limitVal > 0 ? Math.min(100, Math.round((usedVal / limitVal) * 100)) : 0;
   const barColor = pct >= 90 ? '#ef4444' : pct >= 50 ? '#f59e0b' : '#22c55e';
 
+  // Barra de imagens: exibe separado quando o primário é gerações e há limite de imagens.
+  const hasImgsBar = slot.imgsLimite > 0 && slot.geracoesLimite > 0;
+  const imgsPct = slot.imgsLimite > 0 ? Math.min(100, Math.round((slot.imgsUsadas / slot.imgsLimite) * 100)) : 0;
+  const imgsBarColor = imgsPct >= 90 ? '#ef4444' : imgsPct >= 50 ? '#f59e0b' : '#22c55e';
+
   // Barra secundária de renders (quando o plano tem tanto conteúdo/imagem quanto renders).
   const hasSecondBar = slot.rendersLimite > 0 && limitVal !== slot.rendersLimite;
   const renderPct = slot.rendersLimite > 0 ? Math.min(100, Math.round((slot.rendersUsados / slot.rendersLimite) * 100)) : 0;
@@ -103,6 +108,25 @@ export function PlanCard({ slot }: Props) {
               <span style={{ position: 'absolute', left: 'calc(90% - 4px)', fontSize: 8, color: 'rgba(239,68,68,.55)', userSelect: 'none' }}>!</span>
             </div>
             <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)', flexShrink: 0 }}>{usedVal}/{limitVal}</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Barra de imagens (quando primário é gerações) ── */}
+      {hasImgsBar && (
+        <div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.40)', marginBottom: 2 }}>imagens</div>
+          <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
+            <div style={{
+              position: 'absolute', inset: 0, right: `${100 - imgsPct}%`,
+              borderRadius: 3, background: imgsBarColor,
+              transition: 'right .3s ease',
+            }} />
+            <div style={{ position: 'absolute', left: '50%', top: -3, height: 12, width: 1.5, background: 'rgba(255,255,255,.45)', transform: 'translateX(-50%)' }} />
+            <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 1 }}>
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)' }}>{slot.imgsUsadas}/{slot.imgsLimite}</span>
           </div>
         </div>
       )}

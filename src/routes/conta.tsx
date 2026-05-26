@@ -101,7 +101,9 @@ function ContaPage() {
           </button>
         </div>
         <p style={{ color: '#64748b' }}>
-          {isAdmin ? 'Acesso de administrador (consumo ilimitado).' : `Você tem ${slots.length} ${slots.length === 1 ? 'plano ativo' : 'planos ativos'}.`}
+          {isAdmin && slots.length === 0
+            ? 'Acesso de administrador (sem plano próprio).'
+            : `Você tem ${slots.length} ${slots.length === 1 ? 'plano ativo' : 'planos ativos'}.`}
         </p>
         {profile.client_code && (
           <p style={{ marginTop: 4, fontSize: 12, color: '#94a3b8', fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}>
@@ -116,18 +118,18 @@ function ContaPage() {
         )}
       </header>
 
-      {isAdmin ? (
-        <div style={{ padding: 16, borderRadius: 12, background: '#0f213f', color: '#fff' }}>
-          <strong>Consumo ilimitado</strong> — administrador.
-        </div>
-      ) : slots.length === 0 ? (
-        <div style={{ padding: 16, borderRadius: 12, background: '#fef3c7', color: '#92400e' }}>
-          Você ainda não tem nenhum plano ativo. Fale com o administrador.
-        </div>
-      ) : (
+      {slots.length > 0 ? (
         <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
           {slots.map((s) => <SlotCard key={s.key} slot={s} />)}
         </section>
+      ) : isAdmin ? (
+        <div style={{ padding: 16, borderRadius: 12, background: '#0f213f', color: '#fff' }}>
+          <strong>Acesso de administrador</strong> — sem plano próprio atribuído.
+        </div>
+      ) : (
+        <div style={{ padding: 16, borderRadius: 12, background: '#fef3c7', color: '#92400e' }}>
+          Você ainda não tem nenhum plano ativo. Fale com o administrador.
+        </div>
       )}
 
       <section style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

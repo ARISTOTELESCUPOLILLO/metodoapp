@@ -246,6 +246,10 @@ export const Route = createFileRoute('/api/generate-video')({
           // portugues/sinalizacao → ElevenLabs com voz preset detectada por visão
           let audioUrl: string;
 
+          // Garante que o script termina com pontuação limpa para evitar artefato ("soluço")
+          // que o ElevenLabs adiciona quando o texto não tem um fim de frase definido.
+          const scriptTts = script.trimEnd().replace(/[,;:\s]+$/, '') + '.';
+
           if (clonedSamplePath) {
             // ElevenLabs TTS direto com voice_id clonado — gera bytes e faz upload para URL acessível pelo Kling.
             console.log('[generate-video] step=tts provider=elevenlabs-cloned voice=%s', clonedSamplePath.slice(0, 20));
@@ -255,10 +259,10 @@ export const Route = createFileRoute('/api/generate-video')({
               method: 'POST',
               headers: { 'xi-api-key': elKey, 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                text: script,
+                text: scriptTts,
                 model_id: 'eleven_multilingual_v2',
                 language_code: 'pt',
-                voice_settings: { stability: 0.55, similarity_boost: 0.75, style: 0 },
+                voice_settings: { stability: 0.70, similarity_boost: 0.75, style: 0 },
               }),
             });
             if (!ttsRes.ok) {
@@ -290,10 +294,10 @@ export const Route = createFileRoute('/api/generate-video')({
             }
             console.log('[generate-video] step=tts provider=elevenlabs voice=%s', ttsVoice.slice(0, 30));
             const ttsSubmit = await falSubmit(TTS_MODEL, falKey, {
-              text: script,
+              text: scriptTts,
               voice: ttsVoice,
               language_code: 'pt',
-              stability: 0.55,
+              stability: 0.70,
               similarity_boost: 0.75,
               speed: 1.0,
             });
