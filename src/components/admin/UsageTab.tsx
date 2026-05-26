@@ -12,13 +12,22 @@ interface Log {
   qtd_renders: number;
   qtd_geracoes: number;
   custo_usd: number;
+  slot: string | null;
+}
+
+interface ProfileInfo {
+  email: string;
+  nome: string | null;
+  is_test: boolean;
+  created_by: string | null;
+  bonus_assigned_by: string | null;
 }
 
 export function UsageTab() {
   const isMobile = useIsMobile();
   const [logs, setLogs] = useState<Log[]>([]);
-  const [emails, setEmails] = useState<Record<string, string>>({});
-  const [names, setNames] = useState<Record<string, string>>({});
+  const [profiles, setProfiles] = useState<Record<string, ProfileInfo>>({});
+  const [adminEmails, setAdminEmails] = useState<Record<string, string>>({});
   const [days, setDays] = useState(30);
   const [usdRate, setUsdRate] = useState(5);
   const [loading, setLoading] = useState(true);
@@ -27,17 +36,34 @@ export function UsageTab() {
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - days * 86400000).toISOString();
-    const [{ data: ls }, { data: profs }, { data: settings }] = await Promise.all([
+    const [{ data: ls }, profsResult, { data: settings }] = await Promise.all([
       supabase.from('usage_logs').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(500),
-      supabase.from('profiles').select('id,email,nome'),
+      supabase.from('profiles').select('id,email,nome,is_test,created_by,bonus_assigned_by'),
       supabase.from('app_settings').select('usd_brl_rate').eq('id', true).maybeSingle(),
     ]);
+
+    // Fallback para projetos onde as colunas de rastreio ainda não foram migradas
+    const profs = profsResult.error
+      ? ((await supabase.from('profiles').select('id,email,nome,is_test')).data || [])
+      : (profsResult.data || []);
+
+    const profileMap: Record<string, ProfileInfo> = {};
+    const adminIds = new Set<string>();
+    (profs as any[]).forEach((p: any) => {
+      profileMap[p.id] = { email: p.email, nome: p.nome, is_test: !!p.is_test, created_by: p.created_by ?? null, bonus_assigned_by: p.bonus_assigned_by ?? null };
+      if (p.created_by) adminIds.add(p.created_by);
+      if (p.bonus_assigned_by) adminIds.add(p.bonus_assigned_by);
+    });
+    setProfiles(profileMap);
+
+    if (adminIds.size > 0) {
+      const { data: adminProfs } = await supabase.from('profiles').select('id,email').in('id', Array.from(adminIds));
+      const adminEmailMap: Record<string, string> = {};
+      (adminProfs || []).forEach((a: any) => { adminEmailMap[a.id] = a.email; });
+      setAdminEmails(adminEmailMap);
+    }
+
     setLogs((ls as Log[]) || []);
-    const emailMap: Record<string, string> = {};
-    const nameMap: Record<string, string> = {};
-    (profs || []).forEach((p: any) => { emailMap[p.id] = p.email; if (p.nome) nameMap[p.id] = p.nome; });
-    setEmails(emailMap);
-    setNames(nameMap);
     if (settings) setUsdRate(Number(settings.usd_brl_rate));
     setLoading(false);
   }, [days]);
@@ -47,9 +73,16 @@ export function UsageTab() {
   const q = search.toLowerCase().trim();
   const filteredLogs = q
     ? logs.filter(l => {
-        const email = l.user_id ? (emails[l.user_id] || '') : '';
-        const nome = l.user_id ? (names[l.user_id] || '') : '';
-        return email.toLowerCase().includes(q)
+        const p = l.user_id ? profiles[l.user_id] : undefined;
+        const email = p?.email || '';
+        const nome = p?.nome || '';
+        const label = p?.is_test
+          ? `teste [${nome}]`
+          : l.slot === 'bonus'
+            ? `bônus [${nome || email}]`
+            : email;
+        return label.toLowerCase().includes(q)
+          || email.toLowerCase().includes(q)
           || nome.toLowerCase().includes(q)
           || (l.user_id || '').toLowerCase().startsWith(q)
           || (l.modulo || '').toLowerCase().includes(q)
@@ -62,6 +95,42 @@ export function UsageTab() {
   const totalGeracoes = filteredLogs.reduce((s, l) => s + (l.qtd_geracoes || 0), 0);
   const totalUsd = filteredLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
   const totalBrl = totalUsd * usdRate;
+
+  function renderUsuario(l: Log) {
+    if (!l.user_id) return <span>—</span>;
+    const p = profiles[l.user_id];
+
+    if (p?.is_test) {
+      const adminEmail = p.created_by ? (adminEmails[p.created_by] || '?') : '—';
+      return (
+        <div>
+          <span style={{ fontWeight: 700, color: '#d97706' }}>TESTE [{p.nome || 'sem nome'}]</span>
+          <div style={{ fontSize: 11, color: '#94a3b8' }}>{adminEmail}</div>
+        </div>
+      );
+    }
+
+    if (l.slot === 'bonus') {
+      const nome = p?.nome || p?.email || l.user_id.slice(0, 8);
+      const adminEmail = p?.bonus_assigned_by ? (adminEmails[p.bonus_assigned_by] || '?') : '—';
+      return (
+        <div>
+          <span style={{ fontWeight: 700, color: '#7c3aed' }}>BÔNUS [{nome}]</span>
+          <div style={{ fontSize: 11, color: '#94a3b8' }}>{adminEmail}</div>
+        </div>
+      );
+    }
+
+    return <span>{p?.email || l.user_id.slice(0, 8)}</span>;
+  }
+
+  function renderUsuarioMobile(l: Log): string {
+    if (!l.user_id) return '—';
+    const p = profiles[l.user_id];
+    if (p?.is_test) return `TESTE [${p.nome || 'sem nome'}]`;
+    if (l.slot === 'bonus') return `BÔNUS [${p?.nome || p?.email || l.user_id.slice(0, 8)}]`;
+    return p?.email || l.user_id.slice(0, 8);
+  }
 
   return (
     <div>
@@ -107,7 +176,7 @@ export function UsageTab() {
                 <span style={{ color: '#64748b', fontSize: 12 }}>{new Date(l.created_at).toLocaleString('pt-BR')}</span>
               </div>
               <div style={{ color: '#475569', fontSize: 12, marginBottom: 6, wordBreak: 'break-all' }}>
-                {l.user_id ? (emails[l.user_id] || l.user_id.slice(0, 8)) : '—'}{l.modulo ? ` · ${l.modulo}` : ''}
+                {renderUsuarioMobile(l)}{l.modulo ? ` · ${l.modulo}` : ''}
               </div>
               <div style={{ display: 'flex', gap: 12, fontSize: 12, flexWrap: 'wrap' }}>
                 <span>Img: <strong>{l.qtd_imagens}</strong></span>
@@ -133,7 +202,7 @@ export function UsageTab() {
               {filteredLogs.map((l) => (
                 <tr key={l.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                   <Td>{new Date(l.created_at).toLocaleString('pt-BR')}</Td>
-                  <Td>{l.user_id ? (emails[l.user_id] || l.user_id.slice(0, 8)) : '—'}</Td>
+                  <Td>{renderUsuario(l)}</Td>
                   <Td>{l.evento}</Td>
                   <Td>{l.modulo || '—'}</Td>
                   <Td>{l.qtd_imagens}</Td>

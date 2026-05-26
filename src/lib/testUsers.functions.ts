@@ -56,6 +56,7 @@ export const createTestUser = createServerFn({ method: 'POST' })
         plano1_id: data.plano1_id ?? null,
         plano2_id: data.plano2_id ?? null,
         bonus_id: data.bonus_id ?? null,
+        created_by: context.userId,
       })
       .eq('id', newId);
     if (updErr) {

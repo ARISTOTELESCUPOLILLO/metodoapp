@@ -153,9 +153,10 @@ export function UsersTab() {
     setBusy(userId);
     const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
 
-    const { data: plan } = await supabase
-      .from('plans').select('limite_imagens,limite_renders,limite_geracoes')
-      .eq('id', selectedPlanId).maybeSingle();
+    const [{ data: plan }, { data: { user: adminUser } }] = await Promise.all([
+      supabase.from('plans').select('limite_imagens,limite_renders,limite_geracoes').eq('id', selectedPlanId).maybeSingle(),
+      supabase.auth.getUser(),
+    ]);
 
     const patch: Record<string, any> = {
       [`${slot}_id`]: selectedPlanId,
@@ -172,6 +173,7 @@ export function UsersTab() {
         [`extra_${extraPrefix}_estatico_final`]: 0,
         [`extra_${extraPrefix}_reels`]: 0,
       } : {}),
+      ...(slot === 'bonus' && adminUser ? { bonus_assigned_by: adminUser.id } : {}),
     };
 
     const { error } = await supabase.from('profiles').update(patch as any).eq('id', userId);
