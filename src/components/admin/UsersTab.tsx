@@ -328,7 +328,7 @@ export function UsersTab() {
               <tr>
                 <Th>Usuário</Th><Th>Plano 1</Th><Th>Plano 2</Th><Th>Bônus</Th>
                 <Th title="Soma dos preços aplicados nos slots ativos">Faturamento</Th>
-                <Th>Segmento</Th><Th>Consumo</Th><Th>Status</Th><Th>Admin</Th><Th>Ações</Th>
+                <Th>Segmento</Th><Th>Consumo</Th><Th>Ações</Th>
               </tr>
             </thead>
             <tbody>
@@ -377,21 +377,21 @@ export function UsersTab() {
                   <Td><SegmentoSelect value={r.segmento} onChange={(v) => changeSegmento(r, v)} /></Td>
                   <Td><SlotsConsumption row={r} onRenew={(slot) => openAssignModal(r, slot, slot === 'bonus' ? bonusPlans : mainPlans, true)} /></Td>
                   <Td>
-                    <button onClick={() => toggleStatus(r)} style={pill(r.status === 'ativo' ? '#15803d' : '#b91c1c')}>
-                      {r.status === 'ativo' ? 'bloquear' : 'desbloquear'}
-                    </button>
-                  </Td>
-                  <Td>
-                    <button onClick={() => toggleAdmin(r)} style={pill(r.is_admin ? '#0f213f' : '#94a3b8')}>
-                      {r.is_admin ? 'admin' : 'user'}
-                    </button>
-                  </Td>
-                  <Td>
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      <button onClick={() => actAs(r)} style={{ ...actionBtn, background: '#0f213f', color: '#fff', borderColor: '#0f213f', fontWeight: 700 }} disabled={r.is_admin} title={r.is_admin ? 'Não é necessário para admin' : 'Entrar no contexto deste usuário'}>Atuar como</button>
-                      <button onClick={() => verGeracoes(r)} style={{ ...actionBtn, background: '#0f172a', color: '#fff', borderColor: '#0f172a' }} title="Ver histórico de gerações arquivadas deste usuário">Gerações</button>
-                      <button onClick={() => resetCounters(r)} style={actionBtn}>Zerar</button>
-                      <button onClick={() => resetPassword(r)} style={actionBtn}>Senha</button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button onClick={() => actAs(r)} style={{ ...actionBtn, background: '#0f213f', color: '#fff', borderColor: '#0f213f', fontWeight: 700, fontSize: 11 }} disabled={r.is_admin} title={r.is_admin ? 'Não é necessário para admin' : 'Entrar no contexto deste usuário'}>Atuar como</button>
+                        <button onClick={() => verGeracoes(r)} style={{ ...actionBtn, background: '#0f172a', color: '#fff', borderColor: '#0f172a', fontSize: 11 }}>Gerações</button>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        <button onClick={() => toggleStatus(r)} style={pill(r.status === 'ativo' ? '#15803d' : '#b91c1c')}>
+                          {r.status === 'ativo' ? 'ativo' : 'bloq.'}
+                        </button>
+                        <button onClick={() => toggleAdmin(r)} style={pill(r.is_admin ? '#0f213f' : '#94a3b8')}>
+                          {r.is_admin ? 'admin' : 'user'}
+                        </button>
+                        <button onClick={() => resetCounters(r)} style={{ ...actionBtn, fontSize: 11 }}>Zerar</button>
+                        <button onClick={() => resetPassword(r)} style={{ ...actionBtn, fontSize: 11 }}>Senha</button>
+                      </div>
                     </div>
                   </Td>
                 </tr>
@@ -518,7 +518,7 @@ function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey
     return <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>;
   }
   return (
-    <div style={{ display: 'grid', gap: 4, minWidth: 160 }}>
+    <div style={{ display: 'grid', gap: 4 }}>
       {slots.map((s, i) => {
         const pct = s.il > 0 ? Math.min(100, Math.round((s.iu / s.il) * 100)) : 0;
         const color = pct >= 100 ? '#dc2626' : pct >= 90 ? '#d97706' : '#2563eb';
@@ -561,8 +561,8 @@ function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey
   );
 }
 
-const Th = ({ children }: any) => <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: 12, color: '#475569', fontWeight: 600 }}>{children}</th>;
-const Td = ({ children }: any) => <td style={{ padding: '8px 10px', verticalAlign: 'middle' }}>{children}</td>;
+const Th = ({ children }: any) => <th style={{ padding: '6px 8px', textAlign: 'left', fontSize: 12, color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>{children}</th>;
+const Td = ({ children }: any) => <td style={{ padding: '6px 8px', verticalAlign: 'middle' }}>{children}</td>;
 const actionBtn: React.CSSProperties = {
   background: 'transparent', border: '1px solid #cbd5e1', padding: '4px 8px',
   borderRadius: 4, fontSize: 12, cursor: 'pointer',
@@ -606,7 +606,7 @@ function PlanPriceField({ planId, plans, costs, usdRate, value, onChange }: {
           onChange={e => setInp2(e.target.value)}
           onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') commit(); }}
           placeholder={minBrl.toFixed(0)}
-          style={{ width: 72, padding: '2px 4px', fontSize: 12, fontWeight: 700, border: `1px solid ${belowMin ? '#dc2626' : '#cbd5e1'}`, borderRadius: 4, color: belowMin ? '#dc2626' : '#0f172a', background: belowMin ? '#fef2f2' : '#fff' }}
+          style={{ width: 60, padding: '2px 4px', fontSize: 12, fontWeight: 700, border: `1px solid ${belowMin ? '#dc2626' : '#cbd5e1'}`, borderRadius: 4, color: belowMin ? '#dc2626' : '#0f172a', background: belowMin ? '#fef2f2' : '#fff' }}
         />
         {belowMin && <span title={`Abaixo do mínimo (R$ ${minBrl.toFixed(2)})`} style={{ color: '#dc2626', fontSize: 12, fontWeight: 800 }}>⚠</span>}
       </div>
