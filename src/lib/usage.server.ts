@@ -96,14 +96,30 @@ export async function debitUsage(
   let rpcError: Error | null = null;
 
   if (isAdmin) {
-    // Admin: tenta debitar (se tiver plano, barra atualiza); swallow error se não tiver plano.
-    const { data: slotData } = await supabaseAdmin.rpc('debit_usage', {
+    const { data: slotData, error: adminRpcErr } = await supabaseAdmin.rpc('debit_usage', {
       _user_id: userId,
       _imgs: imgs,
       _renders: renders,
       _geracoes: geracoes,
       ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
     } as any);
+
+    if (adminRpcErr || !slotData) {
+      // RPC falhou ou retornou vazio — fallback: incremento direto no perfil.
+      console.error('[debit_usage admin RPC]', adminRpcErr?.message ?? 'sem retorno');
+      const { data: p } = await supabaseAdmin
+        .from('profiles')
+        .select('plano1_imgs_usadas,plano1_renders_usados,plano1_geracoes_usadas')
+        .eq('id', userId)
+        .maybeSingle();
+      if (p) {
+        await supabaseAdmin.from('profiles').update({
+          plano1_imgs_usadas: ((p as any).plano1_imgs_usadas ?? 0) + imgs,
+          plano1_renders_usados: ((p as any).plano1_renders_usados ?? 0) + renders,
+          plano1_geracoes_usadas: ((p as any).plano1_geracoes_usadas ?? 0) + geracoes,
+        } as any).eq('id', userId);
+      }
+    }
     slot = (slotData as string) || 'admin';
   } else {
     const { data: slotData, error } = await supabaseAdmin.rpc('debit_usage', {
