@@ -9,13 +9,15 @@ export function PlanCard({ slot }: Props) {
   const isBonus = slot.key === 'bonus';
   const cycle = computeCycleFromExpiry(slot.expiraEm);
 
-  // Barra de imagens — sempre exibe quando o plano tem limite de imagens.
+  // Barra de imagens — barra de % só quando tem teto; contador aparece quando há uso ou teto.
   const hasImgsBar = slot.imgsLimite > 0;
+  const hasImgsSection = slot.imgsLimite > 0 || slot.imgsUsadas > 0;
   const imgsPct = slot.imgsLimite > 0 ? Math.min(100, Math.round((slot.imgsUsadas / slot.imgsLimite) * 100)) : 0;
   const imgsBarColor = imgsPct >= 90 ? '#ef4444' : imgsPct >= 50 ? '#f59e0b' : '#22c55e';
 
-  // Barra de vídeos — sempre exibe quando o plano tem limite de renders.
+  // Barra de vídeos — mesma lógica.
   const hasSecondBar = slot.rendersLimite > 0;
+  const hasSecondSection = slot.rendersLimite > 0 || slot.rendersUsados > 0;
   const renderPct = slot.rendersLimite > 0 ? Math.min(100, Math.round((slot.rendersUsados / slot.rendersLimite) * 100)) : 0;
   const renderBarColor = renderPct >= 90 ? '#ef4444' : renderPct >= 50 ? '#f59e0b' : '#6366f1';
 
@@ -77,44 +79,54 @@ export function PlanCard({ slot }: Props) {
         </div>
       </div>
 
-      {/* ── Barra de imagens ── */}
-      {hasImgsBar && (
+      {/* ── Imagens ── */}
+      {hasImgsSection && (
         <div>
           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.40)', marginBottom: 2 }}>imagens</div>
-          <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
-            <div style={{
-              position: 'absolute', inset: 0, right: `${100 - imgsPct}%`,
-              borderRadius: 3, background: imgsBarColor,
-              transition: 'right .3s ease',
-            }} />
-            <div style={{ position: 'absolute', left: '50%', top: -3, height: 12, width: 1.5, background: 'rgba(255,255,255,.45)', transform: 'translateX(-50%)' }} />
-            <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
-          </div>
+          {hasImgsBar && (
+            <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
+              <div style={{
+                position: 'absolute', inset: 0, right: `${100 - imgsPct}%`,
+                borderRadius: 3, background: imgsBarColor,
+                transition: 'right .3s ease',
+              }} />
+              <div style={{ position: 'absolute', left: '50%', top: -3, height: 12, width: 1.5, background: 'rgba(255,255,255,.45)', transform: 'translateX(-50%)' }} />
+              <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 1 }}>
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)' }}>{slot.imgsUsadas}/{slot.imgsLimite}</span>
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)' }}>
+              {slot.imgsLimite > 0 ? `${slot.imgsUsadas}/${slot.imgsLimite}` : `${slot.imgsUsadas} usadas`}
+            </span>
           </div>
         </div>
       )}
 
-      {/* ── Barra de vídeos (renders) ── */}
-      {hasSecondBar && (
+      {/* ── Vídeos (renders) ── */}
+      {hasSecondSection && (
         <div>
           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.40)', marginBottom: 2 }}>vídeos</div>
-          <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
-            <div style={{
-              position: 'absolute', inset: 0, right: `${100 - renderPct}%`,
-              borderRadius: 3, background: renderBarColor,
-              transition: 'right .3s ease',
-            }} />
-            <div style={{ position: 'absolute', left: '50%', top: -3, height: 12, width: 1.5, background: 'rgba(255,255,255,.45)', transform: 'translateX(-50%)' }} />
-            <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 1 }}>
-            <div style={{ position: 'relative', height: 10, flex: 1 }}>
-              <span style={{ position: 'absolute', left: 'calc(50% - 4px)', fontSize: 8, color: 'rgba(255,255,255,.30)', userSelect: 'none' }}>½</span>
-              <span style={{ position: 'absolute', left: 'calc(90% - 4px)', fontSize: 8, color: 'rgba(239,68,68,.55)', userSelect: 'none' }}>!</span>
+          {hasSecondBar && (
+            <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
+              <div style={{
+                position: 'absolute', inset: 0, right: `${100 - renderPct}%`,
+                borderRadius: 3, background: renderBarColor,
+                transition: 'right .3s ease',
+              }} />
+              <div style={{ position: 'absolute', left: '50%', top: -3, height: 12, width: 1.5, background: 'rgba(255,255,255,.45)', transform: 'translateX(-50%)' }} />
+              <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
             </div>
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)', flexShrink: 0 }}>{slot.rendersUsados}/{slot.rendersLimite}</span>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 1 }}>
+            {hasSecondBar && (
+              <div style={{ position: 'relative', height: 10, flex: 1 }}>
+                <span style={{ position: 'absolute', left: 'calc(50% - 4px)', fontSize: 8, color: 'rgba(255,255,255,.30)', userSelect: 'none' }}>½</span>
+                <span style={{ position: 'absolute', left: 'calc(90% - 4px)', fontSize: 8, color: 'rgba(239,68,68,.55)', userSelect: 'none' }}>!</span>
+              </div>
+            )}
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)', flexShrink: 0 }}>
+              {slot.rendersLimite > 0 ? `${slot.rendersUsados}/${slot.rendersLimite}` : `${slot.rendersUsados} usados`}
+            </span>
           </div>
         </div>
       )}

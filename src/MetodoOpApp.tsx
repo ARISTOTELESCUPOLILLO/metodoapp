@@ -116,7 +116,7 @@ export default function App() {
   const [loadingKit, setLoadingKit] = useState(false);
   const { user } = useAuth();
   const impersonation = useImpersonation();
-  const { profile, slots, isAdmin, isSelfAdmin, refresh: refreshProfile } = useProfile(impersonation?.userId || null);
+  const { profile, slots, isAdmin, isSelfAdmin, loading: profileLoading, refresh: refreshProfile } = useProfile(impersonation?.userId || null);
   const loadKitServerFn = useServerFn(loadKitServer);
   const saveKitServerFn = useServerFn(saveKitServer);
   // Quando impersonando: usa só o status do usuário alvo (não o do admin logado).
@@ -494,7 +494,7 @@ export default function App() {
 
         {/* ── Cards de plano ── */}
         <div style={{ marginTop: 10 }}>
-          {slots.length > 0 ? (
+          {!profileLoading && (slots.length > 0 ? (
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
               {effectiveAdmin && (
                 <span style={{ background: '#f4b000', color: '#0f213f', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
@@ -512,7 +512,7 @@ export default function App() {
             <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
               Sem plano ativo — fale com o admin
             </span>
-          )}
+          ))}
         </div>
 
         <div className="modoSwitch" role="tablist" aria-label="Modo de geração">
