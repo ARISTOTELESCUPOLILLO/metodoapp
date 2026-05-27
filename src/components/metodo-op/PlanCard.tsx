@@ -54,9 +54,14 @@ export function PlanCard({ slot }: Props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           {isBonus && (
-            <span style={{ fontSize: 9, color: '#f4b000', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 1 }}>
-              Bônus
-            </span>
+            <div style={{ marginBottom: 1 }}>
+              <span style={{ fontSize: 9, color: '#f4b000', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, display: 'block' }}>
+                Bônus
+              </span>
+              <span style={{ fontSize: 8, color: 'rgba(244,176,0,.60)', display: 'block', lineHeight: 1.2 }}>
+                reserva automática
+              </span>
+            </div>
           )}
           <span style={{ color: '#fff', fontWeight: 800, fontSize: 14, letterSpacing: 0.2 }}>
             {slot.plan.codigo}
