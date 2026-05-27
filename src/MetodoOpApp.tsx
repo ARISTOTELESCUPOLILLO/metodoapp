@@ -102,7 +102,13 @@ export default function App() {
   const [imageKit, setImageKit] = useState<ImageKit>(() => loadImageKit(null));
   const [imageKitSaved, setImageKitSaved] = useState(false);
   const [visualSelection, setVisualSelection] = useState<PostUnicoVisualSelection>(defaultVisualSelection);
-  const [mood, setMood] = useState<MoodCode>('OP-01');
+  const [mood, setMood] = useState<MoodCode>(() => {
+    try {
+      const m = localStorage.getItem('metodo-op-mood');
+      if (m && ['OP-01','OP-02','OP-03','OP-04','OP-05','OP-06'].includes(m)) return m as MoodCode;
+    } catch {}
+    return 'OP-01';
+  });
   const [result, setResult] = useState<MethodOpResult | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -148,6 +154,9 @@ export default function App() {
   // Inicializado com puSlot na primeira carga por usuário; pode ser trocado clicando no PlanCard.
   const [selectedSlot, setSelectedSlot] = useState<'plano1' | 'plano2' | 'bonus'>('plano1');
   const slotInitRef = useRef<string | null>(null);
+  // Rastreia o usuário anterior para distinguir troca de usuário (impersonação A→B)
+  // de remontagem com o mesmo usuário (volta do admin/histórico/conta).
+  const prevUserRef = useRef<string | null>(null);
   useEffect(() => {
     if (effectiveUserId && effectiveUserId !== slotInitRef.current && puSlot) {
       slotInitRef.current = effectiveUserId;
@@ -177,6 +186,7 @@ export default function App() {
   useEffect(() => { saveForm(form as any); }, [form]);
   useEffect(() => { savePostUnico(postUnico); }, [postUnico]);
   useEffect(() => { localStorage.setItem('metodo-op-modo', modo); }, [modo]);
+  useEffect(() => { try { localStorage.setItem('metodo-op-mood', mood); } catch {} }, [mood]);
 
   // Auto-seleciona o modo de acordo com o plano1 do usuário ao logar.
   const modeInitializedForRef = useRef<string | null>(null);
@@ -197,12 +207,16 @@ export default function App() {
   // e restaura o conteúdo gerado persistido em localStorage daquele usuário.
   useEffect(() => {
     if (!effectiveUserId) return;
-    // Reset imediato pra evitar vazar dados do usuário anterior (impersonação admin).
-    // form/postUnico não são namespaced por usuário no localStorage, então precisamos
-    // limpá-los em memória ao trocar de "atuando como".
-    setForm({ ...defaultForm });
-    setPostUnico({ ...defaultPostUnico });
-    setKit(defaultKit);
+    // Limpa form/postUnico/kit APENAS quando o usuário trocou de verdade (impersonação A→B).
+    // Na remontagem com o mesmo usuário (volta do admin/histórico/conta), prevUserRef é null
+    // ou igual ao atual — não apaga o estado que o useState initializer já restaurou.
+    const userChanged = prevUserRef.current !== null && prevUserRef.current !== effectiveUserId;
+    prevUserRef.current = effectiveUserId;
+    if (userChanged) {
+      setForm({ ...defaultForm });
+      setPostUnico({ ...defaultPostUnico });
+      setKit(defaultKit);
+    }
     // Admin impersonando: usa server function que bypassa RLS do Supabase
     const loadFn = impersonation
       ? () => loadKitServerFn({ data: { userId: effectiveUserId } })
