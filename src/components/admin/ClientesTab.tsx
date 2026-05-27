@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { UsersTab } from './UsersTab';
 import { TestUsersTab } from './TestUsersTab';
 import { CobrancasTab } from './CobrancasTab';
+import { PlanHistoricoTab } from './PlanHistoricoTab';
 
-type Sub = 'usuarios' | 'testes' | 'cobrancas';
+type Sub = 'usuarios' | 'testes' | 'cobrancas' | 'historico';
 
 const SUB_TABS: { id: Sub; label: string }[] = [
   { id: 'usuarios',  label: 'Usuários' },
   { id: 'testes',    label: 'Testes' },
   { id: 'cobrancas', label: 'Cobranças' },
+  { id: 'historico', label: 'Histórico de Planos' },
 ];
 
 const subStyle = (active: boolean): React.CSSProperties => ({
@@ -37,6 +39,7 @@ export function ClientesTab() {
       {sub === 'usuarios'  && <UsersTab />}
       {sub === 'testes'    && <TestUsersTab />}
       {sub === 'cobrancas' && <CobrancasTab />}
+      {sub === 'historico' && <PlanHistoricoTab />}
     </div>
   );
 }

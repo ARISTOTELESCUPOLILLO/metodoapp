@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { useServerFn } from '@tanstack/react-start';
 import { supabase } from '@/integrations/supabase/client';
 import { startImpersonation } from '@/hooks/useImpersonation';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { assignPlanSlot, removePlanSlot } from '@/lib/planHistory.functions';
 
 import { computeCycle, cycleLabel, cycleColor } from '@/lib/cycle';
 
@@ -63,6 +65,8 @@ type SlotKey = 'plano1' | 'plano2' | 'bonus';
 
 export function UsersTab() {
   const isMobile = useIsMobile();
+  const assignPlanSlotFn = useServerFn(assignPlanSlot);
+  const removePlanSlotFn = useServerFn(removePlanSlot);
   const [rows, setRows] = useState<Row[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,14 +141,11 @@ export function UsersTab() {
     if (!confirm(`Remover ${label}? Isso vai zerar os contadores deste slot.`)) return;
     setBusy(userId);
     const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
-    const patch: Record<string, any> = {
-      [`${slot}_id`]: null, [`${slot}_inicio`]: null,
-      [`${slot}_imgs_limite`]: 0, [`${slot}_renders_limite`]: 0, [`${slot}_geracoes_limite`]: 0,
-      [`${slot}_imgs_usadas`]: 0, [`${slot}_renders_usados`]: 0, [`${slot}_geracoes_usadas`]: 0,
-      [`extra_${extraPrefix}_estatico`]: 0, [`extra_${extraPrefix}_carrossel`]: 0,
-      [`extra_${extraPrefix}_estatico_final`]: 0, [`extra_${extraPrefix}_reels`]: 0,
-    };
-    await supabase.from('profiles').update(patch as any).eq('id', userId);
+    try {
+      await removePlanSlotFn({ data: { userId, slot, extraPrefix } });
+    } catch (e) {
+      alert(`Erro ao remover slot: ${(e as Error).message}`);
+    }
     await load();
     setBusy(null);
   }
@@ -155,31 +156,23 @@ export function UsersTab() {
     setBusy(userId);
     const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
 
-    const [{ data: plan }, { data: { user: adminUser } }] = await Promise.all([
-      supabase.from('plans').select('limite_imagens,limite_renders,limite_geracoes').eq('id', selectedPlanId).maybeSingle(),
-      supabase.auth.getUser(),
-    ]);
+    const { data: { user: adminUser } } = await supabase.auth.getUser();
 
-    const patch: Record<string, any> = {
-      [`${slot}_id`]: selectedPlanId,
-      [`${slot}_inicio`]: new Date(dateVal + 'T12:00:00').toISOString(),
-      [`${slot}_imgs_limite`]: (plan as any)?.limite_imagens ?? 0,
-      [`${slot}_renders_limite`]: (plan as any)?.limite_renders ?? 0,
-      [`${slot}_geracoes_limite`]: (plan as any)?.limite_geracoes ?? 0,
-      ...(resetCounters ? {
-        [`${slot}_imgs_usadas`]: 0,
-        [`${slot}_renders_usados`]: 0,
-        [`${slot}_geracoes_usadas`]: 0,
-        [`extra_${extraPrefix}_estatico`]: 0,
-        [`extra_${extraPrefix}_carrossel`]: 0,
-        [`extra_${extraPrefix}_estatico_final`]: 0,
-        [`extra_${extraPrefix}_reels`]: 0,
-      } : {}),
-      ...(slot === 'bonus' && adminUser ? { bonus_assigned_by: adminUser.id } : {}),
-    };
-
-    const { error } = await supabase.from('profiles').update(patch as any).eq('id', userId);
-    if (error) alert(`Erro: ${error.message}`);
+    try {
+      await assignPlanSlotFn({
+        data: {
+          userId,
+          slot,
+          planId: selectedPlanId,
+          inicio: dateVal,
+          resetCounters,
+          extraPrefix,
+          adminUserId: adminUser?.id ?? null,
+        },
+      });
+    } catch (e) {
+      alert(`Erro: ${(e as Error).message}`);
+    }
     setAssignModal(null);
     await load();
     setBusy(null);
