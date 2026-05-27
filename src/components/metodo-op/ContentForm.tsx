@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ContentFormData, MoodCode, Segment, Track } from '../../types';
 import TemplateChooser from './TemplateChooser';
 import type { PlanAccess } from '@/lib/planAccess';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
 
 interface Props {
   data: ContentFormData;
@@ -62,6 +64,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestCount, setSuggestCount] = useState(0);
+  const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
 
   const SUGGEST_MAX = 2;
@@ -205,7 +208,15 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
           <span>Informação-chave</span>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setShowIdeiasPanel(true)}
+              title="Ver sugestões de assuntos para este segmento"
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
+            >
+              💡 Ideias de Assuntos
+            </button>
             <button
               type="button"
               onClick={fetchSuggestion}
@@ -452,6 +463,35 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           </>
         );
       })()}
+
+      <Sheet open={showIdeiasPanel} onOpenChange={setShowIdeiasPanel}>
+        <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+          <SheetHeader style={{ marginBottom: 20 }}>
+            <SheetTitle style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              Ideias de Assuntos
+              <span style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', borderRadius: 6, padding: '2px 10px', fontSize: 12, fontWeight: 700 }}>
+                {segment === 'SERVIÇOS' ? 'Serviços' : segment === 'VAREJO' ? 'Varejo' : 'Marca'}
+              </span>
+            </SheetTitle>
+          </SheetHeader>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {IDEIAS_ASSUNTOS[segment].map((cat) => (
+              <div key={cat.titulo}>
+                <div style={{ marginBottom: 6 }}>
+                  <strong style={{ fontSize: 14, color: '#0f172a' }}>{cat.titulo}</strong>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>({cat.subtitulo})</div>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {cat.itens.map((item, i) => (
+                    <li key={i} style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{item}</li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: 20, borderBottom: '1px solid #f1f5f9' }} />
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </section>
   );
 }
