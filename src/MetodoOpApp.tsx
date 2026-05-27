@@ -680,6 +680,8 @@ export default function App() {
               onClear={handleClearPostUnico}
               started={postUnicoStarted}
               slot={selectedSlot}
+              direcao={postUnico.direcao}
+              mood={postUnico.mood}
             />
           )}
           {modo === 'imageKit' && (

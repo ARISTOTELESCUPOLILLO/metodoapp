@@ -6,6 +6,11 @@ import { useImageGenAlert } from './PreImageAlert';
 import { ArchiveButton } from './ArchiveButton';
 import type { PostUnicoCaption } from '../../services/postUnico';
 
+const MOOD_NAMES: Record<string, string> = {
+  'OP-01': 'Clareza', 'OP-02': 'Impacto', 'OP-03': 'Instante',
+  'OP-04': 'Fragmento', 'OP-05': 'Desvio', 'OP-06': 'Silêncio',
+};
+
 interface Props {
   imageDataUrl?: string;
   companyName?: string;
@@ -19,6 +24,8 @@ interface Props {
   started?: boolean;
   /** Slot do plano que será usado ao arquivar (plano1 | plano2 | bonus). */
   slot?: 'plano1' | 'plano2' | 'bonus';
+  direcao?: 'livre' | 'mood';
+  mood?: string;
 }
 
 export default function PostUnicoResult({
@@ -33,6 +40,8 @@ export default function PostUnicoResult({
   onClear,
   started,
   slot,
+  direcao,
+  mood,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const [captionRegens, setCaptionRegens] = useState(0);
@@ -104,6 +113,11 @@ export default function PostUnicoResult({
         <div>
           <span className="eyebrow">{isReady ? 'Peça pronta' : 'Em geração'}</span>
           <h2>{isReady ? 'Post Único gerado' : 'Gerando peça...'}</h2>
+          {(direcao || mood) && (
+            <span style={{ display: 'inline-block', marginTop: 4, fontSize: 11, fontWeight: 600, letterSpacing: 0.4, color: 'rgba(255,255,255,.55)', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 6, padding: '2px 8px' }}>
+              {direcao === 'livre' ? 'Livre — IA' : `${MOOD_NAMES[mood ?? ''] ?? mood} · ${mood}`}
+            </span>
+          )}
         </div>
         <p>1080×1350 com respiro de 110px e logo aplicada. Pronta para o feed.</p>
       </div>
