@@ -184,10 +184,16 @@ CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superf
 
 `;
 
-  return `${DEVICE_RULE_FIRST}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
-${coverRefBlock}${coverVerbatimBlock}
-RESPIRO INTERNO OBRIGATÓRIO — ZONA SEGURA INVIOLÁVEL DE ${safeMargin} em TODAS as bordas (laterais, topo e rodapé) do canvas ${canvasSize}. Nada importante (rosto, olhos, mãos, produto-foco, lettering, gráficos, logo) entra nesse perímetro. Bordas são continuação natural do fundo, sem texto cortado, sem rosto colado na borda, sem mão saindo do quadro.
+  // Suspiro — texto e elementos visuais nunca colam nas bordas.
+  const SAFE_ZONE_RULE = `⚠ REGRA INVIOLÁVEL — SUSPIRO DE ${safeMargin} (TODAS AS BORDAS):
+Canvas ${canvasSize}. Mantenha ${safeMargin} de margem livre em TODAS as bordas (topo, base, esquerda, direita).
+PROIBIDO: qualquer letra, título, número, legenda, lettering ou texto tocando ou ultrapassando esse perímetro de ${safeMargin}. Todo texto deve estar centralizado e contido dentro da área segura interna.
+Bordas são continuação natural do fundo (céu, textura, ambiente, desfoque) — sem texto cortado, sem palavra saindo do quadro.
 
+`;
+
+  return `${DEVICE_RULE_FIRST}${SAFE_ZONE_RULE}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
+${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
 ${cenaDetalhada}
