@@ -41,7 +41,7 @@ export function PlansTab() {
   const isMobile = useIsMobile();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usdRate, setUsdRate] = useState(5.8);
-  const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.50, content: 0.003 });
+  const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.60, content: 0.013 });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Plan | (Omit<Plan, 'id'> & { id?: string }) | null>(null);
   const [saving, setSaving] = useState(false);
@@ -58,8 +58,8 @@ export function PlansTab() {
       setUsdRate(Number(s.usd_brl_rate) || 5.8);
       setCosts({
         imageRef: Number((s as any).image_price_usd) || 0.058,
-        video: Number((s as any).render_price_usd) || 1.50,
-        content: Number((s as any).geracao_price_usd) || 0.003,
+        video: Number((s as any).render_price_usd) || 1.60,
+        content: Number((s as any).geracao_price_usd) || 0.013,
       });
     }
     setLoading(false);

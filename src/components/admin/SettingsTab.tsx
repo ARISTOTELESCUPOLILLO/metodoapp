@@ -30,8 +30,8 @@ export function SettingsTab() {
       if (s) {
         setImageBasePrice(String((s as any).image_base_price_usd ?? 0.046));
         setImageRefPrice(String(s.image_price_usd ?? 0.058));
-        setRenderPrice(String(s.render_price_usd ?? 1.50));
-        setGeracaoPrice(String((s as any).geracao_price_usd ?? 0.003));
+        setRenderPrice(String(s.render_price_usd ?? 1.60));
+        setGeracaoPrice(String((s as any).geracao_price_usd ?? 0.013));
         setUsdRate(String(s.usd_brl_rate ?? 5.8));
         setFalaiBalance(String((s as any).falai_balance_usd ?? 0));
         setOpenaiBalance(String((s as any).openai_balance_usd ?? 0));
