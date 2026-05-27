@@ -103,11 +103,6 @@ export function PlanCard({ slot }: Props) {
               <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
             </div>
           )}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 1 }}>
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)' }}>
-              {slot.imgsLimite > 0 ? `${slot.imgsUsadas}/${slot.imgsLimite}` : `${slot.imgsUsadas} usadas`}
-            </span>
-          </div>
         </div>
       )}
 
@@ -126,17 +121,6 @@ export function PlanCard({ slot }: Props) {
               <div style={{ position: 'absolute', left: '90%', top: -3, height: 12, width: 1.5, background: 'rgba(239,68,68,.65)', transform: 'translateX(-50%)' }} />
             </div>
           )}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 1 }}>
-            {hasSecondBar && (
-              <div style={{ position: 'relative', height: 10, flex: 1 }}>
-                <span style={{ position: 'absolute', left: 'calc(50% - 4px)', fontSize: 8, color: 'rgba(255,255,255,.30)', userSelect: 'none' }}>½</span>
-                <span style={{ position: 'absolute', left: 'calc(90% - 4px)', fontSize: 8, color: 'rgba(239,68,68,.55)', userSelect: 'none' }}>!</span>
-              </div>
-            )}
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,.35)', flexShrink: 0 }}>
-              {slot.rendersLimite > 0 ? `${slot.rendersUsados}/${slot.rendersLimite}` : `${slot.rendersUsados} usados`}
-            </span>
-          </div>
         </div>
       )}
 
