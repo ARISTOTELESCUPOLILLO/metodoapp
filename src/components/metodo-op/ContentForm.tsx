@@ -245,16 +245,20 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
                     ? `✨ Refinar com IA (${suggestCount}/${SUGGEST_MAX})`
                     : `✨ Sugerir com IA (${suggestCount}/${SUGGEST_MAX})`}
             </button>
-            {(data.keyInfo || '').trim() && (
-              <button
-                type="button"
-                onClick={() => update('keyInfo', '')}
-                title="Limpar texto"
-                style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
-              >
-                🗑 Limpar
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                update('keyInfo', '');
+                setSuggestCount(0);
+                setSuggestions([]);
+                setSuggestError(null);
+                initialKeyInfoRef.current = null;
+              }}
+              title="Limpar texto e reiniciar sugestões"
+              style={{ background: 'none', border: `1px solid ${suggestExhausted ? '#fbbf24' : '#cbd5e1'}`, borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: suggestExhausted ? '#92400e' : '#0f172a', cursor: 'pointer' }}
+            >
+              🗑 Limpar
+            </button>
             {canRevertInitial && (
               <button
                 type="button"
