@@ -27,6 +27,8 @@ interface Row {
   bonus_imgs_usadas: number; bonus_imgs_limite: number;
   bonus_renders_usados: number; bonus_renders_limite: number;
   bonus_preco_brl: number | null;
+  voice_avatar1_enabled: boolean;
+  voice_avatar2_enabled: boolean;
 }
 interface Plan {
   id: string; nome: string; codigo: string; elegivel_bonus: boolean; tipo: string;
@@ -221,6 +223,22 @@ export function UsersTab() {
     await load();
     setBusy(null);
   }
+  function hasCinematicsPlan(r: Row): boolean {
+    return [r.plano1_id, r.plano2_id, r.bonus_id].some(id => {
+      const p = plans.find(pl => pl.id === id);
+      return !!p && /^S\d+C$/i.test(p.codigo);
+    });
+  }
+
+  async function toggleVoiceAvatar(r: Row, slot: 1 | 2) {
+    const col = slot === 1 ? 'voice_avatar1_enabled' : 'voice_avatar2_enabled';
+    const next = slot === 1 ? !r.voice_avatar1_enabled : !r.voice_avatar2_enabled;
+    setBusy(r.id);
+    await supabase.from('profiles').update({ [col]: next } as any).eq('id', r.id);
+    await load();
+    setBusy(null);
+  }
+
   async function resetPassword(r: Row) {
     if (!confirm(`Enviar e-mail de redefinição de senha para ${r.email}?`)) return;
     setBusy(r.id);
@@ -310,6 +328,20 @@ export function UsersTab() {
                   {r.is_admin ? 'admin' : 'user'}
                 </button>
               </MRow>
+              {hasCinematicsPlan(r) && (
+                <MRow k="🎙 Voz Cine">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={r.voice_avatar1_enabled} onChange={() => toggleVoiceAvatar(r, 1)} />
+                      Avatar 1
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={r.voice_avatar2_enabled} onChange={() => toggleVoiceAvatar(r, 2)} />
+                      Avatar 2
+                    </label>
+                  </div>
+                </MRow>
+              )}
               <div style={{ padding: '8px 0', borderTop: '1px solid #f1f5f9' }}>
                 <div style={{ fontSize: 11, color: '#64748b', marginBottom: 6, fontWeight: 600 }}>CONSUMO</div>
                 <SlotsConsumption row={r} onRenew={(slot) => openAssignModal(r, slot, slot === 'bonus' ? bonusPlans : mainPlans, true)} />
@@ -394,6 +426,19 @@ export function UsersTab() {
                         <button onClick={() => resetCounters(r)} style={{ ...actionBtn, fontSize: 11 }}>Zerar</button>
                         <button onClick={() => resetPassword(r)} style={{ ...actionBtn, fontSize: 11 }}>Senha</button>
                       </div>
+                      {hasCinematicsPlan(r) && (
+                        <div style={{ paddingTop: 6, borderTop: '1px solid #f1f5f9' }}>
+                          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, marginBottom: 4 }}>🎙 VOZ CINEMÁTICA</div>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, cursor: 'pointer', marginBottom: 3 }}>
+                            <input type="checkbox" checked={r.voice_avatar1_enabled} onChange={() => toggleVoiceAvatar(r, 1)} />
+                            Avatar 1
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={r.voice_avatar2_enabled} onChange={() => toggleVoiceAvatar(r, 2)} />
+                            Avatar 2
+                          </label>
+                        </div>
+                      )}
                     </div>
                   </Td>
                 </tr>

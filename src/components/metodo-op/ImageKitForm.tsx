@@ -4,6 +4,7 @@ import { resizeImage, validateImageFile } from '../../utils/imageResize';
 import { PRODUTO_SLOTS, CENARIO_SLOTS } from '../../utils/imageKitStorage';
 import { useAuth } from '../../hooks/useAuth';
 import { useImpersonation } from '../../hooks/useImpersonation';
+import { supabase } from '@/integrations/supabase/client';
 import {
   cloneVoiceFromSample,
   confirmVoice,
@@ -293,6 +294,7 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
   // Para usuários reais, as ações ficam bloqueadas (a voz deve ser do próprio usuário).
   const isImpersonating = !!impersonation && !impersonation.isTest;
   const [state, setState] = useState<VoiceUiState>('loading');
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [voice, setVoice] = useState<VoiceClone | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -350,27 +352,30 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
     setState('loading');
     setVoice(null);
     setVoicePreviewUrl(null);
-    loadVoiceForUser(effectiveUserId, avatarSlot)
-      .then(async (v) => {
-        if (!alive) return;
-        if (v && v.status === 'ready') {
+    const flagCol = avatarSlot === 1 ? 'voice_avatar1_enabled' : 'voice_avatar2_enabled';
+    Promise.all([
+      loadVoiceForUser(effectiveUserId, avatarSlot),
+      supabase.from('profiles').select(flagCol).eq('id', effectiveUserId).maybeSingle(),
+    ]).then(async ([v, { data: prof }]) => {
+      if (!alive) return;
+      setVoiceEnabled(!!(prof as any)?.[flagCol]);
+      if (v && v.status === 'ready') {
+        setVoice(v);
+        setState('ready');
+      } else if (v && v.status === 'pendente_aprovacao' && v.sample_path) {
+        try {
+          const url = await getVoiceSampleUrl(v.sample_path);
+          if (!alive) return;
           setVoice(v);
-          setState('ready');
-        } else if (v && v.status === 'pendente_aprovacao' && v.sample_path) {
-          try {
-            const url = await getVoiceSampleUrl(v.sample_path);
-            if (!alive) return;
-            setVoice(v);
-            setVoicePreviewUrl(url);
-            setState('awaiting_approval');
-          } catch {
-            if (alive) setState('idle');
-          }
-        } else {
-          setState('idle');
+          setVoicePreviewUrl(url);
+          setState('awaiting_approval');
+        } catch {
+          if (alive) setState('idle');
         }
-      })
-      .catch(() => alive && setState('idle'));
+      } else {
+        setState('idle');
+      }
+    }).catch(() => alive && setState('idle'));
     return () => {
       alive = false;
     };
@@ -546,6 +551,22 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
     const m = Math.floor(s / 60).toString().padStart(2, '0');
     const ss = Math.floor(s % 60).toString().padStart(2, '0');
     return `${m}:${ss}`;
+  }
+
+  // Estado bloqueado: funcionalidade não habilitada pelo admin (não se aplica a impersonação de usuário real, pois esse caso já é tratado abaixo)
+  if (!voiceEnabled && !isImpersonating && state !== 'loading') {
+    return (
+      <div style={wrap}>
+        <span style={title}>🎙 Voz do Avatar {avatarSlot}</span>
+        <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 8, padding: 12, fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8 }}>
+          <span style={{ flexShrink: 0 }}>🔒</span>
+          <span>Gravação de voz não habilitada para este kit. Solicite ao administrador para ativar esta função nas trilhas cinemáticas.</span>
+        </div>
+        <button type="button" disabled style={{ ...btnPrimary, opacity: 0.4, cursor: 'not-allowed', marginTop: 10 }}>
+          🎤 Gravar amostra
+        </button>
+      </div>
+    );
   }
 
   return (
