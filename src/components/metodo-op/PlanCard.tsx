@@ -3,9 +3,11 @@ import type { SlotInfo } from '@/hooks/useProfile';
 
 interface Props {
   slot: SlotInfo;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-export function PlanCard({ slot }: Props) {
+export function PlanCard({ slot, isSelected, onSelect }: Props) {
   const isBonus = slot.key === 'bonus';
   const cycle = computeCycleFromExpiry(slot.expiraEm);
 
@@ -37,18 +39,25 @@ export function PlanCard({ slot }: Props) {
     : null;
 
   return (
-    <div style={{
-      background: isBonus ? 'rgba(244,176,0,.10)' : 'rgba(255,255,255,.08)',
-      border: `1px solid ${isBonus ? 'rgba(244,176,0,.35)' : 'rgba(255,255,255,.14)'}`,
-      borderRadius: 10,
-      padding: '9px 11px',
-      minWidth: 130,
-      maxWidth: 200,
-      flex: '0 1 160px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6,
-    }}>
+    <div
+      onClick={onSelect}
+      style={{
+        background: isBonus ? 'rgba(244,176,0,.10)' : 'rgba(255,255,255,.08)',
+        border: isBonus
+          ? `2px solid ${isSelected ? 'rgba(244,176,0,.90)' : 'rgba(244,176,0,.35)'}`
+          : `2px solid ${isSelected ? 'rgba(255,255,255,.80)' : 'rgba(255,255,255,.14)'}`,
+        borderRadius: 10,
+        padding: '8px 10px',
+        minWidth: 130,
+        maxWidth: 200,
+        flex: '0 1 160px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        cursor: onSelect ? 'pointer' : 'default',
+        transition: 'border-color .15s ease',
+      }}
+    >
 
       {/* ── Cabeçalho ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -63,9 +72,21 @@ export function PlanCard({ slot }: Props) {
               </span>
             </div>
           )}
-          <span style={{ color: '#fff', fontWeight: 800, fontSize: 14, letterSpacing: 0.2 }}>
-            {slot.plan.codigo}
-          </span>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+            <span style={{ color: '#fff', fontWeight: 800, fontSize: 14, letterSpacing: 0.2 }}>
+              {slot.plan.codigo}
+            </span>
+            {isSelected && (
+              <span style={{
+                fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
+                background: isBonus ? '#f4b000' : 'rgba(255,255,255,.25)',
+                color: isBonus ? '#0f213f' : '#fff',
+                padding: '1px 5px', borderRadius: 3,
+              }}>
+                ativo
+              </span>
+            )}
+          </div>
           <div style={{ color: 'rgba(255,255,255,.50)', fontSize: 10, marginTop: 1, lineHeight: 1.3 }}>
             {slot.plan.nome}
           </div>

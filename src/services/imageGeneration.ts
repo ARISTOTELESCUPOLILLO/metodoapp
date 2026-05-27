@@ -6,6 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
 import { prepareReferenceImage, prepareReferenceImages } from '@/utils/prepareReference';
 
+// Slot de débito ativo — atualizado via setCurrentDebitSlot() pelo MetodoOpApp
+// quando o usuário seleciona um card de plano. Usado como fallback quando
+// generateImageAsync não recebe preferredSlot explícito.
+let _currentDebitSlot: string | undefined;
+export function setCurrentDebitSlot(slot: string | undefined) { _currentDebitSlot = slot; }
+
 type StartResp = { requestId?: string; modelPath?: string; statusUrl?: string; responseUrl?: string; error?: string };
 type StatusResp = { status?: string; error?: string };
 type ResultResp = { dataUrl?: string; error?: string };
@@ -137,13 +143,14 @@ export async function generateImageAsync(params: {
   }
 
   // 3) RESULT
+  const slotToDebit = preferredSlot ?? _currentDebitSlot;
   const rr = await postJson<ResultResp>({
     action: 'result',
     responseUrl,
     requestId,
     modelPath,
     modulo: modulo || 'metodo-op',
-    ...(preferredSlot ? { preferredSlot } : {}),
+    ...(slotToDebit ? { preferredSlot: slotToDebit } : {}),
   });
   if (!rr.ok || !rr.data.dataUrl) {
     throw new Error(

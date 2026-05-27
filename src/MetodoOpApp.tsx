@@ -21,6 +21,7 @@ import { useProfile } from './hooks/useProfile';
 import { useImpersonation, stopImpersonation } from './hooks/useImpersonation';
 import { buildPlanAccess } from './lib/planAccess';
 import { PlanCard } from './components/metodo-op/PlanCard';
+import { setCurrentDebitSlot } from './services/imageGeneration';
 import './metodo-op.css';
 
 const defaultKit: BrandKit = {
@@ -136,8 +137,22 @@ export default function App() {
   const geracoesRestantes = Math.max(0, geracoesTotal - geracoesUsadasSum);
   const semPlano = slots.length === 0 && !effectiveAdmin;
   const effectiveUserId = impersonation?.userId || user?.id || null;
-  // Slot que será usado para arquivar gerações PU: preferência ao slot com plano PU.
+  // Slot preferido por tipo de plano (PU usa plano2; MOP usa plano1).
   const puSlot = (slots.find(s => /^PU\d+/i.test(s.plan.codigo)) || slots[0])?.key;
+
+  // Slot ativamente selecionado pelo usuário — controla qual slot é debitado.
+  // Inicializado com puSlot na primeira carga por usuário; pode ser trocado clicando no PlanCard.
+  const [selectedSlot, setSelectedSlot] = useState<'plano1' | 'plano2' | 'bonus'>('plano1');
+  const slotInitRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (effectiveUserId && effectiveUserId !== slotInitRef.current && puSlot) {
+      slotInitRef.current = effectiveUserId;
+      setSelectedSlot(puSlot as 'plano1' | 'plano2' | 'bonus');
+    }
+  }, [effectiveUserId, puSlot]);
+  // Propaga o slot selecionado para o serviço de geração de imagens.
+  useEffect(() => { setCurrentDebitSlot(selectedSlot); }, [selectedSlot]);
+
   const greetingName = impersonation?.nome || profile?.nome || user?.email || '';
   const ultimoLoginFmt = profile?.ultimo_login
     ? new Date(profile.ultimo_login).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
@@ -385,7 +400,7 @@ export default function App() {
         brandVoice: kit.brandVoice,
         mainActivity: kit.mainActivity || '',
         mood,
-      });
+      }, selectedSlot);
       setResult(generated);
       refreshProfile();
     } catch (e) {
@@ -427,7 +442,7 @@ export default function App() {
     // Legenda em paralelo com a imagem — não bloqueia a peça.
     // Aqui debita 1 geração no plano (clique inicial do Post Único).
     setCaptionLoading(true);
-    generatePostUnicoCaption(data, { debit: true, brandVoice: kit.brandVoice, preferredSlot: puSlot })
+    generatePostUnicoCaption(data, { debit: true, brandVoice: kit.brandVoice, preferredSlot: selectedSlot })
       .then((c) => { setCaption(c); refreshProfile(); })
       .catch((e) => setCaptionError(String((e as Error).message || e)))
       .finally(() => setCaptionLoading(false));
@@ -452,7 +467,7 @@ export default function App() {
         if (lista.length) references.produtos = lista;
       }
       const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length);
-      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: puSlot });
+      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot });
       setPostUnicoImg(dataUrl);
       refreshProfile();
     } catch (e) {
@@ -501,7 +516,14 @@ export default function App() {
                   Admin
                 </span>
               )}
-              {slots.map((s) => <PlanCard key={s.key} slot={s} />)}
+              {slots.map((s) => (
+                <PlanCard
+                  key={s.key}
+                  slot={s}
+                  isSelected={s.key === selectedSlot}
+                  onSelect={() => setSelectedSlot(s.key as 'plano1' | 'plano2' | 'bonus')}
+                />
+              ))}
             </div>
           ) : effectiveAdmin ? (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -598,7 +620,7 @@ export default function App() {
               geracoesTotal={geracoesTotal}
               semPlano={semPlano}
               hasPostPlano={planAccess.hasPostUnico}
-              puSlot={puSlot}
+              puSlot={selectedSlot}
             />
           )}
           {modo === 'imageKit' && (
@@ -636,7 +658,7 @@ export default function App() {
               onRegenerateCaption={handleGenerateCaption}
               onClear={handleClearPostUnico}
               started={postUnicoStarted}
-              slot={puSlot}
+              slot={selectedSlot}
             />
           )}
           {modo === 'imageKit' && (

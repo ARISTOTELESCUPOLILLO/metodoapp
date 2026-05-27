@@ -19,13 +19,13 @@ async function authHeader(): Promise<Record<string, string>> {
   }
 }
 
-export async function generateMethodContent(data: ContentFormData): Promise<MethodOpResult> {
+export async function generateMethodContent(data: ContentFormData, preferredSlot?: string): Promise<MethodOpResult> {
   const prompt = buildMetodoOpPrompt(data);
   const auth = await authHeader();
   const res = await fetch('/api/generate-content', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...auth },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, ...(preferredSlot ? { preferredSlot } : {}) }),
   });
 
   const ct = res.headers.get('content-type') || '';

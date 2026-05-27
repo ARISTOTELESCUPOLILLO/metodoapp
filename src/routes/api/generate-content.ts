@@ -7,7 +7,7 @@ export const Route = createFileRoute('/api/generate-content')({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { prompt } = await request.json();
+          const { prompt, preferredSlot } = await request.json();
           if (!prompt) {
             return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
           }
@@ -116,7 +116,7 @@ export const Route = createFileRoute('/api/generate-content')({
                 // Debita sempre (admins inclusos, para rastreio de custo).
                 try {
                   const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
-                  await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: COST_USD.content, impersonatedBy });
+                  await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: COST_USD.content, impersonatedBy, preferredSlot: (preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined });
                 } catch (e) {
                   console.warn('[generate-content] debit failed', e);
                 }
