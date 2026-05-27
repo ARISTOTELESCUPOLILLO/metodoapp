@@ -334,6 +334,7 @@ INEDITISM O CONTROLADO:
 - Não repetir estruturas de abertura.
 - Alternar pergunta, afirmação, contraste, exemplo cotidiano e micro narrativa.
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
+- Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento, mantendo clareza, naturalidade e impacto. Ex.: "expertise" → "experiência", "briefing" → "orientação", "saúde laboral" → "saúde do trabalho", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho", "branding" → "identidade de marca", "networking" → "contatos", "feedback" → "retorno", "ROI" → "retorno do investimento".
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
 
 FORMATO DE SAÍDA:
