@@ -20,7 +20,7 @@ interface PurchaseRow {
   motivo_fechamento: string | null;
   created_at: string;
   profiles: { nome: string | null; email: string } | null;
-  closer: { nome: string | null; email: string } | null;
+  closer_nome: string | null;
 }
 
 const LIMIT = 50;
@@ -176,7 +176,7 @@ export function PlanHistoricoTab() {
                         </span>
                       </Td>
                       <Td style={{ color: '#475569', fontSize: 12 }}>
-                        {r.closer?.nome || r.closer?.email || '—'}
+                        {r.closer_nome || '—'}
                       </Td>
                       <Td style={{ color: '#94a3b8', fontSize: 12 }}>{fmt(r.created_at)}</Td>
                     </tr>

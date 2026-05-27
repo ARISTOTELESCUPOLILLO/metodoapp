@@ -182,19 +182,32 @@ export const loadPlanHistorico = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
 
-    // Busca histórico + nome/email do usuário via join
-    let query = supabaseAdmin
+    // Busca histórico com join para nome/email do usuário (user_id tem FK)
+    const { data: rows, count, error } = await supabaseAdmin
       .from('plan_purchases')
-      .select(`
-        *,
-        profiles!plan_purchases_user_id_fkey(nome, email),
-        closer:profiles!plan_purchases_closed_by_fkey(nome, email)
-      `, { count: 'exact' })
+      .select('*, profiles!plan_purchases_user_id_fkey(nome, email)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(data.offset, data.offset + data.limit - 1);
 
-    const { data: rows, count, error } = await query;
     if (error) throw new Error(error.message);
 
-    return { rows: rows ?? [], total: count ?? 0, offset: data.offset, limit: data.limit };
+    // Resolve nomes dos admins que fecharam ciclos (closed_by sem FK — busca separada)
+    const closedByIds = [...new Set((rows ?? []).map((r: any) => r.closed_by).filter(Boolean))];
+    let closerMap: Record<string, string> = {};
+    if (closedByIds.length) {
+      const { data: closers } = await supabaseAdmin
+        .from('profiles')
+        .select('id, nome, email')
+        .in('id', closedByIds);
+      closerMap = Object.fromEntries(
+        (closers ?? []).map((c: any) => [c.id, c.nome || c.email])
+      );
+    }
+
+    const enriched = (rows ?? []).map((r: any) => ({
+      ...r,
+      closer_nome: r.closed_by ? (closerMap[r.closed_by] ?? null) : null,
+    }));
+
+    return { rows: enriched, total: count ?? 0, offset: data.offset, limit: data.limit };
   });
