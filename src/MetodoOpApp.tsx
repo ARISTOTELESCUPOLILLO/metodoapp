@@ -517,12 +517,7 @@ export default function App() {
                 </span>
               )}
               {slots.map((s) => (
-                <PlanCard
-                  key={s.key}
-                  slot={s}
-                  isSelected={s.key === selectedSlot}
-                  onSelect={() => setSelectedSlot(s.key as 'plano1' | 'plano2' | 'bonus')}
-                />
+                <PlanCard key={s.key} slot={s} />
               ))}
             </div>
           ) : effectiveAdmin ? (
@@ -565,6 +560,27 @@ export default function App() {
           >
             Kit Imagem
           </button>
+          {slots.some((s) => s.key === 'bonus') && (
+            <button
+              type="button"
+              onClick={() => setSelectedSlot(selectedSlot === 'bonus' ? (puSlot as 'plano1' | 'plano2') || 'plano1' : 'bonus')}
+              style={{
+                background: selectedSlot === 'bonus' ? '#f4b000' : 'transparent',
+                color: selectedSlot === 'bonus' ? '#0f213f' : '#f4b000',
+                border: '2px solid #f4b000',
+                borderRadius: 12,
+                padding: '7px 16px',
+                fontWeight: 800,
+                fontSize: 13,
+                cursor: 'pointer',
+                letterSpacing: 0.2,
+                transition: 'background .15s, color .15s',
+                marginLeft: 6,
+              }}
+            >
+              ★ Bônus{selectedSlot === 'bonus' ? ' ativo' : ''}
+            </button>
+          )}
         </div>
 
         {impersonation && (
