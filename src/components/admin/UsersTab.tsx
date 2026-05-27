@@ -361,6 +361,7 @@ export function UsersTab() {
             <thead style={{ background: '#f8fafc' }}>
               <tr>
                 <Th>Usuário</Th><Th>Plano 1</Th><Th>Plano 2</Th><Th>Bônus</Th>
+                <Th>🎙 Voz</Th>
                 <Th title="Soma dos preços aplicados nos slots ativos">Faturamento</Th>
                 <Th>Segmento</Th><Th>Consumo</Th><Th>Ações</Th>
               </tr>
@@ -407,6 +408,20 @@ export function UsersTab() {
                       onRemove={() => removeSlot(r.id, 'bonus')} />
                     {r.bonus_id && <PlanPriceField planId={r.bonus_id} plans={bonusPlans} costs={costs} usdRate={usdRate} value={r.bonus_preco_brl} onChange={(v) => changePreco(r.id, 'bonus', v)} />}
                   </Td>
+                  <Td>
+                    {hasCinematicsPlan(r) ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          <input type="checkbox" checked={r.voice_avatar1_enabled} onChange={() => toggleVoiceAvatar(r, 1)} />
+                          Av1
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          <input type="checkbox" checked={r.voice_avatar2_enabled} onChange={() => toggleVoiceAvatar(r, 2)} />
+                          Av2
+                        </label>
+                      </div>
+                    ) : <span style={{ color: '#cbd5e1' }}>—</span>}
+                  </Td>
                   <Td><FaturamentoCell row={r} plans={[...mainPlans, ...bonusPlans]} costs={costs} usdRate={usdRate} /></Td>
                   <Td><SegmentoSelect value={r.segmento} onChange={(v) => changeSegmento(r, v)} /></Td>
                   <Td><SlotsConsumption row={r} onRenew={(slot) => openAssignModal(r, slot, slot === 'bonus' ? bonusPlans : mainPlans, true)} /></Td>
@@ -426,19 +441,6 @@ export function UsersTab() {
                         <button onClick={() => resetCounters(r)} style={{ ...actionBtn, fontSize: 11 }}>Zerar</button>
                         <button onClick={() => resetPassword(r)} style={{ ...actionBtn, fontSize: 11 }}>Senha</button>
                       </div>
-                      {hasCinematicsPlan(r) && (
-                        <div style={{ paddingTop: 6, borderTop: '1px solid #f1f5f9' }}>
-                          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, marginBottom: 4 }}>🎙 VOZ CINEMÁTICA</div>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, cursor: 'pointer', marginBottom: 3 }}>
-                            <input type="checkbox" checked={r.voice_avatar1_enabled} onChange={() => toggleVoiceAvatar(r, 1)} />
-                            Avatar 1
-                          </label>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, cursor: 'pointer' }}>
-                            <input type="checkbox" checked={r.voice_avatar2_enabled} onChange={() => toggleVoiceAvatar(r, 2)} />
-                            Avatar 2
-                          </label>
-                        </div>
-                      )}
                     </div>
                   </Td>
                 </tr>
