@@ -12,6 +12,9 @@ export interface PlanInfo {
   base_carrossel?: number;
   base_estatico_final?: number;
   base_reels?: number;
+  limite_imgs_display?: number | null;
+  limite_renders_display?: number | null;
+  limite_geracoes_display?: number | null;
 }
 
 export interface SlotInfo {
@@ -22,10 +25,14 @@ export interface SlotInfo {
   expiraEm: string | null;
   imgsUsadas: number;
   imgsLimite: number;
+  /** Limite exibido ao cliente na régua (Uso Normal). Pode ser menor que imgsLimite (Uso Estendido). */
+  imgsLimiteDisplay: number;
   rendersUsados: number;
   rendersLimite: number;
+  rendersLimiteDisplay: number;
   geracoesUsadas: number;
   geracoesLimite: number;
+  geracoesLimiteDisplay: number;
 }
 
 export interface Profile {
@@ -122,7 +129,7 @@ export function useProfile(targetUserId?: string | null) {
       if (ids.length) {
         const { data: pls } = await supabase
           .from('plans')
-          .select('id,codigo,nome,tipo,base_estatico,base_carrossel,base_estatico_final,base_reels')
+          .select('id,codigo,nome,tipo,base_estatico,base_carrossel,base_estatico_final,base_reels,limite_imgs_display,limite_renders_display,limite_geracoes_display')
           .in('id', ids);
         plansMap = Object.fromEntries((pls || []).map((pl: any) => [pl.id, pl]));
       }
@@ -133,9 +140,14 @@ export function useProfile(targetUserId?: string | null) {
         iu: number, il: number, ru: number, rl: number, gu: number, gl: number,
       ) => {
         if (!planId || !plansMap[planId]) return;
-        built.push({ key, label, plan: plansMap[planId], inicio, expiraEm,
-          imgsUsadas: iu, imgsLimite: il, rendersUsados: ru, rendersLimite: rl,
-          geracoesUsadas: gu, geracoesLimite: gl });
+        const plan = plansMap[planId];
+        built.push({ key, label, plan, inicio, expiraEm,
+          imgsUsadas: iu, imgsLimite: il,
+          imgsLimiteDisplay: plan.limite_imgs_display ?? il,
+          rendersUsados: ru, rendersLimite: rl,
+          rendersLimiteDisplay: plan.limite_renders_display ?? rl,
+          geracoesUsadas: gu, geracoesLimite: gl,
+          geracoesLimiteDisplay: plan.limite_geracoes_display ?? gl });
       };
       push('plano1', 'Plano 1', p.plano1_id, p.plano1_inicio, p.plano1_expira_em ?? null,
         p.plano1_imgs_usadas, p.plano1_imgs_limite, p.plano1_renders_usados, p.plano1_renders_limite,

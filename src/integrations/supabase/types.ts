@@ -197,8 +197,11 @@ export type Database = {
           elegivel_bonus: boolean
           id: string
           limite_geracoes: number
+          limite_geracoes_display: number | null
           limite_imagens: number
+          limite_imgs_display: number | null
           limite_renders: number
+          limite_renders_display: number | null
           nome: string
           preco_maximo_brl: number
           tipo: string
@@ -217,8 +220,11 @@ export type Database = {
           elegivel_bonus?: boolean
           id?: string
           limite_geracoes?: number
+          limite_geracoes_display?: number | null
           limite_imagens?: number
+          limite_imgs_display?: number | null
           limite_renders?: number
+          limite_renders_display?: number | null
           nome: string
           preco_maximo_brl?: number
           tipo: string
@@ -237,8 +243,11 @@ export type Database = {
           elegivel_bonus?: boolean
           id?: string
           limite_geracoes?: number
+          limite_geracoes_display?: number | null
           limite_imagens?: number
+          limite_imgs_display?: number | null
           limite_renders?: number
+          limite_renders_display?: number | null
           nome?: string
           preco_maximo_brl?: number
           tipo?: string

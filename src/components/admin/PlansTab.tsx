@@ -12,6 +12,9 @@ interface Plan {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
+  limite_imgs_display: number | null;
+  limite_renders_display: number | null;
+  limite_geracoes_display: number | null;
   preco_maximo_brl: number;
   ativo: boolean;
   base_estatico: number;
@@ -24,7 +27,9 @@ interface Costs { imageRef: number; video: number; content: number }
 
 const empty: Omit<Plan, 'id'> = {
   codigo: '', nome: '', tipo: 'mensal', valor_plano: 0, custo_total_usd: 0,
-  limite_imagens: 0, limite_renders: 0, limite_geracoes: 0, preco_maximo_brl: 0, ativo: true,
+  limite_imagens: 0, limite_renders: 0, limite_geracoes: 0,
+  limite_imgs_display: null, limite_renders_display: null, limite_geracoes_display: null,
+  preco_maximo_brl: 0, ativo: true,
   base_estatico: 0, base_carrossel: 0, base_estatico_final: 0, base_reels: 0,
 };
 
@@ -71,6 +76,9 @@ export function PlansTab() {
       custo_total_usd: Number(editing.custo_total_usd || 0),
       limite_imagens: Number(editing.limite_imagens),
       limite_renders: Number(editing.limite_renders), limite_geracoes: Number(editing.limite_geracoes),
+      limite_imgs_display: editing.limite_imgs_display !== null ? Number(editing.limite_imgs_display) : null,
+      limite_renders_display: editing.limite_renders_display !== null ? Number(editing.limite_renders_display) : null,
+      limite_geracoes_display: editing.limite_geracoes_display !== null ? Number(editing.limite_geracoes_display) : null,
       preco_maximo_brl: Number(editing.preco_maximo_brl || 0),
       ativo: editing.ativo,
       base_estatico: Number(editing.base_estatico || 0),
@@ -192,9 +200,33 @@ export function PlansTab() {
                 </select>
               </label>
               <Inp label="Valor R$" type="number" value={String(editing.valor_plano)} onChange={(v) => setEditing({ ...editing, valor_plano: Number(v) })} />
-              <Inp label="Limite imagens" type="number" value={String(editing.limite_imagens)} onChange={(v) => setEditing({ ...editing, limite_imagens: Number(v) })} />
-              <Inp label="Limite renders" type="number" value={String(editing.limite_renders)} onChange={(v) => setEditing({ ...editing, limite_renders: Number(v) })} />
-              <Inp label="Limite gerações" type="number" value={String(editing.limite_geracoes)} onChange={(v) => setEditing({ ...editing, limite_geracoes: Number(v) })} />
+              <Inp label="Limite imagens (real / estendido)" type="number" value={String(editing.limite_imagens)} onChange={(v) => setEditing({ ...editing, limite_imagens: Number(v) })} />
+              <Inp label="Limite renders (real / estendido)" type="number" value={String(editing.limite_renders)} onChange={(v) => setEditing({ ...editing, limite_renders: Number(v) })} />
+              <Inp label="Limite gerações (real / estendido)" type="number" value={String(editing.limite_geracoes)} onChange={(v) => setEditing({ ...editing, limite_geracoes: Number(v) })} />
+
+              <div style={{ padding: '10px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 2 }}>
+                  Limite de display — o que o cliente vê
+                </div>
+                <div style={{ fontSize: 11, color: '#78350f', marginBottom: 8 }}>
+                  Uso Normal (coluna 2 da tabela). Deixe vazio para mostrar o limite real.
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={lbl}>Imgs display</span>
+                    <input type="number" value={editing.limite_imgs_display ?? ''} onChange={(e) => setEditing({ ...editing, limite_imgs_display: e.target.value === '' ? null : Number(e.target.value) })} placeholder="—" style={inp} />
+                  </label>
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={lbl}>Renders display</span>
+                    <input type="number" value={editing.limite_renders_display ?? ''} onChange={(e) => setEditing({ ...editing, limite_renders_display: e.target.value === '' ? null : Number(e.target.value) })} placeholder="—" style={inp} />
+                  </label>
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={lbl}>Ger. display</span>
+                    <input type="number" value={editing.limite_geracoes_display ?? ''} onChange={(e) => setEditing({ ...editing, limite_geracoes_display: e.target.value === '' ? null : Number(e.target.value) })} placeholder="—" style={inp} />
+                  </label>
+                </div>
+              </div>
+
               <Inp label="Preço máx. R$ (tabela de preços)" type="number" value={String(editing.preco_maximo_brl ?? 0)} onChange={(v) => setEditing({ ...editing, preco_maximo_brl: Number(v) })} />
 
               <div style={{ marginTop: 6, padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>

@@ -9,16 +9,16 @@ export function PlanCard({ slot }: Props) {
   const isBonus = slot.key === 'bonus';
   const cycle = computeCycleFromExpiry(slot.expiraEm);
 
-  // Barra de imagens — barra de % só quando tem teto; contador aparece quando há uso ou teto.
-  const hasImgsBar = slot.imgsLimite > 0;
-  const hasImgsSection = slot.imgsLimite > 0 || slot.imgsUsadas > 0;
-  const imgsPct = slot.imgsLimite > 0 ? Math.min(100, Math.round((slot.imgsUsadas / slot.imgsLimite) * 100)) : 0;
+  // Barra de imagens — usa limite de display (Uso Normal) para a régua visual.
+  const hasImgsBar = slot.imgsLimiteDisplay > 0;
+  const hasImgsSection = slot.imgsLimiteDisplay > 0 || slot.imgsUsadas > 0;
+  const imgsPct = slot.imgsLimiteDisplay > 0 ? Math.min(100, Math.round((slot.imgsUsadas / slot.imgsLimiteDisplay) * 100)) : 0;
   const imgsBarColor = imgsPct >= 90 ? '#ef4444' : imgsPct >= 50 ? '#f59e0b' : '#22c55e';
 
   // Barra de vídeos — mesma lógica.
-  const hasSecondBar = slot.rendersLimite > 0;
-  const hasSecondSection = slot.rendersLimite > 0 || slot.rendersUsados > 0;
-  const renderPct = slot.rendersLimite > 0 ? Math.min(100, Math.round((slot.rendersUsados / slot.rendersLimite) * 100)) : 0;
+  const hasSecondBar = slot.rendersLimiteDisplay > 0;
+  const hasSecondSection = slot.rendersLimiteDisplay > 0 || slot.rendersUsados > 0;
+  const renderPct = slot.rendersLimiteDisplay > 0 ? Math.min(100, Math.round((slot.rendersUsados / slot.rendersLimiteDisplay) * 100)) : 0;
   const renderBarColor = renderPct >= 90 ? '#ef4444' : renderPct >= 50 ? '#f59e0b' : '#6366f1';
 
   const expiryColor =
