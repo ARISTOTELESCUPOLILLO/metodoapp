@@ -16,11 +16,10 @@ function bar(used: number, limit: number) {
   const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
   const color = pct >= 100 ? '#dc2626' : pct >= 90 ? '#d97706' : '#0f766e';
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, background: '#e2e8f0', height: 10, borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color }} />
-      </div>
-      <span style={{ fontSize: 12, color: '#475569', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
+    <div style={{ position: 'relative', height: 10, background: '#e2e8f0', borderRadius: 8, overflow: 'visible' }}>
+      <div style={{ position: 'absolute', inset: 0, right: `${100 - pct}%`, borderRadius: 8, background: color, transition: 'right .3s ease' }} />
+      <div style={{ position: 'absolute', left: '50%', top: -3, height: 16, width: 1.5, background: 'rgba(0,0,0,.20)', transform: 'translateX(-50%)' }} />
+      <div style={{ position: 'absolute', left: '90%', top: -3, height: 16, width: 1.5, background: 'rgba(220,38,38,.50)', transform: 'translateX(-50%)' }} />
     </div>
   );
 }
@@ -32,9 +31,9 @@ function fmtDate(s: string | null) {
 function pctOf(u: number, l: number) { return l > 0 ? (u / l) * 100 : 0; }
 
 function SlotCard({ slot }: { slot: SlotInfo }) {
-  const pImg = pctOf(slot.imgsUsadas, slot.imgsLimite);
-  const pRen = pctOf(slot.rendersUsados, slot.rendersLimite);
-  const hasRenders = slot.rendersLimite > 0;
+  const pImg = pctOf(slot.imgsUsadas, slot.imgsLimiteDisplay);
+  const pRen = pctOf(slot.rendersUsados, slot.rendersLimiteDisplay);
+  const hasRenders = slot.rendersLimiteDisplay > 0;
   const alertImg = pImg >= 90;
   const alertRen = hasRenders && pRen >= 90;
 
@@ -52,13 +51,13 @@ function SlotCard({ slot }: { slot: SlotInfo }) {
 
       <div>
         <div style={{ fontSize: 12, color: '#475569', marginBottom: 4 }}>Uso de imagens</div>
-        {bar(slot.imgsUsadas, slot.imgsLimite)}
+        {bar(slot.imgsUsadas, slot.imgsLimiteDisplay)}
       </div>
 
       {hasRenders && (
         <div>
           <div style={{ fontSize: 12, color: '#475569', marginBottom: 4 }}>Uso de renders</div>
-          {bar(slot.rendersUsados, slot.rendersLimite)}
+          {bar(slot.rendersUsados, slot.rendersLimiteDisplay)}
         </div>
       )}
 

@@ -78,7 +78,7 @@ export function PlansTab() {
       limite_renders: Number(editing.limite_renders), limite_geracoes: Number(editing.limite_geracoes),
       limite_imgs_display: editing.limite_imgs_display !== null ? Number(editing.limite_imgs_display) : null,
       limite_renders_display: editing.limite_renders_display !== null ? Number(editing.limite_renders_display) : null,
-      limite_geracoes_display: editing.limite_geracoes_display !== null ? Number(editing.limite_geracoes_display) : null,
+      limite_geracoes_display: null,
       preco_maximo_brl: Number(editing.preco_maximo_brl || 0),
       ativo: editing.ativo,
       base_estatico: Number(editing.base_estatico || 0),
@@ -211,7 +211,7 @@ export function PlansTab() {
                 <div style={{ fontSize: 11, color: '#78350f', marginBottom: 8 }}>
                   Uso Normal (coluna 2 da tabela). Deixe vazio para mostrar o limite real.
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <label style={{ display: 'grid', gap: 4 }}>
                     <span style={lbl}>Imgs display</span>
                     <input type="number" value={editing.limite_imgs_display ?? ''} onChange={(e) => setEditing({ ...editing, limite_imgs_display: e.target.value === '' ? null : Number(e.target.value) })} placeholder="—" style={inp} />
@@ -219,10 +219,6 @@ export function PlansTab() {
                   <label style={{ display: 'grid', gap: 4 }}>
                     <span style={lbl}>Renders display</span>
                     <input type="number" value={editing.limite_renders_display ?? ''} onChange={(e) => setEditing({ ...editing, limite_renders_display: e.target.value === '' ? null : Number(e.target.value) })} placeholder="—" style={inp} />
-                  </label>
-                  <label style={{ display: 'grid', gap: 4 }}>
-                    <span style={lbl}>Ger. display</span>
-                    <input type="number" value={editing.limite_geracoes_display ?? ''} onChange={(e) => setEditing({ ...editing, limite_geracoes_display: e.target.value === '' ? null : Number(e.target.value) })} placeholder="—" style={inp} />
                   </label>
                 </div>
               </div>
