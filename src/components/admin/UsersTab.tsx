@@ -75,7 +75,7 @@ export function UsersTab() {
   const [editNome, setEditNome] = useState<{ id: string; val: string } | null>(null);
   const [assignModal, setAssignModal] = useState<AssignModal | null>(null);
   const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.50, content: 0.003 });
-  const [usdRate, setUsdRate] = useState(5.5);
+  const [usdRate, setUsdRate] = useState(5.8);
 
   const navigate = useNavigate();
 
@@ -102,7 +102,7 @@ export function UsersTab() {
     setRows((profs || []).map((p: any) => ({ ...p, is_admin: adminSet.has(p.id) })));
     setPlans((pls as Plan[]) || []);
     if (s) {
-      setUsdRate(Number((s as any).usd_brl_rate) || 5.5);
+      setUsdRate(Number((s as any).usd_brl_rate) || 5.8);
       setCosts({ imageRef: Number((s as any).image_price_usd) || 0.058, video: Number((s as any).render_price_usd) || 1.50, content: Number((s as any).geracao_price_usd) || 0.003 });
     }
     setLoading(false);

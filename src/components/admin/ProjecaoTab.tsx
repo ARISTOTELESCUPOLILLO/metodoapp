@@ -142,7 +142,7 @@ const usd = (v: number) => `US$ ${v.toFixed(2)}`;
 const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
 export function ProjecaoTab() {
-  const [settings, setSettings] = useState<Settings>({ usd_brl_rate: 5.5, falai_balance_usd: 0, openai_balance_usd: 0, image_price_usd: 0.058, render_price_usd: 1.50, geracao_price_usd: 0.003 });
+  const [settings, setSettings] = useState<Settings>({ usd_brl_rate: 5.8, falai_balance_usd: 0, openai_balance_usd: 0, image_price_usd: 0.058, render_price_usd: 1.50, geracao_price_usd: 0.003 });
   const [projs, setProjs]       = useState<SlotProj[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showDetail, setShowDetail] = useState(false);
@@ -170,7 +170,7 @@ export function ProjecaoTab() {
       supabase.from('user_roles').select('user_id,role'),
     ]);
     const cfg: Settings = {
-      usd_brl_rate:       Number((s as any)?.usd_brl_rate        ?? 5.5),
+      usd_brl_rate:       Number((s as any)?.usd_brl_rate        ?? 5.8),
       falai_balance_usd:  Number((s as any)?.falai_balance_usd   ?? 0),
       openai_balance_usd: Number((s as any)?.openai_balance_usd  ?? 0),
       image_price_usd:    Number((s as any)?.image_price_usd     ?? 0.058),

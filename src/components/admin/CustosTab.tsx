@@ -53,7 +53,7 @@ export function CustosTab() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
   const [settings, setSettings] = useState<AppSettings>({
-    usd_brl_rate: 5.5, falai_balance_usd: 0, openai_balance_usd: 0,
+    usd_brl_rate: 5.8, falai_balance_usd: 0, openai_balance_usd: 0,
     image_base_price_usd: 0.046, image_price_usd: 0.058, render_price_usd: 1.50, geracao_price_usd: 0.003,
   });
   const [days, setDays] = useState(30);
@@ -84,7 +84,7 @@ export function CustosTab() {
     setProfiles((profs as unknown as Profile[]) || []);
     if (cfg) {
       setSettings({
-        usd_brl_rate: Number(cfg.usd_brl_rate) || 5.5,
+        usd_brl_rate: Number(cfg.usd_brl_rate) || 5.8,
         falai_balance_usd: Number((cfg as any).falai_balance_usd) || 0,
         openai_balance_usd: Number((cfg as any).openai_balance_usd) || 0,
         image_base_price_usd: Number((cfg as any).image_base_price_usd) || 0.046,

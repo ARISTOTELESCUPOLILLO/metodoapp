@@ -32,7 +32,7 @@ export function SettingsTab() {
         setImageRefPrice(String(s.image_price_usd ?? 0.058));
         setRenderPrice(String(s.render_price_usd ?? 1.50));
         setGeracaoPrice(String((s as any).geracao_price_usd ?? 0.003));
-        setUsdRate(String(s.usd_brl_rate ?? 5.5));
+        setUsdRate(String(s.usd_brl_rate ?? 5.8));
         setFalaiBalance(String((s as any).falai_balance_usd ?? 0));
         setOpenaiBalance(String((s as any).openai_balance_usd ?? 0));
       }
@@ -65,7 +65,7 @@ export function SettingsTab() {
   const imgRef = Number(imageRefPrice || 0);
   const render = Number(renderPrice || 0);
   const geracao = Number(geracaoPrice || 0);
-  const rate = Number(usdRate || 5.5);
+  const rate = Number(usdRate || 5.8);
 
   if (loading) return <div style={{ padding: 24 }}>Carregando…</div>;
 

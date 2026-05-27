@@ -29,7 +29,7 @@ export function UsageTab() {
   const [profiles, setProfiles] = useState<Record<string, ProfileInfo>>({});
   const [adminEmails, setAdminEmails] = useState<Record<string, string>>({});
   const [days, setDays] = useState(30);
-  const [usdRate, setUsdRate] = useState(5);
+  const [usdRate, setUsdRate] = useState(5.8);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 

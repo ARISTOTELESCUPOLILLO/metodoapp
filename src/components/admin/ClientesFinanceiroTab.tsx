@@ -43,7 +43,7 @@ export function ClientesFinanceiroTab() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
-  const [usdRate, setUsdRate] = useState(5.5);
+  const [usdRate, setUsdRate] = useState(5.8);
   const [imgRef, setImgRef] = useState(0.058);
   const [renderPrice, setRenderPrice] = useState(1.50);
   const [geracaoPrice, setGeracaoPrice] = useState(0.003);
@@ -68,7 +68,7 @@ export function ClientesFinanceiroTab() {
     const aids = new Set<string>((roles || []).filter((r: any) => r.role === 'admin').map((r: any) => r.user_id as string));
     setAdminIds(aids);
     if (s) {
-      setUsdRate(Number((s as any).usd_brl_rate) || 5.5);
+      setUsdRate(Number((s as any).usd_brl_rate) || 5.8);
       setImgRef(Number((s as any).image_price_usd) || 0.058);
       setRenderPrice(Number((s as any).render_price_usd) || 1.50);
       setGeracaoPrice(Number((s as any).geracao_price_usd) || 0.003);

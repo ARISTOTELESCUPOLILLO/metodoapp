@@ -55,7 +55,7 @@ function calcCusto(plan: Plan, s: Settings) {
 export function PrecosTab() {
   const isMobile = useIsMobile();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [settings, setSettings] = useState<Settings>({ usd_brl_rate: 5.5, image_price_usd: 0.058, render_price_usd: 1.50, geracao_price_usd: 0.003 });
+  const [settings, setSettings] = useState<Settings>({ usd_brl_rate: 5.8, image_price_usd: 0.058, render_price_usd: 1.50, geracao_price_usd: 0.003 });
   const [editMax, setEditMax] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +68,7 @@ export function PrecosTab() {
     ]);
     setPlans((p as Plan[]) || []);
     if (s) setSettings({
-      usd_brl_rate: Number((s as any).usd_brl_rate ?? 5.5),
+      usd_brl_rate: Number((s as any).usd_brl_rate ?? 5.8),
       image_price_usd: Number((s as any).image_price_usd ?? 0.058),
       render_price_usd: Number((s as any).render_price_usd ?? 1.50),
       geracao_price_usd: Number((s as any).geracao_price_usd ?? 0.003),
