@@ -22,6 +22,10 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const mode = String(body.mode || 'postunico') as 'postunico' | 'metodo';
           const attempt = Number(body.attempt || 0);
           const angulo: 'tensao' | 'motivacao' = attempt >= 1 ? 'motivacao' : 'tensao';
+          const topicoGuia: { categoria: string; item: string } | null =
+            body.topicoGuia && body.topicoGuia.categoria && body.topicoGuia.item
+              ? { categoria: String(body.topicoGuia.categoria), item: String(body.topicoGuia.item) }
+              : null;
 
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
@@ -69,6 +73,13 @@ EXEMPLO de boa Informação-chave (${angulo === 'tensao' ? 'tensão' : 'motivaç
 NOTA DO MÉTODO: ${editorialProfile.notaMetodo}`
             : '';
 
+          const topicoGuiaBlock = topicoGuia
+            ? `DIREÇÃO TEMÁTICA (use como âncora se não houver pista clara do usuário — não ignore):
+Categoria: ${topicoGuia.categoria}
+Perspectiva: "${topicoGuia.item}"
+Se o usuário já deu uma pista, use este bloco só como reforço de contexto, não como substituto.`
+            : '';
+
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
             return Response.json({ error: 'OPENAI_API_KEY_CONTENT não configurada' }, { status: 500 });
@@ -89,6 +100,8 @@ ${audienceDirective}
 ${progressaoMetodo}
 
 ${editorialBlock}
+
+${topicoGuiaBlock}
 
 ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
 REGRA OP — escreva em 1 LINHA CURTA contendo 4 camadas implícitas:
@@ -117,6 +130,8 @@ ${audienceDirective}
 ${progressaoMetodo}
 
 ${editorialBlock}
+
+${topicoGuiaBlock}
 
 ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
 IMPORTANTE: NÃO "implique" com o público. Não aponte erro, falha ou falta. Fale do que ele QUER alcançar, do próximo nível, da transformação positiva — como quem reconhece o esforço e mostra o caminho.
@@ -147,6 +162,8 @@ ${preservaHint}
 
 ${editorialBlock}
 
+${topicoGuiaBlock}
+
 ÂNGULO: IDENTIDADE / POSICIONAMENTO.
 A Informação-chave deve revelar QUEM a marca é, o que ela representa, como quer ser percebida no território/categoria. Sem dor do cliente, sem promessa comercial, sem CTA, sem urgência, sem gatilho de venda.
 
@@ -173,6 +190,8 @@ ${hint ? `PISTA DO USUÁRIO (refine/melhore PRESERVANDO o sentido): "${hint}"` :
 ${preservaHint}
 
 ${editorialBlock}
+
+${topicoGuiaBlock}
 
 ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
 Foco em história, repertório, tempo de mercado, vínculo afetivo com clientes, evolução da marca, presença no território. Tom de orgulho calmo, sem auto-elogio comercial.

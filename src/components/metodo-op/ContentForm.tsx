@@ -66,6 +66,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const [suggestCount, setSuggestCount] = useState(0);
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
+  const lastCatIdxRef = useRef<number>(-1);
 
   const SUGGEST_MAX = 2;
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
@@ -95,6 +96,17 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     setSuggesting(true);
     setSuggestError(null);
     const attempt = suggestCount;
+
+    // Sorteia categoria diferente da última para garantir variedade
+    const cats = IDEIAS_ASSUNTOS[segment];
+    const catCount = cats.length;
+    let catIdx: number;
+    do { catIdx = Math.floor(Math.random() * catCount); } while (catCount > 1 && catIdx === lastCatIdxRef.current);
+    lastCatIdxRef.current = catIdx;
+    const catEscolhida = cats[catIdx];
+    const itemIdx = Math.floor(Math.random() * catEscolhida.itens.length);
+    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx] };
+
     try {
       const res = await fetch('/api/suggest-keyinfo', {
         method: 'POST',
@@ -108,6 +120,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           hint: (data.keyInfo || '').trim(),
           mode: 'metodo',
           attempt,
+          topicoGuia,
         }),
       });
       if (!res.ok) {
