@@ -40,7 +40,7 @@ function calcCusto(p: Pick<Plan, 'limite_imagens' | 'limite_renders' | 'limite_g
 export function PlansTab() {
   const isMobile = useIsMobile();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [usdRate, setUsdRate] = useState(5);
+  const [usdRate, setUsdRate] = useState(5.5);
   const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.50, content: 0.003 });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Plan | (Omit<Plan, 'id'> & { id?: string }) | null>(null);
@@ -55,7 +55,7 @@ export function PlansTab() {
     ]);
     setPlans((p as Plan[]) || []);
     if (s) {
-      setUsdRate(Number(s.usd_brl_rate) || 5);
+      setUsdRate(Number(s.usd_brl_rate) || 5.5);
       setCosts({
         imageRef: Number((s as any).image_price_usd) || 0.058,
         video: Number((s as any).render_price_usd) || 1.50,
