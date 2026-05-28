@@ -50,7 +50,7 @@ export const Route = createFileRoute('/api/generate-content')({
                   { role: 'user', content: prompt },
                 ],
                 temperature: 0.85,
-                max_tokens: 3500,
+                max_tokens: 8192,
                 response_format: { type: 'json_object' },
                 stream: true,
               }),
