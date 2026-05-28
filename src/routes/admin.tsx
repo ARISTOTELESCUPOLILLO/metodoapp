@@ -9,6 +9,7 @@ import { UsageTab } from '@/components/admin/UsageTab';
 import { FinanceiroTab } from '@/components/admin/FinanceiroTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
 import { DivulgacaoTab } from '@/components/admin/DivulgacaoTab';
+import { StorageTab } from '@/components/admin/StorageTab';
 
 export const Route = createFileRoute('/admin')({
   component: () => (
@@ -19,7 +20,7 @@ export const Route = createFileRoute('/admin')({
   ),
 });
 
-type Tab = 'clientes' | 'convites' | 'planos' | 'consumo' | 'financeiro' | 'configuracoes' | 'divulgacao';
+type Tab = 'clientes' | 'convites' | 'planos' | 'consumo' | 'financeiro' | 'configuracoes' | 'divulgacao' | 'storage';
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>('clientes');
@@ -31,6 +32,7 @@ function AdminPage() {
     { id: 'financeiro',    label: 'Financeiro' },
     { id: 'configuracoes', label: 'Configurações' },
     { id: 'divulgacao',    label: 'Divulgação' },
+    { id: 'storage',       label: 'Storage' },
   ];
 
   return (
@@ -61,6 +63,7 @@ function AdminPage() {
       {tab === 'financeiro'    && <FinanceiroTab />}
       {tab === 'configuracoes' && <SettingsTab />}
       {tab === 'divulgacao'    && <DivulgacaoTab />}
+      {tab === 'storage'       && <StorageTab />}
     </div>
   );
 }
