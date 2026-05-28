@@ -121,6 +121,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           mode: 'metodo',
           attempt,
           topicoGuia,
+          subMode: (data.keyInfo || '').trim() ? 'refinar' : 'sugerir',
           previousSuggestions: suggestions,
         }),
       });

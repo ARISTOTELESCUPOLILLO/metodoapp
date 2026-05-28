@@ -31,6 +31,9 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
             : [];
 
+          const subMode = String(body.subMode || 'sugerir') as 'sugerir' | 'refinar';
+          const isRefinar = subMode === 'refinar' && !!hint;
+
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
           const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment) ? (body.segment as Seg) : 'SERVIÇOS';
@@ -225,12 +228,136 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO):
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
 
+          // ── Prompts de REFINAMENTO (campo com texto) ──────────────────────
+
+          const metodoRefinarTensao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
+
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
+
+${audienceDirective}
+
+${progressaoMetodo}
+
+${editorialBlock}
+
+INSTRUÇÃO DE REFINAMENTO:
+1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
+2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + DOR/CONFLITO + DIREÇÃO)
+3. Integre empresa, atividade e nicho — torne específico para este negócio
+4. PROIBIDO: inventar assunto diferente do texto original
+
+ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
+Deve ATIVAR pelo menos um gatilho: movimento, conflito, mudança, comparação, consequência.
+
+EVITE termos genéricos isolados ("marketing digital", "consultoria", "organização", "tráfego pago").
+
+Exemplos de refinamento com tensão (não copie — referência de FORMATO):
+- "tráfego pago para empresas do interior que dependem apenas de impulsionamento e precisam transformar anúncios em previsibilidade de vendas"
+- "empresas que postam todo dia mas continuam invisíveis no Instagram"
+- "negócios com comunicação desorganizada que passam insegurança sem perceber"
+
+Retorne JSON EXATAMENTE assim:
+{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+
+          const metodoRefinarMotivacao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
+
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
+
+${audienceDirective}
+
+${progressaoMetodo}
+
+${editorialBlock}
+
+INSTRUÇÃO DE REFINAMENTO:
+1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
+2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + DESEJO/CONQUISTA + DIREÇÃO)
+3. Integre empresa, atividade e nicho — torne específico para este negócio
+4. PROIBIDO: inventar assunto diferente do texto original
+
+ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
+NÃO aponte erro ou falta. Fale do que o público QUER alcançar, do próximo nível, da transformação positiva.
+EVITE qualquer formulação crítica ao público ("não conseguem", "não sabem", "fazem errado").
+
+Exemplos de refinamento com motivação (não copie — referência de FORMATO e TOM):
+- "lojistas locais prontos para transformar o Instagram em vitrine que vende todo dia"
+- "negócios consolidados que querem dar o próximo passo e ganhar autoridade no bairro"
+- "marcas construindo presença digital com consistência e prontas para escalar resultados"
+
+Retorne JSON EXATAMENTE assim:
+{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+
+          const marcaRefinarIdentidade = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
+
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
+TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
+
+${preservaHint}
+
+${editorialBlock}
+
+INSTRUÇÃO DE REFINAMENTO:
+1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
+2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + IDENTIDADE/PROPÓSITO + DIREÇÃO)
+3. Integre empresa, atividade e posicionamento da marca
+4. PROIBIDO: inventar assunto diferente do texto original, linguagem de venda, urgência, dor do cliente
+
+ÂNGULO: IDENTIDADE / POSICIONAMENTO.
+Revele QUEM a marca é, o que representa, como quer ser percebida. Sem promessa comercial, sem CTA.
+
+Exemplos de refinamento institucional (não copie — referência de TOM e FORMATO):
+- "loja de bairro que virou parte da vida de duas gerações e segue construindo presença na cidade"
+- "marca local com identidade própria reafirmando o jeito de fazer que a diferencia há anos"
+- "negócio que carrega um propósito claro e quer ser reconhecido pelo que representa, não só pelo que vende"
+
+Retorne JSON EXATAMENTE assim:
+{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+
+          const marcaRefinarLegado = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
+
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
+TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
+
+${preservaHint}
+
+${editorialBlock}
+
+INSTRUÇÃO DE REFINAMENTO:
+1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
+2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + LEGADO/PERCEPÇÃO + DIREÇÃO)
+3. Integre empresa, história, território e vínculo com comunidade
+4. PROIBIDO: inventar assunto diferente do texto original, linguagem comercial, dor do cliente, inversão negativa de pista positiva
+
+ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
+Foco em história, tempo de mercado, vínculo afetivo, evolução da marca. Tom de orgulho calmo.
+
+Exemplos de refinamento de legado (não copie — referência de TOM e FORMATO):
+- "duas décadas atendendo famílias da mesma cidade e construindo uma marca que pertence ao lugar"
+- "trajetória feita de detalhes que viraram a forma como a marca é reconhecida hoje"
+- "presença local que atravessou gerações e segue ditando o tom da categoria no bairro"
+
+Retorne JSON EXATAMENTE assim:
+{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+
           let metodoPrompt: string;
-          if (segment === 'MARCA') {
-            metodoPrompt = attempt >= 1 ? marcaLegado : marcaIdentidade;
+          if (isRefinar) {
+            if (segment === 'MARCA') {
+              metodoPrompt = attempt % 2 === 0 ? marcaRefinarIdentidade : marcaRefinarLegado;
+            } else {
+              metodoPrompt = angulo === 'tensao' ? metodoRefinarTensao : metodoRefinarMotivacao;
+            }
+          } else if (segment === 'MARCA') {
+            metodoPrompt = attempt % 2 === 0 ? marcaIdentidade : marcaLegado;
           } else {
-            const base = angulo === 'motivacao' ? metodoMotivacao : metodoTensao;
-            metodoPrompt = preservaHint ? `${base}\n\n${preservaHint}` : base;
+            metodoPrompt = angulo === 'tensao' ? metodoTensao : metodoMotivacao;
           }
 
           const postUnicoPrompt = `Sugira UMA Informação-chave para um post único de Instagram em português brasileiro.
