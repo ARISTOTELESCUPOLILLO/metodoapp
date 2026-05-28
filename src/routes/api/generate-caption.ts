@@ -86,7 +86,8 @@ Regras:
 - Nada de inglês, nada de markdown
 - PROIBIDO ABSOLUTO usar nos campos "texto", "cta" ou "hashtags" as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos. Use SEMPRE sinônimos ou perífrases (ex.: "clareza" → "direção definida", "leitura simples"; "impacto" → "efeito imediato"; "silêncio" → "pausa", "respiro"; "instante" → "momento"; "fragmento" → "recorte"; "desvio" → "outro caminho").
 - PROIBIDO repetir a mesma palavra em frases próximas ou consecutivas. Use sinônimos ou reformule. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
-- Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".`;
+- Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
+- "texto" e "cta" devem SEMPRE começar com LETRA MAIÚSCULA.`;
 
           const res = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -136,9 +137,10 @@ Regras:
             }
           }
 
+          const cap = (s: string) => { const t = s.trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
           return Response.json({
-            texto: String(parsed.texto || '').trim(),
-            cta: String(parsed.cta || '').trim(),
+            texto: cap(String(parsed.texto || '')),
+            cta:   cap(String(parsed.cta   || '')),
             hashtags: hashtagsArr,
           });
         } catch (e) {

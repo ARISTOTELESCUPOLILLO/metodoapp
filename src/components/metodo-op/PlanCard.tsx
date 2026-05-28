@@ -14,12 +14,14 @@ export function PlanCard({ slot }: Props) {
   const hasImgsSection = slot.imgsLimiteDisplay > 0 || slot.imgsUsadas > 0;
   const imgsPct = slot.imgsLimiteDisplay > 0 ? Math.min(100, Math.round((slot.imgsUsadas / slot.imgsLimiteDisplay) * 100)) : 0;
   const imgsBarColor = imgsPct >= 90 ? '#ef4444' : imgsPct >= 50 ? '#f59e0b' : '#22c55e';
+  const imgsExhausted = hasImgsBar && imgsPct >= 100;
 
   // Barra de vídeos — mesma lógica.
   const hasSecondBar = slot.rendersLimiteDisplay > 0;
   const hasSecondSection = slot.rendersLimiteDisplay > 0 || slot.rendersUsados > 0;
   const renderPct = slot.rendersLimiteDisplay > 0 ? Math.min(100, Math.round((slot.rendersUsados / slot.rendersLimiteDisplay) * 100)) : 0;
   const renderBarColor = renderPct >= 90 ? '#ef4444' : renderPct >= 50 ? '#f59e0b' : '#6366f1';
+  const rendersExhausted = hasSecondBar && renderPct >= 100;
 
   const expiryColor =
     cycle.status === 'overdue' ? '#ef4444' :
@@ -92,7 +94,9 @@ export function PlanCard({ slot }: Props) {
       {hasImgsSection && (
         <div>
           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.40)', marginBottom: 2 }}>imagens</div>
-          {hasImgsBar && (
+          {imgsExhausted ? (
+            <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, letterSpacing: 0.2 }}>🔒 Esgotado</div>
+          ) : hasImgsBar && (
             <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
               <div style={{
                 position: 'absolute', inset: 0, right: `${100 - imgsPct}%`,
@@ -110,7 +114,9 @@ export function PlanCard({ slot }: Props) {
       {hasSecondSection && (
         <div>
           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.40)', marginBottom: 2 }}>vídeos</div>
-          {hasSecondBar && (
+          {rendersExhausted ? (
+            <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, letterSpacing: 0.2 }}>🔒 Esgotado</div>
+          ) : hasSecondBar && (
             <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.10)', borderRadius: 3, overflow: 'visible' }}>
               <div style={{
                 position: 'absolute', inset: 0, right: `${100 - renderPct}%`,

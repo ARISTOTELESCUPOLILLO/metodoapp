@@ -149,10 +149,38 @@ export default function App() {
   const effectiveUserId = impersonation?.userId || user?.id || null;
   // Slot preferido por tipo de plano (PU usa plano2; MOP usa plano1).
   const puSlot = (slots.find(s => /^PU\d+/i.test(s.plan.codigo)) || slots[0])?.key;
+  // Limites específicos do slot PU (para bloqueio por imagens no Post Único)
+  const puSlotInfoObj = slots.find(s => /^PU\d+$/i.test(s.plan.codigo));
+  const puImgsTotal = puSlotInfoObj ? (puSlotInfoObj.imgsLimiteDisplay || puSlotInfoObj.imgsLimite || 0) : 0;
+  const puImgsUsadas = puSlotInfoObj?.imgsUsadas ?? 0;
+  const puImgsRestantes = Math.max(0, puImgsTotal - puImgsUsadas);
+  const puExhausted = planAccess.hasPostUnico && puImgsTotal > 0 && puImgsUsadas >= puImgsTotal;
+
+  // Limites do slot Método OP (bloqueia quando não há imagens suficientes para nenhuma sequência)
+  const hasMopPlan = planAccess.tracks.cinematica || planAccess.tracks.visual || planAccess.tracks.experimentacao;
+  const mopSlotInfoObj = slots.find(s => s.key !== 'bonus' && !/^PU\d+$/i.test(s.plan.codigo));
+  const mopImgsTotal = mopSlotInfoObj ? (mopSlotInfoObj.imgsLimiteDisplay || mopSlotInfoObj.imgsLimite || 0) : 0;
+  const mopImgsUsadas = mopSlotInfoObj?.imgsUsadas ?? 0;
+  const mopImgsRestantes = Math.max(0, mopImgsTotal - mopImgsUsadas);
+  // Threshold = tamanho mínimo de sequência disponível para este usuário
+  const allMopSizes = [
+    ...planAccess.sizesByTrack.cinematica,
+    ...planAccess.sizesByTrack.visual,
+    ...(planAccess.tracks.experimentacao ? [3] : []),
+  ];
+  const mopMinSize = allMopSizes.length > 0 ? Math.min(...allMopSizes) : 3;
+  const mopExhausted = hasMopPlan && mopImgsTotal > 0 && mopImgsRestantes < mopMinSize;
+
+  // Limites do slot Bônus
+  const bonusSlotInfoObj = slots.find(s => s.key === 'bonus');
+  const bonusImgsTotal = bonusSlotInfoObj ? (bonusSlotInfoObj.imgsLimiteDisplay || bonusSlotInfoObj.imgsLimite || 0) : 0;
+  const bonusImgsUsadas = bonusSlotInfoObj?.imgsUsadas ?? 0;
+  const bonusExhausted = !!bonusSlotInfoObj && bonusImgsTotal > 0 && bonusImgsUsadas >= bonusImgsTotal;
 
   // Slot ativamente selecionado pelo usuário — controla qual slot é debitado.
   // Inicializado com puSlot na primeira carga por usuário; pode ser trocado clicando no PlanCard.
   const [selectedSlot, setSelectedSlot] = useState<'plano1' | 'plano2' | 'bonus'>('plano1');
+  const [exhaustedHint, setExhaustedHint] = useState<'mop' | 'pu' | 'bonus' | null>(null);
   const slotInitRef = useRef<string | null>(null);
   // Rastreia o usuário anterior para distinguir troca de usuário (impersonação A→B)
   // de remontagem com o mesmo usuário (volta do admin/histórico/conta).
@@ -557,18 +585,24 @@ export default function App() {
             role="tab"
             aria-selected={modo === 'metodo'}
             className={`modoBtn${modo === 'metodo' ? ' active' : ''}`}
-            onClick={() => setModo('metodo')}
+            onClick={() => mopExhausted ? setExhaustedHint(h => h === 'mop' ? null : 'mop') : setModo('metodo')}
+            onMouseEnter={() => { if (mopExhausted) setExhaustedHint('mop'); }}
+            onMouseLeave={() => setExhaustedHint(null)}
+            style={mopExhausted ? { opacity: 0.45, cursor: 'default' } : undefined}
           >
-            Método OP
+            Método OP{mopExhausted ? ' 🔒' : ''}
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={modo === 'postUnico'}
             className={`modoBtn${modo === 'postUnico' ? ' active' : ''}`}
-            onClick={() => setModo('postUnico')}
+            onClick={() => puExhausted ? setExhaustedHint(h => h === 'pu' ? null : 'pu') : setModo('postUnico')}
+            onMouseEnter={() => { if (puExhausted) setExhaustedHint('pu'); }}
+            onMouseLeave={() => setExhaustedHint(null)}
+            style={puExhausted ? { opacity: 0.45, cursor: 'default' } : undefined}
           >
-            Post Único
+            Post Único{puExhausted ? ' 🔒' : ''}
           </button>
           <button
             type="button"
@@ -582,7 +616,9 @@ export default function App() {
           {slots.some((s) => s.key === 'bonus') && (
             <button
               type="button"
-              onClick={() => setSelectedSlot(selectedSlot === 'bonus' ? (puSlot as 'plano1' | 'plano2') || 'plano1' : 'bonus')}
+              onClick={() => bonusExhausted ? setExhaustedHint(h => h === 'bonus' ? null : 'bonus') : setSelectedSlot(selectedSlot === 'bonus' ? (puSlot as 'plano1' | 'plano2') || 'plano1' : 'bonus')}
+              onMouseEnter={() => { if (bonusExhausted) setExhaustedHint('bonus'); }}
+              onMouseLeave={() => setExhaustedHint(null)}
               style={{
                 background: selectedSlot === 'bonus' ? '#f4b000' : 'transparent',
                 color: selectedSlot === 'bonus' ? '#0f213f' : '#f4b000',
@@ -591,16 +627,37 @@ export default function App() {
                 padding: '7px 16px',
                 fontWeight: 800,
                 fontSize: 13,
-                cursor: 'pointer',
+                cursor: bonusExhausted ? 'default' : 'pointer',
                 letterSpacing: 0.2,
                 transition: 'background .15s, color .15s',
                 marginLeft: 6,
+                opacity: bonusExhausted ? 0.45 : 1,
               }}
             >
-              ★ Bônus{selectedSlot === 'bonus' ? ' ativo' : ''}
+              ★ Bônus{selectedSlot === 'bonus' ? ' ativo' : ''}{bonusExhausted ? ' 🔒' : ''}
             </button>
           )}
         </div>
+
+        {exhaustedHint && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 10 }}>
+            {exhaustedHint === 'mop' && (
+              <div style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.30)', borderRadius: 8, padding: '6px 14px', color: '#fca5a5', fontSize: 12, fontWeight: 600, textAlign: 'center' }}>
+                Método OP esgotado — Renove com o administrador
+              </div>
+            )}
+            {exhaustedHint === 'pu' && (
+              <div style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.30)', borderRadius: 8, padding: '6px 14px', color: '#fca5a5', fontSize: 12, fontWeight: 600, textAlign: 'center' }}>
+                Post Único esgotado — Renove com o administrador
+              </div>
+            )}
+            {exhaustedHint === 'bonus' && (
+              <div style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.30)', borderRadius: 8, padding: '6px 14px', color: '#fca5a5', fontSize: 12, fontWeight: 600, textAlign: 'center' }}>
+                Bônus Esgotado
+              </div>
+            )}
+          </div>
+        )}
 
         {impersonation && (
           <div className="heroActions">
@@ -653,7 +710,10 @@ export default function App() {
               loading={loading}
               geracoesRestantes={geracoesRestantes}
               geracoesTotal={geracoesTotal}
+              imgsRestantes={puImgsRestantes}
+              imgsTotal={puImgsTotal}
               semPlano={semPlano}
+              isAdmin={effectiveAdmin}
               hasPostPlano={planAccess.hasPostUnico}
               puSlot={selectedSlot}
             />

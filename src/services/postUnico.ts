@@ -16,7 +16,7 @@ const OBJETIVO_TONE: Record<PostUnicoObjetivo, string> = {
   promocao: 'energia comercial, desejo, movimento',
   homenagem: 'afeto, luz quente, respeito, contemplação',
   aviso: 'clareza institucional, autoridade tranquila',
-  oportunidade: 'momento decisivo, contraste dramático, sensação de janela rara',
+  oportunidade: 'urgência contida antes da ação, contraste entre espera e movimento, energia direcionada, tensão antes do clique',
   institucional: 'sobriedade contemporânea, autoridade calma, identidade de marca, atemporalidade',
 };
 
@@ -40,11 +40,20 @@ const MOOD_INSTRUCTIONS: Record<MoodCode, string> = {
 
 const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
-function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode): string {
+const OBJETIVO_VISUAL_EXCLUSIONS: Partial<Record<PostUnicoObjetivo, string>> = {
+  oportunidade: 'PROIBIDO NESTE OBJETIVO (metáforas de stock): portais, arcos, portas abertas, janelas abertas, pôr do sol ou nascer do sol como símbolo de "oportunidade", horizonte com luz dourada no fim do túnel. São clichês visuais de banco de imagens. Represente urgência e decisão através de pessoa em ação, postura corporal focada, close de detalhe significativo, composição com movimento implícito.',
+  homenagem: 'PROIBIDO: velas de bolo de aniversário genéricas sem contexto, buquê de flores isolado como stock, confetes soltos sem cena.',
+  promocao: 'PROIBIDO: sacola de compras genérica, carrinho de supermercado, etiqueta de preço flutuando como elemento central, emoji de porcentagem como gráfico principal.',
+};
+
+function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo): string {
   if (direcao === 'mood' && mood) {
     return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}): ${MOOD_INSTRUCTIONS[mood]}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.`;
   }
-  return `DIREÇÃO LIVRE: a IA tem liberdade total de direção de arte — NÃO há mood pré-definido. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Evite repetir a mesma fórmula visual de peças anteriores. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
+  const exclusion = objetivo && OBJETIVO_VISUAL_EXCLUSIONS[objetivo]
+    ? `\n\n${OBJETIVO_VISUAL_EXCLUSIONS[objetivo]}`
+    : '';
+  return `DIREÇÃO LIVRE: a IA tem liberdade total de direção de arte — NÃO há mood pré-definido. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Evite repetir a mesma fórmula visual de peças anteriores. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).${exclusion}`;
 }
 
 function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo: string; regraFinal: string } {
@@ -156,7 +165,7 @@ export function buildPostUnicoPrompt(params: {
   const { data, kit, copy, references } = params;
   const objetivo = OBJETIVO_LABEL[data.objetivo];
   const tom = OBJETIVO_TONE[data.objetivo];
-  const direcao = direcaoBlock(data.direcao, data.mood);
+  const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo);
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
   const zona = logoZoneDescription(kit.logoPosition);

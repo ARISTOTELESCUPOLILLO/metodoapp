@@ -37,3 +37,9 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Testes E2E temporários
+e2e/node_modules
+e2e/package-lock.json
+e2e/test-credentials.json
+e2e/screenshots

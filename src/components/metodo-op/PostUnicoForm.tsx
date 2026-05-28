@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
 
 interface Props {
   data: PostUnicoFormData;
@@ -15,6 +17,8 @@ interface Props {
   loading: boolean;
   geracoesRestantes?: number;
   geracoesTotal?: number;
+  imgsRestantes?: number;
+  imgsTotal?: number;
   semPlano?: boolean;
   isAdmin?: boolean;
   hasPostPlano?: boolean;
@@ -38,11 +42,12 @@ const MOODS: { code: MoodCode; label: string }[] = [
   { code: 'OP-06', label: 'Silêncio' },
 ];
 
-export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, semPlano, isAdmin, hasPostPlano, puSlot }: Props) {
+export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, imgsRestantes, imgsTotal, semPlano, isAdmin, hasPostPlano, puSlot }: Props) {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestCount, setSuggestCount] = useState(0);
+  const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
   const SUGGEST_MAX = 2;
   const suggestExhausted = suggestCount >= SUGGEST_MAX;
@@ -155,12 +160,14 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   }
 
-  const semGeracoes = !isAdmin && typeof geracoesRestantes === 'number' && geracoesRestantes <= 0 && (geracoesTotal || 0) > 0;
+  const semGeracoes = typeof geracoesRestantes === 'number' && geracoesRestantes <= 0 && (geracoesTotal || 0) > 0;
+  const semImagens  = typeof imgsRestantes === 'number' && imgsRestantes <= 0 && (imgsTotal || 0) > 0;
+  const semRecursos = semGeracoes || semImagens;
   const semPlanoPost = !isAdmin && hasPostPlano === false;
-  const canGenerateCopy = !!data.keyInfo.trim() && !loading && !suggesting && !copyLoading && !semGeracoes && !(!isAdmin && semPlano) && !semPlanoPost;
+  const canGenerateCopy = !!data.keyInfo.trim() && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !semPlanoPost;
   const moodPendente = data.direcao === 'mood' && !data.mood;
   const livreSemCopy = data.direcao === 'livre' && !copy;
-  const canGenerate = (!!copy || data.direcao === 'livre') && !loading && !suggesting && !copyLoading && !semGeracoes && !(!isAdmin && semPlano) && !moodPendente && !semPlanoPost && !!data.keyInfo.trim();
+  const canGenerate = (!!copy || data.direcao === 'livre') && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !moodPendente && !semPlanoPost && !!data.keyInfo.trim();
   const hasLogo = !!kit.logoDataUrl;
 
   return (
@@ -226,6 +233,14 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
             Informação-chave <span style={{ color: '#dc2626' }}>*</span>
           </label>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setShowIdeiasPanel(true)}
+              title="Ver sugestões de assuntos para este segmento"
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
+            >
+              💡 Ideias de Assuntos
+            </button>
             <button
               type="button"
               onClick={fetchSuggestion}
@@ -490,7 +505,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           type="button"
           onClick={() => onGenerate(copy || undefined)}
           disabled={!canGenerate}
-          title={semPlanoPost ? 'Você não tem plano de Post Único — fale com o admin' : !data.keyInfo.trim() ? 'Preencha a informação-chave' : moodPendente ? 'Escolha um mood antes de gerar' : (data.direcao === 'mood' && !copy) ? 'Gere o título e o texto antes de gerar a peça (modo Mood)' : semGeracoes ? 'Limite de gerações do plano atingido — fale com o admin' : (!isAdmin && semPlano) ? 'Sem plano ativo — fale com o admin' : undefined}
+          title={semPlanoPost ? 'Você não tem plano de Post Único — fale com o admin' : !data.keyInfo.trim() ? 'Preencha a informação-chave' : moodPendente ? 'Escolha um mood antes de gerar' : (data.direcao === 'mood' && !copy) ? 'Gere o título e o texto antes de gerar a peça (modo Mood)' : semRecursos ? 'Limite do plano atingido — fale com o admin' : (!isAdmin && semPlano) ? 'Sem plano ativo — fale com o admin' : undefined}
           style={{ flex: 1 }}
         >
           {loading ? 'Gerando peça...' : livreSemCopy ? 'Gerar peça (IA livre)' : copy ? 'Gerar peça' : 'Gere o título e o texto primeiro'}
@@ -517,6 +532,34 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           </button>
         )}
       </div>
+      <Sheet open={showIdeiasPanel} onOpenChange={setShowIdeiasPanel}>
+        <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+          <SheetHeader style={{ marginBottom: 20 }}>
+            <SheetTitle style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              Ideias de Assuntos
+              <span style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', borderRadius: 6, padding: '2px 10px', fontSize: 12, fontWeight: 700 }}>
+                {kit.segment === 'SERVIÇOS' ? 'Serviços' : kit.segment === 'VAREJO' ? 'Varejo' : 'Marca'}
+              </span>
+            </SheetTitle>
+          </SheetHeader>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {IDEIAS_ASSUNTOS[kit.segment].map((cat) => (
+              <div key={cat.titulo}>
+                <div style={{ marginBottom: 6 }}>
+                  <strong style={{ fontSize: 14, color: '#0f172a' }}>{cat.titulo}</strong>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>({cat.subtitulo})</div>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {cat.itens.map((item, i) => (
+                    <li key={i} style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{item}</li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: 20, borderBottom: '1px solid #f1f5f9' }} />
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </section>
   );
 }
