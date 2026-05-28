@@ -21,11 +21,15 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const hint = String(body.hint || '').slice(0, 1000).trim();
           const mode = String(body.mode || 'postunico') as 'postunico' | 'metodo';
           const attempt = Number(body.attempt || 0);
-          const angulo: 'tensao' | 'motivacao' = attempt >= 1 ? 'motivacao' : 'tensao';
+          const angulo: 'tensao' | 'motivacao' = attempt % 2 === 0 ? 'tensao' : 'motivacao';
           const topicoGuia: { categoria: string; item: string } | null =
             body.topicoGuia && body.topicoGuia.categoria && body.topicoGuia.item
               ? { categoria: String(body.topicoGuia.categoria), item: String(body.topicoGuia.item) }
               : null;
+
+          const previousSugs: string[] = Array.isArray(body.previousSuggestions)
+            ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
+            : [];
 
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
@@ -74,10 +78,14 @@ NOTA DO MÉTODO: ${editorialProfile.notaMetodo}`
             : '';
 
           const topicoGuiaBlock = topicoGuia
-            ? `DIREÇÃO TEMÁTICA (use como âncora se não houver pista clara do usuário — não ignore):
+            ? `ASSUNTO OBRIGATÓRIO desta sugestão (siga sempre, mesmo que haja texto anterior no campo):
 Categoria: ${topicoGuia.categoria}
 Perspectiva: "${topicoGuia.item}"
-Se o usuário já deu uma pista, use este bloco só como reforço de contexto, não como substituto.`
+Gere a sugestão SOBRE este assunto específico. Não substitua este assunto pelo texto anterior do usuário.`
+            : '';
+
+          const previousBlock = previousSugs.length
+            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos nem ângulos — gere algo completamente diferente):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
             : '';
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
@@ -93,7 +101,7 @@ Se o usuário já deu uma pista, use este bloco só como reforço de contexto, n
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-${hint ? `PISTA DO USUÁRIO (refine/melhore): "${hint}"` : 'O usuário não deu pista — invente algo plausível para a atividade.'}
+${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${audienceDirective}
 
@@ -102,6 +110,8 @@ ${progressaoMetodo}
 ${editorialBlock}
 
 ${topicoGuiaBlock}
+
+${previousBlock}
 
 ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
 REGRA OP — escreva em 1 LINHA CURTA contendo 4 camadas implícitas:
@@ -123,7 +133,7 @@ Retorne JSON EXATAMENTE assim:
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-${hint ? `PISTA DO USUÁRIO (refine/melhore): "${hint}"` : 'O usuário não deu pista — invente algo plausível para a atividade.'}
+${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${audienceDirective}
 
@@ -132,6 +142,8 @@ ${progressaoMetodo}
 ${editorialBlock}
 
 ${topicoGuiaBlock}
+
+${previousBlock}
 
 ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
 IMPORTANTE: NÃO "implique" com o público. Não aponte erro, falha ou falta. Fale do que ele QUER alcançar, do próximo nível, da transformação positiva — como quem reconhece o esforço e mostra o caminho.
@@ -156,13 +168,15 @@ Retorne JSON EXATAMENTE assim:
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
-${hint ? `PISTA DO USUÁRIO (refine/melhore PRESERVANDO o sentido): "${hint}"` : 'O usuário não deu pista — invente algo plausível e identitário para a marca.'}
+${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${preservaHint}
 
 ${editorialBlock}
 
 ${topicoGuiaBlock}
+
+${previousBlock}
 
 ÂNGULO: IDENTIDADE / POSICIONAMENTO.
 A Informação-chave deve revelar QUEM a marca é, o que ela representa, como quer ser percebida no território/categoria. Sem dor do cliente, sem promessa comercial, sem CTA, sem urgência, sem gatilho de venda.
@@ -185,13 +199,15 @@ Retorne JSON EXATAMENTE assim:
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
-${hint ? `PISTA DO USUÁRIO (refine/melhore PRESERVANDO o sentido): "${hint}"` : 'O usuário não deu pista — invente algo plausível ligado à trajetória da marca.'}
+${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${preservaHint}
 
 ${editorialBlock}
 
 ${topicoGuiaBlock}
+
+${previousBlock}
 
 ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
 Foco em história, repertório, tempo de mercado, vínculo afetivo com clientes, evolução da marca, presença no território. Tom de orgulho calmo, sem auto-elogio comercial.

@@ -121,6 +121,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           mode: 'metodo',
           attempt,
           topicoGuia,
+          previousSuggestions: suggestions,
         }),
       });
       if (!res.ok) {
