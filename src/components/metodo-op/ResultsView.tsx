@@ -1690,7 +1690,7 @@ export default function ResultsView({ result, kit, mood, onClear, imageKit, sequ
         <div>
           <span className="eyebrow">Saída</span>
           <h2>Resultado do Método OP</h2>
-          <span style={{ display: 'inline-block', marginTop: 4, fontSize: 11, fontWeight: 600, letterSpacing: 0.4, color: 'rgba(255,255,255,.55)', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 6, padding: '2px 8px' }}>
+          <span style={{ display: 'inline-block', marginTop: 4, fontSize: 11, fontWeight: 600, letterSpacing: 0.4, color: '#92400e', background: 'rgba(244,176,0,.12)', border: '1px solid rgba(244,176,0,.35)', borderRadius: 6, padding: '2px 8px' }}>
             {MOOD_NAMES[mood] ?? mood} · {mood}
           </span>
         </div>
