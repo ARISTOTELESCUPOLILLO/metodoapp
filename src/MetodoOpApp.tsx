@@ -65,7 +65,7 @@ const defaultPostUnico: PostUnicoFormData = {
   direcao: 'livre',
 };
 
-const POSTUNICO_KEY = 'metodo-op-postunico-v1';
+const POSTUNICO_KEY = 'metodo-op-postunico-v2';
 function loadPostUnico(): PostUnicoFormData {
   if (typeof window === 'undefined') return { ...defaultPostUnico };
   try {
