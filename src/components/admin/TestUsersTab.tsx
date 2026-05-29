@@ -18,8 +18,14 @@ interface Row {
   segmento: Segmento | null;
   created_at: string;
   plano1_id: string | null; plano1_imgs_usadas: number; plano1_imgs_limite: number;
+  plano1_renders_usados: number; plano1_renders_limite: number;
+  plano1_geracoes_usadas: number; plano1_geracoes_limite: number;
   plano2_id: string | null; plano2_imgs_usadas: number; plano2_imgs_limite: number;
+  plano2_renders_usados: number; plano2_renders_limite: number;
+  plano2_geracoes_usadas: number; plano2_geracoes_limite: number;
   bonus_id:  string | null; bonus_imgs_usadas:  number; bonus_imgs_limite:  number;
+  bonus_renders_usados: number;  bonus_renders_limite: number;
+  bonus_geracoes_usadas: number; bonus_geracoes_limite: number;
 }
 interface Plan { id: string; codigo: string; nome: string; elegivel_bonus: boolean }
 
@@ -45,7 +51,7 @@ export function TestUsersTab() {
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: profs }, { data: pls }] = await Promise.all([
-      supabase.from('profiles').select('id,nome,email,client_code,segmento,created_at,plano1_id,plano1_imgs_usadas,plano1_imgs_limite,plano2_id,plano2_imgs_usadas,plano2_imgs_limite,bonus_id,bonus_imgs_usadas,bonus_imgs_limite').eq('is_test', true).order('created_at', { ascending: false }),
+      supabase.from('profiles').select('id,nome,email,client_code,segmento,created_at,plano1_id,plano1_imgs_usadas,plano1_imgs_limite,plano1_renders_usados,plano1_renders_limite,plano1_geracoes_usadas,plano1_geracoes_limite,plano2_id,plano2_imgs_usadas,plano2_imgs_limite,plano2_renders_usados,plano2_renders_limite,plano2_geracoes_usadas,plano2_geracoes_limite,bonus_id,bonus_imgs_usadas,bonus_imgs_limite,bonus_renders_usados,bonus_renders_limite,bonus_geracoes_usadas,bonus_geracoes_limite').eq('is_test', true).order('created_at', { ascending: false }),
       supabase.from('plans').select('id,codigo,nome,elegivel_bonus').eq('ativo', true).order('nome'),
     ]);
     setRows((profs as Row[]) || []);
@@ -187,9 +193,24 @@ export function TestUsersTab() {
                   {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: 2 }}>{r.client_code}</div>}
                 </div>
                 <MRow k="Segmento"><SegSelect value={r.segmento} onChange={(v) => changeSeg(r, v)} /></MRow>
-                <MRow k="Plano 1"><PlanSelect value={r.plano1_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano1', v)} /></MRow>
-                <MRow k="Plano 2"><PlanSelect value={r.plano2_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano2', v)} /></MRow>
-                <MRow k="Bônus"><PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r, 'bonus', v)} /></MRow>
+                <MRow k="Plano 1">
+                  <div>
+                    <PlanSelect value={r.plano1_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano1', v)} />
+                    {r.plano1_id && <SlotBar iu={r.plano1_imgs_usadas} il={r.plano1_imgs_limite} ru={r.plano1_renders_usados} rl={r.plano1_renders_limite} gu={r.plano1_geracoes_usadas} gl={r.plano1_geracoes_limite} />}
+                  </div>
+                </MRow>
+                <MRow k="Plano 2">
+                  <div>
+                    <PlanSelect value={r.plano2_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano2', v)} />
+                    {r.plano2_id && <SlotBar iu={r.plano2_imgs_usadas} il={r.plano2_imgs_limite} ru={r.plano2_renders_usados} rl={r.plano2_renders_limite} gu={r.plano2_geracoes_usadas} gl={r.plano2_geracoes_limite} />}
+                  </div>
+                </MRow>
+                <MRow k="Bônus">
+                  <div>
+                    <PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r, 'bonus', v)} />
+                    {r.bonus_id && <SlotBar iu={r.bonus_imgs_usadas} il={r.bonus_imgs_limite} ru={r.bonus_renders_usados} rl={r.bonus_renders_limite} gu={r.bonus_geracoes_usadas} gl={r.bonus_geracoes_limite} />}
+                  </div>
+                </MRow>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
                   <button onClick={() => actAs(r)} style={{ ...btn, background: '#7c3aed', color: '#fff', borderColor: '#7c3aed', fontWeight: 700 }}>Atuar como</button>
                   <button onClick={() => resetCounters(r)} style={btn}>Zerar</button>
@@ -215,9 +236,18 @@ export function TestUsersTab() {
                       {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}>{r.client_code}</div>}
                     </Td>
                     <Td><SegSelect value={r.segmento} onChange={(v) => changeSeg(r, v)} /></Td>
-                    <Td><PlanSelect value={r.plano1_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano1', v)} /></Td>
-                    <Td><PlanSelect value={r.plano2_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano2', v)} /></Td>
-                    <Td><PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r, 'bonus', v)} /></Td>
+                    <Td>
+                      <PlanSelect value={r.plano1_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano1', v)} />
+                      {r.plano1_id && <SlotBar iu={r.plano1_imgs_usadas} il={r.plano1_imgs_limite} ru={r.plano1_renders_usados} rl={r.plano1_renders_limite} gu={r.plano1_geracoes_usadas} gl={r.plano1_geracoes_limite} />}
+                    </Td>
+                    <Td>
+                      <PlanSelect value={r.plano2_id} options={mainPlans} onChange={(v) => changeSlot(r, 'plano2', v)} />
+                      {r.plano2_id && <SlotBar iu={r.plano2_imgs_usadas} il={r.plano2_imgs_limite} ru={r.plano2_renders_usados} rl={r.plano2_renders_limite} gu={r.plano2_geracoes_usadas} gl={r.plano2_geracoes_limite} />}
+                    </Td>
+                    <Td>
+                      <PlanSelect value={r.bonus_id} options={bonusPlans} onChange={(v) => changeSlot(r, 'bonus', v)} />
+                      {r.bonus_id && <SlotBar iu={r.bonus_imgs_usadas} il={r.bonus_imgs_limite} ru={r.bonus_renders_usados} rl={r.bonus_renders_limite} gu={r.bonus_geracoes_usadas} gl={r.bonus_geracoes_limite} />}
+                    </Td>
                     <Td style={{ color: '#64748b', fontSize: 12 }}>{new Date(r.created_at).toLocaleDateString('pt-BR')}</Td>
                     <Td>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -234,6 +264,25 @@ export function TestUsersTab() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function SlotBar({ iu, il, ru, rl, gu, gl }: {
+  iu: number; il: number; ru: number; rl: number; gu: number; gl: number;
+}) {
+  const pct = il > 0 ? Math.min(100, Math.round((iu / il) * 100)) : 0;
+  const color = pct >= 100 ? '#dc2626' : pct >= 90 ? '#d97706' : '#2563eb';
+  const extras = [ru > 0 ? `r ${ru}/${rl}` : '', gu > 0 ? `g ${gu}/${gl}` : ''].filter(Boolean).join(' · ');
+  return (
+    <div style={{ marginTop: 4, minWidth: 100 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color }}>
+        <span>{iu}/{il} img{extras ? ` · ${extras}` : ''}</span>
+        <span>{pct}%</span>
+      </div>
+      <div style={{ height: 3, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden', marginTop: 2 }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: color }} />
+      </div>
     </div>
   );
 }
