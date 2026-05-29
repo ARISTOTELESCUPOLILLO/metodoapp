@@ -43,9 +43,10 @@ const MOOD_INSTRUCTIONS: Record<MoodCode, string> = {
 const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
 const OBJETIVO_VISUAL_EXCLUSIONS: Partial<Record<PostUnicoObjetivo, string>> = {
-  oportunidade: 'PROIBIDO NESTE OBJETIVO (clichês de stock): portais, arcos, portas abertas, janelas abertas, pôr do sol ou nascer do sol como símbolo de "oportunidade", horizonte com luz dourada no fim do túnel, pessoa correndo como metáfora de urgência. São clichês visuais de banco de imagens — evite qualquer uma dessas fórmulas.',
+  oportunidade: 'PROIBIDO NESTE OBJETIVO (clichês de stock): portais, arcos, portas abertas, janelas abertas, pôr do sol ou nascer do sol como símbolo de "oportunidade", horizonte com luz dourada no fim do túnel, pessoa correndo como metáfora de urgência. São clichês visuais de banco de imagens — evite qualquer uma dessas fórmulas. PROIBIDO TAMBÉM: corredores de concreto, paredes de concreto aparente e estruturas arquitetônicas industriais como cenário de tensão — substitua por ambientes neutros, detalhes de objetos ou composições cromáticas.',
   homenagem: 'PROIBIDO: velas de bolo de aniversário genéricas sem contexto, buquê de flores isolado como stock, confetes soltos sem cena.',
   promocao: 'PROIBIDO: sacola de compras genérica, carrinho de supermercado, etiqueta de preço flutuando como elemento central, emoji de porcentagem como gráfico principal.',
+  institucional: 'PROIBIDO NESTE OBJETIVO: paredes de concreto aparente, painéis de concreto, estruturas arquitetônicas frias ou industriais como elemento visual principal, corredores vazios sem presença humana, ambientes de galpão ou obra. Esses elementos comunicam frieza e afastamento — o oposto da autoridade calorosa e da identidade de marca desejada.',
 };
 
 // Arquétipos visuais mutuamente distintos por objetivo — sorteados a cada geração livre
@@ -301,6 +302,7 @@ REGRAS:
 - Alta resolução, estética editorial/publicitária brasileira
 - Direção de arte humana, nunca arte automática
 - Sem watermarks, sem logo fictícia, sem assinatura textual
+- PROIBIDO em qualquer peça: paredes de concreto aparente, painéis de concreto, galpões industriais e estruturas arquitetônicas frias como elemento visual dominante. Ambientes devem ter presença humana, calor visual ou composição abstrata com personalidade — nunca cenário de obra, corredor desumanizado ou painel de concreto.
 - DISPOSITIVOS DIGITAIS — INEGOCIÁVEL: ao aparecer notebook, tablet, celular, monitor ou TV, a TELA FRONTAL mostra conteúdo real e coerente (gráfico, dashboard, app, mensagem, foto, planilha, vídeo); a TAMPA TRASEIRA / VERSO / CARCAÇA é superfície SÓLIDA e OPACA, sem display — proibido renderizar ali interface, gráfico, ícone, app, brilho de tela, reflexo de UI, segunda tela, logo de SO ou vazamento da tela frontal; o aparelho deve aparecer em ângulo que naturalmente esconda ou minimize a tampa (em perfil/diagonal sobre a mesa, na mão em uso, no colo, câmera baixa, por cima do ombro de quem digita). Proibido: vista top-down de laptop fechado, foto frontal do verso de tablet/celular como elemento central, mockup plano da tampa.
 - ${zona.regraFinal}
 - ${typographyShort}

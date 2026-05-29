@@ -225,9 +225,6 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           />
         </label>
       </div>
-      <p style={{ margin: '-4px 0 4px', fontSize: 12, color: '#64748b' }}>
-        Estes campos vêm do <strong>Kit de Marca</strong> — edite no painel ao lado.
-      </p>
 
       <div className="formatBox">
         <strong>Objetivo da peça</strong>
