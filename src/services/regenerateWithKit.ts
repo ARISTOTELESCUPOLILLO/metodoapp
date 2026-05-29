@@ -142,15 +142,50 @@ function refsToArray(refs: PostUnicoReferences): string[] {
  */
 const MOODS_CLAROS: ReadonlySet<MoodCode> = new Set<MoodCode>(['OP-01', 'OP-06']);
 
-function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode): string {
+function isClothingFriendly(hex: string): boolean {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return false;
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const s = max === min ? 0 : l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+  if (l < 0.35) return true;
+  if (s < 0.25) return true;
+  return false;
+}
+
+function buildClothingPool(primary: string, accent: string): string[] {
+  const pool = [
+    'Roupa branca — neutra e limpa; cores da marca reservadas para fundo, grafismos ou tipografia.',
+    'Roupa preta — neutra e forte; cores da marca em outros elementos.',
+    'Cinza claro ou chumbo — versátil, harmoniza com qualquer paleta de marca.',
+    'Bege ou creme — neutro quente que complementa qualquer paleta.',
+  ];
+  if (isClothingFriendly(primary)) {
+    pool.push(`Peça principal (camisa, blazer ou jaqueta) na cor primária da marca (${primary}).`);
+  }
+  if (isClothingFriendly(accent) && accent.toLowerCase() !== primary.toLowerCase()) {
+    pool.push(`Destaque da cor de acento da marca (${accent}) em detalhe ou peça secundária sobre base neutra.`);
+  }
+  return pool;
+}
+
+function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?: { primary: string; accent: string }): string {
   // Ordem dos prefixos espelha a ordem em que as imagens são enviadas
   // (avatar → cenário → produtos), pra que a numeração "imagem #1/#2/#3"
   // case com a posição em image_urls no servidor.
   const lines: string[] = [];
   let idx = 1;
   if (refs.avatar) {
+    const clothingHint = kitColors
+      ? (() => {
+          const pool = buildClothingPool(kitColors.primary, kitColors.accent);
+          return ` COR DO VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
+        })()
+      : '';
     lines.push(
-      `IMAGEM #${idx} = AVATAR (referência de IDENTIDADE, não de figurino). PRESERVE EXATAMENTE: rosto, traços faciais, idade, cabelo, barba, tom de pele, etnia, sexo, biótipo/estatura/porte físico, óculos e acessórios fixos do rosto. NÃO rejuvenesça, NÃO envelheça, NÃO troque etnia, NÃO mude o gênero, NÃO altere o porte físico. IGNORE a roupa, a cor da roupa, a pose exata e os acessórios de vestuário (relógio, anéis, colares) da foto — eles servem só pra mostrar a pessoa, não o figurino. Vista o avatar com roupa NOVA, coerente com a cena e o contexto da empresa descritos abaixo (pode ser polo, camisa social, jaleco, uniforme, regata de treino, moletom, terno — escolha o que faz sentido para a situação e o ambiente).`,
+      `IMAGEM #${idx} = AVATAR (referência de IDENTIDADE, não de figurino). PRESERVE EXATAMENTE: rosto, traços faciais, idade, cabelo, barba, tom de pele, etnia, sexo, biótipo/estatura/porte físico, óculos e acessórios fixos do rosto. NÃO rejuvenesça, NÃO envelheça, NÃO troque etnia, NÃO mude o gênero, NÃO altere o porte físico. IGNORE a roupa, a cor da roupa, a pose exata e os acessórios de vestuário (relógio, anéis, colares) da foto — eles servem só pra mostrar a pessoa, não o figurino. Vista o avatar com roupa NOVA, coerente com a cena e o contexto da empresa descritos abaixo (pode ser polo, camisa social, jaleco, uniforme, regata de treino, moletom, terno — escolha o que faz sentido para a situação e o ambiente).${clothingHint}`,
     );
     idx++;
   }
@@ -190,7 +225,10 @@ export async function regenerateWithKit(
 
   const references = buildReferences(slot.elemento, imageKit, produtosSelecionados, cenarioSelecionado, selecaoDireta);
   const referenceImages = refsToArray(references);
-  const anchorPrefix = buildAnchorPrefix(references, mood);
+  const anchorPrefix = buildAnchorPrefix(references, mood, {
+    primary: kit.primaryColor || '#123a63',
+    accent: kit.accentColor || kit.secondaryColor || '#f4b000',
+  });
 
   const inferred: 'post' | 'reels' = slot.formato === 'reels' ? 'reels' : 'post';
   const targetFormato = formato ?? inferred;

@@ -164,6 +164,35 @@ export interface PostUnicoReferences {
   produtos?: { num: number; dataUrl: string }[];
 }
 
+function isClothingFriendly(hex: string): boolean {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return false;
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const s = max === min ? 0 : l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+  if (l < 0.35) return true;   // cores escuras: navy, vinho, verde-escuro → OK
+  if (s < 0.25) return true;   // muito dessaturadas: cinzas, pastéis neutros → OK
+  return false;                 // vivas + claras: laranja, amarelo, coral → não para roupa
+}
+
+function buildClothingPool(primary: string, accent: string): string[] {
+  const pool = [
+    'Roupa branca — neutra e limpa; cores da marca reservadas para fundo, grafismos ou tipografia.',
+    'Roupa preta — neutra e forte; cores da marca em outros elementos da composição.',
+    'Cinza claro ou chumbo — versátil, harmoniza com qualquer paleta de marca.',
+    'Bege ou creme — neutro quente que complementa qualquer paleta.',
+  ];
+  if (isClothingFriendly(primary)) {
+    pool.push(`Peça principal (camisa, blazer ou jaqueta) na cor primária da marca (${primary}).`);
+  }
+  if (isClothingFriendly(accent) && accent.toLowerCase() !== primary.toLowerCase()) {
+    pool.push(`Destaque da cor de acento da marca (${accent}) em detalhe ou peça secundária sobre base neutra.`);
+  }
+  return pool;
+}
+
 function segmentRules(segment?: string): string {
   if (segment === 'VAREJO') {
     return 'CONTEXTO — SEGMENTO VAREJO: negócio de comercialização de produtos ao consumidor. Quando presentes, produtos comunicam desejo de compra e benefícios (apresentar de forma atraente, não como catálogo técnico); cenário cria atmosfera de experiência de compra ou lifestyle; avatar contextualiza atendimento ou uso do produto. O tom visual e textual é convidativo e orientado ao consumo.';
@@ -174,7 +203,7 @@ function segmentRules(segment?: string): string {
   return 'CONTEXTO — SEGMENTO SERVIÇOS: prestação de serviços especializados. Avatar (quando presente) transmite autoridade, competência e confiança do profissional ou da equipe; cenário reforça o contexto profissional; a composição comunica expertise, credibilidade e entrega de valor. O tom visual e textual é confiante e orientado ao resultado.';
 }
 
-function referencesBlock(refs?: PostUnicoReferences, segment?: string): string {
+function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors?: { primary: string; accent: string }): string {
   if (!refs) return '';
   const parts: string[] = [];
   const elementos: string[] = [];
@@ -188,7 +217,13 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string): string {
   parts.push(segmentRules(segment));
 
   if (refs.avatar) {
-    parts.push(`AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte roupas, postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original. REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, de costas parcial, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro, três-quartos, OU peça sem rosto visível (mãos trabalhando, detalhe de gesto, ambiente com presença implícita). Escolha a combinação que melhor serve à mensagem desta peça específica.`);
+    const clothingHint = kitColors
+      ? (() => {
+          const pool = buildClothingPool(kitColors.primary, kitColors.accent);
+          return ` VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
+        })()
+      : '';
+    parts.push(`AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, de costas parcial, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro, três-quartos, OU peça sem rosto visível (mãos trabalhando, detalhe de gesto, ambiente com presença implícita). Escolha a combinação que melhor serve à mensagem desta peça específica.`);
   }
   if (refs.cenario) {
     parts.push(`CENÁRIO: usar como ambientação, atmosfera e contexto. Aproveite estilo do ambiente, profundidade, iluminação e sensação espacial. Não deve competir visualmente com os elementos principais.`);
@@ -265,7 +300,7 @@ REGRAS:
 - ${zona.regraFinal}
 - ${typographyShort}
 
-${referencesBlock(references, kit.segment)}
+${referencesBlock(references, kit.segment, { primary, accent })}
 
 ${FORBIDDEN_MOOD_WORDS}`;
 }
