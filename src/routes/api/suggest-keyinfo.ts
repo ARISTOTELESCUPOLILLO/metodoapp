@@ -374,8 +374,8 @@ Retorne JSON EXATAMENTE assim:
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
-            ? 'Você é estrategista do Método OP. Responda SEMPRE com JSON válido em português brasileiro.'
-            : 'Você é estrategista de conteúdo brasileiro. Responda SEMPRE com JSON válido em português.';
+            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.'
+            : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.';
 
           const res = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',

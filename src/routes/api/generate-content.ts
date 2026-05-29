@@ -46,7 +46,7 @@ export const Route = createFileRoute('/api/generate-content')({
               body: JSON.stringify({
                 model: 'gpt-4.1-mini',
                 messages: [
-                  { role: 'system', content: 'Você é um especialista em comunicação de marca brasileira. Responda SEMPRE com JSON válido e em português.' },
+                  { role: 'system', content: 'Você é um especialista em comunicação de marca brasileira. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
                   { role: 'user', content: prompt },
                 ],
                 temperature: 0.85,
