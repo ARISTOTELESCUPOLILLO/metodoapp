@@ -152,16 +152,18 @@ export default function App() {
   // Limites específicos do slot PU (para bloqueio por imagens no Post Único)
   const puSlotInfoObj = slots.find(s => /^PU\d+$/i.test(s.plan.codigo));
   const puImgsTotal = puSlotInfoObj ? (puSlotInfoObj.imgsLimiteDisplay || puSlotInfoObj.imgsLimite || 0) : 0;
+  const puImgsReal = puSlotInfoObj?.imgsLimite ?? 0;
   const puImgsUsadas = puSlotInfoObj?.imgsUsadas ?? 0;
-  const puImgsRestantes = Math.max(0, puImgsTotal - puImgsUsadas);
-  const puExhausted = planAccess.hasPostUnico && puImgsTotal > 0 && puImgsUsadas >= puImgsTotal;
+  const puImgsRestantes = Math.max(0, puImgsReal - puImgsUsadas);
+  const puExhausted = planAccess.hasPostUnico && puImgsReal > 0 && puImgsUsadas >= puImgsReal;
 
   // Limites do slot Método OP (bloqueia quando não há imagens suficientes para nenhuma sequência)
   const hasMopPlan = planAccess.tracks.cinematica || planAccess.tracks.visual || planAccess.tracks.experimentacao;
   const mopSlotInfoObj = slots.find(s => s.key !== 'bonus' && !/^PU\d+$/i.test(s.plan.codigo));
   const mopImgsTotal = mopSlotInfoObj ? (mopSlotInfoObj.imgsLimiteDisplay || mopSlotInfoObj.imgsLimite || 0) : 0;
+  const mopImgsReal = mopSlotInfoObj?.imgsLimite ?? 0;
   const mopImgsUsadas = mopSlotInfoObj?.imgsUsadas ?? 0;
-  const mopImgsRestantes = Math.max(0, mopImgsTotal - mopImgsUsadas);
+  const mopImgsRestantes = Math.max(0, mopImgsReal - mopImgsUsadas);
   // Threshold = tamanho mínimo de sequência disponível para este usuário
   const allMopSizes = [
     ...planAccess.sizesByTrack.cinematica,
@@ -169,13 +171,14 @@ export default function App() {
     ...(planAccess.tracks.experimentacao ? [3] : []),
   ];
   const mopMinSize = allMopSizes.length > 0 ? Math.min(...allMopSizes) : 3;
-  const mopExhausted = hasMopPlan && mopImgsTotal > 0 && mopImgsRestantes < mopMinSize;
+  const mopExhausted = hasMopPlan && mopImgsReal > 0 && mopImgsRestantes < mopMinSize;
 
   // Limites do slot Bônus
   const bonusSlotInfoObj = slots.find(s => s.key === 'bonus');
   const bonusImgsTotal = bonusSlotInfoObj ? (bonusSlotInfoObj.imgsLimiteDisplay || bonusSlotInfoObj.imgsLimite || 0) : 0;
+  const bonusImgsReal = bonusSlotInfoObj?.imgsLimite ?? 0;
   const bonusImgsUsadas = bonusSlotInfoObj?.imgsUsadas ?? 0;
-  const bonusExhausted = !!bonusSlotInfoObj && bonusImgsTotal > 0 && bonusImgsUsadas >= bonusImgsTotal;
+  const bonusExhausted = !!bonusSlotInfoObj && bonusImgsReal > 0 && bonusImgsUsadas >= bonusImgsReal;
 
   // Slot ativamente selecionado pelo usuário — controla qual slot é debitado.
   // Inicializado com puSlot na primeira carga por usuário; pode ser trocado clicando no PlanCard.
@@ -564,7 +567,7 @@ export default function App() {
                 </span>
               )}
               {slots.map((s) => (
-                <PlanCard key={s.key} slot={s} />
+                <PlanCard key={s.key} slot={s} isAdmin={effectiveAdmin} />
               ))}
             </div>
           ) : effectiveAdmin ? (

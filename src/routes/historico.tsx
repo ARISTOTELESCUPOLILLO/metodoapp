@@ -89,7 +89,7 @@ function HistoricoPage() {
             </button>
           </div>
           <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14 }}>
-            Limite por formato: 3 boxes por plano (estático, carrossel, estático final, reels). O mais antigo é
+            Limite por formato: 6 boxes por plano (estático, carrossel, estático final, reels). O mais antigo é
             substituído automaticamente. Arquivos expiram em 30 dias.
           </p>
           {impersonation && (

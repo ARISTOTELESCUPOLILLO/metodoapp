@@ -119,7 +119,7 @@ export default function PostUnicoResult({
             </span>
           )}
         </div>
-        <p>1080×1350 com respiro de 110px e logo aplicada. Pronta para o feed.</p>
+        <p>1080×1350px e logo aplicada. Pronta para o feed.</p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
         {imageDataUrl && (

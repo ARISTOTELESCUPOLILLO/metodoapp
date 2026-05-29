@@ -3,25 +3,27 @@ import type { SlotInfo } from '@/hooks/useProfile';
 
 interface Props {
   slot: SlotInfo;
+  isAdmin?: boolean;
 }
 
-export function PlanCard({ slot }: Props) {
+export function PlanCard({ slot, isAdmin }: Props) {
   const isBonus = slot.key === 'bonus';
   const cycle = computeCycleFromExpiry(slot.expiraEm);
 
-  // Barra de imagens — usa limite de display (Uso Normal) para a régua visual.
+  // Régua visual usa limite de display (Uso Normal), capada em 99% — nunca exibe 100% via barra.
+  // Esgotado usa limite real (Uso Estendido) — só trava quando o real é atingido.
   const hasImgsBar = slot.imgsLimiteDisplay > 0;
   const hasImgsSection = slot.imgsLimiteDisplay > 0 || slot.imgsUsadas > 0;
-  const imgsPct = slot.imgsLimiteDisplay > 0 ? Math.min(100, Math.round((slot.imgsUsadas / slot.imgsLimiteDisplay) * 100)) : 0;
+  const imgsPct = slot.imgsLimiteDisplay > 0 ? Math.min(99, Math.round((slot.imgsUsadas / slot.imgsLimiteDisplay) * 100)) : 0;
   const imgsBarColor = imgsPct >= 90 ? '#ef4444' : imgsPct >= 50 ? '#f59e0b' : '#22c55e';
-  const imgsExhausted = hasImgsBar && imgsPct >= 100;
+  const imgsExhausted = hasImgsBar && slot.imgsUsadas >= slot.imgsLimite;
 
   // Barra de vídeos — mesma lógica.
   const hasSecondBar = slot.rendersLimiteDisplay > 0;
   const hasSecondSection = slot.rendersLimiteDisplay > 0 || slot.rendersUsados > 0;
-  const renderPct = slot.rendersLimiteDisplay > 0 ? Math.min(100, Math.round((slot.rendersUsados / slot.rendersLimiteDisplay) * 100)) : 0;
+  const renderPct = slot.rendersLimiteDisplay > 0 ? Math.min(99, Math.round((slot.rendersUsados / slot.rendersLimiteDisplay) * 100)) : 0;
   const renderBarColor = renderPct >= 90 ? '#ef4444' : renderPct >= 50 ? '#f59e0b' : '#6366f1';
-  const rendersExhausted = hasSecondBar && renderPct >= 100;
+  const rendersExhausted = hasSecondBar && slot.rendersUsados >= slot.rendersLimite;
 
   const expiryColor =
     cycle.status === 'overdue' ? '#ef4444' :

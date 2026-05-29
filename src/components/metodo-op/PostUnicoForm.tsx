@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from 'lucide-react';
 import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
@@ -41,6 +42,15 @@ const MOODS: { code: MoodCode; label: string }[] = [
   { code: 'OP-02', label: 'Impacto' },
   { code: 'OP-06', label: 'Silêncio' },
 ];
+
+const MOOD_ICONS: Record<MoodCode, LucideIcon> = {
+  'OP-01': Lightbulb,
+  'OP-02': Zap,
+  'OP-03': Camera,
+  'OP-04': Layers,
+  'OP-05': Shuffle,
+  'OP-06': VolumeX,
+};
 
 export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, imgsRestantes, imgsTotal, semPlano, isAdmin, hasPostPlano, puSlot }: Props) {
   const [suggesting, setSuggesting] = useState(false);
@@ -472,7 +482,10 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                   className={`sequenceCard${data.mood === m.code ? ' active' : ''}`}
                   onClick={() => update('mood', m.code)}
                 >
-                  <span className="sequenceNum">{m.label}</span>
+                  <span className="sequenceNum" style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
+                    {m.label}
+                    {(() => { const Icon = MOOD_ICONS[m.code]; return Icon ? <Icon size={12} strokeWidth={1.8} /> : null; })()}
+                  </span>
                 </button>
               ))}
             </div>
@@ -496,9 +509,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         </p>
       )}
 
-      {isAdmin && (
-        <div style={{ fontSize: 12, color: '#475569', textAlign: 'right' }}>Geração ilimitada (admin).</div>
-      )}
+
       <div style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
         <button
           className="primaryBtn"
