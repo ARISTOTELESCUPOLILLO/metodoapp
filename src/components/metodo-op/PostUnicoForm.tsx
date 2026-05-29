@@ -153,6 +153,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           objetivo: data.objetivo,
           hint: data.keyInfo.trim(),
           mode: 'postunico',
+          previousSuggestions: suggestions,
         }),
       });
       if (!res.ok) {
@@ -316,11 +317,11 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
               {!suggesting && (
                 <button
                   type="button"
-                  onClick={() => { setSuggestions([]); setSuggestError(null); }}
-                  style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b', padding: 0, lineHeight: 1 }}
-                  aria-label="Fechar"
+                  onClick={() => { setSuggestions([]); setSuggestError(null); setSuggestCount(0); }}
+                  style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
+                  aria-label="Limpar sugestões"
                 >
-                  ×
+                  ✕ Limpar
                 </button>
               )}
             </div>

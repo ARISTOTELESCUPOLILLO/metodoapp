@@ -15,6 +15,9 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
+          const today = new Date().toLocaleDateString('pt-BR', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          });
           const companyName = String(body.companyName || '').slice(0, 200);
           const mainActivity = String(body.mainActivity || '').slice(0, 300);
           const objetivo = String(body.objetivo || 'promocao');
@@ -360,14 +363,34 @@ Retorne JSON EXATAMENTE assim:
             metodoPrompt = angulo === 'tensao' ? metodoTensao : metodoMotivacao;
           }
 
+          const OBJETIVO_RULES: Record<string, string> = {
+            promocao: 'REGRAS PARA PROMOÇÃO: sugira um desconto, oferta ou condição específica diferente das sugestões anteriores. PROIBIDO repetir o mesmo percentual de desconto ou a mesma data de encerramento já usados — varie o tipo de oferta (desconto, brinde, parcela, frete, kit), o produto/serviço em destaque e o prazo.',
+            oportunidade: 'REGRAS PARA OPORTUNIDADE: não invente datas comemorativas obscuras. Se usar data específica, calcule a partir da DATA DE HOJE para que seja futura. Represente a urgência por escassez, prazo real ou contexto sazonal concreto.',
+            homenagem: `REGRAS PARA HOMENAGEM: datas comemorativas de referência (use APENAS se forem FUTURAS à DATA DE HOJE):
+- Dia das Mães: 2º domingo de maio
+- Dia dos Pais: 2º domingo de agosto
+- Dia do Cliente: 15 de setembro
+- Dia do Marketing: 27 de setembro
+- Dia das Crianças: 12 de outubro
+- Natal: 25 de dezembro
+Para qualquer outra data comemorativa, use apenas se tiver certeza absoluta da data e ela for futura. Em caso de dúvida, homenageie uma pessoa, conquista ou marco da própria empresa.`,
+            aviso: 'REGRAS PARA AVISO: o comunicado deve ser concreto e acionável — mudança de horário, nova política, prazo de cadastro, atualização de serviço. Evite avisos vagos como "novidades em breve".',
+            institucional: 'REGRAS PARA INSTITUCIONAL: foque em um valor, propósito ou diferencial específico da empresa — não genérico. Prefira fatos concretos (anos de mercado, número de clientes, certificação, metodologia própria) a afirmações abstratas.',
+          };
+
           const postUnicoPrompt = `Sugira UMA Informação-chave para um post único de Instagram em português brasileiro.
 
+DATA DE HOJE: ${today}
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 OBJETIVO: ${objetivo} (tom: ${tom})
 ${hint ? `PISTA DO USUÁRIO (refine/melhore a partir disso): "${hint}"` : 'O usuário não deu pista — invente algo plausível e útil para a atividade.'}
-
+${previousBlock ? `\n${previousBlock}\n` : ''}
 A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica, com número/prazo/nome quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.
+
+REGRA CRÍTICA DE DATAS: quando sugerir prazo, data de encerramento ou data comemorativa, use SEMPRE data FUTURA em relação à DATA DE HOJE. NUNCA sugira data que já passou.
+
+${OBJETIVO_RULES[objetivo] || ''}
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 a 2 frases, no máximo 35 palavras, em português, sem hashtag, sem emoji, sem aspas, concreta e acionável" }`;
