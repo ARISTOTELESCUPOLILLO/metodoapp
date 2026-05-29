@@ -55,7 +55,7 @@ const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
   oportunidade: [
     'CONCEITO DESTA GERAÇÃO — RELÓGIO / TEMPO: construa a peça em torno de um relógio analógico, detalhe de ponteiros ou ampulheta. A tensão visual vem do tempo que passa, não de movimento corporal. Composição com close preciso, luz controlada sobre o objeto.',
     'CONCEITO DESTA GERAÇÃO — GESTO DECISIVO: foco em close de mão em ação — assinando, apontando, segurando um objeto significativo, prestes a pressionar algo. Sem figura correndo. A urgência está no detalhe do gesto, não no movimento geral do corpo.',
-    'CONCEITO DESTA GERAÇÃO — TENSÃO ESPACIAL: pessoa parada em posição de decisão num ambiente carregado (cruzamento vazio, corredor, limite de um espaço), postura de quem está prestes a agir — não em movimento. A tensão vem da composição e do ambiente, não da corrida.',
+    'CONCEITO DESTA GERAÇÃO — TENSÃO ESPACIAL: pessoa parada em posição de decisão num ambiente carregado (limiar de uma porta aberta para luz, beira de janela com vista urbana, mesa com objeto de decisão à frente), postura de quem está prestes a agir — não em movimento. A tensão vem da composição e da luz, não de corredor de concreto ou estrutura industrial.',
     'CONCEITO DESTA GERAÇÃO — OBJETO SIMBÓLICO: elemento físico concreto que representa decisão e momento único (chave sobre superfície, carta fechada, aparelho em pausa, item característico do negócio). Composição limpa, sem pessoa como foco principal.',
     'CONCEITO DESTA GERAÇÃO — ABSTRAÇÃO CROMÁTICA: tensão visual construída por contraste de cor, luz e sombra, sem figura humana em movimento. Paleta audaciosa, composição geométrica, sensação de urgência pela energia visual — não pela narrativa de personagem.',
   ],
@@ -82,7 +82,7 @@ const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
   ],
   institucional: [
     'CONCEITO DESTA GERAÇÃO — PROPÓSITO ABSTRATO: composição abstrata que traduz o valor da marca em cor, forma e luz — sem literalidade.',
-    'CONCEITO DESTA GERAÇÃO — LUGAR DE PERTENCIMENTO: ambiente ou espaço que define o universo da marca, com atmosfera de identidade forte.',
+    'CONCEITO DESTA GERAÇÃO — LUGAR DE PERTENCIMENTO: ambiente que comunica o universo da marca — espaço editorial caloroso, sala iluminada com textura humana, atelier de criação, escritório com personalidade, ambiente de trabalho real com vida. PROIBIDO neste conceito: concreto aparente, galpão industrial, corredor vazio ou qualquer estrutura fria — o "pertencimento" é humano e caloroso, não arquitetônico e frio.',
     'CONCEITO DESTA GERAÇÃO — PESSOA E IDENTIDADE: avatar ou representante da marca como incorporação dos seus valores — postura, olhar e contexto comunicam o posicionamento.',
     'CONCEITO DESTA GERAÇÃO — DETALHE DE OFÍCIO: close em ferramenta, material ou gesto específico do negócio — artesania, especialização, autoria.',
     'CONCEITO DESTA GERAÇÃO — TIPOGRAFIA DE MARCA: identidade visual construída pela tipografia e cor como protagonistas, com elemento fotográfico discreto de suporte.',
@@ -265,7 +265,7 @@ export function buildPostUnicoPrompt(params: {
 TÍTULO: "${copy.titulo}"
 TEXTO DE APOIO: "${copy.texto}"
 
-Hierarquia tipográfica: título dominante e texto de apoio menor — mas a POSIÇÃO do bloco é livre. Pode estar no topo, na lateral esquerda, na lateral direita, na base, sobreposto à imagem, em barra inferior, dividido em duas zonas da peça, ou ancorado em um canto. EVITE a fórmula default "bloco amarelo+branco encostado na borda esquerda ocupando metade da peça" se ela não for a melhor para esta composição específica — explore outras ancoragens.`
+Hierarquia tipográfica: título dominante e texto de apoio menor — mas a POSIÇÃO do bloco é livre. Pode estar no topo, na lateral esquerda, na lateral direita, na base, sobreposto à imagem, em barra inferior, dividido em duas zonas da peça, ou ancorado em um canto. EVITE a fórmula default "bloco amarelo+branco encostado na borda esquerda ocupando metade da peça" se ela não for a melhor para esta composição específica — explore outras ancoragens. O fundo/cenário deve ter calor visual, textura orgânica ou composição cromática — NUNCA parede de concreto, estrutura industrial fria ou corredor vazio como solução para destacar o texto.`
     : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
 A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
 Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave${data.keyInfo.trim() ? ` "${data.keyInfo.trim()}"` : ' fornecida'} e na atividade da empresa${objetivo ? ` com objetivo: ${objetivo}` : ''}.
@@ -275,6 +275,9 @@ A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco 
   return `⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:
 PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — notebook, laptop, tablet, iPad, celular, computador ou monitor. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.
 CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.
+
+⚠ REGRA ABSOLUTA — AMBIENTES VISUAIS:
+PROIBIDO em qualquer peça, em qualquer objetivo e mesmo quando houver título/texto obrigatório: paredes de concreto aparente, painéis de concreto, galpões industriais, estruturas arquitetônicas frias, corredores vazios e ambientes desumanizados como elemento visual dominante ou como fundo/suporte para tipografia. Para fazer texto se destacar, USE: fundos coloridos da paleta da marca, texturas orgânicas, desfoque de ambiente, gradiente sutil, cor sólida, fotografia de pessoa ou detalhe quente. Nunca concreto como solução de legibilidade.
 
 Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
