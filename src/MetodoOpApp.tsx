@@ -718,7 +718,7 @@ export default function App() {
               imgsTotal={puImgsTotal}
               semPlano={semPlano}
               isAdmin={effectiveAdmin}
-              hasPostPlano={planAccess.hasPostUnico}
+              hasPostPlano={profileLoading ? undefined : planAccess.hasPostUnico}
               puSlot={selectedSlot}
             />
           )}
