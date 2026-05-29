@@ -133,7 +133,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fe
 - O Estático Final NÃO é um estático comum nem um reel congelado.
 - É um formato HÍBRIDO de fechamento visual com função psicológica própria: consolidação, resolução visual, fechamento emocional, organização da decisão.
 - Função na sequência: encerrar o ciclo narrativo aberto pelo estático e desenvolvido pelo carrossel.
-- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas; texto com NO MÁXIMO 15 palavras; legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas; texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL; legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - O TÍTULO do Estático Final deve carregar resolução, não provocação. Frase de conclusão, não de abertura.
 - O TEXTO deve consolidar a direção da sequência em uma afirmação clara e estável.
 - A IMAGEM deve traduzir literalmente o título e o texto, com cena de calma, foco e estabilidade — não tensão, não movimento.
@@ -173,23 +173,26 @@ A SEQUÊNCIA COMPLETA segue a progressão: ${progressionText}
 Os formatos são distribuídos pelo método — NÃO pelo usuário.
 
 ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
-- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas; texto com NO MÁXIMO 15 palavras; legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas; texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL; legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - Variar títulos entre afirmação, pergunta, contraste e observação cotidiana.
 - Progressão dos estáticos: ${buildPostProgression(comp.estatico, seg.entrada, isB2BOperational, moment)}
 - Retornar em "feed": [{ "dia", "formato":"Estático", "titulo", "texto", "legenda", "imagem", "leituraCenica": { "intencao": "o que este post ativa emocionalmente", "personagem": "quem aparece na cena e o que faz", "ambiente": "onde a cena acontece com detalhes físicos", "expressao": "expressão facial e corporal do personagem", "clima": "luz, hora do dia, atmosfera", "composicao": "como os elementos se organizam no quadro" } }]
 
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 cards cada):
 - Cada carrossel tem exatamente 5 cards: abertura → desenvolvimento → aprofundamento → direção → ação.
-- Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas; texto até 12 palavras; imagePrompt próprio.
+- Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas; texto até 12 palavras terminando com PONTO FINAL; imagePrompt próprio.
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "organização dos elementos no quadro" } }, ...] }]
 ${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ''}
 ${closingBlock}
 
 REGRA DE LEGENDA (vale para feed estático, carrossel, reels e estático final):
-- Cada legenda tem ATÉ 40 palavras no corpo (contando o CTA, sem contar as hashtags).
-- Termina SEMPRE com 1 CTA genérico curto — varie entre as peças. Exemplos: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.", "Marque alguém que precisa ler isso.", "Envie para quem decide com você."
-- Depois do CTA, incluir EXATAMENTE 3 hashtags, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia).
-- Hashtags devem ser coerentes com o segmento e a atividade da marca, nunca genéricas demais ("#instagram", "#post").
+- A legenda tem 3 parágrafos separados por linha em branco. FORMATO OBRIGATÓRIO no JSON (use \\n\\n como separador literal):
+  "{corpo da legenda terminando com ponto final.}\\n\\n{CTA curto terminando com ponto final.}\\n\\n#hash1 #hash2 #hash3"
+- Parágrafo 1 — corpo: ATÉ 30 palavras, terminando com PONTO FINAL.
+- Parágrafo 2 — CTA: 1 frase genérica curta (máx 6 palavras), terminando com PONTO FINAL. Varie entre as peças. Exemplos: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.", "Marque alguém que precisa ler isso.", "Envie para quem decide com você."
+- Parágrafo 3 — hashtags: EXATAMENTE 3, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia).
+- Total corpo + CTA: ATÉ 40 palavras (sem contar as hashtags).
+- Hashtags coerentes com o segmento e a atividade da marca, nunca genéricas demais ("#instagram", "#post").
 - Nunca usar CAPS, nunca mais que 3 hashtags, nunca emojis dentro das hashtags.
 ` : '';
 

@@ -353,7 +353,11 @@ export async function generatePostUnicoCaption(
   const cta: string = json.cta || '';
   const hashtags: string[] = Array.isArray(json.hashtags) ? json.hashtags : [];
   const tagLine = hashtags.map((t) => `#${t}`).join(' ');
-  const full = [texto, cta].filter(Boolean).join(' ') + (tagLine ? `\n\n${tagLine}` : '');
+  const bodyParts = [texto, cta].filter(Boolean);
+  const body = bodyParts.length === 2
+    ? `${bodyParts[0]}\n\n${bodyParts[1]}`
+    : bodyParts[0] || '';
+  const full = body + (tagLine ? `\n\n${tagLine}` : '');
   return { texto, cta, hashtags, full };
 }
 

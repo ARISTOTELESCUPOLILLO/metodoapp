@@ -83,7 +83,7 @@ Retorne JSON com EXATAMENTE este formato:
 
 Regras:
 - "titulo" no máximo 6 palavras, cada palavra com no máximo 3 sílabas (ex.: "negócio" 3 sílabas ✓, "resultado" 4 sílabas ✗ — use "ganho", "retorno"), sem ponto final, sem aspas, sem emoji, sem hashtag
-- "texto" no máximo 14 palavras, frase completa, sem hashtag, sem emoji
+- "texto" no máximo 14 palavras, frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji
 - Português brasileiro, sem inglês, sem markdown
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
 - Interprete a informação-chave com criatividade — NÃO copie literal

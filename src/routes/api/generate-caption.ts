@@ -82,20 +82,21 @@ INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
 {
-  "texto": "frase principal com no MÁXIMO 30 palavras, sem hashtags, sem emojis exagerados, no tom certo",
-  "cta": "uma chamada curta para ação, no máximo 6 palavras, sem hashtag",
+  "texto": "frase principal com no MÁXIMO 30 palavras, sem hashtags, sem emojis exagerados, no tom certo, terminando com ponto final",
+  "cta": "uma chamada curta para ação, no máximo 6 palavras, terminando com ponto final, sem hashtag",
   "hashtags": ["tag1", "tag2", "tag3"]
 }
 
 Regras:
-- "texto" no máximo 30 palavras
+- "texto" no máximo 30 palavras, terminando SEMPRE com PONTO FINAL
+- "cta" no máximo 6 palavras, terminando SEMPRE com PONTO FINAL
 - "hashtags" sempre 3 itens, em MINÚSCULAS, SEM acento, SEM o caractere #, sem espaços, relevantes ao segmento e à informação-chave
 - Português brasileiro
 - Nada de inglês, nada de markdown
 - PROIBIDO ABSOLUTO usar nos campos "texto", "cta" ou "hashtags" as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos. Use SEMPRE sinônimos ou perífrases (ex.: "clareza" → "direção definida", "leitura simples"; "impacto" → "efeito imediato"; "silêncio" → "pausa", "respiro"; "instante" → "momento"; "fragmento" → "recorte"; "desvio" → "outro caminho").
 - PROIBIDO repetir a mesma palavra em frases próximas ou consecutivas. Use sinônimos ou reformule. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
-- "texto" e "cta" devem SEMPRE começar com LETRA MAIÚSCULA.
+- "texto" e "cta" devem SEMPRE começar com LETRA MAIÚSCULA e terminar com PONTO FINAL.
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.`;
 
           const res = await fetch('https://api.openai.com/v1/chat/completions', {
