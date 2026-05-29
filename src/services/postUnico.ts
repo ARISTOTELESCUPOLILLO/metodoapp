@@ -41,9 +41,49 @@ const MOOD_INSTRUCTIONS: Record<MoodCode, string> = {
 const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
 const OBJETIVO_VISUAL_EXCLUSIONS: Partial<Record<PostUnicoObjetivo, string>> = {
-  oportunidade: 'PROIBIDO NESTE OBJETIVO (metáforas de stock): portais, arcos, portas abertas, janelas abertas, pôr do sol ou nascer do sol como símbolo de "oportunidade", horizonte com luz dourada no fim do túnel. São clichês visuais de banco de imagens. Represente urgência e decisão através de pessoa em ação, postura corporal focada, close de detalhe significativo, composição com movimento implícito.',
+  oportunidade: 'PROIBIDO NESTE OBJETIVO (clichês de stock): portais, arcos, portas abertas, janelas abertas, pôr do sol ou nascer do sol como símbolo de "oportunidade", horizonte com luz dourada no fim do túnel, pessoa correndo como metáfora de urgência. São clichês visuais de banco de imagens — evite qualquer uma dessas fórmulas.',
   homenagem: 'PROIBIDO: velas de bolo de aniversário genéricas sem contexto, buquê de flores isolado como stock, confetes soltos sem cena.',
   promocao: 'PROIBIDO: sacola de compras genérica, carrinho de supermercado, etiqueta de preço flutuando como elemento central, emoji de porcentagem como gráfico principal.',
+};
+
+// Arquétipos visuais mutuamente distintos por objetivo — sorteados a cada geração livre
+// para garantir diversidade de conceito entre chamadas sequenciais com o mesmo keyInfo.
+const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
+  oportunidade: [
+    'CONCEITO DESTA GERAÇÃO — RELÓGIO / TEMPO: construa a peça em torno de um relógio analógico, detalhe de ponteiros ou ampulheta. A tensão visual vem do tempo que passa, não de movimento corporal. Composição com close preciso, luz controlada sobre o objeto.',
+    'CONCEITO DESTA GERAÇÃO — GESTO DECISIVO: foco em close de mão em ação — assinando, apontando, segurando um objeto significativo, prestes a pressionar algo. Sem figura correndo. A urgência está no detalhe do gesto, não no movimento geral do corpo.',
+    'CONCEITO DESTA GERAÇÃO — TENSÃO ESPACIAL: pessoa parada em posição de decisão num ambiente carregado (cruzamento vazio, corredor, limite de um espaço), postura de quem está prestes a agir — não em movimento. A tensão vem da composição e do ambiente, não da corrida.',
+    'CONCEITO DESTA GERAÇÃO — OBJETO SIMBÓLICO: elemento físico concreto que representa decisão e momento único (chave sobre superfície, carta fechada, aparelho em pausa, item característico do negócio). Composição limpa, sem pessoa como foco principal.',
+    'CONCEITO DESTA GERAÇÃO — ABSTRAÇÃO CROMÁTICA: tensão visual construída por contraste de cor, luz e sombra, sem figura humana em movimento. Paleta audaciosa, composição geométrica, sensação de urgência pela energia visual — não pela narrativa de personagem.',
+  ],
+  promocao: [
+    'CONCEITO DESTA GERAÇÃO — PRODUTO EM CONTEXTO: o produto ou serviço em uso real, integrado à vida cotidiana de quem o usa. Cena natural, não estúdio.',
+    'CONCEITO DESTA GERAÇÃO — DETALHE SENSORIAL: close extremo em textura, superfície ou detalhe do produto/serviço que desperta desejo. Composição macro, qualidade editorial.',
+    'CONCEITO DESTA GERAÇÃO — PESSOA E RESULTADO: avatar ou pessoa representando o benefício já conquistado — expressão, postura ou ambiente que comunica a transformação após a compra/contratação.',
+    'CONCEITO DESTA GERAÇÃO — COMPOSIÇÃO GRÁFICA: abordagem predominantemente gráfica/tipográfica, com o produto representado de forma estilizada ou como elemento de design. Sem fotografia literal.',
+    'CONCEITO DESTA GERAÇÃO — AMBIENTE DE MARCA: o cenário ou contexto da marca com atmosfera forte — sem foco em produto isolado, mas no universo que ele habita.',
+  ],
+  homenagem: [
+    'CONCEITO DESTA GERAÇÃO — RETRATO COM LUZ: close de rosto ou perfil com luz quente e suave, expressão genuína, fundo desfocado com bokeh orgânico.',
+    'CONCEITO DESTA GERAÇÃO — DETALHE SIMBÓLICO: objeto ou detalhe que representa a pessoa ou conquista homenageada — sem rosto, mas com identidade clara.',
+    'CONCEITO DESTA GERAÇÃO — CENA DE CELEBRAÇÃO DISCRETA: momento de encontro ou conquista capturado de forma documental, sem pose, com emoção verdadeira.',
+    'CONCEITO DESTA GERAÇÃO — COMPOSIÇÃO TIPOGRÁFICA: homenagem construída predominantemente pelo texto com fundo fotográfico suave e emocional.',
+    'CONCEITO DESTA GERAÇÃO — NATUREZA E SÍMBOLO: elemento natural (luz, planta, água) como metáfora visual da celebração — sem clichê de flores isoladas.',
+  ],
+  aviso: [
+    'CONCEITO DESTA GERAÇÃO — TIPOGRAFIA PROTAGONISTA: o comunicado como design — texto é o elemento visual principal, fundo limpo e autoridade na hierarquia.',
+    'CONCEITO DESTA GERAÇÃO — ÍCONE DE AUTORIDADE: detalhe institucional (carimbo, papel oficial, detalhe arquitetônico da marca) que comunica credibilidade.',
+    'CONCEITO DESTA GERAÇÃO — PESSOA INFORMANDO: avatar ou representante da empresa em postura de autoridade tranquila, comunicando diretamente.',
+    'CONCEITO DESTA GERAÇÃO — AMBIENTE INSTITUCIONAL: espaço físico ou digital da marca como contexto do aviso — sem figura humana como foco.',
+    'CONCEITO DESTA GERAÇÃO — COMPOSIÇÃO MINIMALISTA: peça com máxima economia visual — uma cor, um elemento, hierarquia cristalina.',
+  ],
+  institucional: [
+    'CONCEITO DESTA GERAÇÃO — PROPÓSITO ABSTRATO: composição abstrata que traduz o valor da marca em cor, forma e luz — sem literalidade.',
+    'CONCEITO DESTA GERAÇÃO — LUGAR DE PERTENCIMENTO: ambiente ou espaço que define o universo da marca, com atmosfera de identidade forte.',
+    'CONCEITO DESTA GERAÇÃO — PESSOA E IDENTIDADE: avatar ou representante da marca como incorporação dos seus valores — postura, olhar e contexto comunicam o posicionamento.',
+    'CONCEITO DESTA GERAÇÃO — DETALHE DE OFÍCIO: close em ferramenta, material ou gesto específico do negócio — artesania, especialização, autoria.',
+    'CONCEITO DESTA GERAÇÃO — TIPOGRAFIA DE MARCA: identidade visual construída pela tipografia e cor como protagonistas, com elemento fotográfico discreto de suporte.',
+  ],
 };
 
 function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo): string {
@@ -53,7 +93,12 @@ function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: Pos
   const exclusion = objetivo && OBJETIVO_VISUAL_EXCLUSIONS[objetivo]
     ? `\n\n${OBJETIVO_VISUAL_EXCLUSIONS[objetivo]}`
     : '';
-  return `DIREÇÃO LIVRE: a IA tem liberdade total de direção de arte — NÃO há mood pré-definido. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Evite repetir a mesma fórmula visual de peças anteriores. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).${exclusion}`;
+  // Sorteia um arquétipo visual para forçar diversidade entre gerações sequenciais.
+  const archetypes = objetivo ? OBJETIVO_ARCHETYPES[objetivo] : null;
+  const archetypeHint = archetypes && archetypes.length
+    ? `\n\n${archetypes[Math.floor(Math.random() * archetypes.length)]}`
+    : '';
+  return `DIREÇÃO LIVRE: a IA tem liberdade total de direção de arte — NÃO há mood pré-definido. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).${exclusion}${archetypeHint}`;
 }
 
 function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo: string; regraFinal: string } {
