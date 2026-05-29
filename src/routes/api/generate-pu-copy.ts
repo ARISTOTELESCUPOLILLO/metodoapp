@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getVoiceProfile } from '@/data/brandVoice';
-import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.server';
+import { resolveEffectiveUser, checkBalance, debitUsage } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -35,7 +35,9 @@ export const Route = createFileRoute('/api/generate-pu-copy')({
             return Response.json({ error: 'OPENAI_API_KEY_CONTENT não configurada' }, { status: 500 });
           }
 
-          const userId = await getUserIdFromRequest(request).catch(() => null);
+          const effective = await resolveEffectiveUser(request).catch(() => null);
+          const userId = effective?.userId ?? null;
+          const impersonatedBy = effective?.impersonatedBy;
           if (userId) {
             const bal = await checkBalance(userId, 0, 0, 1);
             if (!bal.ok) {
@@ -118,7 +120,6 @@ Regras:
           try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
 
           if (userId) {
-            const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
             await debitUsage(userId, 0, 0, {
               evento: 'gerar_copia_pu',
               modulo: 'pu',

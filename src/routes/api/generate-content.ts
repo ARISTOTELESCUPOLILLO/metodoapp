@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { checkBalance, debitUsage, getUserIdFromRequest } from '@/lib/usage.server';
+import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
 
 export const Route = createFileRoute('/api/generate-content')({
@@ -12,11 +12,12 @@ export const Route = createFileRoute('/api/generate-content')({
             return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
           }
 
-          // Gate: limite de gerações por plano.
-          const userId = await getUserIdFromRequest(request);
-          if (!userId) {
+          // Gate: limite de gerações por plano. Usa usuário efetivo (teste quando admin impersona).
+          const effective = await resolveEffectiveUser(request);
+          if (!effective) {
             return Response.json({ error: 'Não autenticado' }, { status: 401 });
           }
+          const { userId, impersonatedBy } = effective;
           const balance = await checkBalance(userId, 0, 0, 1);
           if (!balance.ok) {
             return Response.json(
@@ -113,9 +114,8 @@ export const Route = createFileRoute('/api/generate-content')({
                 }
                 console.info('[generate-content] openai_ms=' + (Date.now() - t0) + ' chars=' + fullContent.length);
 
-                // Debita sempre (admins inclusos, para rastreio de custo).
+                // Debita sempre (para rastreio de custo; usuário efetivo já resolvido acima).
                 try {
-                  const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
                   await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: COST_USD.content, impersonatedBy, preferredSlot: (preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined });
                 } catch (e) {
                   console.warn('[generate-content] debit failed', e);

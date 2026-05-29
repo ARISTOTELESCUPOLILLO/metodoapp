@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.server';
+import { resolveEffectiveUser, checkBalance, debitUsage } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
 
 // Provedor: FAL (queue API).
@@ -132,19 +132,18 @@ export const Route = createFileRoute('/api/generate-image')({
 
             // Debita 1 imagem (não bloqueia entrega).
             try {
-              const userId = await getUserIdFromRequest(request);
-              if (userId) {
+              const effective = await resolveEffectiveUser(request);
+              if (effective) {
                 const statusBody = body as StatusBody;
                 const isEdit = statusBody.modelPath?.includes('/edit') ?? false;
                 const moduloReq = statusBody.modulo || 'metodo-op';
-                const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
                 const slotPref = (statusBody.preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined;
-                await debitUsage(userId, 1, 0, {
+                await debitUsage(effective.userId, 1, 0, {
                   evento: 'image.generate',
                   modulo: moduloReq,
                   payload: { provider: 'fal' },
                   custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
-                  impersonatedBy,
+                  impersonatedBy: effective.impersonatedBy,
                   preferredSlot: slotPref,
                 });
               }
@@ -161,11 +160,11 @@ export const Route = createFileRoute('/api/generate-image')({
             return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
           }
 
-          // Pré-checagem de saldo.
+          // Pré-checagem de saldo (usa usuário efetivo — teste quando admin impersona).
           try {
-            const userId = await getUserIdFromRequest(request);
-            if (userId) {
-              const { ok } = await checkBalance(userId, 1, 0);
+            const effective = await resolveEffectiveUser(request);
+            if (effective) {
+              const { ok } = await checkBalance(effective.userId, 1, 0);
               if (!ok) {
                 return Response.json(
                   { error: 'Limite de imagens atingido em todos os seus planos.' },

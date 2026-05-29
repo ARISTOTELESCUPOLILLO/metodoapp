@@ -25,6 +25,29 @@ export async function getUserIdFromRequest(request: Request): Promise<string | n
   }
 }
 
+// Resolve o usuário efetivo para débito e logs.
+// Quando admin impersona um usuário teste, o débito vai para o teste (não para o admin),
+// e impersonatedBy guarda o UUID do admin que gerou.
+export async function resolveEffectiveUser(
+  request: Request,
+): Promise<{ userId: string; impersonatedBy?: string } | null> {
+  const callerUserId = await getUserIdFromRequest(request);
+  if (!callerUserId) return null;
+
+  const rawImpersonate = request.headers.get('x-impersonate-user-id');
+  if (rawImpersonate) {
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+      _user_id: callerUserId,
+      _role: 'admin',
+    });
+    if (isAdmin === true) {
+      return { userId: rawImpersonate, impersonatedBy: callerUserId };
+    }
+  }
+
+  return { userId: callerUserId };
+}
+
 export async function checkBalance(
   userId: string,
   imgs: number,

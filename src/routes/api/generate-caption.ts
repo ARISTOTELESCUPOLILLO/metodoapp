@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { checkBalance, debitUsage, getUserIdFromRequest } from '@/lib/usage.server';
+import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { getVoiceProfile } from '@/data/brandVoice';
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -31,12 +31,15 @@ export const Route = createFileRoute('/api/generate-caption')({
 
           // Gate: quando vem do clique inicial "Gerar Post Único" debita 1 geração.
           let userId: string | null = null;
+          let impersonatedBy: string | undefined;
           let isAdmin = false;
           if (debit) {
-            userId = await getUserIdFromRequest(request);
-            if (!userId) {
+            const effective = await resolveEffectiveUser(request);
+            if (!effective) {
               return Response.json({ error: 'Não autenticado' }, { status: 401 });
             }
+            userId = effective.userId;
+            impersonatedBy = effective.impersonatedBy;
             const bal = await checkBalance(userId, 0, 0, 1);
             if (!bal.ok) {
               return Response.json(
@@ -137,7 +140,7 @@ Regras:
 
           if (debit && userId) {
             try {
-              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined, preferredSlot });
+              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined, preferredSlot, impersonatedBy });
             } catch (e) {
               console.warn('[generate-caption] debit failed', e);
             }

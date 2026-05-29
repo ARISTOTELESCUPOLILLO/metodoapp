@@ -13,6 +13,7 @@ interface Log {
   qtd_geracoes: number;
   custo_usd: number;
   slot: string | null;
+  impersonated_by?: string | null;
 }
 
 interface ProfileInfo {
@@ -53,6 +54,10 @@ export function UsageTab() {
       profileMap[p.id] = { email: p.email, nome: p.nome, is_test: !!p.is_test, created_by: p.created_by ?? null, bonus_assigned_by: p.bonus_assigned_by ?? null };
       if (p.created_by) adminIds.add(p.created_by);
       if (p.bonus_assigned_by) adminIds.add(p.bonus_assigned_by);
+    });
+    // Também coleta admins que geraram via impersonation (impersonated_by = admin que gerou).
+    (ls as any[]).forEach((l: any) => {
+      if (l.impersonated_by) adminIds.add(l.impersonated_by);
     });
     setProfiles(profileMap);
 
@@ -101,11 +106,16 @@ export function UsageTab() {
     const p = profiles[l.user_id];
 
     if (p?.is_test) {
-      const adminEmail = p.created_by ? (adminEmails[p.created_by] || '?') : '—';
+      // Preferência: admin que GEROU este item (impersonated_by); fallback: admin que CRIOU o teste.
+      const generatorEmail = l.impersonated_by
+        ? (adminEmails[l.impersonated_by] || '?')
+        : p.created_by
+          ? (adminEmails[p.created_by] || '?')
+          : '—';
       return (
         <div>
           <span style={{ fontWeight: 700, color: '#d97706' }}>TESTE [{p.nome || 'sem nome'}]</span>
-          <div style={{ fontSize: 11, color: '#94a3b8' }}>{adminEmail}</div>
+          <div style={{ fontSize: 11, color: '#94a3b8' }}>{generatorEmail}</div>
         </div>
       );
     }

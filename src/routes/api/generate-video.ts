@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { getUserIdFromRequest, checkBalance, debitUsage } from '@/lib/usage.server';
+import { resolveEffectiveUser, checkBalance, debitUsage } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
@@ -184,8 +184,10 @@ export const Route = createFileRoute('/api/generate-video')({
 
           console.info('[generate-video] mode=%s image_bytes=%d', videoMode, imageBase64.length);
 
-          // Pré-checagem de saldo (1 render).
-          const userId = await getUserIdFromRequest(request).catch(() => null);
+          // Pré-checagem de saldo (1 render). Usa usuário efetivo (teste quando admin impersona).
+          const effective = await resolveEffectiveUser(request).catch(() => null);
+          const userId = effective?.userId ?? null;
+          const impersonatedBy = effective?.impersonatedBy;
           if (userId) {
             try {
               const { ok } = await checkBalance(userId, 0, 1);
@@ -319,7 +321,6 @@ export const Route = createFileRoute('/api/generate-video')({
           });
 
           // Debita imediatamente após submit bem-sucedido.
-          const impersonatedBy = request.headers.get('x-impersonate-user-id') || undefined;
           if (userId) {
             try {
               await debitUsage(userId, 0, 1, {
