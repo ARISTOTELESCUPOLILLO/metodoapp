@@ -72,7 +72,7 @@ const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     paleta: 'paleta terrosa quente (âmbar, ocre, terracota, marrons), saturação orgânica, sem cor digital',
     composicao: 'composição assimétrica capturada, sem pose, enquadramento de bastidor, elementos cotidianos no quadro, sensação de flagrante',
     camera: 'câmera 35mm levemente alta, distância natural, leve grão filme, autofoco em movimento, textura visível',
-    detalheCriativo: 'um detalhe de bastidor verdadeiro deixado em cena (xícara desfocada em primeiro plano, mão cortada pela borda, papel amassado, anotação manuscrita parcial, fio de cabelo solto, lens flare orgânico) que comprova captura real',
+    detalheCriativo: 'um detalhe de bastidor verdadeiro deixado em cena (xícara desfocada em primeiro plano, mão cortada pela borda, anotação manuscrita parcial, fio de cabelo solto, lens flare orgânico) que comprova captura real',
     assinatura: 'fotografia documental quente, luz ambiente da hora dourada, paleta terrosa, captura espontânea sem pose, lente 35mm com grão sutil',
   },
   'OP-04': {
