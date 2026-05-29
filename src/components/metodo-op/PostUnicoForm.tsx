@@ -178,7 +178,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const canGenerateCopy = !!data.keyInfo.trim() && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !semPlanoPost;
   const moodPendente = data.direcao === 'mood' && !data.mood;
   const livreSemCopy = data.direcao === 'livre' && !copy;
-  const canGenerate = (!!copy || data.direcao === 'livre') && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !moodPendente && !semPlanoPost && !!data.keyInfo.trim();
+  const canGenerate = (!!copy || data.direcao === 'livre') && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !moodPendente && !semPlanoPost
+    && (data.direcao === 'livre' || !!data.keyInfo.trim());
   const hasLogo = !!kit.logoDataUrl;
 
   return (
@@ -517,7 +518,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           type="button"
           onClick={() => onGenerate(copy || undefined)}
           disabled={!canGenerate}
-          title={semPlanoPost ? 'Você não tem plano de Post Único — fale com o admin' : !data.keyInfo.trim() ? 'Preencha a informação-chave' : moodPendente ? 'Escolha um mood antes de gerar' : (data.direcao === 'mood' && !copy) ? 'Gere o título e o texto antes de gerar a peça (modo Mood)' : semRecursos ? 'Limite do plano atingido — fale com o admin' : (!isAdmin && semPlano) ? 'Sem plano ativo — fale com o admin' : undefined}
+          title={semPlanoPost ? 'Você não tem plano de Post Único — fale com o admin' : (!data.keyInfo.trim() && data.direcao !== 'livre') ? 'Preencha a informação-chave' : moodPendente ? 'Escolha um mood antes de gerar' : (data.direcao === 'mood' && !copy) ? 'Gere o título e o texto antes de gerar a peça (modo Mood)' : semRecursos ? 'Limite do plano atingido — fale com o admin' : (!isAdmin && semPlano) ? 'Sem plano ativo — fale com o admin' : undefined}
           style={{ flex: 1 }}
         >
           {loading ? 'Gerando peça...' : livreSemCopy ? 'Gerar peça (IA livre)' : copy ? 'Gerar peça' : 'Gere o título e o texto primeiro'}

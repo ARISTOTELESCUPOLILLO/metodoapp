@@ -279,8 +279,9 @@ ATIVIDADE: ${data.mainActivity || kit.mainActivity || ''}
 OBJETIVO: ${objetivo}
 TOM: ${tom}
 
-INFORMAÇÃO-CHAVE (contexto — pode interpretar com liberdade visual):
-"${data.keyInfo.trim()}"
+${data.keyInfo.trim()
+  ? `INFORMAÇÃO-CHAVE (contexto — pode interpretar com liberdade visual):\n"${data.keyInfo.trim()}"`
+  : `INFORMAÇÃO-CHAVE: não fornecida. Crie a peça com base apenas na empresa, atividade, objetivo e kit visual — a IA tem TOTAL LIBERDADE para inventar o tema e a mensagem mais pertinente para esta marca e este objetivo.`}
 
 ${copyBlock}
 
