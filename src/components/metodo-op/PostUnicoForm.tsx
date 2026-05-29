@@ -27,7 +27,7 @@ interface Props {
 }
 
 const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
-  { code: 'nenhum',        label: 'Nenhum',        desc: 'Sem conceito visual' },
+  { code: 'nenhum',        label: 'Nenhum',        desc: 'Sem objetivo' },
   { code: 'institucional', label: 'Institucional',  desc: 'Posicionamento, propósito, marca' },
   { code: 'aviso',         label: 'Aviso',          desc: 'Comunicado institucional' },
   { code: 'homenagem',     label: 'Homenagem',      desc: 'Pessoa, data, conquista' },

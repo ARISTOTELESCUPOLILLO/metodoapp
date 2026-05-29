@@ -61,7 +61,7 @@ const defaultPostUnico: PostUnicoFormData = {
   companyName: '',
   mainActivity: '',
   keyInfo: '',
-  objetivo: 'promocao',
+  objetivo: 'nenhum',
   direcao: 'livre',
 };
 
