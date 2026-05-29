@@ -234,7 +234,7 @@ export interface PostUnicoCaption {
 
 export async function generatePostUnicoCaption(
   data: PostUnicoFormData,
-  opts?: { debit?: boolean; brandVoice?: string; preferredSlot?: string },
+  opts?: { debit?: boolean; brandVoice?: string; preferredSlot?: string; previousCaption?: string },
 ): Promise<PostUnicoCaption> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (opts?.debit) {
@@ -256,6 +256,7 @@ export async function generatePostUnicoCaption(
       brandVoice: opts?.brandVoice || '',
       debit: opts?.debit === true,
       ...(opts?.preferredSlot ? { preferredSlot: opts.preferredSlot } : {}),
+      ...(opts?.previousCaption ? { previousCaption: opts.previousCaption } : {}),
     }),
   });
   if (!res.ok) {

@@ -21,6 +21,7 @@ export const Route = createFileRoute('/api/generate-caption')({
           const objetivo = String(body.objetivo || 'promocao');
           const keyInfo = String(body.keyInfo || '').slice(0, 1000);
           const brandVoice = String(body.brandVoice || '').slice(0, 80);
+          const previousCaption = body.previousCaption ? String(body.previousCaption).slice(0, 400) : null;
           const debit = body.debit === true;
           const preferredSlot = ['plano1', 'plano2', 'bonus'].includes(body.preferredSlot) ? body.preferredSlot as 'plano1' | 'plano2' | 'bonus' : undefined;
 
@@ -65,11 +66,15 @@ Proibido mencionar literalmente o nome da voz no texto final.
 `
             : '';
 
+          const previousBlock = previousCaption
+            ? `LEGENDA ANTERIOR GERADA (NÃO repita — use estrutura, abertura e palavras-chave completamente diferentes): "${previousCaption}"\n`
+            : '';
+
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
 
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
-${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
+${voiceBlock}${previousBlock}OBJETIVO: ${objetivo} (tom: ${tom})
 INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
@@ -87,7 +92,8 @@ Regras:
 - PROIBIDO ABSOLUTO usar nos campos "texto", "cta" ou "hashtags" as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos. Use SEMPRE sinônimos ou perífrases (ex.: "clareza" → "direção definida", "leitura simples"; "impacto" → "efeito imediato"; "silêncio" → "pausa", "respiro"; "instante" → "momento"; "fragmento" → "recorte"; "desvio" → "outro caminho").
 - PROIBIDO repetir a mesma palavra em frases próximas ou consecutivas. Use sinônimos ou reformule. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
-- "texto" e "cta" devem SEMPRE começar com LETRA MAIÚSCULA.`;
+- "texto" e "cta" devem SEMPRE começar com LETRA MAIÚSCULA.
+- Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.`;
 
           const res = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -98,7 +104,7 @@ Regras:
             body: JSON.stringify({
               model: 'gpt-4.1-mini',
               messages: [
-                { role: 'system', content: 'Você é redator publicitário brasileiro. Responda SEMPRE com JSON válido em português.' },
+                { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
                 { role: 'user', content: userPrompt },
               ],
               temperature: 0.9,

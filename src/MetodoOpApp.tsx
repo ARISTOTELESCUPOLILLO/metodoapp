@@ -412,11 +412,12 @@ export default function App() {
   }
 
   async function handleClearPostUnico() {
-    if (!(await askConfirm('Limpar Post Único', 'Isso vai apagar a informação-chave, a peça gerada e a legenda. Deseja continuar?'))) return;
+    if (!(await askConfirm('Limpar Post Único', 'Isso vai apagar a peça gerada e a legenda. A informação-chave é preservada. Deseja continuar?'))) return;
     setPostUnico({
       ...defaultPostUnico,
       companyName: kit.companyName || '',
       mainActivity: kit.mainActivity || '',
+      keyInfo: postUnico.keyInfo,
     });
     setPostUnicoImg(undefined);
     setPostUnicoStarted(false);
@@ -468,7 +469,7 @@ export default function App() {
         ...postUnico,
         companyName: postUnico.companyName || kit.companyName,
         mainActivity: postUnico.mainActivity || kit.mainActivity || '',
-      }, { brandVoice: kit.brandVoice });
+      }, { brandVoice: kit.brandVoice, previousCaption: caption?.full });
       setCaption(c);
     } catch (e) {
       setCaptionError(String((e as Error).message || e));

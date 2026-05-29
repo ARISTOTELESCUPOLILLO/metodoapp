@@ -50,8 +50,16 @@ export default function PostUnicoResult({
   const [selectedIdx, setSelectedIdx] = useState(0);
   const isMobile = useIsMobile();
   const { guard, dialog } = useImageGenAlert();
-  const CAPTION_MAX = 1;
+  const CAPTION_MAX = 2;
   const captionExhausted = captionRegens >= CAPTION_MAX;
+
+  // Reseta contador e histórico de legenda a cada nova imagem gerada.
+  useEffect(() => {
+    setCaptionRegens(0);
+    setCaptionHistory([]);
+    setSelectedIdx(0);
+    setEditedCaption(null);
+  }, [imageDataUrl]);
 
   // Mantém histórico de até 2 legendas (inicial + 1 regerada).
   useEffect(() => {
