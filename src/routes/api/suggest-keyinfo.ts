@@ -7,6 +7,7 @@ const OBJETIVO_TOM: Record<string, string> = {
   aviso: 'institucional, claro, objetivo',
   oportunidade: 'urgência elegante, momento decisivo',
   institucional: 'institucional de marca, posicionamento, propósito, sóbrio e confiante',
+  nenhum: 'neutro, livre — foco no fato concreto da empresa',
 };
 
 export const Route = createFileRoute('/api/suggest-keyinfo')({

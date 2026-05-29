@@ -27,11 +27,12 @@ interface Props {
 }
 
 const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
-  { code: 'promocao', label: 'Promoção', desc: 'Oferta, campanha comercial' },
-  { code: 'homenagem', label: 'Homenagem', desc: 'Pessoa, data, conquista' },
-  { code: 'aviso', label: 'Aviso', desc: 'Comunicado institucional' },
-  { code: 'oportunidade', label: 'Oportunidade', desc: 'Momento único, urgência' },
-  { code: 'institucional', label: 'Institucional', desc: 'Posicionamento, propósito, marca' },
+  { code: 'nenhum',        label: 'Nenhum',        desc: 'Sem conceito visual' },
+  { code: 'institucional', label: 'Institucional',  desc: 'Posicionamento, propósito, marca' },
+  { code: 'aviso',         label: 'Aviso',          desc: 'Comunicado institucional' },
+  { code: 'homenagem',     label: 'Homenagem',      desc: 'Pessoa, data, conquista' },
+  { code: 'oportunidade',  label: 'Oportunidade',   desc: 'Momento único, urgência' },
+  { code: 'promocao',      label: 'Promoção',       desc: 'Oferta, campanha comercial' },
 ];
 
 const MOODS: { code: MoodCode; label: string }[] = [
@@ -94,11 +95,14 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   }, [data.keyInfo]);
 
-  // Reseta copy quando o objetivo muda
+  // Reseta copy quando o objetivo muda; NENHUM não suporta mood → força LIVRE
   useEffect(() => {
     setCopy(null);
     setCopyError(null);
     setCopyRegenCount(0);
+    if (data.objetivo === 'nenhum' && data.direcao === 'mood') {
+      onChange({ ...data, direcao: 'livre', mood: undefined });
+    }
   }, [data.objetivo]);
 
   async function fetchCopy(isRegen: boolean) {
@@ -171,15 +175,18 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   }
 
+  const isNenhum = data.objetivo === 'nenhum';
   const semGeracoes = typeof geracoesRestantes === 'number' && geracoesRestantes <= 0 && (geracoesTotal || 0) > 0;
   const semImagens  = typeof imgsRestantes === 'number' && imgsRestantes <= 0 && (imgsTotal || 0) > 0;
   const semRecursos = semGeracoes || semImagens;
   const semPlanoPost = !isAdmin && hasPostPlano === false;
-  const canGenerateCopy = !!data.keyInfo.trim() && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !semPlanoPost;
+  const canGenerateCopy = !isNenhum && !!data.keyInfo.trim() && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !semPlanoPost;
   const moodPendente = data.direcao === 'mood' && !data.mood;
   const livreSemCopy = data.direcao === 'livre' && !copy;
-  const canGenerate = (!!copy || data.direcao === 'livre') && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !moodPendente && !semPlanoPost
-    && (data.direcao === 'livre' || !!data.keyInfo.trim());
+  const canGenerate = isNenhum
+    ? !copy && data.direcao === 'livre' && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !semPlanoPost
+    : (!!copy || data.direcao === 'livre') && !loading && !suggesting && !copyLoading && !semRecursos && !(!isAdmin && semPlano) && !moodPendente && !semPlanoPost
+      && (data.direcao === 'livre' || !!data.keyInfo.trim());
   const hasLogo = !!kit.logoDataUrl;
 
   return (
@@ -384,12 +391,14 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
       </div>
 
       {/* Etapa: Título e texto da peça */}
-      <div className="formatBox" style={{ borderColor: copy ? '#10b981' : undefined }}>
-        <strong>Título e texto da peça {data.direcao === 'livre' && <span style={{ fontWeight: 500, fontSize: 12, color: '#64748b' }}>(opcional no modo Livre)</span>}</strong>
-        <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#64748b' }}>
-          {data.direcao === 'livre'
-            ? 'No modo Livre este passo é opcional. Se gerar, o título e o texto viram tipografia obrigatória na peça. Se pular, a IA decide se haverá texto, qual e onde.'
-            : 'A IA cria o título e o texto que aparecerão tipografados na peça, a partir da informação-chave. Confirme antes de gerar a imagem.'}
+      <div className="formatBox" style={{ borderColor: copy ? '#10b981' : isNenhum ? '#e2e8f0' : undefined, opacity: isNenhum ? 0.6 : 1 }}>
+        <strong>Título e texto da peça {data.direcao === 'livre' && !isNenhum && <span style={{ fontWeight: 500, fontSize: 12, color: '#64748b' }}>(opcional no modo Livre)</span>}</strong>
+        <p style={{ margin: '4px 0 10px', fontSize: 12, color: isNenhum ? '#94a3b8' : '#64748b' }}>
+          {isNenhum
+            ? 'Desabilitado no objetivo Nenhum — a IA cria o texto livremente a partir da informação-chave e do Kit de Marca.'
+            : data.direcao === 'livre'
+              ? 'No modo Livre este passo é opcional. Se gerar, o título e o texto viram tipografia obrigatória na peça. Se pular, a IA decide se haverá texto, qual e onde.'
+              : 'A IA cria o título e o texto que aparecerão tipografados na peça, a partir da informação-chave. Confirme antes de gerar a imagem.'}
         </p>
 
         {!copy && !copyLoading && (
@@ -463,8 +472,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
             <input type="radio" name="direcao" checked={data.direcao === 'livre'} onChange={() => setDirecao('livre')} />
             Livre — IA decide tudo
           </label>
-          <label className="radioLabel">
-            <input type="radio" name="direcao" checked={data.direcao === 'mood'} onChange={() => setDirecao('mood')} />
+          <label className="radioLabel" style={{ opacity: isNenhum ? 0.4 : 1, cursor: isNenhum ? 'not-allowed' : 'pointer' }}>
+            <input type="radio" name="direcao" checked={data.direcao === 'mood'} onChange={() => { if (!isNenhum) setDirecao('mood'); }} disabled={isNenhum} />
             Com Mood
           </label>
         </div>
@@ -521,7 +530,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           title={semPlanoPost ? 'Você não tem plano de Post Único — fale com o admin' : (!data.keyInfo.trim() && data.direcao !== 'livre') ? 'Preencha a informação-chave' : moodPendente ? 'Escolha um mood antes de gerar' : (data.direcao === 'mood' && !copy) ? 'Gere o título e o texto antes de gerar a peça (modo Mood)' : semRecursos ? 'Limite do plano atingido — fale com o admin' : (!isAdmin && semPlano) ? 'Sem plano ativo — fale com o admin' : undefined}
           style={{ flex: 1 }}
         >
-          {loading ? 'Gerando peça...' : livreSemCopy ? 'Gerar peça (IA livre)' : copy ? 'Gerar peça' : 'Gere o título e o texto primeiro'}
+          {loading ? 'Gerando peça...' : isNenhum ? 'Gerar peça (criação livre)' : livreSemCopy ? 'Gerar peça (IA livre)' : copy ? 'Gerar peça' : 'Gere o título e o texto primeiro'}
         </button>
         {onClear && (
           <button

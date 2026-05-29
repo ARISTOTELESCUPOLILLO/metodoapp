@@ -10,6 +10,7 @@ const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   aviso: 'Aviso institucional — comunicar com clareza e autoridade',
   oportunidade: 'Oportunidade — sinalizar momento único, urgência elegante',
   institucional: 'Institucional — reforçar posicionamento, propósito e autoridade da marca',
+  nenhum: 'Criação livre — sem objetivo definido',
 };
 
 const OBJETIVO_TONE: Record<PostUnicoObjetivo, string> = {
@@ -18,6 +19,7 @@ const OBJETIVO_TONE: Record<PostUnicoObjetivo, string> = {
   aviso: 'clareza institucional, autoridade tranquila',
   oportunidade: 'urgência contida antes da ação, contraste entre espera e movimento, energia direcionada, tensão antes do clique',
   institucional: 'sobriedade contemporânea, autoridade calma, identidade de marca, atemporalidade',
+  nenhum: 'neutro, totalmente livre',
 };
 
 const MOOD_NAMES: Record<MoodCode, string> = {
@@ -84,6 +86,7 @@ const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
     'CONCEITO DESTA GERAÇÃO — DETALHE DE OFÍCIO: close em ferramenta, material ou gesto específico do negócio — artesania, especialização, autoria.',
     'CONCEITO DESTA GERAÇÃO — TIPOGRAFIA DE MARCA: identidade visual construída pela tipografia e cor como protagonistas, com elemento fotográfico discreto de suporte.',
   ],
+  nenhum: [], // Sem conceito visual pré-definido — IA tem total liberdade
 };
 
 function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo): string {
@@ -243,9 +246,11 @@ export function buildPostUnicoPrompt(params: {
   references?: PostUnicoReferences;
 }): string {
   const { data, kit, copy, references } = params;
-  const objetivo = OBJETIVO_LABEL[data.objetivo];
-  const tom = OBJETIVO_TONE[data.objetivo];
-  const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo);
+  const isNenhum = data.objetivo === 'nenhum';
+  const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
+  const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
+  // Para NENHUM, não passa objetivo → sem arquétipos e sem exclusões visuais por objetivo
+  const direcao = direcaoBlock(data.direcao, data.mood, isNenhum ? undefined : data.objetivo);
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
   const zona = logoZoneDescription(kit.logoPosition);
@@ -262,7 +267,7 @@ TEXTO DE APOIO: "${copy.texto}"
 Hierarquia tipográfica: título dominante e texto de apoio menor — mas a POSIÇÃO do bloco é livre. Pode estar no topo, na lateral esquerda, na lateral direita, na base, sobreposto à imagem, em barra inferior, dividido em duas zonas da peça, ou ancorado em um canto. EVITE a fórmula default "bloco amarelo+branco encostado na borda esquerda ocupando metade da peça" se ela não for a melhor para esta composição específica — explore outras ancoragens.`
     : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
 A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
-Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave "${data.keyInfo.trim()}" e no objetivo ${OBJETIVO_LABEL[data.objetivo]}.
+Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave${data.keyInfo.trim() ? ` "${data.keyInfo.trim()}"` : ' fornecida'} e na atividade da empresa${objetivo ? ` com objetivo: ${objetivo}` : ''}.
 NÃO copie a informação-chave literalmente — interprete-a criativamente com tom publicitário.
 A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, em qualquer peso/fonte dentro da tipografia da marca. Explore ancoragens além do "bloco encostado na borda esquerda".`;
 
@@ -276,8 +281,7 @@ ZONA SEGURA INVIOLÁVEL DE 110 PX em todas as bordas do canvas 1080x1350. Nada i
 
 EMPRESA: ${data.companyName || kit.companyName || 'Marca'}
 ATIVIDADE: ${data.mainActivity || kit.mainActivity || ''}
-OBJETIVO: ${objetivo}
-TOM: ${tom}
+${objetivo ? `OBJETIVO: ${objetivo}\nTOM: ${tom}` : ''}
 
 ${data.keyInfo.trim()
   ? `INFORMAÇÃO-CHAVE (contexto — pode interpretar com liberdade visual):\n"${data.keyInfo.trim()}"`
