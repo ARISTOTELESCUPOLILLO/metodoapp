@@ -18,10 +18,21 @@ export const Route = createFileRoute('/api/meta/debug-accounts')({
           const meRes = await fetch(`https://graph.facebook.com/${META_VERSION}/me?fields=id,name&access_token=${devToken}`);
           const me = await meRes.json() as { id?: string; name?: string; error?: { message: string } };
 
-          // 2. Lista páginas
+          // 2. Lista páginas via /me/accounts (User Token)
           const pagesRes = await fetch(`https://graph.facebook.com/${META_VERSION}/me/accounts?access_token=${devToken}`);
           const pagesData = await pagesRes.json() as { data?: Array<{ id: string; name: string; access_token: string }>; error?: { message: string } };
-          const pages = pagesData.data || [];
+          let pages = pagesData.data || [];
+
+          // Fallback: trata o token como Page Token direto (Business Manager)
+          let usedPageTokenDirectly = false;
+          if (pages.length === 0) {
+            const meAsPage = await fetch(`https://graph.facebook.com/${META_VERSION}/me?fields=id,name&access_token=${devToken}`);
+            const meData = await meAsPage.json() as { id?: string; name?: string };
+            if (meData.id) {
+              pages = [{ id: meData.id, name: meData.name || '', access_token: devToken }];
+              usedPageTokenDirectly = true;
+            }
+          }
 
           // 3. Para cada página, verifica instagram_business_account
           const pageDetails = await Promise.all(pages.map(async (page) => {
@@ -38,6 +49,7 @@ export const Route = createFileRoute('/api/meta/debug-accounts')({
 
           return Response.json({
             tokenUser: { id: me.id, name: me.name, tokenError: me.error?.message || null },
+            tokenType: usedPageTokenDirectly ? 'PAGE_TOKEN_DIRETO' : 'USER_TOKEN',
             pagesCount: pages.length,
             pagesError: pagesData.error?.message || null,
             pages: pageDetails,

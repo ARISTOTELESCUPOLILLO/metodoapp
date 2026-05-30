@@ -31,18 +31,29 @@ export const Route = createFileRoute('/api/meta/test-publish')({
           return Response.json({ error: 'target deve ser "instagram" ou "facebook"' }, { status: 400 });
 
         try {
-          // Resolve páginas a partir do User Token (nunca expostos ao front)
-          const pages = await getJson<{ data?: Array<{ id: string; name: string; access_token: string }> }>(
+          // Tenta via /me/accounts (User Token). Se vazio, assume que o token
+          // é um Page Access Token direto (caso de páginas em Business Manager).
+          const pagesRes = await getJson<{ data?: Array<{ id: string; name: string; access_token: string }> }>(
             `https://graph.facebook.com/${META_VERSION}/me/accounts?access_token=${devToken}`
           );
-          const pageList = pages.data || [];
+          let pageList = pagesRes.data || [];
+
+          // Fallback: trata o token como Page Token direto
+          if (pageList.length === 0) {
+            const me = await getJson<{ id?: string; name?: string; error?: { message: string } }>(
+              `https://graph.facebook.com/${META_VERSION}/me?fields=id,name&access_token=${devToken}`
+            );
+            if (me.id) {
+              pageList = [{ id: me.id, name: me.name || '', access_token: devToken }];
+            }
+          }
+
           if (pageList.length === 0)
-            return Response.json({ error: 'Nenhuma página Facebook encontrada para este token' }, { status: 422 });
+            return Response.json({ error: 'Nenhuma página encontrada. Use um Page Access Token ou adicione a conta como admin da página.' }, { status: 422 });
 
           const imageUrl = await uploadImageToMetaBucket(userId, imageDataUrl);
 
           if (target === 'instagram') {
-            // Encontra página com Instagram Business Account
             let igUserId: string | null = null;
             let pageToken: string | null = null;
 
@@ -58,7 +69,7 @@ export const Route = createFileRoute('/api/meta/test-publish')({
             }
 
             if (!igUserId || !pageToken)
-              return Response.json({ error: 'Nenhuma conta Instagram Business encontrada nas páginas deste token' }, { status: 422 });
+              return Response.json({ error: 'Página encontrada mas sem Instagram Business conectado. Conecte o Instagram à página no Meta Business Suite.' }, { status: 422 });
 
             const createRes = await fetch(`https://graph.facebook.com/${META_VERSION}/${igUserId}/media`, {
               method: 'POST',
