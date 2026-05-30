@@ -42,6 +42,7 @@ import { Route as ApiMetaStatusRouteImport } from './routes/api/meta/status'
 import { Route as ApiMetaPublishInstagramRouteImport } from './routes/api/meta/publish-instagram'
 import { Route as ApiMetaPublishFacebookRouteImport } from './routes/api/meta/publish-facebook'
 import { Route as ApiMetaDisconnectRouteImport } from './routes/api/meta/disconnect'
+import { Route as ApiMetaDebugAccountsRouteImport } from './routes/api/meta/debug-accounts'
 import { Route as ApiMetaAuthUrlRouteImport } from './routes/api/meta/auth-url'
 
 const TermosRoute = TermosRouteImport.update({
@@ -210,6 +211,11 @@ const ApiMetaDisconnectRoute = ApiMetaDisconnectRouteImport.update({
   path: '/api/meta/disconnect',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetaDebugAccountsRoute = ApiMetaDebugAccountsRouteImport.update({
+  id: '/api/meta/debug-accounts',
+  path: '/api/meta/debug-accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetaAuthUrlRoute = ApiMetaAuthUrlRouteImport.update({
   id: '/api/meta/auth-url',
   path: '/api/meta/auth-url',
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
@@ -280,6 +287,7 @@ export interface FileRoutesByTo {
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/api/supabase-pdf'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
+    | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
@@ -391,6 +401,7 @@ export interface FileRouteTypes {
     | '/api/supabase-pdf'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
+    | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
@@ -427,6 +438,7 @@ export interface FileRouteTypes {
     | '/api/supabase-pdf'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
+    | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   ApiSupabasePdfRoute: typeof ApiSupabasePdfRoute
   ApiTtsVoiceRoute: typeof ApiTtsVoiceRoute
   ApiMetaAuthUrlRoute: typeof ApiMetaAuthUrlRoute
+  ApiMetaDebugAccountsRoute: typeof ApiMetaDebugAccountsRoute
   ApiMetaDisconnectRoute: typeof ApiMetaDisconnectRoute
   ApiMetaPublishFacebookRoute: typeof ApiMetaPublishFacebookRoute
   ApiMetaPublishInstagramRoute: typeof ApiMetaPublishInstagramRoute
@@ -706,6 +719,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetaDisconnectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meta/debug-accounts': {
+      id: '/api/meta/debug-accounts'
+      path: '/api/meta/debug-accounts'
+      fullPath: '/api/meta/debug-accounts'
+      preLoaderRoute: typeof ApiMetaDebugAccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/auth-url': {
       id: '/api/meta/auth-url'
       path: '/api/meta/auth-url'
@@ -744,6 +764,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSupabasePdfRoute: ApiSupabasePdfRoute,
   ApiTtsVoiceRoute: ApiTtsVoiceRoute,
   ApiMetaAuthUrlRoute: ApiMetaAuthUrlRoute,
+  ApiMetaDebugAccountsRoute: ApiMetaDebugAccountsRoute,
   ApiMetaDisconnectRoute: ApiMetaDisconnectRoute,
   ApiMetaPublishFacebookRoute: ApiMetaPublishFacebookRoute,
   ApiMetaPublishInstagramRoute: ApiMetaPublishInstagramRoute,

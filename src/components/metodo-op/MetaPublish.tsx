@@ -32,6 +32,8 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
   const [fbError, setFbError] = useState('');
   const [igTestError, setIgTestError] = useState('');
   const [fbTestError, setFbTestError] = useState('');
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const [debugLoading, setDebugLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -187,6 +189,33 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
           </div>
           {igTestState === 'err' && <p style={{ margin: 0, fontSize: 12, color: '#b91c1c' }}>IG: {igTestError}</p>}
           {fbTestState === 'err' && <p style={{ margin: 0, fontSize: 12, color: '#b91c1c' }}>FB: {fbTestError}</p>}
+
+          {/* Diagnóstico de contas */}
+          <button
+            type="button"
+            disabled={debugLoading}
+            onClick={async () => {
+              setDebugLoading(true);
+              setDebugInfo(null);
+              try {
+                const res = await fetch('/api/meta/debug-accounts', { headers: await authHeader() });
+                const d = await res.json();
+                setDebugInfo(JSON.stringify(d, null, 2));
+              } catch (e) {
+                setDebugInfo('Erro: ' + (e as Error).message);
+              } finally {
+                setDebugLoading(false);
+              }
+            }}
+            style={{ alignSelf: 'flex-start', padding: '5px 10px', borderRadius: 6, border: '1px dashed #d97706', background: '#fff', color: '#92400e', fontSize: 11, cursor: 'pointer' }}
+          >
+            {debugLoading ? 'Consultando…' : '🔍 Ver contas Meta'}
+          </button>
+          {debugInfo && (
+            <pre style={{ margin: 0, fontSize: 10, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6, padding: 8, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#374151', maxHeight: 200, overflowY: 'auto' }}>
+              {debugInfo}
+            </pre>
+          )}
         </div>
       )}
     </div>
