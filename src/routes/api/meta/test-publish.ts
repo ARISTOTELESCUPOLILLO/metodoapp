@@ -16,12 +16,14 @@ export const Route = createFileRoute('/api/meta/test-publish')({
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: 'Não autenticado' }, { status: 401 });
 
-        // Guard 2: admin
-        const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
-          _user_id: userId,
-          _role: 'admin',
-        });
-        if (isAdmin !== true) return Response.json({ error: 'Acesso restrito a administradores' }, { status: 403 });
+        // Guard 2: admin — busca direto na tabela user_roles
+        const { data: roleRow } = await (supabaseAdmin as any)
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+          .maybeSingle();
+        if (!roleRow) return Response.json({ error: 'Acesso restrito a administradores' }, { status: 403 });
 
         // Guard 3: token de dev presente no servidor
         const devToken = process.env.META_ACCESS_TOKEN;

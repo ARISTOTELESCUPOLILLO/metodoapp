@@ -9,13 +9,18 @@ export const Route = createFileRoute('/api/meta/status')({
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ connected: false, devMode: false }, { status: 401 });
 
-        // devMode: verifica admin + META_ACCESS_TOKEN ANTES de qualquer query de tabela
+        // devMode: verifica admin via user_roles + META_ACCESS_TOKEN
         let isAdmin = false;
         try {
-          const { data } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'admin' });
-          isAdmin = data === true;
+          const { data: roleRow } = await (supabaseAdmin as any)
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('role', 'admin')
+            .maybeSingle();
+          isAdmin = !!roleRow;
         } catch (e) {
-          console.error('[meta/status] has_role error:', (e as Error).message);
+          console.error('[meta/status] user_roles error:', (e as Error).message);
         }
         const hasToken = !!process.env.META_ACCESS_TOKEN;
         const devMode = isAdmin && hasToken;
