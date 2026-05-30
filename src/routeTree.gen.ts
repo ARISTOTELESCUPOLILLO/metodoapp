@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
@@ -34,6 +36,11 @@ import { Route as ApiConfirmVoiceRouteImport } from './routes/api/confirm-voice'
 import { Route as ApiCloneVoiceRouteImport } from './routes/api/clone-voice'
 import { Route as ApiPublicExpireGenerationsRouteImport } from './routes/api/public/expire-generations'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -42,6 +49,11 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -165,8 +177,10 @@ export interface FileRoutesByFullPath {
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/termos': typeof TermosRoute
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
@@ -191,8 +205,10 @@ export interface FileRoutesByTo {
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/termos': typeof TermosRoute
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
@@ -218,8 +234,10 @@ export interface FileRoutesById {
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/termos': typeof TermosRoute
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
@@ -246,8 +264,10 @@ export interface FileRouteTypes {
     | '/esqueci-senha'
     | '/historico'
     | '/login'
+    | '/privacidade'
     | '/reset-password'
     | '/signup'
+    | '/termos'
     | '/api/clone-voice'
     | '/api/confirm-voice'
     | '/api/delete-voice'
@@ -272,8 +292,10 @@ export interface FileRouteTypes {
     | '/esqueci-senha'
     | '/historico'
     | '/login'
+    | '/privacidade'
     | '/reset-password'
     | '/signup'
+    | '/termos'
     | '/api/clone-voice'
     | '/api/confirm-voice'
     | '/api/delete-voice'
@@ -298,8 +320,10 @@ export interface FileRouteTypes {
     | '/esqueci-senha'
     | '/historico'
     | '/login'
+    | '/privacidade'
     | '/reset-password'
     | '/signup'
+    | '/termos'
     | '/api/clone-voice'
     | '/api/confirm-voice'
     | '/api/delete-voice'
@@ -325,8 +349,10 @@ export interface RootRouteChildren {
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  TermosRoute: typeof TermosRoute
   ApiCloneVoiceRoute: typeof ApiCloneVoiceRoute
   ApiConfirmVoiceRoute: typeof ApiConfirmVoiceRoute
   ApiDeleteVoiceRoute: typeof ApiDeleteVoiceRoute
@@ -345,6 +371,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -357,6 +390,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -525,8 +565,10 @@ const rootRouteChildren: RootRouteChildren = {
   EsqueciSenhaRoute: EsqueciSenhaRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  TermosRoute: TermosRoute,
   ApiCloneVoiceRoute: ApiCloneVoiceRoute,
   ApiConfirmVoiceRoute: ApiConfirmVoiceRoute,
   ApiDeleteVoiceRoute: ApiDeleteVoiceRoute,
