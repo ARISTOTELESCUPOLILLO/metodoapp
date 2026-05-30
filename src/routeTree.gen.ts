@@ -37,6 +37,7 @@ import { Route as ApiConfirmVoiceRouteImport } from './routes/api/confirm-voice'
 import { Route as ApiCloneVoiceRouteImport } from './routes/api/clone-voice'
 import { Route as AuthMetaCallbackRouteImport } from './routes/auth/meta/callback'
 import { Route as ApiPublicExpireGenerationsRouteImport } from './routes/api/public/expire-generations'
+import { Route as ApiMetaTestPublishRouteImport } from './routes/api/meta/test-publish'
 import { Route as ApiMetaStatusRouteImport } from './routes/api/meta/status'
 import { Route as ApiMetaPublishInstagramRouteImport } from './routes/api/meta/publish-instagram'
 import { Route as ApiMetaPublishFacebookRouteImport } from './routes/api/meta/publish-facebook'
@@ -184,6 +185,11 @@ const ApiPublicExpireGenerationsRoute =
     path: '/api/public/expire-generations',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiMetaTestPublishRoute = ApiMetaTestPublishRouteImport.update({
+  id: '/api/meta/test-publish',
+  path: '/api/meta/test-publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetaStatusRoute = ApiMetaStatusRouteImport.update({
   id: '/api/meta/status',
   path: '/api/meta/status',
@@ -242,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
+  '/api/meta/test-publish': typeof ApiMetaTestPublishRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
   '/auth/meta/callback': typeof AuthMetaCallbackRoute
 }
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
+  '/api/meta/test-publish': typeof ApiMetaTestPublishRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
   '/auth/meta/callback': typeof AuthMetaCallbackRoute
 }
@@ -313,6 +321,7 @@ export interface FileRoutesById {
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
+  '/api/meta/test-publish': typeof ApiMetaTestPublishRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
   '/auth/meta/callback': typeof AuthMetaCallbackRoute
 }
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
     | '/api/meta/status'
+    | '/api/meta/test-publish'
     | '/api/public/expire-generations'
     | '/auth/meta/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -385,6 +395,7 @@ export interface FileRouteTypes {
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
     | '/api/meta/status'
+    | '/api/meta/test-publish'
     | '/api/public/expire-generations'
     | '/auth/meta/callback'
   id:
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
     | '/api/meta/status'
+    | '/api/meta/test-publish'
     | '/api/public/expire-generations'
     | '/auth/meta/callback'
   fileRoutesById: FileRoutesById
@@ -456,6 +468,7 @@ export interface RootRouteChildren {
   ApiMetaPublishFacebookRoute: typeof ApiMetaPublishFacebookRoute
   ApiMetaPublishInstagramRoute: typeof ApiMetaPublishInstagramRoute
   ApiMetaStatusRoute: typeof ApiMetaStatusRoute
+  ApiMetaTestPublishRoute: typeof ApiMetaTestPublishRoute
   ApiPublicExpireGenerationsRoute: typeof ApiPublicExpireGenerationsRoute
   AuthMetaCallbackRoute: typeof AuthMetaCallbackRoute
 }
@@ -658,6 +671,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicExpireGenerationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meta/test-publish': {
+      id: '/api/meta/test-publish'
+      path: '/api/meta/test-publish'
+      fullPath: '/api/meta/test-publish'
+      preLoaderRoute: typeof ApiMetaTestPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/status': {
       id: '/api/meta/status'
       path: '/api/meta/status'
@@ -728,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetaPublishFacebookRoute: ApiMetaPublishFacebookRoute,
   ApiMetaPublishInstagramRoute: ApiMetaPublishInstagramRoute,
   ApiMetaStatusRoute: ApiMetaStatusRoute,
+  ApiMetaTestPublishRoute: ApiMetaTestPublishRoute,
   ApiPublicExpireGenerationsRoute: ApiPublicExpireGenerationsRoute,
   AuthMetaCallbackRoute: AuthMetaCallbackRoute,
 }
