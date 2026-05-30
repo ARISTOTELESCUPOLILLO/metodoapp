@@ -10,6 +10,7 @@ interface MetaStatus {
   has_instagram?: boolean;
   has_facebook?: boolean;
   token_expires_at?: string;
+  _debug?: { isAdmin: boolean; hasToken: boolean };
 }
 
 // Estado interno de diagnóstico (visível em /conta)
@@ -120,12 +121,12 @@ export function MetaConnect() {
         </div>
       </header>
 
-      {/* Painel de diagnóstico — sempre visível para admin depurar */}
+      {/* Painel de diagnóstico — sempre visível para depurar */}
       <div style={{ padding: 8, borderRadius: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all', color: '#475569' }}>
         <strong>Diagnóstico:</strong><br />
-        devMode: <strong>{String(!!status?.devMode)}</strong><br />
-        connected: {String(!!status?.connected)}<br />
-        rawStatus: {rawStatus || '(carregando)'}
+        isAdmin: <strong>{String(!!status?._debug?.isAdmin)}</strong><br />
+        hasToken (META_ACCESS_TOKEN): <strong>{String(!!status?._debug?.hasToken)}</strong><br />
+        devMode: <strong>{String(!!status?.devMode)}</strong>
       </div>
 
       {successMsg && (

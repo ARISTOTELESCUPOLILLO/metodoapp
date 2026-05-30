@@ -17,7 +17,8 @@ export const Route = createFileRoute('/api/meta/status')({
         } catch (e) {
           console.error('[meta/status] has_role error:', (e as Error).message);
         }
-        const devMode = isAdmin && !!process.env.META_ACCESS_TOKEN;
+        const hasToken = !!process.env.META_ACCESS_TOKEN;
+        const devMode = isAdmin && hasToken;
 
         // Tenta ler meta_connections — ignora erro graciosamente (tabela pode não existir ainda)
         let conn: Record<string, unknown> | null = null;
@@ -28,7 +29,7 @@ export const Route = createFileRoute('/api/meta/status')({
             .eq('user_id', userId)
             .maybeSingle();
           if (error) {
-            console.warn('[meta/status] meta_connections query error (tabela não existe?):', error.message);
+            console.warn('[meta/status] meta_connections error:', error.message);
           } else {
             conn = data;
           }
@@ -36,7 +37,7 @@ export const Route = createFileRoute('/api/meta/status')({
           console.error('[meta/status] meta_connections throw:', (e as Error).message);
         }
 
-        if (!conn) return Response.json({ connected: false, devMode });
+        if (!conn) return Response.json({ connected: false, devMode, _debug: { isAdmin, hasToken } });
 
         const expired = conn.token_expires_at && new Date(conn.token_expires_at as string) < new Date();
         return Response.json({
