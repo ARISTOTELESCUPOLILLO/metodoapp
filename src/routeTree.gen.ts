@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as ExclusaoDeDadosRouteImport } from './routes/exclusao-de-dados'
 import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as AppRouteImport } from './routes/app'
@@ -64,6 +65,11 @@ const LoginRoute = LoginRouteImport.update({
 const HistoricoRoute = HistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExclusaoDeDadosRoute = ExclusaoDeDadosRouteImport.update({
+  id: '/exclusao-de-dados',
+  path: '/exclusao-de-dados',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRoute
   '/conta': typeof ContaRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/conta': typeof ContaRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/conta': typeof ContaRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/conta'
     | '/esqueci-senha'
+    | '/exclusao-de-dados'
     | '/historico'
     | '/login'
     | '/privacidade'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/conta'
     | '/esqueci-senha'
+    | '/exclusao-de-dados'
     | '/historico'
     | '/login'
     | '/privacidade'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/conta'
     | '/esqueci-senha'
+    | '/exclusao-de-dados'
     | '/historico'
     | '/login'
     | '/privacidade'
@@ -347,6 +359,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   ContaRoute: typeof ContaRoute
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute
+  ExclusaoDeDadosRoute: typeof ExclusaoDeDadosRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -411,6 +424,13 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/historico'
       preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exclusao-de-dados': {
+      id: '/exclusao-de-dados'
+      path: '/exclusao-de-dados'
+      fullPath: '/exclusao-de-dados'
+      preLoaderRoute: typeof ExclusaoDeDadosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/esqueci-senha': {
@@ -563,6 +583,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   ContaRoute: ContaRoute,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
+  ExclusaoDeDadosRoute: ExclusaoDeDadosRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   PrivacidadeRoute: PrivacidadeRoute,

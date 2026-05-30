@@ -458,6 +458,7 @@ function Footer({ onOpenLegal }: { onOpenLegal: (k: 'privacy' | 'cookies') => vo
               <li><Link to="/login" className="hover:text-[#f5a623]">Login</Link></li>
               <li><Link to="/termos" className="hover:text-[#f5a623]">Termos de Serviço</Link></li>
               <li><Link to="/privacidade" className="hover:text-[#f5a623]">Política de Privacidade</Link></li>
+              <li><Link to="/exclusao-de-dados" className="hover:text-[#f5a623]">Exclusão de Dados</Link></li>
               <li>
                 <button
                   type="button"
