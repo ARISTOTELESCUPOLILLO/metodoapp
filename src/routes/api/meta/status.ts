@@ -7,30 +7,47 @@ export const Route = createFileRoute('/api/meta/status')({
     handlers: {
       GET: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
-        if (!userId) return Response.json({ error: 'Não autenticado' }, { status: 401 });
+        if (!userId) return Response.json({ connected: false, devMode: false }, { status: 401 });
 
-        // devMode: admin + META_ACCESS_TOKEN presente no servidor
-        const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'admin' });
-        const devMode = isAdmin === true && !!process.env.META_ACCESS_TOKEN;
+        // devMode: verifica admin + META_ACCESS_TOKEN ANTES de qualquer query de tabela
+        let isAdmin = false;
+        try {
+          const { data } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'admin' });
+          isAdmin = data === true;
+        } catch (e) {
+          console.error('[meta/status] has_role error:', (e as Error).message);
+        }
+        const devMode = isAdmin && !!process.env.META_ACCESS_TOKEN;
 
-        const { data } = await (supabaseAdmin as any)
-          .from('meta_connections')
-          .select('ig_username, fb_page_name, ig_user_id, fb_page_id, token_expires_at')
-          .eq('user_id', userId)
-          .maybeSingle();
+        // Tenta ler meta_connections — ignora erro graciosamente (tabela pode não existir ainda)
+        let conn: Record<string, unknown> | null = null;
+        try {
+          const { data, error } = await (supabaseAdmin as any)
+            .from('meta_connections')
+            .select('ig_username, fb_page_name, ig_user_id, fb_page_id, token_expires_at')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (error) {
+            console.warn('[meta/status] meta_connections query error (tabela não existe?):', error.message);
+          } else {
+            conn = data;
+          }
+        } catch (e) {
+          console.error('[meta/status] meta_connections throw:', (e as Error).message);
+        }
 
-        if (!data) return Response.json({ connected: false, devMode });
+        if (!conn) return Response.json({ connected: false, devMode });
 
-        const expired = data.token_expires_at && new Date(data.token_expires_at) < new Date();
+        const expired = conn.token_expires_at && new Date(conn.token_expires_at as string) < new Date();
         return Response.json({
           connected: true,
           expired: !!expired,
           devMode,
-          ig_username: data.ig_username,
-          fb_page_name: data.fb_page_name,
-          has_instagram: !!data.ig_user_id,
-          has_facebook: !!data.fb_page_id,
-          token_expires_at: data.token_expires_at,
+          ig_username: conn.ig_username,
+          fb_page_name: conn.fb_page_name,
+          has_instagram: !!conn.ig_user_id,
+          has_facebook: !!conn.fb_page_id,
+          token_expires_at: conn.token_expires_at,
         });
       },
     },

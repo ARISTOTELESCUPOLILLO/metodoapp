@@ -37,15 +37,25 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
     (async () => {
       try {
         const res = await fetch('/api/meta/status', { headers: await authHeader() });
-        const d = await res.json() as MetaStatus;
-        setStatus(d);
-      } catch {
+        // Protege contra respostas não-JSON (ex: error page HTML em caso de 500)
+        const text = await res.text();
+        try {
+          const d = JSON.parse(text) as MetaStatus;
+          setStatus(d);
+        } catch {
+          console.error('[MetaPublish] status não retornou JSON:', res.status, text.slice(0, 200));
+          setStatus({ connected: false, devMode: false });
+        }
+      } catch (e) {
+        console.error('[MetaPublish] fetch /api/meta/status falhou:', e);
         setStatus({ connected: false, devMode: false });
       }
     })();
   }, []);
 
-  if (!imageDataUrl || !status) return null;
+  // Sem imagem E sem nada para mostrar → não renderiza
+  if (!status) return null;
+  if (!imageDataUrl && !status.devMode) return null;
 
   const hasRegular = status.connected && !status.expired;
 
