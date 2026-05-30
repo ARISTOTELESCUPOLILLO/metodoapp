@@ -27,7 +27,9 @@ function getRule(kind: Kind, formato: string): { label: string; rule: string; ma
   // kind === 'texto'
   // Estático, Estático Final e Carrossel = 12 palavras (regra do método)
   // Reels (script) = 25 palavras
-  const max = isReels ? 25 : 12;
+  // PostUnico = 14 palavras
+  const isPostUnico = f.startsWith('postunico');
+  const max = isReels ? 25 : isPostUnico ? 14 : 12;
   return {
     label: 'texto de apoio',
     rule: `MÁXIMO ${max} palavras. NUNCA exceda esse limite — conte mentalmente as palavras antes de responder. Frase curta que sustente o título. Sem emoji, sem hashtag, sem aspas.`,

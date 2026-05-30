@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from 'lucide-react';
 import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
+import { regenerateBlock } from '../../services/regenerateBlock';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
@@ -53,6 +54,15 @@ const MOOD_ICONS: Record<MoodCode, LucideIcon> = {
   'OP-06': VolumeX,
 };
 
+function truncateWords(s: string, max: number): string {
+  const words = s.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= max) return s.trim();
+  return words.slice(0, max).join(' ').replace(/[,;:\-–—]+$/, '').trim();
+}
+function wordCount(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, imgsRestantes, imgsTotal, semPlano, isAdmin, hasPostPlano, puSlot }: Props) {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -67,9 +77,17 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
 
   // Etapa intermediária: título + texto gerados antes da imagem
   const [copy, setCopy] = useState<PostUnicoCopy | null>(null);
+  const [copyOriginal, setCopyOriginal] = useState<PostUnicoCopy | null>(null);
   const [copyLoading, setCopyLoading] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
-  const [copyRegenCount, setCopyRegenCount] = useState(0);
+  const [copyTRegenCount, setCopyTRegenCount] = useState(0);
+  const [copyXRegenCount, setCopyXRegenCount] = useState(0);
+  const [copyTBusy, setCopyTBusy] = useState(false);
+  const [copyXBusy, setCopyXBusy] = useState(false);
+  const [copyTError, setCopyTError] = useState<string | null>(null);
+  const [copyXError, setCopyXError] = useState<string | null>(null);
+  const [copyTSuggs, setCopyTSuggs] = useState<string[]>([]);
+  const [copyXSuggs, setCopyXSuggs] = useState<string[]>([]);
   const COPY_REGEN_MAX = 1;
   const copyKeyInfoRef = useRef<string>('');
 
@@ -89,25 +107,20 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
     // Se o keyInfo mudou em relação ao usado para gerar o copy, invalida o copy
     if (copy && data.keyInfo !== copyKeyInfoRef.current) {
-      setCopy(null);
-      setCopyError(null);
-      setCopyRegenCount(0);
+      clearCopy();
     }
   }, [data.keyInfo]);
 
   // Reseta copy quando o objetivo muda; NENHUM não suporta mood → força LIVRE
   useEffect(() => {
-    setCopy(null);
-    setCopyError(null);
-    setCopyRegenCount(0);
+    clearCopy();
     if (data.objetivo === 'nenhum' && data.direcao === 'mood') {
       onChange({ ...data, direcao: 'livre', mood: undefined });
     }
   }, [data.objetivo]);
 
-  async function fetchCopy(isRegen: boolean) {
+  async function fetchCopy() {
     if (copyLoading) return;
-    if (isRegen && copyRegenCount >= COPY_REGEN_MAX) return;
     setCopyLoading(true);
     setCopyError(null);
     try {
@@ -117,8 +130,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         mainActivity: data.mainActivity || kit.mainActivity || '',
       }, kit.brandVoice, kit.segment, puSlot);
       setCopy(result);
+      setCopyOriginal(result);
       copyKeyInfoRef.current = data.keyInfo;
-      if (isRegen) setCopyRegenCount((c) => c + 1);
     } catch (e) {
       setCopyError((e as Error).message);
     } finally {
@@ -126,10 +139,45 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   }
 
+  async function regenField(kind: 'titulo' | 'texto') {
+    if (!copy) return;
+    const isTitulo = kind === 'titulo';
+    if (isTitulo) { if (copyTRegenCount >= COPY_REGEN_MAX || copyTBusy) return; }
+    else          { if (copyXRegenCount >= COPY_REGEN_MAX || copyXBusy) return; }
+    isTitulo ? setCopyTBusy(true) : setCopyXBusy(true);
+    isTitulo ? setCopyTError(null) : setCopyXError(null);
+    try {
+      const next = await regenerateBlock({
+        kind,
+        companyName: data.companyName || kit.companyName,
+        mainActivity: data.mainActivity || kit.mainActivity || '',
+        keyInfo: data.keyInfo,
+        formato: 'PostUnico',
+        tituloAtual: copy.titulo,
+        textoAtual: copy.texto,
+      });
+      const trimmed = next.trim();
+      if (trimmed) {
+        isTitulo ? setCopyTSuggs(s => [...s, trimmed]) : setCopyXSuggs(s => [...s, trimmed]);
+      }
+      isTitulo ? setCopyTRegenCount(c => c + 1) : setCopyXRegenCount(c => c + 1);
+    } catch (e) {
+      isTitulo ? setCopyTError((e as Error).message) : setCopyXError((e as Error).message);
+    } finally {
+      isTitulo ? setCopyTBusy(false) : setCopyXBusy(false);
+    }
+  }
+
   function clearCopy() {
     setCopy(null);
+    setCopyOriginal(null);
     setCopyError(null);
-    setCopyRegenCount(0);
+    setCopyTRegenCount(0);
+    setCopyXRegenCount(0);
+    setCopyTError(null);
+    setCopyXError(null);
+    setCopyTSuggs([]);
+    setCopyXSuggs([]);
   }
 
   const update = <K extends keyof PostUnicoFormData>(key: K, value: PostUnicoFormData[K]) =>
@@ -401,7 +449,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         {!copy && !copyLoading && (
           <button
             type="button"
-            onClick={() => fetchCopy(false)}
+            onClick={() => fetchCopy()}
             disabled={!canGenerateCopy}
             style={{
               background: '#0f172a', color: '#fff', border: 'none', borderRadius: 10,
@@ -422,7 +470,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
             <p style={{ margin: '0 0 6px', fontSize: 13, color: '#b91c1c' }}>{copyError}</p>
             <button
               type="button"
-              onClick={() => fetchCopy(false)}
+              onClick={() => fetchCopy()}
               style={{ background: 'none', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
             >
               Tentar de novo
@@ -432,32 +480,124 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
 
         {copy && !copyLoading && (
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+
+            {/* Título */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Título</span>
+                <span style={{ fontSize: 10, color: wordCount(copy.titulo) >= 6 ? '#f59e0b' : '#94a3b8' }}>
+                  {wordCount(copy.titulo)}/6 palavras · máx 3 sílabas/palavra
+                </span>
+              </div>
+              <input
+                type="text"
+                value={copy.titulo}
+                onChange={e => setCopy(c => c ? { ...c, titulo: e.target.value } : c)}
+                onBlur={e => setCopy(c => c ? { ...c, titulo: truncateWords(e.target.value, 6) } : c)}
+                style={{
+                  width: '100%', fontSize: 16, fontWeight: 800, color: '#0f172a',
+                  border: `1px solid ${wordCount(copy.titulo) >= 6 ? '#fcd34d' : '#e2e8f0'}`,
+                  background: wordCount(copy.titulo) >= 6 ? '#fffbeb' : '#fff',
+                  borderRadius: 6, padding: '6px 8px', boxSizing: 'border-box',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => regenField('titulo')}
+                  disabled={copyTRegenCount >= COPY_REGEN_MAX || copyTBusy}
+                  style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: copyTRegenCount >= COPY_REGEN_MAX ? 'not-allowed' : 'pointer', opacity: copyTRegenCount >= COPY_REGEN_MAX ? 0.55 : 1 }}
+                  title={copyTRegenCount >= COPY_REGEN_MAX ? 'Limite de 1 regeneração atingido' : undefined}
+                >
+                  {copyTBusy ? '…' : `✨ Gerar outro (${copyTRegenCount}/${COPY_REGEN_MAX})`}
+                </button>
+                {copyOriginal && copy.titulo !== copyOriginal.titulo && (
+                  <button
+                    type="button"
+                    onClick={() => { setCopy(c => c ? { ...c, titulo: copyOriginal!.titulo } : c); setCopyTSuggs([]); }}
+                    style={{ background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    ↺ Inicial
+                  </button>
+                )}
+                {copyTError && <span style={{ fontSize: 11, color: '#b91c1c' }}>{copyTError}</span>}
+              </div>
+              {copyTSuggs.map((sugg, i) => (
+                <div key={i} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 10px', marginTop: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontWeight: 700 }}>{sugg}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setCopy(c => c ? { ...c, titulo: sugg } : c); setCopyTSuggs([]); }}
+                    style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    Usar esta
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Texto de apoio */}
             <div style={{ marginBottom: 10 }}>
-              <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Título</span>
-              <p style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>{copy.titulo}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Texto de apoio</span>
+                <span style={{ fontSize: 10, color: wordCount(copy.texto) >= 14 ? '#f59e0b' : '#94a3b8' }}>
+                  {wordCount(copy.texto)}/14 palavras
+                </span>
+              </div>
+              <textarea
+                value={copy.texto}
+                onChange={e => setCopy(c => c ? { ...c, texto: e.target.value } : c)}
+                onBlur={e => setCopy(c => c ? { ...c, texto: truncateWords(e.target.value, 14) } : c)}
+                rows={2}
+                style={{
+                  width: '100%', fontSize: 14, color: '#334155',
+                  border: `1px solid ${wordCount(copy.texto) >= 14 ? '#fcd34d' : '#e2e8f0'}`,
+                  background: wordCount(copy.texto) >= 14 ? '#fffbeb' : '#fff',
+                  borderRadius: 6, padding: '6px 8px', boxSizing: 'border-box', resize: 'vertical',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => regenField('texto')}
+                  disabled={copyXRegenCount >= COPY_REGEN_MAX || copyXBusy}
+                  style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: copyXRegenCount >= COPY_REGEN_MAX ? 'not-allowed' : 'pointer', opacity: copyXRegenCount >= COPY_REGEN_MAX ? 0.55 : 1 }}
+                  title={copyXRegenCount >= COPY_REGEN_MAX ? 'Limite de 1 regeneração atingido' : undefined}
+                >
+                  {copyXBusy ? '…' : `✨ Gerar outro (${copyXRegenCount}/${COPY_REGEN_MAX})`}
+                </button>
+                {copyOriginal && copy.texto !== copyOriginal.texto && (
+                  <button
+                    type="button"
+                    onClick={() => { setCopy(c => c ? { ...c, texto: copyOriginal!.texto } : c); setCopyXSuggs([]); }}
+                    style={{ background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    ↺ Inicial
+                  </button>
+                )}
+                {copyXError && <span style={{ fontSize: 11, color: '#b91c1c' }}>{copyXError}</span>}
+              </div>
+              {copyXSuggs.map((sugg, i) => (
+                <div key={i} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 10px', marginTop: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <span>{sugg}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setCopy(c => c ? { ...c, texto: sugg } : c); setCopyXSuggs([]); }}
+                    style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    Usar esta
+                  </button>
+                </div>
+              ))}
             </div>
-            <div style={{ marginBottom: 10 }}>
-              <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Texto de apoio</span>
-              <p style={{ margin: '2px 0 0', fontSize: 14, color: '#334155', lineHeight: 1.4 }}>{copy.texto}</p>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => fetchCopy(true)}
-                disabled={copyRegenCount >= COPY_REGEN_MAX || copyLoading}
-                style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: copyRegenCount >= COPY_REGEN_MAX ? 'not-allowed' : 'pointer', opacity: copyRegenCount >= COPY_REGEN_MAX ? 0.55 : 1 }}
-                title={copyRegenCount >= COPY_REGEN_MAX ? 'Limite de 1 regeneração atingido' : undefined}
-              >
-                ↻ Regenerar ({copyRegenCount}/{COPY_REGEN_MAX})
-              </button>
-              <button
-                type="button"
-                onClick={clearCopy}
-                style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-              >
-                ↺ Voltar à inicial
-              </button>
-            </div>
+
+            <button
+              type="button"
+              onClick={clearCopy}
+              style={{ background: '#fff', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+            >
+              ✕ Limpar e gerar novo
+            </button>
           </div>
         )}
       </div>
