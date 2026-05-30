@@ -38,18 +38,19 @@ export const Route = createFileRoute('/api/meta/test-publish')({
           );
           let pageList = pagesRes.data || [];
 
-          // Fallback: trata o token como Page Token direto
           if (pageList.length === 0) {
-            const me = await getJson<{ id?: string; name?: string; error?: { message: string } }>(
-              `https://graph.facebook.com/${META_VERSION}/me?fields=id,name&access_token=${devToken}`
+            // Verifica se o token é um Page Token direto válido (não perfil pessoal)
+            const pageCheck = await getJson<{ id?: string; name?: string; instagram_business_account?: { id: string }; error?: { code?: number; message: string } }>(
+              `https://graph.facebook.com/${META_VERSION}/me?fields=id,name,instagram_business_account&access_token=${devToken}`
             );
-            if (me.id) {
-              pageList = [{ id: me.id, name: me.name || '', access_token: devToken }];
-            }
-          }
 
-          if (pageList.length === 0)
-            return Response.json({ error: 'Nenhuma página encontrada. Use um Page Access Token ou adicione a conta como admin da página.' }, { status: 422 });
+            const isPersonalProfile = pageCheck.error?.message?.includes('nonexisting field') || pageCheck.error?.code === 100;
+
+            if (isPersonalProfile || !pageCheck.id)
+              return Response.json({ error: 'Nenhuma Página do Facebook encontrada para este token. Gere um User Token com pages_show_list e selecione a Página correta, depois copie o Page Access Token da Página.' }, { status: 422 });
+
+            pageList = [{ id: pageCheck.id, name: pageCheck.name || '', access_token: devToken }];
+          }
 
           const imageUrl = await uploadImageToMetaBucket(userId, imageDataUrl);
 
