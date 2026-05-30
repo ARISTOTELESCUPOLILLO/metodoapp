@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface MetaStatus {
   connected: boolean;
+  devMode?: boolean;
   expired?: boolean;
   ig_username?: string;
   fb_page_name?: string;
@@ -10,6 +11,9 @@ interface MetaStatus {
   has_facebook?: boolean;
   token_expires_at?: string;
 }
+
+// Estado interno de diagnóstico (visível em /conta)
+let _rawStatusText = '';
 
 async function authHeader(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
@@ -19,6 +23,7 @@ async function authHeader(): Promise<Record<string, string>> {
 
 export function MetaConnect() {
   const [status, setStatus] = useState<MetaStatus | null>(null);
+  const [rawStatus, setRawStatus] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -47,9 +52,16 @@ export function MetaConnect() {
     setLoading(true);
     try {
       const res = await fetch('/api/meta/status', { headers: await authHeader() });
-      const data = await res.json() as MetaStatus;
-      setStatus(data);
-    } catch {
+      const text = await res.text();
+      setRawStatus(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+      try {
+        const data = JSON.parse(text) as MetaStatus;
+        setStatus(data);
+      } catch {
+        setStatus({ connected: false, devMode: false });
+      }
+    } catch (e) {
+      setRawStatus(`Erro de rede: ${(e as Error).message}`);
       setStatus({ connected: false });
     } finally {
       setLoading(false);
@@ -107,6 +119,14 @@ export function MetaConnect() {
             : <div style={{ fontSize: 12, color: '#64748b' }}>Não conectado</div>}
         </div>
       </header>
+
+      {/* Painel de diagnóstico — sempre visível para admin depurar */}
+      <div style={{ padding: 8, borderRadius: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all', color: '#475569' }}>
+        <strong>Diagnóstico:</strong><br />
+        devMode: <strong>{String(!!status?.devMode)}</strong><br />
+        connected: {String(!!status?.connected)}<br />
+        rawStatus: {rawStatus || '(carregando)'}
+      </div>
 
       {successMsg && (
         <div style={{ padding: 10, borderRadius: 8, background: '#f0fdf4', border: '1px solid #86efac', color: '#15803d', fontSize: 13 }}>
