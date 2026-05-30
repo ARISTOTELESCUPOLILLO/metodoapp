@@ -121,15 +121,6 @@ export function MetaConnect() {
         </div>
       </header>
 
-      {/* Painel de diagnóstico */}
-      <div style={{ padding: 8, borderRadius: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all', color: '#475569' }}>
-        <strong>Diagnóstico:</strong><br />
-        uid: {status?._debug?.uid}…<br />
-        roles: <strong>{JSON.stringify(status?._debug?.roles)}</strong><br />
-        rolesErr: {status?._debug?.rolesErr || '—'}<br />
-        isAdmin: <strong>{String(!!status?._debug?.isAdmin)}</strong><br />
-        hasToken: <strong>{String(!!status?._debug?.hasToken)}</strong>
-      </div>
 
       {successMsg && (
         <div style={{ padding: 10, borderRadius: 8, background: '#f0fdf4', border: '1px solid #86efac', color: '#15803d', fontSize: 13 }}>

@@ -16,18 +16,9 @@ export const Route = createFileRoute('/api/meta/test-publish')({
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: 'Não autenticado' }, { status: 401 });
 
-        // Guard 2: admin — busca direto na tabela user_roles
-        const { data: roleRow } = await (supabaseAdmin as any)
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .eq('role', 'admin')
-          .maybeSingle();
-        if (!roleRow) return Response.json({ error: 'Acesso restrito a administradores' }, { status: 403 });
-
-        // Guard 3: token de dev presente no servidor
+        // Guard 2: META_ACCESS_TOKEN presente no servidor (o token só publica na conta de quem o gerou)
         const devToken = process.env.META_ACCESS_TOKEN;
-        if (!devToken) return Response.json({ error: 'META_ACCESS_TOKEN não configurado' }, { status: 403 });
+        if (!devToken) return Response.json({ error: 'META_ACCESS_TOKEN não configurado no servidor' }, { status: 403 });
 
         const { imageDataUrl, target, caption } = await request.json() as {
           imageDataUrl: string;

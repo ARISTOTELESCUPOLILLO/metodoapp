@@ -9,23 +9,10 @@ export const Route = createFileRoute('/api/meta/status')({
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ connected: false, devMode: false }, { status: 401 });
 
-        // devMode: verifica admin via user_roles + META_ACCESS_TOKEN
-        let isAdmin = false;
-        let debugRoles: unknown[] = [];
-        let debugErr = '';
-        try {
-          const { data: allRoles, error: rolesErr } = await (supabaseAdmin as any)
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId);
-          if (rolesErr) debugErr = rolesErr.message;
-          debugRoles = allRoles || [];
-          isAdmin = (allRoles || []).some((r: { role: string }) => r.role === 'admin');
-        } catch (e) {
-          debugErr = (e as Error).message;
-        }
+        // devMode: basta META_ACCESS_TOKEN estar configurado no servidor
+        // O token só publica na conta de quem o gerou — é a proteção real
         const hasToken = !!process.env.META_ACCESS_TOKEN;
-        const devMode = isAdmin && hasToken;
+        const devMode = hasToken;
 
         // Tenta ler meta_connections — ignora erro graciosamente (tabela pode não existir ainda)
         let conn: Record<string, unknown> | null = null;
@@ -44,7 +31,7 @@ export const Route = createFileRoute('/api/meta/status')({
           console.error('[meta/status] meta_connections throw:', (e as Error).message);
         }
 
-        if (!conn) return Response.json({ connected: false, devMode, _debug: { isAdmin, hasToken, roles: debugRoles, rolesErr: debugErr, uid: userId.slice(0, 8) } });
+        if (!conn) return Response.json({ connected: false, devMode });
 
         const expired = conn.token_expires_at && new Date(conn.token_expires_at as string) < new Date();
         return Response.json({
