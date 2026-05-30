@@ -11,16 +11,18 @@ export const Route = createFileRoute('/api/meta/status')({
 
         // devMode: verifica admin via user_roles + META_ACCESS_TOKEN
         let isAdmin = false;
+        let debugRoles: unknown[] = [];
+        let debugErr = '';
         try {
-          const { data: roleRow } = await (supabaseAdmin as any)
+          const { data: allRoles, error: rolesErr } = await (supabaseAdmin as any)
             .from('user_roles')
             .select('role')
-            .eq('user_id', userId)
-            .eq('role', 'admin')
-            .maybeSingle();
-          isAdmin = !!roleRow;
+            .eq('user_id', userId);
+          if (rolesErr) debugErr = rolesErr.message;
+          debugRoles = allRoles || [];
+          isAdmin = (allRoles || []).some((r: { role: string }) => r.role === 'admin');
         } catch (e) {
-          console.error('[meta/status] user_roles error:', (e as Error).message);
+          debugErr = (e as Error).message;
         }
         const hasToken = !!process.env.META_ACCESS_TOKEN;
         const devMode = isAdmin && hasToken;
@@ -42,7 +44,7 @@ export const Route = createFileRoute('/api/meta/status')({
           console.error('[meta/status] meta_connections throw:', (e as Error).message);
         }
 
-        if (!conn) return Response.json({ connected: false, devMode, _debug: { isAdmin, hasToken } });
+        if (!conn) return Response.json({ connected: false, devMode, _debug: { isAdmin, hasToken, roles: debugRoles, rolesErr: debugErr, uid: userId.slice(0, 8) } });
 
         const expired = conn.token_expires_at && new Date(conn.token_expires_at as string) < new Date();
         return Response.json({
