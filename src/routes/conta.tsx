@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { AuthGate } from '@/components/app/AuthGate';
 import { TopBar } from '@/components/app/TopBar';
 import { useProfile, SlotInfo } from '@/hooks/useProfile';
+import { MetaConnect } from '@/components/metodo-op/MetaConnect';
 
 export const Route = createFileRoute('/conta')({
   component: () => (
@@ -130,6 +131,11 @@ function ContaPage() {
           Você ainda não tem nenhum plano ativo. Fale com o administrador.
         </div>
       )}
+
+      <section style={{ display: 'grid', gap: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.1em' }}>Redes Sociais</div>
+        <MetaConnect />
+      </section>
 
       <section style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Link to="/" style={{ padding: '10px 16px', background: '#0f172a', color: '#fff', borderRadius: 10, textDecoration: 'none', fontWeight: 600 }}>

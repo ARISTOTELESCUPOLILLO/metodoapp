@@ -1,0 +1,73 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { getUserIdFromRequest } from '@/lib/usage.server';
+import { supabaseAdmin } from '@/integrations/supabase/client.server';
+
+const META_VERSION = 'v21.0';
+const BUCKET = 'meta-publish';
+
+async function ensureBucket() {
+  const { error } = await supabaseAdmin.storage.createBucket(BUCKET, { public: true });
+  if (error && !error.message.toLowerCase().includes('already exist')) {
+    console.warn('[meta-publish] createBucket warning:', error.message);
+  }
+}
+
+async function uploadImage(userId: string, dataUrl: string): Promise<string> {
+  await ensureBucket();
+  const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+  const buf = Buffer.from(base64, 'base64');
+  const ext = dataUrl.startsWith('data:image/png') ? 'png' : 'jpg';
+  const path = `${userId}/${Date.now()}.${ext}`;
+  const { error } = await supabaseAdmin.storage
+    .from(BUCKET)
+    .upload(path, buf, { contentType: `image/${ext}`, upsert: true });
+  if (error) throw new Error(`Upload falhou: ${error.message}`);
+  const supabaseUrl = process.env.SUPABASE_URL!.replace(/\/$/, '');
+  return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${path}`;
+}
+
+export const Route = createFileRoute('/api/meta/publish-facebook')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const userId = await getUserIdFromRequest(request);
+        if (!userId) return Response.json({ error: 'Não autenticado' }, { status: 401 });
+
+        const { imageDataUrl, text } = await request.json() as { imageDataUrl: string; text: string };
+        if (!imageDataUrl) return Response.json({ error: 'imageDataUrl obrigatório' }, { status: 400 });
+
+        const { data: conn } = await (supabaseAdmin as any)
+          .from('meta_connections')
+          .select('fb_page_id, fb_page_access_token, token_expires_at')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!conn?.fb_page_id) return Response.json({ error: 'Facebook não conectado. Conecte em Conta > Redes Sociais.' }, { status: 422 });
+        if (conn.token_expires_at && new Date(conn.token_expires_at) < new Date())
+          return Response.json({ error: 'Token expirado. Reconecte sua conta em Conta > Redes Sociais.' }, { status: 422 });
+
+        try {
+          const imageUrl = await uploadImage(userId, imageDataUrl);
+          const token = conn.fb_page_access_token;
+          const pageId = conn.fb_page_id;
+
+          const res = await fetch(
+            `https://graph.facebook.com/${META_VERSION}/${pageId}/photos`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: imageUrl, caption: text || '', access_token: token }),
+            }
+          );
+          const data = await res.json() as { id?: string; post_id?: string; error?: { message: string } };
+          if (!data.id && !data.post_id) throw new Error(data.error?.message || 'Falha ao publicar no Facebook');
+
+          return Response.json({ success: true, post_id: data.post_id || data.id });
+        } catch (err) {
+          console.error('[meta/publish-facebook]', err);
+          return Response.json({ error: (err as Error).message }, { status: 500 });
+        }
+      },
+    },
+  },
+});

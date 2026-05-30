@@ -4,6 +4,7 @@ import { mopName } from '../../utils/file';
 import { useIsMobile } from '../../hooks/use-mobile';
 import { useImageGenAlert } from './PreImageAlert';
 import { ArchiveButton } from './ArchiveButton';
+import { MetaPublish } from './MetaPublish';
 import type { PostUnicoCaption } from '../../services/postUnico';
 
 const MOOD_NAMES: Record<string, string> = {
@@ -273,6 +274,12 @@ export default function PostUnicoResult({
                       </button>
                     )}
                   </>
+                )}
+                {imageDataUrl && (
+                  <MetaPublish
+                    imageDataUrl={imageDataUrl}
+                    caption={editedCaption ?? captionHistory[selectedIdx]?.full}
+                  />
                 )}
                 {onClear && (
                   <button type="button" onClick={onClear} disabled={regenerating} style={{ ...lightBtn, opacity: regenerating ? 0.6 : 1, cursor: regenerating ? 'not-allowed' : 'pointer' }}>

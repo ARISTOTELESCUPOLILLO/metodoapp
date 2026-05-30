@@ -35,7 +35,13 @@ import { Route as ApiFalStatusRouteImport } from './routes/api/fal-status'
 import { Route as ApiDeleteVoiceRouteImport } from './routes/api/delete-voice'
 import { Route as ApiConfirmVoiceRouteImport } from './routes/api/confirm-voice'
 import { Route as ApiCloneVoiceRouteImport } from './routes/api/clone-voice'
+import { Route as AuthMetaCallbackRouteImport } from './routes/auth/meta/callback'
 import { Route as ApiPublicExpireGenerationsRouteImport } from './routes/api/public/expire-generations'
+import { Route as ApiMetaStatusRouteImport } from './routes/api/meta/status'
+import { Route as ApiMetaPublishInstagramRouteImport } from './routes/api/meta/publish-instagram'
+import { Route as ApiMetaPublishFacebookRouteImport } from './routes/api/meta/publish-facebook'
+import { Route as ApiMetaDisconnectRouteImport } from './routes/api/meta/disconnect'
+import { Route as ApiMetaAuthUrlRouteImport } from './routes/api/meta/auth-url'
 
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
@@ -167,12 +173,42 @@ const ApiCloneVoiceRoute = ApiCloneVoiceRouteImport.update({
   path: '/api/clone-voice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthMetaCallbackRoute = AuthMetaCallbackRouteImport.update({
+  id: '/auth/meta/callback',
+  path: '/auth/meta/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicExpireGenerationsRoute =
   ApiPublicExpireGenerationsRouteImport.update({
     id: '/api/public/expire-generations',
     path: '/api/public/expire-generations',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiMetaStatusRoute = ApiMetaStatusRouteImport.update({
+  id: '/api/meta/status',
+  path: '/api/meta/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMetaPublishInstagramRoute = ApiMetaPublishInstagramRouteImport.update({
+  id: '/api/meta/publish-instagram',
+  path: '/api/meta/publish-instagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMetaPublishFacebookRoute = ApiMetaPublishFacebookRouteImport.update({
+  id: '/api/meta/publish-facebook',
+  path: '/api/meta/publish-facebook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMetaDisconnectRoute = ApiMetaDisconnectRouteImport.update({
+  id: '/api/meta/disconnect',
+  path: '/api/meta/disconnect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMetaAuthUrlRoute = ApiMetaAuthUrlRouteImport.update({
+  id: '/api/meta/auth-url',
+  path: '/api/meta/auth-url',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -201,7 +237,13 @@ export interface FileRoutesByFullPath {
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
+  '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
+  '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
+  '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
+  '/api/meta/status': typeof ApiMetaStatusRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
+  '/auth/meta/callback': typeof AuthMetaCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -230,7 +272,13 @@ export interface FileRoutesByTo {
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
+  '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
+  '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
+  '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
+  '/api/meta/status': typeof ApiMetaStatusRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
+  '/auth/meta/callback': typeof AuthMetaCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -260,7 +308,13 @@ export interface FileRoutesById {
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
+  '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
+  '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
+  '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
+  '/api/meta/status': typeof ApiMetaStatusRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
+  '/auth/meta/callback': typeof AuthMetaCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -291,7 +345,13 @@ export interface FileRouteTypes {
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
     | '/api/tts-voice'
+    | '/api/meta/auth-url'
+    | '/api/meta/disconnect'
+    | '/api/meta/publish-facebook'
+    | '/api/meta/publish-instagram'
+    | '/api/meta/status'
     | '/api/public/expire-generations'
+    | '/auth/meta/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -320,7 +380,13 @@ export interface FileRouteTypes {
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
     | '/api/tts-voice'
+    | '/api/meta/auth-url'
+    | '/api/meta/disconnect'
+    | '/api/meta/publish-facebook'
+    | '/api/meta/publish-instagram'
+    | '/api/meta/status'
     | '/api/public/expire-generations'
+    | '/auth/meta/callback'
   id:
     | '__root__'
     | '/'
@@ -349,7 +415,13 @@ export interface FileRouteTypes {
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
     | '/api/tts-voice'
+    | '/api/meta/auth-url'
+    | '/api/meta/disconnect'
+    | '/api/meta/publish-facebook'
+    | '/api/meta/publish-instagram'
+    | '/api/meta/status'
     | '/api/public/expire-generations'
+    | '/auth/meta/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -379,7 +451,13 @@ export interface RootRouteChildren {
   ApiSuggestKeyinfoRoute: typeof ApiSuggestKeyinfoRoute
   ApiSupabasePdfRoute: typeof ApiSupabasePdfRoute
   ApiTtsVoiceRoute: typeof ApiTtsVoiceRoute
+  ApiMetaAuthUrlRoute: typeof ApiMetaAuthUrlRoute
+  ApiMetaDisconnectRoute: typeof ApiMetaDisconnectRoute
+  ApiMetaPublishFacebookRoute: typeof ApiMetaPublishFacebookRoute
+  ApiMetaPublishInstagramRoute: typeof ApiMetaPublishInstagramRoute
+  ApiMetaStatusRoute: typeof ApiMetaStatusRoute
   ApiPublicExpireGenerationsRoute: typeof ApiPublicExpireGenerationsRoute
+  AuthMetaCallbackRoute: typeof AuthMetaCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -566,11 +644,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCloneVoiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/meta/callback': {
+      id: '/auth/meta/callback'
+      path: '/auth/meta/callback'
+      fullPath: '/auth/meta/callback'
+      preLoaderRoute: typeof AuthMetaCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/expire-generations': {
       id: '/api/public/expire-generations'
       path: '/api/public/expire-generations'
       fullPath: '/api/public/expire-generations'
       preLoaderRoute: typeof ApiPublicExpireGenerationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/status': {
+      id: '/api/meta/status'
+      path: '/api/meta/status'
+      fullPath: '/api/meta/status'
+      preLoaderRoute: typeof ApiMetaStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/publish-instagram': {
+      id: '/api/meta/publish-instagram'
+      path: '/api/meta/publish-instagram'
+      fullPath: '/api/meta/publish-instagram'
+      preLoaderRoute: typeof ApiMetaPublishInstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/publish-facebook': {
+      id: '/api/meta/publish-facebook'
+      path: '/api/meta/publish-facebook'
+      fullPath: '/api/meta/publish-facebook'
+      preLoaderRoute: typeof ApiMetaPublishFacebookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/disconnect': {
+      id: '/api/meta/disconnect'
+      path: '/api/meta/disconnect'
+      fullPath: '/api/meta/disconnect'
+      preLoaderRoute: typeof ApiMetaDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/auth-url': {
+      id: '/api/meta/auth-url'
+      path: '/api/meta/auth-url'
+      fullPath: '/api/meta/auth-url'
+      preLoaderRoute: typeof ApiMetaAuthUrlRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -603,7 +723,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSuggestKeyinfoRoute: ApiSuggestKeyinfoRoute,
   ApiSupabasePdfRoute: ApiSupabasePdfRoute,
   ApiTtsVoiceRoute: ApiTtsVoiceRoute,
+  ApiMetaAuthUrlRoute: ApiMetaAuthUrlRoute,
+  ApiMetaDisconnectRoute: ApiMetaDisconnectRoute,
+  ApiMetaPublishFacebookRoute: ApiMetaPublishFacebookRoute,
+  ApiMetaPublishInstagramRoute: ApiMetaPublishInstagramRoute,
+  ApiMetaStatusRoute: ApiMetaStatusRoute,
   ApiPublicExpireGenerationsRoute: ApiPublicExpireGenerationsRoute,
+  AuthMetaCallbackRoute: AuthMetaCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
