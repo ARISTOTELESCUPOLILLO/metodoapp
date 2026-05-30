@@ -139,8 +139,8 @@ function TermosPage() {
           <H3>11. Lei aplicável e foro</H3>
           <p>
             Estes Termos são regidos pela legislação brasileira. Fica eleito o foro da comarca
-            de Sinop/MT para dirimir eventuais conflitos, ressalvada a opção pelo Juizado
-            Especial competente.
+            de Barra do Garças/MT para dirimir eventuais conflitos, ressalvada a opção pelo
+            Juizado Especial competente.
           </p>
 
           <H3>12. Contato</H3>
