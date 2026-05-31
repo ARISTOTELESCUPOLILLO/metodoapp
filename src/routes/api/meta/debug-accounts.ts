@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 
-const META_VERSION = 'v21.0';
+const META_VERSION = 'v25.0';
 
 // IDs fixos da OPropaganda
 const IG_USER_ID = '17841403020053112';

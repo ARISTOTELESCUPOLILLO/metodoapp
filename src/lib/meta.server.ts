@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
-export const META_VERSION = 'v21.0';
+export const META_VERSION = 'v25.0';
 export const META_BUCKET = 'meta-publish';
 
 export async function ensureMetaBucket(): Promise<void> {

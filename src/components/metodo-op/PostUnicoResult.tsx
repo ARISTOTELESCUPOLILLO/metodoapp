@@ -278,7 +278,7 @@ export default function PostUnicoResult({
                 {imageDataUrl && (
                   <MetaPublish
                     imageDataUrl={imageDataUrl}
-                    caption={editedCaption ?? captionHistory[selectedIdx]?.full}
+                    caption={captionText}
                   />
                 )}
                 {onClear && (

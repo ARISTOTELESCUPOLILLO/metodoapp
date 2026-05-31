@@ -32,7 +32,7 @@ async function postToFacebook(token: string, imageUrl: string, caption: string) 
   const res = await fetch(`https://graph.facebook.com/${META_VERSION}/${PAGE_ID}/photos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: imageUrl, caption, access_token: token }),
+    body: JSON.stringify({ url: imageUrl, message: caption, access_token: token }),
   });
   const data = await res.json() as { id?: string; post_id?: string; error?: { message: string } };
   if (!data.id && !data.post_id) throw new Error(data.error?.message || 'Falha ao publicar no Facebook');
