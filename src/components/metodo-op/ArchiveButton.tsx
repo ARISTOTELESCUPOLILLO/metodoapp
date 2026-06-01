@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { saveGeneration } from '@/lib/assets.functions';
+import { saveGeneration, updateGeneration } from '@/lib/assets.functions';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import { dataUrlToWebpBase64 } from '@/utils/toWebp';
 
@@ -35,9 +35,22 @@ export function ArchiveButton({
   disabledReason,
 }: Props) {
   const saveFn = useServerFn(saveGeneration);
+  const updateFn = useServerFn(updateGeneration);
   const impersonation = useImpersonation();
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
   const [msg, setMsg] = useState<string>('');
+  const [savedId, setSavedId] = useState<string | null>(null);
+
+  // Reseta savedId quando as imagens mudam (nova geração detectada)
+  const prevImagesRef = useRef(imageDataUrls);
+  useEffect(() => {
+    if (imageDataUrls !== prevImagesRef.current) {
+      prevImagesRef.current = imageDataUrls;
+      setSavedId(null);
+      setState('idle');
+      setMsg('');
+    }
+  }, [imageDataUrls]);
 
   const ready = imageDataUrls.some(Boolean) && (formato !== 'reels' || !!videoUrl);
   const disabled = !ready || state === 'busy';
@@ -65,22 +78,40 @@ export function ArchiveButton({
       );
       if (images.length === 0) throw new Error('Sem imagem para arquivar.');
 
-      const res: any = await saveFn({
-        data: {
-          tipo,
-          slot: resolvedSlot,
-          formato,
-          dia,
-          legenda: (legenda || '').slice(0, 4000),
-          titulo: titulo || '',
-          images,
-          ...(videoUrl ? { videoUrl } : {}),
-          ...(impersonation?.userId ? { asUserId: impersonation.userId } : {}),
-        },
-      });
-      const evicted = res?.evicted || 0;
-      setState('done');
-      setMsg(evicted > 0 ? `✓ Arquivado (${evicted} substituído)` : '✓ Arquivado');
+      if (savedId) {
+        // 2º clique em diante: substitui o registro já arquivado
+        await updateFn({
+          data: {
+            generationId: savedId,
+            legenda: (legenda || '').slice(0, 4000),
+            titulo: titulo || '',
+            images,
+            ...(impersonation?.userId ? { asUserId: impersonation.userId } : {}),
+          },
+        });
+        setState('done');
+        setMsg('✓ Atualizado');
+      } else {
+        // 1º clique: cria novo registro
+        const res: any = await saveFn({
+          data: {
+            tipo,
+            slot: resolvedSlot,
+            formato,
+            dia,
+            legenda: (legenda || '').slice(0, 4000),
+            titulo: titulo || '',
+            images,
+            ...(videoUrl ? { videoUrl } : {}),
+            ...(impersonation?.userId ? { asUserId: impersonation.userId } : {}),
+          },
+        });
+        const evicted = res?.evicted || 0;
+        setSavedId(res?.generationId || null);
+        setState('done');
+        setMsg(evicted > 0 ? `✓ Arquivado (${evicted} substituído)` : '✓ Arquivado');
+      }
+
       setTimeout(() => {
         setState('idle');
         setMsg('');

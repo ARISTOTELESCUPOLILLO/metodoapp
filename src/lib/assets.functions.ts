@@ -152,6 +152,77 @@ export const saveGeneration = createServerFn({ method: 'POST' })
     };
   });
 
+const UpdateSchema = z.object({
+  generationId: z.string().uuid(),
+  legenda: z.string().max(4000).default(''),
+  titulo: z.string().max(200).default(''),
+  images: z
+    .array(
+      z.object({
+        base64: z.string().min(10),
+        ordem: z.number().int().min(1).max(20),
+      }),
+    )
+    .min(1)
+    .max(10),
+  asUserId: z.string().uuid().optional(),
+});
+
+export const updateGeneration = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => UpdateSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const targetUserId = await resolveTargetUserId(context.userId, data.asUserId);
+
+    // Verifica propriedade
+    const { data: gen, error: fetchErr } = await supabaseAdmin
+      .from('user_generations')
+      .select('id')
+      .eq('id', data.generationId)
+      .eq('user_id', targetUserId)
+      .single();
+    if (fetchErr || !gen) throw new Error('Geração não encontrada ou sem permissão');
+
+    // Atualiza legenda + titulo
+    const { error: updErr } = await supabaseAdmin
+      .from('user_generations')
+      .update({ legenda: data.legenda, titulo: data.titulo })
+      .eq('id', data.generationId);
+    if (updErr) throw new Error('Falha ao atualizar geração: ' + updErr.message);
+
+    // Remove assets antigos e faz re-upload nos mesmos caminhos
+    await supabaseAdmin.from('user_assets').delete().eq('generation_id', data.generationId);
+
+    const assetRows: {
+      generation_id: string;
+      user_id: string;
+      ordem: number;
+      storage_path: string;
+      bytes: number;
+    }[] = [];
+    for (const img of data.images) {
+      const bytes = Buffer.from(img.base64, 'base64');
+      const path = `${targetUserId}/${data.generationId}/img-${String(img.ordem).padStart(2, '0')}.webp`;
+      const { error: upErr } = await supabaseAdmin.storage
+        .from(BUCKET)
+        .upload(path, bytes, { contentType: 'image/webp', upsert: true });
+      if (upErr) throw new Error('Falha ao subir imagem: ' + upErr.message);
+      assetRows.push({
+        generation_id: data.generationId,
+        user_id: targetUserId,
+        ordem: img.ordem,
+        storage_path: path,
+        bytes: bytes.length,
+      });
+    }
+    if (assetRows.length) {
+      const { error: aErr } = await supabaseAdmin.from('user_assets').insert(assetRows);
+      if (aErr) throw new Error('Falha ao atualizar assets: ' + aErr.message);
+    }
+
+    return { ok: true };
+  });
+
 const ListSchema = z.object({
   asUserId: z.string().uuid().optional(),
 }).optional();
