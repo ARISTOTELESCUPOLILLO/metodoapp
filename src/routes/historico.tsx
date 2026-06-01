@@ -7,6 +7,7 @@ import { TopBar } from '@/components/app/TopBar';
 import { AuthGate } from '@/components/app/AuthGate';
 import { listMyGenerations, deleteGeneration } from '@/lib/assets.functions';
 import { useImpersonation } from '@/hooks/useImpersonation';
+import { MetaPublish } from '@/components/metodo-op/MetaPublish';
 
 export const Route = createFileRoute('/historico')({
   component: () => (
@@ -383,6 +384,13 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
               <FileText size={12} /> Baixar .txt
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Publicar no Meta */}
+      {gen.assets.length > 0 && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
+          <MetaPublish imageDataUrl={gen.assets[0].url} caption={gen.legenda} />
         </div>
       )}
     </article>

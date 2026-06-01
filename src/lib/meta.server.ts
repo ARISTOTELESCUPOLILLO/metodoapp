@@ -11,6 +11,7 @@ export async function ensureMetaBucket(): Promise<void> {
 }
 
 export async function uploadImageToMetaBucket(userId: string, dataUrl: string): Promise<string> {
+  if (dataUrl.startsWith('https://')) return dataUrl;
   await ensureMetaBucket();
   const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
   const buf = Buffer.from(base64, 'base64');
