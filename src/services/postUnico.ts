@@ -197,26 +197,63 @@ function buildClothingPool(primary: string, accent: string): string[] {
   return pool;
 }
 
-function buildColorBlock(primary: string, accent: string, isMood: boolean): string {
+const OBJETIVO_PALETAS: Record<string, string[]> = {
+  nenhum: [
+    `PALETA DESTA PEÇA — CLAREZA: azul claro, branco e cinza suave. Atmosfera de limpeza visual e inteligibilidade.`,
+    `PALETA DESTA PEÇA — EQUILÍBRIO: bege, cinza quente e azul acinzentado. Harmonia neutra e acolhedora.`,
+    `PALETA DESTA PEÇA — NATURALIDADE: verde suave, areia e branco. Leveza e autenticidade.`,
+    `PALETA DESTA PEÇA — SIMPLICIDADE: branco, cinza claro e azul pálido. Espaço generoso, sem ruído visual.`,
+    `PALETA DESTA PEÇA — ORGANIZAÇÃO: azul médio, branco e grafite suave. Estrutura clara e confiável.`,
+  ],
+  institucional: [
+    `PALETA DESTA PEÇA — CONFIANÇA: azul profundo, branco e cinza. Solidez institucional e credibilidade.`,
+    `PALETA DESTA PEÇA — CREDIBILIDADE: azul petróleo, grafite e branco. Maturidade e autoridade discreta.`,
+    `PALETA DESTA PEÇA — ESTABILIDADE: azul escuro, verde escuro e cinza. Presença de longo prazo.`,
+    `PALETA DESTA PEÇA — PROFISSIONALISMO: azul marinho, prata e branco. Rigor e competência.`,
+    `PALETA DESTA PEÇA — RESPEITO: grafite, azul profundo e bege claro. Sobriedade com calor humano.`,
+  ],
+  promocao: [
+    `PALETA DESTA PEÇA — ENERGIA: laranja, amarelo e branco. Vitalidade que convida à ação imediata.`,
+    `PALETA DESTA PEÇA — MOVIMENTO: vermelho moderado, laranja e cinza escuro. Dinamismo e urgência controlada.`,
+    `PALETA DESTA PEÇA — OPORTUNIDADE CROMÁTICA: amarelo dourado, azul intenso e branco. Destaque e valorização da oferta.`,
+    `PALETA DESTA PEÇA — ENTUSIASMO: coral, amarelo e azul claro. Animação e desejo de participação.`,
+    `PALETA DESTA PEÇA — DINAMISMO: laranja vibrante, azul escuro e branco. Contraste que ativa o olhar.`,
+  ],
+  oportunidade: [
+    `PALETA DESTA PEÇA — DESCOBERTA: turquesa, branco e azul céu. Abertura e novidade ao alcance.`,
+    `PALETA DESTA PEÇA — RENOVAÇÃO: verde claro, branco e bege. Frescor e recomeço.`,
+    `PALETA DESTA PEÇA — CRESCIMENTO: verde médio, dourado suave e branco. Evolução e prosperidade.`,
+    `PALETA DESTA PEÇA — FUTURO: azul elétrico, violeta suave e prata. Inovação e antecipação.`,
+    `PALETA DESTA PEÇA — POSSIBILIDADE: azul céu, turquesa e branco. Horizonte amplo e otimismo.`,
+  ],
+  aviso: [
+    `PALETA DESTA PEÇA — ATENÇÃO: amarelo, grafite e branco. Sinalização clara sem alarme.`,
+    `PALETA DESTA PEÇA — ORIENTAÇÃO: azul médio, branco e cinza. Clareza informativa e direção.`,
+    `PALETA DESTA PEÇA — SEGURANÇA: azul profundo, branco e verde suave. Tranquilidade na comunicação.`,
+    `PALETA DESTA PEÇA — ORGANIZAÇÃO VISUAL: cinza técnico, azul claro e branco. Precisão e ordem.`,
+    `PALETA DESTA PEÇA — ALERTA CONTROLADO: laranja suave, azul escuro e branco. Destaque sem tensão excessiva.`,
+  ],
+  homenagem: [
+    `PALETA DESTA PEÇA — GRATIDÃO: dourado suave, bege e branco. Celebração com elegância e afeto.`,
+    `PALETA DESTA PEÇA — CARINHO: rosa queimado, creme e branco. Ternura e proximidade emocional.`,
+    `PALETA DESTA PEÇA — RECONHECIMENTO: vinho, dourado e bege. Prestígio e valorização genuína.`,
+    `PALETA DESTA PEÇA — RESPEITO SOLENE: azul profundo, dourado discreto e branco. Solenidade com calor.`,
+    `PALETA DESTA PEÇA — PROXIMIDADE: terracota, areia e creme. Afeto terroso e pertencimento.`,
+  ],
+};
+
+function buildColorBlock(primary: string, accent: string, isMood: boolean, objetivo?: PostUnicoObjetivo): string {
   if (isMood) {
     return `Referência cromática da marca (subordinada ao mood): primária ${primary}, apoio ${accent}.`;
   }
 
-  const palettes = [
-    `PALETA DESTA PEÇA — QUENTE E VIBRANTE: predominância de laranjas, vermelhos, amarelos e âmbares. Energia, calor, vitalidade. Fundos em tons quentes médios a escuros; luz dourada e sombras quentes. Cores saturadas com presença.`,
-    `PALETA DESTA PEÇA — FRIA E CONTEMPORÂNEA: predominância de azuis, cianos, violetas e cinzas frios. Sofisticação, clareza, modernidade. Fundos em azul-escuro ou cinza-azulado; destaques em azul vivo ou branco frio.`,
-    `PALETA DESTA PEÇA — LUMINOSA E AÉREA: tons claros predominantes — branco, creme, bege claro, amarelo-pálido. Muito espaço vazio e luz difusa. Destaques pontuais em cor viva. Estética clean e editorial.`,
-    `PALETA DESTA PEÇA — VIVA E SATURADA: cores puras e saturadas sem medo — verde vivo, magenta, amarelo limão, azul elétrico. Composição com alto contraste e energia visual máxima. Referência: pôster gráfico contemporâneo.`,
-    `PALETA DESTA PEÇA — EXCITANTE E CONTRASTANTE: par de cores opostas em alta saturação (ex: laranja + azul, verde + magenta, amarelo + roxo). Tensão visual como recurso criativo. Fundo escuro ou neutro amplifica o contraste.`,
-    `PALETA DESTA PEÇA — NATURAL E ORGÂNICA: verdes, terrosos, ocres, bege, madeira, areia. Paleta da natureza — sem artificialidade. Luz natural suave. Referência: fotografia editorial de lifestyle ao ar livre.`,
-    `PALETA DESTA PEÇA — JOVEM E IRREVERENTE: combinação inesperada de cores — pastéis com neon, rosa + verde menta, lavanda + laranja. Frescor, descontração, contemporaneidade. Referência: identidade visual de marca digital jovem.`,
-    `PALETA DESTA PEÇA — SURPREENDENTE E NOTURNA: fundo escuro (preto, grafite, azul-meia-noite, verde-garrafa escuro) com destaques em cor viva ou dourado. Dramatismo e sofisticação. Luz pontual sobre o elemento principal.`,
-  ];
-
-  const palette = palettes[Math.floor(Math.random() * palettes.length)];
+  const obj = (objetivo && OBJETIVO_PALETAS[objetivo]) ? objetivo : 'nenhum';
+  const pool = OBJETIVO_PALETAS[obj];
+  const palette = pool[Math.floor(Math.random() * pool.length)];
 
   return `${palette}
-Referência cromática da marca (use como inspiração pontual, não como imposição): primária ${primary}, apoio ${accent}. A paleta sorteada acima tem prioridade — incorpore a cor da marca apenas se houver harmonia natural.`;
+As cores são definidas pela intenção emocional da peça, não pelas cores institucionais como base da composição. Referência cromática da marca (use apenas se houver harmonia natural): primária ${primary}, apoio ${accent}.
+COR DO LETTERING: prefira a cor de destaque da marca (${accent}) para o título e elementos tipográficos de destaque, quando houver contraste natural com o fundo desta paleta. Se o contraste for insuficiente ou a cor destoar da atmosfera, use branco ou o tom mais claro da paleta.`;
 }
 
 function segmentRules(segment?: string): string {
@@ -302,6 +339,10 @@ CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superf
 PROIBIDO em qualquer peça, em qualquer objetivo e mesmo quando houver título/texto obrigatório: paredes de concreto aparente, painéis de concreto, galpões industriais, prédios de concreto frio, fachadas de edifício sem vida, estruturas arquitetônicas desumanizadas, corredores vazios e ambientes de obra como elemento visual dominante ou como fundo/suporte para tipografia. Para fazer texto se destacar, USE: fundos coloridos, texturas orgânicas, desfoque de ambiente, gradiente sutil, cor sólida, fotografia de pessoa ou detalhe quente. Nunca concreto como solução de legibilidade.
 PROIBIDO TAMBÉM: formas geométricas abstratas vazias (círculos, esferas, triângulos, polígonos, hexágonos, espirais) flutuando sem propósito narrativo como elemento visual central ou de preenchimento de fundo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido. Abstração pura sem referente é proibida.
 
+⚠ REGRA ABSOLUTA — HUMANIZAÇÃO E AUTENTICIDADE VISUAL:
+As imagens devem parecer humanas, autênticas e reais — priorize pessoas, expressões naturais, interação humana, ambientes verdadeiros e situações cotidianas relacionadas ao contexto da publicação. Evite imagens frias, artificiais, excessivamente corporativas ou genéricas.
+PROIBIDO inserir automaticamente elementos decorativos sem função narrativa: vasos, plantas ornamentais, folhas, flores, folhagens ou objetos usados apenas para preencher cantos e espaços vazios. Todo elemento visual deve contribuir para a mensagem da peça. A humanização da cena tem prioridade sobre a decoração do ambiente.
+
 Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
 ZONA SEGURA INVIOLÁVEL DE 110 PX em todas as bordas do canvas 1080x1350. Nada importante (rosto, olhos, mãos, produto-foco, lettering, gráficos, logo) entra nesse perímetro — bordas são continuação natural do fundo. ${zona.reservaTopo}
@@ -318,7 +359,7 @@ ${copyBlock}
 
 ${direcao}
 
-${buildColorBlock(primary, accent, data.direcao === 'mood')}
+${buildColorBlock(primary, accent, data.direcao === 'mood', data.objetivo)}
 
 ${typographyBlock}
 
