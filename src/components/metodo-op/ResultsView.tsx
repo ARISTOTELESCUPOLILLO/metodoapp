@@ -1,4 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
+
+function insertSignature(caption: string, signature: string): string {
+  const trimmed = caption.trim();
+  const lines = trimmed.split('\n');
+  let hashStart = lines.length;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (line === '' || /^(#\w+\s*)+$/.test(line)) { hashStart = i; } else { break; }
+  }
+  if (hashStart === lines.length) return trimmed + '\n\n' + signature;
+  const before = lines.slice(0, hashStart).join('\n').trimEnd();
+  const hashBlock = lines.slice(hashStart).join('\n').trimStart();
+  return before + '\n\n' + signature + '\n\n' + hashBlock;
+}
 import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
@@ -305,6 +319,14 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
           )}
           {preview && <div className="previewWrapper"><img src={preview} alt="Preview" className="previewImg" /></div>}
           <div className="cardActions">
+            <button
+              type="button"
+              disabled={!kit.assinatura}
+              onClick={() => { if (kit.assinatura) setLegenda(insertSignature(legenda, kit.assinatura)); }}
+              style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+            >
+              Inserir Assinatura
+            </button>
             <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar post'}
             </button>
@@ -442,6 +464,14 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
           )}
           {preview && <div className="previewWrapper"><img src={preview} alt="Preview" className="previewImg" /></div>}
           <div className="cardActions">
+            <button
+              type="button"
+              disabled={!kit.assinatura}
+              onClick={() => { if (kit.assinatura) setLegenda(insertSignature(legenda, kit.assinatura)); }}
+              style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+            >
+              Inserir Assinatura
+            </button>
             <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar fechamento'}
             </button>
@@ -761,6 +791,16 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
                 {index === cards.length - 1 && (
                   <>
                     <EditableField label="Legenda do card" kind="legenda" value={legendas[index]} original={card.legenda || ''} count={lCounts[index]} onChange={(v) => setLegendas(prev => prev.map((p,i) => i === index ? v : p))} onRegenStart={() => setLCounts(prev => prev.map((c,i) => i === index ? c + 1 : c))} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline />
+                    <div style={{ marginTop: 4 }}>
+                      <button
+                        type="button"
+                        disabled={!kit.assinatura}
+                        onClick={() => { if (kit.assinatura) setLegendas(prev => prev.map((p, i) => i === index ? insertSignature(p, kit.assinatura!) : p)); }}
+                        style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+                      >
+                        Inserir Assinatura
+                      </button>
+                    </div>
                     {legendas[index].trim() && isMobile && (
                       <button className="downloadBtn" type="button" style={{ width: '100%', minHeight: 44, fontSize: 15, marginTop: 4 }} onClick={() => shareLegendaWhatsApp('Carrossel', legendas[index])}>
                         📲 Compartilhar legenda no WhatsApp
@@ -1306,6 +1346,14 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
 
           {legenda && (
             <div className="cardActions" style={{ marginBottom: 4 }}>
+              <button
+                type="button"
+                disabled={!kit.assinatura}
+                onClick={() => { if (kit.assinatura) setLegenda(insertSignature(legenda, kit.assinatura)); }}
+                style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+              >
+                Inserir Assinatura
+              </button>
               <button className="downloadBtn" type="button" onClick={handleCopy} style={{ minHeight: 44, fontSize: 15 }}>
                 {copied ? '✓ Copiado!' : '📋 Copiar legenda'}
               </button>

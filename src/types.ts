@@ -25,6 +25,7 @@ export interface BrandKit {
   brandVoice: string;
   mainActivity?: string;
   logoPosition?: LogoPosition;
+  assinatura?: string;
 }
 
 export interface ContentFormData {

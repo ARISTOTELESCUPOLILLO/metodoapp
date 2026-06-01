@@ -264,6 +264,24 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
         />
       </label>
 
+      <div style={{ display: 'grid', gap: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+            Assinatura <span style={{ fontSize: 11, fontWeight: 400, color: '#94a3b8' }}>(opcional · até 100 caracteres)</span>
+          </span>
+          <span style={{ fontSize: 11, color: (kit.assinatura || '').length > 90 ? '#ef4444' : '#94a3b8' }}>
+            {(kit.assinatura || '').length}/100
+          </span>
+        </div>
+        <input
+          type="text"
+          maxLength={100}
+          value={kit.assinatura || ''}
+          onChange={(e) => update('assinatura', e.target.value)}
+          placeholder="Ex.: 📞 (11) 99999-9999 · www.suamarca.com.br"
+        />
+      </div>
+
       {onSave && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
           <button type="button" className="saveBtn" onClick={onSave} disabled={saving || loading}>

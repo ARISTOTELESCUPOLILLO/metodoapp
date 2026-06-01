@@ -760,6 +760,7 @@ export default function App() {
               slot={selectedSlot}
               direcao={postUnico.direcao}
               mood={postUnico.mood}
+              assinatura={kit.assinatura || ''}
             />
           )}
           {modo === 'imageKit' && (

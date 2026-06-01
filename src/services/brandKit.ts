@@ -18,6 +18,7 @@ function rowToKit(k: any): BrandKit {
     logoDataUrl: k.logo_url || undefined,
     mainActivity: k.main_activity || '',
     logoPosition: (k.logo_position as LogoPosition) || 'bottom-right',
+    assinatura: k.assinatura || '',
   };
 }
 
@@ -53,6 +54,7 @@ const KitSchema = z.object({
   logoDataUrl: z.string().optional(),
   mainActivity: z.string().default(''),
   logoPosition: z.string().default('bottom-right'),
+  assinatura: z.string().max(100).optional(),
 });
 
 // Server function: salva Kit de Marca de qualquer usuário (admin bypass RLS).
@@ -85,6 +87,7 @@ export const saveKitServer = createServerFn({ method: 'POST' })
       logo_url: data.logoDataUrl,
       main_activity: data.mainActivity,
       logo_position: data.logoPosition,
+      assinatura: data.assinatura ?? null,
       updated_at: new Date().toISOString(),
     };
 
@@ -128,6 +131,7 @@ export async function saveKitForUser(kit: BrandKit, userId: string): Promise<Bra
     logo_url: kit.logoDataUrl,
     main_activity: kit.mainActivity,
     logo_position: kit.logoPosition || 'bottom-right',
+    assinatura: kit.assinatura ?? null,
     updated_at: new Date().toISOString(),
   };
 

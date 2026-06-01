@@ -7,6 +7,20 @@ import { ArchiveButton } from './ArchiveButton';
 import { MetaPublish } from './MetaPublish';
 import type { PostUnicoCaption } from '../../services/postUnico';
 
+function insertSignature(caption: string, signature: string): string {
+  const trimmed = caption.trim();
+  const lines = trimmed.split('\n');
+  let hashStart = lines.length;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (line === '' || /^(#\w+\s*)+$/.test(line)) { hashStart = i; } else { break; }
+  }
+  if (hashStart === lines.length) return trimmed + '\n\n' + signature;
+  const before = lines.slice(0, hashStart).join('\n').trimEnd();
+  const hashBlock = lines.slice(hashStart).join('\n').trimStart();
+  return before + '\n\n' + signature + '\n\n' + hashBlock;
+}
+
 const MOOD_NAMES: Record<string, string> = {
   'OP-01': 'Clareza', 'OP-02': 'Impacto', 'OP-03': 'Instante',
   'OP-04': 'Fragmento', 'OP-05': 'Desvio', 'OP-06': 'Silêncio',
@@ -27,6 +41,7 @@ interface Props {
   slot?: 'plano1' | 'plano2' | 'bonus';
   direcao?: 'livre' | 'mood';
   mood?: string;
+  assinatura?: string;
 }
 
 export default function PostUnicoResult({
@@ -43,6 +58,7 @@ export default function PostUnicoResult({
   slot,
   direcao,
   mood,
+  assinatura,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const [captionRegens, setCaptionRegens] = useState(0);
@@ -254,6 +270,14 @@ export default function PostUnicoResult({
                   <>
                     <button className="primaryBtn" type="button" style={{ width: 'auto' }} onClick={handleCopy}>
                       {copied ? '✓ Copiado!' : 'Copiar legenda'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!assinatura}
+                      onClick={() => { if (assinatura) setEditedCaption(insertSignature(captionText, assinatura)); }}
+                      style={{ ...lightBtn, background: assinatura ? '#0f172a' : '#e2e8f0', color: assinatura ? '#fff' : '#94a3b8', border: 'none', cursor: assinatura ? 'pointer' : 'default' }}
+                    >
+                      Inserir Assinatura
                     </button>
                     <button type="button" style={lightBtn} onClick={handleDownloadTxt}>
                       Baixar legenda
