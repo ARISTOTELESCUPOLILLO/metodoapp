@@ -51,6 +51,27 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             ? `REGRA CRÍTICA DA PISTA: preserve o SENTIDO da pista do usuário (positivo, neutro ou crítico). Refine a FORMA, NUNCA inverta a intenção. Se a pista é positiva (ex.: "20 anos fazendo parte da vida da cidade"), NÃO transforme em dor/estagnação/crítica. Se é neutra, mantenha neutra. Se já carrega tensão, pode aprofundar.`
             : '';
 
+          const proibicoesInventar = (objetivo !== 'promocao' && objetivo !== 'oportunidade')
+            ? `PROIBIDO inventar: datas • descontos • promoções • eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
+            : '';
+
+          const criteriosRefinamentoOP = `CRITÉRIOS DE QUALIDADE — PROCESSO DE REFINAMENTO:
+
+PASSO 1 — CLASSIFICAR: identifique o que o texto representa de fato: crença / problema / desejo / oferta / benefício / tendência / novidade / evento / oportunidade real / frase genérica.
+
+PASSO 2 — VALIDAR COMPATIBILIDADE: se a categoria trabalhada for "Novidade ou Oportunidade" e a frase for crença ou tese genérica, NÃO invente promoção, prazo, desconto, data ou condição comercial — transforme em observação de tendência ou comportamento emergente (ex.: "Pequenos negócios estão descobrindo que marketing deixou de ser privilégio das grandes empresas.").
+
+PASSO 3 — REENQUADRAR SEM TRAIR A IDEIA ORIGINAL: ajuste para o ângulo correto mantendo o sentido central.
+
+PASSO 4 — ENRIQUECER COM 4 CAMADAS: [ASSUNTO] + [CONTEXTO] + [TENSÃO, DOR OU OPORTUNIDADE] + [DIREÇÃO DESEJADA].
+
+${proibicoesInventar}`;
+
+          const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE OP:
+Construa com 4 camadas obrigatórias: [ASSUNTO] + [CONTEXTO] + [TENSÃO, DOR OU OPORTUNIDADE] + [DIREÇÃO DESEJADA].
+Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.
+${proibicoesInventar}`;
+
           // ── Público-alvo — regra crítica para B2C vs B2B ──────────────────
           const audienceDirective = isB2C
             ? `PÚBLICO-ALVO: CONSUMIDOR FINAL (B2C).
@@ -120,6 +141,8 @@ ${topicoGuiaBlock}
 
 ${previousBlock}
 
+${criteriosSugestaoOP}
+
 ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
 REGRA OP — escreva em 1 LINHA CURTA contendo 4 camadas implícitas:
 ASSUNTO + CONTEXTO + DOR/DESEJO + DIREÇÃO.
@@ -134,7 +157,7 @@ Exemplos do método (não copie, use como referência de FORMATO):
 - "negócios com comunicação desorganizada que passam insegurança sem perceber"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
 
           const metodoMotivacao = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -152,6 +175,8 @@ ${topicoGuiaBlock}
 
 ${previousBlock}
 
+${criteriosSugestaoOP}
+
 ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
 IMPORTANTE: NÃO "implique" com o público. Não aponte erro, falha ou falta. Fale do que ele QUER alcançar, do próximo nível, da transformação positiva — como quem reconhece o esforço e mostra o caminho.
 
@@ -168,7 +193,7 @@ Exemplos do método (não copie, use como referência de FORMATO e TOM):
 - "marcas construindo presença digital com consistência e prontas para escalar resultados"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
 
           const marcaIdentidade = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -185,6 +210,8 @@ ${topicoGuiaBlock}
 
 ${previousBlock}
 
+${criteriosSugestaoOP}
+
 ÂNGULO: IDENTIDADE / POSICIONAMENTO.
 A Informação-chave deve revelar QUEM a marca é, o que ela representa, como quer ser percebida no território/categoria. Sem dor do cliente, sem promessa comercial, sem CTA, sem urgência, sem gatilho de venda.
 
@@ -199,7 +226,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO instituci
 - "negócio que carrega um propósito claro e quer ser reconhecido pelo que representa, não só pelo que vende"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
 
           const marcaLegado = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -216,6 +243,8 @@ ${topicoGuiaBlock}
 
 ${previousBlock}
 
+${criteriosSugestaoOP}
+
 ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
 Foco em história, repertório, tempo de mercado, vínculo afetivo com clientes, evolução da marca, presença no território. Tom de orgulho calmo, sem auto-elogio comercial.
 
@@ -230,7 +259,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO):
 - "presença local que atravessou gerações e segue ditando o tom da categoria no bairro"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
 
           // ── Prompts de REFINAMENTO (campo com texto) ──────────────────────
 
@@ -252,6 +281,8 @@ INSTRUÇÃO DE REFINAMENTO:
 3. Integre empresa, atividade e nicho — torne específico para este negócio
 4. PROIBIDO: inventar assunto diferente do texto original
 
+${criteriosRefinamentoOP}
+
 ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
 Deve ATIVAR pelo menos um gatilho: movimento, conflito, mudança, comparação, consequência.
 
@@ -263,7 +294,7 @@ Exemplos de refinamento com tensão (não copie — referência de FORMATO):
 - "negócios com comunicação desorganizada que passam insegurança sem perceber"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
 
           const metodoRefinarMotivacao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -283,6 +314,8 @@ INSTRUÇÃO DE REFINAMENTO:
 3. Integre empresa, atividade e nicho — torne específico para este negócio
 4. PROIBIDO: inventar assunto diferente do texto original
 
+${criteriosRefinamentoOP}
+
 ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
 NÃO aponte erro ou falta. Fale do que o público QUER alcançar, do próximo nível, da transformação positiva.
 EVITE qualquer formulação crítica ao público ("não conseguem", "não sabem", "fazem errado").
@@ -293,7 +326,7 @@ Exemplos de refinamento com motivação (não copie — referência de FORMATO e
 - "marcas construindo presença digital com consistência e prontas para escalar resultados"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
 
           const marcaRefinarIdentidade = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -312,6 +345,8 @@ INSTRUÇÃO DE REFINAMENTO:
 3. Integre empresa, atividade e posicionamento da marca
 4. PROIBIDO: inventar assunto diferente do texto original, linguagem de venda, urgência, dor do cliente
 
+${criteriosRefinamentoOP}
+
 ÂNGULO: IDENTIDADE / POSICIONAMENTO.
 Revele QUEM a marca é, o que representa, como quer ser percebida. Sem promessa comercial, sem CTA.
 
@@ -321,7 +356,7 @@ Exemplos de refinamento institucional (não copie — referência de TOM e FORMA
 - "negócio que carrega um propósito claro e quer ser reconhecido pelo que representa, não só pelo que vende"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
 
           const marcaRefinarLegado = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -340,6 +375,8 @@ INSTRUÇÃO DE REFINAMENTO:
 3. Integre empresa, história, território e vínculo com comunidade
 4. PROIBIDO: inventar assunto diferente do texto original, linguagem comercial, dor do cliente, inversão negativa de pista positiva
 
+${criteriosRefinamentoOP}
+
 ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
 Foco em história, tempo de mercado, vínculo afetivo, evolução da marca. Tom de orgulho calmo.
 
@@ -349,7 +386,7 @@ Exemplos de refinamento de legado (não copie — referência de TOM e FORMATO):
 - "presença local que atravessou gerações e segue ditando o tom da categoria no bairro"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 30 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
 
           let metodoPrompt: string;
           if (isRefinar) {
@@ -393,8 +430,10 @@ REGRA CRÍTICA DE DATAS: quando sugerir prazo, data de encerramento ou data come
 
 ${OBJETIVO_RULES[objetivo] || ''}
 
+${criteriosSugestaoOP}
+
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 a 2 frases, no máximo 35 palavras, em português, sem hashtag, sem emoji, sem aspas, concreta e acionável" }`;
+{ "sugestao": "1 frase, no máximo 25 palavras, em português, sem hashtag, sem emoji, sem aspas, concreta e acionável" }`;
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
