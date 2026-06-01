@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+const META_ALLOWED_EMAIL = 'acupolillo1@gmail.com';
 
 interface Props {
   imageDataUrl?: string;
@@ -30,6 +33,7 @@ const fbIcon = (
 );
 
 export function MetaPublish({ imageDataUrl, caption }: Props) {
+  const { user } = useAuth();
   const [status, setStatus] = useState<MetaStatus | null>(null);
 
   // Estados OAuth (modo normal)
@@ -69,6 +73,7 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
     })();
   }, []);
 
+  if (!user || user.email !== META_ALLOWED_EMAIL) return null;
   if (!status) return null;
   if (!imageDataUrl && !status.devMode) return null;
 
