@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-const META_ALLOWED_EMAIL = 'acupolillo1@gmail.com';
+const META_ALLOWED_EMAIL = 'acupolillo@uol.com.br';
 
 interface Props {
   imageDataUrl?: string;
