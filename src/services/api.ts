@@ -260,7 +260,7 @@ const moodVisualInstructions: Record<MoodCode, string> = {
 - Imagem-conceito com elemento inesperado ou metáfora visual
 - Composição ousada que provoca estranhamento controlado
 - Título DESLOCADO e assimétrico — fora do centro, quebrando o equilíbrio esperado
-- Elemento fora do lugar como ponto focal
+- ELEMENTO INESPERADO — ESCALA E PESO VISUAL: o objeto ou forma inusitado é COADJUVANTE EXPRESSIVO da mensagem — deve ocupar área visual significativa na composição (não um detalhe periférico ou diminuto), grande o suficiente para chamar atenção à primeira vista e orientar o olhar, harmônico com o conjunto e sem dominar o sujeito principal. PROIBIDO: reduzir o elemento surreal a detalhe sutil, pequeno ou escondido na periferia da peça.
 - Paleta incomum ou contraste inesperado
 - Sombras presentes mas LEVES — o rosto e a cabeça das pessoas NUNCA podem ficar encobertos por escurecimento
 - Iluminação equilibrada: o elemento surreal não pode obscurecer o sujeito principal`,
