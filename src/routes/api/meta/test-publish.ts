@@ -29,13 +29,31 @@ async function postToInstagram(token: string, imageUrl: string, caption: string)
 }
 
 async function postToFacebook(token: string, imageUrl: string, caption: string) {
+  // 1. Troca System User token por Page Access Token
+  const pageTokenRes = await fetch(
+    `https://graph.facebook.com/${META_VERSION}/${PAGE_ID}?fields=access_token&access_token=${token}`
+  );
+  const pageTokenData = await pageTokenRes.json() as { access_token?: string; error?: { message: string } };
+
+  if (!pageTokenData.access_token) {
+    throw new Error(pageTokenData.error?.message || 'Falha ao obter Page Access Token');
+  }
+
+  // 2. Posta foto usando Page Token
   const res = await fetch(`https://graph.facebook.com/${META_VERSION}/${PAGE_ID}/photos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: imageUrl, message: caption, access_token: token }),
+    body: JSON.stringify({
+      url: imageUrl,
+      message: caption,
+      access_token: pageTokenData.access_token
+    }),
   });
+
   const data = await res.json() as { id?: string; post_id?: string; error?: { message: string } };
-  if (!data.id && !data.post_id) throw new Error(data.error?.message || 'Falha ao publicar no Facebook');
+  if (!data.id && !data.post_id) {
+    throw new Error(data.error?.message || 'Falha ao publicar no Facebook');
+  }
 
   return { success: true as const, platform: 'facebook' as const, post_id: data.post_id || data.id! };
 }
