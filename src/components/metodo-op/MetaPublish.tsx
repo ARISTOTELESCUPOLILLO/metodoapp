@@ -51,10 +51,6 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
   const [bothIgError, setBothIgError] = useState('');
   const [bothFbError, setBothFbError] = useState('');
 
-  // Diagnóstico
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  const [debugLoading, setDebugLoading] = useState(false);
-
   useEffect(() => {
     (async () => {
       try {
@@ -251,32 +247,6 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
           {igTestState === 'err' && <p style={{ margin: 0, fontSize: 12, color: '#b91c1c' }}>Instagram: {igTestError}</p>}
           {fbTestState === 'err' && <p style={{ margin: 0, fontSize: 12, color: '#b91c1c' }}>Facebook: {fbTestError}</p>}
 
-          {/* Diagnóstico discreto */}
-          <button
-            type="button"
-            disabled={debugLoading}
-            onClick={async () => {
-              setDebugLoading(true);
-              setDebugInfo(null);
-              try {
-                const res = await fetch('/api/meta/debug-accounts', { headers: await authHeader() });
-                const d = await res.json();
-                setDebugInfo(JSON.stringify(d, null, 2));
-              } catch (e) {
-                setDebugInfo('Erro: ' + (e as Error).message);
-              } finally {
-                setDebugLoading(false);
-              }
-            }}
-            style={{ alignSelf: 'flex-start', padding: 0, background: 'none', border: 'none', fontSize: 11, color: '#64748b', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            {debugLoading ? 'Consultando…' : '🔍 diagnóstico de contas'}
-          </button>
-          {debugInfo && (
-            <pre style={{ margin: 0, fontSize: 10, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: 8, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#374151', maxHeight: 200, overflowY: 'auto' }}>
-              {debugInfo}
-            </pre>
-          )}
         </div>
       )}
     </div>
