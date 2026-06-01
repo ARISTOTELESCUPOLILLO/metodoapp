@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getUserIdFromRequest } from '@/lib/usage.server';
-import { META_VERSION, uploadImageToMetaBucket, pollContainerStatus } from '@/lib/meta.server';
+import { META_VERSION, META_PUBLISH_ALLOWED_EMAIL, getEmailFromJwt, uploadImageToMetaBucket, pollContainerStatus } from '@/lib/meta.server';
 
 // IDs fixos da OPropaganda — não mudam
 const IG_USER_ID = '17841403020053112';
@@ -64,6 +64,7 @@ export const Route = createFileRoute('/api/meta/test-publish')({
       POST: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: 'Não autenticado' }, { status: 401 });
+        if (getEmailFromJwt(request) !== META_PUBLISH_ALLOWED_EMAIL) return Response.json({ error: 'Acesso não autorizado' }, { status: 403 });
 
         const token = process.env.META_ACCESS_TOKEN;
         if (!token) return Response.json({ error: 'META_ACCESS_TOKEN não configurado no servidor' }, { status: 403 });

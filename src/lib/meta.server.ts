@@ -2,6 +2,20 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
 export const META_VERSION = 'v25.0';
 export const META_BUCKET = 'meta-publish';
+export const META_PUBLISH_ALLOWED_EMAIL = 'acupolillo@uol.com.br';
+
+export function getEmailFromJwt(request: Request): string | null {
+  const auth = request.headers.get('authorization') || request.headers.get('Authorization');
+  if (!auth) return null;
+  const token = auth.replace(/^Bearer\s+/i, '').trim();
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+    return (payload?.email as string) || null;
+  } catch { return null; }
+}
 
 export async function ensureMetaBucket(): Promise<void> {
   const { error } = await supabaseAdmin.storage.createBucket(META_BUCKET, { public: true });
