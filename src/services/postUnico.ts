@@ -197,52 +197,26 @@ function buildClothingPool(primary: string, accent: string): string[] {
   return pool;
 }
 
-function hexToHsl(hex: string): { h: number; s: number; l: number } {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return { h: 0, s: 0, l: 0.5 };
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  const d = max - min;
-  const s = d === 0 ? 0 : l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h = 0;
-  if (d !== 0) {
-    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-    else if (max === g) h = ((b - r) / d + 2) / 6;
-    else h = ((r - g) / d + 4) / 6;
-  }
-  return { h: h * 360, s, l };
-}
-
 function buildColorBlock(primary: string, accent: string, isMood: boolean): string {
   if (isMood) {
-    return `Cor primária: ${primary}. Cor de destaque: ${accent}. Use como ancoragem cromática subordinada ao mood definido acima.`;
+    return `Referência cromática da marca (subordinada ao mood): primária ${primary}, apoio ${accent}.`;
   }
-  const { h, s, l } = hexToHsl(primary);
 
-  let temp: string;
-  if (s < 0.15) temp = 'neutra/acromática';
-  else if (h < 30 || h >= 330) temp = 'quente (vermelho/laranja)';
-  else if (h < 60) temp = 'quente (amarelo/âmbar)';
-  else if (h < 150) temp = 'neutra (verde)';
-  else if (h < 270) temp = 'fria (azul/ciano)';
-  else temp = 'fria (violeta)';
-
-  const lightDesc = l < 0.35 ? 'escuro' : l > 0.65 ? 'claro' : 'médio';
-
-  const combos = [
-    `Combinação ANÁLOGA: use tons análogos à cor dominante (variações de saturação e luminosidade na mesma família cromática — mais claro, mais escuro, mais dessaturado) como suporte. Cor de apoio (${accent}) em destaques pontuais. A peça respira dentro da família da cor dominante.`,
-    `Combinação COMPLEMENTAR: cor dominante (${primary}) como base de peso visual. Cor de apoio (${accent}) como contraste pontual nos elementos de maior destaque — tipografia de acento, objeto central, fio condutor visual. Fundos e áreas de descanso em neutro (branco, creme, cinza claro) para respiração.`,
-    `Combinação ANÁLOGA COM NEUTRO: família cromática da dominante (${primary}) + neutro predominante (branco, creme, cinza claro ou bege) como respiro principal. Cor de apoio (${accent}) usada com parcimônia em único ponto de acento. Paleta clean e sofisticada.`,
+  const palettes = [
+    `PALETA DESTA PEÇA — QUENTE E VIBRANTE: predominância de laranjas, vermelhos, amarelos e âmbares. Energia, calor, vitalidade. Fundos em tons quentes médios a escuros; luz dourada e sombras quentes. Cores saturadas com presença.`,
+    `PALETA DESTA PEÇA — FRIA E CONTEMPORÂNEA: predominância de azuis, cianos, violetas e cinzas frios. Sofisticação, clareza, modernidade. Fundos em azul-escuro ou cinza-azulado; destaques em azul vivo ou branco frio.`,
+    `PALETA DESTA PEÇA — LUMINOSA E AÉREA: tons claros predominantes — branco, creme, bege claro, amarelo-pálido. Muito espaço vazio e luz difusa. Destaques pontuais em cor viva. Estética clean e editorial.`,
+    `PALETA DESTA PEÇA — VIVA E SATURADA: cores puras e saturadas sem medo — verde vivo, magenta, amarelo limão, azul elétrico. Composição com alto contraste e energia visual máxima. Referência: pôster gráfico contemporâneo.`,
+    `PALETA DESTA PEÇA — EXCITANTE E CONTRASTANTE: par de cores opostas em alta saturação (ex: laranja + azul, verde + magenta, amarelo + roxo). Tensão visual como recurso criativo. Fundo escuro ou neutro amplifica o contraste.`,
+    `PALETA DESTA PEÇA — NATURAL E ORGÂNICA: verdes, terrosos, ocres, bege, madeira, areia. Paleta da natureza — sem artificialidade. Luz natural suave. Referência: fotografia editorial de lifestyle ao ar livre.`,
+    `PALETA DESTA PEÇA — JOVEM E IRREVERENTE: combinação inesperada de cores — pastéis com neon, rosa + verde menta, lavanda + laranja. Frescor, descontração, contemporaneidade. Referência: identidade visual de marca digital jovem.`,
+    `PALETA DESTA PEÇA — SURPREENDENTE E NOTURNA: fundo escuro (preto, grafite, azul-meia-noite, verde-garrafa escuro) com destaques em cor viva ou dourado. Dramatismo e sofisticação. Luz pontual sobre o elemento principal.`,
   ];
-  const combo = combos[Math.floor(Math.random() * combos.length)];
 
-  return `PALETA DA MARCA (aplicar como base cromática dominante desta peça):
-Cor dominante: ${primary} — temperatura ${temp}, tom ${lightDesc}. Use como cor de maior peso visual da composição: fundos principais, superfícies de maior área, blocos de ancoragem. A peça deve ser reconhecível pela presença desta cor.
-Cor de apoio: ${accent} — use em elementos secundários, destaques pontuais, bordas, detalhes tipográficos e objetos de suporte. Não deve competir com a dominante em área.
-${combo}
-A paleta final deve ser coerente com a identidade cromática da marca — evite cores completamente alheias a estas famílias.`;
+  const palette = palettes[Math.floor(Math.random() * palettes.length)];
+
+  return `${palette}
+Referência cromática da marca (use como inspiração pontual, não como imposição): primária ${primary}, apoio ${accent}. A paleta sorteada acima tem prioridade — incorpore a cor da marca apenas se houver harmonia natural.`;
 }
 
 function segmentRules(segment?: string): string {
@@ -325,7 +299,8 @@ PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, íco
 CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.
 
 ⚠ REGRA ABSOLUTA — AMBIENTES VISUAIS:
-PROIBIDO em qualquer peça, em qualquer objetivo e mesmo quando houver título/texto obrigatório: paredes de concreto aparente, painéis de concreto, galpões industriais, estruturas arquitetônicas frias, corredores vazios e ambientes desumanizados como elemento visual dominante ou como fundo/suporte para tipografia. Para fazer texto se destacar, USE: fundos coloridos da paleta da marca, texturas orgânicas, desfoque de ambiente, gradiente sutil, cor sólida, fotografia de pessoa ou detalhe quente. Nunca concreto como solução de legibilidade.
+PROIBIDO em qualquer peça, em qualquer objetivo e mesmo quando houver título/texto obrigatório: paredes de concreto aparente, painéis de concreto, galpões industriais, prédios de concreto frio, fachadas de edifício sem vida, estruturas arquitetônicas desumanizadas, corredores vazios e ambientes de obra como elemento visual dominante ou como fundo/suporte para tipografia. Para fazer texto se destacar, USE: fundos coloridos, texturas orgânicas, desfoque de ambiente, gradiente sutil, cor sólida, fotografia de pessoa ou detalhe quente. Nunca concreto como solução de legibilidade.
+PROIBIDO TAMBÉM: formas geométricas abstratas vazias (círculos, esferas, triângulos, polígonos, hexágonos, espirais) flutuando sem propósito narrativo como elemento visual central ou de preenchimento de fundo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido. Abstração pura sem referente é proibida.
 
 Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
@@ -353,7 +328,8 @@ REGRAS:
 - Alta resolução, estética editorial/publicitária brasileira
 - Direção de arte humana, nunca arte automática
 - Sem watermarks, sem logo fictícia, sem assinatura textual
-- PROIBIDO em qualquer peça: paredes de concreto aparente, painéis de concreto, galpões industriais e estruturas arquitetônicas frias como elemento visual dominante. Ambientes devem ter presença humana, calor visual ou composição abstrata com personalidade — nunca cenário de obra, corredor desumanizado ou painel de concreto.
+- PROIBIDO em qualquer peça: paredes de concreto aparente, painéis de concreto, galpões industriais, prédios de concreto frio, fachadas de edifício sem vida, estruturas arquitetônicas desumanizadas, corredores vazios e ambientes de obra como elemento visual dominante ou de fundo. Ambientes devem ter presença humana, calor visual, natureza ou composição tipográfica com personalidade — nunca cenário frio, desumanizado ou arquitetura sem alma.
+- PROIBIDO em qualquer peça: formas geométricas abstratas vazias (círculos, esferas, triângulos, polígonos, hexágonos, espirais) flutuando sem propósito narrativo como elemento visual central ou de preenchimento de fundo. A composição deve ter tema concreto — humano, objeto real, natureza, tipografia ou cenário com sentido. Abstração pura sem referente é proibida.
 - DISPOSITIVOS DIGITAIS — INEGOCIÁVEL: ao aparecer notebook, tablet, celular, monitor ou TV, a TELA FRONTAL mostra conteúdo real e coerente (gráfico, dashboard, app, mensagem, foto, planilha, vídeo); a TAMPA TRASEIRA / VERSO / CARCAÇA é superfície SÓLIDA e OPACA, sem display — proibido renderizar ali interface, gráfico, ícone, app, brilho de tela, reflexo de UI, segunda tela, logo de SO ou vazamento da tela frontal; o aparelho deve aparecer em ângulo que naturalmente esconda ou minimize a tampa (em perfil/diagonal sobre a mesa, na mão em uso, no colo, câmera baixa, por cima do ombro de quem digita). Proibido: vista top-down de laptop fechado, foto frontal do verso de tablet/celular como elemento central, mockup plano da tampa.
 - ${zona.regraFinal}
 - ${typographyShort}
