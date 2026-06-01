@@ -197,6 +197,54 @@ function buildClothingPool(primary: string, accent: string): string[] {
   return pool;
 }
 
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return { h: 0, s: 0, l: 0.5 };
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  const s = d === 0 ? 0 : l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  return { h: h * 360, s, l };
+}
+
+function buildColorBlock(primary: string, accent: string, isMood: boolean): string {
+  if (isMood) {
+    return `Cor primária: ${primary}. Cor de destaque: ${accent}. Use como ancoragem cromática subordinada ao mood definido acima.`;
+  }
+  const { h, s, l } = hexToHsl(primary);
+
+  let temp: string;
+  if (s < 0.15) temp = 'neutra/acromática';
+  else if (h < 30 || h >= 330) temp = 'quente (vermelho/laranja)';
+  else if (h < 60) temp = 'quente (amarelo/âmbar)';
+  else if (h < 150) temp = 'neutra (verde)';
+  else if (h < 270) temp = 'fria (azul/ciano)';
+  else temp = 'fria (violeta)';
+
+  const lightDesc = l < 0.35 ? 'escuro' : l > 0.65 ? 'claro' : 'médio';
+
+  const combos = [
+    `Combinação ANÁLOGA: use tons análogos à cor dominante (variações de saturação e luminosidade na mesma família cromática — mais claro, mais escuro, mais dessaturado) como suporte. Cor de apoio (${accent}) em destaques pontuais. A peça respira dentro da família da cor dominante.`,
+    `Combinação COMPLEMENTAR: cor dominante (${primary}) como base de peso visual. Cor de apoio (${accent}) como contraste pontual nos elementos de maior destaque — tipografia de acento, objeto central, fio condutor visual. Fundos e áreas de descanso em neutro (branco, creme, cinza claro) para respiração.`,
+    `Combinação ANÁLOGA COM NEUTRO: família cromática da dominante (${primary}) + neutro predominante (branco, creme, cinza claro ou bege) como respiro principal. Cor de apoio (${accent}) usada com parcimônia em único ponto de acento. Paleta clean e sofisticada.`,
+  ];
+  const combo = combos[Math.floor(Math.random() * combos.length)];
+
+  return `PALETA DA MARCA (aplicar como base cromática dominante desta peça):
+Cor dominante: ${primary} — temperatura ${temp}, tom ${lightDesc}. Use como cor de maior peso visual da composição: fundos principais, superfícies de maior área, blocos de ancoragem. A peça deve ser reconhecível pela presença desta cor.
+Cor de apoio: ${accent} — use em elementos secundários, destaques pontuais, bordas, detalhes tipográficos e objetos de suporte. Não deve competir com a dominante em área.
+${combo}
+A paleta final deve ser coerente com a identidade cromática da marca — evite cores completamente alheias a estas famílias.`;
+}
+
 function segmentRules(segment?: string): string {
   if (segment === 'VAREJO') {
     return 'CONTEXTO — SEGMENTO VAREJO: negócio de comercialização de produtos ao consumidor. Quando presentes, produtos comunicam desejo de compra e benefícios (apresentar de forma atraente, não como catálogo técnico); cenário cria atmosfera de experiência de compra ou lifestyle; avatar contextualiza atendimento ou uso do produto. O tom visual e textual é convidativo e orientado ao consumo.';
@@ -295,7 +343,7 @@ ${copyBlock}
 
 ${direcao}
 
-Cor primária: ${primary}. Cor de destaque: ${accent}. Use como ancoragem cromática, não como obrigação rígida.
+${buildColorBlock(primary, accent, data.direcao === 'mood')}
 
 ${typographyBlock}
 
