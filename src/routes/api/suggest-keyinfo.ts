@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { detectEditorialProfile } from '@/data/editorialProfiles';
+import { getUserIdFromRequest } from '@/lib/usage.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -15,6 +16,11 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const userId = await getUserIdFromRequest(request);
+          if (!userId) {
+            return Response.json({ error: 'Não autenticado' }, { status: 401 });
+          }
+
           const body = await request.json();
           const today = new Date().toLocaleDateString('pt-BR', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',

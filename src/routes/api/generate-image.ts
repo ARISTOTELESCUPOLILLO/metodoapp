@@ -55,6 +55,11 @@ export const Route = createFileRoute('/api/generate-image')({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const effective = await resolveEffectiveUser(request);
+          if (!effective) {
+            return Response.json({ error: 'Não autenticado' }, { status: 401 });
+          }
+
           const body = (await request.json()) as AnyBody;
           const action = (body as StatusBody).action || 'start';
 
@@ -130,23 +135,20 @@ export const Route = createFileRoute('/api/generate-image')({
             }
             const dataUrl = `data:${contentType};base64,${btoa(binary)}`;
 
-            // Debita 1 imagem (não bloqueia entrega).
+            // Debita 1 imagem — effective já foi validado no início do handler.
             try {
-              const effective = await resolveEffectiveUser(request);
-              if (effective) {
-                const statusBody = body as StatusBody;
-                const isEdit = statusBody.modelPath?.includes('/edit') ?? false;
-                const moduloReq = statusBody.modulo || 'metodo-op';
-                const slotPref = (statusBody.preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined;
-                await debitUsage(effective.userId, 1, 0, {
-                  evento: 'image.generate',
-                  modulo: moduloReq,
-                  payload: { provider: 'fal' },
-                  custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
-                  impersonatedBy: effective.impersonatedBy,
-                  preferredSlot: slotPref,
-                });
-              }
+              const statusBody = body as StatusBody;
+              const isEdit = statusBody.modelPath?.includes('/edit') ?? false;
+              const moduloReq = statusBody.modulo || 'metodo-op';
+              const slotPref = (statusBody.preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined;
+              await debitUsage(effective.userId, 1, 0, {
+                evento: 'image.generate',
+                modulo: moduloReq,
+                payload: { provider: 'fal' },
+                custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
+                impersonatedBy: effective.impersonatedBy,
+                preferredSlot: slotPref,
+              });
             } catch (e) {
               console.warn('[debit_usage image]', (e as Error).message);
             }
@@ -160,20 +162,13 @@ export const Route = createFileRoute('/api/generate-image')({
             return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
           }
 
-          // Pré-checagem de saldo (usa usuário efetivo — teste quando admin impersona).
-          try {
-            const effective = await resolveEffectiveUser(request);
-            if (effective) {
-              const { ok } = await checkBalance(effective.userId, 1, 0);
-              if (!ok) {
-                return Response.json(
-                  { error: 'Limite de imagens atingido em todos os seus planos.' },
-                  { status: 402 },
-                );
-              }
-            }
-          } catch (e) {
-            console.warn('[balance pre-check image]', (e as Error).message);
+          // Pré-checagem de saldo — effective já foi validado no início do handler.
+          const { ok: balOk } = await checkBalance(effective.userId, 1, 0);
+          if (!balOk) {
+            return Response.json(
+              { error: 'Limite de imagens atingido em todos os seus planos.' },
+              { status: 402 },
+            );
           }
 
           const refsRaw: string[] = Array.isArray(referenceImages)

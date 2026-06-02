@@ -29,17 +29,17 @@ export const Route = createFileRoute('/api/generate-caption')({
             return Response.json({ error: 'keyInfo obrigatório' }, { status: 400 });
           }
 
-          // Gate: quando vem do clique inicial "Gerar Post Único" debita 1 geração.
-          let userId: string | null = null;
-          let impersonatedBy: string | undefined;
+          // Autenticação obrigatória em todos os casos.
+          const effective = await resolveEffectiveUser(request);
+          if (!effective) {
+            return Response.json({ error: 'Não autenticado' }, { status: 401 });
+          }
+          const userId = effective.userId;
+          const impersonatedBy = effective.impersonatedBy;
           let isAdmin = false;
+
+          // Débita geração apenas no clique inicial "Gerar Post Único".
           if (debit) {
-            const effective = await resolveEffectiveUser(request);
-            if (!effective) {
-              return Response.json({ error: 'Não autenticado' }, { status: 401 });
-            }
-            userId = effective.userId;
-            impersonatedBy = effective.impersonatedBy;
             const bal = await checkBalance(userId, 0, 0, 1);
             if (!bal.ok) {
               return Response.json(

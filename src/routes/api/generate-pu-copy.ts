@@ -35,14 +35,15 @@ export const Route = createFileRoute('/api/generate-pu-copy')({
             return Response.json({ error: 'OPENAI_API_KEY_CONTENT não configurada' }, { status: 500 });
           }
 
-          const effective = await resolveEffectiveUser(request).catch(() => null);
-          const userId = effective?.userId ?? null;
-          const impersonatedBy = effective?.impersonatedBy;
-          if (userId) {
-            const bal = await checkBalance(userId, 0, 0, 1);
-            if (!bal.ok) {
-              return Response.json({ error: 'Limite de gerações atingido.' }, { status: 402 });
-            }
+          const effective = await resolveEffectiveUser(request);
+          if (!effective) {
+            return Response.json({ error: 'Não autenticado' }, { status: 401 });
+          }
+          const userId = effective.userId;
+          const impersonatedBy = effective.impersonatedBy;
+          const bal = await checkBalance(userId, 0, 0, 1);
+          if (!bal.ok) {
+            return Response.json({ error: 'Limite de gerações atingido.' }, { status: 402 });
           }
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
