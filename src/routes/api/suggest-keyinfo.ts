@@ -273,8 +273,6 @@ Retorne JSON EXATAMENTE assim:
 
           const metodoRefinarTensao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
 TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
 ${audienceDirective}
@@ -286,7 +284,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + DOR/CONFLITO + DIREÇÃO)
-3. Integre empresa, atividade e nicho — torne específico para este negócio
+3. Refine a forma e o ângulo a partir do texto do usuário, sem inventar assunto diferente
 4. PROIBIDO: inventar assunto diferente do texto original
 
 ${criteriosRefinamentoOP}
@@ -306,8 +304,6 @@ Retorne JSON EXATAMENTE assim:
 
           const metodoRefinarMotivacao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
 TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
 ${audienceDirective}
@@ -319,7 +315,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + DESEJO/CONQUISTA + DIREÇÃO)
-3. Integre empresa, atividade e nicho — torne específico para este negócio
+3. Refine a forma e o ângulo a partir do texto do usuário, sem inventar assunto diferente
 4. PROIBIDO: inventar assunto diferente do texto original
 
 ${criteriosRefinamentoOP}
@@ -338,8 +334,6 @@ Retorne JSON EXATAMENTE assim:
 
           const marcaRefinarIdentidade = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
 SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
 TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
@@ -350,7 +344,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + IDENTIDADE/PROPÓSITO + DIREÇÃO)
-3. Integre empresa, atividade e posicionamento da marca
+3. Refine a partir do texto do usuário mantendo o tom institucional, sem trocar o assunto
 4. PROIBIDO: inventar assunto diferente do texto original, linguagem de venda, urgência, dor do cliente
 
 ${criteriosRefinamentoOP}
@@ -368,8 +362,6 @@ Retorne JSON EXATAMENTE assim:
 
           const marcaRefinarLegado = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
 SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
 TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
@@ -380,7 +372,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + LEGADO/PERCEPÇÃO + DIREÇÃO)
-3. Integre empresa, história, território e vínculo com comunidade
+3. Refine a partir do texto do usuário mantendo o tom institucional, sem trocar o assunto
 4. PROIBIDO: inventar assunto diferente do texto original, linguagem comercial, dor do cliente, inversão negativa de pista positiva
 
 ${criteriosRefinamentoOP}
@@ -428,9 +420,7 @@ Para qualquer outra data comemorativa, use apenas se tiver certeza absoluta da d
 
           const postUnicoPrompt = `Sugira UMA Informação-chave para um post único de Instagram em português brasileiro.
 
-${dateLine}EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-OBJETIVO: ${objetivo} (tom: ${tom})
+${dateLine}${!isRefinar ? `EMPRESA: ${companyName || '(não informada)'}\nATIVIDADE: ${mainActivity || '(não informada)'}\n` : ''}OBJETIVO: ${objetivo} (tom: ${tom})
 ${hint ? `PISTA DO USUÁRIO (refine/melhore a partir disso): "${hint}"` : 'O usuário não deu pista — invente algo plausível e útil para a atividade.'}
 ${topicoGuiaBlock ? `\n${topicoGuiaBlock}\n` : ''}${previousBlock ? `\n${previousBlock}\n` : ''}
 A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica com nome ou fato real quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.

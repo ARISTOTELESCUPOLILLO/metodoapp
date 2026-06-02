@@ -69,7 +69,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const [refinements, setRefinements] = useState<string[]>([]);
   const [refineError, setRefineError] = useState<string | null>(null);
   const [refineCount, setRefineCount] = useState(0);
-  const [refineStep, setRefineStep] = useState(0);
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
   const lastCatIdxRef = useRef<number>(-1);
@@ -165,12 +164,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     if (refineExhausted || !hasKeyInfo || refining) return;
     setRefining(true);
     setRefineError(null);
-    setRefineStep(1);
     const attempt = refineCount;
-
-    const t2 = setTimeout(() => setRefineStep(2), 800);
-    const t3 = setTimeout(() => setRefineStep(3), 1600);
-    const t4 = setTimeout(() => setRefineStep(4), 2400);
 
     try {
       const auth = await getAuthHeaders();
@@ -204,9 +198,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     } catch (e) {
       setRefineError((e as Error).message);
     } finally {
-      clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
       setRefining(false);
-      setRefineStep(0);
     }
   }
 
@@ -405,22 +397,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
                 <button type="button" onClick={() => { setRefinements([]); setRefineError(null); }} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b', padding: 0, lineHeight: 1 }} aria-label="Fechar">×</button>
               )}
             </div>
-            {refining && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {([
-                  { step: 1, icon: '🔍', label: 'Classificando o conteúdo' },
-                  { step: 2, icon: '✅', label: 'Validando compatibilidade' },
-                  { step: 3, icon: '🔄', label: 'Reenquadrando o ângulo' },
-                  { step: 4, icon: '✨', label: 'Enriquecendo com 4 camadas' },
-                ] as const).map(({ step, icon, label }) => (
-                  <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: refineStep >= step ? '#166534' : '#94a3b8', fontWeight: refineStep === step ? 700 : 400 }}>
-                    <span>{icon}</span>
-                    <span>{label}…</span>
-                    {refineStep > step && <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>}
-                  </div>
-                ))}
-              </div>
-            )}
+            {refining && <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>Aguarde alguns segundos…</p>}
             {!refining && refineError && <p style={{ margin: 0, fontSize: 13, color: '#b91c1c' }}>{refineError}</p>}
             {!refining && !refineError && refinements.length > 0 && (
               <div>
