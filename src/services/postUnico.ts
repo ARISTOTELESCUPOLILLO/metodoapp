@@ -114,7 +114,7 @@ function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo:
   // texto, rosto, objeto-foco e lettering exatamente sobre o ponto da logo,
   // mantendo contraste local suficiente para a marca ser legível.
   const base =
-    'A região onde a logomarca será aplicada depois é uma ÁREA RESERVADA INVIOLÁVEL de aproximadamente 18% da largura por 10% da altura. Dentro dessa área é PROIBIDO colocar: qualquer texto, lettering, número, título, palavra solta, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo, recorte de produto ou elemento decorativo. A área deve ser uma CONTINUAÇÃO NATURAL E ORGÂNICA da imagem ao redor (fotografia de fundo, textura, céu, parede, superfície contínua). PROIBIDO TAMBÉM desenhar ali qualquer bloco, retângulo, painel, faixa, caixa, moldura, etiqueta, badge ou fundo de cor sólida (inclusive a cor da marca) para "marcar" ou "reservar" o espaço da logo — sem moldura, sem caixa, sem painel, sem fundo destacado de cor cheia. Apenas garanta contraste local suficiente para a logo ficar legível depois.';
+    'A região onde a logomarca será aplicada depois é uma ÁREA RESERVADA INVIOLÁVEL de aproximadamente 18% da largura por 10% da altura. PROIBIDO ABSOLUTO nessa área: texto, título, palavra, lettering, nome de empresa, slogan, call-to-action, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo, recorte de produto ou qualquer elemento visual essencial para a comunicação. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO OU FICAR ATRÁS DA LOGOMARCA — a logo será sobreposta aqui depois da geração. A área deve ser CONTINUAÇÃO NATURAL E ORGÂNICA da imagem ao redor (fotografia de fundo, textura, céu, parede, superfície contínua). PROIBIDO TAMBÉM: bloco, retângulo, painel, faixa, caixa, moldura, etiqueta, badge ou fundo de cor sólida (inclusive a cor da marca). Apenas garanta contraste local suficiente para a logo ficar legível depois.';
   if (pos === 'top-center') {
     return {
       reservaTopo: `Ponto da logo: TOPO CENTRAL. ${base}`,
@@ -347,7 +347,10 @@ PROIBIDO inserir automaticamente elementos decorativos sem função narrativa: v
 
 Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
-ZONA SEGURA INVIOLÁVEL DE 110 PX em todas as bordas do canvas 1080x1350. Nada importante (rosto, olhos, mãos, produto-foco, lettering, gráficos, logo) entra nesse perímetro — bordas são continuação natural do fundo. ${zona.reservaTopo}
+ZONA SEGURA INVIOLÁVEL DE 110 PX em todas as bordas do canvas 1080x1350. Nada importante (rosto, olhos, mãos, produto-foco, lettering, gráficos, logo) entra nesse perímetro — bordas são continuação natural do fundo.
+
+⚠ REGRA INVIOLÁVEL — ZONA DA LOGOMARCA: ${zona.reservaTopo}
+NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO OU FICAR ATRÁS DA LOGOMARCA — planeje a composição já respeitando essa área antes de posicionar qualquer elemento.
 
 EMPRESA: ${data.companyName || kit.companyName || 'Marca'}
 ATIVIDADE: ${data.mainActivity || kit.mainActivity || ''}
