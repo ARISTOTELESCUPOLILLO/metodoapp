@@ -368,6 +368,7 @@ export default function App() {
               logoDataUrl: kit.logoDataUrl,
               mainActivity: kit.mainActivity,
               logoPosition: kit.logoPosition || 'bottom-right',
+              assinatura: kit.assinatura,
             },
           });
         } else {
