@@ -102,7 +102,8 @@ export function InvitesTab() {
     try {
       const result = await migrateKitFn({ data: { inviteId: r.id, sourceProfileId: r.source_test_profile_id } });
       const { copied } = result as any;
-      setMsg(`Kit migrado: ${copied.avatar ? '1 avatar' : 'sem avatar'}, ${copied.cenarios} cenário(s), ${copied.produtos} produto(s).`);
+      const kitMarca = copied.brandKit ? ', kit de marca ✓' : ', kit de marca não encontrado no teste';
+      setMsg(`Kit migrado: ${copied.avatar ? '1 avatar' : 'sem avatar'}, ${copied.cenarios} cenário(s), ${copied.produtos} produto(s)${kitMarca}.`);
       load();
     } catch (e: any) {
       setMsg(`Erro na migração: ${e.message}`);
@@ -153,23 +154,29 @@ export function InvitesTab() {
   function KitBadge({ r }: { r: Invite }) {
     if (!r.source_test_profile_id) return null;
     const testName = testNameFor(r.source_test_profile_id);
-    if (r.kit_migrated_at) {
-      return (
-        <div style={{ fontSize: 10, color: '#15803d', marginTop: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span>✓ Kit migrado</span>
-          <span style={{ color: '#94a3b8' }}>({new Date(r.kit_migrated_at).toLocaleDateString('pt-BR')})</span>
-        </div>
-      );
-    }
     if (r.status === 'aceito') {
       return (
-        <button
-          onClick={() => migrateKit(r)}
-          disabled={migrating === r.id}
-          style={{ marginTop: 4, background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', opacity: migrating === r.id ? .6 : 1, display: 'block' }}
-        >
-          {migrating === r.id ? 'Migrando…' : `⬆ Migrar Kit (${testName})`}
-        </button>
+        <div>
+          {r.kit_migrated_at && (
+            <div style={{ fontSize: 10, color: '#15803d', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
+              <span>✓ Kit migrado</span>
+              <span style={{ color: '#94a3b8' }}>({new Date(r.kit_migrated_at).toLocaleDateString('pt-BR')})</span>
+            </div>
+          )}
+          <button
+            onClick={() => migrateKit(r)}
+            disabled={migrating === r.id}
+            style={{
+              background: r.kit_migrated_at ? 'transparent' : '#f59e0b',
+              color: r.kit_migrated_at ? '#64748b' : '#fff',
+              border: r.kit_migrated_at ? '1px solid #cbd5e1' : 'none',
+              borderRadius: 4, padding: '3px 8px', fontSize: 11, fontWeight: 600,
+              cursor: 'pointer', opacity: migrating === r.id ? .6 : 1, display: 'block',
+            }}
+          >
+            {migrating === r.id ? 'Migrando…' : r.kit_migrated_at ? `↺ Re-migrar Kit (${testName})` : `⬆ Migrar Kit (${testName})`}
+          </button>
+        </div>
       );
     }
     return (
