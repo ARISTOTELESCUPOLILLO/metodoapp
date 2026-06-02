@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
-import { META_PUBLISH_ALLOWED_EMAIL, getEmailFromJwt } from '@/lib/meta.server';
+import { META_PUBLISH_ALLOWED_EMAILS, getEmailFromJwt } from '@/lib/meta.server';
 
 export const Route = createFileRoute('/api/meta/status')({
   server: {
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/api/meta/status')({
       GET: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ connected: false, devMode: false }, { status: 401 });
-        if (getEmailFromJwt(request) !== META_PUBLISH_ALLOWED_EMAIL) return Response.json({ connected: false, devMode: false }, { status: 403 });
+        if (!META_PUBLISH_ALLOWED_EMAILS.includes(getEmailFromJwt(request) ?? '')) return Response.json({ connected: false, devMode: false }, { status: 403 });
 
         // devMode: basta META_ACCESS_TOKEN estar configurado no servidor
         // O token só publica na conta de quem o gerou — é a proteção real

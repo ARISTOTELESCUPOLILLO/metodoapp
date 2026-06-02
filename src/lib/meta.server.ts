@@ -2,7 +2,11 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
 export const META_VERSION = 'v25.0';
 export const META_BUCKET = 'meta-publish';
-export const META_PUBLISH_ALLOWED_EMAIL = 'acupolillo@uol.com.br';
+// Emails autorizados a publicar via Meta — separados por vírgula na env var META_PUBLISH_ALLOWED_EMAILS
+// Fallback para o email do admin principal caso a env não esteja definida
+export const META_PUBLISH_ALLOWED_EMAILS: string[] = (
+  process.env.META_PUBLISH_ALLOWED_EMAILS || 'acupolillo@uol.com.br'
+).split(',').map((e) => e.trim()).filter(Boolean);
 
 export function getEmailFromJwt(request: Request): string | null {
   const auth = request.headers.get('authorization') || request.headers.get('Authorization');

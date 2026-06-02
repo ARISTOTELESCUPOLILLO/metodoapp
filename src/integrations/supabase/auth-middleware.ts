@@ -63,28 +63,18 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     let userId: string;
     let claims: Record<string, unknown>;
 
-    // Try getClaims (validates signature via JWKS). Falls back to local decode
-    // if the JWKS network call fails (e.g., corporate SSL proxy after server restart).
+    // Valida o JWT via JWKS (getClaims). Se o serviço Supabase estiver indisponível,
+    // retorna 503 — nunca aceita token sem verificação criptográfica da assinatura.
     try {
       const { data, error } = await supabase.auth.getClaims(token);
-      if (error || !data?.claims?.sub) throw error || new Error('getClaims failed');
+      if (error || !data?.claims?.sub) {
+        throw new Response('Unauthorized: Invalid or expired token', { status: 401 });
+      }
       userId = data.claims.sub as string;
       claims = data.claims as Record<string, unknown>;
-    } catch {
-      try {
-        const parts = token.split('.');
-        if (parts.length !== 3) throw new Error('bad jwt');
-        const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
-        if (!payload?.sub) throw new Error('no sub');
-        if (payload.exp && payload.exp < Math.floor(Date.now() / 1000))
-          throw new Response('Unauthorized: Token expired', { status: 401 });
-        userId = payload.sub as string;
-        claims = payload as Record<string, unknown>;
-      } catch (e) {
-        if (e instanceof Response) throw e;
-        throw new Response('Unauthorized: Invalid token', { status: 401 });
-      }
+    } catch (e) {
+      if (e instanceof Response) throw e;
+      throw new Response('Auth service unavailable', { status: 503 });
     }
 
     return next({

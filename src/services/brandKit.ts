@@ -51,7 +51,7 @@ const KitSchema = z.object({
   fontPair: z.string().default('Montserrat'),
   brandVoice: z.string().default(''),
   logoHasName: z.boolean().default(false),
-  logoDataUrl: z.string().optional(),
+  logoDataUrl: z.string().max(5_000_000).optional(),
   mainActivity: z.string().default(''),
   logoPosition: z.string().default('bottom-right'),
   assinatura: z.string().max(100).optional(),

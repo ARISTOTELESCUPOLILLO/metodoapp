@@ -18,7 +18,7 @@ async function uploadFrame(base64DataUrl: string, userId: string | null): Promis
   if (upErr) throw new Error(`Upload frame falhou: ${upErr.message}`);
   const { data, error: signErr } = await supabaseAdmin.storage
     .from('image-kits')
-    .createSignedUrl(path, 3600);
+    .createSignedUrl(path, 600); // 10 min — suficiente para FAL processar
   if (signErr || !data?.signedUrl) throw new Error('Não foi possível gerar URL do frame.');
   return data.signedUrl;
 }
@@ -279,7 +279,7 @@ export const Route = createFileRoute('/api/generate-video')({
             if (upErr) throw new Error(`Upload áudio TTS falhou: ${upErr.message}`);
             const { data: audioSigned, error: signErr } = await supabaseAdmin.storage
               .from('image-kits')
-              .createSignedUrl(audioPath, 3600);
+              .createSignedUrl(audioPath, 600); // 10 min — suficiente para FAL processar
             if (signErr || !audioSigned?.signedUrl) throw new Error('Não foi possível gerar URL do áudio TTS.');
             audioUrl = audioSigned.signedUrl;
             console.log('[generate-video] elevenlabs cloned tts ok');

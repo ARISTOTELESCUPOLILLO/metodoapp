@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
-import { META_VERSION, META_PUBLISH_ALLOWED_EMAIL, getEmailFromJwt, uploadImageToMetaBucket, pollContainerStatus } from '@/lib/meta.server';
+import { META_VERSION, META_PUBLISH_ALLOWED_EMAILS, getEmailFromJwt, uploadImageToMetaBucket, pollContainerStatus } from '@/lib/meta.server';
 
 export const Route = createFileRoute('/api/meta/publish-instagram')({
   server: {
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/api/meta/publish-instagram')({
       POST: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: 'Não autenticado' }, { status: 401 });
-        if (getEmailFromJwt(request) !== META_PUBLISH_ALLOWED_EMAIL) return Response.json({ error: 'Acesso não autorizado' }, { status: 403 });
+        if (!META_PUBLISH_ALLOWED_EMAILS.includes(getEmailFromJwt(request) ?? '')) return Response.json({ error: 'Acesso não autorizado' }, { status: 403 });
 
         const { imageDataUrl, caption } = await request.json() as { imageDataUrl: string; caption: string };
         if (!imageDataUrl) return Response.json({ error: 'imageDataUrl obrigatório' }, { status: 400 });

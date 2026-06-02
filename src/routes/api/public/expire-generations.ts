@@ -4,7 +4,13 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server';
 export const Route = createFileRoute('/api/public/expire-generations')({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const secret = request.headers.get('x-cron-secret');
+        const expected = process.env.CRON_SECRET;
+        if (!expected || secret !== expected) {
+          return new Response('Unauthorized', { status: 401 });
+        }
+
         const { data: expired, error } = await supabaseAdmin
           .from('user_generations')
           .select('id, pdf_path, video_path')

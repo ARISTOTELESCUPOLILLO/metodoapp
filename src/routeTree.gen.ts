@@ -43,6 +43,8 @@ import { Route as ApiMetaPublishInstagramRouteImport } from './routes/api/meta/p
 import { Route as ApiMetaPublishFacebookRouteImport } from './routes/api/meta/publish-facebook'
 import { Route as ApiMetaDisconnectRouteImport } from './routes/api/meta/disconnect'
 import { Route as ApiMetaDebugAccountsRouteImport } from './routes/api/meta/debug-accounts'
+import { Route as ApiMetaAutopostInstagramRouteImport } from './routes/api/meta/autopost-instagram'
+import { Route as ApiMetaAutopostFacebookRouteImport } from './routes/api/meta/autopost-facebook'
 import { Route as ApiMetaAuthUrlRouteImport } from './routes/api/meta/auth-url'
 
 const TermosRoute = TermosRouteImport.update({
@@ -216,6 +218,17 @@ const ApiMetaDebugAccountsRoute = ApiMetaDebugAccountsRouteImport.update({
   path: '/api/meta/debug-accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetaAutopostInstagramRoute =
+  ApiMetaAutopostInstagramRouteImport.update({
+    id: '/api/meta/autopost-instagram',
+    path: '/api/meta/autopost-instagram',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiMetaAutopostFacebookRoute = ApiMetaAutopostFacebookRouteImport.update({
+  id: '/api/meta/autopost-facebook',
+  path: '/api/meta/autopost-facebook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetaAuthUrlRoute = ApiMetaAuthUrlRouteImport.update({
   id: '/api/meta/auth-url',
   path: '/api/meta/auth-url',
@@ -250,6 +263,8 @@ export interface FileRoutesByFullPath {
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/autopost-facebook': typeof ApiMetaAutopostFacebookRoute
+  '/api/meta/autopost-instagram': typeof ApiMetaAutopostInstagramRoute
   '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
@@ -287,6 +302,8 @@ export interface FileRoutesByTo {
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/autopost-facebook': typeof ApiMetaAutopostFacebookRoute
+  '/api/meta/autopost-instagram': typeof ApiMetaAutopostInstagramRoute
   '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
@@ -325,6 +342,8 @@ export interface FileRoutesById {
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
+  '/api/meta/autopost-facebook': typeof ApiMetaAutopostFacebookRoute
+  '/api/meta/autopost-instagram': typeof ApiMetaAutopostInstagramRoute
   '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
@@ -364,6 +383,8 @@ export interface FileRouteTypes {
     | '/api/supabase-pdf'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
+    | '/api/meta/autopost-facebook'
+    | '/api/meta/autopost-instagram'
     | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
     | '/api/meta/publish-facebook'
@@ -401,6 +422,8 @@ export interface FileRouteTypes {
     | '/api/supabase-pdf'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
+    | '/api/meta/autopost-facebook'
+    | '/api/meta/autopost-instagram'
     | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
     | '/api/meta/publish-facebook'
@@ -438,6 +461,8 @@ export interface FileRouteTypes {
     | '/api/supabase-pdf'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
+    | '/api/meta/autopost-facebook'
+    | '/api/meta/autopost-instagram'
     | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
     | '/api/meta/publish-facebook'
@@ -476,6 +501,8 @@ export interface RootRouteChildren {
   ApiSupabasePdfRoute: typeof ApiSupabasePdfRoute
   ApiTtsVoiceRoute: typeof ApiTtsVoiceRoute
   ApiMetaAuthUrlRoute: typeof ApiMetaAuthUrlRoute
+  ApiMetaAutopostFacebookRoute: typeof ApiMetaAutopostFacebookRoute
+  ApiMetaAutopostInstagramRoute: typeof ApiMetaAutopostInstagramRoute
   ApiMetaDebugAccountsRoute: typeof ApiMetaDebugAccountsRoute
   ApiMetaDisconnectRoute: typeof ApiMetaDisconnectRoute
   ApiMetaPublishFacebookRoute: typeof ApiMetaPublishFacebookRoute
@@ -726,6 +753,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetaDebugAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meta/autopost-instagram': {
+      id: '/api/meta/autopost-instagram'
+      path: '/api/meta/autopost-instagram'
+      fullPath: '/api/meta/autopost-instagram'
+      preLoaderRoute: typeof ApiMetaAutopostInstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/autopost-facebook': {
+      id: '/api/meta/autopost-facebook'
+      path: '/api/meta/autopost-facebook'
+      fullPath: '/api/meta/autopost-facebook'
+      preLoaderRoute: typeof ApiMetaAutopostFacebookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/auth-url': {
       id: '/api/meta/auth-url'
       path: '/api/meta/auth-url'
@@ -764,6 +805,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSupabasePdfRoute: ApiSupabasePdfRoute,
   ApiTtsVoiceRoute: ApiTtsVoiceRoute,
   ApiMetaAuthUrlRoute: ApiMetaAuthUrlRoute,
+  ApiMetaAutopostFacebookRoute: ApiMetaAutopostFacebookRoute,
+  ApiMetaAutopostInstagramRoute: ApiMetaAutopostInstagramRoute,
   ApiMetaDebugAccountsRoute: ApiMetaDebugAccountsRoute,
   ApiMetaDisconnectRoute: ApiMetaDisconnectRoute,
   ApiMetaPublishFacebookRoute: ApiMetaPublishFacebookRoute,
