@@ -3,6 +3,7 @@ import { ContentFormData, MoodCode, Segment, Track } from '../../types';
 import TemplateChooser from './TemplateChooser';
 import type { PlanAccess } from '@/lib/planAccess';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { getAuthHeaders } from '../../services/authHeaders';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
 
 interface Props {
@@ -124,9 +125,10 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx] };
 
     try {
+      const auth = await getAuthHeaders();
       const res = await fetch('/api/suggest-keyinfo', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...auth },
         body: JSON.stringify({
           companyName: data.companyName,
           mainActivity: (data as any).mainActivity || '',
@@ -171,9 +173,10 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     const t4 = setTimeout(() => setRefineStep(4), 2400);
 
     try {
+      const auth = await getAuthHeaders();
       const res = await fetch('/api/suggest-keyinfo', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...auth },
         body: JSON.stringify({
           companyName: data.companyName,
           mainActivity: (data as any).mainActivity || '',

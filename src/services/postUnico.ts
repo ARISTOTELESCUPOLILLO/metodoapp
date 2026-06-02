@@ -3,6 +3,7 @@ import { composeFeedPng } from '../utils/canvasComposer';
 import type { FeedItem } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
+import { getAuthHeaders } from './authHeaders';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: 'Promoção comercial — gerar desejo e ação',
@@ -138,9 +139,10 @@ export interface PostUnicoCopy {
 }
 
 export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?: string, segment?: string, preferredSlot?: string): Promise<PostUnicoCopy> {
+  const auth = await getAuthHeaders();
   const res = await fetch('/api/generate-pu-copy', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...auth },
     body: JSON.stringify({
       companyName: data.companyName,
       mainActivity: data.mainActivity,

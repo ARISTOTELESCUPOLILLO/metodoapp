@@ -3,6 +3,7 @@ import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } fro
 import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
 import { regenerateBlock } from '../../services/regenerateBlock';
+import { getAuthHeaders } from '../../services/authHeaders';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
@@ -238,9 +239,10 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx] };
 
     try {
+      const auth = await getAuthHeaders();
       const res = await fetch('/api/suggest-keyinfo', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...auth },
         body: JSON.stringify({
           companyName: data.companyName || kit.companyName,
           mainActivity: data.mainActivity || kit.mainActivity,
@@ -283,9 +285,10 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     const t4 = setTimeout(() => setRefineStep(4), 2400);
 
     try {
+      const auth = await getAuthHeaders();
       const res = await fetch('/api/suggest-keyinfo', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...auth },
         body: JSON.stringify({
           companyName: data.companyName || kit.companyName,
           mainActivity: data.mainActivity || kit.mainActivity,
