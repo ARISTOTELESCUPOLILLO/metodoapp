@@ -253,7 +253,7 @@ function buildColorBlock(primary: string, accent: string, isMood: boolean, objet
 
   return `${palette}
 As cores são definidas pela intenção emocional da peça, não pelas cores institucionais como base da composição. Referência cromática da marca (use apenas se houver harmonia natural): primária ${primary}, apoio ${accent}.
-COR DO LETTERING: prefira a cor de destaque da marca (${accent}) para o título e elementos tipográficos de destaque, quando houver contraste natural com o fundo desta paleta. Se o contraste for insuficiente ou a cor destoar da atmosfera, use branco ou o tom mais claro da paleta.`;
+COR DO LETTERING: escolha livremente a cor que garanta a melhor leitura visual sobre o fundo desta paleta — branco, preto, tom claro ou escuro conforme o contraste necessário. Legibilidade e destaque visual são prioritários.`;
 }
 
 function segmentRules(segment?: string): string {
