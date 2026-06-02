@@ -62,6 +62,7 @@ export const assignPlanSlot = createServerFn({ method: 'POST' })
       slot: SlotEnum,
       planId: z.string().uuid(),
       inicio: z.string(),
+      mesesContrato: z.number().int().min(1).default(1),
       resetCounters: z.boolean().default(true),
       extraPrefix: z.string(), // 'p1' | 'p2' | 'b'
       motivoFechamento: z.enum(['renovacao', 'troca_plano']).default('renovacao'),
@@ -92,10 +93,11 @@ export const assignPlanSlot = createServerFn({ method: 'POST' })
       .maybeSingle();
     if (planErr) throw new Error(planErr.message);
 
-    // 4. Atualizar profiles (trigger apply_slot_limits cuida do expira_em)
+    // 4. Atualizar profiles (trigger apply_slot_limits cuida do expira_em e contrato_fim)
     const patch: Record<string, any> = {
       [`${data.slot}_id`]: data.planId,
       [`${data.slot}_inicio`]: new Date(data.inicio + 'T12:00:00').toISOString(),
+      [`${data.slot}_meses_contrato`]: data.mesesContrato,
       [`${data.slot}_imgs_limite`]: (plan as any)?.limite_imagens ?? 0,
       [`${data.slot}_renders_limite`]: (plan as any)?.limite_renders ?? 0,
       [`${data.slot}_geracoes_limite`]: (plan as any)?.limite_geracoes ?? 0,

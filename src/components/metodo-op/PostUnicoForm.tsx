@@ -108,7 +108,6 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     setRefineCount(0);
     setRefinements([]);
     setRefineError(null);
-    setRefineStep(0);
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
   }, [data.objetivo, kit.companyName]);
@@ -121,7 +120,6 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
       setRefineCount(0);
       setRefinements([]);
       setRefineError(null);
-      setRefineStep(0);
       initialKeyInfoRef.current = null;
       // allSessionSuggestionsRef NÃO é resetado — persiste para garantir inédito
     }

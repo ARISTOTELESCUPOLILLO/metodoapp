@@ -7,8 +7,6 @@ export const Route = createFileRoute('/signup')({
   component: SignupPage,
 });
 
-type Segmento = 'SERVIÇOS' | 'VAREJO' | 'MARCA';
-
 function SignupPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -16,7 +14,6 @@ function SignupPage() {
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [segmento, setSegmento] = useState<Segmento | ''>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -30,17 +27,12 @@ function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null); setSuccess(null);
-    if (!segmento) { setError('Escolha o segmento do seu negócio.'); return; }
     if (password.length < 6) { setError('Senha deve ter ao menos 6 caracteres.'); return; }
     if (password !== confirm) { setError('As senhas não coincidem.'); return; }
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: { segmento },
-      },
     });
     setLoading(false);
     if (error) {
@@ -54,26 +46,10 @@ function SignupPage() {
       }
       return;
     }
-    // Persistir segmento no profile. O segment do convite tem prioridade sobre o picker.
-    if (data.user) {
-      let effectiveSegmento: Segmento = segmento as Segmento;
-      try {
-        const { data: inviteRow } = await supabase
-          .from('invited_emails')
-          .select('segment')
-          .eq('email', email.trim().toLowerCase())
-          .maybeSingle();
-        const invSeg = (inviteRow as any)?.segment;
-        if (invSeg && ['SERVIÇOS', 'VAREJO', 'MARCA'].includes(invSeg)) {
-          effectiveSegmento = invSeg as Segmento;
-        }
-      } catch { /* fallback para picker */ }
-      await supabase.from('profiles').update({ segmento: effectiveSegmento } as any).eq('id', data.user.id);
-    }
     if (data.session) {
       navigate({ to: '/' });
     } else {
-      setSuccess('Cadastro criado! Verifique seu e-mail para confirmar a conta.');
+      setSuccess('Cadastro criado! Você já pode fazer login.');
     }
   }
 
@@ -109,24 +85,6 @@ function SignupPage() {
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-foreground">Segmento do seu negócio</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['SERVIÇOS','VAREJO','MARCA'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSegmento(s)}
-                  className={`px-2 py-2 rounded-md border text-xs font-semibold ${segmento === s ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground border-input'}`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Define como o app personaliza imagens (avatar, produto ou cenário). Pode ser ajustado depois.
-            </p>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           {success && <p className="text-sm text-green-700">{success}</p>}

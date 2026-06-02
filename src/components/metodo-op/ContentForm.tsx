@@ -89,7 +89,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     setRefineCount(0);
     setRefinements([]);
     setRefineError(null);
-    setRefineStep(0);
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
   }, [segment]);
@@ -102,7 +101,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
       setRefineCount(0);
       setRefinements([]);
       setRefineError(null);
-      setRefineStep(0);
       initialKeyInfoRef.current = null;
       // allSessionSuggestionsRef NÃO é resetado — persiste para garantir inédito
     }

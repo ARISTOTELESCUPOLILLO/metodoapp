@@ -18,14 +18,17 @@ interface Row {
   ultimo_login: string | null;
   is_admin: boolean;
   plano1_id: string | null; plano1_inicio: string | null;
+  plano1_meses_contrato: number; plano1_contrato_fim: string | null;
   plano1_imgs_usadas: number; plano1_imgs_limite: number;
   plano1_renders_usados: number; plano1_renders_limite: number;
   plano1_preco_brl: number | null;
   plano2_id: string | null; plano2_inicio: string | null;
+  plano2_meses_contrato: number; plano2_contrato_fim: string | null;
   plano2_imgs_usadas: number; plano2_imgs_limite: number;
   plano2_renders_usados: number; plano2_renders_limite: number;
   plano2_preco_brl: number | null;
   bonus_id: string | null; bonus_inicio: string | null;
+  bonus_meses_contrato: number; bonus_contrato_fim: string | null;
   bonus_imgs_usadas: number; bonus_imgs_limite: number;
   bonus_renders_usados: number; bonus_renders_limite: number;
   bonus_preco_brl: number | null;
@@ -42,23 +45,23 @@ interface Costs { imageRef: number; video: number; content: number }
 interface AssignModal {
   userId: string; userName: string; slot: SlotKey;
   originalPlanId: string | null; options: Plan[];
-  selectedPlanId: string; dateVal: string; resetCounters: boolean;
+  selectedPlanId: string; dateVal: string; mesesContrato: number; resetCounters: boolean;
 }
 
-function planPeriodo(inicio: string | null, tipo: string): string {
+function planPeriodo(inicio: string | null, tipo: string, mesesContrato?: number, contratoFim?: string | null): string {
   if (!inicio) return '';
   const start = new Date(inicio);
   const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-  if (tipo === 'mensal') {
-    const end = new Date(start); end.setMonth(end.getMonth() + 1);
-    return `${fmt(start)} → ${fmt(end)} · 1 mês`;
-  }
+  if (tipo === 'vitalicio') return `${fmt(start)} · vitalício`;
   if (tipo === 'anual') {
-    const end = new Date(start); end.setFullYear(end.getFullYear() + 1);
+    const end = contratoFim ? new Date(contratoFim) : (() => { const d = new Date(start); d.setFullYear(d.getFullYear() + 1); return d; })();
     return `${fmt(start)} → ${fmt(end)} · 12 meses`;
   }
-  if (tipo === 'vitalicio') return `${fmt(start)} · vitalício`;
-  return fmt(start);
+  // mensal ou outros: usa mesesContrato e contratoFim
+  const meses = mesesContrato && mesesContrato > 0 ? mesesContrato : 1;
+  const endDate = contratoFim ? new Date(contratoFim) : (() => { const d = new Date(start); d.setMonth(d.getMonth() + meses); return d; })();
+  const label = meses === 1 ? '1 mês' : `${meses} meses`;
+  return `${fmt(start)} → ${fmt(endDate)} · ${label}`;
 }
 
 type SlotKey = 'plano1' | 'plano2' | 'bonus';
@@ -126,12 +129,14 @@ export function UsersTab() {
 
   function openAssignModal(r: Row, slot: SlotKey, options: Plan[], forceReset = false) {
     const originalPlanId = slot === 'plano1' ? r.plano1_id : slot === 'plano2' ? r.plano2_id : r.bonus_id;
+    const currentMeses = slot === 'plano1' ? (r.plano1_meses_contrato || 1) : slot === 'plano2' ? (r.plano2_meses_contrato || 1) : (r.bonus_meses_contrato || 1);
     const today = new Date().toISOString().split('T')[0];
     setAssignModal({
       userId: r.id, userName: r.nome || r.email, slot,
       originalPlanId, options,
       selectedPlanId: originalPlanId || '',
       dateVal: today,
+      mesesContrato: currentMeses,
       resetCounters: forceReset,
     });
   }
@@ -152,7 +157,7 @@ export function UsersTab() {
 
   async function assignSlot() {
     if (!assignModal || !assignModal.selectedPlanId || !assignModal.dateVal) return;
-    const { userId, slot, selectedPlanId, dateVal, resetCounters } = assignModal;
+    const { userId, slot, selectedPlanId, dateVal, mesesContrato, resetCounters } = assignModal;
     setBusy(userId);
     const extraPrefix = slot === 'plano1' ? 'p1' : slot === 'plano2' ? 'p2' : 'b';
 
@@ -165,6 +170,7 @@ export function UsersTab() {
           slot,
           planId: selectedPlanId,
           inicio: dateVal,
+          mesesContrato: mesesContrato || 1,
           resetCounters,
           extraPrefix,
           adminUserId: adminUser?.id ?? null,
@@ -287,7 +293,7 @@ export function UsersTab() {
               </div>
               <MRow k="Plano 1">
                 <div>
-                  <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans}
+                  <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} mesesContrato={r.plano1_meses_contrato} contratoFim={r.plano1_contrato_fim} options={mainPlans}
                     onAssign={() => openAssignModal(r, 'plano1', mainPlans)}
                     onRemove={() => removeSlot(r.id, 'plano1')} />
                   {r.plano1_id && <PlanPriceField planId={r.plano1_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano1_preco_brl} onChange={(v) => changePreco(r.id, 'plano1', v)} />}
@@ -295,7 +301,7 @@ export function UsersTab() {
               </MRow>
               <MRow k="Plano 2">
                 <div>
-                  <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans}
+                  <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} mesesContrato={r.plano2_meses_contrato} contratoFim={r.plano2_contrato_fim} options={mainPlans}
                     onAssign={() => openAssignModal(r, 'plano2', mainPlans)}
                     onRemove={() => removeSlot(r.id, 'plano2')} />
                   {r.plano2_id && <PlanPriceField planId={r.plano2_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano2_preco_brl} onChange={(v) => changePreco(r.id, 'plano2', v)} />}
@@ -303,7 +309,7 @@ export function UsersTab() {
               </MRow>
               <MRow k="Bônus">
                 <div>
-                  <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans}
+                  <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} mesesContrato={r.bonus_meses_contrato} contratoFim={r.bonus_contrato_fim} options={bonusPlans}
                     onAssign={() => openAssignModal(r, 'bonus', bonusPlans)}
                     onRemove={() => removeSlot(r.id, 'bonus')} />
                   {r.bonus_id && <PlanPriceField planId={r.bonus_id} plans={bonusPlans} costs={costs} usdRate={usdRate} value={r.bonus_preco_brl} onChange={(v) => changePreco(r.id, 'bonus', v)} />}
@@ -384,19 +390,19 @@ export function UsersTab() {
                     {r.client_code && <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: 2 }}>{r.client_code}</div>}
                   </Td>
                   <Td>
-                    <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} options={mainPlans}
+                    <PlanCell planId={r.plano1_id} inicio={r.plano1_inicio} mesesContrato={r.plano1_meses_contrato} contratoFim={r.plano1_contrato_fim} options={mainPlans}
                       onAssign={() => openAssignModal(r, 'plano1', mainPlans)}
                       onRemove={() => removeSlot(r.id, 'plano1')} />
                     {r.plano1_id && <PlanPriceField planId={r.plano1_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano1_preco_brl} onChange={(v) => changePreco(r.id, 'plano1', v)} />}
                   </Td>
                   <Td>
-                    <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} options={mainPlans}
+                    <PlanCell planId={r.plano2_id} inicio={r.plano2_inicio} mesesContrato={r.plano2_meses_contrato} contratoFim={r.plano2_contrato_fim} options={mainPlans}
                       onAssign={() => openAssignModal(r, 'plano2', mainPlans)}
                       onRemove={() => removeSlot(r.id, 'plano2')} />
                     {r.plano2_id && <PlanPriceField planId={r.plano2_id} plans={mainPlans} costs={costs} usdRate={usdRate} value={r.plano2_preco_brl} onChange={(v) => changePreco(r.id, 'plano2', v)} />}
                   </Td>
                   <Td>
-                    <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} options={bonusPlans}
+                    <PlanCell planId={r.bonus_id} inicio={r.bonus_inicio} mesesContrato={r.bonus_meses_contrato} contratoFim={r.bonus_contrato_fim} options={bonusPlans}
                       onAssign={() => openAssignModal(r, 'bonus', bonusPlans)}
                       onRemove={() => removeSlot(r.id, 'bonus')} />
                     {r.bonus_id && <PlanPriceField planId={r.bonus_id} plans={bonusPlans} costs={costs} usdRate={usdRate} value={r.bonus_preco_brl} onChange={(v) => changePreco(r.id, 'bonus', v)} />}
@@ -473,6 +479,25 @@ export function UsersTab() {
                   onChange={(e) => setAssignModal({ ...assignModal, dateVal: e.target.value })}
                   style={inp} />
               </label>
+              <label style={{ display: 'grid', gap: 4 }}>
+                <span style={lbl}>Meses contratados</span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    value={assignModal.mesesContrato}
+                    onChange={(e) => setAssignModal({ ...assignModal, mesesContrato: Number(e.target.value) })}
+                    style={inp}
+                  >
+                    {[1,2,3,4,5,6,9,12].map(m => (
+                      <option key={m} value={m}>{m} {m === 1 ? 'mês' : 'meses'}</option>
+                    ))}
+                  </select>
+                  {assignModal.dateVal && (
+                    <span style={{ fontSize: 11, color: '#64748b' }}>
+                      até {(() => { const d = new Date(assignModal.dateVal + 'T12:00:00'); d.setMonth(d.getMonth() + assignModal.mesesContrato); return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }); })()}
+                    </span>
+                  )}
+                </div>
+              </label>
               <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}>
                 <input type="checkbox" checked={assignModal.resetCounters}
                   onChange={(e) => setAssignModal({ ...assignModal, resetCounters: e.target.checked })} />
@@ -515,12 +540,12 @@ function SegmentoSelect({ value, onChange }: { value: 'SERVIÇOS' | 'VAREJO' | '
   );
 }
 
-function PlanCell({ planId, inicio, options, onAssign, onRemove }: {
-  planId: string | null; inicio: string | null; options: Plan[];
+function PlanCell({ planId, inicio, mesesContrato, contratoFim, options, onAssign, onRemove }: {
+  planId: string | null; inicio: string | null; mesesContrato?: number; contratoFim?: string | null; options: Plan[];
   onAssign: () => void; onRemove: () => void;
 }) {
   const plan = options.find((p) => p.id === planId);
-  const periodo = plan ? planPeriodo(inicio, plan.tipo) : '';
+  const periodo = plan ? planPeriodo(inicio, plan.tipo, mesesContrato, contratoFim) : '';
   return (
     <div>
       {plan ? (
@@ -661,13 +686,15 @@ function PlanPriceField({ planId, plans, costs, usdRate, value, onChange }: {
 
 function FaturamentoCell({ row, plans, costs, usdRate }: { row: Row; plans: Plan[]; costs: Costs; usdRate: number }) {
   if (row.is_admin) return <span style={{ color: '#94a3b8', fontSize: 11 }}>—</span>;
-  let total = 0;
+  let totalMensal = 0;
   let hasWarning = false;
   const slots = [
-    { planId: row.plano1_id, preco: row.plano1_preco_brl },
-    { planId: row.plano2_id, preco: row.plano2_preco_brl },
-    { planId: row.bonus_id,  preco: row.bonus_preco_brl  },
+    { planId: row.plano1_id, preco: row.plano1_preco_brl, meses: row.plano1_meses_contrato || 1 },
+    { planId: row.plano2_id, preco: row.plano2_preco_brl, meses: row.plano2_meses_contrato || 1 },
+    { planId: row.bonus_id,  preco: row.bonus_preco_brl,  meses: row.bonus_meses_contrato  || 1 },
   ];
+  // Meses máximos do contrato ativo (para mostrar total do contrato)
+  const maxMeses = slots.filter(s => s.planId).reduce((mx, s) => Math.max(mx, s.meses), 1);
   for (const s of slots) {
     if (!s.planId) continue;
     const plan = plans.find(p => p.id === s.planId);
@@ -675,13 +702,22 @@ function FaturamentoCell({ row, plans, costs, usdRate }: { row: Row; plans: Plan
     const cost = plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + plan.limite_geracoes * costs.content;
     const min = cost * usdRate * 3;
     const preco = s.preco || 0;
-    total += preco;
+    totalMensal += preco;
     if (preco > 0 && preco < min) hasWarning = true;
   }
-  if (total === 0) return <span style={{ color: '#94a3b8', fontSize: 11 }}>sem preço</span>;
+  if (totalMensal === 0) return <span style={{ color: '#94a3b8', fontSize: 11 }}>sem preço</span>;
+  const totalContrato = totalMensal * maxMeses;
   return (
-    <div style={{ fontWeight: 700, fontSize: 13, color: hasWarning ? '#dc2626' : '#15803d' }}>
-      {hasWarning && '⚠ '}R$ {total.toFixed(0)}<span style={{ fontSize: 10, fontWeight: 400, color: '#64748b' }}>/mês</span>
+    <div>
+      <div style={{ fontWeight: 700, fontSize: 13, color: hasWarning ? '#dc2626' : '#15803d' }}>
+        {hasWarning && '⚠ '}
+        {maxMeses > 1 && <span style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginRight: 4 }}>{maxMeses} meses ·</span>}
+        R$ {maxMeses > 1 ? totalContrato.toFixed(0) : totalMensal.toFixed(0)}
+        <span style={{ fontSize: 10, fontWeight: 400, color: '#64748b' }}>{maxMeses > 1 ? ' total' : '/mês'}</span>
+      </div>
+      {maxMeses > 1 && (
+        <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 1 }}>R$ {totalMensal.toFixed(0)}/mês</div>
+      )}
     </div>
   );
 }
