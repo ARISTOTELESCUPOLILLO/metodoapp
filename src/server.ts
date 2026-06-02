@@ -68,19 +68,36 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
+  'X-Frame-Options': 'SAMEORIGIN',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'X-XSS-Protection': '1; mode=block',
 };
 
+// Injeta os headers de segurança sem consumir o body (preserva streaming / SSE).
 function addSecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers);
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
+// Redireciona HTTP → HTTPS via cabeçalho CF-Visitor (Cloudflare injeta o scheme real).
+function httpsRedirect(request: Request): Response | null {
+  try {
+    const visitor = request.headers.get('CF-Visitor');
+    if (visitor && JSON.parse(visitor).scheme === 'http') {
+      const url = new URL(request.url);
+      url.protocol = 'https:';
+      return Response.redirect(url.toString(), 301);
+    }
+  } catch { /* ignora */ }
+  return null;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const redirect = httpsRedirect(request);
+    if (redirect) return redirect;
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
