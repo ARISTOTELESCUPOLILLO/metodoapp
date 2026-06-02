@@ -53,6 +53,7 @@ export type Database = {
       brand_kits: {
         Row: {
           accent_color: string | null
+          assinatura: string | null
           brand_voice: string | null
           company_name: string
           created_at: string
@@ -71,6 +72,7 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          assinatura?: string | null
           brand_voice?: string | null
           company_name: string
           created_at?: string
@@ -89,6 +91,7 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          assinatura?: string | null
           brand_voice?: string | null
           company_name?: string
           created_at?: string
