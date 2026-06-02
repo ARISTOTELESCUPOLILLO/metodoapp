@@ -80,8 +80,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const SUGGEST_MAX = 3;
   const REFINE_MAX = 2;
   const hasKeyInfo = !!data.keyInfo.trim();
-  const suggestExhausted = suggestCount >= SUGGEST_MAX;
-  const refineExhausted = refineCount >= REFINE_MAX;
+  const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
+  const refineExhausted = !isAdmin && refineCount >= REFINE_MAX;
   const initialKeyInfo = initialKeyInfoRef.current;
   const canRevertInitial = initialKeyInfo !== null && data.keyInfo !== initialKeyInfo;
 
@@ -161,8 +161,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   async function regenField(kind: 'titulo' | 'texto') {
     if (!copy) return;
     const isTitulo = kind === 'titulo';
-    if (isTitulo) { if (copyTRegenCount >= COPY_REGEN_MAX || copyTBusy) return; }
-    else          { if (copyXRegenCount >= COPY_REGEN_MAX || copyXBusy) return; }
+    if (isTitulo) { if ((!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) || copyTBusy) return; }
+    else          { if ((!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) || copyXBusy) return; }
     isTitulo ? setCopyTBusy(true) : setCopyXBusy(true);
     isTitulo ? setCopyTError(null) : setCopyXError(null);
     try {
@@ -616,9 +616,9 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 <button
                   type="button"
                   onClick={() => regenField('titulo')}
-                  disabled={copyTRegenCount >= COPY_REGEN_MAX || copyTBusy}
-                  style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: copyTRegenCount >= COPY_REGEN_MAX ? 'not-allowed' : 'pointer', opacity: copyTRegenCount >= COPY_REGEN_MAX ? 0.55 : 1 }}
-                  title={copyTRegenCount >= COPY_REGEN_MAX ? 'Limite de 1 regeneração atingido' : undefined}
+                  disabled={(!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) || copyTBusy}
+                  style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: (!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) ? 'not-allowed' : 'pointer', opacity: (!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) ? 0.55 : 1 }}
+                  title={(!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) ? 'Limite de 1 regeneração atingido' : undefined}
                 >
                   {copyTBusy ? '…' : `✨ Gerar outro (${copyTRegenCount}/${COPY_REGEN_MAX})`}
                 </button>
@@ -671,9 +671,9 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 <button
                   type="button"
                   onClick={() => regenField('texto')}
-                  disabled={copyXRegenCount >= COPY_REGEN_MAX || copyXBusy}
-                  style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: copyXRegenCount >= COPY_REGEN_MAX ? 'not-allowed' : 'pointer', opacity: copyXRegenCount >= COPY_REGEN_MAX ? 0.55 : 1 }}
-                  title={copyXRegenCount >= COPY_REGEN_MAX ? 'Limite de 1 regeneração atingido' : undefined}
+                  disabled={(!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) || copyXBusy}
+                  style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: (!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) ? 'not-allowed' : 'pointer', opacity: (!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) ? 0.55 : 1 }}
+                  title={(!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) ? 'Limite de 1 regeneração atingido' : undefined}
                 >
                   {copyXBusy ? '…' : `✨ Gerar outro (${copyXRegenCount}/${COPY_REGEN_MAX})`}
                 </button>

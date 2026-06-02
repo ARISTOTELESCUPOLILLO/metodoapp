@@ -699,6 +699,7 @@ export default function App() {
               geracoesRestantes={geracoesRestantes}
               geracoesTotal={geracoesTotal}
               semPlano={semPlano}
+              isAdmin={effectiveAdmin}
               planAccess={planAccess}
             />
           )}
