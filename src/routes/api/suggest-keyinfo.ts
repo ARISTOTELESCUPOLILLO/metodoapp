@@ -65,12 +65,14 @@ PASSO 3 — REENQUADRAR SEM TRAIR A IDEIA ORIGINAL: ajuste para o ângulo corret
 
 PASSO 4 — ENRIQUECER COM 4 CAMADAS: [ASSUNTO] + [CONTEXTO] + [TENSÃO, DOR OU OPORTUNIDADE] + [DIREÇÃO DESEJADA].
 
-${proibicoesInventar}`;
+${proibicoesInventar}
+LINGUAGEM: use palavras simples e do dia a dia. PROIBIDO: termos técnicos, jargões, palavras difíceis ou rebuscadas. Qualquer pessoa deve entender sem precisar conhecer o setor.`;
 
           const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE OP:
 Construa com 4 camadas obrigatórias: [ASSUNTO] + [CONTEXTO] + [TENSÃO, DOR OU OPORTUNIDADE] + [DIREÇÃO DESEJADA].
 Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.
-${proibicoesInventar}`;
+${proibicoesInventar}
+LINGUAGEM: use palavras simples e do dia a dia. PROIBIDO: termos técnicos, jargões, palavras difíceis ou rebuscadas. Qualquer pessoa deve entender sem precisar conhecer o setor.`;
 
           // ── Público-alvo — regra crítica para B2C vs B2B ──────────────────
           const audienceDirective = isB2C
@@ -157,7 +159,7 @@ Exemplos do método (não copie, use como referência de FORMATO):
 - "negócios com comunicação desorganizada que passam insegurança sem perceber"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
 
           const metodoMotivacao = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -193,7 +195,7 @@ Exemplos do método (não copie, use como referência de FORMATO e TOM):
 - "marcas construindo presença digital com consistência e prontas para escalar resultados"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
 
           const marcaIdentidade = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -226,7 +228,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO instituci
 - "negócio que carrega um propósito claro e quer ser reconhecido pelo que representa, não só pelo que vende"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
 
           const marcaLegado = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -259,7 +261,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO):
 - "presença local que atravessou gerações e segue ditando o tom da categoria no bairro"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
 
           // ── Prompts de REFINAMENTO (campo com texto) ──────────────────────
 
@@ -294,7 +296,7 @@ Exemplos de refinamento com tensão (não copie — referência de FORMATO):
 - "negócios com comunicação desorganizada que passam insegurança sem perceber"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
 
           const metodoRefinarMotivacao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -326,7 +328,7 @@ Exemplos de refinamento com motivação (não copie — referência de FORMATO e
 - "marcas construindo presença digital com consistência e prontas para escalar resultados"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
 
           const marcaRefinarIdentidade = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -356,7 +358,7 @@ Exemplos de refinamento institucional (não copie — referência de TOM e FORMA
 - "negócio que carrega um propósito claro e quer ser reconhecido pelo que representa, não só pelo que vende"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
 
           const marcaRefinarLegado = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -386,7 +388,7 @@ Exemplos de refinamento de legado (não copie — referência de TOM e FORMATO):
 - "presença local que atravessou gerações e segue ditando o tom da categoria no bairro"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 25 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+{ "sugestao": "1 linha, no máximo 15 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
 
           let metodoPrompt: string;
           if (isRefinar) {
@@ -403,7 +405,7 @@ Retorne JSON EXATAMENTE assim:
 
           const OBJETIVO_RULES: Record<string, string> = {
             promocao: 'REGRAS PARA PROMOÇÃO: sugira um desconto, oferta ou condição específica diferente das sugestões anteriores. PROIBIDO repetir o mesmo percentual de desconto ou a mesma data de encerramento já usados — varie o tipo de oferta (desconto, brinde, parcela, frete, kit), o produto/serviço em destaque e o prazo.',
-            oportunidade: 'REGRAS PARA OPORTUNIDADE: não invente datas comemorativas obscuras. Se usar data específica, calcule a partir da DATA DE HOJE para que seja futura. Represente a urgência por escassez, prazo real ou contexto sazonal concreto.',
+            oportunidade: 'REGRAS PARA OPORTUNIDADE: PROIBIDO citar datas, prazos, dias ou períodos específicos. Represente a oportunidade por escassez, momento único ou contexto sazonal — sem especificar quando.',
             homenagem: `REGRAS PARA HOMENAGEM: datas comemorativas de referência (use APENAS se forem FUTURAS à DATA DE HOJE):
 - Dia das Mães: 2º domingo de maio
 - Dia dos Pais: 2º domingo de agosto
@@ -416,24 +418,23 @@ Para qualquer outra data comemorativa, use apenas se tiver certeza absoluta da d
             institucional: 'REGRAS PARA INSTITUCIONAL: foque em um valor, propósito ou diferencial específico da empresa — não genérico. Prefira fatos concretos (anos de mercado, número de clientes, certificação, metodologia própria) a afirmações abstratas.',
           };
 
+          const dateLine = objetivo === 'homenagem' ? `DATA DE HOJE: ${today}\n` : '';
+
           const postUnicoPrompt = `Sugira UMA Informação-chave para um post único de Instagram em português brasileiro.
 
-DATA DE HOJE: ${today}
-EMPRESA: ${companyName || '(não informada)'}
+${dateLine}EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 OBJETIVO: ${objetivo} (tom: ${tom})
 ${hint ? `PISTA DO USUÁRIO (refine/melhore a partir disso): "${hint}"` : 'O usuário não deu pista — invente algo plausível e útil para a atividade.'}
-${previousBlock ? `\n${previousBlock}\n` : ''}
-A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica, com número/prazo/nome quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.
-
-REGRA CRÍTICA DE DATAS: quando sugerir prazo, data de encerramento ou data comemorativa, use SEMPRE data FUTURA em relação à DATA DE HOJE. NUNCA sugira data que já passou.
+${topicoGuiaBlock ? `\n${topicoGuiaBlock}\n` : ''}${previousBlock ? `\n${previousBlock}\n` : ''}
+A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica com nome ou fato real quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.
 
 ${OBJETIVO_RULES[objetivo] || ''}
 
 ${criteriosSugestaoOP}
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 frase, no máximo 25 palavras, em português, sem hashtag, sem emoji, sem aspas, concreta e acionável" }`;
+{ "sugestao": "1 frase, no máximo 15 palavras, em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'

@@ -68,10 +68,20 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestCount, setSuggestCount] = useState(0);
+  const [refining, setRefining] = useState(false);
+  const [refinements, setRefinements] = useState<string[]>([]);
+  const [refineError, setRefineError] = useState<string | null>(null);
+  const [refineCount, setRefineCount] = useState(0);
+  const [refineStep, setRefineStep] = useState(0);
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
-  const SUGGEST_MAX = 2;
+  const lastCatIdxRef = useRef<number>(-1);
+  const allSessionSuggestionsRef = useRef<string[]>([]);
+  const SUGGEST_MAX = 3;
+  const REFINE_MAX = 2;
+  const hasKeyInfo = !!data.keyInfo.trim();
   const suggestExhausted = suggestCount >= SUGGEST_MAX;
+  const refineExhausted = refineCount >= REFINE_MAX;
   const initialKeyInfo = initialKeyInfoRef.current;
   const canRevertInitial = initialKeyInfo !== null && data.keyInfo !== initialKeyInfo;
 
@@ -95,7 +105,12 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     setSuggestCount(0);
     setSuggestions([]);
     setSuggestError(null);
+    setRefineCount(0);
+    setRefinements([]);
+    setRefineError(null);
+    setRefineStep(0);
     initialKeyInfoRef.current = null;
+    allSessionSuggestionsRef.current = [];
   }, [data.objetivo, kit.companyName]);
 
   useEffect(() => {
@@ -103,9 +118,13 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
       setSuggestCount(0);
       setSuggestions([]);
       setSuggestError(null);
+      setRefineCount(0);
+      setRefinements([]);
+      setRefineError(null);
+      setRefineStep(0);
       initialKeyInfoRef.current = null;
+      // allSessionSuggestionsRef NÃO é resetado — persiste para garantir inédito
     }
-    // Se o keyInfo mudou em relação ao usado para gerar o copy, invalida o copy
     if (copy && data.keyInfo !== copyKeyInfoRef.current) {
       clearCopy();
     }
@@ -191,10 +210,78 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   };
 
+  function getCategoriesForObjetivo(objetivo: PostUnicoObjetivo) {
+    const cats = IDEIAS_ASSUNTOS[kit.segment] || IDEIAS_ASSUNTOS['SERVIÇOS'];
+    switch (objetivo) {
+      case 'homenagem':    return cats.filter(c => ['Cliente', 'Novidade ou Oportunidade'].includes(c.titulo));
+      case 'aviso':        return cats.filter(c => ['Novidade ou Oportunidade', 'Produto ou Serviço'].includes(c.titulo));
+      case 'oportunidade': return cats.filter(c => ['Novidade ou Oportunidade', 'Produto ou Serviço'].includes(c.titulo));
+      case 'institucional':return cats.filter(c => ['Solução', 'Produto ou Serviço', 'Cliente'].includes(c.titulo));
+      case 'promocao':     return cats.filter(c => ['Novidade ou Oportunidade', 'Produto ou Serviço', 'Problema'].includes(c.titulo));
+      default:             return cats;
+    }
+  }
+
   async function fetchSuggestion() {
-    if (suggestExhausted) return;
+    if (suggestExhausted || hasKeyInfo) return;
     setSuggesting(true);
     setSuggestError(null);
+    const attempt = suggestCount;
+
+    const cats = getCategoriesForObjetivo(data.objetivo);
+    const catCount = cats.length;
+    let catIdx: number;
+    do { catIdx = Math.floor(Math.random() * catCount); } while (catCount > 1 && catIdx === lastCatIdxRef.current);
+    lastCatIdxRef.current = catIdx;
+    const catEscolhida = cats[catIdx];
+    const itemIdx = Math.floor(Math.random() * catEscolhida.itens.length);
+    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx] };
+
+    try {
+      const res = await fetch('/api/suggest-keyinfo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: data.companyName || kit.companyName,
+          mainActivity: data.mainActivity || kit.mainActivity,
+          objetivo: data.objetivo,
+          hint: '',
+          mode: 'postunico',
+          attempt,
+          topicoGuia,
+          subMode: 'sugerir',
+          previousSuggestions: allSessionSuggestionsRef.current,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Falha (${res.status})`);
+      }
+      const json = await res.json();
+      const newSugg = String(json.sugestao || '').trim();
+      if (newSugg) {
+        setSuggestions((arr) => [...arr, newSugg]);
+        allSessionSuggestionsRef.current = [...allSessionSuggestionsRef.current, newSugg];
+      }
+      setSuggestCount((c) => c + 1);
+    } catch (e) {
+      setSuggestError((e as Error).message);
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  async function fetchRefinement() {
+    if (refineExhausted || !hasKeyInfo || refining) return;
+    setRefining(true);
+    setRefineError(null);
+    setRefineStep(1);
+    const attempt = refineCount;
+
+    const t2 = setTimeout(() => setRefineStep(2), 800);
+    const t3 = setTimeout(() => setRefineStep(3), 1600);
+    const t4 = setTimeout(() => setRefineStep(4), 2400);
+
     try {
       const res = await fetch('/api/suggest-keyinfo', {
         method: 'POST',
@@ -205,7 +292,9 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           objetivo: data.objetivo,
           hint: data.keyInfo.trim(),
           mode: 'postunico',
-          previousSuggestions: suggestions,
+          attempt,
+          subMode: 'refinar',
+          previousSuggestions: allSessionSuggestionsRef.current,
         }),
       });
       if (!res.ok) {
@@ -214,12 +303,17 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
       }
       const json = await res.json();
       const newSugg = String(json.sugestao || '').trim();
-      if (newSugg) setSuggestions((arr) => [...arr, newSugg]);
-      setSuggestCount((c) => c + 1);
+      if (newSugg) {
+        setRefinements((arr) => [...arr, newSugg]);
+        allSessionSuggestionsRef.current = [...allSessionSuggestionsRef.current, newSugg];
+      }
+      setRefineCount((c) => c + 1);
     } catch (e) {
-      setSuggestError((e as Error).message);
+      setRefineError((e as Error).message);
     } finally {
-      setSuggesting(false);
+      clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
+      setRefining(false);
+      setRefineStep(0);
     }
   }
 
@@ -303,33 +397,44 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
               title="Ver sugestões de assuntos para este segmento"
               style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
             >
-              💡 Ideias de Assuntos
+              💡 Ideias
             </button>
             <button
               type="button"
               onClick={fetchSuggestion}
-              disabled={suggesting || loading || suggestExhausted}
-              title={suggestExhausted ? 'Limite de 1 regeneração atingido' : 'Sugerir/Refinar com IA'}
-              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: suggesting || loading || suggestExhausted ? 'not-allowed' : 'pointer', opacity: suggesting || loading || suggestExhausted ? 0.5 : 1 }}
+              disabled={suggesting || loading || hasKeyInfo || suggestExhausted}
+              title={hasKeyInfo ? 'Limpe o campo para usar Sugestão' : suggestExhausted ? 'Limite atingido' : 'Sorteia categoria e sugere uma Informação-chave'}
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: suggesting || loading || hasKeyInfo || suggestExhausted ? 'not-allowed' : 'pointer', opacity: suggesting || loading || hasKeyInfo || suggestExhausted ? 0.4 : 1 }}
             >
-              {suggesting
-                ? 'Gerando…'
-                : suggestExhausted
-                  ? '✨ 1/1'
-                  : data.keyInfo.trim()
-                    ? `✨ Refinar com IA (${suggestCount}/${SUGGEST_MAX})`
-                    : `✨ Sugerir com IA (${suggestCount}/${SUGGEST_MAX})`}
+              {suggesting ? 'Gerando…' : `✨ Sugestão${suggestCount > 0 ? ` (${suggestCount}/${SUGGEST_MAX})` : ''}`}
             </button>
-            {data.keyInfo.trim() && (
-              <button
-                type="button"
-                onClick={() => update('keyInfo', '')}
-                title="Limpar texto"
-                style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
-              >
-                🗑 Limpar
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={fetchRefinement}
+              disabled={refining || loading || !hasKeyInfo || refineExhausted}
+              title={!hasKeyInfo ? 'Preencha o campo para refinar' : refineExhausted ? 'Limite atingido' : 'Refinamento guiado em 4 passos OP'}
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: refining || loading || !hasKeyInfo || refineExhausted ? 'not-allowed' : 'pointer', opacity: refining || loading || !hasKeyInfo || refineExhausted ? 0.4 : 1 }}
+            >
+              {refining ? 'Refinando…' : `🔄 Refinar${refineCount > 0 ? ` (${refineCount}/${REFINE_MAX})` : ''}`}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                update('keyInfo', '');
+                setSuggestCount(0);
+                setSuggestions([]);
+                setSuggestError(null);
+                setRefineCount(0);
+                setRefinements([]);
+                setRefineError(null);
+                initialKeyInfoRef.current = null;
+              }}
+              disabled={!hasKeyInfo}
+              title="Limpar texto e reiniciar"
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: !hasKeyInfo ? 'not-allowed' : 'pointer', opacity: !hasKeyInfo ? 0.4 : 1 }}
+            >
+              🗑 Limpar
+            </button>
             {canRevertInitial && (
               <button
                 type="button"
@@ -349,70 +454,27 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           rows={4}
           style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${suggestExhausted ? '#fcd34d' : '#e2e8f0'}`, fontFamily: 'inherit', fontSize: 14, lineHeight: 1.45, resize: 'vertical', background: suggestExhausted ? '#fffbeb' : '#fff', color: '#0f172a' }}
         />
-        {suggestExhausted && (
-          <p style={{ margin: '4px 0 0', fontSize: 11, color: '#92400e' }}>Limite atingido — edite manualmente ou volte ao inicial.</p>
-        )}
-
         {(suggesting || suggestions.length > 0 || suggestError) && (
-          <div
-            style={{
-              marginTop: 10,
-              padding: 14,
-              borderRadius: 12,
-              background: suggestError ? '#fef2f2' : '#f8fafc',
-              border: `1px solid ${suggestError ? '#fecaca' : '#e2e8f0'}`,
-            }}
-          >
+          <div style={{ marginTop: 10, padding: 14, borderRadius: 12, background: suggestError ? '#fef2f2' : '#f8fafc', border: `1px solid ${suggestError ? '#fecaca' : '#e2e8f0'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span className="eyebrow" style={{ color: suggestError ? '#b91c1c' : '#0f172a' }}>
-                {suggesting ? 'Gerando sugestão…' : suggestError ? 'Erro' : suggestions.length > 1 ? 'Sugestões da IA' : 'Sugestão da IA'}
+                {suggesting ? 'Gerando sugestão…' : suggestError ? 'Erro' : suggestions.length > 1 ? 'Sugestões OP' : 'Sugestão OP'}
               </span>
               {!suggesting && (
-                <button
-                  type="button"
-                  onClick={() => { setSuggestions([]); setSuggestError(null); setSuggestCount(0); }}
-                  style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
-                  aria-label="Limpar sugestões"
-                >
-                  ✕ Limpar
-                </button>
+                <button type="button" onClick={() => { setSuggestions([]); setSuggestError(null); }} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b', padding: 0, lineHeight: 1 }} aria-label="Fechar">×</button>
               )}
             </div>
-
-            {suggesting && (
-              <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>Aguarde alguns segundos…</p>
-            )}
-
-            {!suggesting && suggestError && (
-              <div>
-                <p style={{ margin: '0 0 8px', fontSize: 13, color: '#b91c1c' }}>{suggestError}</p>
-                <button
-                  type="button"
-                  onClick={fetchSuggestion}
-                  style={{ background: 'none', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Tentar de novo
-                </button>
-              </div>
-            )}
-
+            {suggesting && <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>Aguarde alguns segundos…</p>}
+            {!suggesting && suggestError && <p style={{ margin: 0, fontSize: 13, color: '#b91c1c' }}>{suggestError}</p>}
             {!suggesting && !suggestError && suggestions.length > 0 && (
               <div>
-                {suggestions.length > 1 && (
-                  <p style={{ margin: '0 0 8px', fontSize: 12, color: '#64748b' }}>Compare as duas e escolha a que preferir.</p>
-                )}
+                {suggestions.length > 1 && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#64748b' }}>Compare e escolha a que preferir.</p>}
                 <div style={{ display: 'grid', gap: 10, gridTemplateColumns: suggestions.length > 1 ? 'repeat(auto-fit, minmax(220px, 1fr))' : '1fr' }}>
                   {suggestions.map((sugg, idx) => (
                     <div key={idx} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {suggestions.length > 1 && (
-                        <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Sugestão {idx + 1}</span>
-                      )}
+                      {suggestions.length > 1 && <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Sugestão {idx + 1}</span>}
                       <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: '#0f172a', flex: 1 }}>{sugg}</p>
-                      <button
-                        type="button"
-                        onClick={() => { if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || ''; update('keyInfo', sugg); setSuggestions([]); }}
-                        style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start' }}
-                      >
+                      <button type="button" onClick={() => { if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || ''; update('keyInfo', sugg); setSuggestions([]); }} style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start' }}>
                         Usar esta
                       </button>
                     </div>
@@ -420,12 +482,61 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 </div>
                 {!suggestExhausted && (
                   <div style={{ marginTop: 10 }}>
-                    <button
-                      type="button"
-                      onClick={fetchSuggestion}
-                      style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-                    >
+                    <button type="button" onClick={fetchSuggestion} disabled={hasKeyInfo} style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, cursor: hasKeyInfo ? 'not-allowed' : 'pointer', opacity: hasKeyInfo ? 0.4 : 1 }}>
                       Gerar outra ({suggestCount}/{SUGGEST_MAX})
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {(refining || refinements.length > 0 || refineError) && (
+          <div style={{ marginTop: 10, padding: 14, borderRadius: 12, background: refineError ? '#fef2f2' : '#f0fdf4', border: `1px solid ${refineError ? '#fecaca' : '#bbf7d0'}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span className="eyebrow" style={{ color: refineError ? '#b91c1c' : '#166534' }}>
+                {refining ? 'Refinamento OP em andamento…' : refineError ? 'Erro no refinamento' : 'Refinamento (Método OP)'}
+              </span>
+              {!refining && (
+                <button type="button" onClick={() => { setRefinements([]); setRefineError(null); }} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b', padding: 0, lineHeight: 1 }} aria-label="Fechar">×</button>
+              )}
+            </div>
+            {refining && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {([
+                  { step: 1, icon: '🔍', label: 'Classificando o conteúdo' },
+                  { step: 2, icon: '✅', label: 'Validando compatibilidade' },
+                  { step: 3, icon: '🔄', label: 'Reenquadrando o ângulo' },
+                  { step: 4, icon: '✨', label: 'Enriquecendo com 4 camadas' },
+                ] as const).map(({ step, icon, label }) => (
+                  <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: refineStep >= step ? '#166534' : '#94a3b8', fontWeight: refineStep === step ? 700 : 400 }}>
+                    <span>{icon}</span>
+                    <span>{label}…</span>
+                    {refineStep > step && <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {!refining && refineError && <p style={{ margin: 0, fontSize: 13, color: '#b91c1c' }}>{refineError}</p>}
+            {!refining && !refineError && refinements.length > 0 && (
+              <div>
+                {refinements.length > 1 && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#64748b' }}>Compare os refinamentos e escolha o melhor.</p>}
+                <div style={{ display: 'grid', gap: 10, gridTemplateColumns: refinements.length > 1 ? 'repeat(auto-fit, minmax(220px, 1fr))' : '1fr' }}>
+                  {refinements.map((ref, idx) => (
+                    <div key={idx} style={{ background: '#fff', border: '1px solid #bbf7d0', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {refinements.length > 1 && <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Versão {idx + 1}</span>}
+                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: '#0f172a', flex: 1 }}>{ref}</p>
+                      <button type="button" onClick={() => { if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || ''; update('keyInfo', ref); setRefinements([]); }} style={{ background: '#166534', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                        Usar esta
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {!refineExhausted && (
+                  <div style={{ marginTop: 10 }}>
+                    <button type="button" onClick={fetchRefinement} style={{ background: '#fff', color: '#166534', border: '1px solid #bbf7d0', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      Refinar novamente ({refineCount}/{REFINE_MAX})
                     </button>
                   </div>
                 )}
