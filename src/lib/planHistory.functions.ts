@@ -113,7 +113,7 @@ export const assignPlanSlot = createServerFn({ method: 'POST' })
 
     const { error: updErr } = await supabaseAdmin
       .from('profiles')
-      .update(patch)
+      .update(patch as any)
       .eq('id', data.userId);
     if (updErr) throw new Error(updErr.message);
 
@@ -162,7 +162,7 @@ export const removePlanSlot = createServerFn({ method: 'POST' })
 
     const { error: updErr } = await supabaseAdmin
       .from('profiles')
-      .update(patch)
+      .update(patch as any)
       .eq('id', data.userId);
     if (updErr) throw new Error(updErr.message);
 

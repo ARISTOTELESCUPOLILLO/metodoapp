@@ -259,8 +259,91 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_purchases: {
+        Row: {
+          assigned_by: string | null
+          closed_by: string | null
+          created_at: string
+          expira_em: string | null
+          geracoes_limite: number
+          geracoes_usados_final: number
+          id: string
+          imgs_limite: number
+          imgs_usadas_final: number
+          inicio: string | null
+          motivo_fechamento: string | null
+          plan_codigo: string | null
+          plan_id: string | null
+          plan_nome: string | null
+          preco_brl: number | null
+          renders_limite: number
+          renders_usados_final: number
+          slot: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          closed_by?: string | null
+          created_at?: string
+          expira_em?: string | null
+          geracoes_limite?: number
+          geracoes_usados_final?: number
+          id?: string
+          imgs_limite?: number
+          imgs_usadas_final?: number
+          inicio?: string | null
+          motivo_fechamento?: string | null
+          plan_codigo?: string | null
+          plan_id?: string | null
+          plan_nome?: string | null
+          preco_brl?: number | null
+          renders_limite?: number
+          renders_usados_final?: number
+          slot: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          closed_by?: string | null
+          created_at?: string
+          expira_em?: string | null
+          geracoes_limite?: number
+          geracoes_usados_final?: number
+          id?: string
+          imgs_limite?: number
+          imgs_usadas_final?: number
+          inicio?: string | null
+          motivo_fechamento?: string | null
+          plan_codigo?: string | null
+          plan_id?: string | null
+          plan_nome?: string | null
+          preco_brl?: number | null
+          renders_limite?: number
+          renders_usados_final?: number
+          slot?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_purchases_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          bonus_assigned_by: string | null
+          bonus_expira_em: string | null
           bonus_geracoes_limite: number
           bonus_geracoes_usadas: number
           bonus_id: string | null
@@ -271,6 +354,7 @@ export type Database = {
           bonus_renders_limite: number
           bonus_renders_usados: number
           client_code: string
+          created_by: string | null
           client_seq: number
           client_seq_segmento: number | null
           created_at: string
@@ -293,6 +377,7 @@ export type Database = {
           is_test: boolean
           nome: string | null
           plano_id: string | null
+          plano1_expira_em: string | null
           plano1_geracoes_limite: number
           plano1_geracoes_usadas: number
           plano1_id: string | null
@@ -302,6 +387,7 @@ export type Database = {
           plano1_last_charged_at: string | null
           plano1_renders_limite: number
           plano1_renders_usados: number
+          plano2_expira_em: string | null
           plano2_geracoes_limite: number
           plano2_geracoes_usadas: number
           plano2_id: string | null
@@ -319,6 +405,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bonus_assigned_by?: string | null
+          bonus_expira_em?: string | null
           bonus_geracoes_limite?: number
           bonus_geracoes_usadas?: number
           bonus_id?: string | null
@@ -332,6 +420,7 @@ export type Database = {
           client_seq: number
           client_seq_segmento?: number | null
           created_at?: string
+          created_by?: string | null
           email: string
           extra_b_carrossel?: number
           extra_b_estatico?: number
@@ -351,6 +440,7 @@ export type Database = {
           is_test?: boolean
           nome?: string | null
           plano_id?: string | null
+          plano1_expira_em?: string | null
           plano1_geracoes_limite?: number
           plano1_geracoes_usadas?: number
           plano1_id?: string | null
@@ -360,6 +450,7 @@ export type Database = {
           plano1_last_charged_at?: string | null
           plano1_renders_limite?: number
           plano1_renders_usados?: number
+          plano2_expira_em?: string | null
           plano2_geracoes_limite?: number
           plano2_geracoes_usadas?: number
           plano2_id?: string | null
@@ -377,6 +468,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bonus_assigned_by?: string | null
+          bonus_expira_em?: string | null
           bonus_geracoes_limite?: number
           bonus_geracoes_usadas?: number
           bonus_id?: string | null
@@ -387,6 +480,7 @@ export type Database = {
           bonus_renders_limite?: number
           bonus_renders_usados?: number
           client_code?: string
+          created_by?: string | null
           client_seq?: number
           client_seq_segmento?: number | null
           created_at?: string
@@ -409,6 +503,7 @@ export type Database = {
           is_test?: boolean
           nome?: string | null
           plano_id?: string | null
+          plano1_expira_em?: string | null
           plano1_geracoes_limite?: number
           plano1_geracoes_usadas?: number
           plano1_id?: string | null
@@ -418,6 +513,7 @@ export type Database = {
           plano1_last_charged_at?: string | null
           plano1_renders_limite?: number
           plano1_renders_usados?: number
+          plano2_expira_em?: string | null
           plano2_geracoes_limite?: number
           plano2_geracoes_usadas?: number
           plano2_id?: string | null
@@ -716,6 +812,7 @@ export type Database = {
     }
     Functions: {
       _rand_alnum: { Args: { _n: number }; Returns: string }
+      admin_storage_stats: { Args: Record<PropertyKey, never>; Returns: Json }
       _rand_letters: { Args: { _n: number }; Returns: string }
       _seg_code: { Args: { _seg: string }; Returns: string }
       calc_cost:

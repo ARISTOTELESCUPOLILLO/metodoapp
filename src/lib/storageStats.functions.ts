@@ -36,7 +36,7 @@ export const getStorageStats = createServerFn({ method: 'GET' })
     const { data, error } = await supabaseAdmin.rpc('admin_storage_stats');
     if (error) throw new Error(`Falha ao buscar stats de storage: ${error.message}`);
 
-    const raw = data as {
+    const raw = data as unknown as {
       total_bytes: number;
       total_files: number;
       by_user: { user_id: string; bytes: number; files: number }[] | null;
