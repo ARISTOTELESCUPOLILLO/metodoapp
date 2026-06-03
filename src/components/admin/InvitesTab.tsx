@@ -102,7 +102,11 @@ export function InvitesTab() {
     try {
       const result = await migrateKitFn({ data: { inviteId: r.id, sourceProfileId: r.source_test_profile_id } });
       const { copied } = result as any;
-      const kitMarca = copied.brandKit ? ', kit de marca ✓' : ', kit de marca não encontrado no teste';
+      const kitMarca = copied.brandKit
+        ? ', kit de marca ✓'
+        : copied.brandKitFound
+          ? ', kit de marca encontrado mas falhou ao copiar — tente novamente'
+          : ', kit de marca não encontrado no perfil de teste (salve o kit no teste antes de migrar)';
       setMsg(`Kit migrado: ${copied.avatar ? '1 avatar' : 'sem avatar'}, ${copied.cenarios} cenário(s), ${copied.produtos} produto(s)${kitMarca}.`);
       load();
     } catch (e: any) {

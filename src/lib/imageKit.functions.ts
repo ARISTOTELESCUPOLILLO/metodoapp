@@ -196,24 +196,24 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
       { onConflict: 'user_id' },
     );
 
-    // Copia o Kit de Marca (brand_kits), se o destino ainda não tiver um
+    // Copia o Kit de Marca (brand_kits) — sempre sobrescreve no destino via upsert
     const { data: sourceBrandKit } = await supabaseAdmin
       .from('brand_kits').select('*').eq('user_id', sourceId).maybeSingle();
 
+    let brandKitFound = !!sourceBrandKit;
     let brandKitCopied = false;
     if (sourceBrandKit) {
-      const { data: targetBrandKit } = await supabaseAdmin
-        .from('brand_kits').select('id').eq('user_id', targetId).maybeSingle();
-      if (!targetBrandKit) {
-        const { id: _id, ...brandKitFields } = sourceBrandKit as any;
-        const { error: bkErr } = await supabaseAdmin.from('brand_kits').insert({
+      const { id: _id, ...brandKitFields } = sourceBrandKit as any;
+      const { error: bkErr } = await supabaseAdmin.from('brand_kits').upsert(
+        {
           ...brandKitFields,
           user_id: targetId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        });
-        brandKitCopied = !bkErr;
-      }
+        },
+        { onConflict: 'user_id' },
+      );
+      brandKitCopied = !bkErr;
     }
 
     // Marca o convite como migrado
@@ -230,6 +230,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
         cenarios: newCenarios.filter(Boolean).length,
         produtos: newProdutos.filter(Boolean).length,
         brandKit: brandKitCopied,
+        brandKitFound,
       },
     };
   });
