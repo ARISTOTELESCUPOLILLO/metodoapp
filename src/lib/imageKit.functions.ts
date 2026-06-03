@@ -153,54 +153,59 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
     const sourceId = data.sourceProfileId;
     const targetId = targetProfile.id as string;
 
-    // Carrega os paths do kit de origem
+    // ── Kit Imagem — falha suave se não existir no teste ──────────────────
     const { data: sourceKit } = await supabaseAdmin
       .from('user_image_kits')
       .select('avatar_path, avatar_path_2, cenarios_paths, produtos_paths')
       .eq('user_id', sourceId).maybeSingle();
-    if (!sourceKit) throw new Error('Perfil de teste não possui Kit Imagem.');
 
-    const cenariosArr = (sourceKit.cenarios_paths || []) as string[];
-    const produtosArr = (sourceKit.produtos_paths || []) as string[];
+    const imageKitFound = !!sourceKit;
+    let newAvatar: string | null = null;
+    let newAvatar2: string | null = null;
+    let newCenarios: (string | null)[] = [null, null, null];
+    let newProdutos: (string | null)[] = Array.from({ length: 8 }, () => null);
 
-    // Substitui o prefixo userId nos paths
-    const swapId = (p: string | null | undefined) =>
-      p ? p.replace(sourceId, targetId) : null;
+    if (sourceKit) {
+      const cenariosArr = (sourceKit.cenarios_paths || []) as string[];
+      const produtosArr = (sourceKit.produtos_paths || []) as string[];
 
-    async function copySlot(src: string | null | undefined): Promise<string | null> {
-      if (!src) return null;
-      const dest = swapId(src)!;
-      const ok = await copyStorageFile(src, dest);
-      return ok ? dest : null;
+      const swapId = (p: string | null | undefined) =>
+        p ? p.replace(sourceId, targetId) : null;
+
+      const copySlot = async (src: string | null | undefined): Promise<string | null> => {
+        if (!src) return null;
+        const dest = swapId(src)!;
+        const ok = await copyStorageFile(src, dest);
+        return ok ? dest : null;
+      };
+
+      newAvatar  = await copySlot(sourceKit.avatar_path);
+      newAvatar2 = await copySlot((sourceKit as any).avatar_path_2);
+      newCenarios = await Promise.all(
+        Array.from({ length: 3 }, (_, i) => copySlot(cenariosArr[i] || null)),
+      );
+      newProdutos = await Promise.all(
+        Array.from({ length: 8 }, (_, i) => copySlot(produtosArr[i] || null)),
+      );
+
+      await supabaseAdmin.from('user_image_kits').upsert(
+        {
+          user_id: targetId,
+          avatar_path: newAvatar,
+          avatar_path_2: newAvatar2,
+          cenarios_paths: newCenarios.map((p) => p || ''),
+          produtos_paths: newProdutos.map((p) => p || ''),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
+      );
     }
 
-    const newAvatar  = await copySlot(sourceKit.avatar_path);
-    const newAvatar2 = await copySlot((sourceKit as any).avatar_path_2);
-    const newCenarios = await Promise.all(
-      Array.from({ length: 3 }, (_, i) => copySlot(cenariosArr[i] || null)),
-    );
-    const newProdutos = await Promise.all(
-      Array.from({ length: 8 }, (_, i) => copySlot(produtosArr[i] || null)),
-    );
-
-    // Salva os novos paths no banco
-    await supabaseAdmin.from('user_image_kits').upsert(
-      {
-        user_id: targetId,
-        avatar_path: newAvatar,
-        avatar_path_2: newAvatar2,
-        cenarios_paths: newCenarios.map((p) => p || ''),
-        produtos_paths: newProdutos.map((p) => p || ''),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    );
-
-    // Copia o Kit de Marca (brand_kits) — sempre sobrescreve no destino via upsert
+    // ── Kit de Marca — sempre tenta, independente do Kit Imagem ───────────
     const { data: sourceBrandKit } = await supabaseAdmin
       .from('brand_kits').select('*').eq('user_id', sourceId).maybeSingle();
 
-    let brandKitFound = !!sourceBrandKit;
+    const brandKitFound = !!sourceBrandKit;
     let brandKitCopied = false;
     if (sourceBrandKit) {
       const { id: _id, ...brandKitFields } = sourceBrandKit as any;
@@ -226,6 +231,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
       ok: true,
       targetId,
       copied: {
+        imageKitFound,
         avatar: !!newAvatar,
         cenarios: newCenarios.filter(Boolean).length,
         produtos: newProdutos.filter(Boolean).length,

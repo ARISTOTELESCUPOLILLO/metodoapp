@@ -102,12 +102,15 @@ export function InvitesTab() {
     try {
       const result = await migrateKitFn({ data: { inviteId: r.id, sourceProfileId: r.source_test_profile_id } });
       const { copied } = result as any;
+      const imgPart = copied.imageKitFound
+        ? `${copied.avatar ? '1 avatar' : 'sem avatar'}, ${copied.cenarios} cenário(s), ${copied.produtos} produto(s)`
+        : 'sem Kit Imagem no teste';
       const kitMarca = copied.brandKit
         ? ', kit de marca ✓'
         : copied.brandKitFound
           ? ', kit de marca encontrado mas falhou ao copiar — tente novamente'
           : ', kit de marca não encontrado no perfil de teste (salve o kit no teste antes de migrar)';
-      setMsg(`Kit migrado: ${copied.avatar ? '1 avatar' : 'sem avatar'}, ${copied.cenarios} cenário(s), ${copied.produtos} produto(s)${kitMarca}.`);
+      setMsg(`Kit migrado: ${imgPart}${kitMarca}.`);
       load();
     } catch (e: any) {
       setMsg(`Erro na migração: ${e.message}`);
