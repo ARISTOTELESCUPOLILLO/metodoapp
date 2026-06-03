@@ -58,12 +58,12 @@ const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
   'OP-02': {
     nome: 'IMPACTO',
     tensaoDondis: 'Audácia + Ênfase + Acento + Instabilidade controlada — UM elemento gritando sobre o resto, tensão dramática que para o scroll',
-    luz: 'luz dura focal sobre fundo escuro, claro/escuro extremo, sombras profundas e recortadas',
+    luz: 'luz focal direcional sobre fundo escuro médio, contraste pronunciado com alguma gradação, sombras recortadas sem extremismo — dramaticidade presente sem apagar completamente o fundo',
     paleta: 'paleta low-key dominada por preto/grafete com UMA cor quente saturada (amarelo, laranja, vermelho) como acento dramático',
     composicao: 'composição assimétrica com tensão, sujeito recortado pela luz, vazios escuros generosos, foco único concentrado',
     camera: 'câmera 35mm angulada, distância próxima, contraste extremo, micro-grão sutil, sensação cinematográfica',
     detalheCriativo: 'um sinal gráfico mínimo nascido da luz (haste de luz cortando o quadro, partícula de poeira no facho, reflexo metálico recortado, contorno luminoso em uma única borda do sujeito) — pequeno, mas inconfundivelmente autoral',
-    assinatura: 'fotografia cinematográfica low-key, luz dura focal sobre fundo escuro, contraste extremo, paleta com acento quente saturado, lente 35mm',
+    assinatura: 'fotografia cinematográfica, luz focal direcional sobre fundo escuro médio, contraste pronunciado, paleta com acento quente saturado, lente 35mm',
   },
   'OP-03': {
     nome: 'INSTANTE',
@@ -221,9 +221,9 @@ A imagePrompt DEVE evocar a referência concreta acima e DEVE evitar literalment
   // em geração real (modelo ignorando instruções da Camada 2).
   const moodRules: Partial<Record<MoodCode, string>> = {
     'OP-01':
-      'CLAREZA exige EXATAMENTE 1 acento de cor saturada presente em UM único elemento da cena (objeto, peça de roupa, detalhe gráfico). Não 0, não 2. A peça inteira monocromática NÃO é CLAREZA — vira SILÊNCIO. Verifique antes de finalizar a imagePrompt. PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para a câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena, integre como detalhe lateral, desfocado em primeiro plano, ou em ângulo plongée.',
+      'CLAREZA exige EXATAMENTE 1 acento de cor saturada presente em UM único elemento da cena (objeto, peça de roupa, detalhe gráfico). Não 0, não 2. A peça inteira monocromática NÃO é CLAREZA — vira SILÊNCIO. Verifique antes de finalizar a imagePrompt. PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para a câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena, integre como detalhe lateral, desfocado em primeiro plano, ou em ângulo plongée. PERSONAGENS EM CLAREZA: o personagem pode aparecer EM PÉ, em plano médio (da cintura para cima) ou plano americano (da coxa para cima), de qualquer gênero, segurando um objeto ou equipamento diretamente relacionado à atividade profissional, ao contexto da mensagem e ao público a que se destina. A pose em pé com objeto relevante é PREFERIDA quando o brief não especificar posição. Não restringir ao personagem sentado — variar entre em pé e sentado conforme o contexto. Composição e pose devem ser ALEATÓRIAS e INÉDITAS — evitar poses previsíveis de stock (pessoa olhando para câmera com sorriso institucional, pose estática de apresentação). A autenticidade da cena é inegociável.',
     'OP-02':
-      'IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo low-key dominado por preto/grafite. Sem essa única explosão cromática, a peça não para o scroll.',
+      'IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo escuro médio dominado por preto/grafite. Sem essa única explosão cromática, a peça não para o scroll. PERSONAGENS EM IMPACTO: o personagem pode aparecer no plano médio (da cintura para cima) ou plano americano (da coxa para cima), de qualquer gênero, com pose e composição ALEATÓRIA e INÉDITA — evitar poses previsíveis e repetitivas de campanha. A dramaticidade vem da câmera angulada (35mm) e da luz focal, não de pose forçada do personagem.',
     'OP-05':
       'DESVIO exige câmera angulada OBRIGATÓRIA: contra-plongée (câmera baixa olhando para cima) OU plongée (câmera alta olhando para baixo), com lente 28-35mm que cause distorção de perspectiva visível. PROIBIDO câmera frontal neutra na altura dos olhos — sem o ângulo, a peça não é DESVIO mesmo que a metáfora visual esteja presente. PROIBIDO TAMBÉM pose de executivo sentado de blazer atrás de mesa com mãos cruzadas/entrelaçadas — essa pose anula o mood instantaneamente, mesmo que o resto da cena seja conceitual.',
     'OP-06':
