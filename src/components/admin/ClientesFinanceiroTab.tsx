@@ -129,6 +129,7 @@ export function ClientesFinanceiroTab() {
   const grandSold = clients.reduce((s, c) => s + c.totalSold, 0);
   const grandCost = clients.reduce((s, c) => s + c.totalCost, 0);
   const grandProfit = grandSold - grandCost;
+  const grandMargin = grandSold > 0 ? ((grandProfit / grandSold) * 100).toFixed(0) + '%' : '—';
 
   if (loading) return <p style={{ color: '#64748b' }}>Carregando clientes…</p>;
 
@@ -140,6 +141,7 @@ export function ClientesFinanceiroTab() {
         <MiniCard label="Total vendido" value={`R$ ${grandSold.toFixed(2)}`} color="#15803d" />
         <MiniCard label="Custo total (proj.)" value={`R$ ${grandCost.toFixed(2)}`} color="#b45309" />
         <MiniCard label="Lucro estimado" value={`R$ ${grandProfit.toFixed(2)}`} color={grandProfit >= 0 ? '#15803d' : '#dc2626'} />
+        <MiniCard label="Margem" value={grandMargin} color={grandProfit >= 0 ? '#15803d' : '#dc2626'} />
       </div>
 
       {/* Busca */}
@@ -176,6 +178,7 @@ export function ClientesFinanceiroTab() {
                         <>
                           <Stat label="Vendido" value={`R$ ${client.totalSold.toFixed(2)}`} color="#15803d" />
                           <Stat label="Lucro" value={`R$ ${client.totalProfit.toFixed(2)}`} color={client.totalProfit >= 0 ? '#15803d' : '#dc2626'} big />
+                          <Stat label="Margem" value={`${((client.totalProfit / client.totalSold) * 100).toFixed(0)}%`} color={client.totalProfit >= 0 ? '#15803d' : '#dc2626'} />
                         </>
                       )}
                     </div>
