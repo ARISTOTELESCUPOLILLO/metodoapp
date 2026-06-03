@@ -140,7 +140,7 @@ function buildImagePrompt(params: {
     pos === 'top-center'    ? `na FAIXA SUPERIOR CENTRAL (centralizada horizontalmente, dentro do topo da zona segura de ${safeMargin})`
   : pos === 'bottom-center' ? `na FAIXA INFERIOR CENTRAL (centralizada horizontalmente, dentro do rodapé da zona segura de ${safeMargin})`
   :                           'no canto inferior direito';
-  const reservaBase = 'É uma ÁREA RESERVADA INVIOLÁVEL (~18% da largura × ~10% da altura). PROIBIDO ali: qualquer texto, lettering, número, título, palavra, rosto, mão, objeto-foco, gráfico, ícone, símbolo, recorte de produto ou elemento decorativo. A área deve ser uma CONTINUAÇÃO NATURAL E ORGÂNICA da imagem ao redor (fotografia de fundo, textura, superfície contínua). PROIBIDO TAMBÉM desenhar ali bloco, retângulo, painel, faixa, caixa, moldura, etiqueta, badge ou fundo de cor sólida (inclusive a cor da marca) para "marcar" o espaço da logo — sem moldura, sem caixa, sem painel, sem fundo de cor cheia destacado. Apenas garanta contraste local suficiente para a logo ficar legível depois.';
+  const reservaBase = 'É uma ÁREA RESERVADA INVIOLÁVEL (~18% da largura × ~10% da altura). PROIBIDO ali: qualquer texto, lettering, número, título, palavra, rosto, mão, objeto-foco, gráfico, ícone, símbolo, recorte de produto ou elemento decorativo. A área deve ser uma CONTINUAÇÃO NATURAL E ORGÂNICA da imagem ao redor (fotografia de fundo, textura, superfície contínua). PROIBIDO TAMBÉM desenhar ali bloco, retângulo, painel, faixa, caixa, moldura, etiqueta, badge, fundo de cor sólida (inclusive a cor da marca), círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, forma geométrica decorativa ou ornamento — inclusive EM VOLTA ou AO REDOR do espaço da logo. Nenhuma forma, linha ou elemento decorativo pode contornar, enquadrar ou destacar essa zona. Sem moldura, sem caixa, sem painel, sem círculo envolvente, sem linha ao redor, sem pontilhado, sem fundo de cor cheia destacado. Apenas garanta contraste local suficiente para a logo ficar legível depois.';
   const reservaInstrucao =
     pos === 'top-center'    ? `A FAIXA SUPERIOR CENTRAL é a zona da logomarca. ${reservaBase}`
   : pos === 'bottom-center' ? `A FAIXA INFERIOR CENTRAL é a zona da logomarca. ${reservaBase}`
@@ -197,7 +197,7 @@ Bordas são continuação natural do fundo (céu, textura, ambiente, desfoque) �
 PROIBIDO ABSOLUTO nessa área: texto, título, palavra, lettering, nome de empresa, slogan, call-to-action, hashtag, número, código, URL.
 PROIBIDO TAMBÉM: rosto, olhos, mão, objeto-foco, produto, gráfico, ícone, símbolo ou qualquer elemento visual essencial para a comunicação da mensagem.
 NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO OU FICAR ATRÁS DA LOGOMARCA — a logo será aplicada sobre essa área depois.
-A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textura, superfície contínua). Sem cor sólida de marca, sem moldura, sem painel.
+A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textura, superfície contínua). Sem cor sólida de marca, sem moldura, sem painel, sem círculo, sem elipse, sem anel, sem halo, sem linha decorativa, sem pontilhado, sem tracejado, sem qualquer forma geométrica ou ornamento em volta, ao redor ou atrás da logo.
 
 `;
 
