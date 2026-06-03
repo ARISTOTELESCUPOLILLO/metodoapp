@@ -209,15 +209,29 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
     let brandKitCopied = false;
     if (sourceBrandKit) {
       const { id: _id, ...brandKitFields } = sourceBrandKit as any;
-      const { error: bkErr } = await supabaseAdmin.from('brand_kits').upsert(
-        {
-          ...brandKitFields,
-          user_id: targetId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' },
-      );
+      const payload = {
+        ...brandKitFields,
+        user_id: targetId,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Verifica se o destino já tem um kit de marca
+      const { data: existingTarget } = await supabaseAdmin
+        .from('brand_kits').select('id').eq('user_id', targetId).maybeSingle();
+
+      let bkErr: any = null;
+      if (existingTarget?.id) {
+        // UPDATE — sobrescreve o kit existente do destino
+        const { error } = await supabaseAdmin
+          .from('brand_kits').update(payload).eq('id', existingTarget.id);
+        bkErr = error;
+      } else {
+        // INSERT — cria novo kit para o destino
+        const { error } = await supabaseAdmin
+          .from('brand_kits').insert({ ...payload, created_at: new Date().toISOString() });
+        bkErr = error;
+      }
+      if (bkErr) console.error('[migrateBrandKit]', bkErr.message, bkErr.code);
       brandKitCopied = !bkErr;
     }
 
