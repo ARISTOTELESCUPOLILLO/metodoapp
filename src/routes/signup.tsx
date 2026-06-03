@@ -47,7 +47,7 @@ function SignupPage() {
       return;
     }
     if (data.session) {
-      navigate({ to: '/' });
+      navigate({ to: '/login' });
     } else {
       setSuccess('Cadastro criado! Você já pode fazer login.');
     }

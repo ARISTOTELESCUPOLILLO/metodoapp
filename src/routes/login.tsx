@@ -14,24 +14,43 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showResend, setShowResend] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: '/app' });
     });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) navigate({ to: '/app' });
+    });
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setShowResend(false);
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      setError(error.message === 'Invalid login credentials' ? 'Email ou senha inválidos.' : error.message);
+      if (error.message === 'Invalid login credentials') {
+        setError('Email ou senha inválidos.');
+      } else if (error.message === 'Email not confirmed') {
+        setError('E-mail ainda não confirmado. Clique em Reenviar para receber um novo link.');
+        setShowResend(true);
+      } else {
+        setError(error.message);
+      }
       return;
     }
     navigate({ to: '/app' });
+  }
+
+  async function resendConfirmation() {
+    await supabase.auth.resend({ type: 'signup', email });
+    setError('E-mail de confirmação reenviado. Verifique sua caixa de entrada.');
+    setShowResend(false);
   }
 
   return (
@@ -72,6 +91,15 @@ function LoginPage() {
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {showResend && (
+            <button
+              type="button"
+              onClick={resendConfirmation}
+              className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground text-sm font-medium"
+            >
+              Reenviar e-mail de confirmação
+            </button>
+          )}
           <button
             type="submit"
             disabled={loading}
