@@ -154,8 +154,7 @@ export function ProjecaoTab() {
     if (isNaN(val) || val <= 0) return;
     setSaving(supplier);
     const col = supplier === 'falai' ? 'falai_balance_usd' : 'openai_balance_usd';
-    const current = supplier === 'falai' ? settings.falai_balance_usd : settings.openai_balance_usd;
-    await supabase.from('app_settings').update({ [col]: current + val } as any).eq('id', true);
+    await supabase.from('app_settings').update({ [col]: val } as any).eq('id', true);
     setRecharge(r => ({ ...r, [supplier]: '' }));
     setSaving(null);
     await load();
@@ -237,7 +236,7 @@ export function ProjecaoTab() {
           />
         </div>
         <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-          Atualize os saldos manualmente em <strong>Ajustes de custo</strong> após cada recarga.
+          Informe o saldo exato que aparece no painel do fal.ai ou OpenAI. O valor digitado substitui o saldo atual.
         </p>
       </section>
 
@@ -477,7 +476,7 @@ function BalanceCard({ supplier, desc, balance, rate, color, rechargeVal, onRech
   onRechargeConfirm: () => void; saving: boolean;
 }) {
   const val = parseFloat(rechargeVal);
-  const preview = !isNaN(val) && val > 0 ? balance + val : null;
+  const preview = !isNaN(val) && val > 0 ? val : null;
   return (
     <div style={{ border: `2px solid ${color}20`, borderRadius: 10, padding: 16, background: `${color}08` }}>
       <div style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>{supplier}</div>
@@ -485,7 +484,7 @@ function BalanceCard({ supplier, desc, balance, rate, color, rechargeVal, onRech
       <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, marginBottom: 12 }}>R$ {(balance * rate).toFixed(2)} · {desc}</div>
 
       <div style={{ borderTop: `1px solid ${color}20`, paddingTop: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Registrar recarga (USD)</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Saldo atual nas APIs (USD)</div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <input
             type="number" min="0" step="0.01" placeholder="0.00"
@@ -499,12 +498,12 @@ function BalanceCard({ supplier, desc, balance, rate, color, rechargeVal, onRech
             disabled={saving || isNaN(val) || val <= 0}
             style={{ padding: '6px 12px', background: color, color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: (saving || isNaN(val) || val <= 0) ? 0.5 : 1 }}
           >
-            {saving ? '…' : '+ Adicionar'}
+            {saving ? '…' : 'Salvar'}
           </button>
         </div>
         {preview !== null && (
           <div style={{ fontSize: 11, color, marginTop: 4, fontWeight: 600 }}>
-            Novo saldo: {usd(preview)} · R$ {(preview * rate).toFixed(2)}
+            Saldo será: {usd(preview)} · R$ {(preview * rate).toFixed(2)}
           </div>
         )}
       </div>
