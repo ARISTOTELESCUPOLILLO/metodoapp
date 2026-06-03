@@ -48,7 +48,7 @@ interface AppSettings {
 
 export function CustosTab() {
   const [logs, setLogs] = useState<Log[]>([]);
-  const [allTimeLogs, setAllTimeLogs] = useState<{ evento: string; custo_usd: number }[]>([]);
+  const [allTimeLogs, setAllTimeLogs] = useState<{ evento: string; custo_usd: number; user_id: string | null }[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
@@ -76,10 +76,10 @@ export function CustosTab() {
       supabase.from('profiles').select('id,email,nome,is_test,plano1_id,plano2_id,plano1_preco_brl,plano2_preco_brl,bonus_preco_brl'),
       supabase.from('app_settings').select('usd_brl_rate,falai_balance_usd,openai_balance_usd,image_base_price_usd,image_price_usd,render_price_usd,geracao_price_usd').eq('id', true).maybeSingle(),
       supabase.from('user_roles').select('user_id').eq('role', 'admin'),
-      supabase.from('usage_logs').select('evento,custo_usd').in('evento', ['image.generate','video.generate','gerar_conteudo_mop']),
+      supabase.from('usage_logs').select('evento,custo_usd,user_id').in('evento', ['image.generate','video.generate','gerar_conteudo_mop']),
     ]);
     setLogs((ls as Log[]) || []);
-    setAllTimeLogs((allLogs as { evento: string; custo_usd: number }[]) || []);
+    setAllTimeLogs((allLogs as { evento: string; custo_usd: number; user_id: string | null }[]) || []);
     setPlans((ps as unknown as Plan[]) || []);
     setProfiles((profs as unknown as Profile[]) || []);
     if (cfg) {
@@ -119,12 +119,16 @@ export function CustosTab() {
   const custoFalai = custoImgBase + custoImgEdit + custoVideo;
   const custoOpenai = custoConteudo;
 
-  // ── Saldo restante (sempre desde o início, independente do filtro de período) ──
+  // ── Saldo restante — somente clientes reais (exclui admin e testes) ──
+  const profileMap = new Map(profiles.map(p => [p.id, p]));
+  const isRealClient = (uid: string | null) =>
+    uid && !adminIds.has(uid) && !profileMap.get(uid)?.is_test;
+
   const allTimeCustoFalai = allTimeLogs
-    .filter(l => l.evento === 'image.generate' || l.evento === 'video.generate')
+    .filter(l => (l.evento === 'image.generate' || l.evento === 'video.generate') && isRealClient(l.user_id))
     .reduce((s, l) => s + Number(l.custo_usd || 0), 0);
   const allTimeCustoOpenai = allTimeLogs
-    .filter(l => l.evento === 'gerar_conteudo_mop')
+    .filter(l => l.evento === 'gerar_conteudo_mop' && isRealClient(l.user_id))
     .reduce((s, l) => s + Number(l.custo_usd || 0), 0);
   const saldoFalai = Math.max(0, settings.falai_balance_usd - allTimeCustoFalai);
   const saldoOpenai = Math.max(0, settings.openai_balance_usd - allTimeCustoOpenai);
@@ -280,11 +284,11 @@ export function CustosTab() {
                 description="Valor total que você depositou na fal.ai. Defina em Ajustes de custo."
               />
               <SummaryCard
-                label="fal.ai — consumido"
+                label="fal.ai — consumido (clientes)"
                 value={`-$${allTimeCustoFalai.toFixed(3)}`}
                 sub={brl(allTimeCustoFalai)}
                 warn
-                description="Total gasto em imagens e vídeos desde o início — não muda com o filtro de período."
+                description="Gasto dos clientes reais em imagens e vídeos. Admin e testes não entram neste cálculo."
               />
               <SummaryCard
                 label="fal.ai — restante"
@@ -292,8 +296,8 @@ export function CustosTab() {
                 sub={brl(saldoFalai)}
                 highlight={saldoFalai < settings.falai_balance_usd * 0.3}
                 description={saldoFalai < settings.falai_balance_usd * 0.3
-                  ? `Saldo inicial menos tudo consumido. Abaixo de 30% — considere recarregar a conta fal.ai.`
-                  : `Saldo inicial menos tudo consumido desde o início. Disponível para próximas gerações.`}
+                  ? `Saldo informado menos consumo dos clientes reais. Abaixo de 30% — considere recarregar o fal.ai.`
+                  : `Saldo informado menos consumo dos clientes reais. Admin e testes não afetam este valor.`}
               />
               <SummaryCard
                 label="OpenAI — saldo inicial"
@@ -302,11 +306,11 @@ export function CustosTab() {
                 description="Valor disponível na sua conta OpenAI. Defina em Ajustes de custo."
               />
               <SummaryCard
-                label="OpenAI — consumido"
+                label="OpenAI — consumido (clientes)"
                 value={`-$${allTimeCustoOpenai.toFixed(3)}`}
                 sub={brl(allTimeCustoOpenai)}
                 warn
-                description="Total gasto em gerações de conteúdo de texto desde o início — não muda com o filtro."
+                description="Gasto dos clientes reais em gerações de conteúdo. Admin e testes não entram neste cálculo."
               />
               <SummaryCard
                 label="OpenAI — restante"
@@ -314,8 +318,8 @@ export function CustosTab() {
                 sub={brl(saldoOpenai)}
                 highlight={saldoOpenai < settings.openai_balance_usd * 0.3}
                 description={saldoOpenai < settings.openai_balance_usd * 0.3
-                  ? `Saldo inicial menos tudo consumido. Abaixo de 30% — considere recarregar a conta OpenAI.`
-                  : `Saldo inicial menos tudo consumido desde o início. Disponível para próximas gerações.`}
+                  ? `Saldo informado menos consumo dos clientes reais. Abaixo de 30% — considere recarregar o OpenAI.`
+                  : `Saldo informado menos consumo dos clientes reais. Admin e testes não afetam este valor.`}
               />
             </div>
           </Section>
