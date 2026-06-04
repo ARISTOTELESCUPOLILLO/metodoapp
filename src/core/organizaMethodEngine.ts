@@ -318,7 +318,13 @@ ${vendaRule}
 ${feedRules}
 ${storiesRules}
 ${coordinationRules}
-
+${hasFeed ? `
+⚠️ COMPLETUDE OBRIGATÓRIA — VERIFIQUE ANTES DE RETORNAR:
+Esta sequência DEVE conter EXATAMENTE:
+□ "feed": ${comp.estatico} estático${comp.estatico > 1 ? 's' : ''} (formato "Estático")${isVisualOrExperimentacao ? ` + ${comp.fechamento} estático${comp.fechamento > 1 ? 's' : ''} final (formato "Estático Final")` : ' — fechamento vai em "reels", não em "feed"'}
+□ "carousel": ${comp.carrossel * 5} cards preenchidos (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} × 5 cards) — PROIBIDO retornar "carousel": []${!isVisualOrExperimentacao ? `\n□ "reels": ${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} com hook + screenText + script + imagePrompt + legenda` : ''}
+Cada peça: titulo + texto + legenda + imagePrompt — TODOS preenchidos. Resposta incompleta quebra a sequência do usuário.
+` : ''}
 ${buildVisualDirectionBlock(data.mood, data.segment)}
 
 DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
@@ -343,6 +349,7 @@ INEDITISM O CONTROLADO:
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.
+${hasFeed ? `Confirmação obrigatória antes de retornar: "feed" com ${comp.estatico + (isVisualOrExperimentacao ? comp.fechamento : 0)} item${comp.estatico + (isVisualOrExperimentacao ? comp.fechamento : 0) > 1 ? 's' : ''} | "carousel" com ${comp.carrossel * 5} cards | ${isVisualOrExperimentacao ? 'SEM chave "reels"' : `"reels" com ${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''}`}. Se faltar qualquer peça ou campo, gere antes de retornar.` : ''}
 ${isVisualOrExperimentacao ? `\n⚠️ LEMBRETE FINAL: NÃO RETORNE A CHAVE "reels". A trilha é ${isExperimentacao ? 'EXPERIMENTAÇÃO' : 'VISUAL'}, e nesta trilha reels NÃO EXISTEM. O fechamento é feito por "Estático Final" dentro do array "feed".` : ''}
 `;
 }
@@ -449,6 +456,40 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
     } else {
       reels = reels.slice(0, comp.fechamento);
       if (reels.length === 0) reels = undefined;
+    }
+  }
+
+  // Validação de completude — detecta componentes esperados mas ausentes/incompletos.
+  if (comp.carrossel > 0 && (!carousel || carousel.length === 0)) {
+    console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: carrossel esperado mas ausente ou vazio.',
+      { esperados: comp.carrossel * 5, recebidos: carousel?.length ?? 0, rawCarousel: raw?.carousel });
+  } else if (comp.carrossel > 0 && carousel && carousel.length < comp.carrossel * 5) {
+    console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: carrossel com cards faltando.',
+      { esperados: comp.carrossel * 5, recebidos: carousel.length });
+  }
+  if (carousel && carousel.length > 0) {
+    const cardsVazios = carousel.filter((c: any) => !c.titulo || !c.texto || !c.imagePrompt);
+    if (cardsVazios.length > 0) {
+      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: cards de carrossel com campos vazios.',
+        { cardsVazios: cardsVazios.length, cards: cardsVazios.map((c: any) => c.card) });
+    }
+  }
+  if (feed) {
+    const estaticosRecebidos = feed.filter(f => f.formato === 'Estático').length;
+    const finaisRecebidos = feed.filter(f => f.formato === 'Estático Final').length;
+    if (estaticosRecebidos < comp.estatico) {
+      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: estáticos faltando.',
+        { esperados: comp.estatico, recebidos: estaticosRecebidos });
+    }
+    if ((track === 'visual' || track === 'experimentacao') && finaisRecebidos < comp.fechamento) {
+      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: estático final faltando.',
+        { esperados: comp.fechamento, recebidos: finaisRecebidos });
+    }
+  }
+  if (track === 'cinematica' || !track) {
+    if (comp.fechamento > 0 && (!reels || reels.length === 0)) {
+      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: reels esperado mas ausente.',
+        { esperados: comp.fechamento, recebidos: reels?.length ?? 0 });
     }
   }
 
