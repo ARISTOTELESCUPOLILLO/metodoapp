@@ -52,6 +52,7 @@ interface Props {
   kit: BrandKit;
   mood: MoodCode;
   onClear?: () => void;
+  onRetry?: () => void;
   imageKit?: ImageKit;
   sequenceSize?: 3 | 6 | 9;
   onImageGenerated?: () => void;
@@ -1649,7 +1650,7 @@ const MOOD_NAMES: Record<string, string> = {
   'OP-04': 'Fragmento', 'OP-05': 'Desvio', 'OP-06': 'Silêncio',
 };
 
-export default function ResultsView({ result, kit, mood, onClear, imageKit, sequenceSize, onImageGenerated }: Props) {
+export default function ResultsView({ result, kit, mood, onClear, onRetry, imageKit, sequenceSize, onImageGenerated }: Props) {
   const [savingPdf, setSavingPdf] = useState(false);
   const { guard, dialog } = useImageGenAlert();
   const { cotaPersonalizados, isAdmin, refresh: refreshProfile } = useProfile();
@@ -1755,9 +1756,18 @@ export default function ResultsView({ result, kit, mood, onClear, imageKit, sequ
       {sequence.length > 0 && (
         <div className="resultBlock">
           <h3>Sequência do feed</h3>
-          {estaticos.length > 0 && estaticosFinais.length > 0 && carousels.length === 0 && (
-            <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 10, padding: '10px 12px', margin: '8px 0 12px', fontSize: 13, color: '#92400e' }}>
-              ⚠️ A geração veio sem o carrossel desta sequência. Isso geralmente acontece quando a IA trunca a resposta. Clique em <b>"Limpar conteúdo"</b> e gere novamente para receber a peça completa.
+          {estaticos.length > 0 && carousels.length === 0 && (
+            <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 10, padding: '10px 12px', margin: '8px 0 12px', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span style={{ flex: 1 }}>⚠️ A geração veio sem o carrossel desta sequência. Isso geralmente acontece quando a IA trunca a resposta. Clique em <b>"Tentar novamente"</b> para receber a sequência completa.</span>
+              {onRetry && (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  style={{ whiteSpace: 'nowrap', background: '#d97706', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}
+                >
+                  ↻ Tentar novamente
+                </button>
+              )}
             </div>
           )}
           {sequence.map((item) => {

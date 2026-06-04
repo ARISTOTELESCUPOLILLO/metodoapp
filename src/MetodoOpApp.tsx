@@ -745,7 +745,7 @@ export default function App() {
           ) : null}
           {/* ResultsView fica sempre montado para não perder imagens geradas ao trocar de aba */}
           <div style={{ display: modo === 'metodo' ? undefined : 'none' }}>
-            <ResultsView result={result} kit={kit} mood={mood} onClear={handleClearMethodResult} imageKit={imageKit} sequenceSize={form.sequenceSize} onImageGenerated={refreshProfile} />
+            <ResultsView result={result} kit={kit} mood={mood} onClear={handleClearMethodResult} onRetry={handleGenerate} imageKit={imageKit} sequenceSize={form.sequenceSize} onImageGenerated={refreshProfile} />
           </div>
           {modo === 'postUnico' && (
             <PostUnicoResult
