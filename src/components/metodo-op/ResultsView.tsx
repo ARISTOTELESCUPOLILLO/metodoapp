@@ -13,6 +13,16 @@ function insertSignature(caption: string, signature: string): string {
   const hashBlock = lines.slice(hashStart).join('\n').trimStart();
   return before + '\n\n' + signature + '\n\n' + hashBlock;
 }
+
+function countWords(text: string, excludeTexts?: string[]): number {
+  let processed = text.trim();
+  if (excludeTexts) {
+    for (const exc of excludeTexts) {
+      if (exc) processed = processed.split(exc).join('');
+    }
+  }
+  return processed.trim().split(/\s+/).filter(w => w.length > 0 && !w.startsWith('#')).length;
+}
 import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
@@ -109,8 +119,10 @@ function EditableField(props: {
   onRegenDone: () => void;
   ctxBuilder: () => Parameters<typeof regenerateBlock>[0];
   multiline?: boolean;
+  maxWords?: number;
+  excludeTexts?: string[];
 }) {
-  const { label, value, original, count, onChange, onRegenStart, onRegenDone, ctxBuilder, multiline, kind } = props;
+  const { label, value, original, count, onChange, onRegenStart, onRegenDone, ctxBuilder, multiline, kind, maxWords, excludeTexts } = props;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -171,6 +183,11 @@ function EditableField(props: {
           onChange={(e) => onChange(e.target.value)}
           style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${exhausted ? '#fcd34d' : '#e2e8f0'}`, fontFamily: 'inherit', fontSize: 14, background: exhausted ? '#fffbeb' : '#fff', color: '#0f172a' }}
         />
+      )}
+      {maxWords != null && (
+        <div style={{ textAlign: 'right', fontSize: 11, marginTop: 2, color: countWords(value, excludeTexts) > maxWords ? '#dc2626' : '#94a3b8', fontWeight: countWords(value, excludeTexts) > maxWords ? 600 : 400 }}>
+          {countWords(value, excludeTexts)}/{maxWords} palavras
+        </div>
       )}
       {error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{error}</p>}
       {exhausted && !error && suggestions.length === 0 && (
@@ -310,9 +327,9 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
               }
             }}
           />
-          <EditableField label="Título" kind="titulo" value={titulo} original={item.titulo} count={tCount} onChange={setTitulo} onRegenStart={() => setTCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} />
-          <EditableField label="Texto" kind="texto" value={texto} original={item.texto} count={xCount} onChange={setTexto} onRegenStart={() => setXCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline />
-          <EditableField label="Legenda" kind="legenda" value={legenda} original={item.legenda} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline />
+          <EditableField label="Título" kind="titulo" value={titulo} original={item.titulo} count={tCount} onChange={setTitulo} onRegenStart={() => setTCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} maxWords={6} />
+          <EditableField label="Texto" kind="texto" value={texto} original={item.texto} count={xCount} onChange={setTexto} onRegenStart={() => setXCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline maxWords={15} />
+          <EditableField label="Legenda" kind="legenda" value={legenda} original={item.legenda} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline maxWords={40} excludeTexts={kit.assinatura ? [kit.assinatura] : undefined} />
           {legenda.trim() && isMobile && (
             <button className="downloadBtn" type="button" style={{ width: '100%', minHeight: 44, fontSize: 15, marginTop: 4 }} onClick={() => shareLegendaWhatsApp('Estático', legenda)}>
               📲 Compartilhar legenda no WhatsApp
@@ -455,9 +472,9 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
               }
             }}
           />
-          <EditableField label="Título" kind="titulo" value={titulo} original={item.titulo} count={tCount} onChange={setTitulo} onRegenStart={() => setTCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} />
-          <EditableField label="Texto" kind="texto" value={texto} original={item.texto} count={xCount} onChange={setTexto} onRegenStart={() => setXCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline />
-          <EditableField label="Legenda" kind="legenda" value={legenda} original={item.legenda} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline />
+          <EditableField label="Título" kind="titulo" value={titulo} original={item.titulo} count={tCount} onChange={setTitulo} onRegenStart={() => setTCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} maxWords={6} />
+          <EditableField label="Texto" kind="texto" value={texto} original={item.texto} count={xCount} onChange={setTexto} onRegenStart={() => setXCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline maxWords={15} />
+          <EditableField label="Legenda" kind="legenda" value={legenda} original={item.legenda} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline maxWords={40} excludeTexts={kit.assinatura ? [kit.assinatura] : undefined} />
           {legenda.trim() && isMobile && (
             <button className="downloadBtn" type="button" style={{ width: '100%', minHeight: 44, fontSize: 15, marginTop: 4 }} onClick={() => shareLegendaWhatsApp('Estático Final', legenda)}>
               📲 Compartilhar legenda no WhatsApp
@@ -787,11 +804,11 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             return (
               <div key={card.card} className="carouselCardBlock">
                 <span className="cardTag">Card {card.card}</span>
-                <EditableField label="Título do card" kind="titulo" value={titulos[index]} original={card.titulo} count={tCounts[index]} onChange={(v) => setTitulos(prev => prev.map((p,i) => i === index ? v : p))} onRegenStart={() => setTCounts(prev => prev.map((c,i) => i === index ? c + 1 : c))} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} />
-                <EditableField label="Texto do card" kind="texto" value={textos[index]} original={card.texto} count={xCounts[index]} onChange={(v) => setTextos(prev => prev.map((p,i) => i === index ? v : p))} onRegenStart={() => setXCounts(prev => prev.map((c,i) => i === index ? c + 1 : c))} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline />
+                <EditableField label="Título do card" kind="titulo" value={titulos[index]} original={card.titulo} count={tCounts[index]} onChange={(v) => setTitulos(prev => prev.map((p,i) => i === index ? v : p))} onRegenStart={() => setTCounts(prev => prev.map((c,i) => i === index ? c + 1 : c))} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} maxWords={6} />
+                <EditableField label="Texto do card" kind="texto" value={textos[index]} original={card.texto} count={xCounts[index]} onChange={(v) => setTextos(prev => prev.map((p,i) => i === index ? v : p))} onRegenStart={() => setXCounts(prev => prev.map((c,i) => i === index ? c + 1 : c))} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline maxWords={12} />
                 {index === cards.length - 1 && (
                   <>
-                    <EditableField label="Legenda do card" kind="legenda" value={legendas[index]} original={card.legenda || ''} count={lCounts[index]} onChange={(v) => setLegendas(prev => prev.map((p,i) => i === index ? v : p))} onRegenStart={() => setLCounts(prev => prev.map((c,i) => i === index ? c + 1 : c))} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline />
+                    <EditableField label="Legenda do card" kind="legenda" value={legendas[index]} original={card.legenda || ''} count={lCounts[index]} onChange={(v) => setLegendas(prev => prev.map((p,i) => i === index ? v : p))} onRegenStart={() => setLCounts(prev => prev.map((c,i) => i === index ? c + 1 : c))} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline maxWords={40} excludeTexts={kit.assinatura ? [kit.assinatura] : undefined} />
                     <div style={{ marginTop: 4 }}>
                       <button
                         type="button"
@@ -1341,9 +1358,9 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
             }}
           />
 
-          <EditableField label="Hook / Título do reels" kind="titulo" value={hook} original={reels.hook} count={hCount} onChange={setHook} onRegenStart={() => setHCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} />
-          <EditableField label="Roteiro falado (TTS ou voz clonada)" kind="texto" value={script} original={reels.script} count={sCount} onChange={setScript} onRegenStart={() => setSCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline />
-          <EditableField label="Legenda" kind="legenda" value={legenda} original={(reels.legenda || reels.script || '').trim()} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline />
+          <EditableField label="Hook / Título do reels" kind="titulo" value={hook} original={reels.hook} count={hCount} onChange={setHook} onRegenStart={() => setHCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} maxWords={6} />
+          <EditableField label="Roteiro falado (TTS ou voz clonada)" kind="texto" value={script} original={reels.script} count={sCount} onChange={setScript} onRegenStart={() => setSCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline maxWords={22} />
+          <EditableField label="Legenda" kind="legenda" value={legenda} original={(reels.legenda || reels.script || '').trim()} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline maxWords={40} excludeTexts={kit.assinatura ? [kit.assinatura] : undefined} />
 
           {legenda && (
             <div className="cardActions" style={{ marginBottom: 4 }}>
