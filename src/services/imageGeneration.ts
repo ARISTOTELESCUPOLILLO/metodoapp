@@ -88,7 +88,7 @@ export async function generateImageAsync(params: {
     console.warn('[imageGeneration] logo descartada no preparo (formato não suportado)');
   }
 
-  // 1) START
+  // 1) START — preferredSlot incluído para que checkBalance verifique apenas o slot correto
   const start = await postJson<StartResp>({
     action: 'start',
     prompt,
@@ -96,6 +96,7 @@ export async function generateImageAsync(params: {
     logoDataUrl: logoSmall || undefined,
     referenceImages: refsSmall.length ? refsSmall : undefined,
     modulo: modulo || 'metodo-op',
+    ...(preferredSlot ? { preferredSlot } : {}),
   });
   if (!start.ok || !start.data.requestId) {
     throw new Error(

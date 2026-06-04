@@ -53,6 +53,7 @@ export async function checkBalance(
   imgs: number,
   renders: number,
   geracoes = 0,
+  preferredSlot?: 'plano1' | 'plano2' | 'bonus',
 ): Promise<{ ok: boolean; isAdmin: boolean }> {
   // Admin: ilimitado.
   const { data: adminCheck } = await supabaseAdmin.rpc('has_role', {
@@ -84,6 +85,19 @@ export async function checkBalance(
     && fits(rLim, rUsed, renders)
     && fits(gLim, gUsed, geracoes);
 
+  // Cada plano é independente: checar apenas o slot preferido.
+  // Sem fallback para outros slots — se esgotou, esgotou.
+  if (preferredSlot === 'plano1') {
+    return { ok: slotOk(p.plano1_id, p.plano1_imgs_limite, p.plano1_imgs_usadas, p.plano1_renders_limite, p.plano1_renders_usados, (p as any).plano1_geracoes_limite ?? 0, (p as any).plano1_geracoes_usadas ?? 0, (p as any).plano1_expira_em ?? null), isAdmin: false };
+  }
+  if (preferredSlot === 'plano2') {
+    return { ok: slotOk(p.plano2_id, p.plano2_imgs_limite, p.plano2_imgs_usadas, p.plano2_renders_limite, p.plano2_renders_usados, (p as any).plano2_geracoes_limite ?? 0, (p as any).plano2_geracoes_usadas ?? 0, (p as any).plano2_expira_em ?? null), isAdmin: false };
+  }
+  if (preferredSlot === 'bonus') {
+    return { ok: slotOk(p.bonus_id, p.bonus_imgs_limite, p.bonus_imgs_usadas, p.bonus_renders_limite, p.bonus_renders_usados, (p as any).bonus_geracoes_limite ?? 0, (p as any).bonus_geracoes_usadas ?? 0, (p as any).bonus_expira_em ?? null), isAdmin: false };
+  }
+
+  // Sem preferredSlot: compat retroativo — verifica qualquer slot disponível.
   const ok =
     slotOk(p.plano1_id, p.plano1_imgs_limite, p.plano1_imgs_usadas, p.plano1_renders_limite, p.plano1_renders_usados, (p as any).plano1_geracoes_limite ?? 0, (p as any).plano1_geracoes_usadas ?? 0, (p as any).plano1_expira_em ?? null) ||
     slotOk(p.plano2_id, p.plano2_imgs_limite, p.plano2_imgs_usadas, p.plano2_renders_limite, p.plano2_renders_usados, (p as any).plano2_geracoes_limite ?? 0, (p as any).plano2_geracoes_usadas ?? 0, (p as any).plano2_expira_em ?? null) ||

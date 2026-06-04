@@ -18,12 +18,11 @@ export const Route = createFileRoute('/api/generate-content')({
             return Response.json({ error: 'Não autenticado' }, { status: 401 });
           }
           const { userId, impersonatedBy } = effective;
-          const balance = await checkBalance(userId, 0, 0, 1);
+          const balance = await checkBalance(userId, 0, 0, 1, preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined);
           if (!balance.ok) {
-            return Response.json(
-              { error: 'Limite de gerações do plano atingido — fale com o admin.' },
-              { status: 402 },
-            );
+            const slot = preferredSlot as string | undefined;
+            const msg = slot === 'bonus' ? 'Bônus encerrado.' : 'Plano esgotado — renove para continuar.';
+            return Response.json({ error: msg }, { status: 402 });
           }
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;

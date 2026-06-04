@@ -15,6 +15,7 @@ type StartBody = {
   format?: 'post' | 'reels';
   logoDataUrl?: string;
   referenceImages?: string[];
+  preferredSlot?: string;
 };
 
 type StatusBody = {
@@ -157,18 +158,16 @@ export const Route = createFileRoute('/api/generate-image')({
           }
 
           // === START ===
-          const { prompt, format, logoDataUrl, referenceImages } = body as StartBody;
+          const { prompt, format, logoDataUrl, referenceImages, preferredSlot: startSlot } = body as StartBody;
           if (!prompt) {
             return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
           }
 
-          // Pré-checagem de saldo — effective já foi validado no início do handler.
-          const { ok: balOk } = await checkBalance(effective.userId, 1, 0);
+          // Pré-checagem de saldo — verifica apenas o slot preferido (sem fallback entre planos).
+          const { ok: balOk } = await checkBalance(effective.userId, 1, 0, 0, startSlot as 'plano1' | 'plano2' | 'bonus' | undefined);
           if (!balOk) {
-            return Response.json(
-              { error: 'Limite de imagens atingido em todos os seus planos.' },
-              { status: 402 },
-            );
+            const msg = startSlot === 'bonus' ? 'Bônus encerrado.' : 'Plano esgotado — renove para continuar.';
+            return Response.json({ error: msg }, { status: 402 });
           }
 
           const refsRaw: string[] = Array.isArray(referenceImages)
