@@ -55,13 +55,6 @@ export async function checkBalance(
   geracoes = 0,
   preferredSlot?: 'plano1' | 'plano2' | 'bonus',
 ): Promise<{ ok: boolean; isAdmin: boolean }> {
-  // Admin: ilimitado.
-  const { data: adminCheck } = await supabaseAdmin.rpc('has_role', {
-    _user_id: userId,
-    _role: 'admin',
-  });
-  if (adminCheck === true) return { ok: true, isAdmin: true };
-
   const { data: p, error } = await supabaseAdmin
     .from('profiles')
     .select(
@@ -122,62 +115,23 @@ export async function debitUsage(
 ): Promise<{ slot: string }> {
   const geracoes = meta.geracoes ?? 0;
 
-  // Admins não têm cota de plano — skip do RPC de débito mas registra o consumo.
-  const { data: adminCheck } = await supabaseAdmin.rpc('has_role', {
-    _user_id: userId,
-    _role: 'admin',
-  });
-  const isAdmin = adminCheck === true;
-
   let slot: string | null = null;
   let rpcError: Error | null = null;
 
-  if (isAdmin) {
-    const { data: slotData, error: adminRpcErr } = await supabaseAdmin.rpc('debit_usage', {
-      _user_id: userId,
-      _imgs: imgs,
-      _renders: renders,
-      _geracoes: geracoes,
-      ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
-    } as any);
-
-    if (adminRpcErr || !slotData) {
-      // RPC falhou ou retornou vazio — fallback: incremento direto no perfil.
-      // Respeita preferredSlot para que PU (plano2) e MOP (plano1) debitam no slot certo.
-      console.error('[debit_usage admin RPC]', adminRpcErr?.message ?? 'sem retorno');
-      const s = meta.preferredSlot ?? 'plano1';
-      const iCol = `${s}_imgs_usadas`;
-      const rCol = `${s}_renders_usados`;
-      const gCol = `${s}_geracoes_usadas`;
-      const { data: p } = await supabaseAdmin
-        .from('profiles')
-        .select(`${iCol},${rCol},${gCol}`)
-        .eq('id', userId)
-        .maybeSingle();
-      if (p) {
-        await supabaseAdmin.from('profiles').update({
-          [iCol]: ((p as any)[iCol] ?? 0) + imgs,
-          [rCol]: ((p as any)[rCol] ?? 0) + renders,
-          [gCol]: ((p as any)[gCol] ?? 0) + geracoes,
-        } as any).eq('id', userId);
-      }
-    }
-    slot = (slotData as string) || 'admin';
+  // Admin e usuário comum: mesmo caminho — RPC verifica limites do slot preferido.
+  const { data: slotData, error } = await supabaseAdmin.rpc('debit_usage', {
+    _user_id: userId,
+    _imgs: imgs,
+    _renders: renders,
+    _geracoes: geracoes,
+    ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
+  } as any);
+  if (error) {
+    // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.
+    rpcError = new Error(error.message || 'Falha ao debitar consumo.');
+    slot = 'sem-plano';
   } else {
-    const { data: slotData, error } = await supabaseAdmin.rpc('debit_usage', {
-      _user_id: userId,
-      _imgs: imgs,
-      _renders: renders,
-      _geracoes: geracoes,
-      ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
-    } as any);
-    if (error) {
-      // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.
-      rpcError = new Error(error.message || 'Falha ao debitar consumo.');
-      slot = 'sem-plano';
-    } else {
-      slot = (slotData as string) ?? null;
-    }
+    slot = (slotData as string) ?? null;
   }
 
   // Log SEMPRE — inclusive quando plano esgotado ou inexistente (slot='sem-plano').
