@@ -147,8 +147,8 @@ export default function App() {
   const geracoesRestantes = Math.max(0, geracoesTotal - geracoesUsadasSum);
   const semPlano = slots.length === 0 && !effectiveAdmin;
   const effectiveUserId = impersonation?.userId || user?.id || null;
-  // Slot preferido por tipo de plano (PU usa plano2; MOP usa plano1).
-  const puSlot = (slots.find(s => /^PU\d+/i.test(s.plan.codigo)) || slots[0])?.key;
+  // Slot com plano PU explícito — undefined quando não há plano PU (sem fallback para slots[0]).
+  const puSlot = slots.find(s => /^PU\d+/i.test(s.plan.codigo))?.key;
   // Limites específicos do slot PU (para bloqueio por imagens no Post Único)
   const puSlotInfoObj = slots.find(s => /^PU\d+$/i.test(s.plan.codigo));
   const puImgsTotal = puSlotInfoObj ? (puSlotInfoObj.imgsLimiteDisplay || puSlotInfoObj.imgsLimite || 0) : 0;
@@ -157,9 +157,19 @@ export default function App() {
   const puImgsRestantes = Math.max(0, puImgsReal - puImgsUsadas);
   const puExhausted = planAccess.hasPostUnico && puImgsReal > 0 && puImgsUsadas >= puImgsReal;
 
+  // Limites do slot Bônus — declarado antes de mopSlotInfoObj pois é referenciado nele
+  const bonusSlotInfoObj = slots.find(s => s.key === 'bonus');
+  const bonusImgsTotal = bonusSlotInfoObj ? (bonusSlotInfoObj.imgsLimiteDisplay || bonusSlotInfoObj.imgsLimite || 0) : 0;
+  const bonusImgsReal = bonusSlotInfoObj?.imgsLimite ?? 0;
+  const bonusImgsUsadas = bonusSlotInfoObj?.imgsUsadas ?? 0;
+  const bonusExhausted = !!bonusSlotInfoObj && bonusImgsReal > 0 && bonusImgsUsadas >= bonusImgsReal;
+
   // Limites do slot Método OP (bloqueia quando não há imagens suficientes para nenhuma sequência)
   const hasMopPlan = planAccess.tracks.cinematica || planAccess.tracks.visual || planAccess.tracks.experimentacao;
-  const mopSlotInfoObj = slots.find(s => s.key !== 'bonus' && !/^PU\d+$/i.test(s.plan.codigo));
+  // Prefere plano MOP fora do bonus; se não há, usa bonus se seu plano não é PU-type (ex: EX01).
+  const mopSlotInfoObj =
+    slots.find(s => s.key !== 'bonus' && !/^PU\d+$/i.test(s.plan.codigo)) ??
+    (bonusSlotInfoObj && !/^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo) ? bonusSlotInfoObj : undefined);
   // Chave do slot MOP — usada para roteamento de débito correto (MOP → mopSlot, PU → puSlot)
   const mopSlot = mopSlotInfoObj?.key;
   const mopImgsTotal = mopSlotInfoObj ? (mopSlotInfoObj.imgsLimiteDisplay || mopSlotInfoObj.imgsLimite || 0) : 0;
@@ -174,13 +184,6 @@ export default function App() {
   ];
   const mopMinSize = allMopSizes.length > 0 ? Math.min(...allMopSizes) : 3;
   const mopExhausted = hasMopPlan && mopImgsReal > 0 && mopImgsRestantes < mopMinSize;
-
-  // Limites do slot Bônus
-  const bonusSlotInfoObj = slots.find(s => s.key === 'bonus');
-  const bonusImgsTotal = bonusSlotInfoObj ? (bonusSlotInfoObj.imgsLimiteDisplay || bonusSlotInfoObj.imgsLimite || 0) : 0;
-  const bonusImgsReal = bonusSlotInfoObj?.imgsLimite ?? 0;
-  const bonusImgsUsadas = bonusSlotInfoObj?.imgsUsadas ?? 0;
-  const bonusExhausted = !!bonusSlotInfoObj && bonusImgsReal > 0 && bonusImgsUsadas >= bonusImgsReal;
 
   // Slot ativamente selecionado pelo usuário — controla qual slot é debitado.
   // Padrão: MOP slot (quando disponível), caso contrário PU slot, caso contrário plano1.
@@ -200,10 +203,12 @@ export default function App() {
   }, [effectiveUserId, defaultSlot]);
   // Auto-switch slot quando o modo muda: postUnico → PU slot; metodo → MOP slot.
   // Garante que gerações MOP e PU sempre debitam do plano correto sem ação manual.
+  // Considera bonus: se bonus tem plano PU-type (PU2), usa bonus para postUnico.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (modo === 'postUnico' && puSlot) {
-      setSelectedSlot(puSlot as 'plano1' | 'plano2' | 'bonus');
+    if (modo === 'postUnico') {
+      if (puSlot) setSelectedSlot(puSlot as 'plano1' | 'plano2' | 'bonus');
+      else if (bonusSlotInfoObj && /^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo)) setSelectedSlot('bonus');
     } else if (modo === 'metodo' && mopSlot) {
       setSelectedSlot(mopSlot as 'plano1' | 'plano2' | 'bonus');
     }
