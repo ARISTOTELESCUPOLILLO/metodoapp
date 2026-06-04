@@ -160,6 +160,8 @@ export default function App() {
   // Limites do slot Método OP (bloqueia quando não há imagens suficientes para nenhuma sequência)
   const hasMopPlan = planAccess.tracks.cinematica || planAccess.tracks.visual || planAccess.tracks.experimentacao;
   const mopSlotInfoObj = slots.find(s => s.key !== 'bonus' && !/^PU\d+$/i.test(s.plan.codigo));
+  // Chave do slot MOP — usada para roteamento de débito correto (MOP → mopSlot, PU → puSlot)
+  const mopSlot = mopSlotInfoObj?.key;
   const mopImgsTotal = mopSlotInfoObj ? (mopSlotInfoObj.imgsLimiteDisplay || mopSlotInfoObj.imgsLimite || 0) : 0;
   const mopImgsReal = mopSlotInfoObj?.imgsLimite ?? 0;
   const mopImgsUsadas = mopSlotInfoObj?.imgsUsadas ?? 0;
@@ -181,7 +183,9 @@ export default function App() {
   const bonusExhausted = !!bonusSlotInfoObj && bonusImgsReal > 0 && bonusImgsUsadas >= bonusImgsReal;
 
   // Slot ativamente selecionado pelo usuário — controla qual slot é debitado.
-  // Inicializado com puSlot na primeira carga por usuário; pode ser trocado clicando no PlanCard.
+  // Padrão: MOP slot (quando disponível), caso contrário PU slot, caso contrário plano1.
+  // Isso evita que usuários com MOP + PU debitassem tudo no slot PU.
+  const defaultSlot = mopSlot ?? puSlot ?? slots[0]?.key ?? 'plano1';
   const [selectedSlot, setSelectedSlot] = useState<'plano1' | 'plano2' | 'bonus'>('plano1');
   const [exhaustedHint, setExhaustedHint] = useState<'mop' | 'pu' | 'bonus' | null>(null);
   const slotInitRef = useRef<string | null>(null);
@@ -189,11 +193,21 @@ export default function App() {
   // de remontagem com o mesmo usuário (volta do admin/histórico/conta).
   const prevUserRef = useRef<string | null>(null);
   useEffect(() => {
-    if (effectiveUserId && effectiveUserId !== slotInitRef.current && puSlot) {
+    if (effectiveUserId && effectiveUserId !== slotInitRef.current && defaultSlot) {
       slotInitRef.current = effectiveUserId;
-      setSelectedSlot(puSlot as 'plano1' | 'plano2' | 'bonus');
+      setSelectedSlot(defaultSlot as 'plano1' | 'plano2' | 'bonus');
     }
-  }, [effectiveUserId, puSlot]);
+  }, [effectiveUserId, defaultSlot]);
+  // Auto-switch slot quando o modo muda: postUnico → PU slot; metodo → MOP slot.
+  // Garante que gerações MOP e PU sempre debitam do plano correto sem ação manual.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (modo === 'postUnico' && puSlot) {
+      setSelectedSlot(puSlot as 'plano1' | 'plano2' | 'bonus');
+    } else if (modo === 'metodo' && mopSlot) {
+      setSelectedSlot(mopSlot as 'plano1' | 'plano2' | 'bonus');
+    }
+  }, [modo]);
   // Propaga o slot selecionado para o serviço de geração de imagens.
   useEffect(() => { setCurrentDebitSlot(selectedSlot); }, [selectedSlot]);
 
