@@ -114,7 +114,7 @@ function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo:
   // texto, rosto, objeto-foco e lettering exatamente sobre o ponto da logo,
   // mantendo contraste local suficiente para a marca ser legível.
   const base =
-    'A região onde a logomarca será aplicada depois é uma ÁREA RESERVADA INVIOLÁVEL de aproximadamente 18% da largura por 10% da altura. PROIBIDO ABSOLUTO nessa área: texto, título, palavra, lettering, nome de empresa, slogan, call-to-action, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo, recorte de produto ou qualquer elemento visual essencial para a comunicação. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO OU FICAR ATRÁS DA LOGOMARCA — a logo será sobreposta aqui depois da geração. A área deve ser CONTINUAÇÃO NATURAL E ORGÂNICA da imagem ao redor (fotografia de fundo, textura, céu, parede, superfície contínua). PROIBIDO TAMBÉM: bloco, retângulo, painel, faixa, caixa, moldura, etiqueta, badge, fundo de cor sólida (inclusive a cor da marca), círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, forma geométrica decorativa ou ornamento — inclusive EM VOLTA ou AO REDOR do ponto da logo. Nenhuma forma, linha ou elemento decorativo pode contornar, enquadrar ou destacar a zona da logomarca. Apenas garanta contraste local suficiente para a logo ficar legível depois.';
+    'Área reservada inviolável (~18% × ~10%): PROIBIDO ABSOLUTO ali: texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO PELA LOGO — ela será sobreposta depois. Área deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado ou ornamento em volta da zona. Apenas garanta contraste local suficiente para a logo ser legível.';
   if (pos === 'top-center') {
     return {
       reservaTopo: `Ponto da logo: TOPO CENTRAL. ${base}`,
@@ -333,17 +333,11 @@ Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras
 NÃO copie a informação-chave literalmente — interprete-a criativamente com tom publicitário.
 A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, em qualquer peso/fonte dentro da tipografia da marca. Explore ancoragens além do "bloco encostado na borda esquerda".`;
 
-  return `⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:
-PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — notebook, laptop, tablet, iPad, celular, computador ou monitor. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.
-CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.
+  return `⚠ DISPOSITIVOS DIGITAIS: PROIBIDO conteúdo de tela (app, gráfico, ícone) na TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — carcaça é SÓLIDA e OPACA. CORRETO: apenas a tela FRONTAL exibe conteúdo real.
 
-⚠ REGRA ABSOLUTA — AMBIENTES VISUAIS:
-PROIBIDO em qualquer peça, em qualquer objetivo e mesmo quando houver título/texto obrigatório: paredes de concreto aparente, painéis de concreto, galpões industriais, prédios de concreto frio, fachadas de edifício sem vida, estruturas arquitetônicas desumanizadas, corredores vazios e ambientes de obra como elemento visual dominante ou como fundo/suporte para tipografia. Para fazer texto se destacar, USE: fundos coloridos, texturas orgânicas, desfoque de ambiente, gradiente sutil, cor sólida, fotografia de pessoa ou detalhe quente. Nunca concreto como solução de legibilidade.
-PROIBIDO TAMBÉM: formas geométricas abstratas vazias (círculos, esferas, triângulos, polígonos, hexágonos, espirais) flutuando sem propósito narrativo como elemento visual central ou de preenchimento de fundo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido. Abstração pura sem referente é proibida.
+⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.
 
-⚠ REGRA ABSOLUTA — HUMANIZAÇÃO E AUTENTICIDADE VISUAL:
-As imagens devem parecer humanas, autênticas e reais — priorize pessoas, expressões naturais, interação humana, ambientes verdadeiros e situações cotidianas relacionadas ao contexto da publicação. Evite imagens frias, artificiais, excessivamente corporativas ou genéricas.
-PROIBIDO inserir automaticamente elementos decorativos sem função narrativa: vasos, plantas ornamentais, folhas, flores, folhagens ou objetos usados apenas para preencher cantos e espaços vazios. Todo elemento visual deve contribuir para a mensagem da peça. A humanização da cena tem prioridade sobre a decoração do ambiente.
+⚠ HUMANIZAÇÃO: imagens devem parecer humanas, autênticas e reais. PROIBIDO inserir vasos, plantas ornamentais, folhas ou flores apenas para preencher cantos — todo elemento deve contribuir para a mensagem.
 
 Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
@@ -374,9 +368,7 @@ REGRAS:
 - Alta resolução, estética editorial/publicitária brasileira
 - Direção de arte humana, nunca arte automática
 - Sem watermarks, sem logo fictícia, sem assinatura textual
-- PROIBIDO em qualquer peça: paredes de concreto aparente, painéis de concreto, galpões industriais, prédios de concreto frio, fachadas de edifício sem vida, estruturas arquitetônicas desumanizadas, corredores vazios e ambientes de obra como elemento visual dominante ou de fundo. Ambientes devem ter presença humana, calor visual, natureza ou composição tipográfica com personalidade — nunca cenário frio, desumanizado ou arquitetura sem alma.
-- PROIBIDO em qualquer peça: formas geométricas abstratas vazias (círculos, esferas, triângulos, polígonos, hexágonos, espirais) flutuando sem propósito narrativo como elemento visual central ou de preenchimento de fundo. A composição deve ter tema concreto — humano, objeto real, natureza, tipografia ou cenário com sentido. Abstração pura sem referente é proibida.
-- DISPOSITIVOS DIGITAIS — INEGOCIÁVEL: ao aparecer notebook, tablet, celular, monitor ou TV, a TELA FRONTAL mostra conteúdo real e coerente (gráfico, dashboard, app, mensagem, foto, planilha, vídeo); a TAMPA TRASEIRA / VERSO / CARCAÇA é superfície SÓLIDA e OPACA, sem display — proibido renderizar ali interface, gráfico, ícone, app, brilho de tela, reflexo de UI, segunda tela, logo de SO ou vazamento da tela frontal; o aparelho deve aparecer em ângulo que naturalmente esconda ou minimize a tampa (em perfil/diagonal sobre a mesa, na mão em uso, no colo, câmera baixa, por cima do ombro de quem digita). Proibido: vista top-down de laptop fechado, foto frontal do verso de tablet/celular como elemento central, mockup plano da tampa.
+- Regras absolutas (dispositivos digitais, ambientes, humanização): ver início deste prompt
 - ${zona.regraFinal}
 - ${typographyShort}
 

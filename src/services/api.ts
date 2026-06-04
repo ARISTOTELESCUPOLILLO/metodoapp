@@ -140,14 +140,14 @@ function buildImagePrompt(params: {
     pos === 'top-center'    ? `na FAIXA SUPERIOR CENTRAL (centralizada horizontalmente, dentro do topo da zona segura de ${safeMargin})`
   : pos === 'bottom-center' ? `na FAIXA INFERIOR CENTRAL (centralizada horizontalmente, dentro do rodapé da zona segura de ${safeMargin})`
   :                           'no canto inferior direito';
-  const reservaBase = 'É uma ÁREA RESERVADA INVIOLÁVEL (~18% da largura × ~10% da altura). PROIBIDO ali: qualquer texto, lettering, número, título, palavra, rosto, mão, objeto-foco, gráfico, ícone, símbolo, recorte de produto ou elemento decorativo. A área deve ser uma CONTINUAÇÃO NATURAL E ORGÂNICA da imagem ao redor (fotografia de fundo, textura, superfície contínua). PROIBIDO TAMBÉM desenhar ali bloco, retângulo, painel, faixa, caixa, moldura, etiqueta, badge, fundo de cor sólida (inclusive a cor da marca), círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, forma geométrica decorativa ou ornamento — inclusive EM VOLTA ou AO REDOR do espaço da logo. Nenhuma forma, linha ou elemento decorativo pode contornar, enquadrar ou destacar essa zona. Sem moldura, sem caixa, sem painel, sem círculo envolvente, sem linha ao redor, sem pontilhado, sem fundo de cor cheia destacado. Apenas garanta contraste local suficiente para a logo ficar legível depois.';
+  const reservaBase = 'Área reservada inviolável (~18% × ~10%). PROIBIDO ali: texto, lettering, rosto, mão, objeto-foco, gráfico, ícone, símbolo, produto, moldura, caixa, painel, badge, fundo de cor sólida (inclusive cor da marca), círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado ou ornamento — inclusive em volta da zona da logo. A área deve ser continuação natural da imagem ao redor. Apenas garanta contraste local suficiente para a logo ser legível.';
   const reservaInstrucao =
     pos === 'top-center'    ? `A FAIXA SUPERIOR CENTRAL é a zona da logomarca. ${reservaBase}`
   : pos === 'bottom-center' ? `A FAIXA INFERIOR CENTRAL é a zona da logomarca. ${reservaBase}`
   :                           `O CANTO INFERIOR DIREITO é a zona da logomarca. ${reservaBase}`;
   const marcaInstruction = hasLogo
-    ? `Aplique a logomarca fornecida (imagem de referência) ${zonaLogo} da composição, em tamanho discreto (cerca de 12% da largura), totalmente dentro da zona segura de ${safeMargin}, preservando proporções originais, sem distorcer, sem cortar, sem inventar texto. Não adicione nenhuma outra assinatura textual. ${reservaInstrucao}`
-    : `Não adicione nenhum texto de assinatura ou nome de marca — a assinatura será aplicada separadamente. ${reservaInstrucao}`;
+    ? `Aplique a logomarca fornecida (imagem de referência) ${zonaLogo} da composição, em tamanho discreto (~12% da largura), dentro da zona segura de ${safeMargin}, preservando proporções, sem distorcer, sem inventar texto.`
+    : `Não adicione assinatura textual ou nome de marca — será aplicada separadamente.`;
 
   const typographyBlock = buildTypographyBlock(fontFamily);
   const typographyShort = buildTypographyShortRule(fontFamily);
@@ -178,17 +178,12 @@ function buildImagePrompt(params: {
 
 
   // Regra de dispositivos — proíbe conteúdo de tela na carcaça traseira.
-  const DEVICE_RULE_FIRST = `⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:
-PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — notebook, laptop, tablet, iPad, celular, computador ou monitor. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.
-CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.
+  const DEVICE_RULE_FIRST = `⚠ DISPOSITIVOS DIGITAIS: PROIBIDO renderizar conteúdo (tela, app, gráfico, ícone) sobre a TAMPA TRASEIRA ou CARCAÇA de notebook, tablet, iPad, celular ou monitor. A carcaça é superfície SÓLIDA e OPACA. CORRETO: apenas a tela FRONTAL exibe conteúdo real visível.
 
 `;
 
   // Suspiro — texto e elementos visuais nunca colam nas bordas.
-  const SAFE_ZONE_RULE = `⚠ REGRA INVIOLÁVEL — SUSPIRO DE ${safeMargin} (TODAS AS BORDAS):
-Canvas ${canvasSize}. Mantenha ${safeMargin} de margem livre em TODAS as bordas (topo, base, esquerda, direita).
-PROIBIDO: qualquer letra, título, número, legenda, lettering ou texto tocando ou ultrapassando esse perímetro de ${safeMargin}. Todo texto deve estar centralizado e contido dentro da área segura interna.
-Bordas são continuação natural do fundo (céu, textura, ambiente, desfoque) — sem texto cortado, sem palavra saindo do quadro.
+  const SAFE_ZONE_RULE = `⚠ SUSPIRO DE ${safeMargin} (TODAS AS BORDAS): Canvas ${canvasSize}. Mantenha ${safeMargin} de margem livre em todas as bordas. PROIBIDO: qualquer letra, número ou lettering tocando esse perímetro. Todo texto dentro da área segura interna. Bordas são continuação natural do fundo — sem texto cortado.
 
 `;
 
