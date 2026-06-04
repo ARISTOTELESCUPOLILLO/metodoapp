@@ -321,9 +321,9 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
           <div className="cardActions">
             <button
               type="button"
-              disabled={!kit.assinatura}
-              onClick={() => { if (kit.assinatura) setLegenda(insertSignature(legenda, kit.assinatura)); }}
-              style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+              disabled={!(kit.assinatura && !legenda.includes(kit.assinatura))}
+              onClick={() => { if (kit.assinatura && !legenda.includes(kit.assinatura)) setLegenda(insertSignature(legenda, kit.assinatura)); }}
+              style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: (kit.assinatura && !legenda.includes(kit.assinatura)) ? 'pointer' : 'default', background: (kit.assinatura && !legenda.includes(kit.assinatura)) ? '#0f172a' : '#e2e8f0', color: (kit.assinatura && !legenda.includes(kit.assinatura)) ? '#fff' : '#94a3b8' }}
             >
               Inserir Assinatura
             </button>
@@ -466,9 +466,9 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
           <div className="cardActions">
             <button
               type="button"
-              disabled={!kit.assinatura}
-              onClick={() => { if (kit.assinatura) setLegenda(insertSignature(legenda, kit.assinatura)); }}
-              style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+              disabled={!(kit.assinatura && !legenda.includes(kit.assinatura))}
+              onClick={() => { if (kit.assinatura && !legenda.includes(kit.assinatura)) setLegenda(insertSignature(legenda, kit.assinatura)); }}
+              style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: (kit.assinatura && !legenda.includes(kit.assinatura)) ? 'pointer' : 'default', background: (kit.assinatura && !legenda.includes(kit.assinatura)) ? '#0f172a' : '#e2e8f0', color: (kit.assinatura && !legenda.includes(kit.assinatura)) ? '#fff' : '#94a3b8' }}
             >
               Inserir Assinatura
             </button>
@@ -794,9 +794,9 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
                     <div style={{ marginTop: 4 }}>
                       <button
                         type="button"
-                        disabled={!kit.assinatura}
-                        onClick={() => { if (kit.assinatura) setLegendas(prev => prev.map((p, i) => i === index ? insertSignature(p, kit.assinatura!) : p)); }}
-                        style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+                        disabled={!(kit.assinatura && !legendas[index].includes(kit.assinatura))}
+                        onClick={() => { if (kit.assinatura && !legendas[index].includes(kit.assinatura)) setLegendas(prev => prev.map((p, i) => i === index ? insertSignature(p, kit.assinatura!) : p)); }}
+                        style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: (kit.assinatura && !legendas[index].includes(kit.assinatura)) ? 'pointer' : 'default', background: (kit.assinatura && !legendas[index].includes(kit.assinatura)) ? '#0f172a' : '#e2e8f0', color: (kit.assinatura && !legendas[index].includes(kit.assinatura)) ? '#fff' : '#94a3b8' }}
                       >
                         Inserir Assinatura
                       </button>
@@ -1348,9 +1348,9 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
             <div className="cardActions" style={{ marginBottom: 4 }}>
               <button
                 type="button"
-                disabled={!kit.assinatura}
-                onClick={() => { if (kit.assinatura) setLegenda(insertSignature(legenda, kit.assinatura)); }}
-                style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: kit.assinatura ? 'pointer' : 'default', background: kit.assinatura ? '#0f172a' : '#e2e8f0', color: kit.assinatura ? '#fff' : '#94a3b8' }}
+                disabled={!(kit.assinatura && !legenda.includes(kit.assinatura))}
+                onClick={() => { if (kit.assinatura && !legenda.includes(kit.assinatura)) setLegenda(insertSignature(legenda, kit.assinatura)); }}
+                style={{ padding: '6px 12px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: (kit.assinatura && !legenda.includes(kit.assinatura)) ? 'pointer' : 'default', background: (kit.assinatura && !legenda.includes(kit.assinatura)) ? '#0f172a' : '#e2e8f0', color: (kit.assinatura && !legenda.includes(kit.assinatura)) ? '#fff' : '#94a3b8' }}
               >
                 Inserir Assinatura
               </button>

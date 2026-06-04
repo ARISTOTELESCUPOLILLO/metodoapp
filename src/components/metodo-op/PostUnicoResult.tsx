@@ -273,9 +273,9 @@ export default function PostUnicoResult({
                     </button>
                     <button
                       type="button"
-                      disabled={!assinatura}
-                      onClick={() => { if (assinatura) setEditedCaption(insertSignature(captionText, assinatura)); }}
-                      style={{ ...lightBtn, background: assinatura ? '#0f172a' : '#e2e8f0', color: assinatura ? '#fff' : '#94a3b8', border: 'none', cursor: assinatura ? 'pointer' : 'default' }}
+                      disabled={!(assinatura && !captionText.includes(assinatura))}
+                      onClick={() => { if (assinatura && !captionText.includes(assinatura)) setEditedCaption(insertSignature(captionText, assinatura)); }}
+                      style={{ ...lightBtn, background: (assinatura && !captionText.includes(assinatura)) ? '#0f172a' : '#e2e8f0', color: (assinatura && !captionText.includes(assinatura)) ? '#fff' : '#94a3b8', border: 'none', cursor: (assinatura && !captionText.includes(assinatura)) ? 'pointer' : 'default' }}
                     >
                       Inserir Assinatura
                     </button>
