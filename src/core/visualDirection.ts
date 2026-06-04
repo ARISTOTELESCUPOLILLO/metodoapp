@@ -51,9 +51,9 @@ const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     luz: 'luz natural difusa, vinda de lateral única, sem sombras duras; sensação de manhã clara e estável',
     paleta: 'paleta fria controlada (azuis, cinzas, branco quente) com UM único acento de cor saturada no elemento-chave',
     composicao: 'composição simétrica e organizada, espaço negativo amplo e equilibrado, hierarquia limpa, alinhamento ortogonal',
-    camera: 'câmera frontal lente 50mm, distância média, ponto de vista na altura dos olhos, foco nítido e textura limpa',
+    camera: 'câmera lente 50mm, distância média, ponto de vista na altura dos olhos, foco nítido e textura limpa — ângulo (frontal ou 3/4 lateral) definido pelo sorteio de câmera desta geração',
     detalheCriativo: 'um único elemento-assinatura sutil em cena (linha geométrica fina, sombra projetada limpa, reflexo controlado em superfície polida ou objeto cotidiano alinhado com precisão milimétrica) que marca autoria sem atrapalhar a leitura',
-    assinatura: 'fotografia editorial luminosa, luz natural difusa lateral, paleta fria com acento pontual, composição simétrica e respirada, lente 50mm frontal',
+    assinatura: 'fotografia editorial luminosa, luz natural difusa lateral, paleta fria com acento pontual, composição simétrica e respirada, lente 50mm',
   },
   'OP-02': {
     nome: 'IMPACTO',
@@ -61,9 +61,9 @@ const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     luz: 'luz focal direcional sobre fundo escuro médio, contraste pronunciado com alguma gradação, sombras recortadas sem extremismo — dramaticidade presente sem apagar completamente o fundo',
     paleta: 'paleta low-key dominada por preto/grafete com UMA cor quente saturada (amarelo, laranja, vermelho) como acento dramático',
     composicao: 'composição assimétrica com tensão, sujeito recortado pela luz, vazios escuros generosos, foco único concentrado',
-    camera: 'câmera 35mm angulada, distância próxima, contraste extremo, micro-grão sutil, sensação cinematográfica',
+    camera: 'câmera 35mm em contra-plongée leve (câmera ligeiramente abaixo da linha dos olhos, apontando para cima) ou dutch angle (câmera inclinada lateralmente para instabilidade), distância próxima, contraste extremo, micro-grão sutil, sensação cinematográfica — PROIBIDO câmera frontal reta na altura dos olhos',
     detalheCriativo: 'um sinal gráfico mínimo nascido da luz (haste de luz cortando o quadro, partícula de poeira no facho, reflexo metálico recortado, contorno luminoso em uma única borda do sujeito) — pequeno, mas inconfundivelmente autoral',
-    assinatura: 'fotografia cinematográfica, luz focal direcional sobre fundo escuro médio, contraste pronunciado, paleta com acento quente saturado, lente 35mm',
+    assinatura: 'fotografia cinematográfica, luz focal direcional sobre fundo escuro médio, contraste pronunciado, paleta com acento quente saturado, lente 35mm, contra-plongée leve ou dutch angle',
   },
   'OP-03': {
     nome: 'INSTANTE',
@@ -200,6 +200,56 @@ export function getVisualDirection(mood: MoodCode): VisualDirection {
   return VISUAL_DIRECTIONS[mood] || VISUAL_DIRECTIONS['OP-01'];
 }
 
+// Variações de personagem por mood — o código sorteia uma a cada geração
+// e injeta como instrução mandatória, impedindo repetição de padrão.
+// Estrutura: POSIÇÃO, PLANO: descrição do gesto/objeto/uso.
+// INSTANTE: objeto capturado no flagrante deve ser coerente com o cotidiano real
+// do personagem e o tema da mensagem. Proibido dispositivo digital nas mãos
+// (tela voltada para o personagem fica de costas para a câmera documental).
+const INSTANTE_CHARACTER_VARIATIONS: string[] = [
+  'EM MOVIMENTO, plano médio: personagem caminhando em espaço profissional real, flagrado em meio passo — olhar direcionado para frente, não para a câmera',
+  'MICRO-MOMENTO, plano próximo/médio: personagem olhando para baixo, lendo algo em papel ou caderno aberto na mão — expressão de concentração, sem saber que está sendo fotografado',
+  'EM CONVERSA, plano médio/americano: personagem de 3/4 para câmera, uma mão levantada em gesto de explicação, olhar dirigido a alguém fora do quadro',
+  'CHEGADA/SAÍDA, plano americano: personagem em transição — tirando casaco, abrindo porta, colocando bolsa — momento de movimento puro capturado antes da pose',
+  'REVISÃO EM MOVIMENTO, plano médio: personagem em pé folheando caderno, planilha impressa ou documentos em papel — lendo ou anotando algo, completamente absorto na tarefa; PROIBIDO tablet ou qualquer dispositivo digital nestas variações',
+  'REAÇÃO ESPONTÂNEA, plano médio: personagem rindo, surpreso ou reagindo a algo fora do quadro — expressão genuína, não performada, rosto levemente de lado',
+];
+
+// Variação de câmera sorteada exclusivamente para CLAREZA (frontal vs. lateral).
+const CLAREZA_CAMERA_VARIATIONS: string[] = [
+  'CÂMERA FRONTAL: lente 50mm, distância média, ponto de vista na altura dos olhos — personagem enquadrado de frente, composição simétrica e respirada',
+  'CÂMERA LATERAL 3/4: lente 50mm, distância média, ponto de vista na altura dos olhos — personagem levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional',
+];
+
+// CLAREZA: objetos devem ser coerentes com o objetivo e segmento da peça.
+// Câmera na altura dos olhos — telas de dispositivos devem estar voltadas para o observador.
+const CLAREZA_CHARACTER_VARIATIONS: string[] = [
+  'EM PÉ, plano médio (cintura para cima): segurando tablet na mão com tela visível e conteúdo coerente com o tema da peça — tela SEMPRE voltada para o observador; objeto coerente com o segmento (ex.: planilha para finanças, projeto para criativo — nunca objeto descontextualizado)',
+  'EM PÉ, plano americano (coxa para cima): caderno ou agenda aberto na mão, caneta entre os dedos — personagem revisando anotações ou escrevendo',
+  'SENTADO, plano médio (cintura para cima): tablet apoiado à sua frente em ângulo, mão gesticulando para o conteúdo — tela legível com conteúdo real, SEMPRE voltada para o observador, carcaça traseira NUNCA exposta',
+  'EM PÉ, plano médio: segurando pasta de documentos, relatório impresso ou prancheta com papéis — gesto de organização ou apresentação',
+  'EM PÉ, plano americano: com ferramenta ou instrumento específico do ofício declarado no contexto da mensagem (câmera fotográfica para fotógrafo/criativo, estetoscópio para saúde, instrumento técnico para engenharia, etc.) — NUNCA objeto aleatório descontextualizado',
+  'EM PÉ, plano médio: sem objeto nas mãos, postura de autoridade calma — braços ao lado do corpo ou um braço levemente dobrado, olhar sereno e direto',
+];
+
+// IMPACTO: objetos devem ser coerentes com o contexto da mensagem.
+// Contra-plongée obrigatório — dispositivos digitais nas mãos criam risco de
+// carcaça traseira voltada para câmera. Preferir objetos não-digitais nas poses
+// de plano médio e americano em pé.
+const IMPACTO_CHARACTER_VARIATIONS: string[] = [
+  'EM PÉ, plano médio (cintura para cima): postura frontal com tensão contida, braços ao lado do corpo com energia concentrada — sem objeto, a presença é o elemento',
+  'EM PÉ, plano americano (coxa para cima): em movimento — passo à frente ou giro de 3/4, roupa com movimento congelado pela câmera',
+  'EM PÉ, plano médio: segurando prancheta física, bloco de anotações ou objeto não-digital do ofício à frente do corpo em ângulo — gesto de domínio técnico; objeto coerente com o segmento da mensagem',
+  'EM PÉ, plano americano: perfil de 3/4 para a câmera, olhar para fora do quadro com determinação — composição com tensão direcional',
+  'SENTADO sobre superfície elevada (bancada, beira de mesa, degrau), plano americano — postura ativa e inclinada levemente para frente, não atrás de mesa de trabalho',
+  'SENTADO, plano médio: à mesa com notebook aberto em ângulo lateral (não como barreira frontal), dedos no teclado, olhar absorto na tela — luz recortando rosto e equipamento; com contra-plongée, posicionar o notebook de modo que a tela permaneça visível ao observador, tampa traseira NUNCA exposta',
+  'EM PÉ, plano americano: posicionado de costas parcialmente (1/4 de costas), rosto virado em perfil — composição com tensão de saída do quadro',
+];
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 // Bloco pronto para injeção no prompt do motor.
 // Reforça a regra inegociável: a gramática visual GOVERNA luz, paleta,
 // composição e câmera de TODA peça da sequência (estático, carrossel,
@@ -217,13 +267,33 @@ MODULAÇÃO POR SEGMENTO (${segment}) — INEGOCIÁVEL:
 A imagePrompt DEVE evocar a referência concreta acima e DEVE evitar literalmente a fórmula proibida. Esta camada não é decorativa — ela é o que separa a peça de uma foto de banco genérica do segmento.`
     : '';
 
+  // Sorteio de variações — o código decide, a IA executa sem opção de escolha.
+  // Para CLAREZA: sorteia câmera (frontal vs. lateral) + personagem independentemente.
+  // Para IMPACTO e INSTANTE: sorteia apenas personagem.
+  const characterVariationMap: Partial<Record<MoodCode, string[]>> = {
+    'OP-01': CLAREZA_CHARACTER_VARIATIONS,
+    'OP-02': IMPACTO_CHARACTER_VARIATIONS,
+    'OP-03': INSTANTE_CHARACTER_VARIATIONS,
+  };
+  const pickedVariation = characterVariationMap[mood]
+    ? pickRandom(characterVariationMap[mood]!)
+    : null;
+  const pickedCamera = mood === 'OP-01'
+    ? pickRandom(CLAREZA_CAMERA_VARIATIONS)
+    : null;
+  const characterVariationBlock = pickedVariation
+    ? `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${pickedCamera ? `\n• Câmera: ${pickedCamera}` : ''}\n• Personagem: ${pickedVariation}\nEstas combinações foram definidas pelo sistema. Não substituir por variação mais comum, mais segura ou que já apareceu em outra peça da campanha.`
+    : '';
+
   // Regras inegociáveis específicas por mood — corrigem desvios observados
   // em geração real (modelo ignorando instruções da Camada 2).
   const moodRules: Partial<Record<MoodCode, string>> = {
     'OP-01':
-      'CLAREZA exige EXATAMENTE 1 acento de cor saturada presente em UM único elemento da cena (objeto, peça de roupa, detalhe gráfico). Não 0, não 2. A peça inteira monocromática NÃO é CLAREZA — vira SILÊNCIO. Verifique antes de finalizar a imagePrompt. PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para a câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena, integre como detalhe lateral, desfocado em primeiro plano, ou em ângulo plongée. PERSONAGENS EM CLAREZA: o personagem pode aparecer EM PÉ, em plano médio (da cintura para cima) ou plano americano (da coxa para cima), de qualquer gênero, segurando um objeto ou equipamento diretamente relacionado à atividade profissional, ao contexto da mensagem e ao público a que se destina. A pose em pé com objeto relevante é PREFERIDA quando o brief não especificar posição. Não restringir ao personagem sentado — variar entre em pé e sentado conforme o contexto. Composição e pose devem ser ALEATÓRIAS e INÉDITAS — evitar poses previsíveis de stock (pessoa olhando para câmera com sorriso institucional, pose estática de apresentação). A autenticidade da cena é inegociável.',
+      'CLAREZA exige EXATAMENTE 1 acento de cor saturada presente em UM único elemento da cena (objeto, peça de roupa, detalhe gráfico). Não 0, não 2. A peça inteira monocromática NÃO é CLAREZA — vira SILÊNCIO. Verifique antes de finalizar a imagePrompt. PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para a câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena, integre como detalhe lateral, desfocado em primeiro plano, ou em ângulo plongée. A variação de câmera e posição desta geração está especificada no bloco "VARIAÇÕES SORTEADAS" acima — seguir sem alterar.',
     'OP-02':
-      'IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo escuro médio dominado por preto/grafite. Sem essa única explosão cromática, a peça não para o scroll. PERSONAGENS EM IMPACTO: o personagem pode aparecer no plano médio (da cintura para cima) ou plano americano (da coxa para cima), de qualquer gênero, com pose e composição ALEATÓRIA e INÉDITA — evitar poses previsíveis e repetitivas de campanha. A dramaticidade vem da câmera angulada (35mm) e da luz focal, não de pose forçada do personagem.',
+      'IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo escuro médio dominado por preto/grafite. Sem essa única explosão cromática, a peça não para o scroll. CÂMERA EM IMPACTO: OBRIGATÓRIO contra-plongée leve (câmera abaixo da linha dos olhos apontando para cima, dando presença e poder ao sujeito) OU dutch angle (câmera inclinada lateralmente para instabilidade visual). PROIBIDO câmera frontal reta na altura dos olhos — sem o ângulo, a peça perde a dramaticidade cinematográfica mesmo que a luz e a paleta estejam corretas. A variação de posição e gesto desta geração está especificada no bloco "VARIAÇÕES SORTEADAS" acima — seguir sem alterar. A dramaticidade vem da câmera angulada (35mm) e da luz focal, não de pose forçada do personagem. DISPOSITIVOS EM IMPACTO: o contra-plongée faz a tela de qualquer dispositivo (tablet, notebook, celular) ficar voltada para o personagem e a carcaça traseira para a câmera. POR ISSO: prefira variações sem dispositivo digital em mãos; se houver dispositivo em cena, a tela DEVE estar visível ao observador e a tampa/carcaça traseira NUNCA é visível, independentemente do ângulo da câmera. As variações de personagem sorteadas NÃO cancelam esta proibição — ela é hierarquicamente superior a qualquer instrução de pose ou gesto.',
+    'OP-03':
+      'INSTANTE exige captura documental genuína — o personagem NUNCA olha para a câmera com pose intencional, NUNCA sorri institucionalmente, NUNCA está estático esperando o clique. A cena deve parecer flagrada sem que o sujeito soubesse. PROIBIDO: pose de stock, sorriso largo direto para câmera, composição arrumada simetricamente, fundo cenográfico limpo. O micro-momento desta geração está especificado no bloco "VARIAÇÕES SORTEADAS" acima — a câmera captura aquele momento específico, sem alterar.',
     'OP-05':
       'DESVIO exige câmera angulada OBRIGATÓRIA: contra-plongée (câmera baixa olhando para cima) OU plongée (câmera alta olhando para baixo), com lente 28-35mm que cause distorção de perspectiva visível. PROIBIDO câmera frontal neutra na altura dos olhos — sem o ângulo, a peça não é DESVIO mesmo que a metáfora visual esteja presente. PROIBIDO TAMBÉM pose de executivo sentado de blazer atrás de mesa com mãos cruzadas/entrelaçadas — essa pose anula o mood instantaneamente, mesmo que o resto da cena seja conceitual.',
     'OP-06':
@@ -246,12 +316,13 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 - Paleta: ${v.paleta}
 - Composição: ${v.composicao}
 - Atitude da câmera: ${v.camera}
-- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${moodRuleBlock}${segmentBlock}
+- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${characterVariationBlock}${moodRuleBlock}${segmentBlock}
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - TELA FRONTAL de notebook, laptop, tablet, iPad, celular, computador ou monitor deve mostrar SEMPRE conteúdo real e coerente com o tema (gráfico, dashboard, app, mensagem, foto, planilha). Proibido: tela apagada, preta, branca, lockscreen, wallpaper de fábrica, placeholder. A imagePrompt DEVE descrever literalmente o que aparece na tela.
 - PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.
 - POSICIONAMENTO DE NOTEBOOK/LAPTOP — PROIBIDO ABSOLUTO: a composição onde o laptop está aberto com tela E teclado ambos voltados frontalmente para o observador, com o personagem posicionado ATRÁS do equipamento. Essa pose genérica de "pessoa atrás do notebook" é banida em TODOS os moods. Se houver notebook em cena: (a) mostrar em ângulo lateral ou vista superior (plongée) de forma que tela e teclado não fiquem simultaneamente na linha de visão do observador, OU (b) mostrar apenas a tela OU apenas o teclado/base no quadro, com personagem ao lado ou em primeiro plano. O personagem NUNCA fica aprisionado atrás do laptop como se fosse uma barreira entre ele e a câmera.
+- ÂNGULO DE CÂMERA NÃO JUSTIFICA TAMPA TRASEIRA: independentemente do ângulo (contra-plongée, plongée, dutch angle) e da variação de personagem sorteada, a tampa traseira ou carcaça de qualquer dispositivo (notebook, computador, monitor, tablet, iPad, iPhone, celular, smartphone) NUNCA é visível ao observador. Se o gesto do personagem combinado com o ângulo da câmera tornar a tampa naturalmente visível, reposicionar o dispositivo até a tela estar visível, ou substituir o gesto por alternativa sem dispositivo digital. Esta regra é hierarquicamente superior a qualquer variação de personagem ou instrução de câmera do mood.
 
 Os campos "clima" e "composicao" da leituraCenica DEVEM derivar diretamente da Tensão Dondis e da Gramática Visual acima — não são livres.
 Os campos "intencao", "personagem", "ambiente" e "expressao" continuam vindo da progressão psicológica da Matriz; a gramática visual apenas determina COMO a cena é fotografada, não O QUE ela diz.
