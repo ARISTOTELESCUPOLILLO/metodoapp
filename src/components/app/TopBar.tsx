@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { Home, Moon, Sun, History, Users, LogOut, UserX, Image as ImageIcon } from 'lucide-react';
+import { useState } from 'react';
 import { useAuth, signOut } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useImpersonation, stopImpersonation } from '@/hooks/useImpersonation';
@@ -11,6 +12,7 @@ export function TopBar() {
   const { isAdmin } = useProfile();
   const impersonation = useImpersonation();
   const [isDark, toggleDark] = useDarkMode();
+  const [confirmLogout, setConfirmLogout] = useState(false);
   if (!user) return null;
 
   const iconBtn: React.CSSProperties = {
@@ -19,6 +21,8 @@ export function TopBar() {
     color: '#fff',
     width: 32,
     height: 32,
+    minWidth: 44,
+    minHeight: 44,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -59,7 +63,7 @@ export function TopBar() {
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       gap: 6, padding: '10px 12px', flexWrap: 'wrap',
     }}>
-      <Link to="/" title="Voltar ao site" aria-label="Voltar ao site" style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <Link to="/app" title="Início" aria-label="Início" style={{ display: 'inline-flex', alignItems: 'center' }}>
         <img src={logoOp} alt="Método OP" style={{ height: 28, width: 'auto', display: 'block' }} />
       </Link>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -82,12 +86,55 @@ export function TopBar() {
       )}
       <button
         type="button" style={iconBtn} title="Sair" aria-label="Sair"
-        onClick={() => signOut().then(() => window.location.assign('/login'))}
+        onClick={() => setConfirmLogout(true)}
       >
         <LogOut size={16} />
       </button>
       </div>
     </div>
+
+    {confirmLogout && (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.55)',
+      }} onClick={() => setConfirmLogout(false)}>
+        <div style={{
+          background: '#0f1a33', border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: 16, padding: '24px 28px', maxWidth: 320, width: '90%',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        }} onClick={e => e.stopPropagation()}>
+          <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, marginBottom: 8, textAlign: 'center' }}>
+            Sair da conta?
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 20, textAlign: 'center' }}>
+            Você precisará fazer login novamente para acessar o app.
+          </p>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => setConfirmLogout(false)}
+              style={{
+                flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)',
+                background: 'transparent', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => signOut().then(() => window.location.assign('/login'))}
+              style={{
+                flex: 1, padding: '10px 0', borderRadius: 8, border: 'none',
+                background: '#c0392b', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              }}
+            >
+              Sair
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }
