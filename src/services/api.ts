@@ -185,6 +185,8 @@ function buildImagePrompt(params: {
   // Suspiro — texto e elementos visuais nunca colam nas bordas.
   const SAFE_ZONE_RULE = `⚠ SUSPIRO DE ${safeMargin} (TODAS AS BORDAS): Canvas ${canvasSize}. Mantenha ${safeMargin} de margem livre em todas as bordas. PROIBIDO: qualquer letra, número ou lettering tocando esse perímetro. Todo texto dentro da área segura interna. Bordas são continuação natural do fundo — sem texto cortado.
 
+⚠ IMAGEM FULL BLEED — REGRA ABSOLUTA: a imagem preenche o canvas completamente de borda a borda. PROIBIDO: moldura externa, frame decorativo, borda de cor sólida ao redor da arte, vinheta escura periférica como contentor, margem vazia ou espaço branco/preto separando a imagem das bordas do canvas. A composição começa e termina nas bordas — sem nenhum container ou enquadramento ao redor.
+
 `;
 
   // Proteção antecipada da zona da logomarca — lida ANTES da composição da cena.
@@ -350,6 +352,7 @@ PROIBIDO em qualquer dispositivo: tampa/verso/carcaça com tela, interface, grá
 - Composição vertical 9:16 cinematográfica (canvas 1080x1920), alta qualidade, foco nítido no rosto.
 
 ZONA DE RESPIRO INVIOLÁVEL: 150 px de margem livre nas QUATRO bordas (topo, base, esquerda, direita) — nada importante (rosto, olhos, boca, mãos, produto-foco, gráfico) entra nesse perímetro. Bordas são continuação natural do fundo.
+IMAGEM FULL BLEED — REGRA ABSOLUTA: a imagem preenche o canvas 1080x1920 completamente de borda a borda. PROIBIDO: moldura externa, frame decorativo, borda de cor sólida ao redor da arte, vinheta escura periférica como contentor, margem vazia ou espaço branco/preto separando a imagem das bordas do canvas.
 FAIXA CENTRAL HORIZONTAL livre: entre 35% e 65% da altura do canvas, mantenha a área SEM detalhes que competem com texto — é onde a capa do vídeo entra nos primeiros 0,4 s. Posicione rosto, mãos e elementos-foco PREFERENCIALMENTE no terço SUPERIOR ou no terço INFERIOR, deixando o miolo do quadro mais limpo.
 
 CENA ADAPTADA PARA UM ÚNICO PORTA-VOZ: ${imagePrompt}.
