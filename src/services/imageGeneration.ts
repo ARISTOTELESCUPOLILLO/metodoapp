@@ -88,8 +88,8 @@ export async function generateImageAsync(params: {
     console.warn('[imageGeneration] logo descartada no preparo (formato não suportado)');
   }
 
-  // 1) START — preferredSlot incluído para que checkBalance verifique apenas o slot correto
-  const start = await postJson<StartResp>({
+  // 1) START — 1 retry automático em caso de 5xx transiente (ex.: fal.ai/OpenAI 500)
+  const startBody = {
     action: 'start',
     prompt,
     format,
@@ -97,7 +97,12 @@ export async function generateImageAsync(params: {
     referenceImages: refsSmall.length ? refsSmall : undefined,
     modulo: modulo || 'metodo-op',
     ...(preferredSlot ? { preferredSlot } : {}),
-  });
+  };
+  let start = await postJson<StartResp>(startBody);
+  if (!start.ok && start.status >= 500) {
+    await new Promise(r => setTimeout(r, 3000));
+    start = await postJson<StartResp>(startBody);
+  }
   if (!start.ok || !start.data.requestId) {
     throw new Error(
       friendlyError(start.status, start.raw, start.data.error || 'Falha ao iniciar a geração.'),
