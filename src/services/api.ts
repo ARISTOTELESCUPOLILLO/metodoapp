@@ -220,7 +220,6 @@ REGRAS:
 - Todo texto em português, sem tradução, sem texto em inglês
 - Sem elementos decorativos genéricos
 - Alta resolução, estética editorial contemporânea brasileira
-- ${typographyShort}
 
 ${FORBIDDEN_MOOD_WORDS}`;
 }

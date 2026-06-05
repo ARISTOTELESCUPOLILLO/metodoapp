@@ -399,7 +399,6 @@ REGRAS:
 - PROIBIDO ABSOLUTO: renderizar o nome da empresa, nome da marca ou razão social como texto, lettering, título ou qualquer elemento tipográfico na imagem — o nome da marca é representado exclusivamente pela logomarca aplicada separadamente. Nunca escreva o nome da empresa na arte.
 - Regras absolutas (dispositivos digitais, ambientes, humanização): ver início deste prompt
 - ${zona.regraFinal}
-- ${typographyShort}
 
 ${referencesBlock(references, kit.segment, { primary, accent }, data.objetivo)}
 

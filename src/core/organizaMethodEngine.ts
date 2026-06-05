@@ -151,18 +151,10 @@ ${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} Estáticos Finais com aborda
   // Linguagem absoluta e instrução negativa explícita são mais eficazes que descrições suaves.
   const trackHeader = isVisualOrExperimentacao
     ? `
-⚠️ REGRA ABSOLUTA DE TRILHA — LEIA ANTES DE GERAR QUALQUER COISA ⚠️
-
-A trilha solicitada é ${isExperimentacao ? 'EXPERIMENTAÇÃO' : 'VISUAL'}.
-
-REGRAS INVIOLÁVEIS DESTA TRILHA:
-1. PROIBIDO ABSOLUTAMENTE retornar a chave "reels" no JSON. Se você gerar a chave "reels", você está violando a trilha pedida pelo usuário e o conteúdo será descartado.
-2. PROIBIDO retornar qualquer item com formato "Reels" em qualquer parte do JSON.
-3. NÃO existe Reels nesta trilha. NÃO existe vídeo. NÃO existe roteiro falado. NÃO existe screenText.
-4. O FECHAMENTO da sequência é OBRIGATORIAMENTE feito por peças com formato "Estático Final" dentro do array "feed".
-5. As chaves do JSON de saída são EXCLUSIVAMENTE: "feed", "carousel"${wantsStories ? ', "stories"' : ''}. NADA MAIS.
-
-Se você sentir tentação de incluir reels, lembre-se: a trilha ${isExperimentacao ? 'EXPERIMENTAÇÃO' : 'VISUAL'} EXISTE PRECISAMENTE PARA NÃO TER REELS. Reels existem apenas na trilha CINEMÁTICA, que NÃO é o caso aqui.
+⚠️ TRILHA ${isExperimentacao ? 'EXPERIMENTAÇÃO' : 'VISUAL'} — REGRAS INVIOLÁVEIS:
+1. PROIBIDO retornar a chave "reels" ou qualquer item com formato "Reels" — sem vídeo, roteiro nem screenText nesta trilha.
+2. FECHAMENTO obrigatório: peças com formato "Estático Final" dentro do array "feed".
+3. Chaves do JSON: EXCLUSIVAMENTE "feed", "carousel"${wantsStories ? ', "stories"' : ''}. NADA MAIS.
 
 `
     : `
@@ -344,7 +336,7 @@ DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
 ${!isVisualOrExperimentacao ? '- Reels: composição vertical 1080x1920, imagem pura sem texto, sem logo, sem colagem e com somente uma pessoa no quadro.' : ''}
 - Sufixo técnico OBRIGATÓRIO ao final de cada imagePrompt (substitui qualquer sufixo genérico): "${getMoodSignature(data.mood)}".
 
-INEDITISM O CONTROLADO:
+INEDITISMO CONTROLADO:
 - Não repetir estruturas de abertura.
 - Alternar pergunta, afirmação, contraste, exemplo cotidiano e micro narrativa.
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
