@@ -71,7 +71,7 @@ function buildPostProgression(qty: number, entrada: string, isB2BOperational: bo
   if (qty === 1) return `- Post 1: ${ativacao}`;
   if (qty === 2) return `- Post 1: ${ativacao}\n- Post 2: Confiança e autoridade`;
   if (qty === 3) return `- Post 1: ${ativacao}\n- Post 2: Confiança e segurança${segurancaNote}\n- Post 3: Autoridade e ação`;
-  return `- Post 1: ${ativacao}\n- Post 2: Entendimento aplicado\n- Post 3: Confiança\n- Post 4: Segurança${segurancaNote}\n- Post 5: Autoridade\n- Post 6: Agir`;
+  return `- Post 1: ${ativacao}\n- Post 2: Amplia o contexto\n- Post 3: Aplica entendimento\n- Post 4: Segurança${segurancaNote}\n- Post 5: Confiança ou autoridade\n- Post 6: Conduz à ação`;
 }
 
 export function buildMetodoOpPrompt(data: ContentFormData): string {
@@ -94,7 +94,11 @@ export function buildMetodoOpPrompt(data: ContentFormData): string {
 
   const progressionText = isB2B
     ? 'ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR'
-    : 'ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR';
+    : data.segment === 'VAREJO'
+      ? 'IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR'
+      : data.segment === 'MARCA'
+        ? 'RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR'
+        : 'ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR';
 
   const audienceDirection = isB2B
     ? 'Conteúdo SEMPRE para o decisor empresarial (gestor, diretor ou responsável pela área), NUNCA para o consumidor final.'

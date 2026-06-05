@@ -91,9 +91,15 @@ A Informação-chave deve falar com o gestor, diretor ou responsável pela área
 Foque em eficiência, previsibilidade, risco operacional e resultado para o negócio.`;
 
           // ── Progressão do Método OP ────────────────────────────────────────
+          const progressaoB2C = segment === 'VAREJO'
+            ? 'IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR'
+            : segment === 'MARCA'
+              ? 'RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR'
+              : 'ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR';
+
           const progressaoMetodo = isB2C
-            ? `PROGRESSÃO DO MÉTODO (B2C): ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR.
-A Informação-chave é a SEMENTE da sequência. Ela deve carregar uma tensão ou aspiração que NATURALMENTE alimenta essa progressão: o público primeiro se entende no post (entendimento), depois vê que outros passaram pelo mesmo (segurança), depois confia no profissional/marca (confiança), depois reconhece autoridade (autoridade), e no último post toma ação (agir).`
+            ? `PROGRESSÃO DO MÉTODO (B2C): ${progressaoB2C}.
+A Informação-chave é a SEMENTE da sequência. Ela deve carregar uma tensão ou aspiração que NATURALMENTE alimenta essa progressão — a peça inicial ativa o ponto de entrada do segmento, e os posts seguintes conduzem o público até a ação.`
             : `PROGRESSÃO DO MÉTODO (B2B): ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR.
 A Informação-chave deve revelar um risco, ineficiência ou oportunidade estratégica que o decisor reconhece como real. A progressão constrói credibilidade antes de segurança — o empresário precisa confiar que você entende o cenário dele antes de sentir que pode confiar na solução.`;
 
@@ -109,7 +115,6 @@ ${angulo === 'tensao'
   ? `ÂNGULOS DE TENSÃO para este perfil: ${editorialProfile.angulosTensao.join(' / ')}`
   : `ÂNGULOS DE MOTIVAÇÃO para este perfil: ${editorialProfile.angulosMotivacao.join(' / ')}`}
 VOCABULÁRIO PROIBIDO adicional: ${editorialProfile.vocabularioProibido.join(', ')}
-EXEMPLO de boa Informação-chave (${angulo === 'tensao' ? 'tensão' : 'motivação'}) para este perfil: "${angulo === 'tensao' ? editorialProfile.exemploTensao : editorialProfile.exemploMotivacao}"
 NOTA DO MÉTODO: ${editorialProfile.notaMetodo}`
             : '';
 

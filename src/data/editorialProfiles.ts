@@ -3,8 +3,10 @@
  *
  * Cada perfil ancora a geração da Informação-chave no território real de uma
  * categoria de negócio, preservando a progressão do método:
- *   B2C → ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR
- *   B2B → ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR
+ *   SERVIÇOS B2C → ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR
+ *   VAREJO B2C   → IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR
+ *   MARCA B2C    → RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR
+ *   B2B          → ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR
  *
  * O perfil NÃO substitui segmento/público — ele ESPECIALIZA o ângulo dentro
  * desse par, tornando a Informação-chave "method-ready": já carregando a
@@ -22,8 +24,6 @@ export interface EditorialProfile {
   angulosMotivacao: string[];
   vocabularioProibido: string[];
   notaMetodo: string;
-  exemploTensao: string;
-  exemploMotivacao: string;
 }
 
 export const editorialProfiles: EditorialProfile[] = [
@@ -54,8 +54,6 @@ export const editorialProfiles: EditorialProfile[] = [
     vocabularioProibido: ['empreendedor', 'empresário', 'gestor', 'lead', 'conversão', 'funil',
                           'ROI', 'tráfego', 'métricas', 'cliente B2B', 'decisor'],
     notaMetodo: 'Semeia a sequência no estado interno do cliente (tensão/desejo) antes de mostrar a solução estética. A venda acontece quando a pessoa se vê refletida no post.',
-    exemploTensao: 'pessoas que adiaram o cuidado por meses e chegam ao salão sem reconhecer a própria imagem no espelho',
-    exemploMotivacao: 'clientes que descobriram que cuidar do visual uma vez por mês mudou a forma como encaram a semana',
   },
 
   {
@@ -83,8 +81,6 @@ export const editorialProfiles: EditorialProfile[] = [
     vocabularioProibido: ['empreendedor', 'empresário', 'ROI', 'funil', 'tráfego', 'lead',
                           'conversão', 'métricas', 'cliente corporativo'],
     notaMetodo: 'A progressão vai de entendimento do risco/oportunidade → segurança de que é possível mudar → confiança no profissional → autoridade pelo resultado → ação de agendar.',
-    exemploTensao: 'pessoas que convivem com cansaço crônico achando que é normal mas nunca investigaram a causa com um profissional',
-    exemploMotivacao: 'pacientes que ajustaram alimentação e recuperaram disposição que achavam que tinham perdido para sempre',
   },
 
   {
@@ -110,8 +106,6 @@ export const editorialProfiles: EditorialProfile[] = [
     vocabularioProibido: ['empreendedor', 'ROI', 'funil', 'lead', 'conversão', 'tráfego',
                           'métricas', 'C-suite', 'decisor corporativo'],
     notaMetodo: 'O aprendizado é o caminho; o que muda na vida real é a chegada. Semeie com a tensão do despreparo ou o desejo de crescer.',
-    exemploTensao: 'pessoas que tentaram aprender inglês sozinhas três vezes e sempre pararam no mesmo ponto sem entender o que trava',
-    exemploMotivacao: 'alunos que conquistaram a vaga que queriam depois de seis meses de preparação consistente',
   },
 
   {
@@ -135,8 +129,6 @@ export const editorialProfiles: EditorialProfile[] = [
     ],
     vocabularioProibido: ['empreendedor', 'funil', 'ROI', 'lead', 'tráfego', 'métricas', 'B2B'],
     notaMetodo: 'Gastronomia vende pela sensação antes pelo produto. Semear com o estado emocional que a comida cria.',
-    exemploTensao: 'pessoas que passam a semana sem uma refeição que valha a pena e chegam sexta esquecidas de que comida pode ser prazer',
-    exemploMotivacao: 'clientes que tornaram o almoço de domingo um ritual semanal que toda a família aguarda',
   },
 
   {
@@ -160,8 +152,6 @@ export const editorialProfiles: EditorialProfile[] = [
     ],
     vocabularioProibido: ['empreendedor', 'ROI', 'funil', 'lead', 'tráfego', 'B2B', 'decisor'],
     notaMetodo: 'O medo do custo alto e do transtorno é a entrada; a paz de uma casa funcionando é a chegada. Use os dois.',
-    exemploTensao: 'moradores que convivem meses com problema elétrico achando que é arrisco pagar profissional sem saber o preço antes',
-    exemploMotivacao: 'clientes que resolveram o problema de uma vez e não precisaram chamar mais ninguém por dois anos',
   },
 
   // ── SERVIÇOS B2B ──────────────────────────────────────────────────────────
@@ -189,8 +179,6 @@ export const editorialProfiles: EditorialProfile[] = [
     vocabularioProibido: ['empreendedor isolado', 'consumidor final', 'cliente pessoa física',
                           'gatilho emocional de compra por impulso'],
     notaMetodo: 'B2B: semear com o risco operacional ou estratégico de comunicação ineficaz, não com dor emocional pessoal.',
-    exemploTensao: 'empresas que postam todo dia nas redes mas continuam dependendo de indicação para fechar qualquer contrato novo',
-    exemploMotivacao: 'clientes que passaram a receber pedidos de orçamento de prospects qualificados sem depender de prospecção ativa',
   },
 
   {
@@ -216,8 +204,6 @@ export const editorialProfiles: EditorialProfile[] = [
     vocabularioProibido: ['consumidor final', 'cliente pessoa física', 'impulso de compra',
                           'autocuidado', 'emocional pessoal'],
     notaMetodo: 'B2B tech: a progressão vai de custo operacional visível → segurança na solução → confiança no fornecedor → autoridade técnica → decisão de implementar.',
-    exemploTensao: 'empresas que operam com planilha compartilhada porque "sempre funcionou" enquanto o processo paralisa quando alguém falta',
-    exemploMotivacao: 'clientes que reduziram tempo de processo em 60% no primeiro trimestre depois de implementar automação no ponto certo',
   },
 
   {
@@ -243,8 +229,6 @@ export const editorialProfiles: EditorialProfile[] = [
     vocabularioProibido: ['consumidor final', 'cliente pessoa física', 'emocional de compra',
                           'autocuidado', 'autoestima'],
     notaMetodo: 'O decisor B2B precisa de segurança antes de confiança. Mostre que você entende o risco antes de mostrar a solução.',
-    exemploTensao: 'empresas com faturamento crescendo e margem caindo porque a estrutura de gestão não acompanhou o tamanho',
-    exemploMotivacao: 'clientes que depois de reorganizar o processo financeiro passaram a saber exatamente quanto cada produto rende',
   },
 
   {
@@ -269,8 +253,6 @@ export const editorialProfiles: EditorialProfile[] = [
     ],
     vocabularioProibido: ['consumidor final', 'emocional', 'autocuidado', 'impulso', 'sensorial'],
     notaMetodo: 'Segurança vem antes de confiança para B2B jurídico. Mostre o risco primeiro, depois a proteção, depois a autoridade.',
-    exemploTensao: 'empresas que descobrem passivo trabalhista acumulado anos depois por não ter revisão preventiva contratada',
-    exemploMotivacao: 'clientes que economizaram na carga tributária legalmente e usaram o valor para reinvestir no crescimento',
   },
 
   // ── VAREJO ────────────────────────────────────────────────────────────────
@@ -296,8 +278,6 @@ export const editorialProfiles: EditorialProfile[] = [
     ],
     vocabularioProibido: ['empreendedor', 'ROI', 'lead', 'funil', 'tráfego', 'B2B', 'decisor'],
     notaMetodo: 'Moda vende identificação antes de produto. A sequência vai da tensão de imagem → aspiração de estilo → autoridade da loja/curadoria → ação de comprar.',
-    exemploTensao: 'pessoas com armário transbordando que chegam na loja sem saber o que precisam porque nunca construíram um guarda-roupa com critério',
-    exemploMotivacao: 'clientes que compraram três peças com orientação e criaram mais looks do que com o armário inteiro que tinham antes',
   },
 
   {
@@ -321,8 +301,6 @@ export const editorialProfiles: EditorialProfile[] = [
     ],
     vocabularioProibido: ['empreendedor', 'ROI', 'funil', 'lead', 'tráfego', 'B2B'],
     notaMetodo: 'Sensorial e identitário. A progressão vai do desconforto com o espaço atual → aspiração pelo espaço certo → confiança na curadoria/expertise → decisão de renovar.',
-    exemploTensao: 'pessoas que compraram peças ao longo dos anos e a casa nunca ficou com a cara que tinham na cabeça',
-    exemploMotivacao: 'clientes que reformaram a sala com três mudanças orientadas e finalmente pararam de querer se mudar',
   },
 
   // ── MARCA ─────────────────────────────────────────────────────────────────
@@ -349,8 +327,6 @@ export const editorialProfiles: EditorialProfile[] = [
     vocabularioProibido: ['gatilho de escassez', 'urgência forçada', 'oferta por tempo limitado',
                           'venda a qualquer custo'],
     notaMetodo: 'Marca pessoal: identidade antes de entrega. A sequência constrói quem é a pessoa → o que defende → como ajuda → por que agir agora.',
-    exemploTensao: 'especialistas com anos de prática e referências sólidas que ainda dependem de indicação porque a presença digital não comunica o que sabem fazer',
-    exemploMotivacao: 'profissionais que passaram a receber propostas alinhadas com o que querem fazer depois de construir presença com ponto de vista consistente',
   },
 
   {
@@ -373,8 +349,6 @@ export const editorialProfiles: EditorialProfile[] = [
     ],
     vocabularioProibido: ['gatilho de urgência', 'oferta', 'promoção', 'desconto', 'venda agressiva'],
     notaMetodo: 'Institucional: posicionamento antes de produto. A sequência vai de identidade → repertório → relevância → reconhecimento → pertencimento.',
-    exemploTensao: 'empresa com décadas de mercado e presença digital que não comunica nem 10% do que construiu',
-    exemploMotivacao: 'marca local que reposicionou a comunicação e voltou a ser referência para a nova geração do bairro',
   },
 ];
 
