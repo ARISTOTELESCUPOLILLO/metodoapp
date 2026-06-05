@@ -77,7 +77,7 @@ function kitHasRefsForFormat(imageKit: ImageKit | undefined, formato: 'estatico'
   return !!(imageKit.avatar) || imageKit.cenarios.some(c => !!c);
 }
 
-const REGEN_MAX = 1;
+const REGEN_MAX: Record<RegenKind, number> = { titulo: 2, texto: 2, legenda: 1 };
 
 // Props comuns para o seletor de Imagens de Referência nos cards.
 interface RefSelectorProps {
@@ -126,7 +126,7 @@ function EditableField(props: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const exhausted = count >= REGEN_MAX;
+  const exhausted = count >= REGEN_MAX[kind];
   const changed = value !== original;
 
   async function handleRegen() {
@@ -153,10 +153,10 @@ function EditableField(props: {
             type="button"
             onClick={handleRegen}
             disabled={busy || exhausted}
-            title={exhausted ? 'Limite de 1 regeneração atingido' : `Gerar outra ${kind} com IA`}
+            title={exhausted ? `Limite de ${REGEN_MAX[kind]} regenerações atingido` : `Gerar outra ${kind} com IA`}
             style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: busy || exhausted ? 'not-allowed' : 'pointer', opacity: busy || exhausted ? 0.5 : 1 }}
           >
-            {busy ? 'Gerando…' : exhausted ? `✨ 1/1` : `✨ Gerar outro (${count}/${REGEN_MAX})`}
+            {busy ? 'Gerando…' : exhausted ? `✨ ${REGEN_MAX[kind]}/${REGEN_MAX[kind]}` : `✨ Gerar outro (${count}/${REGEN_MAX[kind]})`}
           </button>
           {changed && (
             <button

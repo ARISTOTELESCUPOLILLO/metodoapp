@@ -99,7 +99,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [copyXError, setCopyXError] = useState<string | null>(null);
   const [copyTSuggs, setCopyTSuggs] = useState<string[]>([]);
   const [copyXSuggs, setCopyXSuggs] = useState<string[]>([]);
-  const COPY_REGEN_MAX = 1;
+  const COPY_REGEN_MAX = 2;
   const copyKeyInfoRef = useRef<string>('');
 
   useEffect(() => {
@@ -597,7 +597,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                   onClick={() => regenField('titulo')}
                   disabled={(!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) || copyTBusy}
                   style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: (!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) ? 'not-allowed' : 'pointer', opacity: (!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) ? 0.55 : 1 }}
-                  title={(!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) ? 'Limite de 1 regeneração atingido' : undefined}
+                  title={(!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) ? 'Limite de 2 regenerações atingido' : undefined}
                 >
                   {copyTBusy ? '…' : `✨ Gerar outro (${copyTRegenCount}/${COPY_REGEN_MAX})`}
                 </button>
@@ -652,7 +652,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                   onClick={() => regenField('texto')}
                   disabled={(!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) || copyXBusy}
                   style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: (!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) ? 'not-allowed' : 'pointer', opacity: (!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) ? 0.55 : 1 }}
-                  title={(!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) ? 'Limite de 1 regeneração atingido' : undefined}
+                  title={(!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) ? 'Limite de 2 regenerações atingido' : undefined}
                 >
                   {copyXBusy ? '…' : `✨ Gerar outro (${copyXRegenCount}/${COPY_REGEN_MAX})`}
                 </button>
