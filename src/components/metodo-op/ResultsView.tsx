@@ -77,7 +77,7 @@ function kitHasRefsForFormat(imageKit: ImageKit | undefined, formato: 'estatico'
   return !!(imageKit.avatar) || imageKit.cenarios.some(c => !!c);
 }
 
-const REGEN_MAX: Record<RegenKind, number> = { titulo: 2, texto: 2, legenda: 1 };
+const REGEN_MAX: Record<RegenKind, number> = { titulo: 2, texto: 2, legenda: 2 };
 
 // Props comuns para o seletor de Imagens de Referência nos cards.
 interface RefSelectorProps {
