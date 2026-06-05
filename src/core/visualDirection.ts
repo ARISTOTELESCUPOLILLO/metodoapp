@@ -207,12 +207,9 @@ export function getVisualDirection(mood: MoodCode): VisualDirection {
 // do personagem e o tema da mensagem. Proibido dispositivo digital nas mãos
 // (tela voltada para o personagem fica de costas para a câmera documental).
 const INSTANTE_CHARACTER_VARIATIONS: string[] = [
-  'EM MOVIMENTO, plano médio: personagem caminhando em espaço profissional real, flagrado em meio passo — olhar direcionado para frente, não para a câmera',
-  'MICRO-MOMENTO, plano próximo/médio: personagem olhando para baixo, lendo algo em papel ou caderno aberto na mão — expressão de concentração, sem saber que está sendo fotografado',
-  'EM CONVERSA, plano médio/americano: personagem de 3/4 para câmera, uma mão levantada em gesto de explicação, olhar dirigido a alguém fora do quadro',
-  'CHEGADA/SAÍDA, plano americano: personagem em transição — tirando casaco, abrindo porta, colocando bolsa — momento de movimento puro capturado antes da pose',
-  'REVISÃO EM MOVIMENTO, plano médio: personagem em pé folheando caderno, planilha impressa ou documentos em papel — lendo ou anotando algo, completamente absorto na tarefa; PROIBIDO tablet ou qualquer dispositivo digital nestas variações',
-  'REAÇÃO ESPONTÂNEA, plano médio: personagem rindo, surpreso ou reagindo a algo fora do quadro — expressão genuína, não performada, rosto levemente de lado',
+  'EM MOVIMENTO NATURAL, plano médio: personagem caminhando, chegando, saindo, abrindo porta, colocando bolsa ou ajustando algo — flagrado em ação, olhar nunca para a câmera',
+  'MICRO-MOMENTO DE ATENÇÃO, plano próximo/médio: personagem lendo papel, caderno, documento ou folheando material — expressão concentrada, sem saber que está sendo fotografado',
+  'REAÇÃO ESPONTÂNEA, plano médio: personagem conversando, explicando, rindo ou reagindo a algo fora do quadro — sem olhar direto para a câmera, expressão genuína',
 ];
 
 // Variação de câmera sorteada exclusivamente para CLAREZA (frontal vs. lateral).
@@ -226,12 +223,9 @@ const CLAREZA_CAMERA_VARIATIONS: string[] = [
 // (kit de marca) e do texto gerado para esta peça — não de defaults genéricos.
 // Se houver dispositivo digital em cena: tela SEMPRE voltada para o observador.
 const CLAREZA_CHARACTER_VARIATIONS: string[] = [
-  'EM PÉ, plano médio (cintura para cima): gesto ativo de demonstração ou apresentação — uma mão estendida ou apontando para algo fora do quadro; objeto ou elemento em cena derivado do ofício real da empresa (ferramenta, produto, instrumento, material — conforme a atividade declarada no kit de marca)',
-  'EM PÉ, plano americano (coxa para cima): postura de atendimento ou consulta, corpo levemente voltado para alguém fora do quadro — gesto de explicação ou entrega; ferramenta, produto ou material coerente com a atividade da empresa em mãos ou visível em cena',
-  'SENTADO, plano médio (cintura para cima): em ato de trabalho focado — postura inclinada levemente para frente, mãos sobre objeto ou superfície de trabalho coerente com o ofício (mesa de exame, bancada, mesa de atendimento, balcão), expressão de concentração',
-  'EM PÉ, plano médio: postura de organização ou revisão — mãos ocupadas com material do ofício que pertence ao universo real da empresa; o material (documento, produto, ferramenta, instrumento) deve ser coerente com a atividade declarada no kit de marca',
-  'EM PÉ, plano americano: postura de autoridade confiante, sem objeto em destaque — braços ao lado do corpo ou um braço levemente dobrado, olhar sereno e direto; o ambiente ao redor deve pertencer ao espaço real da empresa (consultório, loja, ateliê, oficina, estúdio)',
-  'EM PÉ, plano médio: em ato de trabalho com as mãos — gesto concreto do ofício (examinar, construir, servir, demonstrar, ajustar, criar, cuidar), coerente com a atividade declarada no kit de marca; a cena captura o profissional fazendo seu trabalho real, não posando',
+  'EM PÉ, plano médio (cintura para cima): gesto de apresentação, explicação ou entrega — com objeto do ofício em cena, coerente com a atividade declarada no kit de marca',
+  'SENTADO, plano médio próximo (cintura para cima): ato de trabalho focado, inclinado levemente para frente, usando superfície, ferramenta, produto ou material do ofício — expressão de concentração',
+  'EM PÉ, plano americano (coxa para cima): postura de autoridade natural, organização ou revisão do material do ofício — sem pose artificial e sem objeto exagerado em destaque; ambiente ao redor pertencente ao espaço real da empresa',
 ];
 
 // IMPACTO: objetos devem ser coerentes com o contexto da mensagem.
@@ -239,13 +233,9 @@ const CLAREZA_CHARACTER_VARIATIONS: string[] = [
 // carcaça traseira voltada para câmera. Preferir objetos não-digitais nas poses
 // de plano médio e americano em pé.
 const IMPACTO_CHARACTER_VARIATIONS: string[] = [
-  'EM PÉ, plano médio (cintura para cima): postura frontal com tensão contida, braços ao lado do corpo com energia concentrada — sem objeto, a presença é o elemento',
-  'EM PÉ, plano americano (coxa para cima): em movimento — passo à frente ou giro de 3/4, roupa com movimento congelado pela câmera',
-  'EM PÉ, plano médio: segurando prancheta física, bloco de anotações ou objeto não-digital do ofício à frente do corpo em ângulo — gesto de domínio técnico; objeto coerente com o segmento da mensagem',
-  'EM PÉ, plano americano: perfil de 3/4 para a câmera, olhar para fora do quadro com determinação — composição com tensão direcional',
-  'SENTADO sobre superfície elevada (bancada, beira de mesa, degrau), plano americano — postura ativa e inclinada levemente para frente, não atrás de mesa de trabalho',
-  'SENTADO, plano médio: à mesa com notebook aberto em ângulo lateral (não como barreira frontal), dedos no teclado, olhar absorto na tela — luz recortando rosto e equipamento; com contra-plongée, posicionar o notebook de modo que a tela permaneça visível ao observador, tampa traseira NUNCA exposta',
-  'EM PÉ, plano americano: posicionado de costas parcialmente (1/4 de costas), rosto virado em perfil — composição com tensão de saída do quadro',
+  'EM PÉ, plano americano (coxa para cima): em movimento — passo à frente, giro 3/4 ou avanço contido; presença forte, roupa com movimento congelado pela câmera',
+  'EM PÉ, plano médio (cintura para cima): domínio técnico com objeto do ofício não-digital à frente do corpo em ângulo — gesto firme e controlado; objeto coerente com o segmento da mensagem',
+  'SENTADO, plano americano ou médio: postura ativa, inclinado para frente, nunca passivo — pode usar superfície elevada (bancada, beira de mesa, degrau) ou notebook em ângulo lateral; se houver notebook, tela visível ao observador, tampa traseira NUNCA exposta',
 ];
 
 function pickRandom<T>(arr: T[]): T {
