@@ -637,31 +637,32 @@ export default function App() {
           >
             Kit Imagem
           </button>
-          {slots.some((s) => s.key === 'bonus') && (
-            <button
-              type="button"
-              onClick={() => bonusExhausted ? setExhaustedHint(h => h === 'bonus' ? null : 'bonus') : setSelectedSlot(selectedSlot === 'bonus' ? (puSlot as 'plano1' | 'plano2') || 'plano1' : 'bonus')}
-              onMouseEnter={() => { if (bonusExhausted) setExhaustedHint('bonus'); }}
-              onMouseLeave={() => setExhaustedHint(null)}
-              style={{
-                background: selectedSlot === 'bonus' ? '#f4b000' : 'transparent',
-                color: selectedSlot === 'bonus' ? '#0f213f' : '#f4b000',
-                border: '2px solid #f4b000',
-                borderRadius: 12,
-                padding: '7px 16px',
-                fontWeight: 800,
-                fontSize: 13,
-                cursor: bonusExhausted ? 'default' : 'pointer',
-                letterSpacing: 0.2,
-                transition: 'background .15s, color .15s',
-                marginLeft: 6,
-                opacity: bonusExhausted ? 0.45 : 1,
-              }}
-            >
-              ★ Bônus{selectedSlot === 'bonus' ? ' ativo' : ''}{bonusExhausted ? ' 🔒' : ''}
-            </button>
-          )}
         </div>
+        {slots.some((s) => s.key === 'bonus') && (
+          <button
+            type="button"
+            onClick={() => bonusExhausted ? setExhaustedHint(h => h === 'bonus' ? null : 'bonus') : setSelectedSlot('bonus')}
+            onMouseEnter={() => { if (bonusExhausted) setExhaustedHint('bonus'); }}
+            onMouseLeave={() => setExhaustedHint(null)}
+            style={{
+              width: '100%',
+              marginTop: 6,
+              background: selectedSlot === 'bonus' ? '#f4b000' : 'transparent',
+              color: selectedSlot === 'bonus' ? '#0f213f' : '#f4b000',
+              border: '2px solid #f4b000',
+              borderRadius: 12,
+              padding: '7px 16px',
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: bonusExhausted ? 'default' : 'pointer',
+              letterSpacing: 0.2,
+              transition: 'background .15s, color .15s',
+              opacity: bonusExhausted ? 0.45 : 1,
+            }}
+          >
+            ★ Bônus{selectedSlot === 'bonus' ? ' ativo' : ''}{bonusExhausted ? ' 🔒' : ''}
+          </button>
+        )}
 
         {exhaustedHint && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 10 }}>
