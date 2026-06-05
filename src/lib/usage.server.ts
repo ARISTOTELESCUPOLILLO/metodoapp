@@ -64,7 +64,7 @@ export async function checkBalance(
     .maybeSingle();
   if (error || !p) return { ok: false, isAdmin: false };
 
-  const fits = (lim: number, used: number, need: number) => lim - used >= need;
+  const fits = (lim: number, used: number, need: number) => lim === 0 || lim - used >= need;
   const notExpired = (expiraEm: string | null) => expiraEm == null || new Date(expiraEm) > new Date();
   const slotOk = (
     id: string | null,
