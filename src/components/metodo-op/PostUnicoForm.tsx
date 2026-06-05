@@ -35,6 +35,7 @@ const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
   { code: 'homenagem',     label: 'Homenagem',      desc: 'Pessoa, data, conquista' },
   { code: 'oportunidade',  label: 'Oportunidade',   desc: 'Momento único, urgência' },
   { code: 'promocao',      label: 'Promoção',       desc: 'Oferta, campanha comercial' },
+  { code: 'fatos',         label: 'Fatos',          desc: 'Registrar evento — foto real do momento' },
 ];
 
 const MOODS: { code: MoodCode; label: string }[] = [

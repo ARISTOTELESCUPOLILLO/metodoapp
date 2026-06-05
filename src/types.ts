@@ -105,7 +105,7 @@ export interface MethodOpResult {
   summary?: GenerationSummary;
 }
 
-export type PostUnicoObjetivo = 'promocao' | 'homenagem' | 'aviso' | 'oportunidade' | 'institucional' | 'nenhum';
+export type PostUnicoObjetivo = 'promocao' | 'homenagem' | 'aviso' | 'oportunidade' | 'institucional' | 'fatos' | 'nenhum';
 export type PostUnicoDirecao = 'livre' | 'mood';
 
 export interface PostUnicoFormData {

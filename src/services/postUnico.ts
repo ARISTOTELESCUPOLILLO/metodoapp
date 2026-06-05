@@ -11,6 +11,7 @@ const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   aviso: 'Aviso institucional — comunicar com clareza e autoridade',
   oportunidade: 'Oportunidade — sinalizar momento único, urgência elegante',
   institucional: 'Institucional — reforçar posicionamento, propósito e autoridade da marca',
+  fatos: 'Fatos — registrar o evento como aconteceu, com fidelidade total ao real',
   nenhum: 'Criação livre — sem objetivo definido',
 };
 
@@ -20,6 +21,7 @@ const OBJETIVO_TONE: Record<PostUnicoObjetivo, string> = {
   aviso: 'clareza institucional, autoridade tranquila',
   oportunidade: 'urgência contida antes da ação, contraste entre espera e movimento, energia direcionada, tensão antes do clique',
   institucional: 'sobriedade contemporânea, autoridade calma, identidade de marca, atemporalidade',
+  fatos: 'documental, fidelidade ao momento, autenticidade, registro visual limpo, sem dramatização',
   nenhum: 'neutro, totalmente livre',
 };
 
@@ -48,6 +50,7 @@ const OBJETIVO_VISUAL_EXCLUSIONS: Partial<Record<PostUnicoObjetivo, string>> = {
   homenagem: 'PROIBIDO: velas de bolo de aniversário genéricas sem contexto, buquê de flores isolado como stock, confetes soltos sem cena.',
   promocao: 'PROIBIDO: sacola de compras genérica, carrinho de supermercado, etiqueta de preço flutuando como elemento central, emoji de porcentagem como gráfico principal.',
   institucional: 'PROIBIDO NESTE OBJETIVO: paredes de concreto aparente, painéis de concreto, estruturas arquitetônicas frias ou industriais como elemento visual principal, corredores vazios sem presença humana, ambientes de galpão ou obra. Esses elementos comunicam frieza e afastamento — o oposto da autoridade calorosa e da identidade de marca desejada.',
+  fatos: 'PROIBIDO NESTE OBJETIVO: alterar pessoas (rostos, poses, roupas, número), alterar ambiente (arquitetura, móveis, espaço), adicionar ou remover elementos, criar luz cinematográfica falsa, dramatizar cores, inventar atmosfera. A imagem deve ser FIEL ao evento como ele aconteceu. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução. O resultado deve ser reconhecidamente o MESMO evento, apenas melhor documentado.',
 };
 
 // Arquétipos visuais mutuamente distintos por objetivo — sorteados a cada geração livre
@@ -87,6 +90,11 @@ const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
     'CONCEITO DESTA GERAÇÃO — PESSOA E IDENTIDADE: avatar ou representante da marca como incorporação dos seus valores — postura, olhar e contexto comunicam o posicionamento.',
     'CONCEITO DESTA GERAÇÃO — DETALHE DE OFÍCIO: close em ferramenta, material ou gesto específico do negócio — artesania, especialização, autoria.',
     'CONCEITO DESTA GERAÇÃO — TIPOGRAFIA DE MARCA: identidade visual construída pela tipografia e cor como protagonistas, com elemento fotográfico discreto de suporte.',
+  ],
+  fatos: [
+    'CONCEITO DESTA GERAÇÃO — REGISTRO DOCUMENTAL FIEL: esta peça é um documento visual do evento. Preserve absolutamente: pessoas (mesmos rostos, posições, roupas), ambiente (mesma arquitetura, móveis, espaço), composição original. Melhore apenas: clareza, nitidez, balanço de branco, contraste para legibilidade. NÃO crie luz nova, NÃO mude atmosfera. O local e as pessoas devem ser reconhecíveis e idênticos ao original.',
+    'CONCEITO DESTA GERAÇÃO — EVIDÊNCIA VISUAL DO MOMENTO: a imagem é prova de que o evento aconteceu. Pessoas em posições naturais originais, ambiente real preservado, luz ambiente respeitada. Calibração técnica permitida (brilho, contraste, nitidez). PROIBIDO: alterar qualquer pessoa, remover elementos, adicionar figuras, dramatizar visualmente. Resultado: o mesmo evento, visualmente mais claro e legível.',
+    'CONCEITO DESTA GERAÇÃO — MOMENTO AUTÊNTICO REGISTRADO: capture a essência do evento sem interferência criativa. Preserve exatamente as pessoas presentes, o espaço onde ocorreu, a luz ambiente real. Apenas refinamento técnico é permitido. A peça final é o evento como aconteceu — não uma reinterpretação artística dele.',
   ],
   nenhum: [], // Sem conceito visual pré-definido — IA tem total liberdade
 };
@@ -268,7 +276,7 @@ function segmentRules(segment?: string): string {
   return 'CONTEXTO — SEGMENTO SERVIÇOS: prestação de serviços especializados. Avatar (quando presente) transmite autoridade, competência e confiança do profissional ou da equipe; cenário reforça o contexto profissional; a composição comunica expertise, credibilidade e entrega de valor. O tom visual e textual é confiante e orientado ao resultado.';
 }
 
-function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors?: { primary: string; accent: string }): string {
+function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors?: { primary: string; accent: string }, objetivo?: PostUnicoObjetivo): string {
   if (!refs) return '';
   const parts: string[] = [];
   const elementos: string[] = [];
@@ -291,7 +299,18 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
     parts.push(`AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, de costas parcial, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro, três-quartos, OU peça sem rosto visível (mãos trabalhando, detalhe de gesto, ambiente com presença implícita). Escolha a combinação que melhor serve à mensagem desta peça específica.`);
   }
   if (refs.cenario) {
-    parts.push(`CENÁRIO OBRIGATÓRIO: preserve FIELMENTE este espaço como ele é na imagem de referência.\n- Se for FACHADA, FRENTE DE LOJA ou EXTERIOR: mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça.\n- Se for AMBIENTE INTERNO: preserve a sala, móveis, equipamentos, paredes e ponto de vista. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.\nNÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
+    if (objetivo === 'fatos') {
+      parts.push(`⚠ OBJETIVO FATOS — PRESERVAÇÃO TOTAL DA FOTO DO EVENTO:
+Esta peça é um REGISTRO DOCUMENTAL. A foto do cenário é o evento real — preserve-a fielmente.
+PESSOAS: não altere rostos, poses, roupas nem número de pessoas. Mantenha exatamente como estão.
+AMBIENTE: preserve arquitetura, móveis, decoração e espaço físico. O local deve ser reconhecível e idêntico.
+LUZ: respeite a luz real do evento (sol, lâmpada, luz de janela). PERMITIDO melhorar tecnicamente: balanço de branco, contraste equilibrado, nitidez, clareza. PROIBIDO: criar luz cinematográfica artificial, mudar temperatura de cor radicalmente, dramatizar atmosfera.
+COMPOSIÇÃO: respeite o enquadramento e ponto de vista originais.
+PROIBIDO ABSOLUTAMENTE: alterar ou substituir pessoas, mudar ambiente, adicionar/remover elementos, dramatizar cores, inventar atmosfera, aplicar efeitos especiais.
+A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, nítida e tecnicamente melhorada.`);
+    } else {
+      parts.push(`CENÁRIO OBRIGATÓRIO: preserve FIELMENTE este espaço como ele é na imagem de referência.\n- Se for FACHADA, FRENTE DE LOJA ou EXTERIOR: mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça.\n- Se for AMBIENTE INTERNO: preserve a sala, móveis, equipamentos, paredes e ponto de vista. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.\nNÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
+    }
   }
   if (refs.produtos && refs.produtos.length) {
     const lista = refs.produtos.map((p) => `Produto ${p.num}`).join(', ');
@@ -372,7 +391,7 @@ REGRAS:
 - ${zona.regraFinal}
 - ${typographyShort}
 
-${referencesBlock(references, kit.segment, { primary, accent })}
+${referencesBlock(references, kit.segment, { primary, accent }, data.objetivo)}
 
 ${FORBIDDEN_MOOD_WORDS}`;
 }

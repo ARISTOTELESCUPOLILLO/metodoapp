@@ -6,6 +6,7 @@ const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
   { code: 'aviso', label: 'Aviso', desc: 'Comunicado institucional' },
   { code: 'oportunidade', label: 'Oportunidade', desc: 'Momento único, urgência' },
   { code: 'institucional', label: 'Institucional', desc: 'Posicionamento, propósito, marca' },
+  { code: 'fatos', label: 'Fatos', desc: 'Registrar evento — foto real do momento' },
 ];
 
 const MOODS: { code: MoodCode; label: string }[] = [
