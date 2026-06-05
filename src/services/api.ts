@@ -267,12 +267,12 @@ const moodVisualInstructions: Record<MoodCode, string> = {
 - Composição ousada que provoca estranhamento controlado
 - Título DESLOCADO e assimétrico — fora do centro, quebrando o equilíbrio esperado
 - ELEMENTO INESPERADO — ESCALA E PESO VISUAL: o objeto ou forma inusitado é COADJUVANTE EXPRESSIVO da mensagem — deve ocupar área visual significativa na composição (não um detalhe periférico ou diminuto), grande o suficiente para chamar atenção à primeira vista e orientar o olhar, harmônico com o conjunto e sem dominar o sujeito principal. PROIBIDO: reduzir o elemento surreal a detalhe sutil, pequeno ou escondido na periferia da peça.
-- Paleta incomum ou contraste inesperado
+- Paleta incomum mas legível — combinações: verde frio + magenta, azul profundo + ferrugem, lilás seco + mostarda, petróleo + coral queimado, vinho + azul elétrico suave — evitar excesso carnavalesco
 - Sombras presentes mas LEVES — o rosto e a cabeça das pessoas NUNCA podem ficar encobertos por escurecimento
 - Iluminação equilibrada: o elemento surreal não pode obscurecer o sujeito principal`,
 
   'OP-06': `ESTILO VISUAL (raiz: Minimalista):
-- Fundo quase branco ou muito claro, espaço vazio como elemento principal
+- Fundo de paleta suave (areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido) — evitar branco puro dominante; espaço vazio como elemento principal
 - Título CENTRALIZADO, fonte tipográfica como protagonista, com muito respiro ao redor
 - Detalhe mínimo de cor como assinatura
 - Composição com muito respiro, elementos reduzidos ao essencial
