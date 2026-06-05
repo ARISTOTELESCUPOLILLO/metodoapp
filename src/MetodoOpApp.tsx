@@ -641,7 +641,13 @@ export default function App() {
         {slots.some((s) => s.key === 'bonus') && (
           <button
             type="button"
-            onClick={() => bonusExhausted ? setExhaustedHint(h => h === 'bonus' ? null : 'bonus') : setSelectedSlot('bonus')}
+            onClick={() => {
+              if (bonusExhausted) { setExhaustedHint(h => h === 'bonus' ? null : 'bonus'); return; }
+              setSelectedSlot('bonus');
+              // Muda o modo conforme o tipo do plano no bonus
+              if (bonusSlotInfoObj && /^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo)) setModo('postUnico');
+              else if (bonusSlotInfoObj) setModo('metodo');
+            }}
             onMouseEnter={() => { if (bonusExhausted) setExhaustedHint('bonus'); }}
             onMouseLeave={() => setExhaustedHint(null)}
             style={{
