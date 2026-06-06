@@ -351,10 +351,10 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 - Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${variacaoBlock}${moodRuleBlock}${segmentBlock}
 
 TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
-- O TÍTULO renderizado na peça deve ser BOLD e GRANDE — ocupando no mínimo 35% da altura vertical da peça. Letras claramente legíveis a distância, sem texto decorativo pequeno.
-- O TEXTO DE APOIO deve ter no mínimo 50% do tamanho do título — legível em tela de celular sem ampliar.
-- PROIBIDO texto miniatura, texto decorativo ilegível, legenda de rodapé em corpo 8pt ou qualquer tipografia que exija zoom para ler.
-- Parâmetro de avaliação: se a peça impressa em 10cm de largura não for legível a 30cm de distância, a tipografia está errada.
+- O TÍTULO renderizado na peça deve ser BOLD e GRANDE — ocupando no mínimo 35% da altura vertical da peça. Letras claramente legíveis a distância.
+- O TEXTO DE APOIO deve ter no mínimo 65% do tamanho do título — NÃO é legenda de rodapé, NÃO é texto decorativo pequeno. É um bloco de texto SECUNDÁRIO MAS LEGÍVEL, equivalente a um subtítulo de revista — corpo grande o suficiente para ser lido sem aproximar o celular.
+- PROIBIDO: texto de apoio com menos de 60% do tamanho do título, texto miniatura, corpo tipo "legenda", qualquer tipografia que exija zoom para ler.
+- Regra prática: ao ver a peça no celular em tamanho normal, o texto de apoio deve ser lido de imediato, sem esforço.
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal OU traseira.

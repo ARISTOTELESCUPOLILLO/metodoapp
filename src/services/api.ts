@@ -216,7 +216,7 @@ ${variationBlock}
 
 CONTEÚDO TEXTUAL:
 - Título principal em CAIXA ALTA (bold, destaque máximo, tamanho ajustado para caber sem cortar): "${tituloUpper}"
-- Texto de apoio (regular, secundário, caixa normal): "${texto}"
+- Texto de apoio (corpo GRANDE — no mínimo 65% do tamanho do título, legível sem zoom, caixa normal, peso regular): "${texto}"
 - ${marcaInstruction}
 
 COR PRIMÁRIA: ${primaryColor}
@@ -226,7 +226,7 @@ ${typographyBlock}
 
 REGRAS:
 - Título renderizado em CAIXA ALTA exatamente como: "${tituloUpper}"
-- Texto de apoio exatamente como: "${texto}", em caixa normal
+- Texto de apoio exatamente como: "${texto}", em caixa normal, corpo GRANDE (no mínimo 65% do título)
 - Todo texto em português, sem tradução, sem texto em inglês
 - Sem elementos decorativos genéricos
 - Alta resolução, estética editorial contemporânea brasileira
