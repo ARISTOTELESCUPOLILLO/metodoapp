@@ -54,6 +54,25 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const audience: Aud = (AUDIENCES as readonly string[]).includes(body.audience) ? (body.audience as Aud) : 'B2C';
           const isB2C = audience === 'B2C';
 
+          const normalizeMomento = (s: string) =>
+            s.toLowerCase()
+              .replace(/[áàãâä]/g, 'a').replace(/[éèêë]/g, 'e')
+              .replace(/[íìîï]/g, 'i').replace(/[óòõôö]/g, 'o')
+              .replace(/[úùûü]/g, 'u').replace(/ç/g, 'c')
+              .replace(/\s+/g, '');
+          const momento = normalizeMomento(String(body.momento || ''));
+          const MOMENTO_CONTEXT: Record<string, string> = {
+            consolidacao: 'público já conhece e compra da marca — aprofundar relacionamento e fortalecer preferência.',
+            lancamento: 'público está tendo o PRIMEIRO contato com a marca — o emissor se apresenta para quem ainda não o conhece. NÃO é o lançamento de um produto; é o momento em que a marca aparece pela primeira vez para esse público.',
+            reativacao: 'público conhecia a marca mas parou de interagir — objetivo é reacender o interesse mostrando novidade ou evolução. NÃO é relançar um serviço; é reconectar com quem já esteve próximo.',
+            sazonalidade: 'aproveitar um contexto externo de data, período, tendência ou evento — o tema é a oportunidade do momento, não a marca em si.',
+            awareness: 'construir reconhecimento de marca em público que ainda não a conhece — sem pressão de conversão, sem CTA urgente.',
+          };
+          const momentoCtx = MOMENTO_CONTEXT[momento] || '';
+          const momentoContextBlock = momentoCtx && mode === 'metodo'
+            ? `CONTEXTO DO MOMENTO COMUNICATIVO: ${momentoCtx}\n`
+            : '';
+
           const brandVoice = String(body.brandVoice || '').slice(0, 80);
           const voiceProfile = getVoiceProfile(brandVoice);
           const voiceBlock = voiceProfile
@@ -97,7 +116,8 @@ Escreva como se estivesse falando com alguém que usa o produto/serviço na pró
             : `PÚBLICO-ALVO: EMPRESARIAL (B2B).
 A Informação-chave deve falar com o dono, sócio, gestor ou responsável pelo negócio.
 Foque em situações reais de trabalho: atendimento, resultado, organização, vendas, prazo, confiança ou crescimento.
-Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".`;
+Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".
+SUJEITO DA FRASE (B2B): use "empresas", "gestores", "equipes", "donos", "negócios" como sujeito. NUNCA use "clientes", "consumidores" ou "compradores" como sujeito principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
 
           // ── Progressão do Método OP ────────────────────────────────────────
           const progressaoB2C = segment === 'VAREJO'
@@ -156,7 +176,7 @@ ${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refi
 
 ${audienceDirective}
 
-${progressaoMetodo}
+${momentoContextBlock}${progressaoMetodo}
 
 ${editorialBlock}
 
@@ -190,7 +210,7 @@ ${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refi
 
 ${audienceDirective}
 
-${progressaoMetodo}
+${momentoContextBlock}${progressaoMetodo}
 
 ${editorialBlock}
 
@@ -294,7 +314,7 @@ ${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO i
 
 ${audienceDirective}
 
-${progressaoMetodo}
+${momentoContextBlock}${progressaoMetodo}
 
 ${editorialBlock}
 
@@ -328,7 +348,7 @@ ${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO i
 
 ${audienceDirective}
 
-${progressaoMetodo}
+${momentoContextBlock}${progressaoMetodo}
 
 ${editorialBlock}
 

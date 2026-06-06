@@ -223,24 +223,31 @@ const CLAREZA_CHARACTER_VARIATIONS: string[] = [
   'DETALHE CONTEXTUAL, plano próximo ou plano-detalhe: rosto não é dominante — a cena mostra mãos, gesto, objeto, produto, ferramenta, bancada, textura de material, documento discreto ou detalhe do ambiente de trabalho. O personagem existe pela presença parcial (mão, braço, silhueta). A cena continua clara, organizada, arejada e coerente com o segmento. Não transformar em stock genérico de fundo branco.',
 ];
 
-// IMPACTO: 3 opções sorteáveis, aplicáveis a múltiplos segmentos.
-// Inclui opção sem personagem dominante para varejo, produto e marca.
+// IMPACTO: 6 opções sorteáveis, aplicáveis a múltiplos segmentos.
+// Variações cobrindo ambientes, enquadramentos e tons emocionais distintos
+// para garantir diversidade visual real entre gerações consecutivas.
 // Contra-plongée obrigatório — preferir objetos não-digitais nas poses com pessoa.
 const IMPACTO_CHARACTER_VARIATIONS: string[] = [
-  'PESSOA EM AÇÃO, plano americano ou médio: movimento controlado — avanço, giro 3/4, deslocamento, gesto de decisão ou atitude de comando. Personagem ativo, presente, determinado, sem pose publicitária artificial. Não obrigar objeto na mão. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
-  'PESSOA COM ELEMENTO CONTEXTUAL, plano médio ou americano: interagindo com elemento simples e coerente com o contexto — produto, ferramenta, embalagem, material de trabalho, peça, equipamento, superfície de apoio, balcão, vitrine, mesa ou objeto simbólico do tema. Não obrigar papel, prancheta, tablet, celular ou notebook. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
-  'SUJEITO SEM PERSONAGEM DOMINANTE: produto, objeto, detalhe de operação, elemento da marca, serviço em execução ou cena contextual com presença humana secundária ou parcial. Foco único, luz recortada, composição dramática. Usar quando produto, objeto ou marca for melhor protagonista do que uma pessoa central.',
+  'PESSOA EM AÇÃO, plano americano ou médio: movimento controlado — avanço, giro 3/4, deslocamento, gesto de decisão ou atitude de comando. Personagem ativo, determinado, sem pose publicitária. Não obrigar objeto na mão. Ambiente interior: escritório, loja, clínica, oficina ou espaço do ofício real com fundo escuro controlado.',
+  'PESSOA COM ELEMENTO CONTEXTUAL, plano médio ou americano: interagindo com elemento simples e coerente com o contexto — produto, ferramenta, embalagem, material de trabalho, peça, equipamento, balcão, vitrine ou objeto simbólico do tema. Não obrigar papel, prancheta, tablet, celular ou notebook. Tom: concentração intensa.',
+  'SUJEITO SEM PERSONAGEM DOMINANTE: produto, objeto, detalhe de operação, elemento da marca, serviço em execução ou cena contextual com presença humana secundária ou parcial. Foco único, luz recortada, composição dramática intensa. Usar quando produto, objeto ou marca for protagonista mais forte do que uma pessoa.',
+  'PESSOA EM AMBIENTE EXTERNO OU INDUSTRIAL, plano americano ou médio: personagem em movimento ou ato do ofício em espaço aberto (rua, fachada, pátio, entrada) ou ambiente de produção (oficina, galpão, estoque, cozinha profissional). Câmera contra-plongée leve, luz focal de fonte externa ou artificial industrial. Tom: intensidade e garra.',
+  'SILHUETA PARCIAL OU CONTRA-LUZ, plano americano ou médio: personagem em contra-luz dramático, silhueta recortada pela fonte de luz (janela, porta, foco artificial) com postura e gesto identificáveis. Rosto não precisa ser legível — a força vem da postura. Fundo com fonte de luz visível ou desfoque de ambiente escuro.',
+  'CLOSE OU PLANO PRÓXIMO, busto ou face próxima: câmera bem próxima ao personagem, detalhe de expressão de determinação ou concentração, fundo escuro com luz recortando traços do rosto ou ombros. Nenhuma ação física necessária — a proximidade e a expressão criam a intensidade. Tom: autoridade calma.',
 ];
 
 // DESVIO: sorteia tipo de ruptura simbólica (não personagem).
 // 4 tipos distintos sem sobreposição — escala e posição/lugar são tipos separados.
 // "Perspectiva impossível" removida: OP-05 já exige câmera angulada com distorção
 // de perspectiva visível — duplicar isso via ruptura gera geometria quebrada.
+// REGRA INEGOCIÁVEL DE INTEGRAÇÃO: o objeto simbólico DEVE estar integrado
+// fisicamente na cena — sobre superfície, nas mãos do personagem ou embutido
+// no ambiente. NUNCA flutuante nem sobreposto como recorte ou prop de fundo.
 const DESVIO_SYMBOLIC_RUPTURE_VARIATIONS: string[] = [
-  'OBJETO DESLOCADO: objeto comum em lugar inesperado ou posição improvável — item de trabalho fora do contexto usual, peça cotidiana suspensa, sombra incompatível com a cena ou objeto em contexto estranho. A ruptura é de LUGAR ou CONTEXTO. Não usar escala alterada neste tipo. Não repetir livro, megafone, notebook, porta ou dashboard como solução automática.',
-  'SOMBRA OU AUSÊNCIA: a cena mostra sombra, reflexo ou marca visual de algo que não está presente. A ausência sugere o problema, a falha, a oportunidade ou o conflito da peça. Metáfora percebida, não explicada literalmente.',
-  'ESCALA ALTERADA: um elemento cotidiano aparece MAIOR ou MENOR do que o esperado, criando tensão visual por desproporção. A escala é a ruptura principal — objeto desproporcional em relação ao restante da cena. A ideia do post deve ser legível pela desproporção, sem virar surrealismo confuso.',
-  'COR INESPERADA: um único item cotidiano recebe cor incomum dentro da paleta do mood, criando ruptura visual. A cor é conceitual — não decorativa. Apenas esse elemento recebe a cor; o restante da cena segue a paleta do mood.',
+  'OBJETO DESLOCADO: objeto comum colocado em lugar inesperado dentro da cena — item de trabalho pousado em superfície incomum, peça cotidiana em posição estranha mas fisicamente apoiada no ambiente (sobre mesa, chão, parede, balcão). O objeto ESTÁ na cena, não voa nem flutua. Câmera contra-plongée ou plongée revelando o estranhamento do posicionamento. Personagem de um lado; objeto deslocado no outro extremo ou em primeiro plano. Não usar livro, megafone, notebook, porta, chave solta ou dashboard.',
+  'SOMBRA OU AUSÊNCIA: a cena mostra a SOMBRA ou o REFLEXO projetado de algo que não está presente no quadro — sombra caindo sobre superfície real (chão, parede, mesa), nunca flutuante. O personagem e o ambiente estão nítidos; apenas a sombra revela o elemento ausente. A ausência sugere o problema ou a oportunidade da peça. Câmera angulada (contra-plongée ou lateral extrema); composição diagonal que destaca a sombra.',
+  'ESCALA ALTERADA: um elemento cotidiano aparece MAIOR ou MENOR do que o esperado — mas integrado ao ambiente, fisicamente presente na cena. Objeto desproporcional pousado (enorme sobre a mesa, minúsculo nas mãos do personagem, gigante apoiado ao fundo). Personagem interage ou está próximo revelando a desproporção por comparação. Câmera enquadra de modo que a escala diferente fique óbvia sem virar surrealismo confuso.',
+  'COR INESPERADA: um único item cotidiano presente fisicamente na cena recebe cor incomum dentro da paleta do mood — objeto está na mão do personagem, sobre superfície ou integrado ao ambiente, não flutuante. Câmera contra-plongée ou plongée; luz teatral salienta o contraste cromático. Apenas esse elemento tem a cor conceitual; o restante da cena segue a paleta fria/escura do mood.',
 ];
 
 function pickRandom<T>(arr: T[]): T {
@@ -342,6 +349,12 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 - Composição: ${v.composicao}
 - Atitude da câmera: ${v.camera}
 - Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${variacaoBlock}${moodRuleBlock}${segmentBlock}
+
+TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
+- O TÍTULO renderizado na peça deve ser BOLD e GRANDE — ocupando no mínimo 35% da altura vertical da peça. Letras claramente legíveis a distância, sem texto decorativo pequeno.
+- O TEXTO DE APOIO deve ter no mínimo 50% do tamanho do título — legível em tela de celular sem ampliar.
+- PROIBIDO texto miniatura, texto decorativo ilegível, legenda de rodapé em corpo 8pt ou qualquer tipografia que exija zoom para ler.
+- Parâmetro de avaliação: se a peça impressa em 10cm de largura não for legível a 30cm de distância, a tipografia está errada.
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal OU traseira.

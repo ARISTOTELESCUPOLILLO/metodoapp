@@ -139,6 +139,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
           brandVoice: data.brandVoice || '',
+          momento: data.businessMoment || '',
         }),
       });
       if (!res.ok) {
@@ -182,6 +183,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           subMode: 'refinar',
           previousSuggestions: allSessionSuggestionsRef.current,
           brandVoice: data.brandVoice || '',
+          momento: data.businessMoment || '',
         }),
       });
       if (!res.ok) {
@@ -279,6 +281,12 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
             <option value="reativação">Reativação</option>
             <option value="sazonalidade">Sazonalidade</option>
           </select>
+          <span style={{ display: 'block', fontSize: 11, color: '#64748b', marginTop: 4, lineHeight: 1.4 }}>
+            {data.businessMoment === 'lançamento' && 'Público descobrindo a marca pela primeira vez'}
+            {data.businessMoment === 'consolidação' && 'Público já compra de você — fortalecer preferência'}
+            {data.businessMoment === 'reativação' && 'Público que conhecia mas parou de engajar'}
+            {data.businessMoment === 'sazonalidade' && 'Aproveitar um período, data ou contexto específico'}
+          </span>
         </label>
       </div>
 
