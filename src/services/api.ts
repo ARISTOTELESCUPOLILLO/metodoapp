@@ -179,8 +179,13 @@ function buildImagePrompt(params: {
     : '';
 
 
-  // Regra de dispositivos — proíbe conteúdo de tela na carcaça traseira.
-  const DEVICE_RULE_FIRST = `⚠ DISPOSITIVOS DIGITAIS: PROIBIDO renderizar conteúdo (tela, app, gráfico, ícone) sobre a TAMPA TRASEIRA ou CARCAÇA de notebook, tablet, iPad, celular ou monitor. A carcaça é superfície SÓLIDA e OPACA. CORRETO: apenas a tela FRONTAL exibe conteúdo real visível.
+  // Regra de dispositivos — proíbe qualquer tela com conteúdo visível.
+  const DEVICE_RULE_FIRST = `⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL:
+PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal ou traseira.
+CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, site, app, texto legível ou qualquer elemento visual.
+DISPOSITIVO PERMITIDO APENAS COMO OBJETO CONTEXTUAL: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra sem conteúdo identificável.
+MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
+NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard on screen, no UI on screen, no app interface, no readable text on devices, no duplicated laptops, no extra devices, screen must be blank dark off turned away or out of focus.
 
 `;
 
@@ -339,11 +344,14 @@ export async function generatePostImage(params: {
     ? `\n\nREFORÇO COM REFERÊNCIAS: A pessoa da imagem de referência deve aparecer como SUJEITO FÍSICO E REAL da cena — em pé, sentada ou em movimento na locação descrita, jamais como imagem projetada/exibida na tela ou tampa de qualquer dispositivo. Preserve exatamente: rosto, traços faciais, etnia, cabelo, barba, óculos — mantendo a identidade visual da pessoa. Mesmo ambiente e iluminação da cena. NÃO copie a roupa da referência — vista a pessoa com roupa coerente com o contexto da cena.`
     : '';
 
-  // Regra de dispositivos digitais com ângulos prescritos — obrigatória em TODOS os frames do reels.
-  const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRAS ABSOLUTAS PARA O REELS:
-PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela, na capa ou na tampa traseira de qualquer dispositivo. É TERMINANTEMENTE PROIBIDO mostrar a pessoa (ou qualquer foto de rosto) como conteúdo na tela de notebook, celular, tablet ou monitor.
-ÂNGULOS OBRIGATÓRIOS: NOTEBOOK: câmera frontal à tela 30°–50° horizontal — tela com conteúdo real visível, tampa traseira oculta pela própria tela. CELULAR: tela voltada para a câmera 20°–40° da vertical — verso oculto. TABLET: tela inclinada 50°–70° da horizontal voltada para a câmera — verso oculto.
-PROIBIDO em qualquer dispositivo: tampa/verso/carcaça com tela, interface, gráfico ou rosto projetado. TELA FRONTAL sempre com conteúdo real (app, dashboard, texto — nunca tela preta ou tela escura).`;
+  // Regra de dispositivos digitais — proíbe qualquer tela com conteúdo visível.
+  const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
+PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
+PROIBIDO qualquer tela com conteúdo visível em notebook, laptop, tablet, iPad, celular, iPhone ou monitor — tela frontal ou traseira.
+CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, app, texto legível ou qualquer elemento visual.
+DISPOSITIVO PERMITIDO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra.
+MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
+NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.`;
 
   const prompt = isReels
     ? `REGRAS INVIOLÁVEIS PARA A IMAGEM DO REELS (PRIMEIRO FRAME DO VÍDEO):

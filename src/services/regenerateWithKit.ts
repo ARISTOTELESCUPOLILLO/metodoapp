@@ -237,10 +237,13 @@ export async function regenerateWithKit(
 
   const baseScene = (imagePrompt || keyInfo || '').slice(0, 600);
   const deviceRule =
-    '⚠ REGRA ABSOLUTA — DISPOSITIVOS DIGITAIS:\n' +
-    'PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento — notebook, laptop, tablet, iPad, celular, computador ou monitor. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.\n' +
-    'CORRETO: tela FRONTAL com conteúdo real visível; carcaça traseira como superfície neutra, lisa e na cor do equipamento.\n' +
-    'PESSOA FÍSICA NA CENA: o porta-voz aparece como PESSOA REAL dentro do ambiente — NUNCA como imagem exibida na tela ou tampa de dispositivo algum.\n\n';
+    '⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL:\n' +
+    'PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal ou traseira.\n' +
+    'CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, site, app, texto legível ou qualquer elemento visual.\n' +
+    'DISPOSITIVO PERMITIDO APENAS COMO OBJETO CONTEXTUAL: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra sem conteúdo identificável.\n' +
+    'MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.\n' +
+    'PESSOA FÍSICA NA CENA: o porta-voz aparece como PESSOA REAL dentro do ambiente — NUNCA como imagem exibida na tela de qualquer dispositivo.\n' +
+    'NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.\n\n';
   const anchoredPrompt = (anchorPrefix + deviceRule + baseScene).slice(0, 1800);
 
   if (isReels) {
