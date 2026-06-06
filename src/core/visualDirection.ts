@@ -214,11 +214,13 @@ const CLAREZA_CAMERA_VARIATIONS: string[] = [
   'CÂMERA LATERAL 3/4: lente 50mm, distância média, ponto de vista na altura dos olhos — personagem levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional',
 ];
 
-// CLAREZA: 2 opções sorteáveis. Sem objeto obrigatório na mão.
+// CLAREZA: 3 opções sorteáveis. Sem objeto obrigatório na mão.
+// A 3ª opção retira o rosto do centro — aumenta diversidade de enquadramento.
 // Segmento e atividade podem orientar gesto e ambiente sem obrigar representação literal.
 const CLAREZA_CHARACTER_VARIATIONS: string[] = [
   'EM PÉ, plano médio ou americano: postura natural, profissional, estável. Gesto funcional — atendimento, organização, observação, apresentação discreta, operação ou interação leve com o ambiente. Não obrigar objeto na mão. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
   'SENTADO, plano médio ou médio próximo: postura organizada, calma, objetiva. A cena pode ocorrer em mesa, balcão, bancada, recepção, estação de trabalho, área de atendimento, ponto de venda, ambiente operacional limpo ou outro contexto adequado. Não depender de papel, caneta, caderno, tablet, celular ou notebook como elemento obrigatório. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
+  'DETALHE CONTEXTUAL, plano próximo ou plano-detalhe: rosto não é dominante — a cena mostra mãos, gesto, objeto, produto, ferramenta, bancada, textura de material, documento discreto ou detalhe do ambiente de trabalho. O personagem existe pela presença parcial (mão, braço, silhueta). A cena continua clara, organizada, arejada e coerente com o segmento. Não transformar em stock genérico de fundo branco.',
 ];
 
 // IMPACTO: 3 opções sorteáveis, aplicáveis a múltiplos segmentos.
@@ -231,14 +233,14 @@ const IMPACTO_CHARACTER_VARIATIONS: string[] = [
 ];
 
 // DESVIO: sorteia tipo de ruptura simbólica (não personagem).
-// O foco é a ruptura + câmera angulada + distorção de perspectiva.
-// Uma ruptura por cena — forte, legível, não óbvia demais.
+// 4 tipos distintos sem sobreposição — escala e posição/lugar são tipos separados.
+// "Perspectiva impossível" removida: OP-05 já exige câmera angulada com distorção
+// de perspectiva visível — duplicar isso via ruptura gera geometria quebrada.
 const DESVIO_SYMBOLIC_RUPTURE_VARIATIONS: string[] = [
-  'OBJETO DESLOCADO: um objeto comum em lugar inesperado, escala incomum ou posição improvável — item de trabalho deslocado, produto fora de escala, peça cotidiana suspensa ou sombra incompatível. Não repetir livro, megafone, notebook, porta ou dashboard como solução automática.',
+  'OBJETO DESLOCADO: objeto comum em lugar inesperado ou posição improvável — item de trabalho fora do contexto usual, peça cotidiana suspensa, sombra incompatível com a cena ou objeto em contexto estranho. A ruptura é de LUGAR ou CONTEXTO. Não usar escala alterada neste tipo. Não repetir livro, megafone, notebook, porta ou dashboard como solução automática.',
   'SOMBRA OU AUSÊNCIA: a cena mostra sombra, reflexo ou marca visual de algo que não está presente. A ausência sugere o problema, a falha, a oportunidade ou o conflito da peça. Metáfora percebida, não explicada literalmente.',
-  'ESCALA ALTERADA: elemento cotidiano aparece maior ou menor do que o esperado, criando tensão visual. A escala serve à ideia do post sem virar fantasia exagerada ou surrealismo confuso.',
+  'ESCALA ALTERADA: um elemento cotidiano aparece MAIOR ou MENOR do que o esperado, criando tensão visual por desproporção. A escala é a ruptura principal — objeto desproporcional em relação ao restante da cena. A ideia do post deve ser legível pela desproporção, sem virar surrealismo confuso.',
   'COR INESPERADA: um único item cotidiano recebe cor incomum dentro da paleta do mood, criando ruptura visual. A cor é conceitual — não decorativa. Apenas esse elemento recebe a cor; o restante da cena segue a paleta do mood.',
-  'PERSPECTIVA IMPOSSÍVEL CONTROLADA: ângulo, profundidade ou alinhamento estranho que sugere deslocamento, dúvida, falha, pressão ou quebra de expectativa. Continua fotográfica, nítida e legível — não vira abstrato.',
 ];
 
 function pickRandom<T>(arr: T[]): T {
@@ -258,8 +260,8 @@ export function buildVisualDirectionBlock(mood: MoodCode, segment?: Segment): st
 
 CONTEXTO DE SEGMENTO (${segment}):
 - Referência: ${seg.referenciaConcreta}
-- Evitar: ${seg.evitar}
-Quando esses elementos fizerem sentido real para o negócio e o tema, podem aparecer desde que não contrariem a gramática do mood.`
+- Não usar como padrão automático: ${seg.evitar}
+Permitir apenas quando estiver explicitamente ligado à informação-chave, ao segmento ou à natureza real do negócio — e desde que não contrarie a gramática do mood.`
     : '';
 
   // OP-05 sorteia tipo de ruptura simbólica em vez de variação de personagem.
