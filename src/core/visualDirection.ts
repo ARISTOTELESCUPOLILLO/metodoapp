@@ -202,10 +202,12 @@ export function getVisualDirection(mood: MoodCode): VisualDirection {
 // e injeta como instrução mandatória, impedindo repetição de padrão.
 // INSTANTE: objeto capturado no flagrante deve ser coerente com o cotidiano real
 // do personagem e o tema da mensagem. Proibido dispositivo digital nas mãos.
+// Cada variação especifica AMBIENTE diferente para forçar diversidade de cenário
+// — o ambiente desta variação SOBREPÕE o leituraCenica.ambiente original.
 const INSTANTE_CHARACTER_VARIATIONS: string[] = [
-  'MOVIMENTO NATURAL, plano médio ou mais aberto: pessoa em movimento real — caminhando, chegando, saindo, abrindo porta, organizando algo, pegando produto, atravessando ambiente, atendendo, conferindo espaço ou executando ação simples. Ação interrompida no meio, sem pose. Não obrigar objeto na mão. Olhar nunca para a câmera.',
-  'MICRO-MOMENTO DE ATENÇÃO, plano próximo ou médio: pessoa concentrada em ação pequena e cotidiana — observando detalhe, conferindo item, ajustando algo, separando produto, organizando bancada, preparando atendimento ou acompanhando tarefa. Não depender de papel, caderno, documento, celular, tablet ou notebook. Expressão concentrada, sem saber que está sendo fotografada.',
-  'REAÇÃO ESPONTÂNEA, plano médio: pessoa reagindo naturalmente a situação real — conversando, explicando, ouvindo, rindo de forma espontânea, apontando algo fora de quadro, atendendo alguém parcialmente visível ou interagindo com ação do ambiente. Reação natural, incompleta, capturada no momento, sem pose institucional.',
+  'MOVIMENTO NATURAL EM AMBIENTE DE ATENDIMENTO OU PONTO DE VENDA, plano médio ou mais aberto: pessoa em movimento real dentro de loja, balcão, recepção ou espaço de atendimento — pegando produto, organizando prateleira, abrindo vitrine, chegando ao caixa, conferindo estoque visível. Ação interrompida no meio, sem pose. Olhar nunca para câmera. AMBIENTE: interior de loja, balcão ou espaço de atendimento com elementos visíveis do negócio ao fundo.',
+  'MICRO-MOMENTO EM ÁREA DE PRODUÇÃO OU BASTIDOR, plano próximo ou médio: pessoa concentrada em tarefa manual real — preparando produto, ajustando equipamento, organizando bancada de trabalho, conferindo material, montando algo, finalizando produção. Proibido papel, caderno, documento, celular, tablet ou notebook. Expressão de concentração, flagrada sem posar. AMBIENTE: cozinha profissional, oficina, área de preparo, estoque organizado ou bastidor de serviço — elementos do processo visíveis.',
+  'REAÇÃO ESPONTÂNEA EM AMBIENTE EXTERNO OU ENTRADA, plano médio: pessoa em situação real ao ar livre ou na entrada do espaço — chegando, saindo, conversando com alguém fora de quadro, recebendo algo, verificando entorno, gesticulando em conversa real. Reação natural e incompleta, sem pose. AMBIENTE: calçada, fachada do estabelecimento, entrada, área externa, terraço ou espaço de transição — luz natural ambiente.',
 ];
 
 // Variação de câmera sorteada exclusivamente para CLAREZA (frontal vs. lateral).
@@ -234,6 +236,17 @@ const IMPACTO_CHARACTER_VARIATIONS: string[] = [
   'PESSOA EM AMBIENTE EXTERNO OU INDUSTRIAL, plano americano ou médio: personagem em movimento ou ato do ofício em espaço aberto (rua, fachada, pátio, entrada) ou ambiente de produção (oficina, galpão, estoque, cozinha profissional). Câmera contra-plongée leve, luz focal de fonte externa ou artificial industrial. Tom: intensidade e garra.',
   'SILHUETA PARCIAL OU CONTRA-LUZ, plano americano ou médio: personagem em contra-luz dramático, silhueta recortada pela fonte de luz (janela, porta, foco artificial) com postura e gesto identificáveis. Rosto não precisa ser legível — a força vem da postura. Fundo com fonte de luz visível ou desfoque de ambiente escuro.',
   'CLOSE OU PLANO PRÓXIMO, busto ou face próxima: câmera bem próxima ao personagem, detalhe de expressão de determinação ou concentração, fundo escuro com luz recortando traços do rosto ou ombros. Nenhuma ação física necessária — a proximidade e a expressão criam a intensidade. Tom: autoridade calma.',
+];
+
+// SILÊNCIO: sorteia o tipo de sujeito/objeto isolado no espaço negativo.
+// PROIBIDO: laptop ou notebook aberto como objeto principal, rosto inteiro posado,
+// dispositivos digitais com tela visível, cenas com múltiplos elementos.
+const SILENCIO_OBJECT_VARIATIONS: string[] = [
+  'OBJETO DO OFÍCIO ISOLADO, plano próximo ou zenital: um único instrumento, ferramenta, produto ou material do ofício real da empresa — tesoura sobre superfície lisa, pincel em repouso, embalagem única centralizada, frasco de produto, ferramenta manual apoiada. Sem tecnologia, sem laptop, sem notebook. Vasto espaço negativo ao redor. Câmera zenital (de cima) ou frontal limpa. Luz de janela natural, sombra suave e curta.',
+  'FRAGMENTO HUMANO COM OBJETO, plano próximo: mão ou fragmento de braço tocando delicadamente um objeto do ofício — mão aberta sobre superfície, ponta do dedo próxima a produto, palma em material de trabalho, dedos segurando objeto simples do negócio. Sem rosto, sem corpo completo. Vasto espaço negativo acima e ao redor. Composição centralizada. Luz alta-chave suave de janela lateral.',
+  'OBJETO EM SUPERFÍCIE TEXTURIZADA, plano próximo ou médio-próximo: um único objeto sobre superfície com textura visível e natural — mármore branco, madeira clara, tecido linho, papel artesanal, concreto suave. O contraste entre o objeto e a textura da superfície é a composição inteira. Sem presença humana, sem outros elementos. Câmera frontal ou levemente inclinada. Luz difusa de janela.',
+  'SILHUETA OU NUCA CONTEMPLATIVA, plano médio: personagem de costas ou de perfil extremo, ocupando menos de 25% da área total da imagem — o espaço vazio é o protagonista. Pessoa pequena diante de janela grande, parede ampla ou fundo neutro. Sem gesto significativo, sem ação — apenas presença silenciosa. Luz traseira ou lateral de janela. Sem rosto visível.',
+  'DETALHE MÍNIMO EM MACRO, plano muito próximo: textura ou detalhe de material, produto ou ambiente do negócio — grão de café, fibra de tecido, superfície de embalagem, detalhe de ferramenta, textura de material de trabalho. Sem rosto, sem texto, sem logo. Fundo desfocado em paleta suave. A beleza está no detalhe ampliado. Composição centralizada ou em regra dos terços.',
 ];
 
 // DESVIO: sorteia tipo de ruptura simbólica (não personagem).
@@ -276,6 +289,11 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     ? pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS)
     : null;
 
+  // OP-06 sorteia objeto/sujeito isolado no espaço negativo.
+  const pickedSilencio = mood === 'OP-06'
+    ? pickRandom(SILENCIO_OBJECT_VARIATIONS)
+    : null;
+
   // OP-01, OP-02, OP-03 sorteia variação de personagem.
   const characterVariationMap: Partial<Record<MoodCode, string[]>> = {
     'OP-01': CLAREZA_CHARACTER_VARIATIONS,
@@ -289,11 +307,13 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     ? pickRandom(CLAREZA_CAMERA_VARIATIONS)
     : null;
 
-  // Bloco de variação: OP-05 usa ruptura simbólica; demais usam personagem.
+  // Bloco de variação: OP-05 usa ruptura; OP-06 usa objeto; demais usam personagem.
   const variacaoBlock = pickedRuptura
     ? `\n\nTIPO DE RUPTURA SIMBÓLICA DESTA GERAÇÃO — SEGUIR EXATAMENTE:\n• ${pickedRuptura}\nDefinido pelo sistema. Usar apenas esta ruptura simbólica como elemento conceitual principal. Não substituir por outra nem acumular rupturas simultâneas.`
+    : pickedSilencio
+    ? `\n\nOBJETO/SUJEITO DESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• ${pickedSilencio}\nDefinido pelo sistema. Este é o único elemento principal da composição. Não substituir por laptop, notebook ou objeto genérico. O vasto espaço negativo ao redor é obrigatório.`
     : pickedVariation
-    ? `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${pickedCamera ? `\n• Câmera: ${pickedCamera}` : ''}\n• Personagem: ${pickedVariation}\nEstas combinações foram definidas pelo sistema. Não substituir por variação mais comum, mais segura ou que já apareceu em outra peça da campanha.`
+    ? `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${pickedCamera ? `\n• Câmera: ${pickedCamera}` : ''}\n• Personagem/Ambiente: ${pickedVariation}\nEstas combinações foram definidas pelo sistema. O ambiente especificado aqui SOBREPÕE o ambiente da leituraCenica — seguir sem substituir por variação mais genérica.`
     : '';
 
   // Regras inegociáveis específicas por mood — corrigem desvios observados
@@ -323,13 +343,16 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
       'FRAGMENTO exige EXATAMENTE 3 a 5 blocos visuais distintos costurados pela mesma paleta de 3 tons máximos. Menos de 3 blocos não é FRAGMENTO — vira CLAREZA ou SILÊNCIO. Mais de 5 blocos vira ruído visual sem ritmo. ' +
       'FRAGMENTO se aplica a qualquer segmento. Os fragmentos pertencem ao universo real do negócio (objetos do ofício, ambiente, gesto, textura de material). A leituraCenica determina o conteúdo de cada bloco; a direção visual determina COMO os blocos são fotografados e costurados.',
     'OP-05':
-      'DESVIO exige câmera angulada OBRIGATÓRIA: contra-plongée (câmera baixa olhando para cima) OU plongée (câmera alta olhando para baixo), com lente 28-35mm causando distorção de perspectiva visível. PROIBIDO câmera frontal neutra na altura dos olhos — sem o ângulo, não é DESVIO mesmo com metáfora visual presente. PROIBIDO pose de executivo sentado de blazer atrás de mesa com mãos cruzadas/entrelaçadas. ' +
-      'RUPTURA SIMBÓLICA: usar EXATAMENTE o tipo sorteado no bloco "TIPO DE RUPTURA SIMBÓLICA DESTA GERAÇÃO". Uma ruptura por cena — forte e legível, não óbvia demais. ' +
-      'VÍCIOS VISUAIS A EVITAR EM DESVIO: executivo genérico em escritório, personagem sentado atrás de mesa em pose neutra, câmera frontal reta, metáfora sem ângulo de câmera, notebook como centro automático da cena, dashboard como solução visual automática, livro voando como padrão, megafone como padrão, porta luminosa como padrão, mini pessoas sobre objetos como padrão, excesso de elementos simbólicos, surrealismo exagerado, cena confusa ou carnavalesca, plantas e vasos como recurso decorativo recorrente, repetição visual entre gerações. ' +
-      'DESVIO se aplica a qualquer segmento. O objeto ou situação fora de lugar pertence ao universo real do negócio. A leituraCenica determina a metáfora e o desvio concreto; a direção visual determina COMO é fotografado.',
+      'CÂMERA DESVIO — VERIFICAÇÃO OBRIGATÓRIA: a câmera DEVE estar visivelmente abaixo da cintura do personagem (contra-plongée) OU acima da cabeça (plongée), com lente 28-35mm e distorção de perspectiva VISÍVEL. Se ao ver a imagem a câmera parecer estar na altura dos olhos, a instrução foi IGNORADA — a peça está errada. PROIBIDO câmera frontal neutra em qualquer hipótese. ' +
+      'PALETA DESVIO — INEGOCIÁVEL: a combinação de cores DEVE ser claramente INCOMUM e imediatamente diferente dos outros moods. Combinações obrigatórias (escolher uma): verde frio com acento magenta; azul-royal profundo com ferrugem oxidada; lilás seco com mostarda; petróleo com coral queimado; vinho escuro com azul elétrico suave. PROIBIDO paleta corporativa azul+cinza, paleta escura+laranja (que é IMPACTO), paleta azul+branco (que é CLAREZA). Se a paleta puder ser confundida com outro mood, refazer. ' +
+      'AMBIENTE DESVIO — PROIBIÇÃO ABSOLUTA: NUNCA escritório corporativo genérico, sala de reunião padrão ou ambiente de trabalho convencional como cenário principal. O ambiente deve ser incomum, fora do contexto esperado ou ter elemento deslocado que amplifique o estranhamento. Exemplos válidos: área de produção com objeto fora de lugar, espaço externo com ruptura visual, ambiente doméstico com elemento profissional deslocado, galeria, espaço industrial, rua com detalhe simbólico. O ambiente AMPLIFICA o desvio — nunca o neutraliza. ' +
+      'RUPTURA SIMBÓLICA: usar EXATAMENTE o tipo sorteado no bloco "TIPO DE RUPTURA SIMBÓLICA DESTA GERAÇÃO". Uma ruptura por cena. ' +
+      'PROIBIDO: executivo de blazer em escritório, personagem sentado atrás de mesa em pose neutra, notebook como centro da cena, dashboard, livro voando, megafone, porta luminosa, mini pessoas sobre objetos, surrealismo carnavalesco.',
     'OP-06':
-      'SILÊNCIO permite no máximo 1 traço de assinatura premium flutuando no espaço negativo. Se aparecer pessoa: fragmento parcial (mão, sombra, nuca, silhueta) — NUNCA rosto inteiro posado. ' +
-      'SILÊNCIO se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, clínica, livraria, pet shop). O que muda é O QUÊ é isolado: o objeto ou fragmento pertence ao universo real do negócio. A leituraCenica determina o objeto e a superfície; a direção visual determina COMO é fotografado.',
+      'SILÊNCIO — OBJETO DESTA GERAÇÃO: seguir EXATAMENTE o objeto/sujeito definido no bloco "OBJETO/SUJEITO DESTA GERAÇÃO". Não substituir por laptop, notebook aberto, smartphone ou qualquer dispositivo digital — esses objetos são PROIBIDOS como elemento principal do SILÊNCIO. ' +
+      'ESPAÇO NEGATIVO OBRIGATÓRIO: o objeto ou fragmento humano deve ocupar NO MÁXIMO 30% da área total da composição. O restante é fundo neutro, vasto e respirado — esse espaço vazio É a mensagem. ' +
+      'Se aparecer pessoa: fragmento parcial APENAS (mão, sombra, nuca, silhueta pequena) — NUNCA rosto inteiro posado, NUNCA corpo completo. ' +
+      'SILÊNCIO se aplica a qualquer segmento. O objeto pertence ao ofício real da empresa. A leituraCenica orienta o tema; o objeto desta geração determina O QUE aparece na cena.',
   };
   const moodRuleBlock = moodRules[mood]
     ? `\n\nREGRA INEGOCIÁVEL DO MOOD ${v.nome}:\n${moodRules[mood]}`
@@ -389,6 +412,11 @@ export function pickImageVariationBlock(mood: MoodCode | undefined): string {
     return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — INSTRUÇÃO FINAL DE RUPTURA E COMPOSIÇÃO (sobrepõe o campo "Composição" da CENA DETALHADA acima — seguir exatamente, não substituir por outra): ${ruptura}`;
   }
 
+  if (mood === 'OP-06') {
+    const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
+    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — OBJETO/SUJEITO DO SILÊNCIO (sobrepõe os campos "Personagem" e "Composição" da CENA DETALHADA acima — seguir exatamente, não substituir por laptop ou dispositivo): ${objeto}`;
+  }
+
   const characterMap: Partial<Record<MoodCode, string[]>> = {
     'OP-01': CLAREZA_CHARACTER_VARIATIONS,
     'OP-02': IMPACTO_CHARACTER_VARIATIONS,
@@ -400,5 +428,5 @@ export function pickImageVariationBlock(mood: MoodCode | undefined): string {
 
   const variation = pickRandom(variations);
   const camera = mood === 'OP-01' ? `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. ` : '';
-  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — INSTRUÇÃO FINAL DE COMPOSIÇÃO E POSE (sobrepõe os campos "Composição" e "Personagem" da CENA DETALHADA acima — seguir exatamente, sem alterar): ${camera}${variation}`;
+  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — INSTRUÇÃO FINAL DE COMPOSIÇÃO, PERSONAGEM E AMBIENTE (sobrepõe os campos "Composição", "Personagem" e "Ambiente" da CENA DETALHADA acima — seguir exatamente, incluindo o ambiente especificado): ${camera}${variation}`;
 }
