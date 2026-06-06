@@ -9,6 +9,18 @@ const OBJETIVO_TOM: Record<string, string> = {
   aviso: 'institucional, claro, objetivo',
   oportunidade: 'urgência elegante, momento decisivo',
   institucional: 'institucional de marca, posicionamento, propósito, sóbrio e confiante',
+  fatos: 'documental, registro fiel, objetivo',
+  nenhum: 'neutro, livre — foco no contexto real da empresa',
+};
+
+const OBJETIVO_INTENCAO: Record<string, string> = {
+  institucional: 'Construa confiança, presença e identidade. Mostre como a empresa atua, cuida ou se posiciona. Evite promessa comercial, urgência e frase grandiosa.',
+  promocao: 'Gere desejo e movimento comercial. Destaque produto, benefício ou condição de forma simples e atrativa. Sem inventar preço, desconto ou prazo não informado.',
+  oportunidade: 'Mostre chance, momento favorável ou próximo passo concreto. Sem urgência falsa, clichê motivacional ou promessa de futuro garantido.',
+  aviso: 'Informe com objetividade e leitura rápida. Sem dramatização, suspense ou excesso de gentileza que esconda a informação.',
+  homenagem: 'Reconheça, valorize ou celebre com humanidade e simplicidade. Sem clichê sentimental, frase de calendário ou emoção forçada.',
+  fatos: 'Registre o que aconteceu com fidelidade e objetividade. Sem dramatizar, inventar emoção ou transformar em campanha.',
+  nenhum: 'Seja útil para comunicação de negócio, marca, produto ou serviço. Evite frase decorativa, motivacional genérica ou texto sem função mercadológica.',
 };
 
 export const Route = createFileRoute('/api/generate-pu-copy')({
@@ -74,7 +86,7 @@ Proibido mencionar literalmente o nome da voz no texto final.
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
 ${segmentBlock}${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
-INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
+${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` : ''}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
 {
@@ -87,6 +99,8 @@ Regras:
 - "texto" no máximo 14 palavras, frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji
 - Português brasileiro, sem inglês, sem markdown
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
+- Linguagem simples, natural e profissional. Ensino médio deve entender sem esforço. Evite "maximizar", "estratégias eficazes", "impacto real", "soluções digitais", "transformar seu negócio". Prefira: "melhorar", "vender", "organizar", "atender", "crescer", "mostrar".
+- O título deve soar natural — evite sintaxe artificial, metáfora confusa ou promessa exagerada.
 - Interprete a informação-chave com criatividade — NÃO copie literal
 - PROIBIDO ABSOLUTO usar as palavras: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". Use sinônimos.
 - PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
@@ -103,7 +117,7 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
             body: JSON.stringify({
               model: 'gpt-4.1-mini',
               messages: [
-                { role: 'system', content: 'Você é diretor de criação publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
+                { role: 'system', content: 'Você é diretor de criação publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. Prefira sempre a palavra mais simples: "ganho" em vez de "resultado percebido", "melhorar" em vez de "otimizar", "vender" em vez de "converter". Antes de retornar: título soa natural? texto é claro para ensino médio? algum termo reservado (clareza/impacto/instante/fragmento/desvio/silêncio) apareceu? Se sim, reescreva.' },
                 { role: 'user', content: userPrompt },
               ],
               temperature: 0.95,

@@ -138,6 +138,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           topicoGuia,
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
+          brandVoice: data.brandVoice || '',
         }),
       });
       if (!res.ok) {
@@ -180,6 +181,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           attempt,
           subMode: 'refinar',
           previousSuggestions: allSessionSuggestionsRef.current,
+          brandVoice: data.brandVoice || '',
         }),
       });
       if (!res.ok) {

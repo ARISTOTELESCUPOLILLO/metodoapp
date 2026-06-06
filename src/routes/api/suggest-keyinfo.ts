@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { detectEditorialProfile } from '@/data/editorialProfiles';
+import { getVoiceProfile } from '@/data/brandVoice';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -53,6 +54,12 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const audience: Aud = (AUDIENCES as readonly string[]).includes(body.audience) ? (body.audience as Aud) : 'B2C';
           const isB2C = audience === 'B2C';
 
+          const brandVoice = String(body.brandVoice || '').slice(0, 80);
+          const voiceProfile = getVoiceProfile(brandVoice);
+          const voiceBlock = voiceProfile
+            ? `VOZ DA MARCA — "${voiceProfile.label}": ritmo: ${voiceProfile.ritmo}. Vocabulário: ${voiceProfile.vocabulario}. Registro: ${voiceProfile.registro}. Evitar: ${voiceProfile.evitar}.\n`
+            : `LINGUAGEM: frases curtas, ordem direta, palavras do dia a dia. Profissional e mercadológico, sem jargão corporativo, sem termos técnicos. Uma ideia por frase.\n`;
+
           const preservaHint = hint
             ? `REGRA CRÍTICA DA PISTA: preserve o SENTIDO da pista do usuário (positivo, neutro ou crítico). Refine a FORMA, NUNCA inverta a intenção. Se a pista é positiva (ex.: "20 anos fazendo parte da vida da cidade"), NÃO transforme em dor/estagnação/crítica. Se é neutra, mantenha neutra. Se já carrega tensão, pode aprofundar.`
             : '';
@@ -72,13 +79,13 @@ PASSO 3 — REENQUADRAR SEM TRAIR A IDEIA ORIGINAL: ajuste para o ângulo corret
 PASSO 4 — ENRIQUECER COM 4 CAMADAS: [ASSUNTO] + [CONTEXTO] + [TENSÃO, DOR OU OPORTUNIDADE] + [DIREÇÃO DESEJADA].
 
 ${proibicoesInventar}
-LINGUAGEM: use palavras simples e do dia a dia. PROIBIDO: termos técnicos, jargões, palavras difíceis ou rebuscadas. Qualquer pessoa deve entender sem precisar conhecer o setor.`;
+LINGUAGEM: uma ideia principal, ordem direta, palavras comuns. Uma pessoa com ensino médio deve entender sem esforço. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", termos técnicos de consultoria. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "responder rápido" a "reduzir tempo de resposta".`;
 
           const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE OP:
 Construa com 4 camadas obrigatórias: [ASSUNTO] + [CONTEXTO] + [TENSÃO, DOR OU OPORTUNIDADE] + [DIREÇÃO DESEJADA].
 Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.
 ${proibicoesInventar}
-LINGUAGEM: use palavras simples e do dia a dia. PROIBIDO: termos técnicos, jargões, palavras difíceis ou rebuscadas. Qualquer pessoa deve entender sem precisar conhecer o setor.`;
+LINGUAGEM: uma ideia principal, ordem direta, palavras comuns. Uma pessoa com ensino médio deve entender sem esforço. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", termos técnicos de consultoria. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "responder rápido" a "reduzir tempo de resposta".`;
 
           // ── Público-alvo — regra crítica para B2C vs B2B ──────────────────
           const audienceDirective = isB2C
@@ -86,9 +93,10 @@ LINGUAGEM: use palavras simples e do dia a dia. PROIBIDO: termos técnicos, jarg
 A Informação-chave deve falar com a PESSOA, não com o empresário.
 PROIBIDO no texto gerado: "empreendedor", "empresário", "empresária", "gestor", "gestora", "decisor", "liderança", "equipe", "time", "empresa cliente", "negócio" como sujeito.
 Escreva como se estivesse falando com alguém que usa o produto/serviço na própria vida.`
-            : `PÚBLICO-ALVO: DECISOR EMPRESARIAL (B2B).
-A Informação-chave deve falar com o gestor, diretor ou responsável pela área.
-Foque em eficiência, previsibilidade, risco operacional e resultado para o negócio.`;
+            : `PÚBLICO-ALVO: EMPRESARIAL (B2B).
+A Informação-chave deve falar com o dono, sócio, gestor ou responsável pelo negócio.
+Foque em situações reais de trabalho: atendimento, resultado, organização, vendas, prazo, confiança ou crescimento.
+Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".`;
 
           // ── Progressão do Método OP ────────────────────────────────────────
           const progressaoB2C = segment === 'VAREJO'
@@ -122,6 +130,7 @@ NOTA DO MÉTODO: ${editorialProfile.notaMetodo}`
             ? `ASSUNTO OBRIGATÓRIO desta sugestão (siga sempre, mesmo que haja texto anterior no campo):
 Categoria: ${topicoGuia.categoria}
 Perspectiva: "${topicoGuia.item}"
+Interprete este assunto dentro da atividade real da empresa acima. Mostre uma situação prática do dia a dia — não um conceito genérico. A atividade da empresa dá o contexto concreto.
 Gere a sugestão SOBRE este assunto específico. Não substitua este assunto pelo texto anterior do usuário.`
             : '';
 
@@ -142,7 +151,7 @@ Gere a sugestão SOBRE este assunto específico. Não substitua este assunto pel
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
+${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${audienceDirective}
 
@@ -176,7 +185,7 @@ Retorne JSON EXATAMENTE assim:
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
+${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${audienceDirective}
 
@@ -212,7 +221,7 @@ Retorne JSON EXATAMENTE assim:
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
+${voiceBlock}SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
 ${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${preservaHint}
@@ -245,7 +254,7 @@ Retorne JSON EXATAMENTE assim:
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
+${voiceBlock}SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
 ${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
 
 ${preservaHint}
@@ -278,7 +287,9 @@ Retorne JSON EXATAMENTE assim:
 
           const metodoRefinarTensao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
 ${audienceDirective}
 
@@ -290,7 +301,8 @@ INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + DOR/CONFLITO + DIREÇÃO)
 3. Refine a forma e o ângulo a partir do texto do usuário, sem inventar assunto diferente
-4. PROIBIDO: inventar assunto diferente do texto original
+4. Se o texto estiver genérico ou abstrato, traga-o para uma situação prática ligada à atividade real da empresa e ao dia a dia do público — sem mudar o assunto original.
+5. PROIBIDO: inventar assunto diferente do texto original
 
 ${criteriosRefinamentoOP}
 
@@ -309,7 +321,9 @@ Retorne JSON EXATAMENTE assim:
 
           const metodoRefinarMotivacao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
 ${audienceDirective}
 
@@ -321,7 +335,8 @@ INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + DESEJO/CONQUISTA + DIREÇÃO)
 3. Refine a forma e o ângulo a partir do texto do usuário, sem inventar assunto diferente
-4. PROIBIDO: inventar assunto diferente do texto original
+4. Se o texto estiver genérico ou abstrato, traga-o para uma situação prática ligada à atividade real da empresa e ao dia a dia do público — sem mudar o assunto original.
+5. PROIBIDO: inventar assunto diferente do texto original
 
 ${criteriosRefinamentoOP}
 
@@ -339,7 +354,9 @@ Retorne JSON EXATAMENTE assim:
 
           const marcaRefinarIdentidade = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+${voiceBlock}SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
 TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
 ${preservaHint}
@@ -350,7 +367,8 @@ INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + IDENTIDADE/PROPÓSITO + DIREÇÃO)
 3. Refine a partir do texto do usuário mantendo o tom institucional, sem trocar o assunto
-4. PROIBIDO: inventar assunto diferente do texto original, linguagem de venda, urgência, dor do cliente
+4. Se o texto estiver genérico ou abstrato, traga-o para uma situação prática ligada à atividade real da empresa — sem mudar o assunto original.
+5. PROIBIDO: inventar assunto diferente do texto original, linguagem de venda, urgência, dor do cliente
 
 ${criteriosRefinamentoOP}
 
@@ -367,7 +385,9 @@ Retorne JSON EXATAMENTE assim:
 
           const marcaRefinarLegado = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
-SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
+EMPRESA: ${companyName || '(não informada)'}
+ATIVIDADE: ${mainActivity || '(não informada)'}
+${voiceBlock}SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
 TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
 
 ${preservaHint}
@@ -378,7 +398,8 @@ INSTRUÇÃO DE REFINAMENTO:
 1. Identifique a qual categoria editorial o texto pertence: Cliente / Produto ou Serviço / Problema / Solução / Novidade ou Oportunidade
 2. Reescreva no formato Método OP: 1 linha curta com 4 camadas implícitas (ASSUNTO + CONTEXTO + LEGADO/PERCEPÇÃO + DIREÇÃO)
 3. Refine a partir do texto do usuário mantendo o tom institucional, sem trocar o assunto
-4. PROIBIDO: inventar assunto diferente do texto original, linguagem comercial, dor do cliente, inversão negativa de pista positiva
+4. Se o texto estiver genérico ou abstrato, traga-o para uma situação prática ligada à atividade real da empresa — sem mudar o assunto original.
+5. PROIBIDO: inventar assunto diferente do texto original, linguagem comercial, dor do cliente, inversão negativa de pista positiva
 
 ${criteriosRefinamentoOP}
 
@@ -439,7 +460,7 @@ Retorne JSON EXATAMENTE assim:
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
-            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule.'
+            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico desnecessário? (3) segmento e atividade estão refletidos? Se não, reescreva.'
             : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule.';
 
           const res = await fetch('https://api.openai.com/v1/chat/completions', {
