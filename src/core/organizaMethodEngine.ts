@@ -74,6 +74,48 @@ function buildPostProgression(qty: number, entrada: string, isB2BOperational: bo
   return `- Post 1: ${ativacao}\n- Post 2: Amplia o contexto\n- Post 3: Aplica entendimento\n- Post 4: Segurança${segurancaNote}\n- Post 5: Confiança ou autoridade\n- Post 6: Conduz à ação`;
 }
 
+function buildCommunicativeFunctionMap(
+  comp: { estatico: number; carrossel: number; fechamento: number },
+  isVisualOrExperimentacao: boolean,
+  progressionStages: string[]
+): string {
+  const fnMap: Record<string, { label: string; desc: string }> = {
+    'IDENTIFICAÇÃO':  { label: 'EDUCATIVO + INSPIRACIONAL', desc: 'nomeia a realidade do público como espelho — a marca entende, não vende' },
+    'RECONHECIMENTO': { label: 'INSPIRACIONAL',             desc: 'revela a marca e cria reconhecimento — sem CTA, sem argumento comercial' },
+    'DESEJO':         { label: 'INSPIRACIONAL',             desc: 'mostra o que é possível alcançar — cria desejo sem pressionar' },
+    'ENTENDIMENTO':   { label: 'EDUCATIVO + INFORMATIVO',   desc: 'esclarece o contexto ou problema — demonstra entendimento do receptor' },
+    'SEGURANÇA':      { label: 'INFORMATIVO + PERSUASIVO',  desc: 'apresenta evidências e casos concretos — começa a construir preferência' },
+    'CONFIANÇA':      { label: 'PERSUASIVO',                desc: 'consolida autoridade e relação — o receptor percebe a empresa como referência' },
+    'AUTORIDADE':     { label: 'PERSUASIVO',                desc: 'posiciona como referência — pode mencionar resultados e diferenciais' },
+    'AGIR':           { label: 'CONVENCIMENTO',             desc: 'convida à ação de forma consultiva — pode nomear o que a empresa oferece' },
+  };
+
+  const lines: string[] = [];
+
+  for (let i = 0; i < comp.estatico; i++) {
+    const stage = progressionStages[i] || progressionStages[0];
+    const fn = fnMap[stage] || { label: 'EDUCATIVO + INFORMATIVO', desc: 'contextualiza e informa' };
+    lines.push(`Estático ${i + 1} [${stage}] → ${fn.label}: ${fn.desc}`);
+  }
+
+  if (comp.carrossel > 0) {
+    lines.push(
+      `Carrossel — arco interno de 5 cards:`,
+      `  Card 1 (abertura)            → EDUCATIVO: abre com o problema ou aspiração que o público reconhece`,
+      `  Cards 2-3 (desenvolvimento)  → INFORMATIVO: detalha e exemplifica com evidência concreta da atividade`,
+      `  Card 4 (direção)             → PERSUASIVO: apresenta a direção — sem CTA, sem nomear a empresa`,
+      `  Card 5 (ação)                → CONVENCIMENTO: consolida e convida — pode citar o que a empresa entrega`
+    );
+  }
+
+  const fechamentoTipo = isVisualOrExperimentacao ? 'Estático Final' : 'Reels';
+  if (comp.fechamento > 0) {
+    lines.push(`${fechamentoTipo} → CONVENCIMENTO: consolida toda a progressão e convida à ação — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`);
+  }
+
+  return lines.join('\n');
+}
+
 export function buildMetodoOpPrompt(data: ContentFormData): string {
   const isB2B = data.audience === 'B2B';
   const segConfig = isB2B ? segmentConfigB2B : segmentConfigB2C;
@@ -175,7 +217,8 @@ ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
 - Retornar em "feed": [{ "dia", "formato":"Estático", "titulo", "texto", "legenda", "imagem", "leituraCenica": { "intencao": "o que este post ativa emocionalmente", "personagem": "quem aparece na cena e o que faz", "ambiente": "onde a cena acontece com detalhes físicos", "expressao": "expressão facial e corporal do personagem", "clima": "luz, hora do dia, atmosfera", "composicao": "como os elementos se organizam no quadro" } }]
 
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 cards cada):
-- Cada carrossel tem exatamente 5 cards: abertura → desenvolvimento → aprofundamento → direção → ação.
+- Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
+- Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa. Card 5 pode citar o que a empresa entrega e tem CTA na legenda.
 - Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL; imagePrompt próprio.
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "organização dos elementos no quadro" } }, ...] }]
 ${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ''}
@@ -284,6 +327,16 @@ Proibido mencionar literalmente o nome da voz no texto final.`
 A voz governa ritmo, vocabulário e registro emocional.
 Proibido mencionar literalmente a voz no texto final.`;
 
+  const progressionStages = progressionText.split(' → ');
+  const communicativeFunctionsMap = buildCommunicativeFunctionMap(comp, isVisualOrExperimentacao, progressionStages);
+  const mercadologicalFrameBlock = `10. FRAME DE COMUNICAÇÃO MERCADOLÓGICA:
+EMISSOR: ${data.companyName} — fala com voz própria e consistente. Não precisa ser nomeada em cada peça: a coerência de voz, os exemplos concretos da atividade e o eixo da keyInfo identificam o emissor. Nomear a empresa repetidamente torna a comunicação fraca.
+RECEPTOR: ${isB2B ? 'decisor empresarial' : 'consumidor final'} — situação atual: "${seg.entrada}" / bloqueio a superar: "${seg.bloqueio}".
+INTENÇÃO: conduzir o receptor da situação atual até a decisão de escolher esta empresa — usando educação, informação, inspiração, persuasão e convencimento como ferramentas progressivas e distintas.
+FUNÇÕES COMUNICATIVAS POR PEÇA:
+${communicativeFunctionsMap}
+REGRA: peças EDUCATIVO/INSPIRACIONAL não fazem CTA nem mencionam a empresa. Peças INFORMATIVO/PERSUASIVO podem aludir à solução. Somente CONVENCIMENTO faz CTA explícito e nomeia o que a empresa oferece.`;
+
   return `Você é o motor estratégico do MÉTODO OP. Retorne SOMENTE JSON válido, sem markdown, sem comentários.
 ${trackHeader}
 CONTEXTO:
@@ -303,6 +356,7 @@ ANÁLISE INTERNA — NÃO EXIBIR NO TEXTO FINAL:
 7. PROIBIDO ABSOLUTO mencionar os nomes dos moods/templates internos em QUALQUER campo de texto exibido (titulo, texto, legenda, hook, screenText, script, cards do carrossel). Palavras BANIDAS no conteúdo final: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood", "moods", "template OP". Use SEMPRE sinônimos ou perífrases. Ex.: em vez de "clareza" → "direção definida", "leitura simples", "entendimento sem ruído"; em vez de "impacto" → "efeito imediato", "marca forte"; em vez de "silêncio" → "pausa", "respiro"; em vez de "instante" → "momento", "agora"; em vez de "fragmento" → "recorte", "pedaço"; em vez de "desvio" → "outro caminho", "ângulo inesperado".
 8. PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
 9. Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado em nenhum campo do JSON.
+${mercadologicalFrameBlock}
 
 DIREÇÃO DE LINGUAGEM:
 - ${audienceDirection}
