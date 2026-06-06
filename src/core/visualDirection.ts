@@ -12,11 +12,9 @@
 // CAMADA 2 — Gramática visual por Mood (luz, paleta, composição, câmera): como
 //   antes, governa COMO a cena é fotografada.
 //
-// CAMADA 3 — Modulação por Segmento (Serviços/Varejo/Marca): cada combinação
-//   ativa carrega uma referência concreta de mercado e uma proibição literal
-//   contra a "fórmula preguiçosa default" daquele segmento. Sem essa camada,
-//   o motor cai no clichê neutro (executiva no escritório, produto em fundo
-//   branco, abstrato corporativo) sempre que o brief não tem direção forte.
+// CAMADA 3 — Modulação por Segmento (Serviços/Varejo/Marca): referência de
+//   mercado e proibições prioritárias selecionadas conforme mood + segmento.
+//   Não enviar integralmente — apenas negativas relevantes ao caso.
 
 import { MoodCode, Segment } from '../types';
 
@@ -36,12 +34,10 @@ interface VisualDirection {
 }
 
 interface SegmentLayer {
-  // 2-3 referências reais de mercado brasileiro/global que ilustram o que
-  // VENDE naquele segmento com aquela tensão visual.
+  // Conceito de mercado em 1-2 frases — referência interna de direção.
   referenciaConcreta: string;
-  // Descrição literal da fórmula preguiçosa default que o modelo entrega
-  // quando o prompt está fraco — proibida.
-  proibicaoStock: string;
+  // Vícios visuais e stock genérico a evitar — compacto, contextual.
+  evitar: string;
 }
 
 const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
@@ -107,91 +103,93 @@ const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
   },
 };
 
-// Modulação por segmento — só preenche as combinações ATIVAS conforme
-// recommendedFor do templateCatalog. Combinação ausente = fallback silencioso.
+// Modulação por segmento — referência interna compacta.
+// Apenas as negativas prioritárias devem ser enviadas ao prompt final —
+// não enviar a tabela inteira. Quando um elemento fizer sentido real para
+// o negócio e o tema, pode aparecer desde que não contrarie a gramática do mood.
 const SEGMENT_LAYERS: Record<MoodCode, Partial<Record<Segment, SegmentLayer>>> = {
   'OP-01': {
     SERVIÇOS: {
-      referenciaConcreta: 'editorial de serviço profissional com personalidade de nicho (referência: consultório médico bem documentado, escritório de advocacia com caráter, clínica veterinária com calor humano, ateliê criativo, estúdio de arquitetura, clínica de estética, consultoria local) — profissional retratado em ato real do ofício específico, ambiente funcional e reconhecível do nicho, gesto e objeto derivados da atividade declarada no kit de marca; a leituraCenica desta peça determina o que o profissional faz e onde está — a câmera registra aquele momento real, não um ambiente corporativo genérico',
-      proibicaoStock: 'PROIBIDO: executivo/a de blazer posado para câmera com laptop, sorriso largo institucional, escritório cenográfico clean, headset, pessoa apontando para gráfico imaginário, aperto de mãos, equipe diversa em volta de mesa de reunião. PROIBIDO TAMBÉM: ambiente de escritório genérico quando a atividade da empresa for um serviço presencial específico (clínica, consultório, ateliê, estúdio, oficina, salão) — o ambiente deve pertencer ao ofício real declarado no kit de marca',
+      referenciaConcreta: 'Editorial de serviço com identidade de nicho: profissional em ato real do ofício, ambiente funcional e reconhecível, gesto derivado da atividade declarada no kit de marca.',
+      evitar: 'executivo/a de blazer posado como solução automática, laptop como barreira visual, sorriso largo institucional, headset genérico, aperto de mãos, equipe em reunião de banco de imagem, ambiente corporativo genérico quando o serviço é presencial, técnico, operacional ou local.',
     },
     VAREJO: {
-      referenciaConcreta: 'editorial de varejo com identidade de nicho (referência: padaria artesanal fotografada com afeto, loja de ferramentas com ambiente de ofício, pet shop com calor humano, livraria com atmosfera de curadoria, loja de moda com lifestyle coerente ao produto, farmácia com cuidado, loja de cosméticos com ritual) — produto em uso real ou no contexto onde vive, ambiente da loja ou do universo do produto, pessoa em gesto de compra, uso ou produção derivado do tipo de produto; a leituraCenica desta peça determina produto, ambiente e gesto — a câmera registra aquele contexto real, não uma vitrine genérica',
-      proibicaoStock: 'PROIBIDO: produto em fundo branco de e-commerce, vitrine genérica sem identidade, modelo posando neutra sem contexto de uso, etiqueta de preço gigante, ambiente de shopping genérico quando o negócio for de bairro ou especializado — o cenário deve pertencer ao universo real do produto e da empresa',
+      referenciaConcreta: 'Editorial de varejo com identidade de produto: produto em uso real ou no contexto onde vive, pessoa em gesto de compra, uso ou produção derivado do universo real do produto.',
+      evitar: 'produto isolado em fundo branco de e-commerce, vitrine genérica sem contexto de uso, modelo posando neutro sem relação com o produto, exposição limpa demais sem vida real, composição fria demais a ponto de parecer SILÊNCIO.',
     },
     MARCA: {
-      referenciaConcreta: 'manifesto visual de marca com identidade própria (referência: qualquer marca que usa imagem para comunicar propósito — padaria de bairro com manifesto de artesanato, clínica com manifesto de cuidado, loja com manifesto de curadoria, serviço local com propósito declarado) — símbolo ou território da marca em composição simétrica respirada, elemento humano ou de produto coerente com o posicionamento declarado no kit de marca; a leituraCenica desta peça determina o que representa a marca — a câmera registra esse símbolo com seriedade e limpeza',
-      proibicaoStock: 'PROIBIDO: collage de "diversidade corporativa", grupo posando sorrindo, abstrato genérico sem narrativa, símbolo desconectado da atividade real da marca — o elemento visual deve ser reconhecível como pertencente ao universo específico dessa marca',
+      referenciaConcreta: 'Manifesto visual de marca com identidade própria: símbolo ou território da marca em composição simétrica respirada, elemento coerente com o posicionamento declarado no kit.',
+      evitar: 'collage de diversidade corporativa genérica, grupo posando sorrindo para câmera, abstrato genérico sem ligação com a atividade real, símbolo solto desconectado do contexto, imagem institucional sem ação, sem objeto claro e sem leitura de marca.',
     },
   },
   'OP-02': {
     SERVIÇOS: {
-      referenciaConcreta: 'fotografia de serviço com dramaticidade de nicho (qualquer ofício — cirurgião veterinário em procedimento, advogado saindo do tribunal, médico em diagnóstico urgente, chef no auge da produção, mecânico de precisão, professora em entrega máxima, fisioterapeuta em sessão intensa) — profissional no momento de máxima intensidade do ofício, luz focal recortando gesto e expressão, ambiente que pertence ao espaço real do serviço; a leituraCenica desta peça determina o profissional, o gesto e o ambiente — a câmera registra com dramaticidade, não com pose',
-      proibicaoStock: 'PROIBIDO: executivo posado em sala de reunião, gráfico/dashboard como cenário de fundo, modelo de stock de blazer com headset, pose de "apresentação para clientes", ambiente corporativo genérico quando a atividade da empresa for presencial e específica — o ambiente deve pertencer ao ofício real',
+      referenciaConcreta: 'Fotografia de serviço com dramaticidade: profissional no momento de máxima intensidade do ofício, luz focal recortando gesto e expressão, ambiente pertencente ao espaço real.',
+      evitar: 'executivo em sala de reunião como padrão, dashboard de fundo como solução automática, headset genérico, pose de apresentação para clientes, personagem parado em autoridade artificial, escritório escuro repetido.',
     },
     VAREJO: {
-      referenciaConcreta: 'fotografia de produto com dramaticidade cinematográfica (qualquer categoria — pão artesanal como herói contra fundo escuro, ferramenta técnica recortada pela luz focal, produto de pet em close dramático, peça de roupa com movimento congelado pela luz, produto de beleza com textura revelada pelo facho) — produto ou sujeito recortado pela luz como protagonista absoluto, fundo dramático que serve o produto, gesto humano derivado do universo real do produto; a leituraCenica desta peça determina o produto e o gesto — a câmera aplica dramaticidade cinematográfica sobre aquele universo específico',
-      proibicaoStock: 'PROIBIDO: produto em fundo branco de e-commerce, vitrine genérica sem tensão visual, modelo posando neutra com produto na mão, etiqueta de preço gigante, mosaico de produtos lado a lado',
+      referenciaConcreta: 'Fotografia de produto com dramaticidade cinematográfica: produto ou sujeito recortado pela luz como protagonista absoluto, fundo dramático que serve o produto.',
+      evitar: 'produto em fundo branco, vitrine sem tensão visual, modelo posando neutro, mosaico de produtos lado a lado, composição de catálogo comum.',
     },
     MARCA: {
-      referenciaConcreta: 'manifesto visual de marca com dramaticidade cinematográfica (qualquer marca — padaria artesanal com manifesto de craft em alta intensidade, clínica com manifesto de urgência e cuidado, loja especializada com manifesto de posicionamento, serviço local com manifesto de propósito declarado com força) — símbolo ou território da marca recortado pela luz dramática, atitude inconfundível derivada do posicionamento real da marca; a leituraCenica desta peça determina o símbolo e a atitude — a câmera registra com intensidade cinematográfica',
-      proibicaoStock: 'PROIBIDO: pessoa posando institucional, fundo de gráfico, qualquer cena de reunião corporativa, símbolo genérico desconectado da atividade real da marca',
+      referenciaConcreta: 'Manifesto visual de marca com dramaticidade: símbolo ou território da marca recortado pela luz dramática, atitude inconfundível derivada do posicionamento real da marca.',
+      evitar: 'pessoa posando institucional, fundo de gráfico como recurso genérico, cena de reunião, símbolo abstrato sem força, imagem corporativa escura sem tensão real.',
     },
   },
   'OP-03': {
     VAREJO: {
-      referenciaConcreta: 'fotografia documental de varejo real (qualquer tipo de loja — padaria de bairro com vapor da máquina, loja de ferramentas com cliente examinando produto, pet shop com animal no colo do atendente, livraria com frequentador absorto, farmácia com atendimento real, loja de roupas com cliente experimentando) — flagrante genuíno do momento real, dono ou atendente em ação, cliente interagindo, produto sendo usado ou escolhido; a leituraCenica desta peça determina o tipo de loja, produto e momento — a câmera captura aquele flagrante específico',
-      proibicaoStock: 'PROIBIDO: cena posada com modelo sorrindo para câmera, vitrine arrumada perfeitamente, produto isolado em superfície limpa, fundo branco, qualquer cena que pareça fotografada para marketing',
+      referenciaConcreta: 'Fotografia documental de varejo real: flagrante genuíno do momento — dono, atendente ou cliente em interação, produto sendo usado ou escolhido.',
+      evitar: 'modelo sorrindo para câmera, cena posada, produto isolado em superfície limpa, fundo branco, vitrine arrumada demais sem ação, fotografia com cara de catálogo.',
     },
     SERVIÇOS: {
-      referenciaConcreta: 'fotografia documental de serviço em ação real (qualquer nicho — veterinária examinando animal, médico em consulta real, advogado no corredor do fórum, cabeleireiro em movimento, chef em produção, professora explicando, fisioterapeuta em sessão, marceneiro na bancada, dentista em procedimento) — profissional flagrado em momento real de trabalho sem pose, gesto e ambiente pertencentes ao ofício específico; a leituraCenica desta peça determina o profissional, o gesto e o ambiente — a câmera captura aquele momento de trabalho real',
-      proibicaoStock: 'PROIBIDO: executivo posado, sorriso institucional, sala de reunião cenográfica, qualquer cena montada para câmera, ambiente genérico que não pertença ao ofício específico declarado no kit de marca',
+      referenciaConcreta: 'Fotografia documental de serviço em ação real: profissional flagrado em momento real de trabalho sem pose, gesto e ambiente pertencentes ao ofício específico.',
+      evitar: 'executivo posado, sorriso institucional, sala de reunião cenográfica, personagem olhando para câmera, cena limpa e montada demais, papel, bolsa ou caderno como solução automática.',
     },
     MARCA: {
-      referenciaConcreta: 'fotografia documental da marca em seu território real (qualquer marca — padaria com sua produção real, clínica com seus momentos de cuidado, loja especializada com seus clientes reais, serviço com seus profissionais em flagrante de trabalho) — pessoas reais no território real da marca, momento espontâneo que revela o propósito sem precisar declarar; a leituraCenica desta peça determina o território e o momento — a câmera captura sem pose',
-      proibicaoStock: 'PROIBIDO: collage de stock "people of the world", grupo posando, qualquer cena montada de "diversidade corporativa", cenas que pareçam publicidade padrão com iluminação de estúdio',
+      referenciaConcreta: 'Fotografia documental da marca em seu território real: pessoas reais, momento espontâneo que revela o propósito sem precisar declarar.',
+      evitar: 'collage stock "people of the world", grupo posando, iluminação de estúdio, cena institucional montada, diversidade corporativa genérica, sorriso forçado.',
     },
   },
   'OP-04': {
     SERVIÇOS: {
-      referenciaConcreta: 'editorial modular de serviço com identidade de nicho (qualquer ofício — grade costurando: mão do veterinário com animal + instrumento em detalhe macro + ambiente da clínica + textura de material de trabalho; ou chef em ação + ingrediente em macro + ambiente da cozinha + textura do prato; ou advogado em postura + objeto do processo em detalhe + ambiente do escritório + anotação manuscrita) — 3 a 5 blocos heterogêneos que juntos revelam o universo do serviço específico; a leituraCenica desta peça determina os fragmentos que compõem este ofício',
-      proibicaoStock: 'PROIBIDO: collage genérica de fotos de stock empilhadas, infográfico digital com ícones flat, "moodboard" Pinterest amador, blocos com pessoas diferentes sorrindo cada uma pra câmera',
+      referenciaConcreta: 'Editorial modular de serviço: grade costurando 3-5 blocos heterogêneos que revelam o universo do serviço — mãos, instrumentos, ambiente, textura de material.',
+      evitar: 'collage genérica de stock empilhada, infográfico flat com ícones óbvios, moodboard amador estilo Pinterest, blocos visuais sem hierarquia, excesso de imagens sem narrativa.',
     },
     VAREJO: {
-      referenciaConcreta: 'editorial de varejo curado com identidade de produto (qualquer categoria — grade costurando: produto em detalhe + ambiente onde ele vive + mão usando ou escolhendo + textura do material; funciona para ferramentas, alimentos artesanais, produtos de pet, cosméticos, livros, roupas, utilidades domésticas, materiais de construção) — cada bloco revela um aspecto do universo do produto específico; a leituraCenica desta peça determina os 3-5 fragmentos que compõem o universo deste produto',
-      proibicaoStock: 'PROIBIDO: grid de produtos em fundo branco de e-commerce, mosaico de Instagram com filtro, collage de modelo posando em 4 ângulos diferentes',
+      referenciaConcreta: 'Editorial de varejo curado: grade costurando produto em detalhe, ambiente onde vive, gesto e textura — cada bloco revela um aspecto do universo do produto.',
+      evitar: 'grid de produtos em fundo branco de e-commerce, mosaico de Instagram com filtro, catálogo visual sem ritmo, repetição de produtos sem leitura editorial.',
     },
     MARCA: {
-      referenciaConcreta: 'manifesto visual modular de marca (qualquer marca — grade costurando: gente real da marca + lugar onde a marca vive + gesto que define o propósito + símbolo ou objeto da marca; funciona para padaria local, clínica, loja especializada, consultoria, marca de produto artesanal, serviço de nicho) — blocos heterogêneos que juntos revelam o território da marca específica; a leituraCenica desta peça determina os fragmentos que definem esta marca',
-      proibicaoStock: 'PROIBIDO: collage genérica de "diversidade corporativa", grid de pessoas felizes posando, mosaico abstrato de cores e formas geométricas sem narrativa, infográfico institucional flat',
+      referenciaConcreta: 'Manifesto visual modular de marca: grade costurando gente real, lugar, gesto e símbolo — blocos heterogêneos que revelam o território da marca específica.',
+      evitar: 'grid de pessoas felizes posando, mosaico abstrato de formas geométricas sem narrativa, colagem corporativa genérica, múltiplos elementos sem assinatura editorial.',
     },
   },
   'OP-05': {
     MARCA: {
-      referenciaConcreta: 'campanha conceitual de marca com metáfora visual (qualquer marca — padaria com objeto do ofício fora de lugar, clínica com ruptura simbólica no ambiente de cuidado, loja especializada com produto em escala ou contexto inesperado, serviço com profissional em situação deslocada mas legível) — metáfora visual concreta como peça central, objeto real do universo da marca fora de lugar com intenção clara, leitura de duas camadas que revela o propósito; a leituraCenica desta peça determina a metáfora e o objeto — a câmera aplica o desvio sobre o universo real desta marca específica',
-      proibicaoStock: 'PROIBIDO: executivo posado em sala de reunião com paleta diferente, abstrato corporativo genérico, "people-of-the-world" sorrindo, fundo de gráfico/dashboard, pessoa apresentando para câmera, qualquer cena institucional padrão maquiada com cor estranha. PROIBIDO TAMBÉM: executivo sentado de blazer atrás de mesa com mãos cruzadas/entrelaçadas, mesmo que a cena ao redor seja conceitual — essa pose anula o mood DESVIO instantaneamente.',
+      referenciaConcreta: 'Campanha conceitual de marca com metáfora visual: objeto real do universo da marca fora de lugar com intenção clara, leitura de duas camadas que revela o propósito.',
+      evitar: 'executivo em sala de reunião com paleta diferente, abstrato corporativo genérico, executivo sentado de blazer com mãos cruzadas mesmo com cena conceitual ao redor, símbolo solto sem relação com a atividade, surrealismo exagerado, excesso de metáforas simultâneas.',
     },
     SERVIÇOS: {
-      referenciaConcreta: 'campanha de serviço com twist conceitual (qualquer nicho — veterinária com instrumento do ofício em escala alterada ou perspectiva inesperada, médico em situação real porém com desvio de perspectiva, advogado com objeto do processo fora de lugar, chef com ingrediente em contexto deslocado, dentista com instrumento em escala alterada) — profissional em situação real do ofício porém com desvio de escala, perspectiva ou objeto que cria estranhamento legível; a metáfora pertence ao universo do serviço específico; a leituraCenica desta peça determina o profissional, o gesto e o desvio concreto',
-      proibicaoStock: 'PROIBIDO: executivo posado em sala de reunião, dashboard de fundo, headset, aperto de mãos. PROIBIDO TAMBÉM: pose institucional sentada com mãos cruzadas, mesmo com cor incomum.',
+      referenciaConcreta: 'Campanha de serviço com twist conceitual: profissional em situação real do ofício com desvio de escala, perspectiva ou objeto que cria estranhamento legível.',
+      evitar: 'executivo posado, dashboard de fundo como solução automática, headset genérico, pose institucional com mãos cruzadas mesmo com cor incomum, escritório corporativo como padrão, metáfora óbvia demais sem ângulo de câmera.',
     },
     VAREJO: {
-      referenciaConcreta: 'campanha de varejo conceitual com metáfora visual (qualquer produto — ferramenta técnica em contexto surpreendente, alimento artesanal em escala alterada, produto de pet em cena inesperada, peça de roupa em ambiente deslocado, livro em situação inusitada) — produto em escala ou contexto inesperado como ponto focal, objeto do universo da loja fora de lugar com intenção clara; a leituraCenica desta peça determina o produto e o desvio concreto sobre o universo real desta loja',
-      proibicaoStock: 'PROIBIDO: produto em fundo branco, vitrine genérica, modelo posando neutra, qualquer composição de e-commerce padrão.',
+      referenciaConcreta: 'Campanha de varejo conceitual: produto em escala ou contexto inesperado como ponto focal, objeto do universo da loja fora de lugar com intenção clara.',
+      evitar: 'produto em fundo branco, vitrine genérica, composição de e-commerce padrão, produto flutuando sem conceito, metáfora visual exagerada sem relação com o tema.',
     },
   },
   'OP-06': {
     MARCA: {
-      referenciaConcreta: 'editorial contemplativo de marca com presença mínima (qualquer marca que queira comunicar cuidado, propósito ou qualidade com silêncio — padaria artesanal com um pão isolado em luz de janela, clínica com instrumento único do ofício sobre superfície neutra, loja especializada com produto singular em vasto espaço, serviço com objeto do ofício em isolamento premium) — objeto único ou fragmento humano (mão tocando, sombra projetada, silhueta parcial) em vasto espaço negativo; a leituraCenica desta peça determina o objeto ou fragmento que representa a marca — a câmera registra com silêncio e precisão',
-      proibicaoStock: 'PROIBIDO ABSOLUTAMENTE: pessoa posando para câmera, sorriso institucional, executiva de blazer em escritório clean, modelo de stock corporativo, ambiente de coworking, qualquer cena que pareça "minimalista de Pinterest empresarial". Se aparecer pessoa, deve ser fragmento parcial recortado, nunca personagem central.',
+      referenciaConcreta: 'Editorial contemplativo de marca com presença mínima: objeto único ou fragmento humano em vasto espaço negativo. Se aparecer pessoa, fragmento parcial — nunca personagem central.',
+      evitar: 'pessoa posando, sorriso institucional, executiva/o de blazer, modelo corporativo, coworking, cena minimalista de Pinterest empresarial, símbolo genérico sem densidade.',
     },
     SERVIÇOS: {
-      referenciaConcreta: 'editorial contemplativo de serviço profissional (qualquer nicho — instrumento do veterinário isolado em luz de janela, ferramenta do ofício sobre superfície neutra, objeto da consultoria em isolamento limpo, material da clínica em detalhe mínimo, instrumento do dentista ou fisioterapeuta em luz natural) — objeto único do ofício específico em vasto espaço, fragmento humano apenas se necessário (mão tocando o instrumento, sombra projetada); a leituraCenica desta peça determina o objeto e o ambiente — a câmera registra com silêncio e minimalismo',
-      proibicaoStock: 'PROIBIDO: rosto inteiro posado, executivo de blazer em escritório clean, headset, sorriso institucional, qualquer cena de coworking ou reunião, ambiente com mais de 1 objeto principal em foco',
+      referenciaConcreta: 'Editorial contemplativo de serviço: objeto único do ofício em vasto espaço, fragmento humano apenas se necessário (mão tocando o instrumento, sombra projetada).',
+      evitar: 'rosto inteiro posado, executivo de blazer em escritório clean, headset, coworking, reunião, mais de 1 objeto principal em foco, cena minimalista corporativa genérica.',
     },
     VAREJO: {
-      referenciaConcreta: 'editorial contemplativo de produto (qualquer categoria — ferramenta técnica isolada em luz de janela, produto de padaria em vasto espaço neutro, produto de pet sobre superfície natural, livro em isolamento clean, ingrediente artesanal em detalhe premium, peça de roupa em vasto espaço respirado) — produto único em luz de janela e vasto espaço negativo, textura de superfície natural visível; a leituraCenica desta peça determina o produto e a superfície — a câmera registra com silêncio e precisão',
-      proibicaoStock: 'PROIBIDO: produto em fundo branco de e-commerce, modelo posando, vitrine cheia, qualquer cena com mais de 1 produto principal em foco',
+      referenciaConcreta: 'Editorial contemplativo de produto: produto único em luz de janela e vasto espaço negativo, textura de superfície natural visível.',
+      evitar: 'produto em fundo branco de e-commerce, modelo posando, vitrine cheia, mais de 1 produto principal em foco, composição de catálogo minimalista genérico.',
     },
   },
 };
@@ -202,14 +200,12 @@ export function getVisualDirection(mood: MoodCode): VisualDirection {
 
 // Variações de personagem por mood — o código sorteia uma a cada geração
 // e injeta como instrução mandatória, impedindo repetição de padrão.
-// Estrutura: POSIÇÃO, PLANO: descrição do gesto/objeto/uso.
 // INSTANTE: objeto capturado no flagrante deve ser coerente com o cotidiano real
-// do personagem e o tema da mensagem. Proibido dispositivo digital nas mãos
-// (tela voltada para o personagem fica de costas para a câmera documental).
+// do personagem e o tema da mensagem. Proibido dispositivo digital nas mãos.
 const INSTANTE_CHARACTER_VARIATIONS: string[] = [
-  'EM MOVIMENTO NATURAL, plano médio: personagem caminhando, chegando, saindo, abrindo porta, colocando bolsa ou ajustando algo — flagrado em ação, olhar nunca para a câmera',
-  'MICRO-MOMENTO DE ATENÇÃO, plano próximo/médio: personagem lendo papel, caderno, documento ou folheando material — expressão concentrada, sem saber que está sendo fotografado',
-  'REAÇÃO ESPONTÂNEA, plano médio: personagem conversando, explicando, rindo ou reagindo a algo fora do quadro — sem olhar direto para a câmera, expressão genuína',
+  'MOVIMENTO NATURAL, plano médio ou mais aberto: pessoa em movimento real — caminhando, chegando, saindo, abrindo porta, organizando algo, pegando produto, atravessando ambiente, atendendo, conferindo espaço ou executando ação simples. Ação interrompida no meio, sem pose. Não obrigar objeto na mão. Olhar nunca para a câmera.',
+  'MICRO-MOMENTO DE ATENÇÃO, plano próximo ou médio: pessoa concentrada em ação pequena e cotidiana — observando detalhe, conferindo item, ajustando algo, separando produto, organizando bancada, preparando atendimento ou acompanhando tarefa. Não depender de papel, caderno, documento, celular, tablet ou notebook. Expressão concentrada, sem saber que está sendo fotografada.',
+  'REAÇÃO ESPONTÂNEA, plano médio: pessoa reagindo naturalmente a situação real — conversando, explicando, ouvindo, rindo de forma espontânea, apontando algo fora de quadro, atendendo alguém parcialmente visível ou interagindo com ação do ambiente. Reação natural, incompleta, capturada no momento, sem pose institucional.',
 ];
 
 // Variação de câmera sorteada exclusivamente para CLAREZA (frontal vs. lateral).
@@ -218,24 +214,31 @@ const CLAREZA_CAMERA_VARIATIONS: string[] = [
   'CÂMERA LATERAL 3/4: lente 50mm, distância média, ponto de vista na altura dos olhos — personagem levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional',
 ];
 
-// CLAREZA: as variações definem POSE e PLANO apenas.
-// O objeto em cena, o ambiente e o gesto específico derivam da atividade da empresa
-// (kit de marca) e do texto gerado para esta peça — não de defaults genéricos.
-// Se houver dispositivo digital em cena: tela SEMPRE voltada para o observador.
+// CLAREZA: 2 opções sorteáveis. Sem objeto obrigatório na mão.
+// Segmento e atividade podem orientar gesto e ambiente sem obrigar representação literal.
 const CLAREZA_CHARACTER_VARIATIONS: string[] = [
-  'EM PÉ, plano médio (cintura para cima): gesto de apresentação, explicação ou entrega — com objeto do ofício em cena, coerente com a atividade declarada no kit de marca',
-  'SENTADO, plano médio próximo (cintura para cima): ato de trabalho focado, inclinado levemente para frente, usando superfície, ferramenta, produto ou material do ofício — expressão de concentração',
-  'EM PÉ, plano americano (coxa para cima): postura de autoridade natural, organização ou revisão do material do ofício — sem pose artificial e sem objeto exagerado em destaque; ambiente ao redor pertencente ao espaço real da empresa',
+  'EM PÉ, plano médio ou americano: postura natural, profissional, estável. Gesto funcional — atendimento, organização, observação, apresentação discreta, operação ou interação leve com o ambiente. Não obrigar objeto na mão. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
+  'SENTADO, plano médio ou médio próximo: postura organizada, calma, objetiva. A cena pode ocorrer em mesa, balcão, bancada, recepção, estação de trabalho, área de atendimento, ponto de venda, ambiente operacional limpo ou outro contexto adequado. Não depender de papel, caneta, caderno, tablet, celular ou notebook como elemento obrigatório. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
 ];
 
-// IMPACTO: objetos devem ser coerentes com o contexto da mensagem.
-// Contra-plongée obrigatório — dispositivos digitais nas mãos criam risco de
-// carcaça traseira voltada para câmera. Preferir objetos não-digitais nas poses
-// de plano médio e americano em pé.
+// IMPACTO: 3 opções sorteáveis, aplicáveis a múltiplos segmentos.
+// Inclui opção sem personagem dominante para varejo, produto e marca.
+// Contra-plongée obrigatório — preferir objetos não-digitais nas poses com pessoa.
 const IMPACTO_CHARACTER_VARIATIONS: string[] = [
-  'EM PÉ, plano americano (coxa para cima): em movimento — passo à frente, giro 3/4 ou avanço contido; presença forte, roupa com movimento congelado pela câmera',
-  'EM PÉ, plano médio (cintura para cima): domínio técnico com objeto do ofício não-digital à frente do corpo em ângulo — gesto firme e controlado; objeto coerente com o segmento da mensagem',
-  'SENTADO, plano americano ou médio: postura ativa, inclinado para frente, nunca passivo — pode usar superfície elevada (bancada, beira de mesa, degrau) ou notebook em ângulo lateral; se houver notebook, tela visível ao observador, tampa traseira NUNCA exposta',
+  'PESSOA EM AÇÃO, plano americano ou médio: movimento controlado — avanço, giro 3/4, deslocamento, gesto de decisão ou atitude de comando. Personagem ativo, presente, determinado, sem pose publicitária artificial. Não obrigar objeto na mão. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
+  'PESSOA COM ELEMENTO CONTEXTUAL, plano médio ou americano: interagindo com elemento simples e coerente com o contexto — produto, ferramenta, embalagem, material de trabalho, peça, equipamento, superfície de apoio, balcão, vitrine, mesa ou objeto simbólico do tema. Não obrigar papel, prancheta, tablet, celular ou notebook. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
+  'SUJEITO SEM PERSONAGEM DOMINANTE: produto, objeto, detalhe de operação, elemento da marca, serviço em execução ou cena contextual com presença humana secundária ou parcial. Foco único, luz recortada, composição dramática. Usar quando produto, objeto ou marca for melhor protagonista do que uma pessoa central.',
+];
+
+// DESVIO: sorteia tipo de ruptura simbólica (não personagem).
+// O foco é a ruptura + câmera angulada + distorção de perspectiva.
+// Uma ruptura por cena — forte, legível, não óbvia demais.
+const DESVIO_SYMBOLIC_RUPTURE_VARIATIONS: string[] = [
+  'OBJETO DESLOCADO: um objeto comum em lugar inesperado, escala incomum ou posição improvável — item de trabalho deslocado, produto fora de escala, peça cotidiana suspensa ou sombra incompatível. Não repetir livro, megafone, notebook, porta ou dashboard como solução automática.',
+  'SOMBRA OU AUSÊNCIA: a cena mostra sombra, reflexo ou marca visual de algo que não está presente. A ausência sugere o problema, a falha, a oportunidade ou o conflito da peça. Metáfora percebida, não explicada literalmente.',
+  'ESCALA ALTERADA: elemento cotidiano aparece maior ou menor do que o esperado, criando tensão visual. A escala serve à ideia do post sem virar fantasia exagerada ou surrealismo confuso.',
+  'COR INESPERADA: um único item cotidiano recebe cor incomum dentro da paleta do mood, criando ruptura visual. A cor é conceitual — não decorativa. Apenas esse elemento recebe a cor; o restante da cena segue a paleta do mood.',
+  'PERSPECTIVA IMPOSSÍVEL CONTROLADA: ângulo, profundidade ou alinhamento estranho que sugere deslocamento, dúvida, falha, pressão ou quebra de expectativa. Continua fotográfica, nítida e legível — não vira abstrato.',
 ];
 
 function pickRandom<T>(arr: T[]): T {
@@ -253,15 +256,18 @@ export function buildVisualDirectionBlock(mood: MoodCode, segment?: Segment): st
   const segmentBlock = seg
     ? `
 
-MODULAÇÃO POR SEGMENTO (${segment}) — INEGOCIÁVEL:
-- Referência concreta de mercado: ${seg.referenciaConcreta}
-- ${seg.proibicaoStock}
-A imagePrompt DEVE evocar a referência concreta acima e DEVE evitar literalmente a fórmula proibida. Esta camada não é decorativa — ela é o que separa a peça de uma foto de banco genérica do segmento.`
+CONTEXTO DE SEGMENTO (${segment}):
+- Referência: ${seg.referenciaConcreta}
+- Evitar: ${seg.evitar}
+Quando esses elementos fizerem sentido real para o negócio e o tema, podem aparecer desde que não contrariem a gramática do mood.`
     : '';
 
-  // Sorteio de variações — o código decide, a IA executa sem opção de escolha.
-  // Para CLAREZA: sorteia câmera (frontal vs. lateral) + personagem independentemente.
-  // Para IMPACTO e INSTANTE: sorteia apenas personagem.
+  // OP-05 sorteia tipo de ruptura simbólica em vez de variação de personagem.
+  const pickedRuptura = mood === 'OP-05'
+    ? pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS)
+    : null;
+
+  // OP-01, OP-02, OP-03 sorteia variação de personagem.
   const characterVariationMap: Partial<Record<MoodCode, string[]>> = {
     'OP-01': CLAREZA_CHARACTER_VARIATIONS,
     'OP-02': IMPACTO_CHARACTER_VARIATIONS,
@@ -273,25 +279,48 @@ A imagePrompt DEVE evocar a referência concreta acima e DEVE evitar literalment
   const pickedCamera = mood === 'OP-01'
     ? pickRandom(CLAREZA_CAMERA_VARIATIONS)
     : null;
-  const characterVariationBlock = pickedVariation
+
+  // Bloco de variação: OP-05 usa ruptura simbólica; demais usam personagem.
+  const variacaoBlock = pickedRuptura
+    ? `\n\nTIPO DE RUPTURA SIMBÓLICA DESTA GERAÇÃO — SEGUIR EXATAMENTE:\n• ${pickedRuptura}\nDefinido pelo sistema. Usar apenas esta ruptura simbólica como elemento conceitual principal. Não substituir por outra nem acumular rupturas simultâneas.`
+    : pickedVariation
     ? `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${pickedCamera ? `\n• Câmera: ${pickedCamera}` : ''}\n• Personagem: ${pickedVariation}\nEstas combinações foram definidas pelo sistema. Não substituir por variação mais comum, mais segura ou que já apareceu em outra peça da campanha.`
     : '';
 
   // Regras inegociáveis específicas por mood — corrigem desvios observados
-  // em geração real (modelo ignorando instruções da Camada 2).
+  // em geração real e expandem aplicação para múltiplos segmentos.
   const moodRules: Partial<Record<MoodCode, string>> = {
     'OP-01':
-      'CLAREZA exige EXATAMENTE 1 acento de cor saturada presente em UM único elemento da cena (objeto, peça de roupa, detalhe gráfico). Não 0, não 2. A peça inteira monocromática NÃO é CLAREZA — vira SILÊNCIO. Verifique antes de finalizar a imagePrompt. PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para a câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena, integre como detalhe lateral, desfocado em primeiro plano, ou em ângulo plongée. A variação de câmera e posição desta geração está especificada no bloco "VARIAÇÕES SORTEADAS" acima — seguir sem alterar. CONTEXTO DE ATIVIDADE EM CLAREZA: a gramática visual do mood (luz natural difusa, paleta fria com acento, composição simétrica e respirada) se aplica a QUALQUER tipo de empresa — veterinária, padaria, advocacia, loja de ferramentas, consultório médico, estúdio criativo, pet shop, odontologia, farmácia. O que muda entre negócios é O QUÊ está em cena: o ambiente pertence ao espaço real da empresa, o objeto em cena é a ferramenta ou produto real do ofício, o gesto é o do trabalho real. A leituraCenica gerada para esta peça determina o conteúdo da cena; a direção visual determina COMO ela é fotografada.',
+      'CLAREZA exige EXATAMENTE 1 acento de cor saturada em 1 único elemento da cena. Não 0, não 2. A peça inteiramente monocromática NÃO é CLAREZA — vira SILÊNCIO. ' +
+      'PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena: detalhe lateral, desfocado em primeiro plano ou em ângulo plongée. ' +
+      'VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. ' +
+      'A variação de câmera e posição desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
+      'CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.',
     'OP-02':
-      'IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo escuro médio dominado por preto/grafite. Sem essa única explosão cromática, a peça não para o scroll. CÂMERA EM IMPACTO: OBRIGATÓRIO contra-plongée leve (câmera abaixo da linha dos olhos apontando para cima, dando presença e poder ao sujeito) OU ângulo 3/4 dinâmico. PROIBIDO câmera frontal reta na altura dos olhos — sem o ângulo, a peça perde a dramaticidade cinematográfica mesmo que a luz e a paleta estejam corretas. PROIBIDO plongée de cima para baixo — câmera de cima para baixo enfraquece o impacto e diminui o personagem/produto. Dutch angle permitido apenas se muito sutil. A variação de posição e gesto desta geração está especificada no bloco "VARIAÇÕES SORTEADAS" acima — seguir sem alterar. A dramaticidade vem da câmera angulada (35mm) e da luz focal, não de pose forçada do personagem. DISPOSITIVOS EM IMPACTO: o contra-plongée faz a tela de qualquer dispositivo (tablet, notebook, celular) ficar voltada para o personagem e a carcaça traseira para a câmera. POR ISSO: prefira variações sem dispositivo digital em mãos; se houver dispositivo em cena, a tela DEVE estar visível ao observador e a tampa/carcaça traseira NUNCA é visível, independentemente do ângulo da câmera. As variações de personagem sorteadas NÃO cancelam esta proibição — ela é hierarquicamente superior a qualquer instrução de pose ou gesto. CONTEXTO DE ATIVIDADE EM IMPACTO: a gramática visual do mood (luz focal direcional, paleta low-key com 1 cor quente saturada, contra-plongée ou dutch angle) se aplica a QUALQUER tipo de empresa — veterinária, padaria, advocacia, loja de ferramentas, consultório médico, pet shop, odontologia. O que muda entre negócios é O QUÊ está em cena: o ambiente pertence ao espaço real da empresa, o gesto pertence ao ofício real. A leituraCenica gerada para esta peça determina o conteúdo; a direção visual determina COMO é fotografado.',
+      'IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo escuro médio (preto/grafite). Sem essa única explosão cromática, a peça não para o scroll. ' +
+      'CÂMERA EM IMPACTO: OBRIGATÓRIO contra-plongée leve ou ângulo 3/4 dinâmico. PROIBIDO câmera frontal reta na altura dos olhos. PROIBIDO plongée de cima para baixo — câmera de cima para baixo enfraquece o impacto e diminui o personagem/produto. ' +
+      'VÍCIOS VISUAIS A EVITAR EM IMPACTO: personagem sempre segurando papel ou prancheta, executivo genérico de terno como padrão automático, olhar lateral repetido em todas as imagens, mesma postura rígida de autoridade, mesa escura com objetos decorativos, plantas e vasos como recurso visual recorrente, luz quente lateral repetida sempre do mesmo jeito, fundo corporativo genérico, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. ' +
+      'Quando a variação sorteada for "SUJEITO SEM PERSONAGEM DOMINANTE", construir a cena a partir do produto, objeto ou detalhe de operação como protagonista — sem forçar presença humana central. ' +
+      'A variação desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
+      'DISPOSITIVOS EM IMPACTO: o contra-plongée faz a tela ficar voltada para o personagem e carcaça traseira para a câmera. Preferir variações sem dispositivo digital nas mãos. Se houver: tela visível ao observador, carcaça traseira NUNCA visível. ' +
+      'IMPACTO se aplica a qualquer segmento. O ambiente e o gesto pertencem ao espaço e ofício reais. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.',
     'OP-03':
-      'INSTANTE exige captura documental genuína — o personagem NUNCA olha para a câmera com pose intencional, NUNCA sorri institucionalmente, NUNCA está estático esperando o clique. A cena deve parecer flagrada sem que o sujeito soubesse. PROIBIDO: pose de stock, sorriso largo direto para câmera, composição arrumada simetricamente, fundo cenográfico limpo. O micro-momento desta geração está especificado no bloco "VARIAÇÕES SORTEADAS" acima — a câmera captura aquele momento específico, sem alterar. CONTEXTO DE ATIVIDADE EM INSTANTE: a gramática documental do mood (luz ambiente quente, captura espontânea, grão de filme) se aplica a QUALQUER tipo de empresa — veterinária, padaria, loja de ferramentas, consultório, advocacia, pet shop. O que muda é O QUÊ é flagrado: o ambiente e o gesto pertencem ao cotidiano real do negócio. A leituraCenica gerada determina o conteúdo do flagrante; a direção visual determina COMO é fotografado.',
+      'INSTANTE exige captura documental genuína — personagem NUNCA olha para câmera com pose intencional, NUNCA sorri institucionalmente, NUNCA está estático esperando o clique. A cena deve parecer flagrada. ' +
+      'VÍCIOS VISUAIS A EVITAR EM INSTANTE: personagem sempre olhando papel, personagem sempre segurando caderno ou documento, personagem sempre caminhando com bolsa como solução automática, executivo genérico em escritório ou corredor, cena com aparência de pose publicitária, olhar direto para câmera, sorriso institucional, composição limpa demais, fundo cenográfico perfeito, luz dourada exageradamente dramática, plantas e vasos como recurso decorativo recorrente, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. ' +
+      'AMBIENTES PERMITIDOS EM INSTANTE: loja, balcão, corredor de atendimento, recepção, bastidor, estoque organizado, oficina, clínica, escola, restaurante, área de preparo, área de serviço, mesa de trabalho real, ponto de venda, rua, entrada ou fachada quando fizer sentido — ambiente como bastidor vivo, não cenário montado. ' +
+      'O micro-momento desta geração está no bloco "VARIAÇÕES SORTEADAS" — a câmera captura aquele momento específico. ' +
+      'INSTANTE se aplica a qualquer segmento. O ambiente e o gesto pertencem ao cotidiano real do negócio. A leituraCenica determina o conteúdo do flagrante; a direção visual determina COMO é fotografado.',
     'OP-04':
-      'FRAGMENTO exige EXATAMENTE 3 a 5 blocos visuais distintos costurados pela mesma paleta de 3 tons máximos. Menos de 3 blocos não é FRAGMENTO — vira CLAREZA ou SILÊNCIO. Mais de 5 blocos vira ruído visual sem ritmo. CONTEXTO DE ATIVIDADE EM FRAGMENTO: a grade modular do mood se aplica a QUALQUER tipo de empresa — veterinária, padaria, loja de ferramentas, consultório, advocacia, pet shop. O que muda são os fragmentos: cada bloco deve pertencer ao universo real do negócio (objetos do ofício, ambiente, gesto, textura de material). A leituraCenica gerada determina o conteúdo de cada bloco; a direção visual determina COMO os blocos são fotografados e costurados.',
+      'FRAGMENTO exige EXATAMENTE 3 a 5 blocos visuais distintos costurados pela mesma paleta de 3 tons máximos. Menos de 3 blocos não é FRAGMENTO — vira CLAREZA ou SILÊNCIO. Mais de 5 blocos vira ruído visual sem ritmo. ' +
+      'FRAGMENTO se aplica a qualquer segmento. Os fragmentos pertencem ao universo real do negócio (objetos do ofício, ambiente, gesto, textura de material). A leituraCenica determina o conteúdo de cada bloco; a direção visual determina COMO os blocos são fotografados e costurados.',
     'OP-05':
-      'DESVIO exige câmera angulada OBRIGATÓRIA: contra-plongée (câmera baixa olhando para cima) OU plongée (câmera alta olhando para baixo), com lente 28-35mm que cause distorção de perspectiva visível. PROIBIDO câmera frontal neutra na altura dos olhos — sem o ângulo, a peça não é DESVIO mesmo que a metáfora visual esteja presente. PROIBIDO TAMBÉM pose de executivo sentado de blazer atrás de mesa com mãos cruzadas/entrelaçadas — essa pose anula o mood instantaneamente, mesmo que o resto da cena seja conceitual. CONTEXTO DE ATIVIDADE EM DESVIO: a gramática conceitual do mood (câmera angulada, paleta incomum, elemento metafórico deslocado) se aplica a QUALQUER tipo de empresa — veterinária, padaria, advocacia, loja de ferramentas, clínica. O que muda é O QUÊ é deslocado: o objeto ou situação fora de lugar pertence ao universo real do negócio declarado no kit de marca. A leituraCenica gerada determina a metáfora e o desvio concreto; a direção visual determina COMO é fotografado.',
+      'DESVIO exige câmera angulada OBRIGATÓRIA: contra-plongée (câmera baixa olhando para cima) OU plongée (câmera alta olhando para baixo), com lente 28-35mm causando distorção de perspectiva visível. PROIBIDO câmera frontal neutra na altura dos olhos — sem o ângulo, não é DESVIO mesmo com metáfora visual presente. PROIBIDO pose de executivo sentado de blazer atrás de mesa com mãos cruzadas/entrelaçadas. ' +
+      'RUPTURA SIMBÓLICA: usar EXATAMENTE o tipo sorteado no bloco "TIPO DE RUPTURA SIMBÓLICA DESTA GERAÇÃO". Uma ruptura por cena — forte e legível, não óbvia demais. ' +
+      'VÍCIOS VISUAIS A EVITAR EM DESVIO: executivo genérico em escritório, personagem sentado atrás de mesa em pose neutra, câmera frontal reta, metáfora sem ângulo de câmera, notebook como centro automático da cena, dashboard como solução visual automática, livro voando como padrão, megafone como padrão, porta luminosa como padrão, mini pessoas sobre objetos como padrão, excesso de elementos simbólicos, surrealismo exagerado, cena confusa ou carnavalesca, plantas e vasos como recurso decorativo recorrente, repetição visual entre gerações. ' +
+      'DESVIO se aplica a qualquer segmento. O objeto ou situação fora de lugar pertence ao universo real do negócio. A leituraCenica determina a metáfora e o desvio concreto; a direção visual determina COMO é fotografado.',
     'OP-06':
-      'SILÊNCIO permite no máximo 1 traço de assinatura premium flutuando no espaço negativo. Se aparecer pessoa, é fragmento parcial (mão, sombra, nuca, silhueta) — NUNCA rosto inteiro posado. CONTEXTO DE ATIVIDADE EM SILÊNCIO: a gramática contemplativa do mood (alta-chave, espaço negativo vasto, mínimo de elementos) se aplica a QUALQUER tipo de empresa — veterinária, padaria, advocacia, loja de ferramentas, clínica, livraria, pet shop. O que muda é O QUÊ é isolado: o objeto ou fragmento pertence ao universo real do negócio. A leituraCenica gerada determina o objeto e a superfície; a direção visual determina COMO é fotografado.',
+      'SILÊNCIO permite no máximo 1 traço de assinatura premium flutuando no espaço negativo. Se aparecer pessoa: fragmento parcial (mão, sombra, nuca, silhueta) — NUNCA rosto inteiro posado. ' +
+      'SILÊNCIO se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, clínica, livraria, pet shop). O que muda é O QUÊ é isolado: o objeto ou fragmento pertence ao universo real do negócio. A leituraCenica determina o objeto e a superfície; a direção visual determina COMO é fotografado.',
   };
   const moodRuleBlock = moodRules[mood]
     ? `\n\nREGRA INEGOCIÁVEL DO MOOD ${v.nome}:\n${moodRules[mood]}`
@@ -310,13 +339,13 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 - Paleta: ${v.paleta}
 - Composição: ${v.composicao}
 - Atitude da câmera: ${v.camera}
-- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${characterVariationBlock}${moodRuleBlock}${segmentBlock}
+- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${variacaoBlock}${moodRuleBlock}${segmentBlock}
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - TELA FRONTAL de notebook, laptop, tablet, iPad, celular, computador ou monitor deve mostrar SEMPRE conteúdo real e coerente com o tema (gráfico, dashboard, app, mensagem, foto, planilha). Proibido: tela apagada, preta, branca, lockscreen, wallpaper de fábrica, placeholder. A imagePrompt DEVE descrever literalmente o que aparece na tela.
 - PROIBIDO renderizar conteúdo de tela (dashboard, app, interface, gráfico, ícone, qualquer display) sobre a TAMPA TRASEIRA ou CARCAÇA de qualquer equipamento. A carcaça traseira é superfície SÓLIDA, OPACA, lisa e na cor do equipamento: não tem tela, não emite luz, não exibe conteúdo.
 - POSICIONAMENTO DE NOTEBOOK/LAPTOP — PROIBIDO ABSOLUTO: a composição onde o laptop está aberto com tela E teclado ambos voltados frontalmente para o observador, com o personagem posicionado ATRÁS do equipamento. Essa pose genérica de "pessoa atrás do notebook" é banida em TODOS os moods. Se houver notebook em cena: (a) mostrar em ângulo lateral ou vista superior (plongée) de forma que tela e teclado não fiquem simultaneamente na linha de visão do observador, OU (b) mostrar apenas a tela OU apenas o teclado/base no quadro, com personagem ao lado ou em primeiro plano. O personagem NUNCA fica aprisionado atrás do laptop como se fosse uma barreira entre ele e a câmera.
-- ÂNGULO DE CÂMERA NÃO JUSTIFICA TAMPA TRASEIRA: independentemente do ângulo (contra-plongée, plongée, dutch angle) e da variação de personagem sorteada, a tampa traseira ou carcaça de qualquer dispositivo (notebook, computador, monitor, tablet, iPad, iPhone, celular, smartphone) NUNCA é visível ao observador. Se o gesto do personagem combinado com o ângulo da câmera tornar a tampa naturalmente visível, reposicionar o dispositivo até a tela estar visível, ou substituir o gesto por alternativa sem dispositivo digital. Esta regra é hierarquicamente superior a qualquer variação de personagem ou instrução de câmera do mood.
+- ÂNGULO DE CÂMERA NÃO JUSTIFICA TAMPA TRASEIRA: independentemente do ângulo (contra-plongée, plongée, dutch angle) e da variação de personagem sorteada, a tampa traseira ou carcaça de qualquer dispositivo NUNCA é visível ao observador. Se o gesto do personagem combinado com o ângulo da câmera tornar a tampa naturalmente visível, reposicionar o dispositivo até a tela estar visível, ou substituir o gesto por alternativa sem dispositivo digital. Esta regra é hierarquicamente superior a qualquer variação de personagem ou instrução de câmera do mood.
 
 Os campos "clima" e "composicao" da leituraCenica DEVEM derivar diretamente da Tensão Dondis e da Gramática Visual acima — não são livres.
 Os campos "intencao", "personagem", "ambiente" e "expressao" continuam vindo da progressão psicológica da Matriz; a gramática visual apenas determina COMO a cena é fotografada, não O QUE ela diz.

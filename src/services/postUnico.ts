@@ -35,22 +35,47 @@ const MOOD_NAMES: Record<MoodCode, string> = {
 };
 
 const MOOD_INSTRUCTIONS: Record<MoodCode, string> = {
-  'OP-01': 'Direção visual: composição organizada e arejada, luz natural difusa, simetria, paleta fria e clara (azuis, cinzas suaves, branco), destaque pontual de cor. Sensação de explicação calma e didática. PROIBIDO: contraste extremo, fundo escuro dramático, paleta quente saturada (isso é IMPACTO).',
-  'OP-02': 'Direção visual IMPACTO: peça que para o scroll por contraste extremo. Escolha UMA das sub-estéticas a seguir (não combine, vá fundo em uma só) e EVITE repetir a fórmula mais óbvia (escritório escuro com luminária âmbar) se ela já é a primeira que vem à mente: (a) cinematográfico quente — fundo escuro, luz focal âmbar/dourada, sombras profundas; (b) frio cortante — paleta azul/ciano/aço, luz dura branca, atmosfera tech/editorial, alto contraste sem ser quente; (c) urbano de alto contraste — rua, neon, luz mista colorida, sombra dura, granulação; (d) gráfico saturado — fundo de cor sólida chapada (vermelho, magenta, verde elétrico, azul-rei), sujeito recortado com sombra dura, estética pôster contemporâneo. Em todas: contraste alto, leitura imediata, sensação de campanha que interrompe o feed. CÂMERA EM IMPACTO: ângulo baixo leve (contra-plongée) ou 3/4 dinâmico — PROIBIDO câmera de cima para baixo (plongée), pois enfraquece o impacto e diminui o personagem/produto. Dutch angle apenas se muito sutil.',
-  'OP-03': 'Direção visual: estética DOCUMENTAL/REPORTAGEM, captura espontânea como foto de bastidor real. Luz ambiente QUENTE ORGÂNICA — hora dourada, luz de janela com sol de tarde, interior natural sem estúdio. Paleta TERROSA QUENTE: âmbar orgânico, ocre, terracota, marrons naturais — NUNCA fria, NUNCA cinza, NUNCA azulada (isso é CLAREZA). Granulação fotográfica sutil, leve imperfeição (foco aproximado, enquadramento espontâneo, ângulos não-publicitários). Sensação de "registrei agora no celular", não de campanha produzida. PROIBIDO: contraste extremo dramático, sombras profundas de estúdio, luz focal cinematográfica, fundo escuro de estúdio — isso é IMPACTO, não INSTANTE. PROIBIDO TAMBÉM: paleta fria, azulada ou cinza neutra — isso é CLAREZA, não INSTANTE.',
+  'OP-01': 'Direção visual: composição organizada e arejada, luz natural difusa, simetria, paleta fria e clara (azuis, cinzas suaves, branco), destaque pontual de cor. Sensação de explicação calma e didática. PROIBIDO: contraste extremo, fundo escuro dramático, paleta quente saturada (isso é IMPACTO). VÍCIOS A EVITAR: personagem sempre olhando papel ou segurando documento, executivo genérico em escritório corporativo, mesa cheia de papéis, cenário de banco de imagem, plantas e vasos como preenchimento, repetição de composição entre peças. CLAREZA se aplica a qualquer segmento (padaria, clínica, pet shop, ferramentas, advocacia) — ambiente e gesto derivam da atividade real, não de escritório corporativo como padrão automático.',
+  'OP-02': 'Direção visual IMPACTO: peça que para o scroll por contraste extremo. Escolha UMA das sub-estéticas a seguir (não combine, vá fundo em uma só) e EVITE repetir a fórmula mais óbvia (escritório escuro com luminária âmbar) se ela já é a primeira que vem à mente: (a) cinematográfico quente — fundo escuro, luz focal âmbar/dourada, sombras profundas; (b) frio cortante — paleta azul/ciano/aço, luz dura branca, atmosfera tech/editorial, alto contraste sem ser quente; (c) urbano de alto contraste — rua, neon, luz mista colorida, sombra dura, granulação; (d) gráfico saturado — fundo de cor sólida chapada (vermelho, magenta, verde elétrico, azul-rei), sujeito recortado com sombra dura, estética pôster contemporâneo. Em todas: contraste alto, leitura imediata, sensação de campanha que interrompe o feed. CÂMERA EM IMPACTO: ângulo baixo leve (contra-plongée) ou 3/4 dinâmico — PROIBIDO câmera de cima para baixo (plongée), pois enfraquece o impacto e diminui o personagem/produto. Dutch angle apenas se muito sutil. VÍCIOS A EVITAR: papel ou prancheta como prop automático, executivo de terno como padrão, olhar lateral repetido, fundo corporativo genérico, plantas e vasos decorativos. OPÇÃO SEM PERSONAGEM CENTRAL: quando produto, objeto ou elemento de marca for o protagonista mais forte, construir a cena sem figura humana dominante — foco no sujeito real com luz recortada e composição dramática. IMPACTO se aplica a qualquer segmento — ambiente e gesto pertencem ao negócio real.',
+  'OP-03': 'Direção visual: estética DOCUMENTAL/REPORTAGEM, captura espontânea como foto de bastidor real. Luz ambiente QUENTE ORGÂNICA — hora dourada, luz de janela com sol de tarde, interior natural sem estúdio. Paleta TERROSA QUENTE: âmbar orgânico, ocre, terracota, marrons naturais — NUNCA fria, NUNCA cinza, NUNCA azulada (isso é CLAREZA). Granulação fotográfica sutil, leve imperfeição (foco aproximado, enquadramento espontâneo, ângulos não-publicitários). Sensação de "registrei agora no celular", não de campanha produzida. PROIBIDO: contraste extremo dramático, sombras profundas de estúdio, luz focal cinematográfica, fundo escuro de estúdio — isso é IMPACTO, não INSTANTE. PROIBIDO TAMBÉM: paleta fria, azulada ou cinza neutra — isso é CLAREZA, não INSTANTE. VÍCIOS A EVITAR: personagem sempre olhando papel ou caderno, bolsa como prop automático, executivo em escritório, pose publicitária com sorriso forçado, cena limpa demais, plantas e vasos decorativos. AMBIENTES VÁLIDOS: loja, balcão, recepção, bastidor, estoque, oficina, clínica, área de preparo, ponto de venda, rua, fachada — bastidor vivo, não cenário montado. INSTANTE se aplica a qualquer segmento — ambiente e gesto pertencem ao cotidiano real do negócio.',
   'OP-04': 'Direção visual: colagem com 3-5 blocos visuais distintos lado a lado, grid implícito, paleta unificada mas com texturas variadas, canto inferior direito limpo. Sensação de comparação/justaposição de ideias.',
-  'OP-05': 'Direção visual: imagem-conceito com elemento inesperado, metáfora visual surreal, paleta incomum mas legível — combinações: verde frio + magenta, azul profundo + ferrugem, lilás seco + mostarda, petróleo + coral queimado, vinho + azul elétrico suave — evitar excesso carnavalesco; sujeito sempre legível. Sensação de provocação intelectual. ELEMENTO INUSITADO — ESCALA E PESO VISUAL: o objeto ou forma inesperado é COADJUVANTE EXPRESSIVO da mensagem — deve ocupar área visual significativa na composição, grande o suficiente para chamar atenção à primeira vista e orientar o olhar do espectador, mas sem sobrepor ou dominar o sujeito principal. Harmonia obrigatória com o conjunto. PROIBIDO: paleta âmbar/dourada óbvia (isso é IMPACTO). PROIBIDO: elemento surreal como detalhe diminuto, sutil ou periférico — ele deve ser VISÍVEL e expressivo.',
+  'OP-05': 'Direção visual: imagem-conceito com elemento inesperado, metáfora visual surreal, paleta incomum mas legível — combinações: verde frio + magenta, azul profundo + ferrugem, lilás seco + mostarda, petróleo + coral queimado, vinho + azul elétrico suave — evitar excesso carnavalesco; sujeito sempre legível. Sensação de provocação intelectual. CÂMERA OBRIGATÓRIA: contra-plongée (câmera baixa olhando para cima) OU plongée (câmera alta olhando para baixo) com lente 28-35mm — sem o ângulo, não é DESVIO. TIPOS DE RUPTURA SIMBÓLICA (usar apenas 1 por peça): objeto cotidiano deslocado ou fora de escala, sombra ou reflexo de algo ausente, elemento em escala alterada, cor inesperada num único item, perspectiva impossível controlada. VÍCIOS A EVITAR: câmera frontal reta, notebook como centro automático, dashboard como solução, livro voando, megafone, porta luminosa, mini pessoas sobre objetos, surrealismo exagerado, cena confusa, plantas e vasos decorativos. ELEMENTO INUSITADO — ESCALA E PESO VISUAL: deve ocupar área visual significativa, grande o suficiente para chamar atenção à primeira vista, mas sem sobrepor ou dominar o sujeito principal. PROIBIDO: paleta âmbar/dourada óbvia (isso é IMPACTO). DESVIO se aplica a qualquer segmento.',
   'OP-06': 'Direção visual: paleta suave de baixa saturação (areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido) — evitar branco puro dominante e excesso de luminosidade; espaço vazio dominante, tipografia protagonista, detalhe mínimo de cor pontual, estética premium minimalista (estilo editorial de luxo). PROIBIDO: fundo escuro, contraste alto, paleta quente saturada (isso é IMPACTO).',
 };
 
 const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
-const OBJETIVO_VISUAL_EXCLUSIONS: Partial<Record<PostUnicoObjetivo, string>> = {
-  oportunidade: 'PROIBIDO NESTE OBJETIVO (clichês de stock): portais, arcos, portas abertas, janelas abertas, pôr do sol ou nascer do sol como símbolo de "oportunidade", horizonte com luz dourada no fim do túnel, pessoa correndo como metáfora de urgência. São clichês visuais de banco de imagens — evite qualquer uma dessas fórmulas. PROIBIDO TAMBÉM: corredores de concreto, paredes de concreto aparente e estruturas arquitetônicas industriais como cenário de tensão — substitua por ambientes neutros, detalhes de objetos ou composições cromáticas.',
-  homenagem: 'PROIBIDO: velas de bolo de aniversário genéricas sem contexto, buquê de flores isolado como stock, confetes soltos sem cena.',
-  promocao: 'PROIBIDO: sacola de compras genérica, carrinho de supermercado, etiqueta de preço flutuando como elemento central, emoji de porcentagem como gráfico principal.',
-  institucional: 'PROIBIDO NESTE OBJETIVO: paredes de concreto aparente, painéis de concreto, estruturas arquitetônicas frias ou industriais como elemento visual principal, corredores vazios sem presença humana, ambientes de galpão ou obra. Esses elementos comunicam frieza e afastamento — o oposto da autoridade calorosa e da identidade de marca desejada.',
-  fatos: 'PROIBIDO NESTE OBJETIVO: alterar pessoas (rostos, poses, roupas, número), alterar ambiente (arquitetura, móveis, espaço), adicionar ou remover elementos, criar luz cinematográfica falsa, dramatizar cores, inventar atmosfera. A imagem deve ser FIEL ao evento como ele aconteceu. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução. O resultado deve ser reconhecidamente o MESMO evento, apenas melhor documentado.',
+// Sensação visual desejada por objetivo — orienta a direção emocional da peça livre.
+const OBJETIVO_SENSACAO: Record<PostUnicoObjetivo, string> = {
+  nenhum: 'clareza, naturalidade, organização ou presença visual conectada ao negócio',
+  institucional: 'confiança, credibilidade, estabilidade, pertencimento ou profissionalismo',
+  promocao: 'energia, dinamismo, entusiasmo ou movimento comercial',
+  oportunidade: 'descoberta, possibilidade, renovação ou decisão estratégica',
+  aviso: 'atenção, orientação, segurança ou alerta controlado',
+  homenagem: 'gratidão, carinho, reconhecimento ou solenidade discreta',
+  fatos: 'autenticidade, realidade, fidelidade ao registro',
+};
+
+// Orientação criativa compacta por objetivo — 1 frase de direção positiva.
+const OBJETIVO_ORIENTACAO: Record<PostUnicoObjetivo, string> = {
+  nenhum: 'Imagem livre mas útil — conectada ao negócio, produto, serviço ou público. Não decorativa.',
+  institucional: 'Conectar à atividade real da empresa. Não virar prédio, parede lisa ou skyline.',
+  promocao: 'Valorizar produto, benefício ou resultado sem símbolos promocionais óbvios.',
+  oportunidade: 'Tensão de escolha, gesto decisivo ou atmosfera de possibilidade — sem clichê literal de caminho aberto.',
+  aviso: 'Hierarquia visual clara e leitura rápida, mas elegante, humano e contextual.',
+  homenagem: 'Humana, respeitosa, contextual — pode ser discreta, simbólica ou documental.',
+  fatos: 'Preservar o registro real. Melhoria técnica apenas: clareza, nitidez, balanço de branco.',
+};
+
+// Exclusões visuais compactas por objetivo — inclui "nenhum".
+const OBJETIVO_VISUAL_EXCLUSIONS: Record<PostUnicoObjetivo, string> = {
+  nenhum: 'Evitar arte solta, paisagem sem relação com negócio, abstrato decorativo, stock genérico e imagem sem função mercadológica.',
+  institucional: 'Evitar concreto aparente, parede lisa genérica, skyline, pessoa olhando janela e institucional stock.',
+  promocao: 'Evitar sacola genérica, carrinho de supermercado, etiqueta flutuante, porcentagem como elemento principal e aparência de panfleto.',
+  oportunidade: 'Evitar portais, portas abertas, arcos, pôr do sol, luz no fim do túnel, pessoa correndo e corredor de concreto.',
+  aviso: 'Evitar alerta exagerado, placa genérica, triângulo de perigo e visual burocrático.',
+  homenagem: 'Evitar buquê isolado, confete solto, vela genérica e pose sentimental stock.',
+  fatos: 'Preservar registro real. Não inventar cena, pessoas, ambiente ou atmosfera. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução.',
 };
 
 // Arquétipos visuais mutuamente distintos por objetivo — sorteados a cada geração livre
@@ -103,15 +128,16 @@ function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: Pos
   if (direcao === 'mood' && mood) {
     return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}): ${MOOD_INSTRUCTIONS[mood]}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.`;
   }
-  const exclusion = objetivo && OBJETIVO_VISUAL_EXCLUSIONS[objetivo]
-    ? `\n\n${OBJETIVO_VISUAL_EXCLUSIONS[objetivo]}`
-    : '';
-  // Sorteia um arquétipo visual para forçar diversidade entre gerações sequenciais.
-  const archetypes = objetivo ? OBJETIVO_ARCHETYPES[objetivo] : null;
+  const obj = objetivo ?? 'nenhum';
+  const sensacao = OBJETIVO_SENSACAO[obj];
+  const orientacao = OBJETIVO_ORIENTACAO[obj];
+  const exclusion = OBJETIVO_VISUAL_EXCLUSIONS[obj];
+  // Sorteia arquétipo visual para forçar diversidade entre gerações sequenciais.
+  const archetypes = OBJETIVO_ARCHETYPES[obj];
   const archetypeHint = archetypes && archetypes.length
     ? `\n\n${archetypes[Math.floor(Math.random() * archetypes.length)]}`
     : '';
-  return `DIREÇÃO LIVRE: a IA tem liberdade total de direção de arte — NÃO há mood pré-definido. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).${exclusion}${archetypeHint}`;
+  return `DIREÇÃO LIVRE — SENSAÇÃO DESEJADA: ${sensacao}.\nOrientação: ${orientacao}\n\n${exclusion}${archetypeHint}\n\nA IA tem liberdade total de direção de arte — NÃO há mood pré-definido. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
 }
 
 function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo: string; regraFinal: string } {
@@ -337,8 +363,7 @@ export function buildPostUnicoPrompt(params: {
   const isNenhum = data.objetivo === 'nenhum';
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
-  // Para NENHUM, não passa objetivo → sem arquétipos e sem exclusões visuais por objetivo
-  const direcao = direcaoBlock(data.direcao, data.mood, isNenhum ? undefined : data.objetivo);
+  const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo);
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
   const zona = logoZoneDescription(kit.logoPosition);
