@@ -373,7 +373,7 @@ export function pickImageVariationBlock(mood: MoodCode | undefined): string {
 
   if (mood === 'OP-05') {
     const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
-    return `\nVARIAÇÃO DESTA GERAÇÃO — TIPO DE RUPTURA SIMBÓLICA (seguir exatamente, não substituir por outra): ${ruptura}`;
+    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — INSTRUÇÃO FINAL DE RUPTURA E COMPOSIÇÃO (sobrepõe o campo "Composição" da CENA DETALHADA acima — seguir exatamente, não substituir por outra): ${ruptura}`;
   }
 
   const characterMap: Partial<Record<MoodCode, string[]>> = {
@@ -387,5 +387,5 @@ export function pickImageVariationBlock(mood: MoodCode | undefined): string {
 
   const variation = pickRandom(variations);
   const camera = mood === 'OP-01' ? `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. ` : '';
-  return `\nVARIAÇÃO DESTA GERAÇÃO — POSIÇÃO/GESTO DO PERSONAGEM (seguir exatamente, não repetir pose anterior): ${camera}${variation}`;
+  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — INSTRUÇÃO FINAL DE COMPOSIÇÃO E POSE (sobrepõe os campos "Composição" e "Personagem" da CENA DETALHADA acima — seguir exatamente, sem alterar): ${camera}${variation}`;
 }

@@ -209,9 +209,10 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
   return `${DEVICE_RULE_FIRST}${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
-${moodInstructions}${variationBlock}
+${moodInstructions}
 ${finalModifier}
 ${cenaDetalhada}
+${variationBlock}
 
 CONTEÚDO TEXTUAL:
 - Título principal em CAIXA ALTA (bold, destaque máximo, tamanho ajustado para caber sem cortar): "${tituloUpper}"
