@@ -4,6 +4,7 @@ import type { FeedItem } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
+import { pickImageVariationBlock } from '../core/visualDirection';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: 'Promoção comercial — gerar desejo e ação',
@@ -121,7 +122,12 @@ const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
     'CONCEITO DESTA GERAÇÃO — EVIDÊNCIA VISUAL DO MOMENTO: a imagem é prova de que o evento aconteceu. Pessoas em posições naturais originais, ambiente real preservado, luz ambiente respeitada. Calibração técnica permitida (brilho, contraste, nitidez). PROIBIDO: alterar qualquer pessoa, remover elementos, adicionar figuras, dramatizar visualmente. Resultado: o mesmo evento, visualmente mais claro e legível.',
     'CONCEITO DESTA GERAÇÃO — MOMENTO AUTÊNTICO REGISTRADO: capture a essência do evento sem interferência criativa. Preserve exatamente as pessoas presentes, o espaço onde ocorreu, a luz ambiente real. Apenas refinamento técnico é permitido. A peça final é o evento como aconteceu — não uma reinterpretação artística dele.',
   ],
-  nenhum: [], // Sem conceito visual pré-definido — IA tem total liberdade
+  nenhum: [
+    'COMPOSIÇÃO DESTA GERAÇÃO — LUZ E AMBIENTE: priorize uma fonte de luz clara e definida (janela, sol lateral, studio suave). Personagem ou produto em destaque com fundo desfocado ou texturizado.',
+    'COMPOSIÇÃO DESTA GERAÇÃO — PERSPECTIVA DINÂMICA: enquadramento em ângulo — câmera levemente baixa olhando para cima, ou câmera alta olhando para baixo. Evitar câmera frontal reta na altura dos olhos.',
+    'COMPOSIÇÃO DESTA GERAÇÃO — CLOSE DETALHADO: foco em um detalhe físico representativo do negócio — mãos em ação, produto em close, textura, superfície. Composição macro ou meio-corpo próximo.',
+    'COMPOSIÇÃO DESTA GERAÇÃO — CENA DE BASTIDOR: momento de processo ou ação em andamento — não pose estática. Captura espontânea, autêntica, como bastidor real do negócio.',
+  ], // Variações de composição para garantir diversidade no "Gerar outra"
 };
 
 function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo): string {
@@ -364,6 +370,7 @@ export function buildPostUnicoPrompt(params: {
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
   const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo);
+  const variationBlock = data.direcao === 'mood' ? pickImageVariationBlock(data.mood) : '';
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
   const zona = logoZoneDescription(kit.logoPosition);
@@ -409,7 +416,7 @@ ${data.keyInfo.trim()
 
 ${copyBlock}
 
-${direcao}
+${direcao}${variationBlock}
 
 ${buildColorBlock(primary, accent, data.direcao === 'mood', data.objetivo)}
 

@@ -1,4 +1,5 @@
 import { buildMetodoOpPrompt, normalizeMethodResult } from '../core/organizaMethodEngine';
+import { pickImageVariationBlock } from '../core/visualDirection';
 import { ContentFormData, LogoPosition, MethodOpResult, MoodCode } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
@@ -128,8 +129,9 @@ function buildImagePrompt(params: {
   logoPosition?: LogoPosition;
   format?: 'post' | 'reels_cover';
   hasRefs?: boolean;
+  mood?: MoodCode;
 }): string {
-  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs } = params;
+  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood } = params;
   const isCover = format === 'reels_cover';
   const canvasSize = isCover ? '1080x1920' : '1080x1350';
   const canvasRatio = isCover ? '9:16 (reels vertical)' : '4:5 (feed)';
@@ -198,9 +200,11 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
 `;
 
+  const variationBlock = pickImageVariationBlock(mood);
+
   return `${DEVICE_RULE_FIRST}${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
-${moodInstructions}
+${moodInstructions}${variationBlock}
 ${finalModifier}
 ${cenaDetalhada}
 
@@ -371,6 +375,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         logoPosition,
         format: isCover ? 'reels_cover' : 'post',
         hasRefs: coverHasRefs,
+        mood,
       });
 
   return generateImageAsync({

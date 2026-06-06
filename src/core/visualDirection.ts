@@ -363,3 +363,27 @@ Encerre cada imagePrompt com a assinatura técnica exata (não traduzir, não pa
 export function getMoodSignature(mood: MoodCode): string {
   return getVisualDirection(mood).assinatura;
 }
+
+// Sorteia uma variação de personagem/ruptura para injetar no prompt de IMAGEM a cada geração.
+// Garante que "Gerar outra" nunca reuse a mesma pose — chame a cada vez que o prompt for construído.
+export function pickImageVariationBlock(mood: MoodCode | undefined): string {
+  if (!mood) return '';
+
+  if (mood === 'OP-05') {
+    const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
+    return `\nVARIAÇÃO DESTA GERAÇÃO — TIPO DE RUPTURA SIMBÓLICA (seguir exatamente, não substituir por outra): ${ruptura}`;
+  }
+
+  const characterMap: Partial<Record<MoodCode, string[]>> = {
+    'OP-01': CLAREZA_CHARACTER_VARIATIONS,
+    'OP-02': IMPACTO_CHARACTER_VARIATIONS,
+    'OP-03': INSTANTE_CHARACTER_VARIATIONS,
+  };
+
+  const variations = characterMap[mood];
+  if (!variations) return '';
+
+  const variation = pickRandom(variations);
+  const camera = mood === 'OP-01' ? `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. ` : '';
+  return `\nVARIAÇÃO DESTA GERAÇÃO — POSIÇÃO/GESTO DO PERSONAGEM (seguir exatamente, não repetir pose anterior): ${camera}${variation}`;
+}
