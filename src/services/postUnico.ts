@@ -244,14 +244,10 @@ function buildClothingPool(primary: string, accent: string): string[] {
   return pool;
 }
 
-const OBJETIVO_PALETAS: Record<string, string[]> = {
-  nenhum: [
-    `PALETA DESTA PEÇA — CLAREZA: azul claro, branco e cinza suave. Atmosfera de limpeza visual e inteligibilidade.`,
-    `PALETA DESTA PEÇA — EQUILÍBRIO: bege, cinza quente e azul acinzentado. Harmonia neutra e acolhedora.`,
-    `PALETA DESTA PEÇA — NATURALIDADE: verde suave, areia e branco. Leveza e autenticidade.`,
-    `PALETA DESTA PEÇA — SIMPLICIDADE: branco, cinza claro e azul pálido. Espaço generoso, sem ruído visual.`,
-    `PALETA DESTA PEÇA — ORGANIZAÇÃO: azul médio, branco e grafite suave. Estrutura clara e confiável.`,
-  ],
+// "nenhum" não entra aqui: forçar uma paleta pré-definida (mesmo que "neutra")
+// contradiz e neutraliza a liberdade cromática anunciada na combinação Livre+Nenhum
+// — ver branch dedicado em buildColorBlock, que libera a escolha entre fria/quente.
+const OBJETIVO_PALETAS: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]> = {
   institucional: [
     `PALETA DESTA PEÇA — CONFIANÇA: azul profundo, branco e cinza. Solidez institucional e credibilidade.`,
     `PALETA DESTA PEÇA — CREDIBILIDADE: azul petróleo, grafite e branco. Maturidade e autoridade discreta.`,
@@ -301,7 +297,17 @@ function buildColorBlock(primary: string, accent: string, isMood: boolean, objet
     return `Referência cromática da marca (subordinada ao mood): primária ${primary}, apoio ${accent}.`;
   }
 
-  const obj = (objetivo && OBJETIVO_PALETAS[objetivo]) ? objetivo : 'nenhum';
+  const obj = objetivo ?? 'nenhum';
+
+  // Livre + Nenhum: liberar a cor por completo, coerente com a "liberdade total"
+  // já anunciada em direcaoBlock — uma paleta pré-definida (mesmo "neutra") aqui
+  // cancelaria a variação fria/quente prometida ali. Ver LIVRE_TOTAL_ARCHETYPES.
+  if (obj === 'nenhum') {
+    return `PALETA DESTA PEÇA — LIVRE: a IA escolhe a combinação cromática que melhor sirva ao conceito visual desta geração — pode ser fria OU quente, suave OU saturada, clara OU escura, monocromática OU contrastante — desde que internamente coerente e harmônica. Não há sensação cromática pré-definida a comunicar: a paleta nasce do conceito escolhido para esta peça específica, não de uma fórmula fixa repetida entre gerações.
+Referência cromática da marca (use apenas se houver harmonia natural com a paleta escolhida): primária ${primary}, apoio ${accent}.
+COR DO LETTERING: escolha livremente a cor que garanta a melhor leitura visual sobre o fundo desta paleta — branco, preto, tom claro ou escuro conforme o contraste necessário. Legibilidade e destaque visual são prioritários.`;
+  }
+
   const pool = OBJETIVO_PALETAS[obj];
   const palette = pool[Math.floor(Math.random() * pool.length)];
 
