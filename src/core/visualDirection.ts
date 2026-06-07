@@ -298,10 +298,10 @@ const DESVIO_SYMBOLIC_RUPTURE_VARIATIONS: string[] = [
 // se repetirem entre gerações (inclusive em "Gerar outra"). Agora ângulo e
 // distância são sorteados de forma independente da ruptura, como no CLAREZA.
 const DESVIO_CAMERA_VARIATIONS: string[] = [
-  'CONTRA-PLONGÉE PRÓXIMA: câmera nitidamente abaixo da cintura do personagem ou objeto, lente 28mm, distância curta — linhas verticais convergindo, sensação de proximidade que amplifica o estranhamento',
-  'CONTRA-PLONGÉE DISTANTE: câmera abaixo da linha dos olhos, porém a distância média/aberta, lente 35mm — o ambiente entra no quadro junto à ruptura, perspectiva alongada sutil, sem o exagero do close',
+  'CONTRA-PLONGÉE SUAVE: câmera ligeiramente abaixo da linha dos olhos do personagem ou objeto — inclinação discreta, NUNCA extrema ou caricata —, lente 35mm, distância média. O leve ângulo ascendente sugere o estranhamento de forma sutil, percebida no segundo olhar, sem dramatizar a perspectiva.',
   'PLONGÉE ACENTUADA: câmera nitidamente acima da cabeça do personagem ou do objeto, lente 28-35mm, enquadramento médio — observador olha de cima, sensação de distanciamento que revela o estranhamento',
   'LATERAL RASANTE AO CHÃO: câmera quase ao nível do piso, ângulo lateral extremo, lente 28mm, distância curta — composição diagonal que distorce a perspectiva sem recorrer ao eixo vertical',
+  'DIAGONAL HOLANDESA (DUTCH ANGLE): câmera na altura dos olhos, porém o quadro inteiro rotacionado em diagonal (10-15°), lente 35mm, distância média — o desequilíbrio nasce da inclinação do enquadramento (horizonte e linhas verticais visivelmente tortos), não da posição vertical da câmera — uma forma de estranhamento sem recorrer a contra-plongée ou plongée',
 ];
 
 function pickRandom<T>(arr: T[]): T {
@@ -337,19 +337,21 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
   // ruptura + câmera; SILÊNCIO combina objeto + câmera; OP-01/02/03 combinam
   // personagem + gênero (+ câmera apenas no CLAREZA).
   let variacaoBlock = '';
+  const TEMA_DERIVATION_RULE = 'ANTES de aplicar a estrutura sorteada abaixo, identifique em UMA palavra ou ação concreta o que o título e o texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar documento ou processo; título sobre "comunicação e design" → ação de revisar peças, provas ou material visual; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback). Essa ação ou símbolo concreto é o que preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela.';
+
   if (mood === 'OP-05') {
     const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
     const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Estrutura da ruptura simbólica: ${ruptura}\nEstas combinações definem COMO a cena é fotografada e construída — não substituir por outra câmera nem acumular rupturas simultâneas. O QUE a ruptura representa (o objeto, gesto ou elemento deslocado escolhido para encarná-la) deve traduzir o tema, a intenção e o assunto desta peça (ver título, texto e leituraCenica acima) — a ruptura simbólica é a forma de expressar a ideia da peça de modo conceitual, não um conceito genérico desconectado da mensagem.`;
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Estrutura da ruptura simbólica: ${ruptura}\n${TEMA_DERIVATION_RULE} Aqui, o objeto, gesto ou elemento deslocado que ENCARNA a ruptura deve ser esse símbolo derivado do tema da peça — não um conceito surreal genérico solto. Uma ruptura por cena, sem acumular.`;
   } else if (mood === 'OP-06') {
     const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Estrutura do objeto/sujeito isolado: ${objeto}\nEstas combinações definem COMO a cena é fotografada (câmera) e a NATUREZA do elemento principal (objeto único, vasto espaço negativo). O objeto específico escolhido deve ser o que melhor representa o tema, a intenção e o assunto desta peça dentro do ofício real da empresa (ver título, texto e leituraCenica acima) — não um objeto genérico do ofício desconectado da mensagem. Não substituir por laptop, notebook ou objeto genérico.`;
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Estrutura do objeto/sujeito isolado: ${objeto}\n${TEMA_DERIVATION_RULE} Aqui, o objeto específico (sempre dentro do ofício real da empresa) deve ser esse símbolo derivado do tema da peça — não um objeto genérico do ofício desconectado da mensagem. Não substituir por laptop, notebook ou dispositivo.`;
   } else if (characterVariationMap[mood]) {
     const variation = pickRandom(characterVariationMap[mood]!);
     const camera = mood === 'OP-01' ? pickRandom(CLAREZA_CAMERA_VARIATIONS) : null;
     const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ''}\n• Gênero do personagem: ${gender} — manter coerência com segmento e leituraCenica, sem estereótipo\n• Estrutura de pose/enquadramento/ambiente: ${variation}\nEsta estrutura define COMO a cena é construída e fotografada (pose, câmera, tipo de ambiente) — segui-la sem trocar por uma composição mais genérica. Porém o GESTO, A AÇÃO e O CONTEXTO específico do personagem dentro dessa estrutura DEVEM continuar conectados ao assunto, à intenção e ao título/texto desta peça (ver leituraCenica acima) — adapte a ação ao tema da mensagem, nunca entregue uma cena genérica de "executivo dramático" desconectada do que a peça está comunicando.`;
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ''}\n• Gênero do personagem: ${gender} — manter coerência com segmento e leituraCenica, sem estereótipo\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
   }
 
   // Regras inegociáveis específicas por mood — corrigem desvios observados
@@ -443,16 +445,18 @@ export function getMoodSignature(mood: MoodCode): string {
 export function pickImageVariationBlock(mood: MoodCode | undefined): string {
   if (!mood) return '';
 
+  const TEMA_DERIVATION_RULE = 'ANTES de aplicar a estrutura abaixo, identifique em UMA ação ou símbolo concreto o que o Título e o Texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar; título sobre "comunicação e design" → ação de revisar peças/provas/material visual; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback). Essa ação ou símbolo concreto preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela.';
+
   if (mood === 'OP-05') {
     const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
     const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE CÂMERA E RUPTURA (define COMO a cena é fotografada — sobrepõe o campo "Composição" da CENA DETALHADA acima quanto a câmera e estrutura conceitual; seguir exatamente, não substituir por outra câmera): Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. IMPORTANTE: o objeto, gesto ou elemento deslocado escolhido para encarnar essa ruptura deve traduzir o tema e o assunto específico desta peça (ver Título/Texto acima) — a ruptura expressa a ideia da peça, não um conceito genérico solto.`;
+    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE CÂMERA E RUPTURA (define COMO a cena é fotografada — sobrepõe o campo "Composição" da CENA DETALHADA acima quanto a câmera e estrutura conceitual; seguir exatamente, não substituir por outra câmera): Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} Aqui, o objeto, gesto ou elemento deslocado que ENCARNA a ruptura deve ser esse símbolo derivado do tema — não um conceito surreal genérico solto. Uma ruptura por cena.`;
   }
 
   if (mood === 'OP-06') {
     const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE CÂMERA E OBJETO/SUJEITO DO SILÊNCIO (define COMO a cena é fotografada e a natureza do elemento principal — sobrepõe os campos "Personagem" e "Composição" da CENA DETALHADA acima; seguir exatamente, não substituir por laptop ou dispositivo): Câmera: ${camera}. Estrutura do objeto: ${objeto}. IMPORTANTE: o objeto específico escolhido (dentro do ofício real da empresa) deve ser o que melhor representa o tema e o assunto desta peça (ver Título/Texto acima) — não um objeto genérico desconectado da mensagem.`;
+    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE CÂMERA E OBJETO/SUJEITO DO SILÊNCIO (define COMO a cena é fotografada e a natureza do elemento principal — sobrepõe os campos "Personagem" e "Composição" da CENA DETALHADA acima; seguir exatamente, não substituir por laptop ou dispositivo): Câmera: ${camera}. Estrutura do objeto: ${objeto}. ${TEMA_DERIVATION_RULE} Aqui, o objeto específico (sempre dentro do ofício real da empresa) deve ser esse símbolo derivado do tema — não um objeto genérico desconectado da mensagem.`;
   }
 
   const characterMap: Partial<Record<MoodCode, string[]>> = {
@@ -467,5 +471,5 @@ export function pickImageVariationBlock(mood: MoodCode | undefined): string {
   const variation = pickRandom(variations);
   const camera = mood === 'OP-01' ? `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. ` : '';
   const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE POSE, CÂMERA E AMBIENTE (define COMO a cena é construída e fotografada — sobrepõe os campos "Composição" e "Ambiente" da CENA DETALHADA acima quanto a pose, enquadramento e tipo de ambiente; seguir sem trocar por uma composição mais genérica): ${camera}Gênero do personagem: ${gender} — manter coerência com segmento e cena, sem estereótipo. Estrutura: ${variation} IMPORTANTE: o GESTO, A AÇÃO e O CONTEXTO específico do personagem dentro dessa estrutura devem continuar conectados ao assunto, à intenção e ao Título/Texto desta peça — adapte a ação ao tema da mensagem, nunca entregue uma cena genérica desconectada do que a peça está comunicando.`;
+  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE POSE, CÂMERA E AMBIENTE (define COMO a cena é construída e fotografada — sobrepõe os campos "Composição" e "Ambiente" da CENA DETALHADA acima quanto a pose, enquadramento e tipo de ambiente; seguir sem trocar por uma composição mais genérica): ${camera}Gênero do personagem: ${gender} — manter coerência com segmento e cena, sem estereótipo. Estrutura: ${variation} ${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
 }
