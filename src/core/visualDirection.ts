@@ -410,9 +410,9 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 - Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${variacaoBlock}${moodRuleBlock}${segmentBlock}
 
 TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
-- O TÍTULO renderizado na peça deve ser BOLD e GRANDE — ocupando no mínimo 35% da altura vertical da peça. Letras claramente legíveis a distância.
-- O TEXTO DE APOIO deve ter no mínimo 65% do tamanho do título — NÃO é legenda de rodapé, NÃO é texto decorativo pequeno. É um bloco de texto SECUNDÁRIO MAS LEGÍVEL, equivalente a um subtítulo de revista — corpo grande o suficiente para ser lido sem aproximar o celular.
-- PROIBIDO: texto de apoio com menos de 60% do tamanho do título, texto miniatura, corpo tipo "legenda", qualquer tipografia que exija zoom para ler.
+- O TÍTULO renderizado na peça deve ser BOLD e GRANDE — ocupando no mínimo 35% da altura vertical da peça, SEMPRE dentro da margem de respiro das bordas (ver regra de zona segura) — o tamanho nunca pode ser motivo para a letra tocar ou ultrapassar essa margem; ajuste a quebra de linha e a posição do bloco para caber inteiramente dentro da área segura. Letras claramente legíveis a distância.
+- O TEXTO DE APOIO deve ter em torno de 55% do tamanho do título — menor que o título, mas NÃO é legenda de rodapé nem texto decorativo pequeno. É um bloco de texto SECUNDÁRIO E LEGÍVEL, equivalente a um subtítulo de revista — corpo grande o suficiente para ser lido sem aproximar o celular.
+- PROIBIDO: texto de apoio com menos de 40% do tamanho do título, texto miniatura, corpo tipo "legenda", qualquer tipografia que exija zoom para ler.
 - Regra prática: ao ver a peça no celular em tamanho normal, o texto de apoio deve ser lido de imediato, sem esforço.
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):

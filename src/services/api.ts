@@ -216,7 +216,7 @@ ${variationBlock}
 
 CONTEÚDO TEXTUAL:
 - Título principal em CAIXA ALTA (bold, destaque máximo, tamanho ajustado para caber sem cortar): "${tituloUpper}"
-- Texto de apoio (corpo GRANDE — no mínimo 65% do tamanho do título, legível sem zoom, caixa normal, peso regular): "${texto}"
+- Texto de apoio (corpo em torno de 55% do tamanho do título — menor que o título, mas legível sem zoom, caixa normal, peso regular): "${texto}"
 - ${marcaInstruction}
 
 COR PRIMÁRIA: ${primaryColor}
@@ -226,7 +226,8 @@ ${typographyBlock}
 
 REGRAS:
 - Título renderizado em CAIXA ALTA exatamente como: "${tituloUpper}"
-- Texto de apoio exatamente como: "${texto}", em caixa normal, corpo GRANDE (no mínimo 65% do título)
+- Texto de apoio exatamente como: "${texto}", em caixa normal, corpo em torno de 55% do título (menor que o título, mas legível sem zoom)
+- ⚠ MARGEM DE ${safeMargin} INVIOLÁVEL PARA TÍTULO E TEXTO DE APOIO: o bloco de texto inteiro (título + texto de apoio, todas as linhas) fica DENTRO da área segura, a pelo menos ${safeMargin} de QUALQUER borda — topo, base, esquerda e direita. PROIBIDO letra, palavra ou linha tocando, cortando ou ultrapassando esse perímetro em qualquer direção. Se for preciso, reduza o tamanho do bloco de texto ou ajuste sua posição para que ele caiba inteiro dentro da margem — a margem nunca pode ser sacrificada para acomodar o texto.
 - Todo texto em português, sem tradução, sem texto em inglês
 - Sem elementos decorativos genéricos
 - Alta resolução, estética editorial contemporânea brasileira
