@@ -216,7 +216,7 @@ ${variationBlock}
 
 CONTEÚDO TEXTUAL:
 - Título principal em CAIXA ALTA (bold, destaque máximo, tamanho ajustado para caber sem cortar): "${tituloUpper}"
-- Texto de apoio (corpo em torno de 55% do tamanho do título — menor que o título, mas legível sem zoom, caixa normal, peso regular): "${texto}"
+- Texto de apoio (corpo em torno de 60% do tamanho do título — claramente menor, mas confortavelmente legível sem zoom, caixa normal, peso regular): "${texto}"
 - ${marcaInstruction}
 
 COR PRIMÁRIA: ${primaryColor}
@@ -226,8 +226,8 @@ ${typographyBlock}
 
 REGRAS:
 - Título renderizado em CAIXA ALTA exatamente como: "${tituloUpper}"
-- Texto de apoio exatamente como: "${texto}", em caixa normal, corpo em torno de 55% do título (menor que o título, mas legível sem zoom)
-- ⚠ MARGEM DE ${safeMargin} INVIOLÁVEL PARA TÍTULO E TEXTO DE APOIO: o bloco de texto inteiro (título + texto de apoio, todas as linhas) fica DENTRO da área segura, a pelo menos ${safeMargin} de QUALQUER borda — topo, base, esquerda e direita. PROIBIDO letra, palavra ou linha tocando, cortando ou ultrapassando esse perímetro em qualquer direção. Se for preciso, reduza o tamanho do bloco de texto ou ajuste sua posição para que ele caiba inteiro dentro da margem — a margem nunca pode ser sacrificada para acomodar o texto.
+- Texto de apoio exatamente como: "${texto}", em caixa normal, corpo em torno de 60% do título (claramente menor, mas confortavelmente legível sem zoom)
+- ⚠ MARGEM DE ${safeMargin} INVIOLÁVEL PARA TÍTULO E TEXTO DE APOIO: o bloco de texto inteiro (título + texto de apoio, todas as linhas) fica DENTRO da área segura, a pelo menos ${safeMargin} de QUALQUER borda — topo, base, esquerda e direita. PROIBIDO letra, palavra ou linha tocando, cortando ou ultrapassando esse perímetro em qualquer direção. ANTES DE FINALIZAR A COMPOSIÇÃO: meça mentalmente a distância entre cada lado do bloco de texto (topo, base, esquerda, direita) e a borda mais próxima — se qualquer uma dessas distâncias for menor que ${safeMargin}, diminua o tamanho do bloco inteiro ou desloque sua posição até que TODAS as distâncias sejam iguais ou maiores que ${safeMargin}. A margem nunca pode ser sacrificada para acomodar o texto — reduzir ou reposicionar o texto é sempre a solução correta.
 - Todo texto em português, sem tradução, sem texto em inglês
 - Sem elementos decorativos genéricos
 - Alta resolução, estética editorial contemporânea brasileira
