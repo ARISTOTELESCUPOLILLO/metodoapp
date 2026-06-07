@@ -47,8 +47,9 @@ const MOOD_INSTRUCTIONS: Record<MoodCode, string> = {
 const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
 // Sensação visual desejada por objetivo — orienta a direção emocional da peça livre.
-const OBJETIVO_SENSACAO: Record<PostUnicoObjetivo, string> = {
-  nenhum: 'clareza, naturalidade, organização ou presença visual conectada ao negócio',
+// "nenhum" não entra aqui: é tratado à parte em direcaoBlock (combinação Livre+Nenhum
+// é a mais aberta do sistema e não deve herdar a obrigação "conectar ao negócio").
+const OBJETIVO_SENSACAO: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> = {
   institucional: 'confiança, credibilidade, estabilidade, pertencimento ou profissionalismo',
   promocao: 'energia, dinamismo, entusiasmo ou movimento comercial',
   oportunidade: 'descoberta, possibilidade, renovação ou decisão estratégica',
@@ -58,8 +59,7 @@ const OBJETIVO_SENSACAO: Record<PostUnicoObjetivo, string> = {
 };
 
 // Orientação criativa compacta por objetivo — 1 frase de direção positiva.
-const OBJETIVO_ORIENTACAO: Record<PostUnicoObjetivo, string> = {
-  nenhum: 'Imagem livre mas útil — conectada ao negócio, produto, serviço ou público. Não decorativa.',
+const OBJETIVO_ORIENTACAO: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> = {
   institucional: 'Conectar à atividade real da empresa. Não virar prédio, parede lisa ou skyline.',
   promocao: 'Valorizar produto, benefício ou resultado sem símbolos promocionais óbvios.',
   oportunidade: 'Tensão de escolha, gesto decisivo ou atmosfera de possibilidade — sem clichê literal de caminho aberto.',
@@ -68,9 +68,8 @@ const OBJETIVO_ORIENTACAO: Record<PostUnicoObjetivo, string> = {
   fatos: 'Preservar o registro real. Melhoria técnica apenas: clareza, nitidez, balanço de branco.',
 };
 
-// Exclusões visuais compactas por objetivo — inclui "nenhum".
-const OBJETIVO_VISUAL_EXCLUSIONS: Record<PostUnicoObjetivo, string> = {
-  nenhum: 'Evitar arte solta, paisagem sem relação com negócio, abstrato decorativo, stock genérico e imagem sem função mercadológica.',
+// Exclusões visuais compactas por objetivo.
+const OBJETIVO_VISUAL_EXCLUSIONS: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> = {
   institucional: 'Evitar concreto aparente, parede lisa genérica, skyline, pessoa olhando janela e institucional stock.',
   promocao: 'Evitar sacola genérica, carrinho de supermercado, etiqueta flutuante, porcentagem como elemento principal e aparência de panfleto.',
   oportunidade: 'Evitar portais, portas abertas, arcos, pôr do sol, luz no fim do túnel, pessoa correndo e corredor de concreto.',
@@ -79,9 +78,21 @@ const OBJETIVO_VISUAL_EXCLUSIONS: Record<PostUnicoObjetivo, string> = {
   fatos: 'Preservar registro real. Não inventar cena, pessoas, ambiente ou atmosfera. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução.',
 };
 
+// Arquétipos para a combinação mais aberta do sistema — Direção Livre + Objetivo Nenhum.
+// Ao contrário dos arquétipos por objetivo (abaixo), estes NÃO amarram a cena ao negócio:
+// servem apenas para variar a composição entre gerações sem reduzir a liberdade criativa.
+const LIVRE_TOTAL_ARCHETYPES: string[] = [
+  'CONCEITO DESTA GERAÇÃO — LUZ COMO PROTAGONISTA: construa a peça em torno de uma fonte de luz marcante (natural ou dramática) — ela é quem dá personalidade à cena, não apenas a ilumina.',
+  'CONCEITO DESTA GERAÇÃO — GESTO E DETALHE: close em um gesto, textura ou objeto que carregue atmosfera própria — composição macro ou meio-corpo, qualidade editorial, sem necessidade de explicar um produto ou serviço.',
+  'CONCEITO DESTA GERAÇÃO — INSTANTE CAPTURADO: um momento real em andamento, espontâneo, não posado — a força da imagem vem da autenticidade do instante, não da encenação.',
+  'CONCEITO DESTA GERAÇÃO — LINGUAGEM GRÁFICA OU CONCEITUAL: abordagem predominantemente gráfica, abstrata ou conceitual — cor, forma, ritmo e luz como linguagem própria, sem depender de uma cena literal.',
+  'CONCEITO DESTA GERAÇÃO — ATMOSFERA DE AMBIENTE: o espaço/cenário como protagonista — luz, textura e profundidade construindo um universo visual com identidade própria.',
+];
+
 // Arquétipos visuais mutuamente distintos por objetivo — sorteados a cada geração livre
 // para garantir diversidade de conceito entre chamadas sequenciais com o mesmo keyInfo.
-const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
+// Não inclui "nenhum": ver LIVRE_TOTAL_ARCHETYPES e o branch dedicado em direcaoBlock.
+const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]> = {
   oportunidade: [
     'CONCEITO DESTA GERAÇÃO — RELÓGIO / TEMPO: construa a peça em torno de um relógio analógico, detalhe de ponteiros ou ampulheta. A tensão visual vem do tempo que passa, não de movimento corporal. Composição com close preciso, luz controlada sobre o objeto.',
     'CONCEITO DESTA GERAÇÃO — GESTO DECISIVO: foco em close de mão em ação — assinando, apontando, segurando um objeto significativo, prestes a pressionar algo. Sem figura correndo. A urgência está no detalhe do gesto, não no movimento geral do corpo.',
@@ -122,12 +133,6 @@ const OBJETIVO_ARCHETYPES: Record<PostUnicoObjetivo, string[]> = {
     'CONCEITO DESTA GERAÇÃO — EVIDÊNCIA VISUAL DO MOMENTO: a imagem é prova de que o evento aconteceu. Pessoas em posições naturais originais, ambiente real preservado, luz ambiente respeitada. Calibração técnica permitida (brilho, contraste, nitidez). PROIBIDO: alterar qualquer pessoa, remover elementos, adicionar figuras, dramatizar visualmente. Resultado: o mesmo evento, visualmente mais claro e legível.',
     'CONCEITO DESTA GERAÇÃO — MOMENTO AUTÊNTICO REGISTRADO: capture a essência do evento sem interferência criativa. Preserve exatamente as pessoas presentes, o espaço onde ocorreu, a luz ambiente real. Apenas refinamento técnico é permitido. A peça final é o evento como aconteceu — não uma reinterpretação artística dele.',
   ],
-  nenhum: [
-    'COMPOSIÇÃO DESTA GERAÇÃO — LUZ E AMBIENTE: priorize uma fonte de luz clara e definida (janela, sol lateral, studio suave). Personagem ou produto em destaque com fundo desfocado ou texturizado.',
-    'COMPOSIÇÃO DESTA GERAÇÃO — PERSPECTIVA DINÂMICA: enquadramento em ângulo — câmera levemente baixa olhando para cima, ou câmera alta olhando para baixo. Evitar câmera frontal reta na altura dos olhos.',
-    'COMPOSIÇÃO DESTA GERAÇÃO — CLOSE DETALHADO: foco em um detalhe físico representativo do negócio — mãos em ação, produto em close, textura, superfície. Composição macro ou meio-corpo próximo.',
-    'COMPOSIÇÃO DESTA GERAÇÃO — CENA DE BASTIDOR: momento de processo ou ação em andamento — não pose estática. Captura espontânea, autêntica, como bastidor real do negócio.',
-  ], // Variações de composição para garantir diversidade no "Gerar outra"
 };
 
 function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo): string {
@@ -135,6 +140,15 @@ function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: Pos
     return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}): ${MOOD_INSTRUCTIONS[mood]}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.`;
   }
   const obj = objetivo ?? 'nenhum';
+
+  // Livre + Nenhum é a combinação mais aberta do sistema (sem mood, sem objetivo).
+  // Tratada à parte: os mapas OBJETIVO_* pressupõem conexão obrigatória com o negócio,
+  // o que contradiz e neutraliza a "liberdade total" — daí a falta de ousadia observada.
+  if (obj === 'nenhum') {
+    const archetypeHint = `\n\n${LIVRE_TOTAL_ARCHETYPES[Math.floor(Math.random() * LIVRE_TOTAL_ARCHETYPES.length)]}`;
+    return `DIREÇÃO LIVRE — SEM TEMA OU OBJETIVO PRÉ-DEFINIDO: a IA tem liberdade total e real de direção de arte — não há mood, não há objetivo, não há obrigação de literalidade com o negócio.${archetypeHint}\n\nVarie ATIVAMENTE entre abordagens possíveis: luz natural OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU conceitual. Escolha uma direção com personalidade própria, ouse e vá fundo nela — o critério é qualidade editorial e impacto visual, não utilidade comercial. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
+  }
+
   const sensacao = OBJETIVO_SENSACAO[obj];
   const orientacao = OBJETIVO_ORIENTACAO[obj];
   const exclusion = OBJETIVO_VISUAL_EXCLUSIONS[obj];
@@ -143,7 +157,7 @@ function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: Pos
   const archetypeHint = archetypes && archetypes.length
     ? `\n\n${archetypes[Math.floor(Math.random() * archetypes.length)]}`
     : '';
-  return `DIREÇÃO LIVRE — SENSAÇÃO DESEJADA: ${sensacao}.\nOrientação: ${orientacao}\n\n${exclusion}${archetypeHint}\n\nA IA tem liberdade total de direção de arte — NÃO há mood pré-definido. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
+  return `DIREÇÃO LIVRE — SENSAÇÃO DESEJADA: ${sensacao}.\nOrientação: ${orientacao}\n\n${exclusion}${archetypeHint}\n\nA IA tem liberdade de direção de arte dentro do objetivo informado. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
 }
 
 function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo: string; regraFinal: string } {
