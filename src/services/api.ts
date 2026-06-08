@@ -134,8 +134,11 @@ function buildImagePrompt(params: {
   // (avatar/cenário/produto). Recebe destaque no topo do prompt — junto das
   // demais regras inegociáveis — para não perder força para a leitura de cena.
   referenceAnchor?: string;
+  // Ver nota em generatePostImage: quando true, suprime o sorteio de gênero
+  // do personagem (o avatar de referência já define a identidade/gênero).
+  hasAvatarRef?: boolean;
 }): string {
-  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor } = params;
+  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef } = params;
   const isCover = format === 'reels_cover';
   const canvasSize = isCover ? '1080x1920' : '1080x1350';
   const canvasRatio = isCover ? '9:16 (reels vertical)' : '4:5 (feed)';
@@ -218,7 +221,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
 `;
 
-  const variationBlock = pickImageVariationBlock(mood);
+  const variationBlock = pickImageVariationBlock(mood, hasAvatarRef);
 
   return `${DEVICE_RULE_FIRST}${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
@@ -332,8 +335,14 @@ export async function generatePostImage(params: {
   // Recebe posição de destaque no prompt final — ANTES da leitura de cena —
   // para não competir e perder para a descrição narrativa do card.
   referenceAnchor?: string;
+  // Indica que a primeira referência enviada é um AVATAR (foto de identidade
+  // da pessoa). Quando true, o sorteio de variação NÃO deve embutir um gênero
+  // aleatório no prompt — o gênero já vem definido pela própria foto, e uma
+  // instrução de "gênero sorteado com precedência" entraria em conflito com a
+  // regra de preservar a identidade do avatar, fazendo a IA descartar a referência.
+  hasAvatarRef?: boolean;
 }): Promise<string> {
-  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor } = params;
+  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef } = params;
 
   const isReels = vertical === 'reels';
   const isCover = vertical === 'reels_cover';
@@ -411,6 +420,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         hasRefs: coverHasRefs,
         mood,
         referenceAnchor,
+        hasAvatarRef,
       });
 
   return generateImageAsync({

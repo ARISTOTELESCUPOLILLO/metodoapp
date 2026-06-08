@@ -254,6 +254,7 @@ export async function regenerateWithKit(
 
   const references = buildReferences(slot.elemento, imageKit, produtosSelecionados, cenarioSelecionado, selecaoDireta);
   const referenceImages = refsToArray(references);
+  const hasAvatarRef = !!references.avatar;
   const anchorPrefix = buildAnchorPrefix(references, mood, {
     primary: kit.primaryColor || '#123a63',
     accent: kit.accentColor || kit.secondaryColor || '#f4b000',
@@ -288,6 +289,7 @@ export async function regenerateWithKit(
       vertical: 'reels',
       // Sem logoDataUrl: a logo é aplicada por canvas (composeReelsPng).
       referenceImages: referenceImages.length ? referenceImages : undefined,
+      hasAvatarRef,
     });
   }
 
@@ -307,6 +309,7 @@ export async function regenerateWithKit(
       logoPosition: kit.logoPosition,
       leituraCenica,
       referenceImages: referenceImages.length ? referenceImages : undefined,
+      hasAvatarRef,
     });
   }
 
@@ -328,6 +331,7 @@ export async function regenerateWithKit(
     logoPosition: kit.logoPosition,
     leituraCenica,
     referenceImages: referenceImages.length ? referenceImages : undefined,
+    hasAvatarRef,
   });
 }
 

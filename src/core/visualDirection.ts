@@ -459,7 +459,7 @@ export function getMoodSignature(mood: MoodCode): string {
 
 // Sorteia uma variação de personagem/ruptura para injetar no prompt de IMAGEM a cada geração.
 // Garante que "Gerar outra" nunca reuse a mesma pose — chame a cada vez que o prompt for construído.
-export function pickImageVariationBlock(mood: MoodCode | undefined): string {
+export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean): string {
   if (!mood) return '';
 
   const TEMA_DERIVATION_RULE = 'ANTES de aplicar a estrutura abaixo, identifique em UMA ação ou símbolo concreto o que o Título e o Texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar; título sobre "comunicação e design" → ação de revisar peças/provas/material visual; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback). Essa ação ou símbolo concreto preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela.';
@@ -487,6 +487,19 @@ export function pickImageVariationBlock(mood: MoodCode | undefined): string {
 
   const variation = pickRandom(variations);
   const camera = mood === 'OP-01' ? `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. ` : '';
-  const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE POSE, CÂMERA E AMBIENTE (define COMO a cena é construída e fotografada — sobrepõe os campos "Composição" e "Ambiente" da CENA DETALHADA acima quanto a pose, enquadramento e tipo de ambiente; seguir sem trocar por uma composição mais genérica): ${camera}Gênero do personagem NESTA GERAÇÃO: ${gender} — ESTA INSTRUÇÃO TEM PRECEDÊNCIA sobre qualquer pronome ou substantivo de gênero (ex.: "ele/empresário" vs. "ela/empresária") que apareça no campo "Personagem" da CENA DETALHADA acima: adapte esses termos para concordar com o gênero sorteado aqui, preservando a mesma ação, postura, papel e contexto descritos — troque só o gênero, sem estereótipo. Estrutura: ${variation} ${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
+
+  // Quando há AVATAR de referência, o gênero do personagem já é determinado pela
+  // própria foto — sortear e injetar "PRECEDÊNCIA MÁXIMA" sobre outro gênero aqui
+  // entra em conflito direto com a instrução de preservar identidade do avatar
+  // (referenceAnchor: "NÃO mude o gênero"), e a IA acaba descartando o avatar e
+  // gerando uma pessoa genérica do gênero sorteado. Sem avatar, o sorteio segue
+  // normalmente — ele existe pra evitar viés sempre-masculino no personagem fictício.
+  const genderBlock = hasAvatarRef
+    ? ''
+    : (() => {
+        const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
+        return `Gênero do personagem NESTA GERAÇÃO: ${gender} — ESTA INSTRUÇÃO TEM PRECEDÊNCIA sobre qualquer pronome ou substantivo de gênero (ex.: "ele/empresário" vs. "ela/empresária") que apareça no campo "Personagem" da CENA DETALHADA acima: adapte esses termos para concordar com o gênero sorteado aqui, preservando a mesma ação, postura, papel e contexto descritos — troque só o gênero, sem estereótipo. `;
+      })();
+
+  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE POSE, CÂMERA E AMBIENTE (define COMO a cena é construída e fotografada — sobrepõe os campos "Composição" e "Ambiente" da CENA DETALHADA acima quanto a pose, enquadramento e tipo de ambiente; seguir sem trocar por uma composição mais genérica): ${camera}${genderBlock}Estrutura: ${variation} ${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
 }
