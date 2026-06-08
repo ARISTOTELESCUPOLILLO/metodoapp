@@ -191,10 +191,11 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
   }
   if (refs.cenario) {
     const reilumina = MOODS_CLAROS.has(mood);
+    const fachadaClause = `se for FACHADA ou FRENTE DE ESTABELECIMENTO, preserve a arquitetura, letreiros e identidade visual do local — a fachada deve ser reconhecível na imagem final, com personagem ou produto posicionado à frente ou com a fachada claramente visível ao fundo. Se houver fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada, é PERMITIDO retocar/remover esses elementos da composição final — desde que a arquitetura, os letreiros e a identidade visual do local continuem plenamente reconhecíveis. Se o céu aparecer na cena, é PERMITIDO substituí-lo por um céu mais bonito e coerente com o mood e o horário do dia (ex.: azul limpo, entardecer dourado, nublado suave) — sem look artificial ou composição com aparência de colagem`;
     lines.push(
       reilumina
-        ? `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: se for FACHADA ou FRENTE DE ESTABELECIMENTO, preserve a arquitetura, letreiros e identidade visual do local — a fachada deve ser reconhecível na imagem final, com personagem ou produto posicionado à frente ou com a fachada claramente visível ao fundo; se for AMBIENTE INTERNO, preserve sala, móveis, equipamentos, paredes e ponto de vista da câmera. NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo. A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os objetos do ambiente, mas adapte a luz para casar com o mood claro.`
-        : `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: se for FACHADA ou FRENTE DE ESTABELECIMENTO, preserve a arquitetura, letreiros e identidade visual do local — a fachada deve ser reconhecível na imagem final, com personagem ou produto posicionado à frente ou com a fachada claramente visível ao fundo; se for AMBIENTE INTERNO, preserve sala, móveis, equipamentos, paredes, mesma iluminação e ponto de vista da câmera. NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo. Apenas adicione/adapte o personagem e a ação descritos abaixo dentro deste espaço real.`,
+        ? `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${fachadaClause}; se for AMBIENTE INTERNO, preserve sala, móveis, equipamentos, paredes e ponto de vista da câmera. NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo. A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os objetos do ambiente, mas adapte a luz para casar com o mood claro.`
+        : `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${fachadaClause}; se for AMBIENTE INTERNO, preserve sala, móveis, equipamentos, paredes, mesma iluminação e ponto de vista da câmera. NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo. Apenas adicione/adapte o personagem e a ação descritos abaixo dentro deste espaço real.`,
     );
     idx++;
   }
@@ -236,19 +237,19 @@ export async function regenerateWithKit(
   const isFinal = slot.formato === 'estatico_final';
 
   const baseScene = (imagePrompt || keyInfo || '').slice(0, 600);
-  const deviceRule =
-    '⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL:\n' +
-    'PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal ou traseira.\n' +
-    'CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, site, app, texto legível ou qualquer elemento visual.\n' +
-    'DISPOSITIVO PERMITIDO APENAS COMO OBJETO CONTEXTUAL: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra sem conteúdo identificável.\n' +
-    'MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.\n' +
-    'PESSOA FÍSICA NA CENA: o porta-voz aparece como PESSOA REAL dentro do ambiente — NUNCA como imagem exibida na tela de qualquer dispositivo.\n' +
-    'NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.\n\n';
-  const anchoredPrompt = (anchorPrefix + deviceRule + baseScene).slice(0, 1800);
+  // Anchor de referência (ex.: "IMAGEM #1 = PRODUTO OBRIGATÓRIO...") é enviado
+  // separado da cena — ver buildImagePrompt/generatePostImage, que o posicionam
+  // com prioridade máxima, ANTES da leitura cênica. Não embutir aqui dentro do
+  // imagePrompt: lá ele acabaria enterrado num bullet de "referência adicional",
+  // perdendo força para o restante da descrição de cena.
+  // A regra de dispositivos digitais também não precisa ser repetida aqui —
+  // generatePostImage já injeta DEVICE_RULE_FIRST/DEVICE_RULE_REELS no topo do prompt.
+  const referenceAnchor = anchorPrefix.trim() ? anchorPrefix.trim() : undefined;
 
   if (isReels) {
     return generatePostImage({
-      imagePrompt: anchoredPrompt,
+      imagePrompt: baseScene,
+      referenceAnchor,
       titulo: '',
       texto: '',
       companyName: kit.companyName,
@@ -265,7 +266,8 @@ export async function regenerateWithKit(
   // Estático Final: imagem-base limpa, logo aplicada por canvas (composeFinalPng).
   if (isFinal) {
     return generatePostImage({
-      imagePrompt: anchoredPrompt,
+      imagePrompt: baseScene,
+      referenceAnchor,
       titulo: titulo || '',
       texto: texto || '',
       companyName: kit.companyName,
@@ -285,7 +287,8 @@ export async function regenerateWithKit(
   // Imagem (cenário/avatar/produto) como ancoragem visual. O caller aplica
   // apenas a logo via composeFeedPng.
   return generatePostImage({
-    imagePrompt: anchoredPrompt,
+    imagePrompt: baseScene,
+    referenceAnchor,
     titulo: titulo || '',
     texto: texto || '',
     companyName: kit.companyName,
