@@ -195,9 +195,9 @@ EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "orga
 PREFIRA versões com tensão psicológica e direção da sequência.
 
 Exemplos do método (não copie, use como referência de FORMATO):
-- "anúncios pagos que não viram vendas para lojas locais"
-- "empresas que postam todo dia mas continuam invisíveis no Instagram"
-- "negócios com comunicação desorganizada que passam insegurança sem perceber"
+- "anúncios pagos não trazem vendas para a loja local"
+- "a empresa publica todo dia e continua invisível no Instagram"
+- "comunicação desorganizada transmite insegurança ao cliente sem perceber"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
@@ -231,9 +231,9 @@ EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "trá
 EVITE qualquer formulação que soe como crítica ao público ("não conseguem", "não sabem", "fazem errado", "estão perdidos").
 
 Exemplos do método (não copie, use como referência de FORMATO e TOM):
-- "lojas de bairro prontas para vender pelo Instagram todo dia"
-- "negócios locais ganhando autoridade com presença digital consistente"
-- "marcas prontas para crescer com consistência nas redes"
+- "a loja de bairro vende todo dia pelo Instagram"
+- "o negócio local ganha autoridade com presença digital consistente"
+- "a marca cresce com consistência nas redes sociais"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
@@ -264,9 +264,9 @@ ASSUNTO + CONTEXTO + IDENTIDADE/PROPÓSITO + DIREÇÃO.
 PROIBIDO: linguagem de venda ("compre", "garanta", "oferta", "promoção"), dor do cliente ("não conseguem", "estão perdidos", "estagnação", "invisíveis"), urgência ("últimas vagas", "agora"), reinterpretação negativa de qualquer pista positiva do usuário.
 
 Exemplos do método (não copie, use como referência de TOM e FORMATO institucional):
-- "loja de bairro que pertence à história da cidade"
-- "marca local reafirmando o jeito de fazer que a diferencia"
-- "negócio com propósito claro além do que vende"
+- "a loja de bairro pertence à história da cidade"
+- "a marca local reafirma o jeito próprio de trabalhar"
+- "o negócio tem um propósito claro além da venda"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
@@ -297,9 +297,9 @@ ASSUNTO + CONTEXTO + LEGADO/PERCEPÇÃO + DIREÇÃO.
 PROIBIDO: dor do cliente, crítica ao público, linguagem comercial agressiva, urgência, qualquer inversão negativa de uma pista positiva (ex.: transformar "20 anos de tradição" em "estagnação há 20 anos" é proibido).
 
 Exemplos do método (não copie, use como referência de TOM e FORMATO):
-- "duas décadas construindo vínculo com a comunidade local"
-- "trajetória de detalhes que definem como a marca é lembrada"
-- "presença local que atravessou gerações e segue referência no bairro"
+- "a marca constrói vínculo com a comunidade há duas décadas"
+- "pequenos detalhes definem como as pessoas lembram da marca"
+- "a marca atravessou gerações e ainda é referência no bairro"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
@@ -333,9 +333,9 @@ Deve ATIVAR pelo menos um gatilho: movimento, conflito, mudança, comparação, 
 EVITE termos genéricos isolados ("marketing digital", "consultoria", "organização", "tráfego pago").
 
 Exemplos de refinamento com tensão (não copie — referência de FORMATO):
-- "anúncios pagos que não viram vendas para lojas locais"
-- "empresas que postam todo dia mas continuam invisíveis no Instagram"
-- "negócios com comunicação desorganizada que passam insegurança sem perceber"
+- "anúncios pagos não trazem vendas para a loja local"
+- "a empresa publica todo dia e continua invisível no Instagram"
+- "comunicação desorganizada transmite insegurança ao cliente sem perceber"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
@@ -366,9 +366,9 @@ NÃO aponte erro ou falta. Fale do que o público QUER alcançar, do próximo n�
 EVITE qualquer formulação crítica ao público ("não conseguem", "não sabem", "fazem errado").
 
 Exemplos de refinamento com motivação (não copie — referência de FORMATO e TOM):
-- "lojas de bairro prontas para vender pelo Instagram todo dia"
-- "negócios locais ganhando autoridade com presença digital consistente"
-- "marcas prontas para crescer com consistência nas redes"
+- "a loja de bairro vende todo dia pelo Instagram"
+- "o negócio local ganha autoridade com presença digital consistente"
+- "a marca cresce com consistência nas redes sociais"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
@@ -397,9 +397,9 @@ ${criteriosRefinamentoOP}
 Revele QUEM a marca é, o que representa, como quer ser percebida. Sem promessa comercial, sem CTA.
 
 Exemplos de refinamento institucional (não copie — referência de TOM e FORMATO):
-- "loja de bairro que pertence à história da cidade"
-- "marca local reafirmando o jeito de fazer que a diferencia"
-- "negócio com propósito claro além do que vende"
+- "a loja de bairro pertence à história da cidade"
+- "a marca local reafirma o jeito próprio de trabalhar"
+- "o negócio tem um propósito claro além da venda"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
@@ -428,9 +428,9 @@ ${criteriosRefinamentoOP}
 Foco em história, tempo de mercado, vínculo afetivo, evolução da marca. Tom de orgulho calmo.
 
 Exemplos de refinamento de legado (não copie — referência de TOM e FORMATO):
-- "duas décadas construindo vínculo com a comunidade local"
-- "trajetória de detalhes que definem como a marca é lembrada"
-- "presença local que atravessou gerações e segue referência no bairro"
+- "a marca constrói vínculo com a comunidade há duas décadas"
+- "pequenos detalhes definem como as pessoas lembram da marca"
+- "a marca atravessou gerações e ainda é referência no bairro"
 
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
