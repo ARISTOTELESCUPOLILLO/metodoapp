@@ -130,8 +130,12 @@ function buildImagePrompt(params: {
   format?: 'post' | 'reels_cover';
   hasRefs?: boolean;
   mood?: MoodCode;
+  // Instrução de PRIORIDADE MÁXIMA sobre como usar as imagens de referência
+  // (avatar/cenário/produto). Recebe destaque no topo do prompt — junto das
+  // demais regras inegociáveis — para não perder força para a leitura de cena.
+  referenceAnchor?: string;
 }): string {
-  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood } = params;
+  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor } = params;
   const isCover = format === 'reels_cover';
   const canvasSize = isCover ? '1080x1920' : '1080x1350';
   const canvasRatio = isCover ? '9:16 (reels vertical)' : '4:5 (feed)';
@@ -154,6 +158,9 @@ function buildImagePrompt(params: {
   const typographyBlock = buildTypographyBlock(fontFamily);
   const typographyShort = buildTypographyShortRule(fontFamily);
 
+  // Quando há `referenceAnchor`, ele já cobre a "referência visual" com prioridade
+  // máxima lá no topo do prompt (ver referenceAnchorBlock) — não repetir aqui
+  // dentro de um bullet, onde perderia força para o restante da leitura cênica.
   const cenaDetalhada = leituraCenica
     ? `CENA DETALHADA:
 - Intenção emocional: ${leituraCenica.intencao || ''}
@@ -161,9 +168,15 @@ function buildImagePrompt(params: {
 - Ambiente: ${leituraCenica.ambiente || ''}
 - Expressão: ${leituraCenica.expressao || ''}
 - Clima/Luz: ${leituraCenica.clima || ''}
-- Composição: ${leituraCenica.composicao || ''}
-- Referência visual adicional: ${imagePrompt}`
+- Composição: ${leituraCenica.composicao || ''}${referenceAnchor ? '' : `\n- Referência visual adicional: ${imagePrompt}`}`
     : `CENA FOTOGRÁFICA: ${imagePrompt}`;
+
+  // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
+  // posicionada junto das demais regras inegociáveis, ANTES da leitura de cena,
+  // para não competir e perder para a descrição narrativa do card.
+  const referenceAnchorBlock = referenceAnchor
+    ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito na leitura de cena a seguir, em caso de conflito.\n${referenceAnchor}\n\n`
+    : '';
 
   const finalModifier = isFinal ? `\n${ESTATICO_FINAL_MODIFIER}\n` : '';
 
@@ -207,7 +220,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
   const variationBlock = pickImageVariationBlock(mood);
 
-  return `${DEVICE_RULE_FIRST}${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
+  return `${DEVICE_RULE_FIRST}${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
@@ -314,8 +327,13 @@ export async function generatePostImage(params: {
   // Imagens de referência (avatar/cenário/produtos do Kit Imagem).
   // Quando informadas, o servidor usa fal-ai/gpt-image-2/edit.
   referenceImages?: string[];
+  // Instrução textual de PRIORIDADE MÁXIMA sobre como usar as `referenceImages`
+  // (ex.: "IMAGEM #1 = PRODUTO OBRIGATÓRIO. Use EXATAMENTE este produto...").
+  // Recebe posição de destaque no prompt final — ANTES da leitura de cena —
+  // para não competir e perder para a descrição narrativa do card.
+  referenceAnchor?: string;
 }): Promise<string> {
-  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages } = params;
+  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor } = params;
 
   const isReels = vertical === 'reels';
   const isCover = vertical === 'reels_cover';
@@ -355,6 +373,12 @@ DISPOSITIVO PERMITIDO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado
 MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
 NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.`;
 
+  // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
+  // precisa vir ANTES da descrição da cena para não perder força para ela.
+  const referenceAnchorBlock = referenceAnchor
+    ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito na cena a seguir, em caso de conflito.\n${referenceAnchor}\n\n`
+    : '';
+
   const prompt = isReels
     ? `REGRAS INVIOLÁVEIS PARA A IMAGEM DO REELS (PRIMEIRO FRAME DO VÍDEO):
 - Gerar UMA FOTO ÚNICA, não carrossel, não colagem, não montagem, não sequência de quadros.
@@ -368,7 +392,7 @@ ZONA DE RESPIRO INVIOLÁVEL: 150 px de margem livre nas QUATRO bordas (topo, bas
 IMAGEM FULL BLEED — REGRA ABSOLUTA: a imagem preenche o canvas 1080x1920 completamente de borda a borda. PROIBIDO: moldura externa, frame decorativo, borda de cor sólida ao redor da arte, vinheta escura periférica como contentor, margem vazia ou espaço branco/preto separando a imagem das bordas do canvas.
 FAIXA CENTRAL HORIZONTAL livre: entre 35% e 65% da altura do canvas, mantenha a área SEM detalhes que competem com texto — é onde a capa do vídeo entra nos primeiros 0,4 s. Posicione rosto, mãos e elementos-foco PREFERENCIALMENTE no terço SUPERIOR ou no terço INFERIOR, deixando o miolo do quadro mais limpo.
 
-CENA ADAPTADA PARA UM ÚNICO PORTA-VOZ: ${imagePrompt}.
+${referenceAnchorBlock}CENA ADAPTADA PARA UM ÚNICO PORTA-VOZ: ${imagePrompt}.
 
 ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}`
     : buildImagePrompt({
@@ -386,6 +410,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         format: isCover ? 'reels_cover' : 'post',
         hasRefs: coverHasRefs,
         mood,
+        referenceAnchor,
       });
 
   return generateImageAsync({

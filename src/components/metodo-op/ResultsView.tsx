@@ -761,9 +761,32 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             storageKey={blockStorageKey}
             compact
             onGerou={() => { /* disparo vem do botão "Gerar X cards com refs" */ }}
+            footerAction={blockSel.hasAny && kitHasRefsForFormat(imageKit, 'carrossel') ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <span style={{ fontSize: 11, color: '#475569' }}>
+                  Cada card recebe o produto na ordem marcada (card 1 → produto 1, …).
+                </span>
+                <button
+                  type="button"
+                  className="generateBtn"
+                  onClick={runGenerateAllWithRefs}
+                  disabled={busyAll || busyIndex !== null}
+                  title="Gera os cards em sequência: card 1 com produto 1, card 2 com produto 2, e assim por diante"
+                >
+                  {busyAllMode === 'refs'
+                    ? `Gerando ${(allProgress?.done ?? 0) + 1}/${allProgress?.total ?? cards.length}…`
+                    : `✨ Gerar ${cards.length} cards com refs`}
+                </button>
+              </div>
+            ) : undefined}
           />
-          {/* Botão: Gerar todos sem refs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 6px', flexWrap: 'wrap' }}>
+
+          {/* Caixa separada: gerar todos os cards sem imagens de referência. */}
+          <div style={{
+            background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10,
+            padding: '8px 10px', marginBottom: 10,
+            display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+          }}>
             <button
               type="button"
               className="generateBtn"
@@ -777,25 +800,6 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             </button>
             <span style={{ fontSize: 11, color: '#64748b' }}>Revise títulos e textos antes de confirmar.</span>
           </div>
-
-          {blockSel.hasAny && kitHasRefsForFormat(imageKit, 'carrossel') && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="generateBtn"
-                onClick={runGenerateAllWithRefs}
-                disabled={busyAll || busyIndex !== null}
-                title="Gera os cards em sequência: card 1 com produto 1, card 2 com produto 2, e assim por diante"
-              >
-                {busyAllMode === 'refs'
-                  ? `Gerando ${(allProgress?.done ?? 0) + 1}/${allProgress?.total ?? cards.length}…`
-                  : `✨ Gerar ${cards.length} cards com refs`}
-              </button>
-              <span style={{ fontSize: 11, color: '#475569' }}>
-                Cada card recebe o produto na ordem marcada (card 1 → produto 1, …).
-              </span>
-            </div>
-          )}
           {cards.map((card, index) => {
             const ctx = (kind: RegenKind) => ({
               kind, companyName: kit.companyName, mainActivity: kit.mainActivity, keyInfo,

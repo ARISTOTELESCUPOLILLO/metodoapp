@@ -53,6 +53,11 @@ interface Props {
   // Usado quando o disparo vem de um botão externo (ex.: "Gerar 5 cards com refs"
   // no carrossel). Os checkboxes continuam editáveis e persistidos.
   compact?: boolean;
+  // Ação customizada renderizada DENTRO da caixa, no lugar do botão interno
+  // "Gerar com referências" — usado quando o disparo precisa de uma lógica
+  // própria (ex.: "Gerar N cards com refs" do carrossel, que itera os cards
+  // em sequência em vez de gerar uma única imagem via handleGerar).
+  footerAction?: React.ReactNode;
 }
 
 export default function UsoReferenciasDia(props: Props) {
@@ -60,7 +65,7 @@ export default function UsoReferenciasDia(props: Props) {
     segmento, modelo, formato, posicao, cardCarrossel,
     extrasCarrossel, kit, imageKit, mood,
     titulo, texto, imagePrompt, leituraCenica, formatoOverride,
-    onGerou, storageKey, compact,
+    onGerou, storageKey, compact, footerAction,
   } = props;
 
   // Policy efetiva (com extras de carrossel quando se aplica)
@@ -287,7 +292,9 @@ export default function UsoReferenciasDia(props: Props) {
             </div>
           )}
 
-          {!compact && (
+          {footerAction ? (
+            <div style={{ marginTop: 8 }}>{footerAction}</div>
+          ) : !compact && (
             <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 type="button"
