@@ -1,4 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
+
+function truncateWords(s: string, max: number): string {
+  const words = s.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= max) return s.trim();
+  return words.slice(0, max).join(' ').replace(/[,;:\-–—]+$/, '').trim();
+}
 import { getVoiceProfile } from '@/data/brandVoice';
 import { resolveEffectiveUser, checkBalance, debitUsage } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
@@ -148,10 +154,16 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
             });
           }
 
-          return Response.json({
-            titulo: String(parsed.titulo || '').trim(),
-            texto: String(parsed.texto || '').trim(),
-          });
+          let titulo = truncateWords(String(parsed.titulo || ''), 6);
+          let texto = truncateWords(String(parsed.texto || ''), 14);
+
+          if (!titulo) return Response.json({ error: 'Título vazio na resposta da IA' }, { status: 502 });
+          if (!texto) return Response.json({ error: 'Texto vazio na resposta da IA' }, { status: 502 });
+
+          // Garante ponto final no texto quando a IA esquece.
+          if (!/[.!?]$/.test(texto)) texto = texto + '.';
+
+          return Response.json({ titulo, texto });
         } catch (e) {
           return Response.json({ error: (e as Error).message }, { status: 500 });
         }

@@ -9,6 +9,7 @@ const OBJETIVO_TOM: Record<string, string> = {
   aviso: 'institucional, claro, objetivo',
   oportunidade: 'urgência elegante, momento decisivo',
   institucional: 'institucional de marca, posicionamento, propósito, sóbrio e confiante',
+  fatos: 'documental, registro fiel, objetivo',
   nenhum: 'neutro, livre — foco no fato concreto da empresa',
 };
 
@@ -83,7 +84,10 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             ? `REGRA CRÍTICA DA PISTA: preserve o SENTIDO da pista do usuário (positivo, neutro ou crítico). Refine a FORMA, NUNCA inverta a intenção. Se a pista é positiva (ex.: "20 anos fazendo parte da vida da cidade"), NÃO transforme em dor/estagnação/crítica. Se é neutra, mantenha neutra. Se já carrega tensão, pode aprofundar.`
             : '';
 
-          const proibicoesInventar = (objetivo !== 'promocao' && objetivo !== 'oportunidade')
+          // Na MOP, objetivo de peça (ex.: 'promocao') pertence à PU e não deve
+          // remover a proteção contra invenções — a sequência do Método OP nunca
+          // inventa datas/descontos/promoções independente do objetivo enviado.
+          const proibicoesInventar = (mode === 'metodo' || (objetivo !== 'promocao' && objetivo !== 'oportunidade'))
             ? `PROIBIDO inventar: datas • descontos • promoções • eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
             : '';
 
