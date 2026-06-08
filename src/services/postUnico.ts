@@ -413,11 +413,16 @@ Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com co
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
     : '';
 
-  // Suprimido quando: (a) há Kit Imagem ativo (refsBlock) — a referência já ancora a
-  // cena; ou (b) objetivo simbólico (homenagem/aviso) — "ação operacional" seria
-  // inadequada para registros e comunicados.
+  // Suprimido quando:
+  // (a) há Kit Imagem ativo (refsBlock) — referência já ancora a cena;
+  // (b) objetivo simbólico (homenagem/aviso) — ação operacional inadequada;
+  // (c) mood com gramática intencionalmente simbólica/abstrata (OP-04 FRAGMENTO,
+  //     OP-05 DESVIO, OP-06 SILÊNCIO) — "mostre ação concreta" conflita com a
+  //     linguagem de fragmento/desvio/minimalismo desses moods.
   const OBJETIVOS_SIMBOLICOS = new Set(['homenagem', 'aviso']);
-  const papelBlock = (!refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? ''))
+  const MOODS_SIMBOLICOS = new Set(['OP-04', 'OP-05', 'OP-06']);
+  const moodEhSimbolico = data.direcao === 'mood' && MOODS_SIMBOLICOS.has(data.mood ?? '');
+  const papelBlock = (!refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? '') && !moodEhSimbolico)
     ? `\nASSUNTO DA CENA: mostre o que a empresa concretamente faz ou entrega nesta mensagem (com base no título, texto e informação-chave acima) — uma cena específica dessa atividade, não um retrato genérico do segmento. O mood define luz, clima e estética; nunca o assunto da cena.\n`
     : '';
 
