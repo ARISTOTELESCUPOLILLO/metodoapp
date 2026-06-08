@@ -96,7 +96,7 @@ Retorne JSON EXATAMENTE assim:
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: 'gpt-4.1-mini',
+              model: 'gpt-4.1',
               messages: [
                 { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
                 { role: 'user', content: userPrompt },

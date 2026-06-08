@@ -495,7 +495,7 @@ Retorne JSON EXATAMENTE assim:
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: 'gpt-4.1-mini',
+              model: 'gpt-4.1',
               messages: [
                 { role: 'system', content: systemMsg },
                 { role: 'user', content: userPrompt },
