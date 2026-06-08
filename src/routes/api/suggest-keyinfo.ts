@@ -95,17 +95,17 @@ PASSO 2 — VALIDE: se a categoria for "Novidade ou Oportunidade" e o texto for 
 
 PASSO 3 — REENQUADRE SEM TRAIR A IDEIA: ajuste o ângulo mantendo o sentido central. Se positivo, mantenha positivo.
 
-PASSO 4 — ESCREVA COM CLAREZA: 1 frase direta e simples, no máximo 12 palavras. Sintaxe: sujeito + verbo + complemento. Evite encadear mais de uma cláusula relativa.
+PASSO 4 — ESCREVA COM CLAREZA: 1 frase direta e simples, até 14 palavras (ideal por volta de 12). Sintaxe: sujeito + verbo + complemento. Evite encadear mais de uma cláusula relativa.
 
 ${proibicoesInventar}
-LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente".`;
+LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se trocar uma palavra grande por palavras mais curtas deixar a frase com mais de 12 palavras, pode chegar a até 14 — isso é preferível a manter um termo difícil só para caber no limite.`;
 
           const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE OP:
-Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo. No máximo 12 palavras.
+Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo. Até 14 palavras (ideal por volta de 12).
 SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.
 ${proibicoesInventar}
-LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente".`;
+LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se trocar uma palavra grande por palavras mais curtas deixar a frase com mais de 12 palavras, pode chegar a até 14 — isso é preferível a manter um termo difícil só para caber no limite.`;
 
           // ── Público-alvo — regra crítica para B2C vs B2B ──────────────────
           const audienceDirective = isB2C
@@ -200,7 +200,7 @@ Exemplos do método (não copie, use como referência de FORMATO):
 - "comunicação desorganizada transmite insegurança ao cliente sem perceber"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
 
           const metodoMotivacao = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -236,7 +236,7 @@ Exemplos do método (não copie, use como referência de FORMATO e TOM):
 - "a marca cresce com consistência nas redes sociais"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
 
           const marcaIdentidade = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -269,7 +269,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO instituci
 - "o negócio tem um propósito claro além da venda"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
 
           const marcaLegado = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -302,7 +302,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO):
 - "a marca atravessou gerações e ainda é referência no bairro"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
 
           // ── Prompts de REFINAMENTO (campo com texto) ──────────────────────
 
@@ -320,7 +320,7 @@ ${editorialBlock}
 
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: quem + o quê + tensão ou dor. No máximo 12 palavras.
+2. Reescreva em 1 frase curta e direta: quem + o quê + tensão ou dor. Até 14 palavras (ideal por volta de 12).
 3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para uma situação concreta do dia a dia da empresa.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase.
@@ -338,7 +338,7 @@ Exemplos de refinamento com tensão (não copie — referência de FORMATO):
 - "comunicação desorganizada transmite insegurança ao cliente sem perceber"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
 
           const metodoRefinarMotivacao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -354,7 +354,7 @@ ${editorialBlock}
 
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: quem + o quê + desejo ou conquista. No máximo 12 palavras.
+2. Reescreva em 1 frase curta e direta: quem + o quê + desejo ou conquista. Até 14 palavras (ideal por volta de 12).
 3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para uma situação concreta do dia a dia da empresa.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase.
@@ -371,7 +371,7 @@ Exemplos de refinamento com motivação (não copie — referência de FORMATO e
 - "a marca cresce com consistência nas redes sociais"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
 
           const marcaRefinarIdentidade = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -386,7 +386,7 @@ ${editorialBlock}
 
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: marca + identidade ou propósito. No máximo 12 palavras.
+2. Reescreva em 1 frase curta e direta: marca + identidade ou propósito. Até 14 palavras (ideal por volta de 12).
 3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para uma situação concreta da marca.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase, linguagem de venda, urgência.
@@ -402,7 +402,7 @@ Exemplos de refinamento institucional (não copie — referência de TOM e FORMA
 - "o negócio tem um propósito claro além da venda"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
 
           const marcaRefinarLegado = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -417,7 +417,7 @@ ${editorialBlock}
 
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: marca + trajetória ou vínculo. No máximo 12 palavras.
+2. Reescreva em 1 frase curta e direta: marca + trajetória ou vínculo. Até 14 palavras (ideal por volta de 12).
 3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para um fato concreto da trajetória da marca.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase, linguagem comercial, dor do cliente, inversão negativa.
@@ -433,7 +433,7 @@ Exemplos de refinamento de legado (não copie — referência de TOM e FORMATO):
 - "a marca atravessou gerações e ainda é referência no bairro"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, no máximo 12 palavras, sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+{ "sugestao": "1 linha, até 14 palavras (ideal por volta de 12), sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
 
           let metodoPrompt: string;
           if (isRefinar) {
@@ -477,11 +477,11 @@ ${OBJETIVO_RULES[objetivo] || ''}
 ${criteriosSugestaoOP}
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 frase, no máximo 12 palavras, em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
+{ "sugestao": "1 frase, até 14 palavras (ideal por volta de 12), em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
-            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) segmento e atividade estão refletidos? Se sim para (2), troque por algo mais simples antes de responder. Limite rígido: máximo 12 palavras por sugestão, sem exceção. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
+            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) segmento e atividade estão refletidos? Se sim para (2), troque por algo mais simples antes de responder. Limite: até 14 palavras por sugestão (ideal por volta de 12) — só passe de 12 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples. Frases com mais de 14 palavras devem ser cortadas antes de retornar.'
             : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule.';
 
           const res = await fetch('https://api.openai.com/v1/chat/completions', {
