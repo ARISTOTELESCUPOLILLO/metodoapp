@@ -40,8 +40,12 @@ function isSafeRef(u: unknown): u is string {
   return false;
 }
 
-function imageSizeFor(format?: 'post' | 'reels'): 'portrait_4_3' | 'portrait_16_9' {
-  return format === 'reels' ? 'portrait_16_9' : 'portrait_4_3';
+// Post/feed/carrossel/estático final fecham em 1080x1350 (4:5) — 'portrait_4_3' (3:4)
+// devolvia raster em proporção diferente do canvas final, forçando crop posterior.
+// 1088x1360 mantém 4:5, é múltiplo de 16 nos dois lados e cabe nos limites da FAL,
+// permitindo que o canvas apenas reduza a imagem (sem cortar conteúdo).
+function imageSizeFor(format?: 'post' | 'reels'): 'portrait_16_9' | { width: number; height: number } {
+  return format === 'reels' ? 'portrait_16_9' : { width: 1088, height: 1360 };
 }
 
 function falHeaders(falKey: string): HeadersInit {
