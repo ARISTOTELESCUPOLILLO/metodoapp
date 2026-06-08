@@ -73,7 +73,7 @@ interface Props {
 // Carrossel: precisa de produto.
 function kitHasRefsForFormat(imageKit: ImageKit | undefined, formato: 'estatico' | 'carrossel' | 'estatico_final' | 'reels'): boolean {
   if (!imageKit) return false;
-  if (formato === 'carrossel') return imageKit.produtos.some(p => !!p);
+  if (formato === 'carrossel') return imageKit.produtos.some(p => !!p) || imageKit.cenarios.some(c => !!c);
   return !!(imageKit.avatar) || imageKit.cenarios.some(c => !!c);
 }
 

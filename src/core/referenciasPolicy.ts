@@ -7,7 +7,7 @@
 //
 //   MOP (S*V / S*C) — TODOS os segmentos (SERVIÇOS, MARCA, VAREJO):
 //     estatico       : 1 avatar + até 3 cenários + até 3 produtos (apenas VAREJO; SERVIÇOS/MARCA sem produto)
-//     carrossel      : SÓ produtos (sem avatar, sem cenário) — até 5 produtos (1/card)
+//     carrossel      : sem avatar — 1 cenário (compartilhado por todos os cards) + até 5 produtos (1/card)
 //     estatico_final : 1 avatar + até 3 cenários + até 3 produtos (apenas VAREJO; SERVIÇOS/MARCA sem produto)
 //     reels          : 1 avatar + até 3 cenários (NUNCA produto)
 //
@@ -46,8 +46,9 @@ export function policyPorFormato(
     return { avatar: true, cenarios: 3, produtos: 3 };
   }
 
-  // MOP — carrossel: só produtos (sem avatar, sem cenário — cada card recebe 1 produto)
-  if (formato === 'carrossel')       return { avatar: false, cenarios: 0, produtos: 5 };
+  // MOP — carrossel: sem avatar; 1 cenário compartilhado pela sequência inteira
+  // + até 5 produtos (cada card recebe 1 produto, na ordem marcada).
+  if (formato === 'carrossel')       return { avatar: false, cenarios: 1, produtos: 5 };
   if (formato === 'reels')           return { avatar: true,  cenarios: 3, produtos: 0 };
 
   // S*V / S*C — estatico / estatico_final
