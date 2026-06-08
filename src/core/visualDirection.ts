@@ -354,6 +354,42 @@ const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     'SILÊNCIO se aplica a qualquer segmento. O objeto pertence ao ofício real da empresa. A leituraCenica orienta o tema; o objeto desta geração determina O QUE aparece na cena.',
 };
 
+// Bloco canônico "papel da empresa na mensagem" — fonte única para MOP e PU.
+// Garante que a decisão de cena parta do ofício real, não da leitura literal de
+// metáforas do título, e que o mood governe linguagem visual, não assunto da cena.
+//
+// opts.includeConcreteAction (default true):
+//   true  → 3 pontos de derivação de papel + trava anti-metáfora (uso geral).
+//   false → apenas a trava anti-metáfora, sem "mostre ação concreta".
+//            Usar quando a instrução de ação concreta conflitaria: Kit Imagem ativo
+//            (referência ancora a cena), mood simbólico (OP-04/05/06) ou objetivo
+//            sem ação operacional (homenagem/aviso). A trava anti-metáfora permanece.
+export function buildSceneRoleRule(opts?: { includeConcreteAction?: boolean }): string {
+  const includeConcreteAction = opts?.includeConcreteAction !== false;
+
+  const metaphorGuard =
+    '⚠ TRAVA ANTI-LITERALIDADE: palavras do título com sentido estratégico ou metafórico ' +
+    '("rumo", "caminho", "direção", "passo", "virada", "sentido", "ponte", "norte", "avanço", ' +
+    '"impulso", "crescimento") descrevem a INTENÇÃO da mensagem — NUNCA traduzir como ' +
+    'deslocamento físico (pessoa andando, saindo pela porta, caminhando com pasta, personagem ' +
+    'de costas indo embora) nem como cenário de passagem (corredor, porta, escada como elemento ' +
+    'principal). A cena nasce do ofício real da empresa, não da leitura literal de uma palavra do título.';
+
+  if (!includeConcreteAction) return metaphorGuard;
+
+  return (
+    'PAPEL DA EMPRESA NESTA PEÇA — DERIVAR ANTES DE MONTAR A CENA:\n' +
+    '1. O que a empresa CONCRETAMENTE FAZ ou ENTREGA nesta mensagem ' +
+    '(com base na atividade real, no título, no texto e na informação-chave)?\n' +
+    '2. Qual PAPEL cumpre nesta promessa — está orientando, vendendo, resolvendo, ' +
+    'atendendo, executando, diagnosticando, organizando, apoiando, facilitando ou ' +
+    'entregando algo específico?\n' +
+    '3. Traduza esse papel em uma AÇÃO CONCRETA do ofício real: essa ação é o assunto ' +
+    'da cena. O mood define luz, clima, paleta, composição, câmera e energia — nunca o assunto.\n' +
+    metaphorGuard
+  );
+}
+
 // Monta o resumo da gramática visual canônica de um mood (tensão Dondis +
 // luz/paleta/composição/câmera/detalhe + regra inegociável) para uso fora do
 // motor MOP — hoje consumido pelo PU em direcaoBlock. Fonte única junto com

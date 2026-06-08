@@ -4,7 +4,7 @@ import type { FeedItem } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
-import { buildMoodGrammarBlock, pickImageVariationBlock } from '../core/visualDirection';
+import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule } from '../core/visualDirection';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: 'Promoção comercial — gerar desejo e ação',
@@ -413,18 +413,21 @@ Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com co
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
     : '';
 
-  // Suprimido quando:
-  // (a) há Kit Imagem ativo (refsBlock) — referência já ancora a cena;
-  // (b) objetivo simbólico (homenagem/aviso) — ação operacional inadequada;
-  // (c) mood com gramática intencionalmente simbólica/abstrata (OP-04 FRAGMENTO,
-  //     OP-05 DESVIO, OP-06 SILÊNCIO) — "mostre ação concreta" conflita com a
-  //     linguagem de fragmento/desvio/minimalismo desses moods.
+  // papelBlock usa buildSceneRoleRule() — fonte canônica em visualDirection.ts.
+  //
+  // "ação concreta" (includeConcreteAction: true) ativa apenas quando:
+  //   - sem Kit Imagem ativo (refsBlock) — referência ancora e domina a cena;
+  //   - objetivo não simbólico (homenagem/aviso — sem ação operacional clara);
+  //   - mood não intencionalmente abstrato (OP-04/05/06 — fragmento/desvio/minimalismo).
+  //
+  // Trava anti-metáfora sempre ativa — buildSceneRoleRule({ includeConcreteAction: false })
+  // retorna só a trava, sem "mostre ação concreta". Quando Kit Imagem ativo, a referência
+  // domina avatar/produto/cenário; a trava anti-metáfora não conflita e permanece.
   const OBJETIVOS_SIMBOLICOS = new Set(['homenagem', 'aviso']);
   const MOODS_SIMBOLICOS = new Set(['OP-04', 'OP-05', 'OP-06']);
   const moodEhSimbolico = data.direcao === 'mood' && MOODS_SIMBOLICOS.has(data.mood ?? '');
-  const papelBlock = (!refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? '') && !moodEhSimbolico)
-    ? `\nASSUNTO DA CENA: mostre o que a empresa concretamente faz ou entrega nesta mensagem (com base no título, texto e informação-chave acima) — uma cena específica dessa atividade, não um retrato genérico do segmento. O mood define luz, clima e estética; nunca o assunto da cena.\n`
-    : '';
+  const showConcreteAction = !refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? '') && !moodEhSimbolico;
+  const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}\n`;
 
   return `⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL: PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo — tela frontal ou traseira. CONTEÚDO PROIBIDO: gráfico, dashboard, imagem, interface, app, texto legível. DISPOSITIVO PERMITIDO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado ou com tela apagada/neutra. MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida. NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.
 

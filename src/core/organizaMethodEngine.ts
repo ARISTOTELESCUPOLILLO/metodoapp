@@ -1,6 +1,6 @@
 import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track } from '../types';
 import { getVoiceProfile } from '../data/brandVoice';
-import { buildVisualDirectionBlock, getMoodSignature } from './visualDirection';
+import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
 
 interface MomentModulator {
   label: string;
@@ -384,7 +384,8 @@ Cada peça: titulo + texto + legenda + imagePrompt — TODOS preenchidos. Respos
 ${buildVisualDirectionBlock(data.mood, data.segment)}
 
 DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
-- A cena deve traduzir literalmente o título e o texto, nunca decorar genericamente o tema.
+${buildSceneRoleRule()}
+- A cena deve traduzir estrategicamente o sentido do título e do texto, identificando o papel da empresa na mensagem e a ação concreta do ofício real — metáforas do título não se convertem automaticamente em cena física literal.
 - Pessoas em cena são regra quando houver cliente, profissional, decisor, problema vivido ou ação humana; para Reels, isso significa exatamente UMA pessoa, nunca grupo.
 - Proibido: distorções anatômicas, texto dentro da imagem, logomarca inventada, interfaces irreais, gráficos flutuantes, lâmpadas, engrenagens e handshake genérico.
 - ⚠️ REGRA GLOBAL DE DISPOSITIVOS DIGITAIS — INVIOLÁVEL no imagePrompt e na leituraCenica: PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo — tela frontal ou traseira. CONTEÚDO PROIBIDO: gráfico, dashboard, imagem, interface, app, texto legível. DISPOSITIVO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra. MÁXIMO 1 DISPOSITIVO por cena. NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.
