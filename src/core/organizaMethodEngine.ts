@@ -340,6 +340,8 @@ FUNÇÕES COMUNICATIVAS POR PEÇA:
 ${communicativeFunctionsMap}
 REGRA: peças EDUCATIVO/INSPIRACIONAL não fazem CTA nem mencionam a empresa. Peças INFORMATIVO/PERSUASIVO podem aludir à solução. Somente CONVENCIMENTO faz CTA explícito e nomeia o que a empresa oferece.`;
 
+  const titleSyntaxRule = `11. SINTAXE OBRIGATÓRIA DE TODO TÍTULO (estáticos, cards do carrossel, hook do reels, estático final): ordem direta — sujeito concreto (pessoa, equipe, time, público ou marca) + verbo ativo + complemento. PROIBIDO nominalizar a ação como sujeito abstrato ou trocar o verbo por substantivo + negação (ex. proibido: "Operações sem atrasos garantidas", "Atendimento sem demora garantido", "Entrega sem falhas comprovada"; correto: "Equipes entregam no prazo", "Time atende sem enrolação", "Loja entrega sem erro"). O título deve responder de forma direta quem faz o quê — nunca abrir com um estado, conceito ou negação sem agente.`;
+
   return `Você é o motor estratégico do MÉTODO OP. Retorne SOMENTE JSON válido, sem markdown, sem comentários.
 ${trackHeader}
 CONTEXTO:
@@ -360,6 +362,7 @@ ANÁLISE INTERNA — NÃO EXIBIR NO TEXTO FINAL:
 8. PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
 9. Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado em nenhum campo do JSON.
 ${mercadologicalFrameBlock}
+${titleSyntaxRule}
 
 DIREÇÃO DE LINGUAGEM:
 - ${audienceDirection}
