@@ -319,6 +319,7 @@ const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     'CLAREZA exige EXATAMENTE 1 acento de cor saturada em 1 único elemento da cena. Não 0, não 2. A peça inteiramente monocromática NÃO é CLAREZA — vira SILÊNCIO. ' +
     'PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena: detalhe lateral, desfocado em primeiro plano ou em ângulo plongée. ' +
     'VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. ' +
+    'EXCEÇÃO FUNCIONAL — MATERIAL ORGANIZADO EM CLAREZA: quando o tema central da peça for organização, alinhamento, prioridades ou planejamento (ex.: "alinham ideias", "organiza prioridades", "planejamento limpo", "decisões sem ruído"), cartões, folhas ou peças impressas dispostos de forma organizada SOBRE a superfície de trabalho SÃO PERMITIDOS como objetos de ação funcional — representam o processo concreto de organizar e alinhar. Nesses temas, CLAREZA não deve ser mesa vazia com pessoa parada — deve mostrar organização visual simples, limpa e funcional. ' +
     'A variação de câmera e posição desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
     'CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.',
   'OP-02':
@@ -443,7 +444,7 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     const variation = pickRandom(characterVariationMap[mood]!);
     const camera = mood === 'OP-01' ? pickRandom(CLAREZA_CAMERA_VARIATIONS) : null;
     const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ''}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESTA INSTRUÇÃO TEM PRECEDÊNCIA sobre qualquer pronome ou substantivo de gênero (ex.: "ele/empresário" vs. "ela/empresária") que apareça no campo "Personagem" da leituraCenica acima: adapte esses termos para concordar com o gênero sorteado aqui, preservando a mesma ação, postura, papel e contexto descritos — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ''}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESCOPO EXCLUSIVO: aplica-se APENAS ao campo "personagem" da leituraCenica e à composição visual da imagem — NÃO deve alterar título, texto, legenda, hook nem qualquer campo textual da peça. Nos campos de texto, quando o usuário não especificou gênero, usar sempre termos neutros ("gestores", "profissionais", "decisores", "equipes", "pessoas") — nunca escolher gênero nos textos por conta própria. No campo "personagem": adapte para ${gender}, preservando a mesma ação, postura, papel e contexto — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
   }
 
   const moodRuleBlock = MOOD_RULES[mood]
@@ -496,7 +497,7 @@ export function getMoodSignature(mood: MoodCode): string {
 
 // Sorteia uma variação de personagem/ruptura para injetar no prompt de IMAGEM a cada geração.
 // Garante que "Gerar outra" nunca reuse a mesma pose — chame a cada vez que o prompt for construído.
-export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean): string {
+export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string): string {
   if (!mood) return '';
 
   const TEMA_DERIVATION_RULE = 'ANTES de aplicar a estrutura abaixo, identifique em UMA ação ou símbolo concreto o que o Título e o Texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar; título sobre "comunicação e design" → ação de revisar peças/provas/material visual; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback; título com metáfora estratégica como "rumo da campanha" → ação de revisar material, orientar cliente ou analisar peças — o que a empresa FAZ, NÃO pessoa andando). Essa ação ou símbolo concreto preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela. ATENÇÃO: palavras metafóricas do título ("rumo", "caminho", "direção", "passo", "virada") descrevem intenção estratégica — nunca traduzir como deslocamento físico de uma pessoa.';
@@ -531,10 +532,14 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
   // (referenceAnchor: "NÃO mude o gênero"), e a IA acaba descartando o avatar e
   // gerando uma pessoa genérica do gênero sorteado. Sem avatar, o sorteio segue
   // normalmente — ele existe pra evitar viés sempre-masculino no personagem fictício.
+  // Se o copy já usou marcadores femininos explícitos, a imagem deve concordar.
+  const FEMININE_COPY_RE = /\bgestoras?\b|\bmulheres?\b|\bempresárias?\b|\bexecutivas?\b|\bdecisoras?\b/i;
+  const copyText = `${titulo ?? ''} ${texto ?? ''}`;
+  const detectedGender = FEMININE_COPY_RE.test(copyText) ? 'mulher' : null;
   const genderBlock = hasAvatarRef
     ? ''
     : (() => {
-        const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
+        const gender = detectedGender ?? pickRandom(PERSONAGEM_GENDER_VARIATIONS);
         return `Gênero do personagem NESTA GERAÇÃO: ${gender} — ESTA INSTRUÇÃO TEM PRECEDÊNCIA sobre qualquer pronome ou substantivo de gênero (ex.: "ele/empresário" vs. "ela/empresária") que apareça no campo "Personagem" da CENA DETALHADA acima: adapte esses termos para concordar com o gênero sorteado aqui, preservando a mesma ação, postura, papel e contexto descritos — troque só o gênero, sem estereótipo. `;
       })();
 

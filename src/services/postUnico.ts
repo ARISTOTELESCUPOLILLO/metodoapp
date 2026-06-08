@@ -381,7 +381,7 @@ export function buildPostUnicoPrompt(params: {
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
   const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo);
-  const variationBlock = data.direcao === 'mood' ? pickImageVariationBlock(data.mood, !!references?.avatar) : '';
+  const variationBlock = data.direcao === 'mood' ? pickImageVariationBlock(data.mood, !!references?.avatar, copy?.titulo, copy?.texto) : '';
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
   const zona = logoZoneDescription(kit.logoPosition);
