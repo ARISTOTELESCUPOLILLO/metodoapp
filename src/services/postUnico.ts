@@ -413,6 +413,14 @@ Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com co
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
     : '';
 
+  // Suprimido quando: (a) há Kit Imagem ativo (refsBlock) — a referência já ancora a
+  // cena; ou (b) objetivo simbólico (homenagem/aviso) — "ação operacional" seria
+  // inadequada para registros e comunicados.
+  const OBJETIVOS_SIMBOLICOS = new Set(['homenagem', 'aviso']);
+  const papelBlock = (!refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? ''))
+    ? `\nASSUNTO DA CENA: mostre o que a empresa concretamente faz ou entrega nesta mensagem (com base no título, texto e informação-chave acima) — uma cena específica dessa atividade, não um retrato genérico do segmento. O mood define luz, clima e estética; nunca o assunto da cena.\n`
+    : '';
+
   return `⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL: PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo — tela frontal ou traseira. CONTEÚDO PROIBIDO: gráfico, dashboard, imagem, interface, app, texto legível. DISPOSITIVO PERMITIDO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado ou com tela apagada/neutra. MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida. NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.
 
 ⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.
@@ -436,7 +444,7 @@ ${data.keyInfo.trim()
   : `INFORMAÇÃO-CHAVE: não fornecida. Crie a peça com base apenas na empresa, atividade, objetivo e kit visual — a IA tem TOTAL LIBERDADE para inventar o tema e a mensagem mais pertinente para esta marca e este objetivo.`}
 
 ${copyBlock}
-
+${papelBlock}
 ${direcao}${variationBlock}
 
 ${buildColorBlock(primary, accent, data.direcao === 'mood', data.objetivo)}
