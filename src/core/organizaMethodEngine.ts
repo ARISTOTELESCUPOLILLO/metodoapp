@@ -230,7 +230,7 @@ ${closingBlock}
 REGRA DE LEGENDA (vale para feed estático, carrossel, reels e estático final):
 - A legenda tem 3 parágrafos separados por linha em branco. FORMATO OBRIGATÓRIO no JSON (use \\n\\n como separador literal):
   "{corpo da legenda terminando com ponto final.}\\n\\n{CTA curto terminando com ponto final.}\\n\\n#hash1 #hash2 #hash3"
-- Parágrafo 1 — corpo: ATÉ 30 palavras, terminando com PONTO FINAL.
+- Parágrafo 1 — corpo: ATÉ 30 palavras, terminando com PONTO FINAL. RETOMA o conceito central do título e da imagem — não introduz tema novo nem desconectado da peça (a legenda fecha o ciclo palavra→imagem→palavra).
 - Parágrafo 2 — CTA: 1 frase genérica curta (máx 6 palavras), terminando com PONTO FINAL. Varie entre as peças. Exemplos: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.", "Marque alguém que precisa ler isso.", "Envie para quem decide com você."
 - Parágrafo 3 — hashtags: EXATAMENTE 3, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia).
 - Total corpo + CTA: ATÉ 40 palavras (sem contar as hashtags).
@@ -385,10 +385,11 @@ ${buildVisualDirectionBlock(data.mood, data.segment)}
 
 DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
 ${buildSceneRoleRule()}
+PRINCÍPIO-RAIZ — CICLO DA PALAVRA: a imagem responde ao título. Antes de descrever imagePrompt e leituraCenica, identifique o núcleo do título (sujeito + verbo/promessa central) e garanta que a cena o torne visível. A legenda fecha o ciclo retomando esse conceito. A imagem NUNCA pode negar o que o título afirma.
 - A cena deve traduzir estrategicamente o sentido do título e do texto, identificando o papel da empresa na mensagem e a ação concreta do ofício real — metáforas do título não se convertem automaticamente em cena física literal.
 - Pessoas em cena são regra quando houver cliente, profissional, decisor, problema vivido ou ação humana; para Reels, isso significa exatamente UMA pessoa, nunca grupo.
-- Proibido: distorções anatômicas, texto dentro da imagem, logomarca inventada, interfaces irreais, gráficos flutuantes, lâmpadas, engrenagens e handshake genérico.
-- ⚠️ REGRA GLOBAL DE DISPOSITIVOS DIGITAIS — INVIOLÁVEL no imagePrompt e na leituraCenica: PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo — tela frontal ou traseira. CONTEÚDO PROIBIDO: gráfico, dashboard, imagem, interface, app, texto legível. DISPOSITIVO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra. MÁXIMO 1 DISPOSITIVO por cena. NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.
+- Proibido: distorções anatômicas, texto dentro da imagem, logomarca inventada, interfaces irreais, gráficos flutuantes, lâmpadas, setas como símbolo de crescimento, Post-it com ícones de negócios, engrenagens e handshake genérico.
+- ⚠️ REGRA GLOBAL DE DISPOSITIVOS DIGITAIS — INVIOLÁVEL no imagePrompt e na leituraCenica: PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo — tela frontal ou traseira. CONTEÚDO PROIBIDO: gráfico, dashboard, imagem, interface, app, texto legível. DISPOSITIVO COMO OBJETO CONTEXTUAL: pode estar aberto, em uso, na mão, apoiado — NÃO forçar fechado. Restrição é só o conteúdo: tela escura/neutra sem nada visível, carcaça lisa. MÁXIMO 1 DISPOSITIVO por cena. NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.
 - Estático e Carrossel: composição vertical 1080x1350.
 - Estático Final: composição vertical 1080x1350, com mais respiro, menos ruído e foco centralizado.
 ${!isVisualOrExperimentacao ? '- Reels: composição vertical 1080x1920, imagem pura sem texto, sem logo, sem colagem e com somente uma pessoa no quadro.' : ''}
