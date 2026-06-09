@@ -5,6 +5,7 @@ import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
 import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule } from '../core/visualDirection';
+import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS } from '../utils/promptRules';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: 'Promoção comercial — gerar desejo e ação',
@@ -34,8 +35,6 @@ const MOOD_NAMES: Record<MoodCode, string> = {
   'OP-05': 'DESVIO',
   'OP-06': 'SILÊNCIO',
 };
-
-const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
 // Sensação visual desejada por objetivo — orienta a direção emocional da peça livre.
 // "nenhum" não entra aqui: é tratado à parte em direcaoBlock (combinação Livre+Nenhum
@@ -392,7 +391,7 @@ export function buildPostUnicoPrompt(params: {
   const hasCopy = copy && (copy.titulo || copy.texto);
   const copyBlock = hasCopy
     ? `TÍTULO E TEXTO OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
-TÍTULO: "${copy.titulo}"
+TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
 Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com corpo em torno de 55% do título — menor que o título mas ainda legível sem zoom no celular — mas a POSIÇÃO do bloco é livre. Pode estar no topo, na lateral esquerda, na lateral direita, na base, sobreposto à imagem, em barra inferior, dividido em duas zonas da peça, ou ancorado em um canto. EVITE a fórmula default "bloco amarelo+branco encostado na borda esquerda ocupando metade da peça" se ela não for a melhor para esta composição específica — explore outras ancoragens. O fundo/cenário deve ter calor visual, textura orgânica ou composição cromática — NUNCA parede de concreto, estrutura industrial fria ou corredor vazio como solução para destacar o texto.`
@@ -429,11 +428,11 @@ Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com co
   const showConcreteAction = !refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? '') && !moodEhSimbolico;
   const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}\n`;
 
-  return `⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL: PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo — tela frontal ou traseira. CONTEÚDO PROIBIDO: gráfico, dashboard, imagem, interface, app, texto legível. DISPOSITIVO PERMITIDO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado ou com tela apagada/neutra. MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida. NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.
+  return `${DEVICE_RULE}
 
-⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.
+${AMBIENTES_RULE}
 
-⚠ HUMANIZAÇÃO: imagens devem parecer humanas, autênticas e reais. PROIBIDO inserir vasos, plantas ornamentais, folhas ou flores apenas para preencher cantos — todo elemento deve contribuir para a mensagem.
+${HUMANIZACAO_RULE}
 
 ${referenceAnchorBlock}Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
@@ -462,7 +461,7 @@ ${typographyBlock}
 REGRAS:
 - Esta peça é STANDALONE — não precisa parecer parte de uma série. Evite a fórmula visual mais óbvia para o briefing; escolha uma execução com personalidade própria dentro da direção definida.
 - Todo texto em PORTUGUÊS, sem inglês
-- ⚠ MARGEM DE 110 PX INVIOLÁVEL PARA TÍTULO E TEXTO DE APOIO: o bloco de texto inteiro (título + texto de apoio, todas as linhas) fica DENTRO da área segura, a pelo menos 110 px de QUALQUER borda — topo, base, esquerda e direita. PROIBIDO letra, palavra ou linha tocando, cortando ou ultrapassando esse perímetro em qualquer direção. ANTES DE FINALIZAR A COMPOSIÇÃO: meça mentalmente a distância entre cada lado do bloco de texto (topo, base, esquerda, direita) e a borda mais próxima — se qualquer uma dessas distâncias for menor que 110 px, diminua o tamanho do bloco inteiro ou desloque sua posição até que TODAS as distâncias sejam iguais ou maiores que 110 px. A margem nunca pode ser sacrificada para acomodar o texto — reduzir ou reposicionar o texto é sempre a solução correta.
+- ⚠ MARGEM DE 110 PX para título e texto de apoio (zona segura definida no topo do prompt) — texto que não caiba dentro da margem deve ser reduzido ou reposicionado, nunca cortado
 - Alta resolução, estética editorial/publicitária brasileira
 - Direção de arte humana, nunca arte automática
 - Sem watermarks, sem logo fictícia, sem assinatura textual

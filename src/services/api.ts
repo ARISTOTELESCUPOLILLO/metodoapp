@@ -3,6 +3,7 @@ import { pickImageVariationBlock } from '../core/visualDirection';
 import { ContentFormData, LogoPosition, MethodOpResult, MoodCode } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
+import { DEVICE_RULE, FORBIDDEN_MOOD_WORDS } from '../utils/promptRules';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
 
@@ -195,16 +196,6 @@ function buildImagePrompt(params: {
     : '';
 
 
-  // Regra de dispositivos — proíbe qualquer tela com conteúdo visível.
-  const DEVICE_RULE_FIRST = `⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL:
-PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal ou traseira.
-CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, site, app, texto legível ou qualquer elemento visual.
-DISPOSITIVO PERMITIDO APENAS COMO OBJETO CONTEXTUAL: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra sem conteúdo identificável.
-MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
-NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard on screen, no UI on screen, no app interface, no readable text on devices, no duplicated laptops, no extra devices, screen must be blank dark off turned away or out of focus.
-
-`;
-
   // Suspiro — texto e elementos visuais nunca colam nas bordas.
   const SAFE_ZONE_RULE = `⚠ SUSPIRO DE ${safeMargin} (TODAS AS BORDAS): Canvas ${canvasSize}. Mantenha ${safeMargin} de margem livre em todas as bordas. PROIBIDO: qualquer letra, número ou lettering tocando esse perímetro. Todo texto dentro da área segura interna. Bordas são continuação natural do fundo — sem texto cortado.
 
@@ -223,7 +214,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
   const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto);
 
-  return `${DEVICE_RULE_FIRST}${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
+  return `${DEVICE_RULE}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
@@ -243,7 +234,7 @@ ${typographyBlock}
 REGRAS:
 - Título renderizado em CAIXA ALTA exatamente como: "${tituloUpper}"
 - Texto de apoio exatamente como: "${texto}", em caixa normal, corpo em torno de 60% do título (claramente menor, mas confortavelmente legível sem zoom)
-- ⚠ MARGEM DE ${safeMargin} INVIOLÁVEL PARA TÍTULO E TEXTO DE APOIO: o bloco de texto inteiro (título + texto de apoio, todas as linhas) fica DENTRO da área segura, a pelo menos ${safeMargin} de QUALQUER borda — topo, base, esquerda e direita. PROIBIDO letra, palavra ou linha tocando, cortando ou ultrapassando esse perímetro em qualquer direção. ANTES DE FINALIZAR A COMPOSIÇÃO: meça mentalmente a distância entre cada lado do bloco de texto (topo, base, esquerda, direita) e a borda mais próxima — se qualquer uma dessas distâncias for menor que ${safeMargin}, diminua o tamanho do bloco inteiro ou desloque sua posição até que TODAS as distâncias sejam iguais ou maiores que ${safeMargin}. A margem nunca pode ser sacrificada para acomodar o texto — reduzir ou reposicionar o texto é sempre a solução correta.
+- ⚠ MARGEM DE ${safeMargin} para título e texto de apoio (zona segura definida no topo do prompt) — texto que não caiba dentro da margem deve ser reduzido ou reposicionado, nunca cortado
 - Todo texto em português, sem tradução, sem texto em inglês
 - Sem elementos decorativos genéricos
 - Alta resolução, estética editorial contemporânea brasileira
@@ -304,8 +295,6 @@ const moodVisualInstructions: Record<MoodCode, string> = {
 - Composição com muito respiro, elementos reduzidos ao essencial
 - Sensação de premium, contenção e autoridade`,
 };
-
-const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
 export async function generatePostImage(params: {
   imagePrompt: string;
