@@ -179,7 +179,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fe
 - O Estático Final NÃO é um estático comum nem um reel congelado.
 - É um formato HÍBRIDO de fechamento visual com função psicológica própria: consolidação, resolução visual, fechamento emocional, organização da decisão.
 - Função na sequência: encerrar o ciclo narrativo aberto pelo estático e desenvolvido pelo carrossel.
-- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL; legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada Estático Final: título com NO MÁXIMO 6 palavras (CONTE antes de retornar), cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (CONTE antes de retornar — 16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - O TÍTULO do Estático Final deve carregar resolução, não provocação. Frase de conclusão, não de abertura.
 - O TEXTO deve consolidar a direção da sequência em uma afirmação clara e estável.
 - A IMAGEM deve traduzir literalmente o título e o texto, com cena de calma, foco e estabilidade — não tensão, não movimento.
@@ -211,7 +211,7 @@ A SEQUÊNCIA COMPLETA segue a progressão: ${progressionText}
 Os formatos são distribuídos pelo método — NÃO pelo usuário.
 
 ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
-- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL; legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada estático: título com NO MÁXIMO 6 palavras (CONTE antes de retornar), cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (CONTE antes de retornar — 16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - Variar títulos entre afirmação, pergunta, contraste e observação cotidiana.
 - DIVERSIDADE LEXICAL OBRIGATÓRIA: os títulos dos estáticos de uma mesma sequência NÃO podem começar com a mesma palavra — garantir abertura distinta entre Estático 1, Estático 2 e Estático Final.
 - SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL: qualquer palavra da língua portuguesa pode ser o sujeito quando substantivada: substantivo concreto ou abstrato, adjetivo, verbo no infinitivo, advérbio, numeral ou pronome. Exemplos válidos: "O melhor começa assim", "A solução mora no detalhe", "Decidir cedo muda tudo", "A saudade move quem cria", "Cuidar é o diferencial", "O que define tudo", "Gestores fecham com clareza", "Confiança antes de assinar". PROIBIDO: construção passiva sem agente ("Atendimento garantido", "Resultados assegurados", "Dúvidas no contrato surgem") — porque não há quem aja. VARIE o sujeito entre pessoas, conceitos, ações e abstrações — evite repetir "gestores", "equipes" ou "decisores" em toda sequência.
@@ -222,7 +222,7 @@ ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 cards cada):
 - Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
 - Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. Card 5 pode citar o que a empresa entrega e tem CTA na legenda.
-- Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL; imagePrompt próprio.
+- Cada card: titulo até 6 palavras (CONTE antes de retornar), cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (CONTE antes de retornar — 13ª palavra em diante é cortada); imagePrompt próprio.
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "organização dos elementos no quadro" } }, ...] }]
 ${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ''}
 ${closingBlock}
@@ -430,6 +430,12 @@ function shouldDiscardReels(track: Track | undefined, hasReels: boolean): boolea
   return track === 'visual' || track === 'experimentacao';
 }
 
+function truncateWords(s: string, max: number): string {
+  const words = String(s || '').trim().split(/\s+/).filter(Boolean);
+  if (words.length <= max) return s.trim();
+  return words.slice(0, max).join(' ').replace(/[,;:\-–—]+$/, '').trim();
+}
+
 export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 | 6 | 9): MethodOpResult {
   const isExperimentacao = track === 'experimentacao';
   const effectiveSize: 3 | 6 | 9 = isExperimentacao ? 3 : ((sequenceSize || 6) as 3 | 6 | 9);
@@ -511,6 +517,23 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
       reels = reels.slice(0, comp.fechamento);
       if (reels.length === 0) reels = undefined;
     }
+  }
+
+  // Guard de limite de palavras: garante que titulo/texto nunca ultrapassem os limites
+  // definidos no prompt, independente do que o LLM retornou. Mesmos limites do prompt.
+  if (feed) {
+    feed = feed.map(item => ({
+      ...item,
+      titulo: truncateWords(item.titulo || '', 6),
+      texto: truncateWords(item.texto || '', 15),
+    }));
+  }
+  if (carousel) {
+    carousel = carousel.map((card: any) => ({
+      ...card,
+      titulo: truncateWords(card.titulo || '', 6),
+      texto: truncateWords(card.texto || '', 12),
+    }));
   }
 
   // Validação de completude — detecta componentes esperados mas ausentes/incompletos.
