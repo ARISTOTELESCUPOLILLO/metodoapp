@@ -379,11 +379,15 @@ export function buildSceneRoleRule(opts?: { includeConcreteAction?: boolean }): 
 
   const metaphorGuard =
     '⚠ TRAVA ANTI-LITERALIDADE: palavras do título com sentido estratégico ou metafórico ' +
-    '("rumo", "caminho", "direção", "passo", "virada", "sentido", "ponte", "norte", "avanço", ' +
-    '"impulso", "crescimento") descrevem a INTENÇÃO da mensagem — NUNCA traduzir como ' +
-    'deslocamento físico (pessoa andando, saindo pela porta, caminhando com pasta, personagem ' +
-    'de costas indo embora) nem como cenário de passagem (corredor, porta, escada como elemento ' +
-    'principal). A cena nasce do ofício real da empresa, não da leitura literal de uma palavra do título.';
+    '("longe", "avançar", "subir", "alcançar", "chegar", "rumo", "caminho", "direção", "passo", ' +
+    '"virada", "sentido", "ponte", "norte", "avanço", "impulso", "crescimento") descrevem a INTENÇÃO ' +
+    'da mensagem — NUNCA traduzir como deslocamento físico (pessoa andando, saindo pela porta, ' +
+    'caminhando com pasta, personagem de costas indo embora) nem como cenário de passagem ' +
+    '(corredor, porta, escada como elemento principal). ' +
+    'ADJETIVOS DE QUALIDADE também ancoram no ofício, não na propriedade física: ' +
+    '"rápido" = eficiência, não velocidade; "forte" = coesão, não músculo; ' +
+    '"claro" = transparência, não iluminação; "sólido" = confiança, não material rígido. ' +
+    'A cena nasce do ofício real da empresa, não da leitura literal de uma palavra do título.';
 
   if (!includeConcreteAction) return metaphorGuard;
 
@@ -439,7 +443,7 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
   // ruptura + câmera; SILÊNCIO combina objeto + câmera; OP-01/02/03 combinam
   // personagem + gênero (+ câmera apenas no CLAREZA).
   let variacaoBlock = '';
-  const TEMA_DERIVATION_RULE = 'ANTES de aplicar a estrutura sorteada abaixo, identifique em UMA palavra ou ação concreta o que o título e o texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar documento ou processo; título sobre "comunicação e design" → ação de revisar peças, provas ou material visual; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback; título com metáfora estratégica como "rumo da campanha" → ação de revisar material, orientar cliente ou analisar peças — o que a empresa FAZ, NÃO pessoa andando). Essa ação ou símbolo concreto é o que preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela. ATENÇÃO — METÁFORAS ESPACIAIS/DE JORNADA SÃO INTERPRETADAS PELO CONTEXTO DO NEGÓCIO: palavras como "longe", "avançar", "subir", "alcançar", "chegar", "rumo", "caminho", "passo", "virada" descrevem intenção estratégica — NUNCA traduzir como cenário físico de deslocamento (escada, degraus, caminho, horizonte vazio, trilha). Tradução correta: identifique o SEGMENTO e a ATIVIDADE REAL da empresa e mostre a ação concreta que, naquele ofício, produz o resultado descrito. Ex.: "pessoas juntas chegam longe" em agência de comunicação → profissionais revisando estratégia juntos, não degraus; "avançar com método" em consultoria → gestor conduzindo reunião com pauta clara, não caminho. A cena ancora a metáfora no ofício real — nunca no espaço físico que a palavra sugere literalmente. CRÍTICO — A CENA NUNCA PODE NEGAR O SUJEITO DO TÍTULO: se o título menciona interação ou equipe, a cena tem ao menos dois sujeitos ou troca visível; se menciona decisão, o personagem está no ato de decidir; se menciona escuta, há presença de interlocutor ou elemento de recepção — nunca personagem sozinho sem contexto relacional quando o título é relacional.';
+  const TEMA_DERIVATION_RULE = 'ANTES de aplicar a estrutura sorteada abaixo, identifique em UMA palavra ou ação concreta o que o título e o texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar documento ou processo; título sobre "comunicação e design" → ação de revisar peças, provas ou material visual; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback; título com metáfora estratégica como "rumo da campanha" → ação de revisar material, orientar cliente ou analisar peças — o que a empresa FAZ, NÃO pessoa andando). Essa ação ou símbolo concreto é o que preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela. METÁFORAS/MODIFICADORES DO TÍTULO — ANCORAGEM NO OFÍCIO: palavras como "longe", "avançar", "subir", "crescimento", "rumo", "caminho" e adjetivos como "rápido", "forte", "claro", "sólido" ancoram-se no ofício real — NUNCA traduzir como cenário físico (escada, degraus, horizonte vazio) nem como propriedade física literal (velocidade, músculo, iluminação). Ex.: "avançar com método" em consultoria → reunião com pauta, não caminho; "atendimento rápido" → cliente atendido sem espera, não borrão de movimento. CRÍTICO — A CENA NUNCA PODE NEGAR O SUJEITO DO TÍTULO: se o título menciona interação ou equipe, a cena tem ao menos dois sujeitos ou troca visível; se menciona decisão, o personagem está no ato de decidir; se menciona escuta, há presença de interlocutor ou elemento de recepção — nunca personagem sozinho sem contexto relacional quando o título é relacional.';
 
   if (mood === 'OP-05') {
     const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
@@ -509,7 +513,7 @@ export function getMoodSignature(mood: MoodCode): string {
 export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string): string {
   if (!mood) return '';
 
-  const TEMA_DERIVATION_RULE = 'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas do título ("rumo", "caminho", "passo", "direção") = intenção estratégica — nunca deslocamento físico.';
+  const TEMA_DERIVATION_RULE = 'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas/modificadores do título ("rumo", "avançar", "longe", "crescimento", "rápido", "forte", "claro") = intenção ou qualidade do ofício — nunca deslocamento físico nem propriedade literal.';
 
   if (mood === 'OP-05') {
     const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
