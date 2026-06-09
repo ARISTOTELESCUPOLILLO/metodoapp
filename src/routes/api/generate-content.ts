@@ -2,6 +2,137 @@ import { createFileRoute } from '@tanstack/react-router';
 import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
 
+const LEITURA_CENICA_SCHEMA = {
+  anyOf: [
+    {
+      type: 'object',
+      properties: {
+        intencao: { type: 'string' },
+        personagem: { type: 'string' },
+        ambiente: { type: 'string' },
+        expressao: { type: 'string' },
+        clima: { type: 'string' },
+        composicao: { type: 'string' },
+      },
+      required: ['intencao', 'personagem', 'ambiente', 'expressao', 'clima', 'composicao'],
+      additionalProperties: false,
+    },
+    { type: 'null' },
+  ],
+} as const;
+
+const METODO_OP_SCHEMA = {
+  type: 'object',
+  properties: {
+    feed: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              dia: { type: 'number' },
+              formato: { type: 'string' },
+              titulo: { type: 'string' },
+              texto: { type: 'string' },
+              legenda: { type: 'string' },
+              imagem: { type: 'string' },
+              leituraCenica: LEITURA_CENICA_SCHEMA,
+            },
+            required: ['dia', 'formato', 'titulo', 'texto', 'legenda', 'imagem', 'leituraCenica'],
+            additionalProperties: false,
+          },
+        },
+        { type: 'null' },
+      ],
+    },
+    carousel: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              sequencia: { type: 'number' },
+              legenda: { type: 'string' },
+              cards: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    card: { type: 'number' },
+                    titulo: { type: 'string' },
+                    texto: { type: 'string' },
+                    imagePrompt: { type: 'string' },
+                    leituraCenica: LEITURA_CENICA_SCHEMA,
+                  },
+                  required: ['card', 'titulo', 'texto', 'imagePrompt', 'leituraCenica'],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['sequencia', 'legenda', 'cards'],
+            additionalProperties: false,
+          },
+        },
+        { type: 'null' },
+      ],
+    },
+    reels: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              hook: { type: 'string' },
+              script: { type: 'string' },
+              imagePrompt: { type: 'string' },
+              screenText: { type: 'string' },
+              legenda: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+            },
+            required: ['hook', 'script', 'imagePrompt', 'screenText', 'legenda'],
+            additionalProperties: false,
+          },
+        },
+        { type: 'null' },
+      ],
+    },
+    stories: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              dia: { type: 'number' },
+              sequencia: { type: 'string' },
+              stories: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    ordem: { type: 'number' },
+                    tipo: { type: 'string' },
+                    texto: { type: 'string' },
+                  },
+                  required: ['ordem', 'tipo', 'texto'],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['dia', 'sequencia', 'stories'],
+            additionalProperties: false,
+          },
+        },
+        { type: 'null' },
+      ],
+    },
+  },
+  required: ['feed', 'carousel', 'reels', 'stories'],
+  additionalProperties: false,
+} as const;
+
 export const Route = createFileRoute('/api/generate-content')({
   server: {
     handlers: {
@@ -46,12 +177,19 @@ export const Route = createFileRoute('/api/generate-content')({
               body: JSON.stringify({
                 model: 'gpt-4.1',
                 messages: [
-                  { role: 'system', content: 'Você é um especialista em comunicação de marca brasileira. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
+                  { role: 'system', content: 'Você é um especialista em comunicação de marca brasileira. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro.' },
                   { role: 'user', content: prompt },
                 ],
                 temperature: 0.85,
                 max_tokens: 8192,
-                response_format: { type: 'json_object' },
+                response_format: {
+                  type: 'json_schema',
+                  json_schema: {
+                    name: 'metodo_op_result',
+                    strict: true,
+                    schema: METODO_OP_SCHEMA,
+                  },
+                },
                 stream: true,
               }),
               signal: controller.signal,
@@ -107,6 +245,8 @@ export const Route = createFileRoute('/api/generate-content')({
                         const j = JSON.parse(payload);
                         const d = j?.choices?.[0]?.delta?.content;
                         if (typeof d === 'string') fullContent += d;
+                        const cached = j?.usage?.prompt_tokens_details?.cached_tokens;
+                        if (cached) console.info('[generate-content] cached_tokens=%d', cached);
                       } catch { /* ignore parse errors */ }
                     }
                   }
