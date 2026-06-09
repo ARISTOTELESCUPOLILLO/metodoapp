@@ -436,7 +436,10 @@ function shouldDiscardReels(track: Track | undefined, hasReels: boolean): boolea
 function truncateWords(s: string, max: number): string {
   const words = String(s || '').trim().split(/\s+/).filter(Boolean);
   if (words.length <= max) return s.trim();
-  return words.slice(0, max).join(' ').replace(/[,;:\-–—]+$/, '').trim();
+  return words.slice(0, max).join(' ')
+    .replace(/[,;:\-–—]+$/, '')
+    .replace(/\s+(e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via)\s*$/i, '')
+    .trim();
 }
 
 export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 | 6 | 9): MethodOpResult {
