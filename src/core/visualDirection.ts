@@ -474,10 +474,10 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 - Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${variacaoBlock}${moodRuleBlock}${segmentBlock}
 
 TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
-- O TÍTULO renderizado na peça deve ser BOLD e GRANDE — ocupando no mínimo 35% da altura vertical da peça, SEMPRE dentro da margem de respiro das bordas (ver regra de zona segura) — o tamanho nunca pode ser motivo para a letra tocar ou ultrapassar essa margem; ajuste a quebra de linha e a posição do bloco para caber inteiramente dentro da área segura. Letras claramente legíveis a distância.
-- O TEXTO DE APOIO deve ter em torno de 60% do tamanho do título — claramente menor que o título, porém confortavelmente legível, na proporção de cerca de dois terços da sua altura. NÃO é legenda de rodapé nem texto decorativo pequeno. É um bloco de texto SECUNDÁRIO E LEGÍVEL, equivalente a um subtítulo de revista — corpo grande o suficiente para ser lido sem aproximar o celular.
-- PROIBIDO: texto de apoio com menos de 40% do tamanho do título, texto miniatura, corpo tipo "legenda", qualquer tipografia que exija zoom para ler.
-- Regra prática: ao ver a peça no celular em tamanho normal, o texto de apoio deve ser lido de imediato, sem esforço.
+- O TÍTULO renderizado na peça deve ser BOLD e GRANDE — o bloco de título deve ocupar no MÍNIMO 45% da altura vertical do canvas. Se o título tiver 4 ou mais palavras, quebre em até 3 linhas para MANTER O CORPO GRANDE — nunca reduza o corpo para caber em menos linhas. Letras legíveis a pelo menos 3 metros da tela do celular. SEMPRE dentro da margem de respiro das bordas — ajuste quebra de linha e posição do bloco, jamais o corpo da fonte.
+- O TEXTO DE APOIO (subtítulo) é um BLOCO DE SUBTÍTULO DE REVISTA — corpo entre 55% e 70% do tamanho do título. Deve ser lido de imediato no celular sem aproximar nem dar zoom. NÃO é legenda de rodapé, NÃO é texto decorativo pequeno, NÃO é legenda de foto.
+- PROIBIDO: texto de apoio com menos de 50% do tamanho do título, texto miniatura, corpo tipo "legenda", qualquer tipografia que exija zoom para ler.
+- Regra prática: ambos título e texto de apoio devem ser lidos de imediato ao ver a peça no celular em tamanho normal — se precisar aproximar o celular para ler qualquer um deles, o tamanho está errado.
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal OU traseira.

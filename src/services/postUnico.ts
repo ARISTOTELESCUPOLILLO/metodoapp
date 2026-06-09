@@ -394,14 +394,14 @@ export function buildPostUnicoPrompt(params: {
 TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
-Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com corpo em torno de 55% do título — menor que o título mas ainda legível sem zoom no celular — mas a POSIÇÃO do bloco é livre. Explore ancoragens — topo, lateral esquerda ou direita, base, barra inferior, dividido em zonas ou ancorado em canto.`
+Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — legível sem zoom no celular, nunca tamanho de legenda — mas a POSIÇÃO do bloco é livre. Explore ancoragens — topo, lateral esquerda ou direita, base, barra inferior, dividido em zonas ou ancorado em canto.`
     : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
 A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
 Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave${data.keyInfo.trim() ? ` "${data.keyInfo.trim()}"` : ' fornecida'} e na atividade da empresa${objetivo ? ` com objetivo: ${objetivo}` : ''}.
 NÃO copie a informação-chave literalmente — interprete-a criativamente com tom publicitário.
 PROIBIDO usar o nome da empresa ou da marca como título ou texto — inspire-se na mensagem, na atividade e na informação-chave, nunca no nome da empresa. O nome da marca é representado pela logomarca, não pelo texto da arte.
 A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, em qualquer peso/fonte dentro da tipografia da marca, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda".
-Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com corpo em torno de 55% do título — menor que o título mas ainda legível sem zoom no celular.`;
+Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — legível sem zoom no celular, nunca tamanho de legenda.`;
 
   // Instrução de referência (avatar/cenário/produtos) com PRIORIDADE MÁXIMA —
   // posicionada junto das demais regras invioláveis, ANTES da descrição da peça

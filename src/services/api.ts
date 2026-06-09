@@ -222,8 +222,8 @@ ${cenaDetalhada}
 ${variationBlock}
 
 CONTEÚDO TEXTUAL:
-- Título principal em CAIXA ALTA (bold, destaque máximo, tamanho ajustado para caber sem cortar): "${tituloUpper}"
-- Texto de apoio (corpo em torno de 60% do tamanho do título — claramente menor, mas confortavelmente legível sem zoom, caixa normal, peso regular): "${texto}"
+- Título principal em CAIXA ALTA (bold, corpo GRANDE — mínimo 45% da altura do canvas; quebre em até 3 linhas se necessário para MANTER o corpo grande, nunca encolha o corpo para caber em menos linhas): "${tituloUpper}"
+- Texto de apoio — SUBTÍTULO DE REVISTA (corpo entre 55% e 70% do título, legível sem zoom no celular, caixa normal, peso regular — nunca tamanho de legenda): "${texto}"
 - ${marcaInstruction}
 
 COR PRIMÁRIA: ${primaryColor}
@@ -233,8 +233,8 @@ ${typographyBlock}
 
 REGRAS:
 - Título renderizado em CAIXA ALTA exatamente como: "${tituloUpper}"
-- Texto de apoio exatamente como: "${texto}", em caixa normal, corpo em torno de 60% do título (claramente menor, mas confortavelmente legível sem zoom)
-- ⚠ MARGEM DE ${safeMargin} para título e texto de apoio (zona segura definida no topo do prompt) — texto que não caiba dentro da margem deve ser reduzido ou reposicionado, nunca cortado
+- Texto de apoio exatamente como: "${texto}", em caixa normal, corpo entre 55% e 70% do título (subtítulo de revista legível sem zoom — nunca tamanho de legenda)
+- ⚠ MARGEM DE ${safeMargin} para título e texto de apoio (zona segura definida no topo do prompt) — se o texto não couber, quebre em mais linhas ou reposicione; nunca reduza o corpo da fonte nem corte palavras
 - Todo texto em português, sem tradução, sem texto em inglês
 - Sem elementos decorativos genéricos
 - Alta resolução, estética editorial contemporânea brasileira
@@ -247,8 +247,8 @@ const moodVisualInstructions: Record<MoodCode, string> = {
 'OP-01': `ESTILO VISUAL (raiz: Renascentista):
 - Grid organizado em 3 zonas horizontais bem definidas
 - Assinatura da marca pequena e discreta no topo
-- Título em 2 linhas máximo, hierarquia tipográfica clara, alinhado à ESQUERDA
-- Texto de apoio curto abaixo do título, alinhado à esquerda
+- Título em CAIXA ALTA, bold, corpo GRANDE (mínimo 45% da altura do canvas) — quebre em até 3 linhas se necessário, nunca encolha o corpo para caber em menos linhas; alinhado à ESQUERDA
+- Texto de apoio como SUBTÍTULO DE REVISTA logo abaixo do título — corpo entre 55% e 70% do título, legível sem zoom, alinhado à esquerda; nunca tamanho de legenda
 - Luz natural equilibrada, composição simétrica
 - Fundo limpo, sem elementos decorativos desnecessários
 - Paleta fria e controlada, cor de destaque apenas no elemento-chave`,
