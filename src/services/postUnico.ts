@@ -60,7 +60,7 @@ const OBJETIVO_ORIENTACAO: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> 
 
 // Exclusões visuais compactas por objetivo.
 const OBJETIVO_VISUAL_EXCLUSIONS: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> = {
-  institucional: 'Evitar concreto aparente, parede lisa genérica, skyline, pessoa olhando janela e institucional stock.',
+  institucional: 'Evitar skyline, prédio genérico, pessoa olhando janela e stock corporativo sem personalidade.',
   promocao: 'Evitar sacola genérica, carrinho de supermercado, etiqueta flutuante, porcentagem como elemento principal e aparência de panfleto.',
   oportunidade: 'Evitar portais, portas abertas, arcos, pôr do sol, luz no fim do túnel, pessoa correndo e corredor de concreto.',
   aviso: 'Evitar alerta exagerado, placa genérica, triângulo de perigo e visual burocrático.',
@@ -112,7 +112,7 @@ const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]
     'CONCEITO DESTA GERAÇÃO — COMPOSIÇÃO MINIMALISTA: peça com máxima economia visual — uma cor, um elemento, hierarquia cristalina.',
   ],
   institucional: [
-    'CONCEITO DESTA GERAÇÃO — PROPÓSITO ABSTRATO: composição abstrata que traduz o valor da marca em cor, forma e luz — sem literalidade.',
+    'CONCEITO DESTA GERAÇÃO — PROPÓSITO ABSTRATO: composição que traduz o valor da marca em cor, forma e luz — escolha UM elemento visual concreto como âncora (textura de material do ofício, gradiente de cor institucional, detalhe fotográfico específico do negócio) para ancorar a abstração e evitar resultado genérico.',
     'CONCEITO DESTA GERAÇÃO — LUGAR DE PERTENCIMENTO: ambiente que comunica o universo da marca — espaço editorial caloroso, sala iluminada com textura humana, atelier de criação, escritório com personalidade, ambiente de trabalho real com vida. PROIBIDO neste conceito: concreto aparente, galpão industrial, corredor vazio ou qualquer estrutura fria — o "pertencimento" é humano e caloroso, não arquitetônico e frio.',
     'CONCEITO DESTA GERAÇÃO — PESSOA E IDENTIDADE: avatar ou representante da marca como incorporação dos seus valores — postura, olhar e contexto comunicam o posicionamento.',
     'CONCEITO DESTA GERAÇÃO — DETALHE DE OFÍCIO: close em ferramenta, material ou gesto específico do negócio — artesania, especialização, autoria.',
@@ -394,7 +394,7 @@ export function buildPostUnicoPrompt(params: {
 TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
-Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com corpo em torno de 55% do título — menor que o título mas ainda legível sem zoom no celular — mas a POSIÇÃO do bloco é livre. Pode estar no topo, na lateral esquerda, na lateral direita, na base, sobreposto à imagem, em barra inferior, dividido em duas zonas da peça, ou ancorado em um canto. EVITE a fórmula default "bloco amarelo+branco encostado na borda esquerda ocupando metade da peça" se ela não for a melhor para esta composição específica — explore outras ancoragens. O fundo/cenário deve ter calor visual, textura orgânica ou composição cromática — NUNCA parede de concreto, estrutura industrial fria ou corredor vazio como solução para destacar o texto.`
+Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio com corpo em torno de 55% do título — menor que o título mas ainda legível sem zoom no celular — mas a POSIÇÃO do bloco é livre. Explore ancoragens — topo, lateral esquerda ou direita, base, barra inferior, dividido em zonas ou ancorado em canto.`
     : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
 A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
 Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave${data.keyInfo.trim() ? ` "${data.keyInfo.trim()}"` : ' fornecida'} e na atividade da empresa${objetivo ? ` com objetivo: ${objetivo}` : ''}.

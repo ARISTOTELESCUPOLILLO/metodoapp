@@ -219,6 +219,12 @@ const CLAREZA_CAMERA_VARIATIONS: string[] = [
   'CÂMERA LATERAL 3/4: lente 50mm, distância média, ponto de vista na altura dos olhos — personagem levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional',
 ];
 
+// Variação de câmera sorteada para IMPACTO (contra-plongée vs. 3/4 dinâmico).
+const IMPACTO_CAMERA_VARIATIONS: string[] = [
+  'contra-plongée leve, lente 35mm, distância média — câmera ligeiramente abaixo da linha dos olhos, ângulo ascendente sutil que amplifica o impacto',
+  'ângulo 3/4 dinâmico, lente 35mm, distância média — câmera levemente lateral, perspectiva cinematográfica sem ser extrema',
+];
+
 // CLAREZA: 3 opções sorteáveis. Sem objeto obrigatório na mão.
 // A 3ª opção retira o rosto do centro — aumenta diversidade de enquadramento.
 // Segmento e atividade podem orientar gesto e ambiente sem obrigar representação literal.
@@ -500,18 +506,18 @@ export function getMoodSignature(mood: MoodCode): string {
 export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string): string {
   if (!mood) return '';
 
-  const TEMA_DERIVATION_RULE = 'ANTES de aplicar a estrutura abaixo, identifique em UMA ação ou símbolo concreto o que o Título e o Texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar; título sobre "comunicação e design" → ação de revisar peças/provas/material visual; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback; título com metáfora estratégica como "rumo da campanha" → ação de revisar material, orientar cliente ou analisar peças — o que a empresa FAZ, NÃO pessoa andando). Essa ação ou símbolo concreto preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela. ATENÇÃO: palavras metafóricas do título ("rumo", "caminho", "direção", "passo", "virada") descrevem intenção estratégica — nunca traduzir como deslocamento físico de uma pessoa.';
+  const TEMA_DERIVATION_RULE = 'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas do título ("rumo", "caminho", "passo", "direção") = intenção estratégica — nunca deslocamento físico.';
 
   if (mood === 'OP-05') {
     const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
     const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE CÂMERA E RUPTURA (define COMO a cena é fotografada — sobrepõe o campo "Composição" da CENA DETALHADA acima quanto a câmera e estrutura conceitual; seguir exatamente, não substituir por outra câmera): Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} Aqui, o objeto, gesto ou elemento deslocado que ENCARNA a ruptura deve ser esse símbolo derivado do tema — não um conceito surreal genérico solto, e nunca um clichê pronto de "estratégia/ideia" (peça de xadrez, tabuleiro, dominó, labirinto, bússola, lâmpada acesa). Uma ruptura por cena.`;
+    return `\n⚠ VARIAÇÃO: Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} O elemento que encarna a ruptura deriva do tema — nunca clichê de "estratégia/ideia" (xadrez, dominó, bússola, lâmpada). Uma ruptura por cena.`;
   }
 
   if (mood === 'OP-06') {
     const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE CÂMERA E OBJETO/SUJEITO DO SILÊNCIO (define COMO a cena é fotografada e a natureza do elemento principal — sobrepõe os campos "Personagem" e "Composição" da CENA DETALHADA acima; seguir exatamente, não substituir por laptop ou dispositivo): Câmera: ${camera}. Estrutura do objeto: ${objeto}. ${TEMA_DERIVATION_RULE} Aqui, o objeto específico (sempre dentro do ofício real da empresa) deve ser esse símbolo derivado do tema — não um objeto genérico desconectado da mensagem. INEDITISMO: prefira o objeto plausível porém menos óbvio dentro do ofício real — evite a primeira associação mais previsível e busque algo mais específico do negócio descrito no kit de marca, para variar o que já foi gerado antes para esta empresa.`;
+    return `\n⚠ VARIAÇÃO: Câmera: ${camera}. Estrutura do objeto: ${objeto}. ${TEMA_DERIVATION_RULE} O objeto (do ofício real) deriva do tema. INEDITISMO: prefira o objeto menos óbvio dentro do ofício real — evite a primeira associação previsível.`;
   }
 
   const characterMap: Partial<Record<MoodCode, string[]>> = {
@@ -524,7 +530,12 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
   if (!variations) return '';
 
   const variation = pickRandom(variations);
-  const camera = mood === 'OP-01' ? `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. ` : '';
+  const cameraStr = (() => {
+    if (mood === 'OP-01') return `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. `;
+    if (mood === 'OP-02') return `Câmera: ${pickRandom(IMPACTO_CAMERA_VARIATIONS)}. `;
+    if (mood === 'OP-03') return 'Câmera: 35mm levemente alta, distância natural, grão sutil. ';
+    return '';
+  })();
 
   // Quando há AVATAR de referência, o gênero do personagem já é determinado pela
   // própria foto — sortear e injetar "PRECEDÊNCIA MÁXIMA" sobre outro gênero aqui
@@ -540,8 +551,8 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
     ? ''
     : (() => {
         const gender = detectedGender ?? pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-        return `Gênero do personagem NESTA GERAÇÃO: ${gender} — ESTA INSTRUÇÃO TEM PRECEDÊNCIA sobre qualquer pronome ou substantivo de gênero (ex.: "ele/empresário" vs. "ela/empresária") que apareça no campo "Personagem" da CENA DETALHADA acima: adapte esses termos para concordar com o gênero sorteado aqui, preservando a mesma ação, postura, papel e contexto descritos — troque só o gênero, sem estereótipo. `;
+        return `Gênero: ${gender} — sobrepõe gênero da CENA, preservando ação e contexto. `;
       })();
 
-  return `\n⚠ VARIAÇÃO DESTA GERAÇÃO — ESTRUTURA DE POSE, CÂMERA E AMBIENTE (define COMO a cena é construída e fotografada — sobrepõe os campos "Composição" e "Ambiente" da CENA DETALHADA acima quanto a pose, enquadramento e tipo de ambiente; seguir sem trocar por uma composição mais genérica): ${camera}${genderBlock}Estrutura: ${variation} ${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
+  return `\n⚠ VARIAÇÃO: ${cameraStr}${genderBlock}Estrutura: ${variation} ${TEMA_DERIVATION_RULE}`;
 }
