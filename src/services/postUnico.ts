@@ -264,7 +264,7 @@ const OBJETIVO_PALETAS: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]> =
   oportunidade: [
     `PALETA DESTA PEÇA — DESCOBERTA: turquesa, branco e azul céu. Abertura e novidade ao alcance.`,
     `PALETA DESTA PEÇA — RENOVAÇÃO: verde claro, branco e bege. Frescor e recomeço.`,
-    `PALETA DESTA PEÇA — CRESCIMENTO: verde médio, dourado suave e branco. Evolução e prosperidade.`,
+    `PALETA DESTA PEÇA — REALIZAÇÃO: dourado suave, laranja discreto e branco. Conquista e resultado concreto.`,
     `PALETA DESTA PEÇA — FUTURO: azul elétrico, violeta suave e prata. Inovação e antecipação.`,
     `PALETA DESTA PEÇA — POSSIBILIDADE: azul céu, turquesa e branco. Horizonte amplo e otimismo.`,
   ],
