@@ -215,8 +215,8 @@ const INSTANTE_CHARACTER_VARIATIONS: string[] = [
 
 // Variação de câmera sorteada exclusivamente para CLAREZA (frontal vs. lateral).
 const CLAREZA_CAMERA_VARIATIONS: string[] = [
-  'CÂMERA FRONTAL: lente 50mm, distância média, ponto de vista na altura dos olhos — personagem enquadrado de frente, composição simétrica e respirada',
-  'CÂMERA LATERAL 3/4: lente 50mm, distância média, ponto de vista na altura dos olhos — personagem levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional',
+  'CÂMERA FRONTAL: lente 50mm, plano médio ou americano, ponto de vista na altura dos olhos — personagem enquadrado da cintura ou quadril ao TOPO DA CABEÇA (rosto e cabeça INTEIRAMENTE dentro do quadro — NUNCA cortar no pescoço, queixo ou testa), composição simétrica e respirada',
+  'CÂMERA LATERAL 3/4: lente 50mm, plano médio ou americano, ponto de vista na altura dos olhos — personagem da cintura ou quadril ao TOPO DA CABEÇA (rosto e cabeça INTEIRAMENTE dentro do quadro — NUNCA cortar no pescoço, queixo ou testa), levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional',
 ];
 
 // Variação de câmera sorteada para IMPACTO (contra-plongée vs. 3/4 dinâmico).
@@ -229,8 +229,8 @@ const IMPACTO_CAMERA_VARIATIONS: string[] = [
 // A 3ª opção retira o rosto do centro — aumenta diversidade de enquadramento.
 // Segmento e atividade podem orientar gesto e ambiente sem obrigar representação literal.
 const CLAREZA_CHARACTER_VARIATIONS: string[] = [
-  'EM PÉ, plano médio ou americano: postura natural, profissional, estável. Gesto funcional — atendimento, organização, observação, apresentação discreta, operação ou interação leve com o ambiente. Não obrigar objeto na mão. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
-  'SENTADO, plano médio ou médio próximo: postura organizada, calma, objetiva. A cena pode ocorrer em mesa, balcão, bancada, recepção, estação de trabalho, área de atendimento, ponto de venda, ambiente operacional limpo ou outro contexto adequado. Não depender de papel, caneta, caderno, tablet, celular ou notebook como elemento obrigatório. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
+  'EM PÉ, plano médio ou americano — rosto e cabeça SEMPRE inteiramente dentro do quadro (nunca cortar no pescoço, queixo ou testa): postura natural, profissional, estável. Gesto funcional — atendimento, organização, observação, apresentação discreta, operação ou interação leve com o ambiente. Não obrigar objeto na mão. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
+  'SENTADO, plano médio ou médio próximo — rosto e cabeça SEMPRE inteiramente dentro do quadro (nunca cortar no pescoço, queixo ou testa): postura organizada, calma, objetiva. A cena pode ocorrer em mesa, balcão, bancada, recepção, estação de trabalho, área de atendimento, ponto de venda, ambiente operacional limpo ou outro contexto adequado. Não depender de papel, caneta, caderno, tablet, celular ou notebook como elemento obrigatório. Personagem, gesto e ambiente podem refletir o segmento quando necessário, sem ser obrigatório nem literal.',
   'DETALHE CONTEXTUAL, plano próximo ou plano-detalhe: rosto não é dominante — a cena mostra mãos, gesto, objeto, produto, ferramenta, bancada, textura de material, documento discreto ou detalhe do ambiente de trabalho. O personagem existe pela presença parcial (mão, braço, silhueta). A cena continua clara, organizada, arejada e coerente com o segmento. Não transformar em stock genérico de fundo branco.',
 ];
 
@@ -326,6 +326,7 @@ const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     'PROIBIDO ESPECÍFICO EM CLAREZA: laptop/notebook aberto voltado frontalmente para câmera com personagem posicionado atrás — essa composição "barreira de laptop" destrói o espaço negativo e a simetria respirada do mood. Se houver tecnologia em cena: detalhe lateral, desfocado em primeiro plano ou em ângulo plongée. ' +
     'VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. ' +
     'EXCEÇÃO FUNCIONAL — MATERIAL ORGANIZADO EM CLAREZA: quando o tema central da peça for organização, alinhamento, prioridades ou planejamento (ex.: "alinham ideias", "organiza prioridades", "planejamento limpo", "decisões sem ruído"), cartões, folhas ou peças impressas dispostos de forma organizada SOBRE a superfície de trabalho SÃO PERMITIDOS como objetos de ação funcional — representam o processo concreto de organizar e alinhar. Nesses temas, CLAREZA não deve ser mesa vazia com pessoa parada — deve mostrar organização visual simples, limpa e funcional. ' +
+    'PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO: nas variações EM PÉ e SENTADO, o enquadramento vai da cintura ou quadril ao TOPO DA CABEÇA. Rosto e cabeça devem estar INTEIRAMENTE dentro do quadro. PROIBIDO cortar no pescoço, queixo, testa ou qualquer ponto acima dos ombros. A variação DETALHE CONTEXTUAL é a única exceção permitida (mãos/fragmento sem rosto). ' +
     'A variação de câmera e posição desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
     'CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.',
   'OP-02':
