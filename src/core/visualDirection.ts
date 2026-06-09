@@ -482,7 +482,7 @@ TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal OU traseira.
 - CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, site, app, texto legível ou qualquer elemento visual.
-- DISPOSITIVO PERMITIDO APENAS COMO OBJETO CONTEXTUAL: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra sem conteúdo identificável.
+- DISPOSITIVO COMO OBJETO CONTEXTUAL: pode estar aberto, em uso, na mão, na mesa, apoiado ou em qualquer posição natural do contexto — NÃO forçar dispositivo fechado. Restrição é só o CONTEÚDO: tela frontal escura/neutra (sem nada visível), carcaça e tampa traseira lisas (sem imagem, logo ou adesivo).
 - MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
 - POSICIONAMENTO PROIBIDO: laptop aberto com tela voltada frontalmente para o observador e personagem posicionado ATRÁS — essa "barreira de laptop" é banida em TODOS os moods e segmentos.
 - NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard on screen, no UI on screen, no app interface, no readable text on devices, no duplicated laptops, no extra devices, screen must be blank dark off turned away or out of focus.

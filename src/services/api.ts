@@ -367,7 +367,7 @@ export async function generatePostImage(params: {
 PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
 PROIBIDO qualquer tela com conteúdo visível em notebook, laptop, tablet, iPad, celular, iPhone ou monitor — tela frontal ou traseira.
 CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, app, texto legível ou qualquer elemento visual.
-DISPOSITIVO PERMITIDO APENAS COMO OBJETO: fechado, de lado, de costas, desfocado ou com tela apagada/escura/neutra.
+DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. Restrição é só o conteúdo: tela frontal escura/neutra (sem nada visível), carcaça e tampa traseira lisas (sem imagem ou logo).
 MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
 NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.`;
 
