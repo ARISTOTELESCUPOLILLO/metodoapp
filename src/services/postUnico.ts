@@ -5,7 +5,7 @@ import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
 import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule } from '../core/visualDirection';
-import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS } from '../utils/promptRules';
+import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: 'Promoção comercial — gerar desejo e ação',
@@ -60,9 +60,9 @@ const OBJETIVO_ORIENTACAO: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> 
 
 // Exclusões visuais compactas por objetivo.
 const OBJETIVO_VISUAL_EXCLUSIONS: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> = {
-  institucional: 'Evitar skyline, prédio genérico, pessoa olhando janela e stock corporativo sem personalidade.',
+  institucional: 'Evitar skyline, prédio genérico, pessoa olhando janela e stock corporativo sem personalidade. ROSTO HUMANO É PERMITIDO E BEM-VINDO: a peça institucional pode mostrar pessoa com rosto visível — profissional com olhar direto ou contextual — quando isso comunicar melhor identidade e valores da marca.',
   promocao: 'Evitar sacola genérica, carrinho de supermercado, etiqueta flutuante, porcentagem como elemento principal e aparência de panfleto.',
-  oportunidade: 'Evitar portais, portas abertas, arcos, pôr do sol, luz no fim do túnel, pessoa correndo e corredor de concreto.',
+  oportunidade: 'PROIBIDO ABSOLUTO: porta entreaberta com feixe de luz dourada, portal luminoso, arco com luz, luz no fim do túnel, pôr do sol como metáfora, corredor de concreto, pessoa correndo. Esses elementos são clichês motivacionais banidos — não aparecem mesmo que o briefing não os cite explicitamente. NEGATIVE: glowing doorway, door with light, light at end of tunnel, running person.',
   aviso: 'Evitar alerta exagerado, placa genérica, triângulo de perigo e visual burocrático.',
   homenagem: 'Evitar buquê isolado, confete solto, vela genérica e pose sentimental stock.',
   fatos: 'Preservar registro real. Não inventar cena, pessoas, ambiente ou atmosfera. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução.',
@@ -451,6 +451,7 @@ ${data.keyInfo.trim()
   : `INFORMAÇÃO-CHAVE: não fornecida. Crie a peça com base apenas na empresa, atividade, objetivo e kit visual — a IA tem TOTAL LIBERDADE para inventar o tema e a mensagem mais pertinente para esta marca e este objetivo.`}
 
 ${copyBlock}
+${CONCEITO_FIRST_RULE}
 ${papelBlock}
 ${direcao}${variationBlock}
 

@@ -3,7 +3,7 @@ import { pickImageVariationBlock } from '../core/visualDirection';
 import { ContentFormData, LogoPosition, MethodOpResult, MoodCode } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
-import { DEVICE_RULE, FORBIDDEN_MOOD_WORDS } from '../utils/promptRules';
+import { DEVICE_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
 
@@ -218,6 +218,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
+${CONCEITO_FIRST_RULE}
 ${cenaDetalhada}
 ${variationBlock}
 
