@@ -99,14 +99,14 @@ PASSO 2 — VALIDE: se a categoria for "Novidade ou Oportunidade" e o texto for 
 
 PASSO 3 — REENQUADRE SEM TRAIR A IDEIA: ajuste o ângulo mantendo o sentido central. Se positivo, mantenha positivo.
 
-PASSO 4 — ESCREVA COM CLAREZA: 1 frase direta e simples, até 14 palavras (ideal por volta de 12). Sintaxe: sujeito + verbo + complemento. Evite encadear mais de uma cláusula relativa.
+PASSO 4 — ESCREVA COM CLAREZA: 1 frase direta e simples, até 14 palavras (ideal por volta de 12). Sintaxe: qualquer palavra substantivada pode ser sujeito — substantivo, adjetivo, verbo no infinitivo ou locução; não restrinja a papéis pessoais. Evite encadear mais de uma cláusula relativa.
 
 ${proibicoesInventar}
 LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se trocar uma palavra grande por palavras mais curtas deixar a frase com mais de 12 palavras, pode chegar a até 14 — isso é preferível a manter um termo difícil só para caber no limite.`;
 
           const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE OP:
 Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo. Até 14 palavras (ideal por volta de 12).
-SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
+SINTAXE: qualquer palavra substantivada pode ser sujeito — substantivo, adjetivo, verbo no infinitivo ou locução; não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.
 ${proibicoesInventar}
 LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se trocar uma palavra grande por palavras mais curtas deixar a frase com mais de 12 palavras, pode chegar a até 14 — isso é preferível a manter um termo difícil só para caber no limite.`;
@@ -121,7 +121,7 @@ Escreva como se estivesse falando com alguém que usa o produto/serviço na pró
 A Informação-chave deve falar com o dono, sócio, gestor ou responsável pelo negócio.
 Foque em situações reais de trabalho: atendimento, resultado, organização, vendas, prazo, confiança ou crescimento.
 Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".
-SUJEITO DA FRASE (B2B): use "empresas", "gestores", "equipes", "donos", "negócios" como sujeito. NUNCA use "clientes", "consumidores" ou "compradores" como sujeito principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
+SUJEITO DA FRASE (B2B): qualquer palavra da língua portuguesa pode ser sujeito quando substantivada — substantivo concreto ou abstrato, adjetivo, verbo no infinitivo, locução. Não restrinja a papéis pessoais ("gestores", "equipes", "donos"). Exemplos válidos: "A organização que falta custa caro", "Não responder a tempo afasta cliente", "Confiar custa caro quando a marca falha", "O detalhe que o cliente percebe define a escolha", "Crescer exige comunicação alinhada". NUNCA use "clientes", "consumidores" ou "compradores" como sujeito principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
 
           // ── Progressão do Método OP ────────────────────────────────────────
           const progressaoB2C = segment === 'VAREJO'
@@ -325,7 +325,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
 2. Reescreva em 1 frase curta e direta: quem + o quê + tensão ou dor. Até 14 palavras (ideal por volta de 12).
-3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
+3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para uma situação concreta do dia a dia da empresa.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase.
 
@@ -359,7 +359,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
 2. Reescreva em 1 frase curta e direta: quem + o quê + desejo ou conquista. Até 14 palavras (ideal por volta de 12).
-3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
+3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para uma situação concreta do dia a dia da empresa.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase.
 
@@ -391,7 +391,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
 2. Reescreva em 1 frase curta e direta: marca + identidade ou propósito. Até 14 palavras (ideal por volta de 12).
-3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
+3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para uma situação concreta da marca.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase, linguagem de venda, urgência.
 
@@ -422,7 +422,7 @@ ${editorialBlock}
 INSTRUÇÃO DE REFINAMENTO:
 1. Preserve o ASSUNTO do usuário — mude apenas a forma.
 2. Reescreva em 1 frase curta e direta: marca + trajetória ou vínculo. Até 14 palavras (ideal por volta de 12).
-3. SINTAXE SIMPLES: sujeito + verbo + complemento. Evite cláusulas relativas encadeadas ("que X que Y que Z").
+3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 4. Se o texto estiver vago, traga para um fato concreto da trajetória da marca.
 5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase, linguagem comercial, dor do cliente, inversão negativa.
 
