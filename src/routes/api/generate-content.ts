@@ -177,53 +177,82 @@ export const Route = createFileRoute('/api/generate-content')({
           const controller = new AbortController();
           const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-          let upstream: Response;
-          try {
-            upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${apiKey}`,
-              },
-              body: JSON.stringify({
-                model: 'gpt-4.1',
-                messages: [
-                  { role: 'system', content: 'Você é um especialista em comunicação de marca brasileira. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro.' },
-                  { role: 'user', content: prompt },
-                ],
-                temperature: 0.85,
-                max_tokens: maxTokens,
-                response_format: {
-                  type: 'json_schema',
-                  json_schema: {
-                    name: 'metodo_op_result',
-                    strict: true,
-                    schema: METODO_OP_SCHEMA,
-                  },
-                },
-                stream: true,
-              }),
-              signal: controller.signal,
-            });
-          } catch (e) {
-            clearTimeout(timer);
-            const aborted = (e as Error).name === 'AbortError';
-            console.error('[generate-content] openai fetch failed', aborted ? 'timeout' : (e as Error).message);
-            return Response.json(
-              { error: aborted ? 'O servidor demorou demais pra responder. Tente novamente em alguns segundos.' : 'Falha ao conectar ao gerador de conteúdo.' },
-              { status: aborted ? 504 : 502 },
-            );
-          }
-
-          if (!upstream.ok || !upstream.body) {
-            clearTimeout(timer);
-            const txt = await upstream.text().catch(() => '');
-            return Response.json({ error: `OpenAI: ${txt || upstream.status}` }, { status: 502 });
-          }
-
           const encoder = new TextEncoder();
-          const decoder = new TextDecoder();
-          const reader = upstream.body.getReader();
+          const requestBody = JSON.stringify({
+            model: 'gpt-4.1',
+            messages: [
+              { role: 'system', content: 'Você é um especialista em comunicação de marca brasileira. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro.' },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0.85,
+            max_tokens: maxTokens,
+            response_format: {
+              type: 'json_schema',
+              json_schema: {
+                name: 'metodo_op_result',
+                strict: true,
+                schema: METODO_OP_SCHEMA,
+              },
+            },
+            stream: true,
+          });
+
+          // Faz uma chamada streaming à OpenAI e devolve o conteúdo acumulado.
+          // gpt-4.1 + json_schema strict ocasionalmente trunca a resposta
+          // (finish_reason='length' ou JSON inválido) de forma não-determinística,
+          // por isso o handler tenta de novo quando isso acontece.
+          async function runAttempt(): Promise<
+            | { kind: 'ok'; fullContent: string; finishReason: string | null }
+            | { kind: 'http-error'; status: number; text: string }
+            | { kind: 'fetch-error'; aborted: boolean; message: string }
+          > {
+            let upstream: Response;
+            try {
+              upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${apiKey}`,
+                },
+                body: requestBody,
+                signal: controller.signal,
+              });
+            } catch (e) {
+              return { kind: 'fetch-error', aborted: (e as Error).name === 'AbortError', message: (e as Error).message };
+            }
+            if (!upstream.ok || !upstream.body) {
+              const txt = await upstream.text().catch(() => '');
+              return { kind: 'http-error', status: upstream.status, text: txt };
+            }
+            const decoder = new TextDecoder();
+            const reader = upstream.body.getReader();
+            let buffer = '';
+            let fullContent = '';
+            let finishReason: string | null = null;
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              let idx;
+              while ((idx = buffer.indexOf('\n\n')) !== -1) {
+                const evt = buffer.slice(0, idx);
+                buffer = buffer.slice(idx + 2);
+                for (const line of evt.split('\n')) {
+                  if (!line.startsWith('data: ')) continue;
+                  const payload = line.slice(6).trim();
+                  if (!payload || payload === '[DONE]') continue;
+                  try {
+                    const j = JSON.parse(payload);
+                    const d = j?.choices?.[0]?.delta?.content;
+                    if (typeof d === 'string') fullContent += d;
+                    const fr = j?.choices?.[0]?.finish_reason;
+                    if (fr) finishReason = fr;
+                  } catch { /* ignore parse errors */ }
+                }
+              }
+            }
+            return { kind: 'ok', fullContent, finishReason };
+          }
 
           const stream = new ReadableStream({
             async start(ctrl) {
@@ -232,37 +261,48 @@ export const Route = createFileRoute('/api/generate-content')({
                 try { ctrl.enqueue(encoder.encode(': ping\n\n')); } catch {}
               }, 10_000);
 
-              let buffer = '';
-              let fullContent = '';
               try {
-                while (true) {
-                  const { value, done } = await reader.read();
-                  if (done) break;
-                  const chunk = decoder.decode(value, { stream: true });
-                  buffer += chunk;
-                  // Repassa cru pro cliente (SSE puro da OpenAI).
-                  ctrl.enqueue(encoder.encode(chunk));
+                let successContent: string | null = null;
+                let lastContent: string | null = null;
+                let connError: string | null = null;
+                const maxAttempts = 2;
 
-                  // Acumula `delta.content` pra logging/debit no fim.
-                  let idx;
-                  while ((idx = buffer.indexOf('\n\n')) !== -1) {
-                    const evt = buffer.slice(0, idx);
-                    buffer = buffer.slice(idx + 2);
-                    for (const line of evt.split('\n')) {
-                      if (!line.startsWith('data: ')) continue;
-                      const payload = line.slice(6).trim();
-                      if (!payload || payload === '[DONE]') continue;
-                      try {
-                        const j = JSON.parse(payload);
-                        const d = j?.choices?.[0]?.delta?.content;
-                        if (typeof d === 'string') fullContent += d;
-                        const cached = j?.usage?.prompt_tokens_details?.cached_tokens;
-                        if (cached) console.info('[generate-content] cached_tokens=%d', cached);
-                      } catch { /* ignore parse errors */ }
-                    }
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                  const r = await runAttempt();
+                  if (r.kind === 'fetch-error') {
+                    console.error('[generate-content] attempt %d fetch failed: %s', attempt, r.message);
+                    connError = r.aborted
+                      ? 'O servidor demorou demais pra responder. Tente novamente em alguns segundos.'
+                      : 'Falha ao conectar ao gerador de conteúdo.';
+                    if (r.aborted) break;
+                    continue;
                   }
+                  if (r.kind === 'http-error') {
+                    console.error('[generate-content] attempt %d http %d: %s', attempt, r.status, r.text.slice(0, 300));
+                    connError = `OpenAI: ${r.text || r.status}`;
+                    continue;
+                  }
+                  const validJson = (() => { try { JSON.parse(r.fullContent); return true; } catch { return false; } })();
+                  console.info('[generate-content] attempt %d openai_ms=%d chars=%d finish_reason=%s valid=%s', attempt, Date.now() - t0, r.fullContent.length, r.finishReason, validJson);
+                  lastContent = r.fullContent;
+                  if (r.finishReason === 'stop' && validJson) {
+                    successContent = r.fullContent;
+                    break;
+                  }
+                  console.warn('[generate-content] attempt %d incompleto (finish_reason=%s)%s', attempt, r.finishReason, attempt < maxAttempts ? ' — tentando de novo' : '');
                 }
-                console.info('[generate-content] openai_ms=' + (Date.now() - t0) + ' chars=' + fullContent.length);
+
+                if (successContent !== null) {
+                  ctrl.enqueue(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: successContent } }] })}\n\n`));
+                  ctrl.enqueue(encoder.encode('data: [DONE]\n\n'));
+                } else if (lastContent !== null) {
+                  // Devolve o que veio mesmo incompleto — o cliente detecta JSON
+                  // inválido/vazio e mostra a mensagem apropriada.
+                  ctrl.enqueue(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: lastContent } }] })}\n\n`));
+                  ctrl.enqueue(encoder.encode('data: [DONE]\n\n'));
+                } else {
+                  ctrl.enqueue(encoder.encode(`data: ${JSON.stringify({ error: connError || 'Falha ao gerar conteúdo.' })}\n\n`));
+                }
 
                 // Debita sempre (para rastreio de custo; usuário efetivo já resolvido acima).
                 try {
