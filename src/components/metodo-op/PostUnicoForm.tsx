@@ -746,6 +746,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         imageKit={imageKit}
         selection={visualSelection}
         onChange={onVisualSelectionChange}
+        mood={data.direcao === 'mood' ? data.mood : undefined}
       />
 
       {!hasLogo && (

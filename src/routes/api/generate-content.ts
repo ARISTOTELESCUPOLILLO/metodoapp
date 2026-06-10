@@ -169,6 +169,11 @@ export const Route = createFileRoute('/api/generate-content')({
           const effectiveSize = track === 'experimentacao' ? 3 : (sequenceSize || 6);
           const TIMEOUT_BY_SIZE: Record<number, number> = { 3: 120_000, 6: 180_000, 9: 240_000 };
           const timeoutMs = TIMEOUT_BY_SIZE[effectiveSize] ?? 180_000;
+          // S9 gera ~3x o conteúdo de S3 (6 itens de feed + 15 cards de carrossel +
+          // 3 reels, cada um com leituraCenica verbosa) — 16384 tokens estoura e o
+          // JSON sai truncado ("resposta incompleta"). 32768 é o teto do gpt-4.1.
+          const MAX_TOKENS_BY_SIZE: Record<number, number> = { 3: 16384, 6: 16384, 9: 32768 };
+          const maxTokens = MAX_TOKENS_BY_SIZE[effectiveSize] ?? 16384;
           const controller = new AbortController();
           const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -187,7 +192,7 @@ export const Route = createFileRoute('/api/generate-content')({
                   { role: 'user', content: prompt },
                 ],
                 temperature: 0.85,
-                max_tokens: 16384,
+                max_tokens: maxTokens,
                 response_format: {
                   type: 'json_schema',
                   json_schema: {

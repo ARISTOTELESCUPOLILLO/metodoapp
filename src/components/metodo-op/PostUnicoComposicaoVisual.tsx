@@ -1,4 +1,4 @@
-import { ImageKit, PostUnicoVisualSelection } from '../../types';
+import { ImageKit, MoodCode, PostUnicoVisualSelection } from '../../types';
 import { produtosDisponiveis, cenariosDisponiveis } from '../../utils/imageKitStorage';
 
 const MAX_PRODUTOS_PU = 3;
@@ -7,9 +7,10 @@ interface Props {
   imageKit: ImageKit;
   selection: PostUnicoVisualSelection;
   onChange: (next: PostUnicoVisualSelection) => void;
+  mood?: MoodCode;
 }
 
-export default function PostUnicoComposicaoVisual({ imageKit, selection, onChange }: Props) {
+export default function PostUnicoComposicaoVisual({ imageKit, selection, onChange, mood }: Props) {
   const hasAvatar1 = !!imageKit.avatar;
   const hasAvatar2 = !!imageKit.avatar2;
   const hasAvatar = hasAvatar1 || hasAvatar2;
@@ -114,6 +115,15 @@ export default function PostUnicoComposicaoVisual({ imageKit, selection, onChang
           ⚠️ {!hasAvatar && 'Adicione um avatar no Kit Imagem para usar. '}
           {!hasCenario && 'Adicione cenários (até 3) no Kit Imagem para usar. '}
           {!hasProdutos && 'Adicione produtos no Kit Imagem para usar.'}
+        </div>
+      )}
+
+      {mood === 'OP-06' && selection.useCenario && hasCenario && effectiveCenario && (
+        <div style={{
+          marginTop: 10, background: '#fffbeb', border: '1px solid #fcd34d',
+          color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
+        }}>
+          ⚠️ No mood <strong>Silêncio</strong>, a composição prioriza espaço vazio e um único elemento isolado — o cenário enviado pode não aparecer reconhecível no resultado. Se quiser preservar este ambiente, considere usar Avatar/Produto como referência ou escolher outro mood.
         </div>
       )}
 
