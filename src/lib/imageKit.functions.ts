@@ -86,7 +86,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
 
     const { data: row, error } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, cenarios_paths, produtos_paths')
+      .select('avatar_path, avatar_path_2, cenarios_paths, cenario_tipos, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -97,6 +97,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
         avatar: null,
         avatar2: null,
         cenarios: [null, null, null] as (string | null)[],
+        cenarioTipos: [] as string[],
         produtos: [null, null, null, null, null, null, null, null] as (string | null)[],
       };
     }
@@ -118,6 +119,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
       avatar: avatarUrl,
       avatar2: avatar2Url,
       cenarios: cenariosUrls,
+      cenarioTipos: ((row as any).cenario_tipos || []) as string[],
       produtos: produtosUrls,
     };
   });
@@ -271,6 +273,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       avatar: SlotInput,
       avatar2: SlotInput,
       cenarios: z.array(SlotInput).max(3).optional(),
+      cenarioTipos: z.array(z.enum(['fachada', 'ambiente'])).max(3).optional(),
       produtos: z.array(SlotInput).max(8).optional(),
     }).parse(d),
   )
@@ -290,12 +293,13 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     // Carrega o que já existe pra saber o que apagar.
     const { data: existing } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, cenarios_paths, produtos_paths')
+      .select('avatar_path, cenarios_paths, cenario_tipos, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
 
     const oldAvatar = existing?.avatar_path || null;
     const oldCenarios = (existing?.cenarios_paths || []) as string[];
+    const oldCenarioTipos = ((existing as any)?.cenario_tipos || []) as string[];
     const oldProdutos = (existing?.produtos_paths || []) as string[];
 
     // Avatar 1
@@ -358,6 +362,11 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       }
     }
 
+    // Tipos de cenário (fachada/ambiente) — só sobrescreve se o cliente enviou.
+    const newCenarioTipos: string[] = data.cenarioTipos
+      ? data.cenarioTipos.slice(0, 3)
+      : oldCenarioTipos;
+
     // Compacta cenários/produtos pra arrays (mantendo a posição via length).
     const cenariosForDb = newCenarios.map((c) => c || '').slice(0, 3);
     const produtosForDb = newProdutos.map((p) => p || '').slice(0, 8);
@@ -374,6 +383,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
           avatar_path: newAvatar,
           avatar_path_2: newAvatar2,
           cenarios_paths: cenariosForDb,
+          cenario_tipos: newCenarioTipos,
           produtos_paths: produtosForDb,
           updated_at: new Date().toISOString(),
         },
@@ -394,6 +404,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       avatar: avatarUrl,
       avatar2: avatar2Url,
       cenarios: cenariosUrls,
+      cenarioTipos: newCenarioTipos,
       produtos: produtosUrls,
     };
   });

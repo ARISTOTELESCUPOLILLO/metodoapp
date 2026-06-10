@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ImageKit } from '../../types';
+import { CenarioTipo, ImageKit } from '../../types';
 import { resizeImage, validateImageFile } from '../../utils/imageResize';
 import { PRODUTO_SLOTS, CENARIO_SLOTS } from '../../utils/imageKitStorage';
 import { useAuth } from '../../hooks/useAuth';
@@ -79,6 +79,14 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
     applySlot(slot, null);
   }
 
+  function toggleCenarioFachada(index: number) {
+    const current = kit.cenarioTipos?.[index] || 'ambiente';
+    const next: CenarioTipo[] = Array.from({ length: CENARIO_SLOTS }, (_, i) =>
+      i === index ? (current === 'fachada' ? 'ambiente' : 'fachada') : 'ambiente',
+    );
+    onChange({ ...kit, cenarioTipos: next });
+  }
+
   return (
     <section className="panel">
       <div className="sectionHeader">
@@ -131,20 +139,35 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
         <strong>Cenários</strong>
         <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#64748b' }}>
           Até 3 cenários numerados (loja, escritório, fachada, ambiente, atmosfera).
-          A numeração é fixa.
+          A numeração é fixa. Marque um deles como <strong>Fachada</strong> — a frente
+          do seu estabelecimento — para que ele seja usado de forma diferente nas peças.
+          Os outros dois continuam como ambientes internos.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
-          {Array.from({ length: CENARIO_SLOTS }).map((_, i) => (
-            <SlotCard
-              key={i}
-              label={`Cenário ${i + 1}`}
-              dataUrl={kit.cenarios[i] || undefined}
-              busy={busySlot === slotKey({ tipo: 'cenario', index: i })}
-              onPick={(f) => handleFile({ tipo: 'cenario', index: i }, f)}
-              onClear={() => clearSlot({ tipo: 'cenario', index: i })}
-              compact
-            />
-          ))}
+          {Array.from({ length: CENARIO_SLOTS }).map((_, i) => {
+            const tipo = kit.cenarioTipos?.[i] || 'ambiente';
+            return (
+              <SlotCard
+                key={i}
+                label={tipo === 'fachada' ? 'Cenário Fachada' : `Cenário ${i + 1}`}
+                dataUrl={kit.cenarios[i] || undefined}
+                busy={busySlot === slotKey({ tipo: 'cenario', index: i })}
+                onPick={(f) => handleFile({ tipo: 'cenario', index: i }, f)}
+                onClear={() => clearSlot({ tipo: 'cenario', index: i })}
+                compact
+                footer={
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#475569', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={tipo === 'fachada'}
+                      onChange={() => toggleCenarioFachada(i)}
+                    />
+                    É a fachada
+                  </label>
+                }
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -195,11 +218,12 @@ interface SlotCardProps {
   dataUrl?: string;
   busy?: boolean;
   compact?: boolean;
+  footer?: React.ReactNode;
   onPick: (file: File) => void;
   onClear: () => void;
 }
 
-function SlotCard({ label, dataUrl, busy, compact, onPick, onClear }: SlotCardProps) {
+function SlotCard({ label, dataUrl, busy, compact, footer, onPick, onClear }: SlotCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const size = compact ? 130 : 180;
 
@@ -266,6 +290,7 @@ function SlotCard({ label, dataUrl, busy, compact, onPick, onClear }: SlotCardPr
           </button>
         )}
       </div>
+      {footer}
     </div>
   );
 }

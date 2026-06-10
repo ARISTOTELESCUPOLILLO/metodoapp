@@ -1,11 +1,25 @@
 // Aplica uma migration SQL diretamente no Supabase via Management API
 import { readFileSync } from 'fs';
-import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dirname, '../.env') });
+
+// Carrega .env manualmente (sem dependência de "dotenv")
+const envPath = resolve(__dirname, '../.env');
+const envContent = readFileSync(envPath, 'utf8');
+for (const line of envContent.split('\n')) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#')) continue;
+  const eq = trimmed.indexOf('=');
+  if (eq === -1) continue;
+  const key = trimmed.slice(0, eq).trim();
+  let value = trimmed.slice(eq + 1).trim();
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    value = value.slice(1, -1);
+  }
+  if (!(key in process.env)) process.env[key] = value;
+}
 
 const SQL_FILE = process.argv[2];
 if (!SQL_FILE) { console.error('Usage: node apply-migration.mjs <file.sql>'); process.exit(1); }
@@ -14,12 +28,7 @@ const sql = readFileSync(resolve(__dirname, '..', SQL_FILE), 'utf8');
 const projectRef = new URL(process.env.SUPABASE_URL).hostname.split('.')[0];
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Supabase expõe execução de SQL via a função pg_advisory_lock-like no dashboard,
-// mas a forma mais direta é chamar via o endpoint do Supabase Admin.
-// Usamos o endpoint interno que o dashboard usa: /pg/query
-const url = `https://api.supabase.com/v1/projects/${projectRef}/database/query`;
-
-// Como fallback, tenta via rpc direto com service role
+// Fallback: tenta via rpc direto com service role
 const fallbackUrl = `${process.env.SUPABASE_URL}/rest/v1/rpc/exec_sql`;
 
 async function tryDirect() {

@@ -12,7 +12,7 @@ import {
   type ElementoPersonalizacao,
   type SlotPersonalizacao,
 } from '../../core/personalizacaoMop';
-import { produtosDisponiveis, cenariosDisponiveis } from '../../utils/imageKitStorage';
+import { produtosDisponiveis, cenariosDisponiveis, cenarioLabel } from '../../utils/imageKitStorage';
 import { regenerateWithKit } from '../../services/regenerateWithKit';
 
 interface Props {
@@ -180,7 +180,12 @@ export default function PersonalizacaoBadge({
       {precisaCenario && cenariosOk.length > 1 && (
         <ThumbPicker
           name={`cen-${slot.formato}-${slot.posicao}`}
-          options={cenariosOk.map((n) => ({ num: n, url: imageKit.cenarios[n - 1] || undefined, label: `C${n}` }))}
+          options={cenariosOk.map((n) => ({
+            num: n,
+            url: imageKit.cenarios[n - 1] || undefined,
+            label: cenarioLabel(imageKit, n),
+            shortLabel: imageKit.cenarioTipos?.[n - 1] === 'fachada' ? 'F' : `C${n}`,
+          }))}
           selected={effectiveCenarioNum}
           onChange={setCenarioNum}
         />
@@ -232,7 +237,7 @@ export default function PersonalizacaoBadge({
 
 interface ThumbPickerProps {
   name: string;
-  options: { num: number; url?: string; label: string }[];
+  options: { num: number; url?: string; label: string; shortLabel?: string }[];
   selected: number | null;
   onChange: (num: number) => void;
 }
@@ -270,7 +275,7 @@ function ThumbPicker({ name, options, selected, onChange }: ThumbPickerProps) {
             {o.url ? (
               <img src={o.url} alt={o.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#475569' }}>{o.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#475569' }}>{o.shortLabel || o.label}</span>
             )}
             <span
               style={{

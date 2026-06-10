@@ -1,5 +1,5 @@
 import { ImageKit, MoodCode, PostUnicoVisualSelection } from '../../types';
-import { produtosDisponiveis, cenariosDisponiveis } from '../../utils/imageKitStorage';
+import { produtosDisponiveis, cenariosDisponiveis, cenarioLabel } from '../../utils/imageKitStorage';
 
 const MAX_PRODUTOS_PU = 3;
 
@@ -93,7 +93,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, selection, onChang
             checked={selection.useCenario && effectiveCenario === num}
             onToggle={() => pickCenario(num)}
             url={imageKit.cenarios[num - 1] || undefined}
-            label={`Cenário ${num}`}
+            label={cenarioLabel(imageKit, num)}
           />
         ))}
         {produtos.map((num) => (

@@ -11,6 +11,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { BrandKit, ImageKit, MoodCode } from '../../types';
 import { regenerateWithKit } from '../../services/regenerateWithKit';
+import { cenarioLabel } from '../../utils/imageKitStorage';
 import type { ModeloOP, SlotFormato, SlotPersonalizacao } from '../../core/personalizacaoMop';
 import {
   descrevePolicy,
@@ -262,7 +263,7 @@ export default function UsoReferenciasDia(props: Props) {
                 checked={cenarioNum === n}
                 onToggle={() => setCenarioNum((cur) => (cur === n ? null : n))}
                 url={imageKit.cenarios[n - 1] || undefined}
-                label={`Cenário ${n}`}
+                label={cenarioLabel(imageKit, n)}
               />
             ))}
             {policy.produtos > 0 && produtosDisp.map((n) => {

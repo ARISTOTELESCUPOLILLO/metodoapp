@@ -211,6 +211,9 @@ export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?
 export interface PostUnicoReferences {
   avatar?: string;
   cenario?: string;
+  // Tipo do cenário enviado, conforme marcado no Kit Imagem.
+  // 'fachada' = frente do estabelecimento; 'ambiente' (default) = interior.
+  cenarioTipo?: 'fachada' | 'ambiente';
   produtos?: { num: number; dataUrl: string }[];
 }
 
@@ -357,8 +360,13 @@ LUZ: respeite a luz real do evento (sol, lâmpada, luz de janela). PERMITIDO mel
 COMPOSIÇÃO: respeite o enquadramento e ponto de vista originais.
 PROIBIDO ABSOLUTAMENTE: alterar ou substituir pessoas, mudar ambiente, adicionar/remover elementos, dramatizar cores, inventar atmosfera, aplicar efeitos especiais.
 A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, nítida e tecnicamente melhorada.`);
+    } else if (refs.cenarioTipo === 'fachada') {
+      parts.push(`CENÁRIO OBRIGATÓRIO — FACHADA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, os letreiros e a identidade visual permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
     } else {
-      parts.push(`CENÁRIO OBRIGATÓRIO: preserve FIELMENTE este espaço como ele é na imagem de referência.\n- Se for FACHADA, FRENTE DE LOJA ou EXTERIOR: mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, os letreiros e a identidade visual permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada.\n- Se for AMBIENTE INTERNO: preserve a sala, móveis, equipamentos, paredes e ponto de vista. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.\nNÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
+      const produtoGuard = segment !== 'VAREJO'
+        ? ' Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço.'
+        : '';
+      parts.push(`CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. Preserve a sala, móveis, equipamentos, paredes e ponto de vista. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
     }
   }
   if (refs.produtos && refs.produtos.length) {

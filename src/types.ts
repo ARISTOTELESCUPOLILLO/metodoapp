@@ -125,6 +125,10 @@ export interface TemplateMood {
   color: string;
 }
 
+// Tipo de cada slot de cenário: "fachada" (frente do estabelecimento) ou
+// "ambiente" (interior — loja, escritório, oficina, atmosfera).
+export type CenarioTipo = 'fachada' | 'ambiente';
+
 // Kit Imagem — biblioteca visual da marca usada como referência na geração de imagens.
 // Avatar é único. Cenários têm 2 slots numerados FIXOS. Produtos têm 8 slots
 // numerados FIXOS — apagar o slot 3 não reorganiza nada; o slot fica vazio
@@ -134,6 +138,9 @@ export interface ImageKit {
   avatar2?: string;
   // Tamanho fixo 3; cada posição é dataURL ou null.
   cenarios: (string | null)[];
+  // Tamanho fixo 3; classifica cada posição de `cenarios` como fachada ou
+  // ambiente. Default 'ambiente' — apenas 1 slot pode ser 'fachada'.
+  cenarioTipos: CenarioTipo[];
   // Tamanho fixo 8; cada posição é dataURL ou null.
   produtos: (string | null)[];
 }

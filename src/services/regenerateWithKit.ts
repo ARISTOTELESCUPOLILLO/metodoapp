@@ -9,7 +9,7 @@
 // o MESMO motor da geração normal (generatePostImage com vertical adequado),
 // apenas adicionando as imagens do Kit como referenceImages.
 
-import type { BrandKit, ImageKit, MoodCode } from '../types';
+import type { BrandKit, ImageKit, MoodCode, Segment } from '../types';
 import type { PostUnicoReferences } from './postUnico';
 import { generatePostImage } from './api';
 import type {
@@ -89,11 +89,13 @@ function buildReferences(
   if (wantsAvatar && imageKit.avatar) refs.avatar = imageKit.avatar;
   if (wantsCenario) {
     const idx = (cenarioPick ?? 1) - 1;
-    const chosen =
-      imageKit.cenarios[idx] ||
-      imageKit.cenarios.find((c) => !!c) ||
-      null;
-    if (chosen) refs.cenario = chosen;
+    const fallbackIdx = imageKit.cenarios.findIndex((c) => !!c);
+    const finalIdx = imageKit.cenarios[idx] ? idx : fallbackIdx;
+    const chosen = finalIdx >= 0 ? imageKit.cenarios[finalIdx] : null;
+    if (chosen) {
+      refs.cenario = chosen;
+      refs.cenarioTipo = imageKit.cenarioTipos?.[finalIdx] || 'ambiente';
+    }
   }
   if (wantsProduto) {
     const nums = produtosPick.length
@@ -185,7 +187,7 @@ const CENARIO_FRAMING_POOL: readonly string[] = [
   'enquadramento diagonal / outro canto do ambiente — plano médio-fechado, recorte diferente do mesmo local',
 ];
 
-function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?: { primary: string; accent: string }, cardCarrossel?: number): string {
+function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?: { primary: string; accent: string }, cardCarrossel?: number, segment?: Segment): string {
   // Ordem dos prefixos espelha a ordem em que as imagens são enviadas
   // (avatar → cenário → produtos), pra que a numeração "imagem #1/#2/#3"
   // case com a posição em image_urls no servidor.
@@ -205,26 +207,47 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
   }
   if (refs.cenario) {
     const reilumina = MOODS_CLAROS.has(mood);
-    const fachadaClause = `se for FACHADA ou FRENTE DE ESTABELECIMENTO, preserve a arquitetura, letreiros e identidade visual do local — a fachada deve ser reconhecível na imagem final, com personagem ou produto posicionado à frente ou com a fachada claramente visível ao fundo. Se houver fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada, é PERMITIDO retocar/remover esses elementos da composição final — desde que a arquitetura, os letreiros e a identidade visual do local continuem plenamente reconhecíveis. Se o céu aparecer na cena, é PERMITIDO substituí-lo por um céu mais bonito e coerente com o mood e o horário do dia (ex.: azul limpo, entardecer dourado, nublado suave) — sem look artificial ou composição com aparência de colagem`;
     // Carrossel reaproveita o MESMO cenário em todos os cards — sem variar o
     // enquadramento, os 5 fundos saem quase idênticos. Aqui trocamos a regra
     // fixa "NÃO mude o ângulo" por uma instrução de enquadramento específica
     // para este card (determinística pelo índice), preservando o mesmo espaço.
     const variaEnquadramento = cardCarrossel != null;
-    // "ponto de vista da câmera" só entra na lista de preservação quando NÃO
-    // estamos variando o enquadramento — caso contrário a frase contradiria
-    // a liberação de ângulo/distância dada pelo framingClause abaixo.
-    const ambienteInternoClause = variaEnquadramento
-      ? 'preserve sala, móveis, equipamentos e paredes'
-      : 'preserve sala, móveis, equipamentos, paredes e ponto de vista da câmera';
-    const framingClause = variaEnquadramento
-      ? `Pode variar o ÂNGULO e a DISTÂNCIA DA CÂMERA — mas continue sendo claramente reconhecível como o MESMO AMBIENTE, com a mesma arquitetura, móveis/objetos e identidade visual. ENQUADRAMENTO DESTE CARD: ${CENARIO_FRAMING_POOL[(cardCarrossel! - 1) % CENARIO_FRAMING_POOL.length]}.`
-      : `NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo.`;
-    lines.push(
-      reilumina
-        ? `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${fachadaClause}; se for AMBIENTE INTERNO, ${ambienteInternoClause}. NÃO invente outro local, NÃO troque os objetos. ${framingClause} A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os objetos do ambiente, mas adapte a luz para casar com o mood claro.`
-        : `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${fachadaClause}; se for AMBIENTE INTERNO, ${ambienteInternoClause}${variaEnquadramento ? '' : ', mesma iluminação'}. NÃO invente outro local, NÃO troque os objetos. ${framingClause} Apenas adicione/adapte o personagem e a ação descritos abaixo dentro deste espaço real.`,
-    );
+    const framingPick = variaEnquadramento
+      ? CENARIO_FRAMING_POOL[(cardCarrossel! - 1) % CENARIO_FRAMING_POOL.length]
+      : null;
+
+    if (refs.cenarioTipo === 'fachada') {
+      const fachadaClause = `preserve a arquitetura, letreiros e identidade visual do local — a fachada deve ser reconhecível na imagem final, com personagem ou produto posicionado à frente ou com a fachada claramente visível ao fundo. Se houver fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada, é PERMITIDO retocar/remover esses elementos da composição final — desde que a arquitetura, os letreiros e a identidade visual do local continuem plenamente reconhecíveis. Se o céu aparecer na cena, é PERMITIDO substituí-lo por um céu mais bonito e coerente com o mood e o horário do dia (ex.: azul limpo, entardecer dourado, nublado suave) — sem look artificial ou composição com aparência de colagem`;
+      const framingClause = framingPick
+        ? `Pode variar o ÂNGULO e a DISTÂNCIA DA CÂMERA — mas continue sendo claramente reconhecível como o MESMO LOCAL, com a mesma arquitetura, letreiros e identidade visual. ENQUADRAMENTO DESTE CARD: ${framingPick}.`
+        : `NÃO mude o ângulo.`;
+      lines.push(
+        reilumina
+          ? `IMAGEM #${idx} = CENÁRIO FACHADA OBRIGATÓRIO. Use EXATAMENTE este local: ${fachadaClause}. NÃO invente outro local, NÃO troque os elementos. ${framingClause} A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os elementos do local, mas adapte a luz para casar com o mood claro.`
+          : `IMAGEM #${idx} = CENÁRIO FACHADA OBRIGATÓRIO. Use EXATAMENTE este local: ${fachadaClause}. NÃO invente outro local, NÃO troque os elementos. ${framingClause} Apenas adicione/adapte o personagem e a ação descritos abaixo neste local real.`,
+      );
+    } else {
+      // "ponto de vista da câmera" só entra na lista de preservação quando NÃO
+      // estamos variando o enquadramento — caso contrário a frase contradiria
+      // a liberação de ângulo/distância dada pelo framingClause abaixo.
+      const ambienteInternoClause = variaEnquadramento
+        ? 'preserve sala, móveis, equipamentos e paredes'
+        : 'preserve sala, móveis, equipamentos, paredes e ponto de vista da câmera';
+      const framingClause = framingPick
+        ? `Pode variar o ÂNGULO e a DISTÂNCIA DA CÂMERA — mas continue sendo claramente reconhecível como o MESMO AMBIENTE, com a mesma arquitetura, móveis/objetos e identidade visual. ENQUADRAMENTO DESTE CARD: ${framingPick}.`
+        : `NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo.`;
+      // SERVIÇOS/MARCA: produtos de terceiros visíveis no cenário real (ex.: embalagens
+      // de marca em obra) não devem "vazar" pra peça — a política de referências
+      // dessas combinações não inclui produtos (ver referenciasPolicy.ts).
+      const produtoGuard = segment !== 'VAREJO'
+        ? ' Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação.'
+        : '';
+      lines.push(
+        reilumina
+          ? `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${ambienteInternoClause}.${produtoGuard} NÃO invente outro local, NÃO troque os objetos. ${framingClause} A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os objetos do ambiente, mas adapte a luz para casar com o mood claro.`
+          : `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${ambienteInternoClause}${variaEnquadramento ? '' : ', mesma iluminação'}.${produtoGuard} NÃO invente outro local, NÃO troque os objetos. ${framingClause} Apenas adicione/adapte o personagem e a ação descritos abaixo dentro deste espaço real.`,
+      );
+    }
     idx++;
   }
   if (refs.produtos?.length) {
@@ -258,7 +281,7 @@ export async function regenerateWithKit(
   const anchorPrefix = buildAnchorPrefix(references, mood, {
     primary: kit.primaryColor || '#123a63',
     accent: kit.accentColor || kit.secondaryColor || '#f4b000',
-  }, slot.formato === 'carrossel' ? slot.cardCarrossel : undefined);
+  }, slot.formato === 'carrossel' ? slot.cardCarrossel : undefined, kit.segment);
 
   const inferred: 'post' | 'reels' = slot.formato === 'reels' ? 'reels' : 'post';
   const targetFormato = formato ?? inferred;

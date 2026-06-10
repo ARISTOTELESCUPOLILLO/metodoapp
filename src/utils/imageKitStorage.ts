@@ -1,4 +1,4 @@
-import { ImageKit } from '../types';
+import { CenarioTipo, ImageKit } from '../types';
 
 // Persistência local do Kit Imagem.
 // Estratégia: localStorage (rápido, simples, sem dependência de backend).
@@ -13,8 +13,26 @@ export const CENARIO_SLOTS = 3;
 export const emptyImageKit: ImageKit = {
   avatar: undefined,
   cenarios: Array.from({ length: CENARIO_SLOTS }, () => null),
+  cenarioTipos: Array.from({ length: CENARIO_SLOTS }, () => 'ambiente'),
   produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
 };
+
+function normalizeCenarioTipos(raw: any): CenarioTipo[] {
+  const tipos: CenarioTipo[] = Array.isArray(raw)
+    ? raw.slice(0, CENARIO_SLOTS).map((t) => (t === 'fachada' ? 'fachada' : 'ambiente'))
+    : [];
+  while (tipos.length < CENARIO_SLOTS) tipos.push('ambiente');
+  // Garante no máximo 1 'fachada' — mantém a primeira ocorrência.
+  let foundFachada = false;
+  return tipos.map((t) => {
+    if (t === 'fachada') {
+      if (foundFachada) return 'ambiente';
+      foundFachada = true;
+      return 'fachada';
+    }
+    return t;
+  });
+}
 
 function normalize(kit: any): ImageKit {
   // Produtos
@@ -35,6 +53,7 @@ function normalize(kit: any): ImageKit {
   return {
     avatar: kit?.avatar || undefined,
     cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
+    cenarioTipos: normalizeCenarioTipos(kit?.cenarioTipos),
     produtos: produtos.map((p: any) => (typeof p === 'string' && p ? p : null)),
   };
 }
@@ -43,6 +62,7 @@ function freshEmpty(): ImageKit {
   return {
     avatar: undefined,
     cenarios: Array.from({ length: CENARIO_SLOTS }, () => null),
+    cenarioTipos: Array.from({ length: CENARIO_SLOTS }, () => 'ambiente'),
     produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
   };
 }
@@ -99,6 +119,12 @@ export function cenariosDisponiveis(kit: ImageKit): number[] {
     .filter((n): n is number => n !== null);
 }
 
+// Rótulo de exibição do cenário (1..3) — "Cenário Fachada" se marcado como tal
+// no Kit Imagem, senão "Cenário N" (numeração mantida).
+export function cenarioLabel(kit: ImageKit, num: number): string {
+  return kit.cenarioTipos?.[num - 1] === 'fachada' ? 'Cenário Fachada' : `Cenário ${num}`;
+}
+
 // ============================================================
 // Sync com backend (Supabase). O Kit Imagem agora vive no
 // servidor para que o usuário não perca o Kit ao trocar de
@@ -113,6 +139,7 @@ function normalizeRemote(remote: {
   avatar?: string | null;
   avatar2?: string | null;
   cenarios?: (string | null)[] | null;
+  cenarioTipos?: (string | null)[] | null;
   produtos?: (string | null)[] | null;
 }): _ImageKit {
   const cenarios = (remote.cenarios || []).slice(0, CENARIO_SLOTS);
@@ -123,6 +150,7 @@ function normalizeRemote(remote: {
     avatar: remote.avatar || undefined,
     avatar2: remote.avatar2 || undefined,
     cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
+    cenarioTipos: normalizeCenarioTipos(remote.cenarioTipos),
     produtos: produtos.map((p) => (typeof p === 'string' && p ? p : null)),
   };
 }
@@ -167,6 +195,8 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
   const avatar2Payload = slotPayload(prev.avatar2, kit.avatar2);
   const cenariosPayload = diffSlots(prev.cenarios, kit.cenarios);
   const produtosPayload = diffSlots(prev.produtos, kit.produtos);
+  const cenarioTipos = normalizeCenarioTipos(kit.cenarioTipos);
+  const cenarioTiposChanged = cenarioTipos.some((t, i) => t !== prev.cenarioTipos[i]);
 
   const remote = await saveImageKitFor({
     data: {
@@ -174,6 +204,7 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
       avatar: avatarPayload,
       avatar2: avatar2Payload,
       cenarios: cenariosPayload as any,
+      ...(cenarioTiposChanged ? { cenarioTipos } : {}),
       produtos: produtosPayload as any,
     },
   });

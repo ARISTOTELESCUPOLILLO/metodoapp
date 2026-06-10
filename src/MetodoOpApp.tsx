@@ -526,8 +526,13 @@ export default function App() {
       }
       if (visualSelection.useCenario) {
         const idx = (visualSelection.cenarioSelecionado ?? 1) - 1;
-        const c = imageKit.cenarios[idx] || imageKit.cenarios.find((x) => !!x) || null;
-        if (c) references.cenario = c;
+        const fallbackIdx = imageKit.cenarios.findIndex((x) => !!x);
+        const finalIdx = imageKit.cenarios[idx] ? idx : fallbackIdx;
+        const c = finalIdx >= 0 ? imageKit.cenarios[finalIdx] : null;
+        if (c) {
+          references.cenario = c;
+          references.cenarioTipo = imageKit.cenarioTipos?.[finalIdx] || 'ambiente';
+        }
       }
       if (visualSelection.useProdutos && visualSelection.produtosSelecionados.length) {
         const lista: { num: number; dataUrl: string }[] = [];
