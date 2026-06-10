@@ -15,6 +15,7 @@ import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from './
 import { useServerFn } from '@tanstack/react-start';
 import { saveKit, loadKit, saveForm, loadForm, clearAll } from './utils/storage';
 import { loadImageKit, saveImageKit, loadImageKitAsync, saveImageKitAsync } from './utils/imageKitStorage';
+import { clearSessionImages } from './utils/sessionImageCache';
 import { Audience, BrandKit, ContentFormData, ImageKit, MethodOpResult, MoodCode, PostUnicoFormData, PostUnicoVisualSelection, Segment } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useProfile } from './hooks/useProfile';
@@ -450,6 +451,7 @@ export default function App() {
     if (!(await askConfirm('Limpar conteúdo gerado', 'Isso vai apagar o resultado atual (feed, carrossel, reels, stories). Deseja continuar?'))) return;
     setResult(undefined);
     setError('');
+    clearSessionImages(effectiveUserId);
   }
 
   async function handleClearMethodGeneration() {
@@ -457,12 +459,14 @@ export default function App() {
     setForm((prev) => ({ ...prev, keyInfo: '' }));
     setResult(undefined);
     setError('');
+    clearSessionImages(effectiveUserId);
   }
 
   async function handleGenerate() {
     setLoading(true);
     setError('');
     setResult(undefined);
+    clearSessionImages(effectiveUserId);
     try {
       const generated = await generateMethodContent({
         ...form,
@@ -544,9 +548,14 @@ export default function App() {
       }
       const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length);
       const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot });
+      // Persiste direto no localStorage (independe do componente seguir montado —
+      // cobre o caso de geração em segundo plano após navegar para outra página).
+      try { localStorage.setItem(`metodo-op-postunico-img-v1:${effectiveUserId}`, JSON.stringify(dataUrl)); } catch {}
+      try { localStorage.setItem(`metodo-op-postunico-started-v1:${effectiveUserId}`, 'false'); } catch {}
       setPostUnicoImg(dataUrl);
       refreshProfile();
     } catch (e) {
+      try { localStorage.setItem(`metodo-op-postunico-started-v1:${effectiveUserId}`, 'false'); } catch {}
       setError(String((e as Error).message || e));
     } finally {
       setLoading(false);
@@ -776,7 +785,7 @@ export default function App() {
           ) : null}
           {/* ResultsView fica sempre montado para não perder imagens geradas ao trocar de aba */}
           <div style={{ display: modo === 'metodo' ? undefined : 'none' }}>
-            <ResultsView result={result} kit={kit} mood={mood} onClear={handleClearMethodResult} onRetry={handleGenerate} imageKit={imageKit} sequenceSize={form.sequenceSize} onImageGenerated={refreshProfile} />
+            <ResultsView result={result} kit={kit} mood={mood} onClear={handleClearMethodResult} onRetry={handleGenerate} imageKit={imageKit} sequenceSize={form.sequenceSize} onImageGenerated={refreshProfile} userId={effectiveUserId} />
           </div>
           {modo === 'postUnico' && (
             <PostUnicoResult

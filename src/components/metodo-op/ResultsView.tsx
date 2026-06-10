@@ -40,6 +40,7 @@ import {
   type ModeloOP,
 } from '../../core/personalizacaoMop';
 import { emptyImageKit } from '../../utils/imageKitStorage';
+import { getSessionImage, setSessionImage } from '../../utils/sessionImageCache';
 import UsoReferenciasDia, { useRefSelection } from './UsoReferenciasDia';
 import { regenerateWithKit } from '../../services/regenerateWithKit';
 import { useProfile } from '../../hooks/useProfile';
@@ -66,6 +67,7 @@ interface Props {
   imageKit?: ImageKit;
   sequenceSize?: 3 | 6 | 9;
   onImageGenerated?: () => void;
+  userId?: string | null;
 }
 
 // Verifica se o kit tem imagens relevantes para o formato dado.
@@ -227,11 +229,16 @@ function EditableField(props: {
   );
 }
 
-function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
+function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const cacheKey = `feed:${dayNumber}`;
+  const [preview, setPreview] = useState<string | null>(() => getSessionImage(userId, cacheKey));
+  function updatePreview(value: string | null) {
+    setPreview(value);
+    setSessionImage(userId, cacheKey, value);
+  }
   const isMobile = useIsMobile();
   const storageKey = `uso-ref:estatico:${item.dia}`;
   const sel = useRefSelection(storageKey);
@@ -257,7 +264,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
         leituraCenica: (item as any).leituraCenica,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
-      setPreview(final);
+      updatePreview(final);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusy(false); }
@@ -278,7 +285,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
         selecaoDireta: { usarAvatar: sel.usarAvatar, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
-      setPreview(final);
+      updatePreview(final);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyRefs(false); }
@@ -321,9 +328,9 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
             onGerou={async (url) => {
               try {
                 const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
-                setPreview(final);
+                updatePreview(final);
               } catch {
-                setPreview(url);
+                updatePreview(url);
               }
             }}
           />
@@ -374,11 +381,16 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
   );
 }
 
-function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
+function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const cacheKey = `final:${dayNumber}`;
+  const [preview, setPreview] = useState<string | null>(() => getSessionImage(userId, cacheKey));
+  function updatePreview(value: string | null) {
+    setPreview(value);
+    setSessionImage(userId, cacheKey, value);
+  }
   const isMobile = useIsMobile();
   const storageKey = `uso-ref:estatico_final:${item.dia}`;
   const sel = useRefSelection(storageKey);
@@ -404,7 +416,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
         leituraCenica: (item as any).leituraCenica,
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
-      setPreview(final);
+      updatePreview(final);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusy(false); }
@@ -424,7 +436,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
         selecaoDireta: { usarAvatar: sel.usarAvatar, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
-      setPreview(final);
+      updatePreview(final);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyRefs(false); }
@@ -466,9 +478,9 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
             onGerou={async (url) => {
               try {
                 const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
-                setPreview(final);
+                updatePreview(final);
               } catch {
-                setPreview(url);
+                updatePreview(url);
               }
             }}
           />
@@ -520,9 +532,13 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
 }
 
 
-function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
+function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [previews, setPreviews] = useState<(string | null)[]>(cards.map(() => null));
+  const [previews, setPreviews] = useState<(string | null)[]>(() => cards.map((c) => getSessionImage(userId, `carousel:${dayNumber}:${c.card}`)));
+  function updatePreview(index: number, value: string) {
+    setPreviews(prev => prev.map((p, i) => i === index ? value : p));
+    setSessionImage(userId, `carousel:${dayNumber}:${cards[index].card}`, value);
+  }
   const [busyIndex, setBusyIndex] = useState<number | null>(null);
   const [busyMode, setBusyMode] = useState<'noref' | 'refs' | null>(null);
   const [busyAllMode, setBusyAllMode] = useState<'refs' | 'noref' | null>(null);
@@ -557,7 +573,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       });
       const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[index], texto: textos[index], legenda: '', imagem: card.imagePrompt };
       const final = await composeFeedPng(kit, item, url);
-      setPreviews(prev => prev.map((p, i) => i === index ? final : p));
+      updatePreview(index, final);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyIndex(null); setBusyMode(null); }
@@ -624,7 +640,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       });
       const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[index], texto: textos[index], legenda: '', imagem: card.imagePrompt };
       const final = await composeFeedPng(kit, item, url);
-      setPreviews(prev => prev.map((p, i) => i === index ? final : p));
+      updatePreview(index, final);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyIndex(null); setBusyMode(null); }
@@ -661,7 +677,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
           });
           const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[i], texto: textos[i], legenda: '', imagem: card.imagePrompt };
           const final = await composeFeedPng(kit, item, url);
-          setPreviews(prev => prev.map((p, j) => j === i ? final : p));
+          updatePreview(i, final);
         } catch (err) {
           console.error(`Falha card ${i + 1}:`, err);
           failures.push(i + 1);
@@ -713,7 +729,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
           });
           const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[i], texto: textos[i], legenda: '', imagem: card.imagePrompt };
           const final = await composeFeedPng(kit, item, url);
-          setPreviews(prev => prev.map((p, j) => j === i ? final : p));
+          updatePreview(i, final);
         } catch (err) {
           console.error(`Falha card ${i + 1}:`, err);
           failures.push(i + 1);
@@ -880,22 +896,22 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 // 'sinalizacao' → vídeo silencioso + título queimado no canvas via FFmpeg
 type VideoMode = 'portugues' | 'kit-voz' | 'sinalizacao';
 
-function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void } & RefSelectorProps) {
+function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(() => getSessionImage(userId, `reels-preview:${dayNumber}`));
   // previewBase = mesma imagem do preview SEM a logo aplicada pelo canvas.
   // É o que mandamos para o gpt-image-2/edit como referência da capa, para
   // que o modelo aplique apenas o lettering do título e não tente redesenhar
   // a logomarca (a logo final é reaplicada por canvas em cima da capa).
-  const [previewBase, setPreviewBase] = useState<string | null>(null);
+  const [previewBase, setPreviewBase] = useState<string | null>(() => getSessionImage(userId, `reels-previewBase:${dayNumber}`));
   const [busyVideo, setBusyVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   // Resultado real do backend de vídeo (lipsync efetivamente concluído ou não).
   const [usedClonedVoice, setUsedClonedVoice] = useState<boolean | null>(null);
   const [requestedClonedVoice, setRequestedClonedVoice] = useState<boolean>(false);
-  const [coverPng, setCoverPng] = useState<string | null>(null);
+  const [coverPng, setCoverPng] = useState<string | null>(() => getSessionImage(userId, `reels-cover:${dayNumber}`));
   const [coverError, setCoverError] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [retryingCover, setRetryingCover] = useState(false);
@@ -912,6 +928,19 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
   // expiram ao fechar a página e não podem ser acessadas pelo servidor.
   const falVideoUrlRef = useRef<string | null>(null);
   const videoRef = useRef<HTMLDivElement | null>(null);
+
+  function updatePreview(value: string | null) {
+    setPreview(value);
+    setSessionImage(userId, `reels-preview:${dayNumber}`, value);
+  }
+  function updatePreviewBase(value: string | null) {
+    setPreviewBase(value);
+    setSessionImage(userId, `reels-previewBase:${dayNumber}`, value);
+  }
+  function updateCoverPng(value: string | null) {
+    setCoverPng(value);
+    setSessionImage(userId, `reels-cover:${dayNumber}`, value);
+  }
 
   // Limpa blob URL ao desmontar (evita vazamento de memória).
   useEffect(() => {
@@ -1038,10 +1067,10 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         logoPosition: kit.logoPosition,
       });
       const final = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
-      setPreview(final);
-      setPreviewBase(url);  // frame limpo (sem logo) = base ideal para a capa
+      updatePreview(final);
+      updatePreviewBase(url);  // frame limpo (sem logo) = base ideal para a capa
       setVideoUrl(null);
-      setCoverPng(null);
+      updateCoverPng(null);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusy(false); }
@@ -1072,11 +1101,11 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         selecaoDireta: s,
       });
       const final = await composeReelsPng(kit, url);
-      setPreview(final);
+      updatePreview(final);
       // url = imagem do reels antes do canvas aplicar a logo → base ideal para o /edit da capa.
-      setPreviewBase(url);
+      updatePreviewBase(url);
       setVideoUrl(null);
-      setCoverPng(null);
+      updateCoverPng(null);
       onImageGenerated?.();
     } catch (e) { alert(`Erro: ${(e as Error).message}`); }
     finally { setBusyRefs(false); }
@@ -1180,7 +1209,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
 
       // PRIMEIRO trata capa.
       if (coverRes.status === 'fulfilled') {
-        setCoverPng(coverRes.value);
+        updateCoverPng(coverRes.value);
       } else {
         const msg = (coverRes.reason as Error)?.message || 'erro desconhecido';
         console.error('[runGenerateVideo] capa falhou:', coverRes.reason);
@@ -1305,7 +1334,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         referenceImages: (previewBase || preview) ? [(previewBase || preview) as string] : undefined,
       });
       const withLogo = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
-      setCoverPng(withLogo);
+      updateCoverPng(withLogo);
     } catch (e) {
       setCoverError((e as Error)?.message || 'erro desconhecido');
     } finally {
@@ -1350,15 +1379,15 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
                 const withLogo = kit.logoDataUrl
                   ? await composeReelsPng(kit, url)
                   : url;
-                setPreview(withLogo);
+                updatePreview(withLogo);
                 // url = frame SEM logo → base ideal para o /edit da capa.
-                setPreviewBase(url);
+                updatePreviewBase(url);
               } catch {
-                setPreview(url);
-                setPreviewBase(url);
+                updatePreview(url);
+                updatePreviewBase(url);
               }
               setVideoUrl(null);
-              setCoverPng(null);
+              updateCoverPng(null);
             }}
           />
 
@@ -1671,7 +1700,7 @@ const MOOD_NAMES: Record<string, string> = {
   'OP-04': 'Fragmento', 'OP-05': 'Desvio', 'OP-06': 'Silêncio',
 };
 
-export default function ResultsView({ result, kit, mood, onClear, onRetry, imageKit, sequenceSize, onImageGenerated }: Props) {
+export default function ResultsView({ result, kit, mood, onClear, onRetry, imageKit, sequenceSize, onImageGenerated, userId }: Props) {
   const [savingPdf, setSavingPdf] = useState(false);
   const { guard, dialog } = useImageGenAlert();
   const { cotaPersonalizados, isAdmin, refresh: refreshProfile } = useProfile();
@@ -1793,16 +1822,16 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
           )}
           {sequence.map((item) => {
             if (item.type === 'feed') {
-              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
+              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
             }
             if (item.type === 'final') {
-              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
+              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
             }
             if (item.type === 'carousel') {
-              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
+              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
             }
             if (item.type === 'reels') {
-              return <ReelsCard key={`reels-${item.day}`} reels={item.reels} kit={kit} mood={mood} dayNumber={item.day} track={(result as any).track} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} />;
+              return <ReelsCard key={`reels-${item.day}`} reels={item.reels} kit={kit} mood={mood} dayNumber={item.day} track={(result as any).track} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
             }
             return null;
           })}
