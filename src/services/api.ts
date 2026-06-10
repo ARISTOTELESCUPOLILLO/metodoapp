@@ -228,7 +228,7 @@ ${cenaDetalhada}
 ${variationBlock}
 
 CONTEÚDO TEXTUAL:
-- Título principal em CAIXA ALTA (bold, corpo GRANDE — mínimo 45% da altura do canvas; quebre em até 3 linhas se necessário para MANTER o corpo grande, nunca encolha o corpo para caber em menos linhas): "${tituloUpper}"
+- Título principal em CAIXA ALTA (bold, corpo GRANDE — entre 25% e 35% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro): "${tituloUpper}"
 - Texto de apoio — SUBTÍTULO DE REVISTA (corpo entre 55% e 70% do título, legível sem zoom no celular, caixa normal, peso regular — nunca tamanho de legenda): "${texto}"
 - ${marcaInstruction}
 
@@ -251,9 +251,8 @@ ${FORBIDDEN_MOOD_WORDS}`;
 
 const moodVisualInstructions: Record<MoodCode, string> = {
 'OP-01': `ESTILO VISUAL (raiz: Renascentista):
-- Grid organizado em 3 zonas horizontais bem definidas
-- Assinatura da marca pequena e discreta no topo
-- Título em CAIXA ALTA, bold, corpo GRANDE (mínimo 45% da altura do canvas) — quebre em até 3 linhas se necessário, nunca encolha o corpo para caber em menos linhas; alinhado à ESQUERDA
+- Composição organizada por alinhamento ortogonal (grid invisível) — fundo contínuo de borda a borda, SEM dividir a peça em blocos, faixas ou painéis de cor
+- Título alinhado à ESQUERDA, em CAIXA ALTA bold
 - Texto de apoio como SUBTÍTULO DE REVISTA logo abaixo do título — corpo entre 55% e 70% do título, legível sem zoom, alinhado à esquerda; nunca tamanho de legenda
 - Luz natural equilibrada, composição simétrica
 - Fundo limpo, sem elementos decorativos desnecessários
