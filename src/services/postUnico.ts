@@ -159,16 +159,23 @@ function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo:
   // mantendo contraste local suficiente para a marca ser legível.
   const base =
     'Área reservada inviolável (~18% × ~10%): PROIBIDO ABSOLUTO ali: texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO PELA LOGO — ela será sobreposta depois. Área deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado ou ornamento em volta da zona. Apenas garanta contraste local suficiente para a logo ser legível.';
+  // Para logo centralizada (topo/base), o ponto da logo fica no MEIO de uma linha
+  // que normalmente atravessa o canvas de ponta a ponta. Um "retângulo pequeno"
+  // não basta: título/texto de apoio que ocupem essa linha colidem com a logo no
+  // centro. Por isso a zona aqui é uma FAIXA HORIZONTAL COMPLETA — nenhuma linha
+  // de texto pode cruzá-la, mesmo parcialmente.
+  const faixa =
+    'A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ~14% da altura. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado ou ornamento dentro da faixa. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa.';
   if (pos === 'top-center') {
     return {
-      reservaTopo: `Ponto da logo: TOPO CENTRAL. ${base}`,
-      regraFinal: 'Topo central legível para a logo, sem dead space',
+      reservaTopo: `Ponto da logo: TOPO CENTRAL. ${faixa}`,
+      regraFinal: 'Faixa superior completa livre de texto, logo central legível, sem dead space',
     };
   }
   if (pos === 'bottom-center') {
     return {
-      reservaTopo: `Ponto da logo: BASE CENTRAL. ${base}`,
-      regraFinal: 'Base central legível para a logo, sem dead space',
+      reservaTopo: `Ponto da logo: BASE CENTRAL. ${faixa}`,
+      regraFinal: 'Faixa inferior completa livre de texto, logo central legível, sem dead space',
     };
   }
   return {

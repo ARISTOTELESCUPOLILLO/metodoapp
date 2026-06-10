@@ -156,9 +156,15 @@ function buildImagePrompt(params: {
   : pos === 'bottom-center' ? `na FAIXA INFERIOR CENTRAL (centralizada horizontalmente, dentro do rodapé da zona segura de ${safeMargin})`
   :                           'no canto inferior direito';
   const reservaBase = 'Área reservada inviolável (~18% × ~10%). PROIBIDO ali: texto, lettering, rosto, mão, objeto-foco, gráfico, ícone, símbolo, produto, moldura, caixa, painel, badge, fundo de cor sólida (inclusive cor da marca), círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado ou ornamento — inclusive em volta da zona da logo. A área deve ser continuação natural da imagem ao redor. Apenas garanta contraste local suficiente para a logo ser legível.';
+  // Para logo centralizada (topo/base), o ponto da logo fica no MEIO de uma linha
+  // que normalmente atravessa o canvas de ponta a ponta. Um "retângulo pequeno"
+  // não basta: título/texto que ocupem essa linha colidem com a logo no centro.
+  // Por isso a zona aqui é uma FAIXA HORIZONTAL COMPLETA — nenhuma linha de texto
+  // pode cruzá-la, mesmo parcialmente.
+  const reservaFaixa = 'A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ~14% da altura. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. Título e texto/legenda (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado ou ornamento dentro da faixa. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa.';
   const reservaInstrucao =
-    pos === 'top-center'    ? `A FAIXA SUPERIOR CENTRAL é a zona da logomarca. ${reservaBase}`
-  : pos === 'bottom-center' ? `A FAIXA INFERIOR CENTRAL é a zona da logomarca. ${reservaBase}`
+    pos === 'top-center'    ? `A FAIXA SUPERIOR CENTRAL é a zona da logomarca. ${reservaFaixa}`
+  : pos === 'bottom-center' ? `A FAIXA INFERIOR CENTRAL é a zona da logomarca. ${reservaFaixa}`
   :                           `O CANTO INFERIOR DIREITO é a zona da logomarca. ${reservaBase}`;
   const marcaInstruction = hasLogo
     ? `Aplique a logomarca fornecida (imagem de referência) ${zonaLogo} da composição, em tamanho discreto (~12% da largura), dentro da zona segura de ${safeMargin}, preservando proporções, sem distorcer, sem inventar texto.`
