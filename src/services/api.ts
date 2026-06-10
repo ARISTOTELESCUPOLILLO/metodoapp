@@ -27,7 +27,12 @@ export async function generateMethodContent(data: ContentFormData, preferredSlot
   const res = await fetch('/api/generate-content', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...auth },
-    body: JSON.stringify({ prompt, ...(preferredSlot ? { preferredSlot } : {}) }),
+    body: JSON.stringify({
+      prompt,
+      sequenceSize: data.sequenceSize,
+      track: data.track,
+      ...(preferredSlot ? { preferredSlot } : {}),
+    }),
   });
 
   const ct = res.headers.get('content-type') || '';

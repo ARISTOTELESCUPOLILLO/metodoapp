@@ -138,7 +138,7 @@ export const Route = createFileRoute('/api/generate-content')({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { prompt, preferredSlot } = await request.json();
+          const { prompt, preferredSlot, sequenceSize, track } = await request.json();
           if (!prompt) {
             return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
           }
@@ -163,8 +163,14 @@ export const Route = createFileRoute('/api/generate-content')({
 
           const t0 = Date.now();
           console.info('[generate-content] prompt_chars=%d', prompt.length);
+          // Trilhas maiores (mais dias/cards/leituraCenica) geram mais tokens e
+          // demoram mais com gpt-4.1 + json_schema strict — escala o timeout
+          // pelo tamanho efetivo da sequência em vez de um valor fixo.
+          const effectiveSize = track === 'experimentacao' ? 3 : (sequenceSize || 6);
+          const TIMEOUT_BY_SIZE: Record<number, number> = { 3: 120_000, 6: 180_000, 9: 240_000 };
+          const timeoutMs = TIMEOUT_BY_SIZE[effectiveSize] ?? 180_000;
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 120_000);
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
 
           let upstream: Response;
           try {
