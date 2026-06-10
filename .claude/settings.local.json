@@ -46,7 +46,8 @@
       "Bash(Get-ChildItem -Path \"E:\\\\CLIENTES\\\\OPROPAGANDA\\\\METODO OP _CLAUDE_CODE\\\\dev-server\\\\src\" -Recurse -File)",
       "Bash(Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"E:\\\\CLIENTES\\\\OPROPAGANDA\\\\METODO OP _CLAUDE_CODE\\\\dev-server\" -Recurse -Filter \"*.tsx\" -o FullName)",
-      "Bash(Select-String -Pattern \"\\(UsersTab|CobrancasTab\\)\")"
+      "Bash(Select-String -Pattern \"\\(UsersTab|CobrancasTab\\)\")",
+      "Bash(git commit *)"
     ]
   }
 }

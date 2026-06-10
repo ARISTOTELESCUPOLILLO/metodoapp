@@ -88,7 +88,7 @@ const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]
     'CONCEITO DESTA GERAÇÃO — GESTO DECISIVO: close de mão no gesto exato de decisão do ofício real da empresa — o instante de comprometer-se com a ação que o negócio entrega. O objeto ou instrumento na mão pertence ao ofício real descrito na ATIVIDADE (ferramenta, instrumento, material de trabalho). A urgência está no gesto suspenso, não no movimento do corpo inteiro.',
     'CONCEITO DESTA GERAÇÃO — TENSÃO ESPACIAL: pessoa, produto ou objeto em posição de decisão dentro de um ambiente real — postura ou composição que sugere escolha, avanço ou momento favorável. A tensão vem da luz e do enquadramento. PROIBIDO: porta aberta como metáfora, portal, arco, limiar luminoso, luz no fim do túnel, pôr do sol, corredor de concreto ou estrutura industrial.',
     'CONCEITO DESTA GERAÇÃO — OBJETO SIMBÓLICO: um único elemento físico concreto que representa decisão e momento único, derivado do ofício real descrito na ATIVIDADE — ferramenta, produto característico, instrumento ou material de trabalho do negócio. Composição limpa, objeto isolado, sem pessoa como foco principal.',
-    'CONCEITO DESTA GERAÇÃO — ABSTRAÇÃO CROMÁTICA: tensão visual construída por planos de cor, gradiente, reflexo ou textura em close — NÃO corredor, NÃO porta, NÃO espaço arquitetônico ou estrutura de passagem. A geometria é de superfícies e materiais abstratos (sombra projetada, reflexo em vidro ou metal, tecido, papel), não de ambientes transitáveis. Sem figura humana em movimento. Paleta audaciosa, energia pela cor e contraste puros.',
+    'CONCEITO DESTA GERAÇÃO — ABSTRAÇÃO CROMÁTICA: tensão visual construída por planos de cor, gradiente, reflexo ou textura em close — NÃO corredor, NÃO porta, NÃO espaço arquitetônico ou estrutura de passagem. A geometria é de superfícies e materiais abstratos ligados ao ofício da empresa (sombra projetada, reflexo em vidro ou metal de ferramenta ou equipamento do negócio, textura de material de trabalho real), não de objetos genéricos de "novidade" (caderno limpo, página em branco, objeto brilhante impessoal). Sem figura humana em movimento. Paleta audaciosa, energia pela cor e contraste puros.',
   ],
   promocao: [
     'CONCEITO DESTA GERAÇÃO — PRODUTO EM CONTEXTO: o produto ou serviço em uso real, integrado à vida cotidiana de quem o usa. Cena natural, não estúdio.',
@@ -394,14 +394,20 @@ export function buildPostUnicoPrompt(params: {
 TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
-Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — legível sem zoom no celular, nunca tamanho de legenda — mas a POSIÇÃO do bloco é livre. Explore ancoragens — topo, lateral esquerda ou direita, base, barra inferior, dividido em zonas ou ancorado em canto.`
+Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto; o título deve ocupar ao menos 35-45% da altura útil do canvas). Texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — claramente legível a distância normal de celular, nunca tamanho de legenda ou rodapé. POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).
+ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da paleta desta peça) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
+⚠ TÍTULO FIXO — ANTI-TRADUÇÃO LITERAL: o título acima é texto tipográfico a renderizar. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras abstratas do título. Proibições diretas: "novo"/"novidade" ≠ caderno limpo, página em branco, objeto novo genérico; "ação"/"agir" ≠ seta, figura em movimento, objeto cinético; "rumo"/"caminho"/"direção" ≠ corredor, estrada, passagem; "hoje"/"agora" ≠ relógio, ampulheta, pôr do sol; "escolha"/"decisão" ≠ encruzilhada, bifurcação; "novo" ≠ porta se abrindo. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`
     : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
 A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
 Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, até 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave${data.keyInfo.trim() ? ` "${data.keyInfo.trim()}"` : ' fornecida'} e na atividade da empresa${objetivo ? ` com objetivo: ${objetivo}` : ''}.
+⚠ REGRA ABSOLUTA DE TEXTO NA IMAGEM: a imagem contém EXATAMENTE 2 elementos de texto — (1) o TÍTULO em caixa alta e (2) o TEXTO DE APOIO. NENHUM outro texto, frase, citação ou trecho deve aparecer na imagem. A informação-chave é contexto criativo para INSPIRAR o título e o texto — JAMAIS deve aparecer escrita, citada ou resumida como terceiro elemento tipográfico na peça.
 NÃO copie a informação-chave literalmente — interprete-a criativamente com tom publicitário.
 PROIBIDO usar o nome da empresa ou da marca como título ou texto — inspire-se na mensagem, na atividade e na informação-chave, nunca no nome da empresa. O nome da marca é representado pela logomarca, não pelo texto da arte.
-A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, em qualquer peso/fonte dentro da tipografia da marca, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda".
-Hierarquia tipográfica: título dominante em CAIXA ALTA e texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — legível sem zoom no celular, nunca tamanho de legenda.`;
+A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda".
+Hierarquia tipográfica obrigatória:
+• TÍTULO: DOMINANTE — renderizado em tamanho grande e impactante (pense em outdoor; o título deve ocupar ao menos 35-45% da altura útil do canvas com 2-4 linhas). Nunca compacto, nunca horizontal com muitas palavras em linha única se caber melhor em 2-3 linhas maiores.
+• TEXTO DE APOIO: SUBTÍTULO DE REVISTA — corpo entre 55% e 70% do título, facilmente legível a distância normal de celular (nunca tamanho de legenda ou rodapé; se o texto tiver 2-3 linhas, cada linha deve ser claramente lida sem aproximar o olho da tela).
+• ACENTO DE COR: aplique a cor de acento da paleta em 1 palavra-chave ou linha do título para criar hierarquia e personalidade visual.`;
 
   // Instrução de referência (avatar/cenário/produtos) com PRIORIDADE MÁXIMA —
   // posicionada junto das demais regras invioláveis, ANTES da descrição da peça
@@ -447,7 +453,7 @@ ATIVIDADE: ${data.mainActivity || kit.mainActivity || ''}
 ${objetivo ? `OBJETIVO: ${objetivo}\nTOM: ${tom}` : ''}
 
 ${data.keyInfo.trim()
-  ? `INFORMAÇÃO-CHAVE (contexto — pode interpretar com liberdade visual):\n"${data.keyInfo.trim()}"`
+  ? `INFORMAÇÃO-CHAVE (contexto criativo — USE APENAS para gerar o conceito e o texto da peça, PROIBIDO renderizar esta informação como texto, lettering, citação ou qualquer tipografia na imagem):\n"${data.keyInfo.trim()}"`
   : `INFORMAÇÃO-CHAVE: não fornecida. Crie a peça com base apenas na empresa, atividade, objetivo e kit visual — a IA tem TOTAL LIBERDADE para inventar o tema e a mensagem mais pertinente para esta marca e este objetivo.`}
 
 ${copyBlock}
@@ -467,6 +473,7 @@ REGRAS:
 - Direção de arte humana, nunca arte automática
 - Sem watermarks, sem logo fictícia, sem assinatura textual
 - PROIBIDO ABSOLUTO: renderizar o nome da empresa, nome da marca ou razão social como texto, lettering, título ou qualquer elemento tipográfico na imagem — o nome da marca é representado exclusivamente pela logomarca aplicada separadamente. Nunca escreva o nome da empresa na arte.
+- PROIBIDO ABSOLUTO: escrever, citar ou transcrever a INFORMAÇÃO-CHAVE do briefing como texto na imagem — ela é contexto de criação, não conteúdo tipográfico. A imagem contém apenas o TÍTULO e o TEXTO DE APOIO definidos acima; qualquer texto adicional (terceiro bloco, rodapé, tagline extra, citação) é PROIBIDO.
 - Regras absolutas (dispositivos digitais, ambientes, humanização): ver início deste prompt
 - ${zona.regraFinal}
 

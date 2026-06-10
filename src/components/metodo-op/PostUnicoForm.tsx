@@ -59,9 +59,17 @@ const MOOD_ICONS: Record<MoodCode, LucideIcon> = {
 function truncateWords(s: string, max: number): string {
   const words = s.trim().split(/\s+/).filter(Boolean);
   if (words.length <= max) return s.trim();
-  return words.slice(0, max).join(' ')
-    .replace(/[,;:\-–—]+$/, '')
-    .replace(/\s+(e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via)\s*$/i, '')
+
+  const truncated = words.slice(0, max).join(' ')
+    .replace(/[,;:\-–—]+$/, '');
+
+  // Prefere corte em limite de frase completa dentro do trecho
+  const m = truncated.match(/^(.*[.!?])\s+\S/);
+  if (m) return m[1].trim();
+
+  // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
+  return truncated
+    .replace(/\s+(e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo)\s*$/i, '')
     .trim();
 }
 function wordCount(s: string): number {

@@ -181,7 +181,7 @@ export const Route = createFileRoute('/api/generate-content')({
                   { role: 'user', content: prompt },
                 ],
                 temperature: 0.85,
-                max_tokens: 8192,
+                max_tokens: 16384,
                 response_format: {
                   type: 'json_schema',
                   json_schema: {

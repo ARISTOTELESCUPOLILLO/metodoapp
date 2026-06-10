@@ -14,7 +14,7 @@ export function setCurrentDebitSlot(slot: string | undefined) { _currentDebitSlo
 
 type StartResp = { requestId?: string; modelPath?: string; statusUrl?: string; responseUrl?: string; error?: string };
 type StatusResp = { status?: string; error?: string };
-type ResultResp = { dataUrl?: string; error?: string };
+type ResultResp = { dataUrl?: string; imageUrl?: string; contentType?: string; error?: string };
 
 async function authHeader(): Promise<Record<string, string>> {
   try {
@@ -158,10 +158,28 @@ export async function generateImageAsync(params: {
     modulo: modulo || 'metodo-op',
     ...(slotToDebit ? { preferredSlot: slotToDebit } : {}),
   });
-  if (!rr.ok || !rr.data.dataUrl) {
+  const rawUrl = rr.data.dataUrl || rr.data.imageUrl;
+  if (!rr.ok || !rawUrl) {
     throw new Error(
       friendlyError(rr.status, rr.raw, rr.data.error || 'Imagem ausente na resposta.'),
     );
   }
-  return rr.data.dataUrl;
+  // Se já é data URL (legado), retorna direto.
+  if (rawUrl.startsWith('data:')) return rawUrl;
+  // É uma URL CDN — faz o download no browser (sem limite de Worker).
+  try {
+    const imgResp = await fetch(rawUrl, { mode: 'cors' });
+    if (!imgResp.ok) throw new Error(`status ${imgResp.status}`);
+    const blob = await imgResp.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Erro ao converter imagem.'));
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    // Se CORS bloquear, retorna a URL HTTPS direta — composeFeedPng tenta usá-la
+    // no canvas; se falhar também, devolve a URL para exibição como <img src>.
+    return rawUrl;
+  }
 }

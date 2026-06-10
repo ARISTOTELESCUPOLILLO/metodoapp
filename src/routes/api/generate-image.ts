@@ -120,25 +120,6 @@ export const Route = createFileRoute('/api/generate-image')({
                 { status: 502 },
               );
             }
-            // Baixa e converte pra data URL (mantém contrato com o cliente).
-            const imgRes = await fetch(imgUrl);
-            if (!imgRes.ok) {
-              return Response.json(
-                { error: `Falha ao baixar imagem do FAL (${imgRes.status}).` },
-                { status: 502 },
-              );
-            }
-            const buf = new Uint8Array(await imgRes.arrayBuffer());
-            // Converte em chunks pra não estourar o stack.
-            let binary = '';
-            const CHUNK = 8192;
-            for (let i = 0; i < buf.length; i += CHUNK) {
-              binary += String.fromCharCode.apply(
-                null,
-                Array.from(buf.subarray(i, Math.min(i + CHUNK, buf.length))),
-              );
-            }
-            const dataUrl = `data:${contentType};base64,${btoa(binary)}`;
 
             // Debita 1 imagem — effective já foi validado no início do handler.
             try {
@@ -158,7 +139,10 @@ export const Route = createFileRoute('/api/generate-image')({
               console.warn('[debit_usage image]', (e as Error).message);
             }
 
-            return Response.json({ dataUrl });
+            // Retorna a URL CDN diretamente — o browser faz o download e converte
+            // para data URL. Evita bufferizar imagem de 1-3 MB no Worker.
+            // dataUrl contém a URL HTTPS (não um data: URL) para compat com clientes antigos.
+            return Response.json({ dataUrl: imgUrl, imageUrl: imgUrl, contentType });
           }
 
           // === START ===

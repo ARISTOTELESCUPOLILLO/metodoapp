@@ -357,11 +357,12 @@ const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     'RUPTURA SIMBÓLICA: usar EXATAMENTE o tipo sorteado no bloco "VARIAÇÕES SORTEADAS". Uma ruptura por cena. PROIBIDO recorrer a clichês visuais prontos de "estratégia/ideia/decisão" (peça de xadrez, tabuleiro, dominó, labirinto, bússola, quebra-cabeça, lâmpada acesa) — esses símbolos são genéricos e não nascem do tema real da peça; o objeto da ruptura precisa ser derivado do título e do texto específicos desta geração (ver regra de derivação do tema), nunca um símbolo de banco de imagens sobre "pensar estrategicamente". ' +
     'PROIBIDO: executivo de blazer em escritório, personagem sentado atrás de mesa em pose neutra, notebook como centro da cena, dashboard, livro voando, megafone, porta luminosa, mini pessoas sobre objetos, surrealismo carnavalesco.',
   'OP-06':
-    'SILÊNCIO — CÂMERA E OBJETO DESTA GERAÇÃO: a câmera e o objeto/sujeito desta geração estão definidos no bloco "VARIAÇÕES SORTEADAS" — seguir exatamente, sem alterar a distância/ângulo nem substituir o objeto. Não substituir o objeto por laptop, notebook aberto, smartphone ou qualquer dispositivo digital — esses objetos são PROIBIDOS como elemento principal do SILÊNCIO. ' +
+    'SILÊNCIO — CÂMERA DESTA GERAÇÃO: a câmera está definida no bloco "VARIAÇÕES SORTEADAS" — seguir exatamente a distância e o ângulo. ' +
+    'OBJETO DESTA GERAÇÃO — DERIVAR DO OFÍCIO REAL: o objeto ou sujeito isolado nasce da leituraCenica, da atividade real e do tema da peça — um único instrumento, ferramenta, material ou produto que pertença genuinamente ao negócio. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto). PROIBIDO laptop, notebook aberto, smartphone ou qualquer dispositivo digital como elemento principal. ' +
     'ESPAÇO NEGATIVO OBRIGATÓRIO: o objeto ou fragmento humano deve ocupar NO MÁXIMO 30% da área total da composição. O restante é fundo neutro, vasto e respirado — esse espaço vazio É a mensagem. ' +
     'AMBIENTE: pode ser INTERNO ou EXTERNO — campo aberto com horizonte limpo, superfície de água calma, caminho desaparecendo na névoa, arquitetura minimalista ao ar livre são todos válidos e incentivados para quebrar a repetição de mesa+interior. O critério é: fundo vasto, neutro e respirado. ' +
     'Se aparecer pessoa: fragmento parcial APENAS (mão, sombra, nuca, silhueta pequena) — NUNCA rosto inteiro posado, NUNCA corpo completo. ' +
-    'SILÊNCIO se aplica a qualquer segmento. O objeto pertence ao ofício real da empresa. A leituraCenica orienta o tema; o objeto desta geração determina O QUE aparece na cena.',
+    'SILÊNCIO se aplica a qualquer segmento. A leituraCenica determina O QUE aparece na cena; a direção visual determina COMO é fotografado.',
 };
 
 // Bloco canônico "papel da empresa na mensagem" — fonte única para MOP e PU.
@@ -450,9 +451,8 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Estrutura da ruptura simbólica: ${ruptura}\n${TEMA_DERIVATION_RULE} Aqui, o objeto, gesto ou elemento deslocado que ENCARNA a ruptura deve ser esse símbolo derivado do tema da peça — não um conceito surreal genérico solto. Uma ruptura por cena, sem acumular.`;
   } else if (mood === 'OP-06') {
-    const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Estrutura do objeto/sujeito isolado: ${objeto}\n${TEMA_DERIVATION_RULE} Aqui, o objeto específico (sempre dentro do ofício real da empresa) deve ser esse símbolo derivado do tema da peça — não um objeto genérico do ofício desconectado da mensagem. Não substituir por laptop, notebook ou dispositivo. INEDITISMO: para não repetir o que já foi gerado para esta empresa, prefira o objeto plausível porém menos óbvio dentro do ofício real — evite a primeira associação mais previsível (ex.: caderno/bloco de notas para qualquer negócio de escritório) e busque algo mais específico do negócio descrito no kit de marca.`;
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
   } else if (characterVariationMap[mood]) {
     const variation = pickRandom(characterVariationMap[mood]!);
     const camera = mood === 'OP-01' ? pickRandom(CLAREZA_CAMERA_VARIATIONS) : null;
@@ -482,6 +482,7 @@ Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carros
 TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - O TÍTULO renderizado na peça deve ser BOLD e GRANDE — o bloco de título deve ocupar no MÍNIMO 45% da altura vertical do canvas. Se o título tiver 4 ou mais palavras, quebre em até 3 linhas para MANTER O CORPO GRANDE — nunca reduza o corpo para caber em menos linhas. Letras legíveis a pelo menos 3 metros da tela do celular. SEMPRE dentro da margem de respiro das bordas — ajuste quebra de linha e posição do bloco, jamais o corpo da fonte.
 - O TEXTO DE APOIO (subtítulo) é um BLOCO DE SUBTÍTULO DE REVISTA — corpo entre 55% e 70% do tamanho do título. Deve ser lido de imediato no celular sem aproximar nem dar zoom. NÃO é legenda de rodapé, NÃO é texto decorativo pequeno, NÃO é legenda de foto.
+- ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta do mood (ou tom vibrante da paleta) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
 - PROIBIDO: texto de apoio com menos de 50% do tamanho do título, texto miniatura, corpo tipo "legenda", qualquer tipografia que exija zoom para ler.
 - Regra prática: ambos título e texto de apoio devem ser lidos de imediato ao ver a peça no celular em tamanho normal — se precisar aproximar o celular para ler qualquer um deles, o tamanho está errado.
 
@@ -522,9 +523,8 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
   }
 
   if (mood === 'OP-06') {
-    const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO: Câmera: ${camera}. Estrutura do objeto: ${objeto}. ${TEMA_DERIVATION_RULE} O objeto (do ofício real) deriva do tema. INEDITISMO: prefira o objeto menos óbvio dentro do ofício real — evite a primeira associação previsível.`;
+    return `\n⚠ VARIAÇÃO: Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
   }
 
   const characterMap: Partial<Record<MoodCode, string[]>> = {
