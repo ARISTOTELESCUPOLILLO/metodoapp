@@ -230,7 +230,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     lastCatIdxRef.current = catIdx;
     const catEscolhida = cats[catIdx];
     const itemIdx = Math.floor(Math.random() * catEscolhida.itens.length);
-    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx] };
+    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx], subtitulo: catEscolhida.subtitulo };
 
     try {
       const auth = await getAuthHeaders();
@@ -241,6 +241,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           companyName: data.companyName || kit.companyName,
           mainActivity: data.mainActivity || kit.mainActivity,
           objetivo: data.objetivo,
+          segment: kit.segment,
+          brandVoice: kit.brandVoice || '',
           hint: '',
           mode: 'postunico',
           attempt,
@@ -282,6 +284,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           companyName: data.companyName || kit.companyName,
           mainActivity: data.mainActivity || kit.mainActivity,
           objetivo: data.objetivo,
+          segment: kit.segment,
+          brandVoice: kit.brandVoice || '',
           hint: data.keyInfo.trim(),
           mode: 'postunico',
           attempt,
@@ -402,7 +406,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
               type="button"
               onClick={fetchRefinement}
               disabled={refining || loading || !hasKeyInfo || refineExhausted}
-              title={!hasKeyInfo ? 'Preencha o campo para refinar' : refineExhausted ? 'Limite atingido' : 'Refinamento guiado em 4 passos OP'}
+              title={!hasKeyInfo ? 'Preencha o campo para refinar' : refineExhausted ? 'Limite atingido' : 'Opcional: ajusta a forma da Informação-chave, mantendo o mesmo assunto'}
               style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: refining || loading || !hasKeyInfo || refineExhausted ? 'not-allowed' : 'pointer', opacity: refining || loading || !hasKeyInfo || refineExhausted ? 0.4 : 1 }}
             >
               {refining ? 'Refinando…' : `🔄 Refinar${refineCount > 0 ? ` (${refineCount}/${REFINE_MAX})` : ''}`}

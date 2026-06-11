@@ -385,6 +385,47 @@ export function validateLegenda(legenda: string): string[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Validação da sugestão (botão "Sugestão" / keyInfo) — anti-vagueza
+// ─────────────────────────────────────────────────────────────────────────
+
+const SUGESTAO_GENERIC_PATTERNS: RegExp[] = [
+  /produtos?\s+de\s+qualidade/i,
+  /qualidade\s+e\s+confian[çc]a/i,
+  /solu[çc][õo]es?\s+completas?/i,
+  /atendimento\s+diferenciado/i,
+  /fazer\s+a\s+diferen[çc]a/i,
+  /muito\s+mais/i,
+  /venha\s+conferir/i,
+  /o\s+melhor\s+para\s+voc[êe]/i,
+  /alta\s+qualidade/i,
+  /excel[êe]ncia/i,
+];
+
+// Validação leve da sugestão/keyInfo gerada pelo botão "Sugestão": comprimento
+// (ideal 5-10, máx. 12), terminação pendurada e frases-clichê genéricas. Não
+// inclui checagem de ancoragem com mainActivity/topicoGuia de propósito — uma
+// sugestão concreta pode não repetir nenhuma palavra literal da atividade, e
+// isso não deve reprová-la (decisão de produto).
+export function validateSugestao(sugestao: string): string[] {
+  const trimmed = sugestao.trim();
+  const motivos: string[] = [];
+  if (!trimmed) return ['sugestão vazia'];
+
+  const words = trimmed.split(/\s+/).filter(Boolean).length;
+  if (words < 4) motivos.push(`sugestão muito curta (${words} palavra(s)) — abaixo do mínimo de 4`);
+  if (words > 12) motivos.push(`sugestão com ${words} palavras — acima do máximo de 12`);
+
+  const dangling = checkDanglingEnding(trimmed);
+  if (dangling) motivos.push(dangling);
+
+  if (SUGESTAO_GENERIC_PATTERNS.some((re) => re.test(trimmed))) {
+    motivos.push('sugestão usa frase genérica/clichê — falta concretude');
+  }
+
+  return motivos;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // E4 — limpeza determinística (fallback final, sem chamada de API)
 // ─────────────────────────────────────────────────────────────────────────
 

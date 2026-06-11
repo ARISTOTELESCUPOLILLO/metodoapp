@@ -119,7 +119,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     lastCatIdxRef.current = catIdx;
     const catEscolhida = cats[catIdx];
     const itemIdx = Math.floor(Math.random() * catEscolhida.itens.length);
-    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx] };
+    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx], subtitulo: catEscolhida.subtitulo };
 
     try {
       const auth = await getAuthHeaders();
@@ -128,7 +128,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
         headers: { 'Content-Type': 'application/json', ...auth },
         body: JSON.stringify({
           companyName: data.companyName,
-          mainActivity: (data as any).mainActivity || '',
+          mainActivity: data.mainActivity || '',
           objetivo: 'promocao',
           segment,
           audience: data.audience,
@@ -173,7 +173,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
         headers: { 'Content-Type': 'application/json', ...auth },
         body: JSON.stringify({
           companyName: data.companyName,
-          mainActivity: (data as any).mainActivity || '',
+          mainActivity: data.mainActivity || '',
           objetivo: 'promocao',
           segment,
           audience: data.audience,
