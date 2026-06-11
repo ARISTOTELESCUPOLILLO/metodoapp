@@ -58,6 +58,9 @@ export interface RegenerateInput {
   // estático com avatar + cenário + produtos juntos).
   selecaoDireta?: {
     usarAvatar: boolean;
+    // Qual avatar do Kit usar quando usarAvatar=true. Default: 1 (avatar
+    // principal). Apenas 1 avatar é enviado por geração.
+    avatarNum?: 1 | 2 | null;
     cenarioNum?: number | null;
     produtosNums?: number[];
   };
@@ -72,7 +75,7 @@ function buildReferences(
   imageKit: ImageKit,
   produtosSelecionados?: number[],
   cenarioSelecionado?: number | null,
-  selecaoDireta?: { usarAvatar: boolean; cenarioNum?: number | null; produtosNums?: number[] },
+  selecaoDireta?: { usarAvatar: boolean; avatarNum?: 1 | 2 | null; cenarioNum?: number | null; produtosNums?: number[] },
 ): PostUnicoReferences {
   const refs: PostUnicoReferences = {};
   const wantsAvatar = selecaoDireta
@@ -87,7 +90,11 @@ function buildReferences(
   const cenarioPick = selecaoDireta ? (selecaoDireta.cenarioNum ?? null) : (cenarioSelecionado ?? null);
   const produtosPick = selecaoDireta ? (selecaoDireta.produtosNums ?? []) : (produtosSelecionados ?? []);
 
-  if (wantsAvatar && imageKit.avatar) refs.avatar = imageKit.avatar;
+  if (wantsAvatar) {
+    const avatarNum = selecaoDireta?.avatarNum ?? 1;
+    const avatarUrl = avatarNum === 2 ? (imageKit.avatar2 || imageKit.avatar) : imageKit.avatar;
+    if (avatarUrl) refs.avatar = avatarUrl;
+  }
   if (wantsCenario) {
     const idx = (cenarioPick ?? 1) - 1;
     const fallbackIdx = imageKit.cenarios.findIndex((c) => !!c);

@@ -40,6 +40,7 @@ import {
   type ModeloOP,
 } from '../../core/personalizacaoMop';
 import { emptyImageKit } from '../../utils/imageKitStorage';
+import { policyPorFormato } from '../../core/referenciasPolicy';
 import { getSessionImage, setSessionImage } from '../../utils/sessionImageCache';
 import UsoReferenciasDia, { useRefSelection } from './UsoReferenciasDia';
 import { regenerateWithKit } from '../../services/regenerateWithKit';
@@ -70,13 +71,22 @@ interface Props {
   userId?: string | null;
 }
 
-// Verifica se o kit tem imagens relevantes para o formato dado.
-// Estático/Estático Final/Reels: precisa de avatar ou cenário.
-// Carrossel: precisa de produto.
-function kitHasRefsForFormat(imageKit: ImageKit | undefined, formato: 'estatico' | 'carrossel' | 'estatico_final' | 'reels'): boolean {
+// Verifica se o kit tem alguma imagem ENTRE AS PERMITIDAS pela política
+// (policyPorFormato) para este (segmento, formato, modelo) — avatar/avatar2,
+// cenário ou produto, conforme o que a política libera para o contexto.
+function kitHasRefsForFormat(
+  imageKit: ImageKit | undefined,
+  formato: 'estatico' | 'carrossel' | 'estatico_final' | 'reels',
+  segmento: BrandKit['segment'],
+  modelo: ModeloOP | null,
+): boolean {
   if (!imageKit) return false;
-  if (formato === 'carrossel') return imageKit.produtos.some(p => !!p) || imageKit.cenarios.some(c => !!c);
-  return !!(imageKit.avatar) || imageKit.cenarios.some(c => !!c);
+  const policy = policyPorFormato(segmento, formato, modelo);
+  return (
+    (policy.avatar && (!!imageKit.avatar || !!imageKit.avatar2)) ||
+    (policy.cenarios > 0 && imageKit.cenarios.some((c) => !!c)) ||
+    (policy.produtos > 0 && imageKit.produtos.some((p) => !!p))
+  );
 }
 
 const REGEN_MAX: Record<RegenKind, number> = { titulo: 2, texto: 2, legenda: 2 };
@@ -90,12 +100,12 @@ interface RefSelectorProps {
 }
 
 // Botão "Gerar outra com refs" — só aparece se há seleção marcada E o kit tem imagens do tipo certo.
-function RefsRegenButton({ storageKey, fallbackKey, busy, onRun, imageKit, formato }: { storageKey: string; fallbackKey?: string; busy: boolean; onRun: () => void; imageKit?: ImageKit; formato?: 'estatico' | 'carrossel' | 'estatico_final' | 'reels' }) {
+function RefsRegenButton({ storageKey, fallbackKey, busy, onRun, imageKit, formato, segmento, modelo }: { storageKey: string; fallbackKey?: string; busy: boolean; onRun: () => void; imageKit?: ImageKit; formato?: 'estatico' | 'carrossel' | 'estatico_final' | 'reels'; segmento: BrandKit['segment']; modelo: ModeloOP | null }) {
   const sel = useRefSelection(storageKey);
   const selFb = useRefSelection(fallbackKey || storageKey);
   const has = sel.hasAny || selFb.hasAny;
   if (!has) return null;
-  if (!kitHasRefsForFormat(imageKit, formato || 'estatico')) return null;
+  if (!kitHasRefsForFormat(imageKit, formato || 'estatico', segmento, modelo)) return null;
   return (
     <button className="generateBtn" type="button" onClick={onRun} disabled={busy} title="Gerar outra usando as referências marcadas acima">
       {busy ? 'Gerando...' : '↻ Gerar outra com refs'}
@@ -282,7 +292,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
         keyInfo: `${item.titulo || ''}. ${item.imagem || ''}`.slice(0, 500),
         titulo, texto, imagePrompt: item.imagem, leituraCenica: (item as any).leituraCenica,
         formato: 'post',
-        selecaoDireta: { usarAvatar: sel.usarAvatar, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
+        selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -355,7 +365,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
             <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar post'}
             </button>
-            {preview && sel.hasAny && kitHasRefsForFormat(imageKit, 'estatico') && (
+            {preview && sel.hasAny && kitHasRefsForFormat(imageKit, 'estatico', segmento, modelo) && (
               <button className="generateBtn" type="button" onClick={handleGenerateWithRefs} disabled={busy || busyRefs} title="Gerar outra usando as referências marcadas acima">
                 {busyRefs ? 'Gerando...' : '↻ Gerar outra com refs'}
               </button>
@@ -433,7 +443,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
         keyInfo: `${item.titulo || ''}. ${item.imagem || ''}`.slice(0, 500),
         titulo, texto, imagePrompt: item.imagem, leituraCenica: (item as any).leituraCenica,
         formato: 'post',
-        selecaoDireta: { usarAvatar: sel.usarAvatar, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
+        selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -505,7 +515,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
             <button className="generateBtn" type="button" onClick={handleGenerate} disabled={busy || busyRefs}>
               {busy ? 'Gerando...' : preview ? '↻ Gerar outra (sem refs)' : '⬇ Gerar fechamento'}
             </button>
-            {preview && sel.hasAny && kitHasRefsForFormat(imageKit, 'estatico_final') && (
+            {preview && sel.hasAny && kitHasRefsForFormat(imageKit, 'estatico_final', segmento, modelo) && (
               <button className="generateBtn" type="button" onClick={handleGenerateWithRefs} disabled={busy || busyRefs} title="Gerar outra usando as referências marcadas acima">
                 {busyRefs ? 'Gerando...' : '↻ Gerar outra com refs'}
               </button>
@@ -589,8 +599,11 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 
   // Lê seleção efetiva para um card: prefere storage do bloco (consolidado)
   // mapeando card[i] → produto[i]; fallback para storage individual por card.
-  function selecaoParaCard(index: number): { usarAvatar: boolean; cenarioNum: number | null; produtosNums: number[] } | null {
+  function selecaoParaCard(index: number): { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[] } | null {
     const card = cards[index];
+    // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
+    const avatarNumDe = (j: any): 1 | 2 | null =>
+      (typeof j.avatarNum === 'number') ? j.avatarNum : (j.usarAvatar ? 1 : null);
     // 1) Bloco consolidado
     try {
       const raw = localStorage.getItem(blockStorageKey);
@@ -599,8 +612,10 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         if (j.enabled) {
           const produtos: number[] = Array.isArray(j.produtosNums) ? j.produtosNums.filter((n: unknown) => typeof n === 'number') : [];
           const pick = produtos[index] ?? produtos[0] ?? null;
+          const avatarNum = avatarNumDe(j);
           return {
-            usarAvatar: !!j.usarAvatar,
+            usarAvatar: avatarNum != null,
+            avatarNum,
             cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
             produtosNums: pick ? [pick] : [],
           };
@@ -613,8 +628,10 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
       if (!raw) return null;
       const j = JSON.parse(raw);
       if (!j.enabled) return null;
+      const avatarNum = avatarNumDe(j);
       return {
-        usarAvatar: !!j.usarAvatar,
+        usarAvatar: avatarNum != null,
+        avatarNum,
         cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
         produtosNums: Array.isArray(j.produtosNums) ? j.produtosNums : [],
       };
@@ -777,7 +794,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             storageKey={blockStorageKey}
             compact
             onGerou={() => { /* disparo vem do botão "Gerar X cards com refs" */ }}
-            footerAction={blockSel.hasAny && kitHasRefsForFormat(imageKit, 'carrossel') ? (
+            footerAction={blockSel.hasAny && kitHasRefsForFormat(imageKit, 'carrossel', segmento, modelo) ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 <span style={{ fontSize: 11, color: '#475569' }}>
                   Cada card recebe o produto na ordem marcada (card 1 → produto 1, …).
@@ -861,6 +878,8 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
                       onRun={() => handleGenerateWithRefs(index)}
                       imageKit={imageKit}
                       formato="carrossel"
+                      segmento={segmento}
+                      modelo={modelo}
                     />
                   )}
                   {previews[index] && (
@@ -1079,12 +1098,15 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
 
   async function runGenerateWithRefs() {
     const storageKey = `uso-ref:reels:${dayNumber}`;
-    let s: { usarAvatar: boolean; cenarioNum: number | null; produtosNums: number[] };
+    let s: { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[] };
     try {
       const raw = localStorage.getItem(storageKey);
       const j = raw ? JSON.parse(raw) : {};
+      // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
+      const avatarNum: 1 | 2 | null = (typeof j.avatarNum === 'number') ? j.avatarNum : (j.usarAvatar ? 1 : null);
       s = {
-        usarAvatar: !!j.usarAvatar,
+        usarAvatar: avatarNum != null,
+        avatarNum,
         cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
         produtosNums: Array.isArray(j.produtosNums) ? j.produtosNums : [],
       };
@@ -1430,6 +1452,8 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
                 onRun={handleGenerateWithRefs}
                 imageKit={imageKit}
                 formato="reels"
+                segmento={segmento}
+                modelo={modelo}
               />
             )}
             {preview && (() => {

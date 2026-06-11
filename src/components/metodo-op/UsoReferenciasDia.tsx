@@ -91,13 +91,14 @@ export default function UsoReferenciasDia(props: Props) {
     [imageKit.produtos],
   );
   const temAlguma =
-    (policy.avatar && imageKit.avatar) ||
+    (policy.avatar && (!!imageKit.avatar || !!imageKit.avatar2)) ||
     (policy.cenarios > 0 && cenariosDisp.length > 0) ||
     (policy.produtos > 0 && produtosDisp.length > 0);
 
   // Estado UI persistido
   const [enabled, setEnabled] = useState<boolean>(false);
-  const [usarAvatar, setUsarAvatar] = useState<boolean>(false);
+  // Qual avatar está marcado (1, 2 ou nenhum). Único — só 1 avatar por geração.
+  const [avatarNum, setAvatarNum] = useState<number | null>(null);
   const [cenarioNum, setCenarioNum] = useState<number | null>(null);
   const [produtosNums, setProdutosNums] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
@@ -110,7 +111,12 @@ export default function UsoReferenciasDia(props: Props) {
       if (raw) {
         const s = JSON.parse(raw);
         if (typeof s.enabled === 'boolean') setEnabled(s.enabled);
-        if (typeof s.usarAvatar === 'boolean') setUsarAvatar(s.usarAvatar);
+        if (typeof s.avatarNum === 'number' || s.avatarNum === null) {
+          setAvatarNum(s.avatarNum);
+        } else if (typeof s.usarAvatar === 'boolean') {
+          // Migração do formato antigo (boolean) → avatarNum (1|2|null).
+          setAvatarNum(s.usarAvatar ? 1 : null);
+        }
         if (typeof s.cenarioNum === 'number' || s.cenarioNum === null) setCenarioNum(s.cenarioNum);
         if (Array.isArray(s.produtosNums)) setProdutosNums(s.produtosNums);
       }
@@ -122,10 +128,10 @@ export default function UsoReferenciasDia(props: Props) {
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return;
-      localStorage.setItem(storageKey, JSON.stringify({ enabled, usarAvatar, cenarioNum, produtosNums }));
+      localStorage.setItem(storageKey, JSON.stringify({ enabled, avatarNum, cenarioNum, produtosNums }));
       window.dispatchEvent(new CustomEvent('uso-ref:changed', { detail: { key: storageKey } }));
     } catch { /* ignore */ }
-  }, [enabled, usarAvatar, cenarioNum, produtosNums, storageKey]);
+  }, [enabled, avatarNum, cenarioNum, produtosNums, storageKey]);
 
   function toggleProduto(n: number) {
     setProdutosNums((prev) => {
@@ -139,7 +145,7 @@ export default function UsoReferenciasDia(props: Props) {
   }
 
   const totalSelecionado =
-    (usarAvatar ? 1 : 0) + (cenarioNum != null ? 1 : 0) + produtosNums.length;
+    (avatarNum != null ? 1 : 0) + (cenarioNum != null ? 1 : 0) + produtosNums.length;
   const podeGerar = !busy && enabled && totalSelecionado > 0;
 
   // Carrossel: 1 produto por card. Quando este componente está num card
@@ -173,7 +179,8 @@ export default function UsoReferenciasDia(props: Props) {
         titulo, texto, imagePrompt, leituraCenica,
         formato: formatoOverride,
         selecaoDireta: {
-          usarAvatar,
+          usarAvatar: avatarNum != null,
+          avatarNum: avatarNum as 1 | 2 | null,
           cenarioNum: cenarioNum,
           produtosNums: produtosNumsParaUso,
         },
@@ -196,7 +203,7 @@ export default function UsoReferenciasDia(props: Props) {
   // Política permite imagens mas o Kit está vazio → mostra orientação.
   if (!temAlguma) {
     const itemsFaltando: string[] = [];
-    if (policy.avatar && !imageKit.avatar) itemsFaltando.push('avatar');
+    if (policy.avatar && !imageKit.avatar && !imageKit.avatar2) itemsFaltando.push('avatar');
     if (policy.cenarios > 0 && cenariosDisp.length === 0) itemsFaltando.push('cenário');
     if (policy.produtos > 0 && produtosDisp.length === 0) itemsFaltando.push('produtos');
     return (
@@ -211,7 +218,7 @@ export default function UsoReferenciasDia(props: Props) {
   }
 
   // Aviso amarelo se a política permite o tipo mas o Kit não tem a imagem.
-  const faltaAvatar = policy.avatar && !imageKit.avatar;
+  const faltaAvatar = policy.avatar && !imageKit.avatar && !imageKit.avatar2;
   const faltaCenario = policy.cenarios > 0 && cenariosDisp.length === 0;
   const faltaProduto = policy.produtos > 0 && produtosDisp.length === 0;
   const algumFaltando = faltaAvatar || faltaCenario || faltaProduto;
@@ -251,10 +258,18 @@ export default function UsoReferenciasDia(props: Props) {
           }}>
             {policy.avatar && imageKit.avatar && (
               <Tile
-                checked={usarAvatar}
-                onToggle={() => setUsarAvatar((v) => !v)}
+                checked={avatarNum === 1}
+                onToggle={() => setAvatarNum((cur) => (cur === 1 ? null : 1))}
                 url={imageKit.avatar}
-                label="Avatar"
+                label={imageKit.avatar2 ? 'Avatar 1' : 'Avatar'}
+              />
+            )}
+            {policy.avatar && imageKit.avatar2 && (
+              <Tile
+                checked={avatarNum === 2}
+                onToggle={() => setAvatarNum((cur) => (cur === 2 ? null : 2))}
+                url={imageKit.avatar2}
+                label="Avatar 2"
               />
             )}
             {policy.cenarios > 0 && cenariosDisp.map((n) => (
@@ -378,14 +393,15 @@ function Tile({ checked, onToggle, url, label, badge }: {
 // quando muda (mesma aba via evento custom, outras abas via 'storage').
 export interface RefSelectionState {
   enabled: boolean;
-  usarAvatar: boolean;
+  // Qual avatar está marcado (1, 2 ou nenhum).
+  avatarNum: number | null;
   cenarioNum: number | null;
   produtosNums: number[];
   hasAny: boolean;
 }
 
 const EMPTY_SEL: RefSelectionState = {
-  enabled: false, usarAvatar: false, cenarioNum: null, produtosNums: [], hasAny: false,
+  enabled: false, avatarNum: null, cenarioNum: null, produtosNums: [], hasAny: false,
 };
 
 function readSel(storageKey: string): RefSelectionState {
@@ -395,11 +411,14 @@ function readSel(storageKey: string): RefSelectionState {
     if (!raw) return EMPTY_SEL;
     const s = JSON.parse(raw);
     const enabled = !!s.enabled;
-    const usarAvatar = !!s.usarAvatar;
+    // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
+    const avatarNum = (typeof s.avatarNum === 'number' || s.avatarNum === null)
+      ? s.avatarNum
+      : (s.usarAvatar ? 1 : null);
     const cenarioNum = (typeof s.cenarioNum === 'number') ? s.cenarioNum : null;
     const produtosNums = Array.isArray(s.produtosNums) ? s.produtosNums.filter((n: unknown) => typeof n === 'number') : [];
-    const hasAny = enabled && (usarAvatar || cenarioNum != null || produtosNums.length > 0);
-    return { enabled, usarAvatar, cenarioNum, produtosNums, hasAny };
+    const hasAny = enabled && (avatarNum != null || cenarioNum != null || produtosNums.length > 0);
+    return { enabled, avatarNum, cenarioNum, produtosNums, hasAny };
   } catch {
     return EMPTY_SEL;
   }
@@ -412,7 +431,7 @@ function getSnapshot(storageKey: string): RefSelectionState {
   const cached = selCache.get(storageKey);
   if (cached
     && cached.enabled === fresh.enabled
-    && cached.usarAvatar === fresh.usarAvatar
+    && cached.avatarNum === fresh.avatarNum
     && cached.cenarioNum === fresh.cenarioNum
     && cached.produtosNums.length === fresh.produtosNums.length
     && cached.produtosNums.every((n, i) => n === fresh.produtosNums[i])

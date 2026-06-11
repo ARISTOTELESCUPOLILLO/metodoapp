@@ -73,11 +73,15 @@ export function totalImagens(p: RefPolicy): number {
   return (p.avatar ? 1 : 0) + p.cenarios + p.produtos;
 }
 
-// Resumo humano da regra: "1 avatar, 1 cenário, até 3 produtos".
+// Resumo humano da regra: "1 avatar, 1 cenário (dentre até 3 cadastrados), até 3 produtos".
+// Cenário é sempre 1 por geração — o número em `p.cenarios` é quantas opções
+// cadastradas no Kit ficam disponíveis para escolha, não quantas são usadas juntas.
 export function descrevePolicy(p: RefPolicy): string {
   const parts: string[] = [];
   if (p.avatar) parts.push('1 avatar');
-  if (p.cenarios > 0) parts.push(`até ${p.cenarios} cenário${p.cenarios > 1 ? 's' : ''}`);
+  if (p.cenarios > 0) {
+    parts.push(p.cenarios > 1 ? `1 cenário (dentre até ${p.cenarios} cadastrados)` : '1 cenário');
+  }
   if (p.produtos > 0) parts.push(`até ${p.produtos} produto${p.produtos > 1 ? 's' : ''}`);
   return parts.length ? parts.join(', ') : 'nenhuma imagem permitida';
 }

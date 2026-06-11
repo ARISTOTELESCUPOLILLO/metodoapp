@@ -12,6 +12,7 @@ export const CENARIO_SLOTS = 3;
 
 export const emptyImageKit: ImageKit = {
   avatar: undefined,
+  avatar2: undefined,
   cenarios: Array.from({ length: CENARIO_SLOTS }, () => null),
   cenarioTipos: Array.from({ length: CENARIO_SLOTS }, () => 'ambiente'),
   produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
@@ -52,6 +53,7 @@ function normalize(kit: any): ImageKit {
 
   return {
     avatar: kit?.avatar || undefined,
+    avatar2: kit?.avatar2 || undefined,
     cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
     cenarioTipos: normalizeCenarioTipos(kit?.cenarioTipos),
     produtos: produtos.map((p: any) => (typeof p === 'string' && p ? p : null)),
@@ -61,6 +63,7 @@ function normalize(kit: any): ImageKit {
 function freshEmpty(): ImageKit {
   return {
     avatar: undefined,
+    avatar2: undefined,
     cenarios: Array.from({ length: CENARIO_SLOTS }, () => null),
     cenarioTipos: Array.from({ length: CENARIO_SLOTS }, () => 'ambiente'),
     produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
@@ -102,6 +105,7 @@ export function clearImageKit(userId?: string | null): void {
 export function hasAnyImage(kit: ImageKit): boolean {
   return (
     !!kit.avatar ||
+    !!kit.avatar2 ||
     kit.cenarios.some((c) => !!c) ||
     kit.produtos.some((p) => !!p)
   );

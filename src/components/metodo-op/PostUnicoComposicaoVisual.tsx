@@ -1,7 +1,11 @@
 import { ImageKit, MoodCode, PostUnicoVisualSelection } from '../../types';
 import { produtosDisponiveis, cenariosDisponiveis, cenarioLabel } from '../../utils/imageKitStorage';
+import { policyPorFormato } from '../../core/referenciasPolicy';
 
-const MAX_PRODUTOS_PU = 3;
+// PU2/PU4/PU8 têm a mesma política em qualquer segmento/formato — usamos
+// 'estatico'/'PU2' apenas como parâmetro neutro para ler o limite de produtos
+// a partir da fonte única de verdade (referenciasPolicy.ts).
+const MAX_PRODUTOS_PU = policyPorFormato('VAREJO', 'estatico', 'PU2').produtos;
 
 interface Props {
   imageKit: ImageKit;
