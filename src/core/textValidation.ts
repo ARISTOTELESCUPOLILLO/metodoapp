@@ -429,36 +429,52 @@ export function validateSugestao(sugestao: string): string[] {
 // Sugestão — bloqueio de promoção/urgência/data inventada
 // ─────────────────────────────────────────────────────────────────────────
 
-// Cada grupo cobre uma forma de "promessa comercial" que a sugestão não pode
-// inventar (promoção, desconto, percentual, prazo, data, urgência, oferta).
-// Padrões aplicados sobre texto normalizado (minúsculo, sem acento).
-const INVENTED_PROMO_GROUPS: { label: string; re: RegExp }[] = [
+// Os grupos se dividem em duas categorias. GENÉRICOS: linguagem promocional
+// sem dado específico ("promoção", "desconto" solto, "oferta") — bloqueada por
+// padrão, mas liberada quando o objetivo da peça pede tom promocional (PU
+// promoção/oportunidade, ver `allowPromoLanguage`). ESPECÍFICOS: dados
+// comerciais concretos (%, R$, brinde, prazo/data, condição de compra) que
+// NUNCA podem ser inventados em nenhum modo/objetivo — só passam se já
+// constarem no `allowedContext`. Padrões aplicados sobre texto normalizado
+// (minúsculo, sem acento).
+const INVENTED_PROMO_GENERIC_GROUPS: { label: string; re: RegExp }[] = [
   { label: 'promoção/promocional', re: /\bpromoc/ },
   { label: 'desconto', re: /\bdesconto/ },
-  { label: '"off" de desconto', re: /\boff\b/ },
-  { label: 'percentual (%)', re: /\d+\s*%/ },
-  { label: 'grátis/gratuito', re: /\bgratis|\bgratuit/ },
   { label: 'oferta', re: /\boferta/ },
   { label: 'lançamento', re: /\blancamento/ },
   { label: 'liquidação/saldão', re: /\bliquidac|\bsaldao/ },
   { label: 'agenda/vagas aberta(s)', re: /\b(agenda|vagas?)\s+abert/ },
+];
+
+const INVENTED_PROMO_SPECIFIC_GROUPS: { label: string; re: RegExp }[] = [
+  { label: 'percentual (%) / "off"', re: /\d+\s*%|\boff\b/ },
+  { label: 'valor em reais (R$)', re: /r\$\s*[\d.,]+/ },
+  { label: 'brinde/grátis/cortesia', re: /\bbrinde|\bgratis|\bgratuit|\bcortesia/ },
+  { label: 'condição de compra (acima de, a partir de, sem juros...)', re: /\b(acima de|a partir de|na compra de|compre\s+e\s+ganhe|sem juros)\b/ },
   {
     label: 'prazo/data/urgência (hoje, até X, esta semana, última chance...)',
     re: /\b(hoje|amanha|esta semana|essa semana|este fim de semana|por tempo limitado|ultimas? (vagas?|unidades?|chances?|dias?)|nao perca|so hoje|ate (domingo|segunda|terca|quarta|quinta|sexta|sabado))\b/,
   },
 ];
 
+const INVENTED_PROMO_GROUPS: { label: string; re: RegExp }[] = [
+  ...INVENTED_PROMO_GENERIC_GROUPS,
+  ...INVENTED_PROMO_SPECIFIC_GROUPS,
+];
+
 // Reprova quando a sugestão (botão "Sugestão"/keyInfo) inventa promoção,
 // desconto, percentual, prazo, data, urgência ou oferta que o usuário não
 // forneceu. `allowedContext` reúne pista do usuário + assunto do botão Ideias
-// + atividade/empresa — termos só são permitidos se já constarem ali (ou se o
-// objetivo da peça explicitamente pedir promoção/oportunidade, ver chamada).
-export function checkInventedPromotion(sugestao: string, allowedContext: string): string[] {
+// + atividade/empresa — termos só são permitidos se já constarem ali.
+// Com `opts.allowPromoLanguage` (PU promoção/oportunidade), a linguagem
+// promocional genérica é liberada e só os dados ESPECÍFICOS são bloqueados.
+export function checkInventedPromotion(sugestao: string, allowedContext: string, opts?: { allowPromoLanguage?: boolean }): string[] {
   const motivos: string[] = [];
   const sugNorm = normalizeForCompare(sugestao);
   const ctxNorm = normalizeForCompare(allowedContext);
 
-  for (const { label, re } of INVENTED_PROMO_GROUPS) {
+  const groups = opts?.allowPromoLanguage ? INVENTED_PROMO_SPECIFIC_GROUPS : INVENTED_PROMO_GROUPS;
+  for (const { label, re } of groups) {
     if (re.test(sugNorm) && !re.test(ctxNorm)) {
       motivos.push(`sugestão inventa "${label}" sem isso constar na informação/contexto do usuário`);
     }

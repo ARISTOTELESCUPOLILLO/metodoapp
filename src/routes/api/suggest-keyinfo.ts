@@ -96,10 +96,14 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             : '';
 
           // Na MOP, objetivo de peça (ex.: 'promocao') pertence à PU e não deve
-          // remover a proteção contra invenções — a sequência do Método OP nunca
-          // inventa datas/descontos/promoções independente do objetivo enviado.
+          // remover a proteção contra invenções — vale independente do objetivo
+          // enviado, e a checkInventedPromotion continua rodando para o MOP sem
+          // allowPromoLanguage: dados específicos (%, R$, brinde, prazo/data,
+          // condição de compra) seguem bloqueados pelo D1 se o modelo não
+          // seguir a instrução. Pista promocional não é descartada — é
+          // reenquadrada como abertura de sequência.
           const proibicoesInventarMop = mode === 'metodo'
-            ? ' No Método OP a Informação-chave abre uma SEQUÊNCIA — não é uma peça de promoção: NÃO use linguagem promocional/comercial nesta sugestão, mesmo que pareça natural, a menos que o texto atual do usuário já peça isso explicitamente.'
+            ? ' No Método OP a Informação-chave abre uma SEQUÊNCIA — não é uma peça de promoção: ela NÃO promete oferta, desconto ou condição diretamente. SE a pista do usuário trouxer promoção/oferta com dados específicos (percentual, valor, brinde, prazo, data, "até X", "hoje", condição de compra), NÃO repita esses dados nem mantenha a promessa direta — extraia o ASSUNTO por trás da promoção (o produto/serviço/categoria em destaque) e reenquadre como abertura de sequência: preparação ou orientação para o momento ANTES dessa oferta. Exemplo: pista "30% off até domingo" → "como escolher peças certas antes da promoção". O assunto da pista NÃO deve ser descartado — apenas reenquadrado.'
             : '';
           const proibicoesInventar = (mode === 'metodo' || (objetivo !== 'promocao' && objetivo !== 'oportunidade'))
             ? `PROIBIDO inventar promoção, desconto, percentual, prazo, data, urgência ou oferta que o usuário não tenha fornecido — isso inclui termos como "promoção", "desconto", "off", "grátis", "oferta especial", "lançamento", "agenda aberta", "hoje", "até domingo" (ou qualquer outro dia/data/prazo) e chamadas de urgência ("não perca", "última chance", "por tempo limitado"). Esses termos só podem aparecer se já estiverem na pista do usuário, no assunto obrigatório (Ideias) ou na atividade da empresa informada acima.${proibicoesInventarMop} PROIBIDO também inventar: eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
@@ -117,8 +121,11 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             topicoGuia?.item,
           ].filter(Boolean).join(' ');
           // PU com objetivo 'promocao'/'oportunidade': o próprio objetivo da peça
-          // pede oferta/urgência — não reprovar por isso (igual a proibicoesInventar).
-          const skipPromoCheck = mode === 'postunico' && (objetivo === 'promocao' || objetivo === 'oportunidade');
+          // pede tom promocional — a linguagem genérica ("promoção", "oferta",
+          // "desconto" solto) é liberada, mas dados ESPECÍFICOS inventados
+          // (%, R$, brinde, prazo/data, condição de compra) continuam bloqueados
+          // pela checkInventedPromotion, que agora roda SEMPRE.
+          const allowPromoLanguagePU = mode === 'postunico' && (objetivo === 'promocao' || objetivo === 'oportunidade');
 
           const criteriosRefinamentoOP = `CRITÉRIOS DE QUALIDADE — PROCESSO DE REFINAMENTO:
 
@@ -524,8 +531,8 @@ Retorne JSON EXATAMENTE assim:
           }
 
           const OBJETIVO_RULES: Record<string, string> = {
-            promocao: 'REGRAS PARA PROMOÇÃO: sugira um desconto, oferta ou condição específica diferente das sugestões anteriores. PROIBIDO repetir o mesmo percentual de desconto ou a mesma data de encerramento já usados — varie o tipo de oferta (desconto, brinde, parcela, frete, kit), o produto/serviço em destaque e o prazo.',
-            oportunidade: 'REGRAS PARA OPORTUNIDADE: PROIBIDO citar datas, prazos, dias ou períodos específicos. Represente a oportunidade por escassez, momento único ou contexto sazonal — sem especificar quando.',
+            promocao: 'REGRAS PARA PROMOÇÃO: use tom comercial/promocional — esse é o tom esperado para o objetivo (palavras como "promoção", "oferta", "aproveite", "garanta o seu" são bem-vindas). PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia, prazo, data/dia da semana, "última chance" ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário, no assunto do botão Ideias ou na atividade/empresa. Se nada disso foi informado, descreva a oportunidade comercial de forma genérica — sem números, datas ou condições inventadas.',
+            oportunidade: 'REGRAS PARA OPORTUNIDADE: represente a oportunidade por escassez, momento único ou contexto sazonal — sem especificar quando. PROIBIDO citar datas, prazos, dias ou períodos específicos, e PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário, no assunto do botão Ideias ou na atividade/empresa.',
             homenagem: `REGRAS PARA HOMENAGEM: datas comemorativas de referência (use APENAS se forem FUTURAS à DATA DE HOJE):
 - Dia das Mães: 2º domingo de maio
 - Dia dos Pais: 2º domingo de agosto
@@ -601,9 +608,7 @@ Retorne JSON EXATAMENTE assim:
             if (!sugestao) return Response.json({ error: 'Sugestão vazia' }, { status: 502 });
 
             motivos = validateSugestao(sugestao);
-            if (!skipPromoCheck) {
-              motivos = motivos.concat(checkInventedPromotion(sugestao, allowedContext));
-            }
+            motivos = motivos.concat(checkInventedPromotion(sugestao, allowedContext, { allowPromoLanguage: allowPromoLanguagePU }));
             if (motivos.length === 0) break;
           }
 
