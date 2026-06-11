@@ -59,7 +59,29 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             'SERVIÇOS': 'problema, dúvida, decisão, risco, confiança, processo, manutenção, prevenção, atendimento, resultado percebido',
             MARCA: 'reconhecimento, identificação, percepção, vínculo, bastidor, diferenciação, valor percebido, história, relação com o público',
           };
-          const segmentLensBlock = `LENTE DO SEGMENTO (${segment}): ancore a sugestão em um destes eixos — ${SEGMENT_LENS[segment]}.`;
+
+          // Ancoragem na atividade — a categoria editorial e a lente do segmento
+          // dão o ÂNGULO; a atividade da empresa dá o ELEMENTO CONCRETO. Sem essa
+          // ponte, a sugestão fica genérica o bastante para servir a qualquer
+          // empresa do segmento. "Quando fizer sentido"/"não force" evita
+          // elemento artificial em atividades mais abstratas.
+          const ancoragemAtividade = mainActivity.trim()
+            ? `ANCORAGEM NA ATIVIDADE:
+A empresa trabalha com: "${mainActivity}".
+Pense no que essa empresa especificamente faz, vende, resolve, explica ou escuta dos clientes — ferramentas, canais, produtos, procedimentos, situações típicas desse ramo no dia a dia.
+Quando fizer sentido para a atividade, a frase deve conter pelo menos um elemento concreto desse ramo — não apenas palavras genéricas que servem para qualquer empresa do segmento (ex.: "atendimento", "confiança", "agenda", "venda", "cliente"). Para atividades mais abstratas, não force um elemento artificial.
+TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, prefira reescrever ancorando em algo reconhecível do ramo "${mainActivity}".`
+            : '';
+          const ancoragemAtividadeMarca = mainActivity.trim()
+            ? `ANCORAGEM NA ATIVIDADE:
+A marca trabalha com: "${mainActivity}".
+Pense em elementos próprios dessa marca: ingredientes, materiais, processos, rituais, território, gestos ou características que ela especificamente tem ou representa${mode === 'metodo' ? ' — sem dor do cliente, sem linguagem de venda' : ''}.
+Quando fizer sentido para a atividade, a frase deve conter pelo menos um elemento concreto desse ramo — não apenas palavras genéricas que servem para qualquer marca do segmento (ex.: "reconhecimento", "identificação", "vínculo", "valor percebido"). Para atividades mais abstratas, não force um elemento artificial.
+TESTE: se a frase serviria igual para qualquer outra marca do segmento, prefira reescrever ancorando em algo reconhecível da marca "${mainActivity}".`
+            : '';
+          const ancoragemBlock = segment === 'MARCA' ? ancoragemAtividadeMarca : ancoragemAtividade;
+
+          const segmentLensBlock = `LENTE DO SEGMENTO (${segment}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segment]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.${ancoragemBlock ? `\n\n${ancoragemBlock}` : ''}`;
 
           const AUDIENCES = ['B2C', 'B2B'] as const;
           type Aud = typeof AUDIENCES[number];
@@ -194,7 +216,8 @@ ${angulo === 'tensao'
   ? `ÂNGULOS DE TENSÃO para este perfil: ${editorialProfile.angulosTensao.join(' / ')}`
   : `ÂNGULOS DE MOTIVAÇÃO para este perfil: ${editorialProfile.angulosMotivacao.join(' / ')}`}
 VOCABULÁRIO PROIBIDO adicional: ${editorialProfile.vocabularioProibido.join(', ')}
-NOTA DO MÉTODO: ${editorialProfile.notaMetodo}`
+NOTA DO MÉTODO: ${editorialProfile.notaMetodo}
+TERRITÓRIO e ÂNGULOS acima são direções de leitura do perfil, não frases prontas. Se a ATIVIDADE da empresa (informada no início) apontar para um contexto mais específico e reconhecível do que esses ângulos genéricos, a ATIVIDADE PREVALECE — priorize a situação real da empresa sobre o ângulo do perfil.`
             : '';
 
           const topicoGuiaBlock = topicoGuia
@@ -568,8 +591,8 @@ Retorne JSON EXATAMENTE assim:
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
-            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) segmento e atividade estão refletidos? Se sim para (2), troque por algo mais simples antes de responder. Limite: entre 5 e 10 palavras por sugestão (máximo absoluto 12) — só passe de 10 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples, e nunca ultrapasse 12. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
-            : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule.';
+            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) quando fizer sentido para a ATIVIDADE informada, a frase tem pelo menos um elemento concreto e reconhecível desse ramo — não só vocabulário genérico do segmento? Se sim para (2), troque por algo mais simples; se não para (3) e isso for natural para a atividade, ajuste antes de responder. Limite: entre 5 e 10 palavras por sugestão (máximo absoluto 12) — só passe de 10 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples, e nunca ultrapasse 12. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
+            : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, quando fizer sentido para a ATIVIDADE informada, prefira que a frase tenha pelo menos um elemento concreto e reconhecível desse ramo, em vez de só vocabulário genérico do segmento.';
 
           // D1 (validateSugestao) + 1 retry no máximo: se a sugestão sair vaga
           // (muito curta/longa, terminação pendurada ou frase-clichê), pede uma
