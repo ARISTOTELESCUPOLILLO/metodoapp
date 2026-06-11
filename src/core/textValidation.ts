@@ -125,10 +125,59 @@ export function checkPunctuation(text: string, kind: 'titulo' | 'texto' | 'legen
     return null;
   }
 
-  // texto / legenda
+  if (kind === 'legenda') {
+    // A legenda termina com o parágrafo de hashtags (sem pontuação final) —
+    // a pontuação do parágrafo de CTA é validada por checkLegendaStructure.
+    return null;
+  }
+
+  // texto
   if (!/[.!?]$/.test(trimmed)) {
     return `${kind} não termina com pontuação final (./!/?)`;
   }
+  return null;
+}
+
+const HASHTAG_RE = /^#[a-z0-9]+$/;
+
+// REGRA DE LEGENDA (organizaMethodEngine.ts) — vale para feed estático,
+// carrossel, reels e estático final: 3 parágrafos separados por linha em
+// branco — corpo (até 30 palavras, termina em ./!/?), CTA (até 6 palavras,
+// termina em ./!/?) e, por último, EXATAMENTE 3 hashtags minúsculas, sem
+// acento e sem caracteres especiais. Reprova quando essa estrutura não é
+// respeitada, para que a regeneração (E3) recupere CTA + hashtags ausentes.
+export function checkLegendaStructure(legenda: string): string | null {
+  const trimmed = legenda.trim();
+  if (!trimmed) return null;
+
+  const hashtags = trimmed.match(/#[^\s#]+/g) || [];
+
+  if (hashtags.length === 0) {
+    return 'legenda sem o parágrafo final de hashtags — faltam EXATAMENTE 3 (ver REGRA DE LEGENDA)';
+  }
+  if (hashtags.length !== 3) {
+    return `legenda com ${hashtags.length} hashtag(s) em vez de EXATAMENTE 3 (ver REGRA DE LEGENDA)`;
+  }
+  const invalid = hashtags.filter((h) => !HASHTAG_RE.test(h));
+  if (invalid.length > 0) {
+    return `hashtags fora do padrão — devem ser minúsculas, sem acento e sem caracteres especiais (${invalid.join(' ')})`;
+  }
+
+  const paragraphs = trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (paragraphs.length < 3) {
+    return 'legenda sem a estrutura de 3 parágrafos separados por linha em branco — corpo, CTA e hashtags (ver REGRA DE LEGENDA)';
+  }
+
+  const lastPara = paragraphs[paragraphs.length - 1];
+  if (!/^#/.test(lastPara)) {
+    return 'parágrafo final da legenda não está isolado apenas com as hashtags (ver REGRA DE LEGENDA)';
+  }
+
+  const ctaPara = paragraphs[paragraphs.length - 2];
+  if (!/[.!?]$/.test(ctaPara)) {
+    return 'parágrafo de CTA da legenda não termina com ponto final (ver REGRA DE LEGENDA)';
+  }
+
   return null;
 }
 
@@ -262,6 +311,8 @@ export function validateLegenda(legenda: string): string[] {
   const motivos: string[] = [];
   const punct = checkPunctuation(legenda, 'legenda');
   if (punct) motivos.push(punct);
+  const structure = checkLegendaStructure(legenda);
+  if (structure) motivos.push(structure);
   return motivos;
 }
 
@@ -277,6 +328,14 @@ export function applyDeterministicFallback(value: string, kind: 'titulo' | 'text
   let text = value.trim();
   if (!text) return text;
 
+  if (kind === 'legenda') {
+    // Estrutura multi-parágrafo (corpo + CTA + hashtags) — a limpeza de
+    // frase única abaixo cortaria a legenda no fim do 1º parágrafo,
+    // destruindo CTA e hashtags. Mantém o texto como veio da última
+    // tentativa de regeneração (E3), que já reaplica checkLegendaStructure.
+    return text;
+  }
+
   const sentenceMatch = text.match(/^(.*[.!?])\s+\S/);
   if (sentenceMatch) text = sentenceMatch[1].trim();
 
@@ -288,7 +347,7 @@ export function applyDeterministicFallback(value: string, kind: 'titulo' | 'text
     text = words.join(' ').replace(/[,;:\-–—]+$/, '').trim();
   }
 
-  if (kind === 'texto' || kind === 'legenda') {
+  if (kind === 'texto') {
     if (!/[.!?]$/.test(text)) text += '.';
   } else {
     const isPergunta = QUESTION_STARTERS.test(text);

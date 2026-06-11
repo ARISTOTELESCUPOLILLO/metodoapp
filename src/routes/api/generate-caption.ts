@@ -11,6 +11,50 @@ const OBJETIVO_TOM: Record<string, string> = {
   institucional: 'institucional de marca, posicionamento, propósito, sóbrio e confiante',
 };
 
+// E4 — fallback determinístico (sem chamada extra de API) quando o modelo,
+// mesmo após 1 nova tentativa, não preenche "cta" e/ou "hashtags".
+const OBJETIVO_CTA_FALLBACK: Record<string, string> = {
+  promocao: 'Aproveite agora.',
+  homenagem: 'Celebre com a gente.',
+  aviso: 'Saiba mais.',
+  oportunidade: 'Garanta a sua vaga.',
+  institucional: 'Conheça nosso trabalho.',
+};
+
+const OBJETIVO_HASHTAG_FALLBACK: Record<string, string[]> = {
+  promocao: ['promocao', 'oferta', 'novidade'],
+  homenagem: ['gratidao', 'historia', 'conquista'],
+  aviso: ['aviso', 'informacao', 'novidade'],
+  oportunidade: ['oportunidade', 'novidade', 'momento'],
+  institucional: ['marca', 'qualidade', 'confianca'],
+};
+
+const HASHTAG_FALLBACK_STOPWORDS = new Set([
+  'de', 'da', 'do', 'das', 'dos', 'para', 'com', 'em', 'no', 'na', 'nos', 'nas',
+  'uma', 'uns', 'umas', 'que', 'por', 'sobre', 'entre', 'mais', 'menos',
+]);
+
+// Deriva até 3 hashtags a partir de palavras significativas do negócio
+// (atividade, nome da empresa, informação-chave) — usado só quando o modelo
+// não retornou as 3 hashtags esperadas mesmo após retry.
+function deriveFallbackHashtags(
+  mainActivity: string,
+  companyName: string,
+  keyInfo: string,
+  sanitizeTag: (t: string) => string,
+): string[] {
+  const words = `${mainActivity} ${companyName} ${keyInfo}`.split(/[^\p{L}0-9]+/u).filter(Boolean);
+  const out: string[] = [];
+  for (const w of words) {
+    if (w.length < 4 || HASHTAG_FALLBACK_STOPWORDS.has(w.toLowerCase())) continue;
+    const tag = sanitizeTag(w);
+    if (!tag || tag.length < 4 || out.includes(tag)) continue;
+    out.push(tag);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
 export const Route = createFileRoute('/api/generate-caption')({
   server: {
     handlers: {
@@ -102,36 +146,67 @@ Regras:
 ${objetivo === 'institucional' ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ''}
 ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ''}`;
 
-          const result = await fetchOpenAIChat(apiKey, {
-            model: 'gpt-4.1-mini',
-            messages: [
-              { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
-              { role: 'user', content: userPrompt },
-            ],
-            temperature: 0.9,
-            response_format: { type: 'json_object' },
-          });
-
-          if (!result.ok) {
-            return Response.json({ error: result.error }, { status: result.status });
-          }
-          const content = result.data.choices?.[0]?.message?.content;
-          if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
-
-          let parsed: { texto?: string; cta?: string; hashtags?: unknown };
-          try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
-
           const sanitizeTag = (t: string) =>
             t
               .toLowerCase()
               .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/[̀-ͯ]/g, '')
               .replace(/[^a-z0-9]/g, '')
               .slice(0, 30);
 
-          const hashtagsArr = Array.isArray(parsed.hashtags)
-            ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean).slice(0, 3)
-            : [];
+          // D1+E3 — valida "cta" (não vazio, terminando em ./!/?) e
+          // "hashtags" (EXATAMENTE 3); se faltar algo, repete a chamada uma
+          // vez com reforço explícito antes de cair no fallback determinístico (E4).
+          const MAX_CAPTION_ATTEMPTS = 2;
+          let textoValue = '';
+          let ctaValue = '';
+          let hashtagsArr: string[] = [];
+
+          for (let attempt = 1; attempt <= MAX_CAPTION_ATTEMPTS; attempt++) {
+            const result = await fetchOpenAIChat(apiKey, {
+              model: 'gpt-4.1-mini',
+              messages: [
+                { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
+                {
+                  role: 'user',
+                  content: attempt === 1
+                    ? userPrompt
+                    : `${userPrompt}\n\nATENÇÃO: a resposta anterior não preencheu corretamente "cta" e/ou "hashtags". Garanta os TRÊS campos: "texto", "cta" (não vazio, terminando com PONTO FINAL) e "hashtags" (array com EXATAMENTE 3 itens válidos).`,
+                },
+              ],
+              temperature: 0.9,
+              response_format: { type: 'json_object' },
+            });
+
+            if (!result.ok) {
+              return Response.json({ error: result.error }, { status: result.status });
+            }
+            const content = result.data.choices?.[0]?.message?.content;
+            if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
+
+            let parsed: { texto?: string; cta?: string; hashtags?: unknown };
+            try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
+
+            textoValue = String(parsed.texto || '').trim();
+            ctaValue = String(parsed.cta || '').trim();
+            hashtagsArr = Array.isArray(parsed.hashtags)
+              ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean).slice(0, 3)
+              : [];
+
+            const ctaOk = ctaValue !== '' && /[.!?]$/.test(ctaValue);
+            const hashtagsOk = hashtagsArr.length === 3;
+            if (ctaOk && hashtagsOk) break;
+
+            if (attempt === MAX_CAPTION_ATTEMPTS) {
+              if (!ctaOk) ctaValue = OBJETIVO_CTA_FALLBACK[objetivo] || OBJETIVO_CTA_FALLBACK.promocao;
+              if (!hashtagsOk) {
+                const derived = deriveFallbackHashtags(mainActivity, companyName, keyInfo, sanitizeTag)
+                  .filter((t) => !hashtagsArr.includes(t));
+                const fallback = OBJETIVO_HASHTAG_FALLBACK[objetivo] || OBJETIVO_HASHTAG_FALLBACK.promocao;
+                hashtagsArr = [...new Set([...hashtagsArr, ...derived, ...fallback])].slice(0, 3);
+              }
+            }
+          }
 
           if (debit && userId) {
             try {
@@ -143,8 +218,8 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
 
           const cap = (s: string) => { const t = s.trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
           return Response.json({
-            texto: cap(String(parsed.texto || '')),
-            cta:   cap(String(parsed.cta   || '')),
+            texto: cap(textoValue),
+            cta:   cap(ctaValue),
             hashtags: hashtagsArr,
           });
         } catch (e) {

@@ -12,7 +12,11 @@ function getRule(kind: Kind, formato: string): { label: string; rule: string; ma
   if (kind === 'legenda') {
     return {
       label: 'legenda do post',
-      rule: 'Até 40 palavras, voz humana brasileira, com 1 chamada ao final. Pode usar emojis com moderação. NÃO inclua hashtags.',
+      rule: `Estrutura OBRIGATÓRIA em exatamente 3 parágrafos, separados por LINHA EM BRANCO (uma quebra de linha dupla):
+1) Corpo: até 30 palavras, retomando o conceito central do título/imagem, terminando com PONTO FINAL.
+2) CTA: 1 frase curta (máx. 6 palavras), terminando com PONTO FINAL — varie, ex.: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.".
+3) Hashtags: EXATAMENTE 3, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia), coerentes com o segmento — nunca genéricas demais.
+Total corpo + CTA: até 40 palavras (sem contar as hashtags). Formato final exato: "{corpo}\\n\\n{CTA}\\n\\n#hash1 #hash2 #hash3". Nunca emojis nas hashtags.`,
       max: 40,
     };
   }
