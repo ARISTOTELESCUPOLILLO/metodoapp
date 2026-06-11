@@ -3,7 +3,7 @@ import { detectEditorialProfile } from '@/data/editorialProfiles';
 import { getVoiceProfile } from '@/data/brandVoice';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
-import { truncateWords, validateSugestao } from '@/core/textValidation';
+import { truncateWords, validateSugestao, checkInventedPromotion } from '@/core/textValidation';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -98,9 +98,27 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           // Na MOP, objetivo de peça (ex.: 'promocao') pertence à PU e não deve
           // remover a proteção contra invenções — a sequência do Método OP nunca
           // inventa datas/descontos/promoções independente do objetivo enviado.
-          const proibicoesInventar = (mode === 'metodo' || (objetivo !== 'promocao' && objetivo !== 'oportunidade'))
-            ? `PROIBIDO inventar: datas • descontos • promoções • eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
+          const proibicoesInventarMop = mode === 'metodo'
+            ? ' No Método OP a Informação-chave abre uma SEQUÊNCIA — não é uma peça de promoção: NÃO use linguagem promocional/comercial nesta sugestão, mesmo que pareça natural, a menos que o texto atual do usuário já peça isso explicitamente.'
             : '';
+          const proibicoesInventar = (mode === 'metodo' || (objetivo !== 'promocao' && objetivo !== 'oportunidade'))
+            ? `PROIBIDO inventar promoção, desconto, percentual, prazo, data, urgência ou oferta que o usuário não tenha fornecido — isso inclui termos como "promoção", "desconto", "off", "grátis", "oferta especial", "lançamento", "agenda aberta", "hoje", "até domingo" (ou qualquer outro dia/data/prazo) e chamadas de urgência ("não perca", "última chance", "por tempo limitado"). Esses termos só podem aparecer se já estiverem na pista do usuário, no assunto obrigatório (Ideias) ou na atividade da empresa informada acima.${proibicoesInventarMop} PROIBIDO também inventar: eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
+            : '';
+
+          // allowedContext: termos de promoção/desconto/prazo/urgência só passam
+          // pela checkInventedPromotion (D1) se já estiverem aqui — pista do
+          // usuário, assunto obrigatório (Ideias) ou atividade/empresa.
+          const allowedContext = [
+            hint,
+            mainActivity,
+            companyName,
+            topicoGuia?.categoria,
+            topicoGuia?.subtitulo,
+            topicoGuia?.item,
+          ].filter(Boolean).join(' ');
+          // PU com objetivo 'promocao'/'oportunidade': o próprio objetivo da peça
+          // pede oferta/urgência — não reprovar por isso (igual a proibicoesInventar).
+          const skipPromoCheck = mode === 'postunico' && (objetivo === 'promocao' || objetivo === 'oportunidade');
 
           const criteriosRefinamentoOP = `CRITÉRIOS DE QUALIDADE — PROCESSO DE REFINAMENTO:
 
@@ -583,6 +601,9 @@ Retorne JSON EXATAMENTE assim:
             if (!sugestao) return Response.json({ error: 'Sugestão vazia' }, { status: 502 });
 
             motivos = validateSugestao(sugestao);
+            if (!skipPromoCheck) {
+              motivos = motivos.concat(checkInventedPromotion(sugestao, allowedContext));
+            }
             if (motivos.length === 0) break;
           }
 

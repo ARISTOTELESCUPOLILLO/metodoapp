@@ -47,7 +47,11 @@
       "Bash(Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"E:\\\\CLIENTES\\\\OPROPAGANDA\\\\METODO OP _CLAUDE_CODE\\\\dev-server\" -Recurse -Filter \"*.tsx\" -o FullName)",
       "Bash(Select-String -Pattern \"\\(UsersTab|CobrancasTab\\)\")",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git status *)",
+      "Bash(NODE_OPTIONS=--use-system-ca npm run build)",
+      "Bash(find . -maxdepth 3 -iname \"*migration*\" -not -path \"./node_modules/*\" -not -path \"./supabase/migrations/*\")",
+      "Bash(ls scripts *)"
     ]
   }
 }

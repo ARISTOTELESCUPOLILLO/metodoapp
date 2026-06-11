@@ -426,6 +426,48 @@ export function validateSugestao(sugestao: string): string[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Sugestão — bloqueio de promoção/urgência/data inventada
+// ─────────────────────────────────────────────────────────────────────────
+
+// Cada grupo cobre uma forma de "promessa comercial" que a sugestão não pode
+// inventar (promoção, desconto, percentual, prazo, data, urgência, oferta).
+// Padrões aplicados sobre texto normalizado (minúsculo, sem acento).
+const INVENTED_PROMO_GROUPS: { label: string; re: RegExp }[] = [
+  { label: 'promoção/promocional', re: /\bpromoc/ },
+  { label: 'desconto', re: /\bdesconto/ },
+  { label: '"off" de desconto', re: /\boff\b/ },
+  { label: 'percentual (%)', re: /\d+\s*%/ },
+  { label: 'grátis/gratuito', re: /\bgratis|\bgratuit/ },
+  { label: 'oferta', re: /\boferta/ },
+  { label: 'lançamento', re: /\blancamento/ },
+  { label: 'liquidação/saldão', re: /\bliquidac|\bsaldao/ },
+  { label: 'agenda/vagas aberta(s)', re: /\b(agenda|vagas?)\s+abert/ },
+  {
+    label: 'prazo/data/urgência (hoje, até X, esta semana, última chance...)',
+    re: /\b(hoje|amanha|esta semana|essa semana|este fim de semana|por tempo limitado|ultimas? (vagas?|unidades?|chances?|dias?)|nao perca|so hoje|ate (domingo|segunda|terca|quarta|quinta|sexta|sabado))\b/,
+  },
+];
+
+// Reprova quando a sugestão (botão "Sugestão"/keyInfo) inventa promoção,
+// desconto, percentual, prazo, data, urgência ou oferta que o usuário não
+// forneceu. `allowedContext` reúne pista do usuário + assunto do botão Ideias
+// + atividade/empresa — termos só são permitidos se já constarem ali (ou se o
+// objetivo da peça explicitamente pedir promoção/oportunidade, ver chamada).
+export function checkInventedPromotion(sugestao: string, allowedContext: string): string[] {
+  const motivos: string[] = [];
+  const sugNorm = normalizeForCompare(sugestao);
+  const ctxNorm = normalizeForCompare(allowedContext);
+
+  for (const { label, re } of INVENTED_PROMO_GROUPS) {
+    if (re.test(sugNorm) && !re.test(ctxNorm)) {
+      motivos.push(`sugestão inventa "${label}" sem isso constar na informação/contexto do usuário`);
+    }
+  }
+
+  return motivos;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // E4 — limpeza determinística (fallback final, sem chamada de API)
 // ─────────────────────────────────────────────────────────────────────────
 
