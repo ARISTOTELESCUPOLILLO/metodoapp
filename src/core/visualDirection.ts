@@ -411,6 +411,68 @@ export function buildSceneRoleRule(opts?: { includeConcreteAction?: boolean }): 
   );
 }
 
+// Bloco canônico "hierarquia produto x cenário/avatar" — fonte única para MOP e PU.
+// Quando o Kit Imagem combina PRODUTO com CENÁRIO e/ou AVATAR, sem uma regra explícita
+// de protagonismo o modelo de imagem tende a deixar o produto referenciado virar
+// coadjuvante: pequeno, ao fundo, cortado ou encoberto, enquanto outro elemento (móvel
+// já presente no cenário, ou o avatar) vira o "herói" da composição. Este bloco força o
+// produto a ser sempre o protagonista visual, rebaixa elementos concorrentes do cenário
+// a pano de fundo, e instrui o avatar a apresentar o produto em vez de competir com ele.
+const PRODUTO_PROTAGONISMO_SINGULAR =
+  'REGRA DE PROTAGONISMO DO PRODUTO — INEGOCIÁVEL: o PRODUTO referenciado é o HERÓI ABSOLUTO desta composição. ' +
+  'DEVE aparecer em primeiro plano, GRANDE — ocupando no mínimo 30-40% da área visível do quadro —, em foco nítido, bem iluminado, e ser o PRIMEIRO elemento que o olho identifica. ' +
+  'Tudo o mais na cena (ambiente, móveis, objetos, pessoas) é coadjuvante. ' +
+  'Se a composição "realista" esconderia o produto (ex.: armário encostado na parede ao fundo, cadeira embaixo de alguém sentado, prateleira atrás de uma mesa), ADAPTE A CÂMERA — não o papel do produto: aproxime o enquadramento, escolha um ângulo que revele sua forma por inteiro, use profundidade de campo que mantenha o produto nítido enquanto o resto desfoca. ' +
+  'PROIBIDO um enquadramento em que o produto fique pequeno, distante, cortado ou parcialmente encoberto. ' +
+  'Teste: ao olhar a imagem por 1 segundo, o produto deve ser a primeira coisa que se vê.';
+
+const PRODUTO_PROTAGONISMO_PLURAL =
+  'REGRA DE PROTAGONISMO DOS PRODUTOS — INEGOCIÁVEL: os PRODUTOS referenciados são os HERÓIS ABSOLUTOS desta composição. ' +
+  'DEVEM aparecer em primeiro plano, GRANDES — ocupando juntos no mínimo 30-40% da área visível do quadro —, em foco nítido, bem iluminados, e ser os PRIMEIROS elementos que o olho identifica. ' +
+  'Tudo o mais na cena (ambiente, móveis, objetos, pessoas) é coadjuvante. ' +
+  'Se a composição "realista" esconderia algum dos produtos (ex.: armário encostado na parede ao fundo, cadeira embaixo de alguém sentado, prateleira atrás de uma mesa), ADAPTE A CÂMERA — não o papel dos produtos: aproxime o enquadramento, escolha um ângulo que revele a forma de cada um por inteiro, use profundidade de campo que mantenha os produtos nítidos enquanto o resto desfoca. ' +
+  'PROIBIDO um enquadramento em que qualquer um dos produtos fique pequeno, distante, cortado ou parcialmente encoberto. ' +
+  'Teste: ao olhar a imagem por 1 segundo, os produtos devem estar entre as primeiras coisas que se vê.';
+
+const CENARIO_VS_PRODUTO_SINGULAR =
+  'CENÁRIO vs PRODUTO — REGRA ANTI-ROUBO DE CENA: o cenário de referência é PANO DE FUNDO e contexto, NUNCA protagonista. ' +
+  'Outros móveis/objetos que JÁ EXISTEM na foto do cenário e pertencem à mesma categoria do produto (outras cadeiras, outras mesas, outros armários de uma loja de móveis, por exemplo) NÃO PODEM virar o "herói disfarçado" da cena. ' +
+  'PROIBIDO qualquer item do cenário aparecer em primeiro plano, maior, mais central ou mais nítido que o produto referenciado. ' +
+  'Esses outros itens ficam VISIVELMENTE secundários — menores, mais ao fundo, desfocados ou cortados nas bordas. ' +
+  'Existe um único protagonista nítido e dominante nesta imagem: o produto referenciado.';
+
+const CENARIO_VS_PRODUTO_PLURAL =
+  'CENÁRIO vs PRODUTOS — REGRA ANTI-ROUBO DE CENA: o cenário de referência é PANO DE FUNDO e contexto, NUNCA protagonista. ' +
+  'Outros móveis/objetos que JÁ EXISTEM na foto do cenário e pertencem à mesma categoria dos produtos (outras cadeiras, outras mesas, outros armários de uma loja de móveis, por exemplo) NÃO PODEM virar o "herói disfarçado" da cena. ' +
+  'PROIBIDO qualquer item do cenário aparecer em primeiro plano, maior, mais central ou mais nítido que os produtos referenciados. ' +
+  'Esses outros itens ficam VISIVELMENTE secundários — menores, mais ao fundo, desfocados ou cortados nas bordas. ' +
+  'Os protagonistas nítidos e dominantes nesta imagem são os produtos referenciados.';
+
+const AVATAR_VS_PRODUTO_SINGULAR =
+  'AVATAR vs PRODUTO — REGRA DE APRESENTAÇÃO: a pessoa existe na cena PARA APRESENTAR o produto, nunca para competir com ele. ' +
+  'A pose DEVE mostrar o produto: pessoa ao lado dele, gesticulando para ele, exibindo-o ou usando-o de um ângulo que revele sua forma por inteiro. ' +
+  'PROIBIDO o corpo da pessoa cobrir a maior parte do produto. PROIBIDO a pessoa dominar o quadro enquanto o produto vira coadjuvante. ' +
+  'Se o produto é algo que se usa sentado ou apoiado (cadeira, poltrona, mesa), prefira a pessoa AO LADO ou ATRÁS dele, apresentando-o — ou um ângulo de câmera em que o produto apareça inteiro e reconhecível mesmo em uso. ' +
+  'Na dúvida entre valorizar a pessoa ou o produto, valorize SEMPRE o produto.';
+
+const AVATAR_VS_PRODUTO_PLURAL =
+  'AVATAR vs PRODUTOS — REGRA DE APRESENTAÇÃO: a pessoa existe na cena PARA APRESENTAR os produtos, nunca para competir com eles. ' +
+  'A pose DEVE mostrar os produtos: pessoa próxima a eles, gesticulando para eles, exibindo-os ou usando-os de ângulos que revelem suas formas por inteiro. ' +
+  'PROIBIDO o corpo da pessoa cobrir a maior parte de qualquer um dos produtos. PROIBIDO a pessoa dominar o quadro enquanto os produtos viram coadjuvantes. ' +
+  'Se algum produto é algo que se usa sentado ou apoiado (cadeira, poltrona, mesa), prefira a pessoa AO LADO ou ATRÁS dele, apresentando-o — ou um ângulo de câmera em que os produtos apareçam inteiros e reconhecíveis mesmo em uso. ' +
+  'Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE os produtos.';
+
+export function buildProductHierarchyBlock(opts: { produtosCount: number; hasCenario: boolean; hasAvatar: boolean }): string {
+  const { produtosCount, hasCenario, hasAvatar } = opts;
+  if (produtosCount <= 0) return '';
+  const multi = produtosCount > 1;
+
+  const lines: string[] = [multi ? PRODUTO_PROTAGONISMO_PLURAL : PRODUTO_PROTAGONISMO_SINGULAR];
+  if (hasCenario) lines.push(multi ? CENARIO_VS_PRODUTO_PLURAL : CENARIO_VS_PRODUTO_SINGULAR);
+  if (hasAvatar) lines.push(multi ? AVATAR_VS_PRODUTO_PLURAL : AVATAR_VS_PRODUTO_SINGULAR);
+  return lines.join('\n');
+}
+
 // Monta o resumo da gramática visual canônica de um mood (tensão Dondis +
 // luz/paleta/composição/câmera/detalhe + regra inegociável) para uso fora do
 // motor MOP — hoje consumido pelo PU em direcaoBlock. Fonte única junto com

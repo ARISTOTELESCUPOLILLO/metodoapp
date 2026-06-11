@@ -4,7 +4,7 @@ import type { FeedItem } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
-import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule } from '../core/visualDirection';
+import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule, buildProductHierarchyBlock } from '../core/visualDirection';
 import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
@@ -373,12 +373,26 @@ A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, n
       const produtoGuard = segment !== 'VAREJO'
         ? ' Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço.'
         : '';
-      parts.push(`CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. Preserve a sala, móveis, equipamentos, paredes e ponto de vista. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
+      const temProduto = !!(refs.produtos && refs.produtos.length);
+      const ambienteClause = temProduto
+        ? 'preserve a arquitetura, paredes, piso, iluminação geral e identidade visual do ambiente — móveis e objetos do cenário aparecem apenas como FUNDO de apoio, atrás e ao redor do produto referenciado, nunca à frente dele nem maiores ou mais nítidos que ele'
+        : 'preserve a sala, móveis, equipamentos, paredes e ponto de vista';
+      const anguloClause = temProduto
+        ? 'Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local.'
+        : 'NÃO mude o ângulo.';
+      parts.push(`CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`);
     }
   }
   if (refs.produtos && refs.produtos.length) {
     const lista = refs.produtos.map((p) => `Produto ${p.num}`).join(', ');
     parts.push(`PRODUTOS SELECIONADOS (${lista}): elementos principais da composição. Preservar embalagem, formato, cores principais e características físicas. Apresentar de forma integrada à cena, evitando aparência de catálogo técnico ou montagem artificial.`);
+    parts.push(
+      buildProductHierarchyBlock({
+        produtosCount: refs.produtos.length,
+        hasCenario: !!refs.cenario,
+        hasAvatar: !!refs.avatar,
+      }),
+    );
   }
   parts.push(`INTEGRAÇÃO: combinar os elementos de forma natural, elegante e coerente — adapte iluminação, profundidade e atmosfera ao mood. Resultado deve parecer campanha visual profissional, não colagem.`);
   return parts.join('\n\n');

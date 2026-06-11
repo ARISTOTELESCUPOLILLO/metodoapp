@@ -16,6 +16,7 @@ import type {
   ElementoPersonalizacao,
   SlotPersonalizacao,
 } from '../core/personalizacaoMop';
+import { buildProductHierarchyBlock } from '../core/visualDirection';
 
 export interface RegenerateInput {
   // Slot recomendado pela tabela de personalização do MOP
@@ -193,6 +194,10 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
   // case com a posição em image_urls no servidor.
   const lines: string[] = [];
   let idx = 1;
+  // Quando há produto referenciado, o cenário deixa de "travar" móveis/ângulo
+  // originais — vira pano de fundo de apoio, e a câmera pode se reposicionar
+  // para dar protagonismo ao produto (ver buildProductHierarchyBlock abaixo).
+  const temProduto = !!refs.produtos?.length;
   if (refs.avatar) {
     const clothingHint = kitColors
       ? (() => {
@@ -230,12 +235,19 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
       // "ponto de vista da câmera" só entra na lista de preservação quando NÃO
       // estamos variando o enquadramento — caso contrário a frase contradiria
       // a liberação de ângulo/distância dada pelo framingClause abaixo.
-      const ambienteInternoClause = variaEnquadramento
-        ? 'preserve sala, móveis, equipamentos e paredes'
-        : 'preserve sala, móveis, equipamentos, paredes e ponto de vista da câmera';
+      // Com produto referenciado, os móveis/objetos do cenário viram fundo de
+      // apoio (não competem pelo protagonismo) e a câmera fica livre para se
+      // reposicionar a favor do produto — ver framingClause abaixo.
+      const ambienteInternoClause = temProduto
+        ? 'preserve a arquitetura, paredes, piso, iluminação geral e identidade visual do ambiente — móveis e objetos do cenário aparecem apenas como FUNDO de apoio, atrás e ao redor do produto referenciado, nunca à frente dele nem maiores ou mais nítidos que ele'
+        : variaEnquadramento
+          ? 'preserve sala, móveis, equipamentos e paredes'
+          : 'preserve sala, móveis, equipamentos, paredes e ponto de vista da câmera';
       const framingClause = framingPick
         ? `Pode variar o ÂNGULO e a DISTÂNCIA DA CÂMERA — mas continue sendo claramente reconhecível como o MESMO AMBIENTE, com a mesma arquitetura, móveis/objetos e identidade visual. ENQUADRAMENTO DESTE CARD: ${framingPick}.`
-        : `NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo.`;
+        : temProduto
+          ? 'NÃO invente outro local, NÃO troque os objetos. Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local.'
+          : 'NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo.';
       // SERVIÇOS/MARCA: produtos de terceiros visíveis no cenário real (ex.: embalagens
       // de marca em obra) não devem "vazar" pra peça — a política de referências
       // dessas combinações não inclui produtos (ver referenciasPolicy.ts).
@@ -245,7 +257,7 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
       lines.push(
         reilumina
           ? `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${ambienteInternoClause}.${produtoGuard} NÃO invente outro local, NÃO troque os objetos. ${framingClause} A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os objetos do ambiente, mas adapte a luz para casar com o mood claro.`
-          : `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${ambienteInternoClause}${variaEnquadramento ? '' : ', mesma iluminação'}.${produtoGuard} NÃO invente outro local, NÃO troque os objetos. ${framingClause} Apenas adicione/adapte o personagem e a ação descritos abaixo dentro deste espaço real.`,
+          : `IMAGEM #${idx} = CENÁRIO OBRIGATÓRIO. Use EXATAMENTE este espaço: ${ambienteInternoClause}${(variaEnquadramento || temProduto) ? '' : ', mesma iluminação'}.${produtoGuard} NÃO invente outro local, NÃO troque os objetos. ${framingClause} Apenas adicione/adapte o personagem e a ação descritos abaixo dentro deste espaço real.`,
       );
     }
     idx++;
@@ -254,6 +266,13 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
     const n = refs.produtos.length;
     lines.push(
       `IMAGEM${n > 1 ? 'NS' : ''} #${idx}${n > 1 ? `..#${idx + n - 1}` : ''} = PRODUTO${n > 1 ? 'S' : ''} OBRIGATÓRIO${n > 1 ? 'S' : ''}. Use EXATAMENTE este produto, com mesmo formato, mesma cor, mesmo rótulo e mesma embalagem. Não invente outra versão, não troque a marca, não altere o design.`,
+    );
+    lines.push(
+      buildProductHierarchyBlock({
+        produtosCount: n,
+        hasCenario: !!refs.cenario,
+        hasAvatar: !!refs.avatar,
+      }),
     );
     if (n >= 2) {
       lines.push(
