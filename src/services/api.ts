@@ -2,6 +2,7 @@ import { buildMetodoOpPrompt, normalizeMethodResult } from '../core/organizaMeth
 import { pickImageVariationBlock } from '../core/visualDirection';
 import { ContentFormData, LogoPosition, MethodOpResult, MoodCode } from '../types';
 import { generateImageAsync } from './imageGeneration';
+import { autoRegenerateFlaggedFields } from './autoRegenerate';
 import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
 import { DEVICE_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +32,7 @@ export async function generateMethodContent(data: ContentFormData, preferredSlot
       prompt,
       sequenceSize: data.sequenceSize,
       track: data.track,
+      wantsStories: data.outputMode === 'stories' || data.outputMode === 'feed+stories',
       ...(preferredSlot ? { preferredSlot } : {}),
     }),
   });
@@ -79,7 +81,8 @@ export async function generateMethodContent(data: ContentFormData, preferredSlot
     try { parsed = JSON.parse(full); } catch {
       throw new Error('Resposta do gerador veio incompleta. Tente novamente.');
     }
-    return normalizeMethodResult(parsed, data.track, data.sequenceSize);
+    const result = normalizeMethodResult(parsed, data.track, data.sequenceSize, data.keyInfo);
+    return autoRegenerateFlaggedFields(result, { companyName: data.companyName, mainActivity: data.mainActivity, keyInfo: data.keyInfo });
   }
 
   // Caminho 2 (fallback): resposta não-stream (erro JSON ou texto de gateway).
@@ -96,7 +99,8 @@ export async function generateMethodContent(data: ContentFormData, preferredSlot
     throw new Error(msg);
   }
   // Compat: rota antiga devolvia { result }.
-  return normalizeMethodResult(payload.result, data.track, data.sequenceSize);
+  const result = normalizeMethodResult(payload.result, data.track, data.sequenceSize, data.keyInfo);
+  return autoRegenerateFlaggedFields(result, { companyName: data.companyName, mainActivity: data.mainActivity, keyInfo: data.keyInfo });
 }
 
 // fal.ai removido — usamos diretamente OpenAI gpt-image-2 via /api/generate-image

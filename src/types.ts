@@ -103,6 +103,14 @@ export interface MethodOpResult {
   stories?: StoriesSequence[];
   raw?: unknown;
   summary?: GenerationSummary;
+  // D1 — reprovações heurísticas pós-geração (não bloqueiam a entrega; usadas
+  // pela orquestração de regeneração pontual no cliente, ver E3).
+  flags?: ValidationFlag[];
+}
+
+export interface ValidationFlag {
+  campo: string;
+  motivo: string;
 }
 
 export type PostUnicoObjetivo = 'promocao' | 'homenagem' | 'aviso' | 'oportunidade' | 'institucional' | 'fatos' | 'nenhum';

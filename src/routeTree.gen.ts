@@ -26,6 +26,7 @@ import { Route as ApiTtsVoiceRouteImport } from './routes/api/tts-voice'
 import { Route as ApiSupabasePdfRouteImport } from './routes/api/supabase-pdf'
 import { Route as ApiSuggestKeyinfoRouteImport } from './routes/api/suggest-keyinfo'
 import { Route as ApiRegenerateBlockRouteImport } from './routes/api/regenerate-block'
+import { Route as ApiJudgeContentRouteImport } from './routes/api/judge-content'
 import { Route as ApiGenerateVideoRouteImport } from './routes/api/generate-video'
 import { Route as ApiGeneratePuCopyRouteImport } from './routes/api/generate-pu-copy'
 import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
@@ -130,6 +131,11 @@ const ApiSuggestKeyinfoRoute = ApiSuggestKeyinfoRouteImport.update({
 const ApiRegenerateBlockRoute = ApiRegenerateBlockRouteImport.update({
   id: '/api/regenerate-block',
   path: '/api/regenerate-block',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiJudgeContentRoute = ApiJudgeContentRouteImport.update({
+  id: '/api/judge-content',
+  path: '/api/judge-content',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGenerateVideoRoute = ApiGenerateVideoRouteImport.update({
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/generate-pu-copy': typeof ApiGeneratePuCopyRoute
   '/api/generate-video': typeof ApiGenerateVideoRoute
+  '/api/judge-content': typeof ApiJudgeContentRoute
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
@@ -297,6 +304,7 @@ export interface FileRoutesByTo {
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/generate-pu-copy': typeof ApiGeneratePuCopyRoute
   '/api/generate-video': typeof ApiGenerateVideoRoute
+  '/api/judge-content': typeof ApiJudgeContentRoute
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/generate-pu-copy': typeof ApiGeneratePuCopyRoute
   '/api/generate-video': typeof ApiGenerateVideoRoute
+  '/api/judge-content': typeof ApiJudgeContentRoute
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
@@ -378,6 +387,7 @@ export interface FileRouteTypes {
     | '/api/generate-image'
     | '/api/generate-pu-copy'
     | '/api/generate-video'
+    | '/api/judge-content'
     | '/api/regenerate-block'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
@@ -417,6 +427,7 @@ export interface FileRouteTypes {
     | '/api/generate-image'
     | '/api/generate-pu-copy'
     | '/api/generate-video'
+    | '/api/judge-content'
     | '/api/regenerate-block'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
@@ -456,6 +467,7 @@ export interface FileRouteTypes {
     | '/api/generate-image'
     | '/api/generate-pu-copy'
     | '/api/generate-video'
+    | '/api/judge-content'
     | '/api/regenerate-block'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
@@ -496,6 +508,7 @@ export interface RootRouteChildren {
   ApiGenerateImageRoute: typeof ApiGenerateImageRoute
   ApiGeneratePuCopyRoute: typeof ApiGeneratePuCopyRoute
   ApiGenerateVideoRoute: typeof ApiGenerateVideoRoute
+  ApiJudgeContentRoute: typeof ApiJudgeContentRoute
   ApiRegenerateBlockRoute: typeof ApiRegenerateBlockRoute
   ApiSuggestKeyinfoRoute: typeof ApiSuggestKeyinfoRoute
   ApiSupabasePdfRoute: typeof ApiSupabasePdfRoute
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       path: '/api/regenerate-block'
       fullPath: '/api/regenerate-block'
       preLoaderRoute: typeof ApiRegenerateBlockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/judge-content': {
+      id: '/api/judge-content'
+      path: '/api/judge-content'
+      fullPath: '/api/judge-content'
+      preLoaderRoute: typeof ApiJudgeContentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/generate-video': {
@@ -800,6 +820,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGenerateImageRoute: ApiGenerateImageRoute,
   ApiGeneratePuCopyRoute: ApiGeneratePuCopyRoute,
   ApiGenerateVideoRoute: ApiGenerateVideoRoute,
+  ApiJudgeContentRoute: ApiJudgeContentRoute,
   ApiRegenerateBlockRoute: ApiRegenerateBlockRoute,
   ApiSuggestKeyinfoRoute: ApiSuggestKeyinfoRoute,
   ApiSupabasePdfRoute: ApiSupabasePdfRoute,

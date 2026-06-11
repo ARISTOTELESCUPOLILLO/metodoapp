@@ -1,0 +1,341 @@
+// Validação heurística pós-geração (determinística, sem custo de API) +
+// truncamento por limite de palavras — único local, usado por
+// normalizeMethodResult, regenerate-block, generate-pu-copy e PostUnicoForm
+// (substitui as cópias antes duplicadas em cada um desses arquivos).
+
+import type { ValidationFlag } from '../types';
+
+export type { ValidationFlag };
+
+const TRUNCATE_TRAILING_WORDS = 'e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo';
+
+export function truncateWords(s: string, max: number): string {
+  const text = String(s ?? '');
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= max) return text.trim();
+
+  const truncated = words.slice(0, max).join(' ')
+    .replace(/[,;:\-–—]+$/, '');
+
+  // Prefere corte em limite de frase completa dentro do trecho
+  const m = truncated.match(/^(.*[.!?])\s+\S/);
+  if (m) return m[1].trim();
+
+  // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
+  return truncated
+    .replace(new RegExp(`\\s+(${TRUNCATE_TRAILING_WORDS})\\s*$`, 'i'), '')
+    .trim();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// D1 — heurísticas determinísticas pós-geração
+// ─────────────────────────────────────────────────────────────────────────
+
+// Item 1: terminação "pendurada" — conjunto ampliado em relação ao usado por
+// truncateWords. Além de conjunções/preposições/verbos de ligação, inclui
+// artigos indefinidos, pronomes relativos/possessivos/demonstrativos,
+// advérbios comparativos pendentes, verbos auxiliares sem complemento e
+// conjunções subordinativas.
+const DANGLING_END_WORDS = new Set([
+  'e', 'ou', 'mas', 'que', 'se', 'nem', 'de', 'da', 'do', 'das', 'dos', 'para', 'com', 'em',
+  'a', 'o', 'as', 'os', 'ao', 'aos', 'à', 'às', 'por', 'pois', 'até', 'ante', 'após', 'sob',
+  'sobre', 'entre', 'contra', 'desde', 'durante', 'sem', 'via',
+  'é', 'foi', 'era', 'será', 'está', 'estava', 'ficou', 'parece', 'fica', 'são', 'eram',
+  'serão', 'sendo', 'tendo',
+  // artigos indefinidos
+  'um', 'uma', 'uns', 'umas',
+  // pronomes relativos/possessivos/demonstrativos
+  'qual', 'quais', 'cujo', 'cuja', 'cujos', 'cujas',
+  'meu', 'minha', 'meus', 'minhas', 'teu', 'tua', 'teus', 'tuas',
+  'seu', 'sua', 'seus', 'suas', 'nosso', 'nossa', 'nossos', 'nossas',
+  'este', 'esta', 'estes', 'estas', 'esse', 'essa', 'esses', 'essas',
+  'aquele', 'aquela', 'aqueles', 'aquelas', 'isto', 'isso', 'aquilo',
+  // advérbios comparativos/intensificadores pendentes
+  'mais', 'tão', 'menos', 'muito', 'muita', 'muitos', 'muitas', 'pouco', 'pouca', 'tanto', 'tanta',
+  // verbos auxiliares/modais sem complemento
+  'vai', 'vou', 'vamos', 'vão', 'vais', 'pode', 'podem', 'posso', 'podemos',
+  'quer', 'querem', 'quero', 'queremos', 'deve', 'devem', 'devo', 'devemos',
+  'vem', 'vêm', 'têm', 'tem', 'consegue', 'conseguem', 'precisa', 'precisam',
+  // conjunções subordinativas
+  'porque', 'quando', 'embora', 'caso', 'enquanto', 'portanto', 'então', 'logo', 'assim',
+  'contudo', 'todavia', 'entretanto', 'porém',
+]);
+
+// Consoantes finais raras em palavras nativas do português — sinal de
+// truncamento no meio de um token (ex.: "result" em vez de "resultado").
+const ATYPICAL_FINAL_CONSONANTS = /[bcdfghjkpqtvwy]$/i;
+
+function stripAccents(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function lastToken(text: string): string {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  return words[words.length - 1] || '';
+}
+
+// Item 1: detecta finalização "pendurada" — palavra que sugere corte
+// (conjunção/preposição/pronome/auxiliar sem complemento) ou pontuação de
+// transição (vírgula, dois-pontos, hífen, reticências).
+export function checkDanglingEnding(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  if (/[,;:\-–—]$/.test(trimmed) || /\.\.\.$|…$/.test(trimmed)) {
+    return 'termina com pontuação de transição (vírgula/dois-pontos/hífen/reticências), sugerindo corte';
+  }
+
+  const last = lastToken(trimmed).replace(/[.!?,;:'"()«»“”]+$/g, '');
+  if (!last) return null;
+
+  const lastNorm = stripAccents(last.toLowerCase());
+  if (DANGLING_END_WORDS.has(lastNorm)) {
+    return `termina com a palavra "${last}", que sugere frase incompleta/cortada`;
+  }
+
+  if (last.length >= 3 && ATYPICAL_FINAL_CONSONANTS.test(last) && !/[.!?]$/.test(trimmed)) {
+    return `última palavra "${last}" termina em consoante incomum no português, sugerindo corte no meio do token`;
+  }
+
+  return null;
+}
+
+const QUESTION_STARTERS = /^(por que|por quê|como|quando|onde|qual|quais|quem|o que|que|será que|pra que|para que|quanto|quanta|quantos|quantas)\b/i;
+
+// Itens 2/4: pontuação final esperada por tipo de campo + parênteses/aspas
+// desbalanceados (sinal de frase quebrada).
+export function checkPunctuation(text: string, kind: 'titulo' | 'texto' | 'legenda'): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const opens = (trimmed.match(/\(/g) || []).length;
+  const closes = (trimmed.match(/\)/g) || []).length;
+  if (opens !== closes) return 'parênteses desbalanceados';
+  const quotes = (trimmed.match(/"/g) || []).length;
+  if (quotes % 2 !== 0) return 'aspas desbalanceadas';
+
+  if (kind === 'titulo') {
+    const isPergunta = QUESTION_STARTERS.test(trimmed);
+    if (isPergunta && !/\?$/.test(trimmed)) {
+      return 'título é uma pergunta mas não termina com "?"';
+    }
+    if (!isPergunta && /[.!]$/.test(trimmed)) {
+      return 'título não-pergunta termina com ponto/exclamação (deveria não ter pontuação final)';
+    }
+    return null;
+  }
+
+  // texto / legenda
+  if (!/[.!?]$/.test(trimmed)) {
+    return `${kind} não termina com pontuação final (./!/?)`;
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Item 5 — repetição morfológica (stemming leve de sufixos PT comuns)
+// ─────────────────────────────────────────────────────────────────────────
+
+const STOPWORDS = new Set([
+  'a', 'o', 'as', 'os', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em', 'no', 'na', 'nos', 'nas',
+  'e', 'ou', 'mas', 'que', 'se', 'nem', 'para', 'com', 'por', 'ao', 'aos', 'à', 'às',
+  'é', 'são', 'foi', 'era', 'será', 'está', 'estava', 'ser', 'ter', 'tem', 'têm',
+  'seu', 'sua', 'seus', 'suas', 'este', 'esta', 'esse', 'essa', 'isso', 'isto',
+  'mais', 'menos', 'muito', 'muita', 'pouco', 'pouca', 'já', 'não', 'sem', 'sobre', 'entre', 'até',
+  'como', 'quando', 'onde', 'qual', 'quem', 'você', 'nosso', 'nossa', 'pelo', 'pela', 'pelos', 'pelas',
+]);
+
+const STEM_SUFFIXES = [
+  'acoes', 'acao', 'agens', 'agem', 'mente', 'ando', 'endo', 'indo',
+  'ados', 'adas', 'idos', 'idas', 'ado', 'ada', 'ido', 'ida',
+  'avel', 'aveis', 'oso', 'osa', 'osos', 'osas',
+  'al', 'ais', 'ar', 'er', 'ir', 'es', 'os', 'as', 'a', 'o', 'e', 's',
+];
+
+function stem(word: string): string {
+  let w = stripAccents(word.toLowerCase()).replace(/[^a-z]/g, '');
+  for (const suf of STEM_SUFFIXES) {
+    if (w.length - suf.length >= 3 && w.endsWith(suf)) {
+      w = w.slice(0, -suf.length);
+      break;
+    }
+  }
+  return w.slice(0, 5);
+}
+
+// Item 5: compara raízes (stemming leve) entre palavras de conteúdo dos
+// textos informados (ex.: título + texto do mesmo item) — reprova se a mesma
+// raiz aparece em palavras de superfície diferentes.
+export function checkMorphRepetition(texts: string[]): string | null {
+  const seen = new Map<string, string>();
+  for (const text of texts) {
+    const words = text.split(/[^\p{L}]+/u).filter(Boolean);
+    for (const word of words) {
+      if (word.length < 4) continue;
+      const norm = stripAccents(word.toLowerCase());
+      if (STOPWORDS.has(norm)) continue;
+      const root = stem(word);
+      if (root.length < 3) continue;
+      const prev = seen.get(root);
+      if (prev && prev !== norm) {
+        return `repetição morfológica: "${prev}" e "${norm}" compartilham a raiz "${root}"`;
+      }
+      if (!prev) seen.set(root, norm);
+    }
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Item 7 (subcaso numérico) — promessa numérica/oferta dura sem respaldo na keyInfo
+// ─────────────────────────────────────────────────────────────────────────
+
+const HARD_OFFER_TERMS = ['grátis', 'gratuito', 'gratuita', 'garantido', 'garantida', 'garantia', 'frete grátis', 'sem juros', 'cashback'];
+
+const NUMERIC_CLAIM_PATTERNS: RegExp[] = [
+  /\d+([.,]\d+)?\s*%/g,
+  /R\$\s*[\d.,]+/gi,
+  /\d+\s*(dias?|semanas?|mes(es)?|anos?|horas?|minutos?|min)\b/gi,
+  /\b\d+\s*x\b/gi,
+];
+
+function normalizeForCompare(s: string): string {
+  return stripAccents(s.toLowerCase());
+}
+
+// Item 7 (subcaso numérico): extrai %, R$, prazos, parcelamento e ofertas
+// duras de título/texto/legenda; reprova o que não tem respaldo (literal,
+// sem acento) na informação-chave. Sem keyInfo, não há base de comparação —
+// não reprova nada.
+export function checkNumericClaims(text: string, keyInfo: string): string[] {
+  const flags: string[] = [];
+  const keyNorm = normalizeForCompare(keyInfo || '');
+  if (!keyNorm) return flags;
+
+  for (const pattern of NUMERIC_CLAIM_PATTERNS) {
+    const matches = text.match(pattern) || [];
+    for (const raw of matches) {
+      const token = raw.trim();
+      const digits = token.replace(/[^\d]/g, '');
+      if (!digits) continue;
+      if (!keyNorm.includes(digits)) {
+        flags.push(`menciona "${token}" sem respaldo na informação-chave`);
+      }
+    }
+  }
+
+  const textNorm = normalizeForCompare(text);
+  for (const term of HARD_OFFER_TERMS) {
+    const termNorm = normalizeForCompare(term);
+    const firstWord = termNorm.split(' ')[0];
+    if (textNorm.includes(termNorm) && !keyNorm.includes(firstWord)) {
+      flags.push(`promete "${term}" sem respaldo na informação-chave`);
+    }
+  }
+
+  return flags;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Combinadores por tipo de campo
+// ─────────────────────────────────────────────────────────────────────────
+
+export function validateTitulo(titulo: string): string[] {
+  const motivos: string[] = [];
+  const dangling = checkDanglingEnding(titulo);
+  if (dangling) motivos.push(dangling);
+  const punct = checkPunctuation(titulo, 'titulo');
+  if (punct) motivos.push(punct);
+  return motivos;
+}
+
+export function validateTexto(texto: string): string[] {
+  const motivos: string[] = [];
+  const dangling = checkDanglingEnding(texto);
+  if (dangling) motivos.push(dangling);
+  const punct = checkPunctuation(texto, 'texto');
+  if (punct) motivos.push(punct);
+  return motivos;
+}
+
+export function validateLegenda(legenda: string): string[] {
+  const motivos: string[] = [];
+  const punct = checkPunctuation(legenda, 'legenda');
+  if (punct) motivos.push(punct);
+  return motivos;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// E4 — limpeza determinística (fallback final, sem chamada de API)
+// ─────────────────────────────────────────────────────────────────────────
+
+// Aplicada quando a regeneração via regenerate-block (E3) esgota as
+// tentativas e o campo ainda reprova D1. Corta para a última frase completa
+// (se houver), remove palavra(s) final(is) que sugerem corte e repontua —
+// um título de 4 palavras limpo é melhor que um de 6 quebrado.
+export function applyDeterministicFallback(value: string, kind: 'titulo' | 'texto' | 'legenda'): string {
+  let text = value.trim();
+  if (!text) return text;
+
+  const sentenceMatch = text.match(/^(.*[.!?])\s+\S/);
+  if (sentenceMatch) text = sentenceMatch[1].trim();
+
+  for (let i = 0; i < 3; i++) {
+    if (!checkDanglingEnding(text)) break;
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length <= 1) break;
+    words.pop();
+    text = words.join(' ').replace(/[,;:\-–—]+$/, '').trim();
+  }
+
+  if (kind === 'texto' || kind === 'legenda') {
+    if (!/[.!?]$/.test(text)) text += '.';
+  } else {
+    const isPergunta = QUESTION_STARTERS.test(text);
+    text = text.replace(/[.!]+$/, '');
+    if (isPergunta) {
+      if (!/\?$/.test(text)) text += '?';
+    } else {
+      text = text.replace(/\?+$/, '');
+    }
+  }
+
+  return text;
+}
+
+// Roda todas as heurísticas D1 sobre os campos de uma peça (estático, card de
+// carrossel ou reels — "hook"/"script" entram como titulo/texto) e devolve as
+// reprovações já endereçadas a `${prefix}.<campo>`. Não bloqueia a entrega —
+// apenas sinaliza para regeneração pontual (E3).
+export function validatePieceFields(
+  prefix: string,
+  fields: { titulo?: string; texto?: string; legenda?: string },
+  keyInfo?: string
+): ValidationFlag[] {
+  const flags: ValidationFlag[] = [];
+
+  if (fields.titulo) {
+    for (const motivo of validateTitulo(fields.titulo)) flags.push({ campo: `${prefix}.titulo`, motivo });
+  }
+  if (fields.texto) {
+    for (const motivo of validateTexto(fields.texto)) flags.push({ campo: `${prefix}.texto`, motivo });
+  }
+  if (fields.legenda) {
+    for (const motivo of validateLegenda(fields.legenda)) flags.push({ campo: `${prefix}.legenda`, motivo });
+  }
+
+  const morphTexts = [fields.titulo, fields.texto].filter((t): t is string => !!t);
+  if (morphTexts.length > 1) {
+    const morph = checkMorphRepetition(morphTexts);
+    if (morph) flags.push({ campo: prefix, motivo: morph });
+  }
+
+  if (keyInfo) {
+    const combined = [fields.titulo, fields.texto, fields.legenda].filter(Boolean).join(' ');
+    for (const motivo of checkNumericClaims(combined, keyInfo)) {
+      flags.push({ campo: prefix, motivo });
+    }
+  }
+
+  return flags;
+}

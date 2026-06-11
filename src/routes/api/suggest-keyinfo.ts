@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { detectEditorialProfile } from '@/data/editorialProfiles';
 import { getVoiceProfile } from '@/data/brandVoice';
 import { getUserIdFromRequest } from '@/lib/usage.server';
+import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -488,29 +489,20 @@ Retorne JSON EXATAMENTE assim:
             ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) segmento e atividade estão refletidos? Se sim para (2), troque por algo mais simples antes de responder. Limite: até 14 palavras por sugestão (ideal por volta de 12) — só passe de 12 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples. Frases com mais de 14 palavras devem ser cortadas antes de retornar.'
             : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule.';
 
-          const res = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4.1',
-              messages: [
-                { role: 'system', content: systemMsg },
-                { role: 'user', content: userPrompt },
-              ],
-              temperature: 0.95,
-              response_format: { type: 'json_object' },
-            }),
+          const result = await fetchOpenAIChat(apiKey, {
+            model: 'gpt-4.1-mini',
+            messages: [
+              { role: 'system', content: systemMsg },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.95,
+            response_format: { type: 'json_object' },
           });
 
-          if (!res.ok) {
-            const txt = await res.text();
-            return Response.json({ error: `OpenAI: ${txt}` }, { status: 502 });
+          if (!result.ok) {
+            return Response.json({ error: result.error }, { status: result.status });
           }
-          const data = await res.json();
-          const content = data.choices?.[0]?.message?.content;
+          const content = result.data.choices?.[0]?.message?.content;
           if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
 
           let parsed: { sugestao?: string };

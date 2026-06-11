@@ -1,6 +1,7 @@
-import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track } from '../types';
+import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from '../types';
 import { getVoiceProfile } from '../data/brandVoice';
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
+import { truncateWords, validatePieceFields } from './textValidation';
 
 interface MomentModulator {
   label: string;
@@ -168,7 +169,7 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} de produção):
 - Se a ideia envolver clientes, equipe, reunião ou atendimento, traduza visualmente para uma pessoa sozinha olhando para a câmera.
 - Campo "hook": título editorial do reels, NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas. Sem ponto final — EXCETO se for pergunta (direta ou retórica): nesse caso "?" é obrigatório (ex.: "Por que isso acontece?", "O que está faltando?").
 - Texto de tela em "screenText", frase curta até 7 palavras.
-- Roteiro falado (campo "script"): ESTRUTURA em 2 partes — (1) mensagem principal de 14 a 16 palavras curtas + ponto final + (2) CTA genérico de 5 a 6 palavras. TOTAL: 19 a 22 palavras → ~7 segundos em voz. CONTE as palavras antes de retornar.
+- Roteiro falado (campo "script"): ESTRUTURA em 2 partes — (1) mensagem principal de 14 a 16 palavras curtas + ponto final + (2) CTA genérico de 5 a 6 palavras. TOTAL: 19 a 22 palavras → ~7 segundos em voz.
   CTA OBRIGATORIAMENTE GENÉRICO — varie a cada geração, escolha entre: "Fale com a gente hoje.", "Entre em contato agora.", "Venha saber mais.", "Comece ainda hoje.", "Fale conosco agora.", "Dá pra começar hoje.", "A gente te ajuda.", "Vem com a gente.", "O primeiro passo é seu.", "Bora dar o próximo passo." — ou crie outro de mesmo tom. PROIBIDO mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
 - REGRA TTS — campo "script" (será LIDO em voz alta por sintetizador): USE palavras de 1 ou 2 sílabas sempre que possível. PROIBIDO: palavras com mais de 3 sílabas, siglas em caixa alta (APP→"app", CRM→"sistema", ROI→"retorno", KPI→"meta", IA→"inteligência"), anglicismos crus (link, lead, brief, deadline, framework), abreviações (vc, tb, p/). TRADUZA termos difíceis: "consultoria"→"apoio"; "estratégia"→"plano"; "posicionamento"→"presença". Exemplo correto (21 palavras, ~7s): "Sua marca fala. Seu time entrega. Seu cliente volta. É assim que se cresce. Fale com a gente hoje." O campo "screenText" PODE conter sigla (é lido com os olhos), mas o "script" NÃO PODE — precisa fluir natural em voz alta em português brasileiro.
 - Retornar em "reels": [{ "sequencia": 1, "hook", "screenText", "script", "imagePrompt", "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)" }]
@@ -179,7 +180,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fe
 - O Estático Final NÃO é um estático comum nem um reel congelado.
 - É um formato HÍBRIDO de fechamento visual com função psicológica própria: consolidação, resolução visual, fechamento emocional, organização da decisão.
 - Função na sequência: encerrar o ciclo narrativo aberto pelo estático e desenvolvido pelo carrossel.
-- Cada Estático Final: título com NO MÁXIMO 6 palavras (CONTE antes de retornar), cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (CONTE antes de retornar — 16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - O TÍTULO do Estático Final deve carregar resolução, não provocação. Frase de conclusão, não de abertura.
 - O TEXTO deve consolidar a direção da sequência em uma afirmação clara e estável.
 - A IMAGEM deve traduzir literalmente o título e o texto, com cena de calma, foco e estabilidade — não tensão, não movimento.
@@ -194,9 +195,8 @@ ${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} Estáticos Finais com aborda
   const trackHeader = isVisualOrExperimentacao
     ? `
 ⚠️ TRILHA ${isExperimentacao ? 'EXPERIMENTAÇÃO' : 'VISUAL'} — REGRAS INVIOLÁVEIS:
-1. PROIBIDO retornar a chave "reels" ou qualquer item com formato "Reels" — sem vídeo, roteiro nem screenText nesta trilha.
-2. FECHAMENTO obrigatório: peças com formato "Estático Final" dentro do array "feed".
-3. Chaves do JSON: EXCLUSIVAMENTE "feed", "carousel"${wantsStories ? ', "stories"' : ''}. NADA MAIS.
+1. FECHAMENTO obrigatório: peças com formato "Estático Final" dentro do array "feed".
+2. Chaves do JSON: EXCLUSIVAMENTE "feed", "carousel"${wantsStories ? ', "stories"' : ''}. NADA MAIS.
 
 `
     : `
@@ -211,10 +211,10 @@ A SEQUÊNCIA COMPLETA segue a progressão: ${progressionText}
 Os formatos são distribuídos pelo método — NÃO pelo usuário.
 
 ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
-- Cada estático: título com NO MÁXIMO 6 palavras (CONTE antes de retornar), cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (CONTE antes de retornar — 16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - Variar títulos entre afirmação, pergunta, contraste e observação cotidiana.
 - DIVERSIDADE LEXICAL OBRIGATÓRIA: os títulos dos estáticos de uma mesma sequência NÃO podem começar com a mesma palavra — garantir abertura distinta entre Estático 1, Estático 2 e Estático Final.
-- SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL: qualquer palavra da língua portuguesa pode ser o sujeito quando substantivada: substantivo concreto ou abstrato, adjetivo, verbo no infinitivo, advérbio, numeral ou pronome. Exemplos válidos: "O melhor começa assim", "A solução mora no detalhe", "Decidir cedo muda tudo", "A saudade move quem cria", "Cuidar é o diferencial", "O que define tudo", "Gestores fecham com clareza", "Confiança antes de assinar". PROIBIDO: construção passiva sem agente ("Atendimento garantido", "Resultados assegurados", "Dúvidas no contrato surgem") — porque não há quem aja. VARIE o sujeito entre pessoas, conceitos, ações e abstrações — evite repetir "gestores", "equipes" ou "decisores" em toda sequência.
+- SUJEITO DO TÍTULO: aplica-se a regra de liberdade gramatical do item 11 (ver ANÁLISE INTERNA acima) — qualquer classe gramatical pode ser sujeito quando substantivada; proibida construção passiva sem agente.
 - ANCORAGEM CONCRETA — ANTI-SÍMBOLO: o título deve poder virar uma FOTO de pessoa(s) real(is) em ação observável (decidir, alinhar, atender, revisar, entregar, fechar, apresentar). Teste antes de retornar: "dá para fotografar isso sem recorrer a objeto-metáfora ou cenário espacial genérico?" Se a única imagem possível for engrenagem, peão de madeira, seta, xadrez, escada, degraus, horizonte vazio ou aperto de mãos → título conceitual demais; reescreva com verbo de ação + agente humano. Exemplo: prefira "Time decide junto e fecha" a "Equipe forte traz bom ganho". Metáforas de jornada ("longe", "avançar", "crescer", "subir") e adjetivos de qualidade ("rápido", "forte", "claro", "sólido") SÃO PERMITIDOS nos títulos — a imagePrompt e leituraCenica os traduzirão pelo contexto real do negócio, não por cenário físico nem propriedade literal.
 - TEXTO DE APOIO — PADRÕES PROIBIDOS: "vendas aumentadas", "resultados mais consistentes", "crescimento constante e", "para seu negócio", "para a sua empresa", "para a sua marca". Proibido o padrão "[abstrato] gera [resultado]", "[abstrato] faz [resultado]", "[abstrato] traz [resultado]" ou "[abstrato] é [abstrato]" como estrutura dominante — preferir construções diretas: sujeito + verbo de ação + complemento específico.
 - Progressão dos estáticos: ${buildPostProgression(comp.estatico, seg.entrada, isB2BOperational, moment)}
@@ -223,7 +223,7 @@ ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 cards cada):
 - Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
 - Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. Card 5 pode citar o que a empresa entrega e tem CTA na legenda.
-- Cada card: titulo até 6 palavras (CONTE antes de retornar), cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (CONTE antes de retornar — 13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: o título deve poder virar uma foto de pessoa(s) real(is) em ação observável — se a única imagem possível for objeto-metáfora (engrenagem, xadrez, seta, peão, escada), reescreva com verbo de ação.
+- Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "organização dos elementos no quadro" } }, ...] }]
 ${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ''}
 ${closingBlock}
@@ -391,7 +391,7 @@ PRINCÍPIO-RAIZ — CICLO DA PALAVRA: a imagem responde ao título. Antes de des
 - Quando o núcleo do título for um conceito abstrato (sucesso, união, força, resultado, crescimento, ganho), NÃO o represente por objeto-metáfora (engrenagem, peão de madeira, xadrez, balança, troféu, seta). Traduza em PESSOAS reais executando a ação concreta do ofício que PRODUZ aquele conceito — ex.: "união" → colegas decidindo lado a lado numa mesa real; "crescimento" → profissional revisando resultados com cliente.
 - Pessoas em cena são regra quando houver cliente, profissional, decisor, problema vivido ou ação humana; para Reels, isso significa exatamente UMA pessoa, nunca grupo.
 - Proibido: distorções anatômicas, texto dentro da imagem, logomarca inventada, interfaces irreais, gráficos flutuantes, lâmpadas, setas como símbolo de crescimento, Post-it com ícones de negócios, engrenagens e handshake genérico.
-- ⚠️ REGRA GLOBAL DE DISPOSITIVOS DIGITAIS — INVIOLÁVEL no imagePrompt e na leituraCenica: PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo — tela frontal ou traseira. CONTEÚDO PROIBIDO: gráfico, dashboard, imagem, interface, app, texto legível. DISPOSITIVO COMO OBJETO CONTEXTUAL: pode estar aberto, em uso, na mão, apoiado — NÃO forçar fechado. Restrição é só o conteúdo: tela escura/neutra sem nada visível, carcaça lisa. MÁXIMO 1 DISPOSITIVO por cena. NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.
+- Regra de dispositivos digitais (notebook, celular, tablet etc.) no imagePrompt e na leituraCenica: ver "REGRA DE DISPOSITIVOS DIGITAIS" acima — vale igualmente aqui.
 - Estático e Carrossel: composição vertical 1080x1350.
 - Estático Final: composição vertical 1080x1350, com mais respiro, menos ruído e foco centralizado.
 ${!isVisualOrExperimentacao ? '- Reels: composição vertical 1080x1920, imagem pura sem texto, sem logo, sem colagem e com somente uma pessoa no quadro.' : ''}
@@ -406,8 +406,6 @@ INEDITISMO CONTROLADO:
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.
-${hasFeed ? `Confirmação obrigatória antes de retornar: "feed" com ${comp.estatico + (isVisualOrExperimentacao ? comp.fechamento : 0)} item${comp.estatico + (isVisualOrExperimentacao ? comp.fechamento : 0) > 1 ? 's' : ''} | "carousel" com ${comp.carrossel * 5} cards | ${isVisualOrExperimentacao ? 'SEM chave "reels"' : `"reels" com ${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''}`}. Se faltar qualquer peça ou campo, gere antes de retornar.` : ''}
-${isVisualOrExperimentacao ? `\n⚠️ LEMBRETE FINAL: NÃO RETORNE A CHAVE "reels". A trilha é ${isExperimentacao ? 'EXPERIMENTAÇÃO' : 'VISUAL'}, e nesta trilha reels NÃO EXISTEM. O fechamento é feito por "Estático Final" dentro do array "feed".` : ''}
 `;
 }
 
@@ -433,24 +431,7 @@ function shouldDiscardReels(track: Track | undefined, hasReels: boolean): boolea
   return track === 'visual' || track === 'experimentacao';
 }
 
-function truncateWords(s: string, max: number): string {
-  const words = String(s || '').trim().split(/\s+/).filter(Boolean);
-  if (words.length <= max) return s.trim();
-
-  const truncated = words.slice(0, max).join(' ')
-    .replace(/[,;:\-–—]+$/, '');
-
-  // Prefere corte em limite de frase completa dentro do trecho
-  const m = truncated.match(/^(.*[.!?])\s+\S/);
-  if (m) return m[1].trim();
-
-  // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
-  return truncated
-    .replace(/\s+(e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo)\s*$/i, '')
-    .trim();
-}
-
-export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 | 6 | 9): MethodOpResult {
+export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 | 6 | 9, keyInfo?: string): MethodOpResult {
   const isExperimentacao = track === 'experimentacao';
   const effectiveSize: 3 | 6 | 9 = isExperimentacao ? 3 : ((sequenceSize || 6) as 3 | 6 | 9);
   const comp = SEQUENCE_COMPOSITION[effectiveSize];
@@ -550,6 +531,27 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
     }));
   }
 
+  // D1 — validação heurística pós-geração (palavra cortada, pontuação
+  // pendente, repetição morfológica, promessa numérica sem respaldo na
+  // keyInfo). Não bloqueia a entrega — fica marcada em `flags` para
+  // regeneração pontual via regenerate-block (E3).
+  const flags: ValidationFlag[] = [];
+  if (feed) {
+    feed.forEach((item, i) => {
+      flags.push(...validatePieceFields(`feed[${i}]`, { titulo: item.titulo, texto: item.texto, legenda: item.legenda }, keyInfo));
+    });
+  }
+  if (carousel) {
+    carousel.forEach((card: any, i) => {
+      flags.push(...validatePieceFields(`carousel[${i}]`, { titulo: card.titulo, texto: card.texto, legenda: card.legenda }, keyInfo));
+    });
+  }
+  if (reels) {
+    reels.forEach((r, i) => {
+      flags.push(...validatePieceFields(`reels[${i}]`, { titulo: r.hook, texto: r.script, legenda: r.legenda }, keyInfo));
+    });
+  }
+
   // Validação de completude — detecta componentes esperados mas ausentes/incompletos.
   if (comp.carrossel > 0 && (!carousel || carousel.length === 0)) {
     console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: carrossel esperado mas ausente ou vazio.',
@@ -591,5 +593,6 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
     ...partial,
     raw,
     summary,
+    ...(flags.length > 0 ? { flags } : {}),
   };
 }

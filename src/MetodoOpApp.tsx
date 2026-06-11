@@ -10,6 +10,7 @@ import GenerationProgress from './components/metodo-op/GenerationProgress';
 import ImageKitForm from './components/metodo-op/ImageKitForm';
 import { defaultVoice } from './data/brandVoice';
 import { generateMethodContent } from './services/api';
+import { judgeAndRegenerateContent } from './services/judgeContent';
 import { generatePostUnico, generatePostUnicoCaption, type PostUnicoCaption, type PostUnicoReferences } from './services/postUnico';
 import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from './services/brandKit';
 import { useServerFn } from '@tanstack/react-start';
@@ -478,6 +479,17 @@ export default function App() {
       }, selectedSlot);
       setResult(generated);
       refreshProfile();
+
+      // D2 — juiz semântico em lote, best-effort, fora do caminho crítico:
+      // roda depois que o resultado já está na tela; se corrigir algo, atualiza.
+      judgeAndRegenerateContent(generated, {
+        companyName: kit.companyName,
+        mainActivity: kit.mainActivity || '',
+        keyInfo: form.keyInfo,
+        segment: kit.segment,
+      }).then((updated) => {
+        if (updated) setResult(updated);
+      });
     } catch (e) {
       setError(String((e as Error).message || e));
     } finally {

@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { truncateWords, validateTitulo, validateTexto, validateLegenda } from '@/core/textValidation';
+import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 type Kind = 'titulo' | 'texto' | 'legenda';
 
@@ -37,23 +39,6 @@ function getRule(kind: Kind, formato: string): { label: string; rule: string; ma
   };
 }
 
-function truncateWords(s: string, max: number): string {
-  const words = s.trim().split(/\s+/).filter(Boolean);
-  if (words.length <= max) return s.trim();
-
-  const truncated = words.slice(0, max).join(' ')
-    .replace(/[,;:\-–—]+$/, '');
-
-  // Prefere corte em limite de frase completa dentro do trecho
-  const m = truncated.match(/^(.*[.!?])\s+\S/);
-  if (m) return m[1].trim();
-
-  // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
-  return truncated
-    .replace(/\s+(e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo)\s*$/i, '')
-    .trim();
-}
-
 export const Route = createFileRoute('/api/regenerate-block')({
   server: {
     handlers: {
@@ -71,6 +56,7 @@ export const Route = createFileRoute('/api/regenerate-block')({
           const textoAtual = String(body.textoAtual || '').slice(0, 800);
           const legendaAtual = String(body.legendaAtual || '').slice(0, 1500);
           const formato = String(body.formato || '').slice(0, 60);
+          const motivoReprovacao = String(body.motivoReprovacao || '').slice(0, 300);
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
@@ -90,7 +76,7 @@ VERSÃO ATUAL:
 - Título: ${tituloAtual || '(vazio)'}
 - Texto: ${textoAtual || '(vazio)'}
 - Legenda: ${legendaAtual || '(vazia)'}
-
+${motivoReprovacao ? `\nMOTIVO DA REJEIÇÃO DA VERSÃO ATUAL: ${motivoReprovacao}\nA nova versão NÃO PODE repetir esse defeito específico.\n` : ''}
 REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.
@@ -100,29 +86,20 @@ REGRA DE LINGUAGEM: substitua tecnicismos, estrangeirismos e jargões por palavr
 Retorne JSON EXATAMENTE assim:
 { "value": "novo ${rule.label} aqui, sem aspas externas" }`;
 
-          const res = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4.1',
-              messages: [
-                { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
-                { role: 'user', content: userPrompt },
-              ],
-              temperature: 0.95,
-              response_format: { type: 'json_object' },
-            }),
+          const result = await fetchOpenAIChat(apiKey, {
+            model: 'gpt-4.1-mini',
+            messages: [
+              { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.95,
+            response_format: { type: 'json_object' },
           });
 
-          if (!res.ok) {
-            const txt = await res.text();
-            return Response.json({ error: `OpenAI: ${txt}` }, { status: 502 });
+          if (!result.ok) {
+            return Response.json({ error: result.error }, { status: result.status });
           }
-          const data = await res.json();
-          const content = data.choices?.[0]?.message?.content;
+          const content = result.data.choices?.[0]?.message?.content;
           if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
 
           let parsed: { value?: string };
@@ -136,7 +113,11 @@ Retorne JSON EXATAMENTE assim:
             value = truncateWords(value, rule.max);
           }
 
-          return Response.json({ value });
+          // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas
+          // sinalizam para a orquestração de regeneração no cliente (E3).
+          const motivos = kind === 'titulo' ? validateTitulo(value) : kind === 'texto' ? validateTexto(value) : validateLegenda(value);
+
+          return Response.json({ value, ...(motivos.length > 0 ? { flags: motivos } : {}) });
         } catch (e) {
           return Response.json({ error: (e as Error).message }, { status: 500 });
         }

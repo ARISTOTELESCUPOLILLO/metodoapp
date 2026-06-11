@@ -1,24 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-
-function truncateWords(s: string, max: number): string {
-  const words = s.trim().split(/\s+/).filter(Boolean);
-  if (words.length <= max) return s.trim();
-
-  const truncated = words.slice(0, max).join(' ')
-    .replace(/[,;:\-–—]+$/, '');
-
-  // Prefere corte em limite de frase completa dentro do trecho
-  const m = truncated.match(/^(.*[.!?])\s+\S/);
-  if (m) return m[1].trim();
-
-  // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
-  return truncated
-    .replace(/\s+(e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo)\s*$/i, '')
-    .trim();
-}
+import { truncateWords, validatePieceFields } from '@/core/textValidation';
 import { getVoiceProfile } from '@/data/brandVoice';
 import { resolveEffectiveUser, checkBalance, debitUsage } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
+import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -126,29 +111,20 @@ Regras:
 ${objetivo === 'institucional' ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ''}
 ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ''}`;
 
-          const res = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4.1',
-              messages: [
-                { role: 'system', content: 'Você é diretor de criação publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. Prefira sempre a palavra mais simples: "ganho" em vez de "resultado percebido", "melhorar" em vez de "otimizar", "vender" em vez de "converter". Antes de retornar: título soa natural? texto é claro para ensino médio? algum termo reservado (clareza/impacto/instante/fragmento/desvio/silêncio) apareceu? Se sim, reescreva.' },
-                { role: 'user', content: userPrompt },
-              ],
-              temperature: 0.95,
-              response_format: { type: 'json_object' },
-            }),
+          const result = await fetchOpenAIChat(apiKey, {
+            model: 'gpt-4.1-mini',
+            messages: [
+              { role: 'system', content: 'Você é diretor de criação publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. Prefira sempre a palavra mais simples: "ganho" em vez de "resultado percebido", "melhorar" em vez de "otimizar", "vender" em vez de "converter". Antes de retornar: título soa natural? texto é claro para ensino médio? algum termo reservado (clareza/impacto/instante/fragmento/desvio/silêncio) apareceu? Se sim, reescreva.' },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.95,
+            response_format: { type: 'json_object' },
           });
 
-          if (!res.ok) {
-            const txt = await res.text();
-            return Response.json({ error: `OpenAI: ${txt}` }, { status: 502 });
+          if (!result.ok) {
+            return Response.json({ error: result.error }, { status: result.status });
           }
-          const data = await res.json();
-          const content = data.choices?.[0]?.message?.content;
+          const content = result.data.choices?.[0]?.message?.content;
           if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
 
           let parsed: { titulo?: string; texto?: string };
@@ -175,7 +151,11 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           // Garante ponto final no texto quando a IA esquece.
           if (!/[.!?]$/.test(texto)) texto = texto + '.';
 
-          return Response.json({ titulo, texto });
+          // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas
+          // sinalizam para a orquestração de regeneração no cliente (E3).
+          const flags = validatePieceFields('copy', { titulo, texto }, keyInfo);
+
+          return Response.json({ titulo, texto, ...(flags.length > 0 ? { flags } : {}) });
         } catch (e) {
           return Response.json({ error: (e as Error).message }, { status: 500 });
         }

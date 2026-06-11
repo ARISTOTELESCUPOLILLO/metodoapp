@@ -7,6 +7,7 @@ import { getAuthHeaders } from '../../services/authHeaders';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
+import { truncateWords } from '@/core/textValidation';
 
 interface Props {
   data: PostUnicoFormData;
@@ -56,22 +57,6 @@ const MOOD_ICONS: Record<MoodCode, LucideIcon> = {
   'OP-06': VolumeX,
 };
 
-function truncateWords(s: string, max: number): string {
-  const words = s.trim().split(/\s+/).filter(Boolean);
-  if (words.length <= max) return s.trim();
-
-  const truncated = words.slice(0, max).join(' ')
-    .replace(/[,;:\-–—]+$/, '');
-
-  // Prefere corte em limite de frase completa dentro do trecho
-  const m = truncated.match(/^(.*[.!?])\s+\S/);
-  if (m) return m[1].trim();
-
-  // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
-  return truncated
-    .replace(/\s+(e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo)\s*$/i, '')
-    .trim();
-}
 function wordCount(s: string): number {
   return s.trim().split(/\s+/).filter(Boolean).length;
 }

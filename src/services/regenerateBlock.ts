@@ -9,9 +9,15 @@ export interface RegenContext {
   tituloAtual?: string;
   textoAtual?: string;
   legendaAtual?: string;
+  motivoReprovacao?: string;
 }
 
-export async function regenerateBlock(ctx: RegenContext): Promise<string> {
+export interface RegenResult {
+  value: string;
+  flags?: string[];
+}
+
+async function callRegenerateBlock(ctx: RegenContext): Promise<RegenResult> {
   const res = await fetch('/api/regenerate-block', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -22,5 +28,19 @@ export async function regenerateBlock(ctx: RegenContext): Promise<string> {
     throw new Error(err.error || `Falha ao regenerar (${res.status})`);
   }
   const json = await res.json();
-  return String(json.value || '').trim();
+  return {
+    value: String(json.value || '').trim(),
+    flags: Array.isArray(json.flags) ? json.flags : undefined,
+  };
+}
+
+export async function regenerateBlock(ctx: RegenContext): Promise<string> {
+  const { value } = await callRegenerateBlock(ctx);
+  return value;
+}
+
+// Variante usada pela orquestração de regeneração automática (E3) — também
+// devolve as reprovações D1 já recalculadas pelo servidor sobre o novo valor.
+export async function regenerateBlockWithFlags(ctx: RegenContext): Promise<RegenResult> {
+  return callRegenerateBlock(ctx);
 }

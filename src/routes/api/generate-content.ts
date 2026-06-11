@@ -21,124 +21,149 @@ const LEITURA_CENICA_SCHEMA = {
   ],
 } as const;
 
-const METODO_OP_SCHEMA = {
-  type: 'object',
-  properties: {
-    feed: {
-      anyOf: [
-        {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              dia: { type: 'number' },
-              formato: { type: 'string' },
-              titulo: { type: 'string' },
-              texto: { type: 'string' },
-              legenda: { type: 'string' },
-              imagem: { type: 'string' },
-              leituraCenica: LEITURA_CENICA_SCHEMA,
-            },
-            required: ['dia', 'formato', 'titulo', 'texto', 'legenda', 'imagem', 'leituraCenica'],
-            additionalProperties: false,
-          },
+const FEED_SCHEMA = {
+  anyOf: [
+    {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          dia: { type: 'number' },
+          formato: { type: 'string' },
+          titulo: { type: 'string' },
+          texto: { type: 'string' },
+          legenda: { type: 'string' },
+          imagem: { type: 'string' },
+          leituraCenica: LEITURA_CENICA_SCHEMA,
         },
-        { type: 'null' },
-      ],
+        required: ['dia', 'formato', 'titulo', 'texto', 'legenda', 'imagem', 'leituraCenica'],
+        additionalProperties: false,
+      },
     },
-    carousel: {
-      anyOf: [
-        {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              sequencia: { type: 'number' },
-              legenda: { type: 'string' },
-              cards: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    card: { type: 'number' },
-                    titulo: { type: 'string' },
-                    texto: { type: 'string' },
-                    imagePrompt: { type: 'string' },
-                    leituraCenica: LEITURA_CENICA_SCHEMA,
-                  },
-                  required: ['card', 'titulo', 'texto', 'imagePrompt', 'leituraCenica'],
-                  additionalProperties: false,
-                },
-              },
-            },
-            required: ['sequencia', 'legenda', 'cards'],
-            additionalProperties: false,
-          },
-        },
-        { type: 'null' },
-      ],
-    },
-    reels: {
-      anyOf: [
-        {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              hook: { type: 'string' },
-              script: { type: 'string' },
-              imagePrompt: { type: 'string' },
-              screenText: { type: 'string' },
-              legenda: { anyOf: [{ type: 'string' }, { type: 'null' }] },
-            },
-            required: ['hook', 'script', 'imagePrompt', 'screenText', 'legenda'],
-            additionalProperties: false,
-          },
-        },
-        { type: 'null' },
-      ],
-    },
-    stories: {
-      anyOf: [
-        {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              dia: { type: 'number' },
-              sequencia: { type: 'string' },
-              stories: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    ordem: { type: 'number' },
-                    tipo: { type: 'string' },
-                    texto: { type: 'string' },
-                  },
-                  required: ['ordem', 'tipo', 'texto'],
-                  additionalProperties: false,
-                },
-              },
-            },
-            required: ['dia', 'sequencia', 'stories'],
-            additionalProperties: false,
-          },
-        },
-        { type: 'null' },
-      ],
-    },
-  },
-  required: ['feed', 'carousel', 'reels', 'stories'],
-  additionalProperties: false,
+    { type: 'null' },
+  ],
 } as const;
+
+const CAROUSEL_SCHEMA = {
+  anyOf: [
+    {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          sequencia: { type: 'number' },
+          legenda: { type: 'string' },
+          cards: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                card: { type: 'number' },
+                titulo: { type: 'string' },
+                texto: { type: 'string' },
+                imagePrompt: { type: 'string' },
+                leituraCenica: LEITURA_CENICA_SCHEMA,
+              },
+              required: ['card', 'titulo', 'texto', 'imagePrompt', 'leituraCenica'],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ['sequencia', 'legenda', 'cards'],
+        additionalProperties: false,
+      },
+    },
+    { type: 'null' },
+  ],
+} as const;
+
+const REELS_SCHEMA = {
+  anyOf: [
+    {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          hook: { type: 'string' },
+          script: { type: 'string' },
+          imagePrompt: { type: 'string' },
+          screenText: { type: 'string' },
+          legenda: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+        },
+        required: ['hook', 'script', 'imagePrompt', 'screenText', 'legenda'],
+        additionalProperties: false,
+      },
+    },
+    { type: 'null' },
+  ],
+} as const;
+
+const STORIES_SCHEMA = {
+  anyOf: [
+    {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          dia: { type: 'number' },
+          sequencia: { type: 'string' },
+          stories: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                ordem: { type: 'number' },
+                tipo: { type: 'string' },
+                texto: { type: 'string' },
+              },
+              required: ['ordem', 'tipo', 'texto'],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ['dia', 'sequencia', 'stories'],
+        additionalProperties: false,
+      },
+    },
+    { type: 'null' },
+  ],
+} as const;
+
+// Schema dependente da trilha: nas trilhas visual/experimentação o fechamento
+// é "Estático Final" dentro de "feed" — a chave "reels" não existe nessas
+// trilhas. Em response_format strict, toda chave em `properties` precisa
+// constar em `required` (mesmo que anyOf-nullable); incluir "reels" sempre
+// forçava o modelo a emitir "reels": null mesmo com o prompt instruindo o
+// oposto — um conflito direto entre prompt e schema. Removendo a chave do
+// schema quando ela não é usada, o conflito desaparece.
+function buildMetodoOpSchema(includeReels: boolean, includeStories: boolean) {
+  const properties: Record<string, unknown> = {
+    feed: FEED_SCHEMA,
+    carousel: CAROUSEL_SCHEMA,
+  };
+  const required = ['feed', 'carousel'];
+  if (includeReels) {
+    properties.reels = REELS_SCHEMA;
+    required.push('reels');
+  }
+  if (includeStories) {
+    properties.stories = STORIES_SCHEMA;
+    required.push('stories');
+  }
+  return {
+    type: 'object',
+    properties,
+    required,
+    additionalProperties: false,
+  };
+}
 
 export const Route = createFileRoute('/api/generate-content')({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { prompt, preferredSlot, sequenceSize, track } = await request.json();
+          const { prompt, preferredSlot, sequenceSize, track, wantsStories } = await request.json();
           if (!prompt) {
             return Response.json({ error: 'prompt obrigatório' }, { status: 400 });
           }
@@ -167,15 +192,22 @@ export const Route = createFileRoute('/api/generate-content')({
           // demoram mais com gpt-4.1 + json_schema strict — escala o timeout
           // pelo tamanho efetivo da sequência em vez de um valor fixo.
           const effectiveSize = track === 'experimentacao' ? 3 : (sequenceSize || 6);
-          const TIMEOUT_BY_SIZE: Record<number, number> = { 3: 120_000, 6: 180_000, 9: 240_000 };
+          // Trilhas visual/experimentação fecham com "Estático Final" dentro de
+          // "feed" — a chave "reels" não existe nessas trilhas (ver buildMetodoOpSchema).
+          const includeReels = track !== 'visual' && track !== 'experimentacao';
+          const includeStories = !!wantsStories;
+          // S3 paga quase o mesmo prefill (prompt-base) que S6/S9 — só o array de
+          // saída esperado é menor — então não faz sentido ter o orçamento de tempo
+          // mais apertado dos três. Alinhado com S6.
+          const TIMEOUT_BY_SIZE: Record<number, number> = { 3: 180_000, 6: 180_000, 9: 240_000 };
           const timeoutMs = TIMEOUT_BY_SIZE[effectiveSize] ?? 180_000;
           // S9 gera ~3x o conteúdo de S3 (6 itens de feed + 15 cards de carrossel +
           // 3 reels, cada um com leituraCenica verbosa) — 16384 tokens estoura e o
           // JSON sai truncado ("resposta incompleta"). 32768 é o teto do gpt-4.1.
           const MAX_TOKENS_BY_SIZE: Record<number, number> = { 3: 16384, 6: 16384, 9: 32768 };
           const maxTokens = MAX_TOKENS_BY_SIZE[effectiveSize] ?? 16384;
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), timeoutMs);
+          const deadline = Date.now() + timeoutMs;
+          let activeController: AbortController | null = null;
 
           const encoder = new TextEncoder();
           const requestBody = JSON.stringify({
@@ -191,7 +223,7 @@ export const Route = createFileRoute('/api/generate-content')({
               json_schema: {
                 name: 'metodo_op_result',
                 strict: true,
-                schema: METODO_OP_SCHEMA,
+                schema: buildMetodoOpSchema(includeReels, includeStories),
               },
             },
             stream: true,
@@ -201,57 +233,70 @@ export const Route = createFileRoute('/api/generate-content')({
           // gpt-4.1 + json_schema strict ocasionalmente trunca a resposta
           // (finish_reason='length' ou JSON inválido) de forma não-determinística,
           // por isso o handler tenta de novo quando isso acontece.
-          async function runAttempt(): Promise<
+          // `budgetMs` é o orçamento de tempo desta tentativa (sub-orçamento do
+          // timeout total) — cada tentativa tem seu próprio AbortController, então
+          // uma 1ª tentativa lenta não consome todo o tempo da 2ª.
+          async function runAttempt(budgetMs: number): Promise<
             | { kind: 'ok'; fullContent: string; finishReason: string | null }
             | { kind: 'http-error'; status: number; text: string }
             | { kind: 'fetch-error'; aborted: boolean; message: string }
           > {
-            let upstream: Response;
+            const attemptController = new AbortController();
+            activeController = attemptController;
+            const attemptTimer = setTimeout(() => attemptController.abort(), budgetMs);
             try {
-              upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${apiKey}`,
-                },
-                body: requestBody,
-                signal: controller.signal,
-              });
-            } catch (e) {
-              return { kind: 'fetch-error', aborted: (e as Error).name === 'AbortError', message: (e as Error).message };
-            }
-            if (!upstream.ok || !upstream.body) {
-              const txt = await upstream.text().catch(() => '');
-              return { kind: 'http-error', status: upstream.status, text: txt };
-            }
-            const decoder = new TextDecoder();
-            const reader = upstream.body.getReader();
-            let buffer = '';
-            let fullContent = '';
-            let finishReason: string | null = null;
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
-              buffer += decoder.decode(value, { stream: true });
-              let idx;
-              while ((idx = buffer.indexOf('\n\n')) !== -1) {
-                const evt = buffer.slice(0, idx);
-                buffer = buffer.slice(idx + 2);
-                for (const line of evt.split('\n')) {
-                  if (!line.startsWith('data: ')) continue;
-                  const payload = line.slice(6).trim();
-                  if (!payload || payload === '[DONE]') continue;
-                  try {
-                    const j = JSON.parse(payload);
-                    const d = j?.choices?.[0]?.delta?.content;
-                    if (typeof d === 'string') fullContent += d;
-                    const fr = j?.choices?.[0]?.finish_reason;
-                    if (fr) finishReason = fr;
-                  } catch { /* ignore parse errors */ }
+              let upstream: Response;
+              try {
+                upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${apiKey}`,
+                  },
+                  body: requestBody,
+                  signal: attemptController.signal,
+                });
+              } catch (e) {
+                return { kind: 'fetch-error', aborted: (e as Error).name === 'AbortError', message: (e as Error).message };
+              }
+              if (!upstream.ok || !upstream.body) {
+                const txt = await upstream.text().catch(() => '');
+                return { kind: 'http-error', status: upstream.status, text: txt };
+              }
+              const decoder = new TextDecoder();
+              const reader = upstream.body.getReader();
+              let buffer = '';
+              let fullContent = '';
+              let finishReason: string | null = null;
+              while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                let idx;
+                while ((idx = buffer.indexOf('\n\n')) !== -1) {
+                  const evt = buffer.slice(0, idx);
+                  buffer = buffer.slice(idx + 2);
+                  for (const line of evt.split('\n')) {
+                    if (!line.startsWith('data: ')) continue;
+                    const payload = line.slice(6).trim();
+                    if (!payload || payload === '[DONE]') continue;
+                    try {
+                      const j = JSON.parse(payload);
+                      const d = j?.choices?.[0]?.delta?.content;
+                      if (typeof d === 'string') fullContent += d;
+                      const fr = j?.choices?.[0]?.finish_reason;
+                      if (fr) finishReason = fr;
+                    } catch { /* ignore parse errors */ }
+                  }
                 }
               }
+              return { kind: 'ok', fullContent, finishReason };
+            } catch (e) {
+              return { kind: 'fetch-error', aborted: (e as Error).name === 'AbortError', message: (e as Error).message };
+            } finally {
+              clearTimeout(attemptTimer);
+              if (activeController === attemptController) activeController = null;
             }
-            return { kind: 'ok', fullContent, finishReason };
           }
 
           const stream = new ReadableStream({
@@ -266,15 +311,27 @@ export const Route = createFileRoute('/api/generate-content')({
                 let lastContent: string | null = null;
                 let connError: string | null = null;
                 const maxAttempts = 2;
+                // Tentativa 1 recebe no máximo 70% do orçamento total — se ela
+                // travar perto do limite, ainda sobra tempo real para a tentativa 2
+                // (antes, a 1ª tentativa podia consumir o timeout inteiro e a 2ª
+                // rodava com ~0ms restantes).
+                const ATTEMPT1_RATIO = 0.7;
+                const MIN_ATTEMPT_BUDGET_MS = 15_000;
 
                 for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                  const r = await runAttempt();
+                  const remaining = deadline - Date.now();
+                  if (remaining < MIN_ATTEMPT_BUDGET_MS) {
+                    console.warn('[generate-content] sem orçamento de tempo restante para tentativa %d (%dms)', attempt, remaining);
+                    break;
+                  }
+                  const budget = attempt < maxAttempts ? Math.min(remaining, Math.floor(timeoutMs * ATTEMPT1_RATIO)) : remaining;
+
+                  const r = await runAttempt(budget);
                   if (r.kind === 'fetch-error') {
-                    console.error('[generate-content] attempt %d fetch failed: %s', attempt, r.message);
+                    console.error('[generate-content] attempt %d fetch failed (aborted=%s): %s', attempt, r.aborted, r.message);
                     connError = r.aborted
                       ? 'O servidor demorou demais pra responder. Tente novamente em alguns segundos.'
                       : 'Falha ao conectar ao gerador de conteúdo.';
-                    if (r.aborted) break;
                     continue;
                   }
                   if (r.kind === 'http-error') {
@@ -317,12 +374,11 @@ export const Route = createFileRoute('/api/generate-content')({
                 } catch {}
               } finally {
                 clearInterval(hb);
-                clearTimeout(timer);
                 try { ctrl.close(); } catch {}
               }
             },
             cancel() {
-              try { controller.abort(); } catch {}
+              try { activeController?.abort(); } catch {}
             },
           });
 

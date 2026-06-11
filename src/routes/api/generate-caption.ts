@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { getVoiceProfile } from '@/data/brandVoice';
+import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -101,29 +102,20 @@ Regras:
 ${objetivo === 'institucional' ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ''}
 ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ''}`;
 
-          const res = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4.1-mini',
-              messages: [
-                { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
-                { role: 'user', content: userPrompt },
-              ],
-              temperature: 0.9,
-              response_format: { type: 'json_object' },
-            }),
+          const result = await fetchOpenAIChat(apiKey, {
+            model: 'gpt-4.1-mini',
+            messages: [
+              { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.9,
+            response_format: { type: 'json_object' },
           });
 
-          if (!res.ok) {
-            const txt = await res.text();
-            return Response.json({ error: `OpenAI: ${txt}` }, { status: 502 });
+          if (!result.ok) {
+            return Response.json({ error: result.error }, { status: result.status });
           }
-          const data = await res.json();
-          const content = data.choices?.[0]?.message?.content;
+          const content = result.data.choices?.[0]?.message?.content;
           if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
 
           let parsed: { texto?: string; cta?: string; hashtags?: unknown };
