@@ -178,7 +178,75 @@ export function checkLegendaStructure(legenda: string): string | null {
     return 'parágrafo de CTA da legenda não termina com ponto final (ver REGRA DE LEGENDA)';
   }
 
+  if (paragraphs.length !== 3) {
+    return `legenda com ${paragraphs.length} parágrafos em vez de EXATAMENTE 3 — corpo, CTA e hashtags (ver REGRA DE LEGENDA)`;
+  }
+
   return null;
+}
+
+// Verbos no imperativo dirigido ao leitor — marcam uma frase como CTA
+// ("chamada para ação"). Usado para detectar quando o corpo da legenda (ou o
+// "texto" do Post Único) termina com uma frase que duplica o parágrafo/campo
+// de CTA dedicado.
+const CTA_IMPERATIVE_RE = /^(compartilhe|salve|comente|marque|acesse|confira|aproveite|garanta|conhe[cç]a|saiba|visite|clique|siga|envie|chame|fale|pe[cç]a|agende|baixe|curta|deixe|mande|venha|descubra|corra|reserve|adquira|solicite|celebre|participe|inscreva-se|cadastre-se|entre em contato|n[aã]o perca|responda|vote|avalie|experimente|escolha)\b/i;
+
+function splitSentences(text: string): string[] {
+  return text.match(/[^.!?]+[.!?]+/g) || [];
+}
+
+// Remove a última frase de um texto quando ela é uma chamada para ação no
+// imperativo (ex.: "Confira mais.") E existe pelo menos outra frase antes —
+// evita esvaziar o texto e só age quando a frase de CTA é redundante.
+export function stripTrailingCtaSentence(text: string): string {
+  const trimmed = text.trim();
+  const sentences = splitSentences(trimmed);
+  if (sentences.length < 2) return trimmed;
+  const last = sentences[sentences.length - 1].trim();
+  if (!CTA_IMPERATIVE_RE.test(last)) return trimmed;
+  return sentences.slice(0, -1).map((s) => s.trim()).join(' ');
+}
+
+// Normaliza a legenda (corpo + CTA + hashtags, ver REGRA DE LEGENDA) para
+// corrigir dois defeitos recorrentes do modelo:
+// 1) o corpo termina com uma frase de CTA própria, duplicando o parágrafo 2;
+// 2) o parágrafo de CTA traz uma 2ª frase/linha de "CTA indireto" (ex.:
+//    "Acesse a bio... ou site...") ou parágrafos extras antes das hashtags.
+// Roda ANTES da validação D1, para reduzir regenerações (E3) desnecessárias.
+export function normalizeLegenda(legenda: string): string {
+  const trimmed = legenda.trim();
+  if (!trimmed) return trimmed;
+
+  let paragraphs = trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (paragraphs.length < 2) return trimmed;
+
+  const lastIdx = paragraphs.length - 1;
+  const isHashtagsLast = /^#/.test(paragraphs[lastIdx]);
+
+  // Garante exatamente 3 parágrafos quando há hashtags isoladas no fim:
+  // corpo, CTA e hashtags — descarta parágrafos extras de CTA indireto.
+  if (isHashtagsLast && paragraphs.length > 3) {
+    paragraphs = [paragraphs[0], paragraphs[1], paragraphs[lastIdx]];
+  }
+
+  paragraphs[0] = stripTrailingCtaSentence(paragraphs[0]);
+
+  // Parágrafo de CTA: mantém só a primeira linha/frase — descarta CTA
+  // indireto (bio/site) colado junto do CTA direto.
+  const ctaIdx = paragraphs.length - 2;
+  if (ctaIdx > 0) {
+    const lines = paragraphs[ctaIdx].split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      paragraphs[ctaIdx] = lines[0];
+    } else {
+      const sentences = splitSentences(paragraphs[ctaIdx]);
+      if (sentences.length > 1) {
+        paragraphs[ctaIdx] = sentences[0].trim();
+      }
+    }
+  }
+
+  return paragraphs.join('\n\n');
 }
 
 // ─────────────────────────────────────────────────────────────────────────

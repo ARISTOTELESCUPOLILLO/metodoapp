@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { truncateWords, validateTitulo, validateTexto, validateLegenda } from '@/core/textValidation';
+import { truncateWords, validateTitulo, validateTexto, validateLegenda, normalizeLegenda } from '@/core/textValidation';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 type Kind = 'titulo' | 'texto' | 'legenda';
@@ -13,8 +13,8 @@ function getRule(kind: Kind, formato: string): { label: string; rule: string; ma
     return {
       label: 'legenda do post',
       rule: `Estrutura OBRIGATÓRIA em exatamente 3 parágrafos, separados por LINHA EM BRANCO (uma quebra de linha dupla):
-1) Corpo: até 30 palavras, retomando o conceito central do título/imagem, terminando com PONTO FINAL.
-2) CTA: 1 frase curta (máx. 6 palavras), terminando com PONTO FINAL — varie, ex.: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.".
+1) Corpo: até 30 palavras, retomando o conceito central do título/imagem, terminando com PONTO FINAL. PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do parágrafo 2.
+2) CTA: EXATAMENTE 1 frase curta (máx. 6 palavras), terminando com PONTO FINAL — varie, ex.: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.". PROIBIDO incluir uma 2ª frase ou CTA indireto (ex.: "Acesse a bio...", "Acesse o site...") no mesmo parágrafo ou em parágrafo extra.
 3) Hashtags: EXATAMENTE 3, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia), coerentes com o segmento — nunca genéricas demais.
 Total corpo + CTA: até 40 palavras (sem contar as hashtags). Formato final exato: "{corpo}\\n\\n{CTA}\\n\\n#hash1 #hash2 #hash3". Nunca emojis nas hashtags.`,
       max: 40,
@@ -115,6 +115,8 @@ Retorne JSON EXATAMENTE assim:
           // Enforcement: garante que nunca volta acima do limite do método.
           if (kind === 'titulo' || kind === 'texto') {
             value = truncateWords(value, rule.max);
+          } else if (kind === 'legenda') {
+            value = normalizeLegenda(value);
           }
 
           // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas

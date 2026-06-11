@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { getVoiceProfile } from '@/data/brandVoice';
+import { stripTrailingCtaSentence } from '@/core/textValidation';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -128,13 +129,13 @@ INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 Retorne JSON com EXATAMENTE este formato:
 {
   "texto": "frase principal com no MÁXIMO 30 palavras, sem hashtags, sem emojis exagerados, no tom certo, terminando com ponto final",
-  "cta": "uma chamada curta para ação, no máximo 6 palavras, terminando com ponto final, sem hashtag",
+  "cta": "uma chamada curta para ação, no máximo 6 palavras, terminando com ponto final, sem hashtag — única frase de CTA da legenda",
   "hashtags": ["tag1", "tag2", "tag3"]
 }
 
 Regras:
-- "texto" no máximo 30 palavras, terminando SEMPRE com PONTO FINAL
-- "cta" no máximo 6 palavras, terminando SEMPRE com PONTO FINAL
+- "texto" no máximo 30 palavras, terminando SEMPRE com PONTO FINAL. PROIBIDO terminar "texto" com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse..."): isso é função EXCLUSIVA do campo "cta" — "texto" só descreve/retoma, nunca convida à ação.
+- "cta" no máximo 6 palavras, terminando SEMPRE com PONTO FINAL — EXATAMENTE 1 frase, sem CTA indireto adicional (ex.: "Acesse a bio...", "Acesse o site...")
 - "hashtags" sempre 3 itens, em MINÚSCULAS, SEM acento, SEM o caractere #, sem espaços, relevantes ao segmento e à informação-chave
 - Português brasileiro
 - Nada de inglês, nada de markdown
@@ -187,7 +188,9 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
             let parsed: { texto?: string; cta?: string; hashtags?: unknown };
             try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
 
-            textoValue = String(parsed.texto || '').trim();
+            // Remove frase de CTA duplicada no fim de "texto" (ex.: "Salve para
+            // não esquecer."), que repetiria o campo "cta" dedicado.
+            textoValue = stripTrailingCtaSentence(String(parsed.texto || '').trim());
             ctaValue = String(parsed.cta || '').trim();
             hashtagsArr = Array.isArray(parsed.hashtags)
               ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean).slice(0, 3)

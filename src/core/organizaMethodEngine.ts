@@ -1,7 +1,7 @@
 import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from '../types';
 import { getVoiceProfile } from '../data/brandVoice';
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
-import { truncateWords, validatePieceFields } from './textValidation';
+import { truncateWords, validatePieceFields, normalizeLegenda } from './textValidation';
 
 interface MomentModulator {
   label: string;
@@ -231,8 +231,8 @@ ${closingBlock}
 REGRA DE LEGENDA (vale para feed estático, carrossel, reels e estático final):
 - A legenda tem 3 parágrafos separados por linha em branco. FORMATO OBRIGATÓRIO no JSON (use \\n\\n como separador literal):
   "{corpo da legenda terminando com ponto final.}\\n\\n{CTA curto terminando com ponto final.}\\n\\n#hash1 #hash2 #hash3"
-- Parágrafo 1 — corpo: ATÉ 30 palavras, terminando com PONTO FINAL. RETOMA o conceito central do título e da imagem — não introduz tema novo nem desconectado da peça (a legenda fecha o ciclo palavra→imagem→palavra).
-- Parágrafo 2 — CTA: 1 frase genérica curta (máx 6 palavras), terminando com PONTO FINAL. Varie entre as peças. Exemplos: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.", "Marque alguém que precisa ler isso.", "Envie para quem decide com você."
+- Parágrafo 1 — corpo: ATÉ 30 palavras, terminando com PONTO FINAL. RETOMA o conceito central do título e da imagem — não introduz tema novo nem desconectado da peça (a legenda fecha o ciclo palavra→imagem→palavra). PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do Parágrafo 2. O corpo só descreve/retoma, nunca convida à ação.
+- Parágrafo 2 — CTA: EXATAMENTE 1 frase genérica curta (máx 6 palavras), terminando com PONTO FINAL. Varie entre as peças. Exemplos: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.", "Marque alguém que precisa ler isso.", "Envie para quem decide com você." PROIBIDO incluir uma 2ª frase ou CTA indireto (ex.: "Acesse a bio...", "Acesse o site...") no mesmo parágrafo ou em parágrafo extra — apenas essa única frase.
 - Parágrafo 3 — hashtags: EXATAMENTE 3, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia).
 - Total corpo + CTA: ATÉ 40 palavras (sem contar as hashtags).
 - Hashtags coerentes com o segmento e a atividade da marca, nunca genéricas demais ("#instagram", "#post").
@@ -516,11 +516,14 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
 
   // Guard de limite de palavras: garante que titulo/texto nunca ultrapassem os limites
   // definidos no prompt, independente do que o LLM retornou. Mesmos limites do prompt.
+  // Legenda passa por normalizeLegenda: remove CTA duplicado no fim do corpo
+  // e CTA indireto (bio/site) extra no parágrafo de CTA (ver REGRA DE LEGENDA).
   if (feed) {
     feed = feed.map(item => ({
       ...item,
       titulo: truncateWords(item.titulo || '', 6),
       texto: truncateWords(item.texto || '', 15),
+      legenda: item.legenda ? normalizeLegenda(item.legenda) : item.legenda,
     }));
   }
   if (carousel) {
@@ -528,6 +531,13 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
       ...card,
       titulo: truncateWords(card.titulo || '', 6),
       texto: truncateWords(card.texto || '', 12),
+      ...(card.legenda ? { legenda: normalizeLegenda(card.legenda) } : {}),
+    }));
+  }
+  if (reels) {
+    reels = reels.map(r => ({
+      ...r,
+      ...(r.legenda ? { legenda: normalizeLegenda(r.legenda) } : {}),
     }));
   }
 
