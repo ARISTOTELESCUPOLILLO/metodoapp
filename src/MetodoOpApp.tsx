@@ -206,15 +206,17 @@ export default function App() {
   // Auto-switch slot quando o modo muda: postUnico → PU slot; metodo → MOP slot.
   // Garante que gerações MOP e PU sempre debitam do plano correto sem ação manual.
   // Considera bonus: se bonus tem plano PU-type (PU2), usa bonus para postUnico.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Reage também à chegada assíncrona de puSlot/mopSlot (slots carregam depois
+  // do remount), não só a mudanças de `modo`.
+  const bonusIsPuType = !!(bonusSlotInfoObj && /^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo));
   useEffect(() => {
     if (modo === 'postUnico') {
       if (puSlot) setSelectedSlot(puSlot as 'plano1' | 'plano2' | 'bonus');
-      else if (bonusSlotInfoObj && /^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo)) setSelectedSlot('bonus');
+      else if (bonusIsPuType) setSelectedSlot('bonus');
     } else if (modo === 'metodo' && mopSlot) {
       setSelectedSlot(mopSlot as 'plano1' | 'plano2' | 'bonus');
     }
-  }, [modo]);
+  }, [modo, puSlot, mopSlot, bonusIsPuType]);
   // Propaga o slot selecionado para o serviço de geração de imagens.
   useEffect(() => { setCurrentDebitSlot(selectedSlot); }, [selectedSlot]);
 
@@ -240,12 +242,15 @@ export default function App() {
   useEffect(() => { localStorage.setItem('metodo-op-modo', modo); }, [modo]);
   useEffect(() => { try { localStorage.setItem('metodo-op-mood', mood); } catch {} }, [mood]);
 
-  // Auto-seleciona o modo de acordo com o plano1 do usuário ao logar.
-  const modeInitializedForRef = useRef<string | null>(null);
+  // Auto-seleciona o modo de acordo com o plano1 ao logar — UMA vez por login
+  // real nesta aba. sessionStorage (em vez de useRef) sobrevive à remontagem
+  // do componente (volta de /historico, /conta etc.) e a F5; é limpa no
+  // signOut(), permitindo nova auto-seleção em um login realmente novo.
   useEffect(() => {
     if (!effectiveUserId || !slots.length) return;
-    if (modeInitializedForRef.current === effectiveUserId) return;
-    modeInitializedForRef.current = effectiveUserId;
+    const key = `metodo-op-modo-init-v1:${effectiveUserId}`;
+    try { if (sessionStorage.getItem(key) === '1') return; } catch {}
+    try { sessionStorage.setItem(key, '1'); } catch {}
     const plano1 = slots.find(s => s.key === 'plano1');
     if (!plano1) return;
     if (/^PU/i.test(plano1.plan.codigo)) {
