@@ -17,6 +17,12 @@ export interface EditorialProfile {
   id: string;
   nome: string;
   keywords: string[];
+  // Se a ATIVIDADE contiver qualquer um destes termos, o perfil é descartado
+  // mesmo que tenha pontuação suficiente — evita colisão de palavra-chave
+  // genérica com um contexto de negócio diferente (ex.: "móveis" não deve
+  // levar ao perfil de decoração residencial quando a atividade é "móveis
+  // para escritório/consultório").
+  excludeKeywords?: string[];
   segmentos: ('SERVIÇOS' | 'VAREJO' | 'MARCA')[];
   audiencias: ('B2C' | 'B2B')[];
   territorio: string;
@@ -154,6 +160,32 @@ export const editorialProfiles: EditorialProfile[] = [
     notaMetodo: 'O medo do custo alto e do transtorno é a entrada; a paz de uma casa funcionando é a chegada. Use os dois.',
   },
 
+  {
+    id: 'pet_veterinaria',
+    nome: 'Pet & Veterinária',
+    keywords: ['veterinária', 'veterinário', 'petshop', 'pet shop', 'pet', 'animal', 'animais',
+               'ração', 'cão', 'cães', 'gato', 'gatos', 'banho e tosa', 'adestramento',
+               'castração', 'tutor'],
+    segmentos: ['SERVIÇOS', 'VAREJO'],
+    audiencias: ['B2C'],
+    territorio: 'saúde, bem-estar e o vínculo entre o tutor e o animal de estimação — cuidado preventivo, alimentação e o papel do pet na rotina da família',
+    angulosTensao: [
+      'sinal do pet ignorado até virar emergência',
+      'ração ou produto errado sem o tutor perceber o efeito no animal',
+      'checkup ou vacina atrasada porque parece que "tá tudo bem"',
+      'pet desconfortável e o tutor sem saber identificar o motivo',
+    ],
+    angulosMotivacao: [
+      'pet saudável e ativo no dia a dia da família',
+      'tutor que acompanha de perto e evita susto depois',
+      'vínculo que se fortalece quando o pet está bem cuidado',
+      'rotina de cuidado que vira tranquilidade para o tutor',
+    ],
+    vocabularioProibido: ['empreendedor', 'empresário', 'gestor', 'lead', 'conversão', 'funil',
+                          'ROI', 'tráfego', 'métricas', 'cliente B2B', 'decisor'],
+    notaMetodo: 'A progressão vai de atenção ao sinal do pet → segurança de que há solução → confiança no cuidado profissional/produto → autoridade pelo resultado → ação de agendar ou comprar.',
+  },
+
   // ── SERVIÇOS B2B ──────────────────────────────────────────────────────────
 
   {
@@ -286,6 +318,11 @@ export const editorialProfiles: EditorialProfile[] = [
     keywords: ['decoração', 'móveis', 'casa', 'lar', 'utensílios', 'design de interiores',
                'arquitetura', 'reforma decoração', 'iluminação', 'revestimento', 'piso',
                'colchão', 'sofá', 'cama', 'ambientação', 'jardim', 'varanda'],
+    // "móveis para escritório/consultório/auditório/escolar" é mobiliário
+    // corporativo/institucional, não decoração residencial — não deixa
+    // "móveis" puxar para o território de casa/lar.
+    excludeKeywords: ['escritório', 'escritórios', 'consultório', 'consultórios', 'auditório',
+                      'auditórios', 'escolar', 'escolares', 'corporativo', 'empresarial'],
     segmentos: ['VAREJO', 'SERVIÇOS'],
     audiencias: ['B2C'],
     territorio: 'sensação de pertencimento ao próprio espaço, casa como extensão da identidade e o custo emocional de viver em ambiente que não reflete quem você é',
@@ -371,18 +408,23 @@ export function detectEditorialProfile(
 
   const haystack = mainActivity.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+  const matchesKeyword = (kw: string) => {
+    const kwNorm = kw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const escaped = kwNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`).test(haystack);
+  };
+
   let bestProfile: EditorialProfile | null = null;
   let bestScore = 0;
 
   for (const profile of editorialProfiles) {
     if (!profile.segmentos.includes(segment)) continue;
     if (!profile.audiencias.includes(audience)) continue;
+    if (profile.excludeKeywords?.some(matchesKeyword)) continue;
 
     let score = 0;
     for (const kw of profile.keywords) {
-      const kwNorm = kw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      const escaped = kwNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      if (new RegExp(`\\b${escaped}\\b`).test(haystack)) score += kwNorm.length; // keywords mais longas pesam mais
+      if (matchesKeyword(kw)) score += kw.length; // keywords mais longas pesam mais
     }
     if (score > bestScore) {
       bestScore = score;
