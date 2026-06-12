@@ -65,19 +65,13 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestCount, setSuggestCount] = useState(0);
-  const [refining, setRefining] = useState(false);
-  const [refinements, setRefinements] = useState<string[]>([]);
-  const [refineError, setRefineError] = useState<string | null>(null);
-  const [refineCount, setRefineCount] = useState(0);
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
   const allSessionSuggestionsRef = useRef<string[]>([]);
 
   const SUGGEST_MAX = 3;
-  const REFINE_MAX = 2;
   const hasKeyInfo = !!(data.keyInfo || '').trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
-  const refineExhausted = !isAdmin && refineCount >= REFINE_MAX;
   const initialKeyInfo = initialKeyInfoRef.current;
   const canRevertInitial = initialKeyInfo !== null && data.keyInfo !== initialKeyInfo;
 
@@ -85,9 +79,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     setSuggestCount(0);
     setSuggestions([]);
     setSuggestError(null);
-    setRefineCount(0);
-    setRefinements([]);
-    setRefineError(null);
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
   }, [segment]);
@@ -97,9 +88,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
       setSuggestCount(0);
       setSuggestions([]);
       setSuggestError(null);
-      setRefineCount(0);
-      setRefinements([]);
-      setRefineError(null);
       initialKeyInfoRef.current = null;
       // allSessionSuggestionsRef NÃO é resetado — persiste para garantir inédito
     }
@@ -146,50 +134,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
       setSuggestError((e as Error).message);
     } finally {
       setSuggesting(false);
-    }
-  }
-
-  async function fetchRefinement() {
-    if (refineExhausted || !hasKeyInfo || refining) return;
-    setRefining(true);
-    setRefineError(null);
-    const attempt = refineCount;
-
-    try {
-      const auth = await getAuthHeaders();
-      const res = await fetch('/api/suggest-keyinfo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...auth },
-        body: JSON.stringify({
-          companyName: data.companyName,
-          mainActivity: data.mainActivity || '',
-          objetivo: 'promocao',
-          segment,
-          audience: data.audience,
-          hint: (data.keyInfo || '').trim(),
-          mode: 'metodo',
-          attempt,
-          subMode: 'refinar',
-          previousSuggestions: allSessionSuggestionsRef.current,
-          brandVoice: data.brandVoice || '',
-          momento: data.businessMoment || '',
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `Falha (${res.status})`);
-      }
-      const json = await res.json();
-      const newSugg = String(json.sugestao || '').trim();
-      if (newSugg) {
-        setRefinements((arr) => [...arr, newSugg]);
-        allSessionSuggestionsRef.current = [...allSessionSuggestionsRef.current, newSugg];
-      }
-      setRefineCount((c) => c + 1);
-    } catch (e) {
-      setRefineError((e as Error).message);
-    } finally {
-      setRefining(false);
     }
   }
 
@@ -302,23 +246,11 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
             </button>
             <button
               type="button"
-              onClick={fetchRefinement}
-              disabled={refining || loading || !hasKeyInfo || refineExhausted}
-              title={!hasKeyInfo ? 'Preencha o campo para refinar' : refineExhausted ? 'Limite atingido' : 'Refinamento guiado em 4 passos OP'}
-              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: refining || loading || !hasKeyInfo || refineExhausted ? 'not-allowed' : 'pointer', opacity: refining || loading || !hasKeyInfo || refineExhausted ? 0.4 : 1 }}
-            >
-              {refining ? 'Refinando…' : `🔄 Refinar${refineCount > 0 ? ` (${refineCount}/${REFINE_MAX})` : ''}`}
-            </button>
-            <button
-              type="button"
               onClick={() => {
                 update('keyInfo', '');
                 setSuggestCount(0);
                 setSuggestions([]);
                 setSuggestError(null);
-                setRefineCount(0);
-                setRefinements([]);
-                setRefineError(null);
                 initialKeyInfoRef.current = null;
               }}
               disabled={!hasKeyInfo}
@@ -384,43 +316,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           </div>
         )}
 
-        {(refining || refinements.length > 0 || refineError) && (
-          <div style={{ marginTop: 10, padding: 14, borderRadius: 12, background: refineError ? '#fef2f2' : '#f0fdf4', border: `1px solid ${refineError ? '#fecaca' : '#bbf7d0'}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span className="eyebrow" style={{ color: refineError ? '#b91c1c' : '#166534' }}>
-                {refining ? 'Refinamento OP em andamento…' : refineError ? 'Erro no refinamento' : 'Refinamento (Método OP)'}
-              </span>
-              {!refining && (
-                <button type="button" onClick={() => { setRefinements([]); setRefineError(null); }} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b', padding: 0, lineHeight: 1 }} aria-label="Fechar">×</button>
-              )}
-            </div>
-            {refining && <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>Aguarde alguns segundos…</p>}
-            {!refining && refineError && <p style={{ margin: 0, fontSize: 13, color: '#b91c1c' }}>{refineError}</p>}
-            {!refining && !refineError && refinements.length > 0 && (
-              <div>
-                {refinements.length > 1 && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#64748b' }}>Compare os refinamentos e escolha o melhor.</p>}
-                <div style={{ display: 'grid', gap: 10, gridTemplateColumns: refinements.length > 1 ? 'repeat(auto-fit, minmax(220px, 1fr))' : '1fr' }}>
-                  {refinements.map((ref, idx) => (
-                    <div key={idx} style={{ background: '#fff', border: '1px solid #bbf7d0', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {refinements.length > 1 && <span className="eyebrow" style={{ fontSize: 10, color: '#64748b' }}>Versão {idx + 1}</span>}
-                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: '#0f172a', flex: 1 }}>{ref}</p>
-                      <button type="button" onClick={() => { if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || ''; update('keyInfo', ref); setRefinements([]); }} style={{ background: '#166534', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start' }}>
-                        Usar esta
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                {!refineExhausted && (
-                  <div style={{ marginTop: 10 }}>
-                    <button type="button" onClick={fetchRefinement} style={{ background: '#fff', color: '#166534', border: '1px solid #bbf7d0', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                      Refinar novamente ({refineCount}/{REFINE_MAX})
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="formatBox">

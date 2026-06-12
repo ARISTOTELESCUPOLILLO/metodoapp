@@ -41,9 +41,6 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
             : [];
 
-          const subMode = String(body.subMode || 'sugerir') as 'sugerir' | 'refinar';
-          const isRefinar = subMode === 'refinar' && !!hint;
-
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
           const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment) ? (body.segment as Seg) : 'SERVIÇOS';
@@ -160,19 +157,6 @@ COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários elementos, produtos 
           // (%, R$, brinde, prazo/data, condição de compra) continuam bloqueados
           // pela checkInventedPromotion, que agora roda SEMPRE.
           const allowPromoLanguagePU = mode === 'postunico' && (objetivo === 'promocao' || objetivo === 'oportunidade');
-
-          const criteriosRefinamentoOP = `CRITÉRIOS DE QUALIDADE — PROCESSO DE REFINAMENTO:
-
-PASSO 1 — PRESERVE O ASSUNTO E O ELEMENTO CONCRETO: mantenha o tema do usuário E pelo menos 1 elemento concreto nomeado no texto original (produto, peça, serviço, canal, procedimento, objeto ou situação) — literal ou sinônimo direto. Mude apenas a forma e o ângulo, nunca o objeto sobre o qual a frase fala.
-
-PASSO 2 — VALIDE: se a categoria for "Novidade ou Oportunidade" e o texto for crença ou tese genérica, NÃO invente promoção, data ou desconto — transforme em observação de comportamento ou tendência real.
-
-PASSO 3 — REENQUADRE SEM TRAIR A IDEIA: ajuste o ângulo mantendo o sentido central. Se positivo, mantenha positivo.
-
-PASSO 4 — ESCREVA COM CLAREZA: 1 frase direta e simples, entre 5 e 10 palavras (máximo absoluto 12). Sintaxe: qualquer palavra substantivada pode ser sujeito — substantivo, adjetivo, verbo no infinitivo ou locução; não restrinja a papéis pessoais. Evite encadear mais de uma cláusula relativa.
-
-${proibicoesInventar}
-LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se precisar trocar uma palavra grande por palavras mais curtas e isso aproximar a frase do limite de 12, prefira isso a manter um termo difícil — mas nunca ultrapasse 12 palavras. EXCEÇÃO: se houver um elemento concreto central (produto, peça, serviço, objeto, procedimento) vindo do texto do usuário ou da atividade, esse termo pode ter mais de 3 sílabas (ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia") — não o troque por palavra genérica só para simplificar.`;
 
           const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE OP:
 Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo. Entre 5 e 10 palavras (máximo absoluto 12).
@@ -384,161 +368,8 @@ ${sementeLembreteMarca}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, ligada a um fato real da trajetória, tom de legado e pertencimento" }`;
 
-          // ── Prompts de REFINAMENTO (campo com texto) ──────────────────────
-
-          const metodoRefinarTensao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
-
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
-
-${audienceDirective}
-
-${momentoContextBlock}
-
-${editorialBlock}
-
-INSTRUÇÃO DE REFINAMENTO:
-1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: quem + o quê + tensão ou dor. Entre 5 e 10 palavras (máximo absoluto 12).
-3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
-4. Se o texto estiver vago, traga para uma situação concreta do dia a dia da empresa.
-5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase.
-
-${criteriosRefinamentoOP}
-
-${aberturaSequenciaGuide}
-
-${segmentLensBlock}
-
-ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
-Deve ATIVAR pelo menos um gatilho: movimento, conflito, mudança, comparação, consequência.
-
-EVITE termos genéricos isolados ("marketing digital", "consultoria", "organização", "tráfego pago").
-
-Exemplos de refinamento com tensão (não copie — referência de FORMATO):
-- "anúncios pagos não trazem vendas para a loja local"
-- "a empresa publica todo dia e continua invisível no Instagram"
-- "comunicação desorganizada transmite insegurança ao cliente sem perceber"
-
-Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
-
-          const metodoRefinarMotivacao = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
-
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
-
-${audienceDirective}
-
-${momentoContextBlock}
-
-${editorialBlock}
-
-INSTRUÇÃO DE REFINAMENTO:
-1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: quem + o quê + desejo ou conquista. Entre 5 e 10 palavras (máximo absoluto 12).
-3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
-4. Se o texto estiver vago, traga para uma situação concreta do dia a dia da empresa.
-5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase.
-
-${criteriosRefinamentoOP}
-
-${aberturaSequenciaGuide}
-
-${segmentLensBlock}
-
-ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
-NÃO aponte erro ou falta. Fale do que o público QUER alcançar, do próximo nível, da transformação positiva.
-EVITE qualquer formulação crítica ao público ("não conseguem", "não sabem", "fazem errado").
-
-Exemplos de refinamento com motivação (não copie — referência de FORMATO e TOM):
-- "a loja de bairro vende todo dia pelo Instagram"
-- "o negócio local ganha autoridade com presença digital consistente"
-- "a marca cresce com consistência nas redes sociais"
-
-Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
-
-          const marcaRefinarIdentidade = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
-
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
-TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
-
-${preservaHint}
-
-${editorialBlock}
-
-INSTRUÇÃO DE REFINAMENTO:
-1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: marca + identidade ou propósito. Entre 5 e 10 palavras (máximo absoluto 12).
-3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
-4. Se o texto estiver vago, traga para uma situação concreta da marca.
-5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase, linguagem de venda, urgência.
-
-${criteriosRefinamentoOP}
-
-${aberturaSequenciaGuide}
-
-${segmentLensBlock}
-
-ÂNGULO: IDENTIDADE / POSICIONAMENTO.
-Revele QUEM a marca é, o que representa, como quer ser percebida. Sem promessa comercial, sem CTA.
-
-Exemplos de refinamento institucional (não copie — referência de TOM e FORMATO):
-- "a loja de bairro pertence à história da cidade"
-- "a marca local reafirma o jeito próprio de trabalhar"
-- "o negócio tem um propósito claro além da venda"
-
-Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
-
-          const marcaRefinarLegado = `Refine a Informação-chave do usuário para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
-
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
-TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO invente outro): "${hint}"
-
-${preservaHint}
-
-${editorialBlock}
-
-INSTRUÇÃO DE REFINAMENTO:
-1. Preserve o ASSUNTO do usuário — mude apenas a forma.
-2. Reescreva em 1 frase curta e direta: marca + trajetória ou vínculo. Entre 5 e 10 palavras (máximo absoluto 12).
-3. SINTAXE: qualquer palavra substantivada pode ser sujeito — não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
-4. Se o texto estiver vago, traga para um fato concreto da trajetória da marca.
-5. PROIBIDO: inventar assunto diferente, usar "que" mais de 1 vez na frase, linguagem comercial, dor do cliente, inversão negativa.
-
-${criteriosRefinamentoOP}
-
-${aberturaSequenciaGuide}
-
-${segmentLensBlock}
-
-ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
-Foco em história, tempo de mercado, vínculo afetivo, evolução da marca. Tom de orgulho calmo.
-
-Exemplos de refinamento de legado (não copie — referência de TOM e FORMATO):
-- "a marca constrói vínculo com a comunidade há duas décadas"
-- "pequenos detalhes definem como as pessoas lembram da marca"
-- "a marca atravessou gerações e ainda é referência no bairro"
-
-Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
-
           let metodoPrompt: string;
-          if (isRefinar) {
-            if (segment === 'MARCA') {
-              metodoPrompt = attempt % 2 === 0 ? marcaRefinarIdentidade : marcaRefinarLegado;
-            } else {
-              metodoPrompt = angulo === 'tensao' ? metodoRefinarTensao : metodoRefinarMotivacao;
-            }
-          } else if (segment === 'MARCA') {
+          if (segment === 'MARCA') {
             metodoPrompt = attempt % 2 === 0 ? marcaIdentidade : marcaLegado;
           } else {
             metodoPrompt = angulo === 'tensao' ? metodoTensao : metodoMotivacao;

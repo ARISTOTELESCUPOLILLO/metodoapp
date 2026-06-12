@@ -315,7 +315,7 @@ EIXO OBRIGATÓRIO DA SEQUÊNCIA — INFORMAÇÃO-CHAVE:
 - O eixo determina o ÂNGULO de cada post dentro da progressão psicológica — não substitui a progressão.
 - O fechamento da sequência deve consolidar a decisão em torno deste eixo.
 - Proibido peça que não se conecte de forma evidente ao eixo.
-- ANCORAGEM CONCRETA DO EIXO: se a informação-chave acima contém um elemento concreto nomeado (produto, peça, serviço, canal, procedimento, objeto ou situação), pelo menos 1 peça da sequência (preferencialmente o primeiro Estático ou o Estático Final) deve usar esse termo — literal ou sinônimo direto — no título ou no texto, mesmo que as demais peças tratem o eixo de forma mais abstrata.
+- ANCORAGEM CONCRETA DO EIXO: a informação-chave nomeia um elemento concreto (produto, peça, serviço, canal, procedimento ou situação) — esse elemento, ou sinônimo direto, deve aparecer no título OU no texto do PRIMEIRO Estático E do Estático Final/última peça — abertura e fechamento da sequência precisam ser reconhecíveis como sendo sobre esse elemento, não sobre um tema genérico do segmento. As peças intermediárias podem tratar o eixo de forma mais abstrata.
 `
     : '';
 
