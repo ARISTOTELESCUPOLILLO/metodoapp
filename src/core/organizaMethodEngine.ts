@@ -167,7 +167,7 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} de produção):
 - Cada Reels: até 15 segundos, imagem PURA (sem texto, sem logo), sempre com UMA ÚNICA PESSOA adulta como porta-voz.
 - O imagePrompt do Reels DEVE descrever uma FOTO ÚNICA, sem colagem, sem sequência de quadros, sem reunião e sem várias pessoas.
 - Se a ideia envolver clientes, equipe, reunião ou atendimento, traduza visualmente para uma pessoa sozinha olhando para a câmera.
-- Campo "hook": título editorial do reels, NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas. Sem ponto final — EXCETO se for pergunta (direta ou retórica): nesse caso "?" é obrigatório (ex.: "Por que isso acontece?", "O que está faltando?").
+- Campo "hook": título editorial do reels, NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"). Sem ponto final — EXCETO se for pergunta (direta ou retórica): nesse caso "?" é obrigatório (ex.: "Por que isso acontece?", "O que está faltando?").
 - Texto de tela em "screenText", frase curta até 7 palavras.
 - Roteiro falado (campo "script"): ESTRUTURA em 2 partes — (1) mensagem principal de 14 a 16 palavras curtas + ponto final + (2) CTA genérico de 5 a 6 palavras. TOTAL: 19 a 22 palavras → ~7 segundos em voz.
   CTA OBRIGATORIAMENTE GENÉRICO — varie a cada geração, escolha entre: "Fale com a gente hoje.", "Entre em contato agora.", "Venha saber mais.", "Comece ainda hoje.", "Fale conosco agora.", "Dá pra começar hoje.", "A gente te ajuda.", "Vem com a gente.", "O primeiro passo é seu.", "Bora dar o próximo passo." — ou crie outro de mesmo tom. PROIBIDO mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
@@ -180,7 +180,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fe
 - O Estático Final NÃO é um estático comum nem um reel congelado.
 - É um formato HÍBRIDO de fechamento visual com função psicológica própria: consolidação, resolução visual, fechamento emocional, organização da decisão.
 - Função na sequência: encerrar o ciclo narrativo aberto pelo estático e desenvolvido pelo carrossel.
-- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - O TÍTULO do Estático Final deve carregar resolução, não provocação. Frase de conclusão, não de abertura.
 - O TEXTO deve consolidar a direção da sequência em uma afirmação clara e estável.
 - A IMAGEM deve traduzir literalmente o título e o texto, com cena de calma, foco e estabilidade — não tensão, não movimento.
@@ -211,7 +211,7 @@ A SEQUÊNCIA COMPLETA segue a progressão: ${progressionText}
 Os formatos são distribuídos pelo método — NÃO pelo usuário.
 
 ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
-- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - Variar títulos entre afirmação, pergunta, contraste e observação cotidiana.
 - DIVERSIDADE LEXICAL OBRIGATÓRIA: os títulos dos estáticos de uma mesma sequência NÃO podem começar com a mesma palavra — garantir abertura distinta entre Estático 1, Estático 2 e Estático Final.
 - SUJEITO DO TÍTULO: aplica-se a regra de liberdade gramatical do item 11 (ver ANÁLISE INTERNA acima) — qualquer classe gramatical pode ser sujeito quando substantivada; proibida construção passiva sem agente.
@@ -223,7 +223,7 @@ ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 cards cada):
 - Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
 - Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. Card 5 pode citar o que a empresa entrega e tem CTA na legenda.
-- Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
+- Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "organização dos elementos no quadro" } }, ...] }]
 ${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ''}
 ${closingBlock}
@@ -315,6 +315,7 @@ EIXO OBRIGATÓRIO DA SEQUÊNCIA — INFORMAÇÃO-CHAVE:
 - O eixo determina o ÂNGULO de cada post dentro da progressão psicológica — não substitui a progressão.
 - O fechamento da sequência deve consolidar a decisão em torno deste eixo.
 - Proibido peça que não se conecte de forma evidente ao eixo.
+- ANCORAGEM CONCRETA DO EIXO: se a informação-chave acima contém um elemento concreto nomeado (produto, peça, serviço, canal, procedimento, objeto ou situação), pelo menos 1 peça da sequência (preferencialmente o primeiro Estático ou o Estático Final) deve usar esse termo — literal ou sinônimo direto — no título ou no texto, mesmo que as demais peças tratem o eixo de forma mais abstrata.
 `
     : '';
 
