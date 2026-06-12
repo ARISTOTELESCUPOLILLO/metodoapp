@@ -7,15 +7,15 @@ import { BrandKit, CarouselCard, FeedItem, MoodCode } from '../types';
 const FEED_W = 1080;
 const FEED_H = 1350;
 const PAD = 110;
-const LOGO_MAX_W = 240;
-const LOGO_MAX_H = 90;
+const LOGO_MAX_W = 288;
+const LOGO_MAX_H = 108;
 
 // Reels 9:16 (1080x1920) — respiro maior (150px) para a logo no canto inferior direito.
 const REELS_W = 1080;
 const REELS_H = 1920;
 const REELS_PAD = 150;
-const REELS_LOGO_MAX_W = 280;
-const REELS_LOGO_MAX_H = 110;
+const REELS_LOGO_MAX_W = 336;
+const REELS_LOGO_MAX_H = 132;
 
 // Calcula luminância relativa WCAG (0..1) a partir de hex #rrggbb.
 function relativeLuminance(hex: string): number {
