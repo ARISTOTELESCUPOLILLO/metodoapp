@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useEffect, type ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   children: ReactNode;
@@ -13,7 +14,17 @@ export function AuthGate({ children, requireAdmin }: Props) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: '/login' });
+    if (loading || user) return;
+    // useAuth pode reportar user=null momentaneamente durante a inicialização
+    // (corrida entre onAuthStateChange e getSession — mais provável em
+    // mobile com o app aberto em mais de um lugar, ex.: atalho da tela
+    // inicial + navegador, disputando a renovação do mesmo token). Confirma
+    // com uma releitura direta da sessão antes de chutar para /login.
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && !data.session) navigate({ to: '/login' });
+    });
+    return () => { cancelled = true; };
   }, [loading, user, navigate]);
 
   if (loading) {
