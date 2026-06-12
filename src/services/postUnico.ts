@@ -125,29 +125,43 @@ const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]
   ],
 };
 
-function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo): string {
+function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo, hasProdutos?: boolean): string {
   if (direcao === 'mood' && mood) {
     return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood)}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.`;
   }
   const obj = objetivo ?? 'nenhum';
 
+  // Quando há produtos referenciados (Kit Imagem / MIX), eles já são o "conceito"
+  // da geração — sortear um arquétipo adicional (ex.: RELÓGIO/TEMPO) cria um
+  // segundo elemento-herói que disputa protagonismo e espaço com o produto real,
+  // degradando sua geometria. Por isso o sorteio é substituído por esta nota.
+  const PRODUTOS_CONCEITO_NOTE = '\n\nPRODUTOS REFERENCIADOS SÃO O CONCEITO DESTA GERAÇÃO: não introduza objeto-conceito adicional (relógio, ampulheta, ferramenta simbólica isolada, elemento gráfico abstrato, etc.) que possa competir em protagonismo ou espaço com os produtos reais — a personalidade da peça vem de como os produtos são compostos na cena, com o PAPEL DA EMPRESA e a ATIVIDADE REAL como contexto.';
+
   // Livre + Nenhum é a combinação mais aberta do sistema (sem mood, sem objetivo).
   // Tratada à parte: os mapas OBJETIVO_* pressupõem conexão obrigatória com o negócio,
   // o que contradiz e neutraliza a "liberdade total" — daí a falta de ousadia observada.
   if (obj === 'nenhum') {
-    const archetypeHint = `\n\n${LIVRE_TOTAL_ARCHETYPES[Math.floor(Math.random() * LIVRE_TOTAL_ARCHETYPES.length)]}`;
+    const archetypeHint = hasProdutos
+      ? PRODUTOS_CONCEITO_NOTE
+      : `\n\n${LIVRE_TOTAL_ARCHETYPES[Math.floor(Math.random() * LIVRE_TOTAL_ARCHETYPES.length)]}`;
     return `DIREÇÃO LIVRE — SEM TEMA OU OBJETIVO PRÉ-DEFINIDO: a IA tem liberdade total e real de direção de arte — não há mood, não há objetivo, não há obrigação de literalidade com o negócio.${archetypeHint}\n\nVarie ATIVAMENTE entre abordagens possíveis: luz natural OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU conceitual. Escolha uma direção com personalidade própria, ouse e vá fundo nela — o critério é qualidade editorial e impacto visual, não utilidade comercial. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
   }
 
   const sensacao = OBJETIVO_SENSACAO[obj];
   const orientacao = OBJETIVO_ORIENTACAO[obj];
   const exclusion = OBJETIVO_VISUAL_EXCLUSIONS[obj];
-  // Sorteia arquétipo visual para forçar diversidade entre gerações sequenciais.
+  // Sorteia arquétipo visual para forçar diversidade entre gerações sequenciais
+  // — substituído pela nota de protagonismo dos produtos quando há MIX (acima).
   const archetypes = OBJETIVO_ARCHETYPES[obj];
-  const archetypeHint = archetypes && archetypes.length
-    ? `\n\n${archetypes[Math.floor(Math.random() * archetypes.length)]}`
-    : '';
-  return `DIREÇÃO LIVRE — SENSAÇÃO DESEJADA: ${sensacao}.\nOrientação: ${orientacao}\n\n${exclusion}${archetypeHint}\n\nDERIVAÇÃO OBRIGATÓRIA: o objeto, gesto ou elemento visual do arquétipo acima é sempre derivado da ATIVIDADE REAL da empresa e do PAPEL DA EMPRESA neste prompt — nunca de uma lista padrão. A estrutura visual (enquadramento, câmera, nível de abstração) é do arquétipo; o conteúdo é do ofício real.\n\nA IA tem liberdade de direção de arte dentro do objetivo informado. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
+  const archetypeHint = hasProdutos
+    ? PRODUTOS_CONCEITO_NOTE
+    : archetypes && archetypes.length
+      ? `\n\n${archetypes[Math.floor(Math.random() * archetypes.length)]}`
+      : '';
+  const derivacaoBlock = hasProdutos
+    ? ''
+    : '\n\nDERIVAÇÃO OBRIGATÓRIA: o objeto, gesto ou elemento visual do arquétipo acima é sempre derivado da ATIVIDADE REAL da empresa e do PAPEL DA EMPRESA neste prompt — nunca de uma lista padrão. A estrutura visual (enquadramento, câmera, nível de abstração) é do arquétipo; o conteúdo é do ofício real.';
+  return `DIREÇÃO LIVRE — SENSAÇÃO DESEJADA: ${sensacao}.\nOrientação: ${orientacao}\n\n${exclusion}${archetypeHint}${derivacaoBlock}\n\nA IA tem liberdade de direção de arte dentro do objetivo informado. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
 }
 
 function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo: string; regraFinal: string } {
@@ -408,7 +422,7 @@ export function buildPostUnicoPrompt(params: {
   const isNenhum = data.objetivo === 'nenhum';
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
-  const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo);
+  const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo, !!references?.produtos?.length);
   const variationBlock = data.direcao === 'mood' ? pickImageVariationBlock(data.mood, !!references?.avatar, copy?.titulo, copy?.texto) : '';
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
@@ -437,7 +451,8 @@ A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco 
 Hierarquia tipográfica obrigatória:
 • TÍTULO: DOMINANTE — renderizado em tamanho grande e impactante (pense em outdoor; o título deve ocupar ao menos 35-45% da altura útil do canvas com 2-4 linhas). Nunca compacto, nunca horizontal com muitas palavras em linha única se caber melhor em 2-3 linhas maiores.
 • TEXTO DE APOIO: SUBTÍTULO DE REVISTA — corpo entre 55% e 70% do título, facilmente legível a distância normal de celular (nunca tamanho de legenda ou rodapé; se o texto tiver 2-3 linhas, cada linha deve ser claramente lida sem aproximar o olho da tela).
-• ACENTO DE COR: aplique a cor de acento da paleta em 1 palavra-chave ou linha do título para criar hierarquia e personalidade visual.`;
+• ACENTO DE COR: aplique a cor de acento da paleta em 1 palavra-chave ou linha do título para criar hierarquia e personalidade visual.
+⚠ ANTI-TRADUÇÃO LITERAL DO TÍTULO CRIADO: ao criar o título e o texto acima, NÃO os transforme em objeto visual literal da cena. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras do título que você mesmo escrever. Proibições diretas: "novo"/"novidade" ≠ caderno limpo, página em branco, objeto novo genérico; "ação"/"agir" ≠ seta, figura em movimento, objeto cinético; "rumo"/"caminho"/"direção" ≠ corredor, estrada, passagem; "hoje"/"agora" ≠ relógio, ampulheta, pôr do sol; "escolha"/"decisão" ≠ encruzilhada, bifurcação. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`;
 
   // Instrução de referência (avatar/cenário/produtos) com PRIORIDADE MÁXIMA —
   // posicionada junto das demais regras invioláveis, ANTES da descrição da peça
