@@ -609,7 +609,7 @@ Retorne JSON EXATAMENTE assim:
               : '';
 
             const result = await fetchOpenAIChat(apiKey, {
-              model: 'gpt-4.1-mini',
+              model: 'gpt-4.1',
               messages: [
                 { role: 'system', content: systemMsg },
                 { role: 'user', content: `${userPrompt}${reinforcement}` },
