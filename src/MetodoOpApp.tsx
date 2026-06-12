@@ -389,6 +389,7 @@ export default function App() {
               secondaryColor: kit.secondaryColor,
               accentColor: kit.accentColor,
               fontPair: kit.fontPair,
+              secondaryFont: kit.secondaryFont,
               brandVoice: kit.brandVoice,
               logoHasName: kit.logoHasName ?? false,
               logoDataUrl: kit.logoDataUrl,

@@ -5,6 +5,8 @@ export type OutputMode = 'feed' | 'stories' | 'feed+stories';
 export type OutputFormat = 'feed' | 'carrossel' | 'reels' | 'stories' | 'estatico_final';
 export type MoodCode = 'OP-01' | 'OP-02' | 'OP-03' | 'OP-04' | 'OP-05' | 'OP-06';
 export type FontPair = 'Inter' | 'Montserrat' | 'Playfair Display' | 'Roboto Slab' | 'Poppins' | 'Lora' | 'Raleway' | 'Merriweather';
+// Tipografia secundária opcional (manuscrita) — destaca 1 palavra-chave do título.
+export type SecondaryFont = 'fina' | 'grossa';
 export type LogoPosition = 'bottom-right' | 'top-center' | 'bottom-center';
 
 // Trilha narrativa do Método OP — define qual peça fecha a sequência
@@ -22,6 +24,7 @@ export interface BrandKit {
   secondaryColor: string;
   accentColor?: string;
   fontPair: FontPair;
+  secondaryFont?: SecondaryFont;
   brandVoice: string;
   mainActivity?: string;
   logoPosition?: LogoPosition;

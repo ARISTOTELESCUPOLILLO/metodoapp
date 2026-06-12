@@ -1,9 +1,9 @@
 import { buildMetodoOpPrompt, normalizeMethodResult } from '../core/organizaMethodEngine';
 import { pickImageVariationBlock } from '../core/visualDirection';
-import { ContentFormData, LogoPosition, MethodOpResult, MoodCode } from '../types';
+import { ContentFormData, LogoPosition, MethodOpResult, MoodCode, SecondaryFont } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { autoRegenerateFlaggedFields } from './autoRegenerate';
-import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
+import { buildTypographyBlock, buildTypographyShortRule, buildScriptAccentBlock } from '../utils/typography';
 import { DEVICE_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
@@ -133,6 +133,7 @@ function buildImagePrompt(params: {
   primaryColor: string;
   accentColor: string;
   fontFamily: string;
+  secondaryFont?: SecondaryFont;
   moodInstructions: string;
   isFinal?: boolean;
   hasLogo?: boolean;
@@ -148,7 +149,7 @@ function buildImagePrompt(params: {
   // do personagem (o avatar de referência já define a identidade/gênero).
   hasAvatarRef?: boolean;
 }): string {
-  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef } = params;
+  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, secondaryFont, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef } = params;
   const isCover = format === 'reels_cover';
   const canvasSize = isCover ? '1080x1920' : '1080x1350';
   const canvasRatio = isCover ? '9:16 (reels vertical)' : '4:5 (feed)';
@@ -176,6 +177,7 @@ function buildImagePrompt(params: {
 
   const typographyBlock = buildTypographyBlock(fontFamily);
   const typographyShort = buildTypographyShortRule(fontFamily);
+  const scriptAccentBlock = secondaryFont ? `\n${buildScriptAccentBlock(secondaryFont)}\n` : '';
 
   // Quando há `referenceAnchor`, ele já cobre a "referência visual" com prioridade
   // máxima lá no topo do prompt (ver referenceAnchorBlock) — não repetir aqui
@@ -246,7 +248,7 @@ COR PRIMÁRIA: ${primaryColor}
 COR DE DESTAQUE: ${accentColor}
 
 ${typographyBlock}
-
+${scriptAccentBlock}
 REGRAS:
 - Título renderizado em CAIXA ALTA exatamente como: "${tituloUpper}"
 - Texto de apoio exatamente como: "${texto}", em caixa normal, corpo entre 55% e 70% do título (subtítulo de revista legível sem zoom — nunca tamanho de legenda)
@@ -319,6 +321,7 @@ export async function generatePostImage(params: {
   primaryColor: string;
   accentColor: string;
   fontFamily: string;
+  secondaryFont?: SecondaryFont;
   logoDataUrl?: string;
   mood: MoodCode;
   vertical: 'post' | 'reels' | 'estatico_final' | 'reels_cover';
@@ -346,7 +349,7 @@ export async function generatePostImage(params: {
   // regra de preservar a identidade do avatar, fazendo a IA descartar a referência.
   hasAvatarRef?: boolean;
 }): Promise<string> {
-  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef } = params;
+  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef } = params;
 
   const isReels = vertical === 'reels';
   const isCover = vertical === 'reels_cover';
@@ -416,6 +419,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         primaryColor,
         accentColor,
         fontFamily,
+        secondaryFont,
         moodInstructions,
         isFinal,
         hasLogo,

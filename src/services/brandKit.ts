@@ -3,7 +3,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
-import { BrandKit, LogoPosition } from '../types';
+import { BrandKit, LogoPosition, SecondaryFont } from '../types';
 
 function rowToKit(k: any): BrandKit {
   return {
@@ -13,6 +13,7 @@ function rowToKit(k: any): BrandKit {
     secondaryColor: k.secondary_color,
     accentColor: k.accent_color,
     fontPair: k.font_pair,
+    secondaryFont: (k.secondary_font as SecondaryFont) || undefined,
     brandVoice: k.brand_voice,
     logoHasName: k.logo_has_name,
     logoDataUrl: k.logo_url || undefined,
@@ -49,6 +50,7 @@ const KitSchema = z.object({
   secondaryColor: z.string().optional(),
   accentColor: z.string().optional(),
   fontPair: z.string().default('Montserrat'),
+  secondaryFont: z.enum(['fina', 'grossa']).optional(),
   brandVoice: z.string().default(''),
   logoHasName: z.boolean().default(false),
   logoDataUrl: z.string().max(5_000_000).optional(),
@@ -82,6 +84,7 @@ export const saveKitServer = createServerFn({ method: 'POST' })
       secondary_color: data.secondaryColor,
       accent_color: data.accentColor,
       font_pair: data.fontPair,
+      secondary_font: data.secondaryFont ?? null,
       brand_voice: data.brandVoice,
       logo_has_name: data.logoHasName,
       logo_url: data.logoDataUrl,
@@ -126,6 +129,7 @@ export async function saveKitForUser(kit: BrandKit, userId: string): Promise<Bra
     secondary_color: kit.secondaryColor,
     accent_color: kit.accentColor,
     font_pair: kit.fontPair,
+    secondary_font: kit.secondaryFont ?? null,
     brand_voice: kit.brandVoice,
     logo_has_name: kit.logoHasName ?? false,
     logo_url: kit.logoDataUrl,

@@ -66,6 +66,7 @@ export type Database = {
           main_activity: string | null
           primary_color: string | null
           secondary_color: string | null
+          secondary_font: string | null
           segment: string | null
           updated_at: string
           user_id: string
@@ -85,6 +86,7 @@ export type Database = {
           main_activity?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          secondary_font?: string | null
           segment?: string | null
           updated_at?: string
           user_id: string
@@ -104,6 +106,7 @@ export type Database = {
           main_activity?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          secondary_font?: string | null
           segment?: string | null
           updated_at?: string
           user_id?: string

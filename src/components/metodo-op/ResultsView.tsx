@@ -270,6 +270,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || '#f4b000',
         fontFamily: kit.fontPair || 'Montserrat',
+        secondaryFont: kit.secondaryFont,
         mood, vertical: 'post', logoPosition: kit.logoPosition,
         leituraCenica: (item as any).leituraCenica,
       });
@@ -422,6 +423,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || '#f4b000',
         fontFamily: kit.fontPair || 'Montserrat',
+        secondaryFont: kit.secondaryFont,
         mood, vertical: 'estatico_final', logoPosition: kit.logoPosition,
         leituraCenica: (item as any).leituraCenica,
       });
@@ -578,6 +580,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || '#f4b000',
         fontFamily: kit.fontPair || 'Montserrat',
+        secondaryFont: kit.secondaryFont,
         mood, vertical: 'post', logoPosition: kit.logoPosition,
         leituraCenica: (card as any).leituraCenica,
       });
@@ -689,6 +692,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             primaryColor: kit.primaryColor,
             accentColor: kit.accentColor || '#f4b000',
             fontFamily: kit.fontPair || 'Montserrat',
+            secondaryFont: kit.secondaryFont,
             mood, vertical: 'post', logoPosition: kit.logoPosition,
             leituraCenica: (card as any).leituraCenica,
           });
@@ -1082,6 +1086,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || '#f4b000',
         fontFamily: kit.fontPair || 'Montserrat',
+        secondaryFont: kit.secondaryFont,
         mood, vertical: 'reels',
         logoPosition: kit.logoPosition,
       });
@@ -1218,6 +1223,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
             primaryColor: kit.primaryColor,
             accentColor: kit.accentColor || '#f4b000',
             fontFamily: kit.fontPair || 'Montserrat',
+            secondaryFont: kit.secondaryFont,
             mood,
             vertical: 'reels_cover',
             logoDataUrl: kit.logoDataUrl,
@@ -1349,6 +1355,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || '#f4b000',
         fontFamily: kit.fontPair || 'Montserrat',
+        secondaryFont: kit.secondaryFont,
         mood,
         vertical: 'reels_cover',
         logoDataUrl: kit.logoDataUrl,

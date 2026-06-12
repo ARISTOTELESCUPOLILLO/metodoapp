@@ -334,6 +334,7 @@ export async function regenerateWithKit(
       primaryColor: kit.primaryColor,
       accentColor: kit.accentColor || kit.secondaryColor || '#f4b000',
       fontFamily: kit.fontPair || 'Montserrat',
+      secondaryFont: kit.secondaryFont,
       mood,
       vertical: 'reels',
       // Sem logoDataUrl: a logo é aplicada por canvas (composeReelsPng).
@@ -353,6 +354,7 @@ export async function regenerateWithKit(
       primaryColor: kit.primaryColor,
       accentColor: kit.accentColor || kit.secondaryColor || '#f4b000',
       fontFamily: kit.fontPair || 'Montserrat',
+      secondaryFont: kit.secondaryFont,
       mood,
       vertical: 'estatico_final',
       logoPosition: kit.logoPosition,
@@ -375,6 +377,7 @@ export async function regenerateWithKit(
     primaryColor: kit.primaryColor,
     accentColor: kit.accentColor || kit.secondaryColor || '#f4b000',
     fontFamily: kit.fontPair || 'Montserrat',
+    secondaryFont: kit.secondaryFont,
     mood,
     vertical: 'post',
     logoPosition: kit.logoPosition,

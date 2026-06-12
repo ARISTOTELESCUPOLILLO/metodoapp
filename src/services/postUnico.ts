@@ -2,7 +2,7 @@ import { BrandKit, LogoPosition, MoodCode, PostUnicoDirecao, PostUnicoFormData, 
 import { composeFeedPng } from '../utils/canvasComposer';
 import type { FeedItem } from '../types';
 import { generateImageAsync } from './imageGeneration';
-import { buildTypographyBlock, buildTypographyShortRule } from '../utils/typography';
+import { buildTypographyBlock, buildTypographyShortRule, buildScriptAccentBlock } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
 import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule, buildProductHierarchyBlock } from '../core/visualDirection';
 import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
@@ -416,6 +416,7 @@ export function buildPostUnicoPrompt(params: {
 
   const typographyBlock = buildTypographyBlock(kit.fontPair);
   const typographyShort = buildTypographyShortRule(kit.fontPair);
+  const scriptAccentBlock = kit.secondaryFont ? `\n${buildScriptAccentBlock(kit.secondaryFont)}\n` : '';
 
   const hasCopy = copy && (copy.titulo || copy.texto);
   const copyBlock = hasCopy
@@ -493,7 +494,7 @@ ${direcao}${variationBlock}
 ${buildColorBlock(primary, accent, data.direcao === 'mood', data.objetivo)}
 
 ${typographyBlock}
-
+${scriptAccentBlock}
 REGRAS:
 - Esta peça é STANDALONE — não precisa parecer parte de uma série. Evite a fórmula visual mais óbvia para o briefing; escolha uma execução com personalidade própria dentro da direção definida.
 - Todo texto em PORTUGUÊS, sem inglês

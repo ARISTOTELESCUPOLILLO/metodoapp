@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrandKit, FontPair, LogoPosition, Segment } from '../../types';
+import { BrandKit, FontPair, LogoPosition, SecondaryFont, Segment } from '../../types';
 import { brandVoiceCatalog, defaultVoice } from '../../data/brandVoice';
 import { fileToDataUrl } from '../../utils/file';
 import ConfirmDialog from './ConfirmDialog';
@@ -38,6 +38,11 @@ interface Props {
 const FONTS: { value: FontPair; label: string; sample: string }[] = [
   { value: 'Inter',            label: 'Helvética', sample: 'Aa' },
   { value: 'Playfair Display', label: 'Serifada',  sample: 'Aa' },
+];
+
+const SECONDARY_FONTS: { value: SecondaryFont; label: string; sample: string; cssFamily: string }[] = [
+  { value: 'fina',   label: 'Manuscrita fina',   sample: 'Aa', cssFamily: 'Allura' },
+  { value: 'grossa', label: 'Manuscrita grossa', sample: 'Aa', cssFamily: 'Great Vibes' },
 ];
 
 const COLORS_PRESET = [
@@ -243,6 +248,24 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
               className={`fontCard${kit.fontPair === f.value ? ' active' : ''}`}
               onClick={() => update('fontPair', f.value)}
               style={{ fontFamily: f.value }}>
+              <span className="fontSample">{f.sample}</span>
+              <span className="fontName">{f.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="fontSection">
+        <strong className="fontLabel">Manuscrita <span style={{ fontSize: 11, fontWeight: 400, color: '#94a3b8' }}>(opcional)</span></strong>
+        <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 8px' }}>
+          Se marcada, destaca 1 palavra-chave do título com fonte manuscrita na cor de destaque. Se nenhuma estiver marcada, o título usa só a tipografia primária acima.
+        </p>
+        <div className="fontGrid">
+          {SECONDARY_FONTS.map(f => (
+            <button key={f.value} type="button"
+              className={`fontCard${kit.secondaryFont === f.value ? ' active' : ''}`}
+              onClick={() => update('secondaryFont', kit.secondaryFont === f.value ? undefined : f.value)}
+              style={{ fontFamily: f.cssFamily }}>
               <span className="fontSample">{f.sample}</span>
               <span className="fontName">{f.label}</span>
             </button>
