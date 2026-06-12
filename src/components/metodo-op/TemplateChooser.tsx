@@ -45,7 +45,6 @@ export default function TemplateChooser({ segment, selected, onSelect }: Props) 
               {(() => { const Icon = MOOD_ICONS[mood.code]; return Icon ? <Icon size={22} color="white" strokeWidth={1.8} /> : null; })()}
             </span>
             <strong>{mood.code} · {mood.name}</strong>
-            {mood.recommendedFor.includes(segment) && <em>recomendado</em>}
           </button>
         ))}
       </div>
