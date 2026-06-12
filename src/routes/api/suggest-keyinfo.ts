@@ -217,7 +217,17 @@ ${angulo === 'tensao'
 VOCABULÁRIO PROIBIDO adicional: ${editorialProfile.vocabularioProibido.join(', ')}
 NOTA DO MÉTODO: ${editorialProfile.notaMetodo}
 TERRITÓRIO e ÂNGULOS acima são direções de leitura do perfil, não frases prontas. Se a ATIVIDADE da empresa (informada no início) apontar para um contexto mais específico e reconhecível do que esses ângulos genéricos, a ATIVIDADE PREVALECE — priorize a situação real da empresa sobre o ângulo do perfil.`
-            : '';
+            // Sem perfil cadastrado para esta atividade (negócio novo/nicho não
+            // previsto): em vez de ficar sem direção (string vazia), pede para o
+            // próprio modelo ler a ATIVIDADE e construir a leitura de território
+            // e ângulo a partir dela — sem tomar de empréstimo território,
+            // ângulos ou vocabulário de outro segmento de negócio.
+            : (mode === 'metodo' && mainActivity.trim()
+              ? `PERFIL EDITORIAL: nenhum perfil específico cadastrado para esta atividade — não empreste território, ângulos ou vocabulário de outro tipo de negócio.
+TERRITÓRIO: leia "${mainActivity}" e identifique que tipo real de ${isB2C ? 'momento, necessidade, decisão ou desconforto da vida do cliente' : 'situação, risco ou decisão do dia a dia do negócio'} essa atividade toca — esse é o território desta sugestão.
+ÂNGULO: a partir desse território, o ângulo pedido mais abaixo (tensão, oportunidade, identidade ou legado) deve nascer de algo REAL e ESPECÍFICO de "${mainActivity}" — nunca de uma ideia genérica que serviria para qualquer negócio do segmento ${segment} (ex.: "falta de organização", "pouca visibilidade online", "crescer", "se destacar").
+VOCABULÁRIO: use o vocabulário natural de quem trabalha ou é atendido em "${mainActivity}" — evite termos típicos de outros setores.`
+              : '');
 
           const previousBlock = previousSugs.length
             ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos nem ângulos — gere algo completamente diferente; se a atividade reúne vários grupos de produtos/serviços, dê preferência a um grupo ainda não tocado por estas sugestões):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
