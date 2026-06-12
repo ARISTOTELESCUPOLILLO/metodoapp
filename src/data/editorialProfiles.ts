@@ -355,7 +355,13 @@ export const editorialProfiles: EditorialProfile[] = [
 /**
  * Detecta o perfil editorial mais adequado para a atividade/segmento informados.
  * Usa correspondência de palavras-chave sem custo de API.
+ *
+ * Exige fronteira de palavra (evita "lar" casar dentro de "escolares", "ia"
+ * dentro de "veterinária" etc.) e uma pontuação mínima — abaixo disso,
+ * nenhum perfil é mais seguro do que um perfil mal-encaixado.
  */
+const MIN_PROFILE_SCORE = 5;
+
 export function detectEditorialProfile(
   mainActivity: string,
   segment: 'SERVIÇOS' | 'VAREJO' | 'MARCA',
@@ -375,7 +381,8 @@ export function detectEditorialProfile(
     let score = 0;
     for (const kw of profile.keywords) {
       const kwNorm = kw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      if (haystack.includes(kwNorm)) score += kwNorm.length; // keywords mais longas pesam mais
+      const escaped = kwNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (new RegExp(`\\b${escaped}\\b`).test(haystack)) score += kwNorm.length; // keywords mais longas pesam mais
     }
     if (score > bestScore) {
       bestScore = score;
@@ -383,5 +390,5 @@ export function detectEditorialProfile(
     }
   }
 
-  return bestProfile;
+  return bestScore >= MIN_PROFILE_SCORE ? bestProfile : null;
 }

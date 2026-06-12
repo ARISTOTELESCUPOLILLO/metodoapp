@@ -71,10 +71,10 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
 A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa empresa faz, vende, resolve ou oferece — é dali que a sugestão deve nascer. O NOME DA EMPRESA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
 
 CENA CONCRETA: a sugestão deve partir de uma situação real e reconhecível desse ramo — um produto, peça, ferramenta, canal, procedimento ou momento específico do dia a dia — e NÃO de um conceito amplo que serviria para qualquer empresa do segmento ${segment} (ex.: "atendimento gera confiança", "escolha certa evita problemas", "empresa próxima vira referência").
-Contraste esperado — em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (ferramentas e máquinas).
+Contraste esperado — exemplos de FORMATO de OUTROS RAMOS (não copie o vocabulário ou os produtos destes exemplos; servem só para mostrar o tipo de especificidade esperado — a sua sugestão deve usar vocabulário de "${mainActivity}", não destes exemplos): em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (exemplo do ramo consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (exemplo do ramo peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (exemplo do ramo ferramentas e máquinas).
 TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial.
 
-COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários grupos de produtos, serviços ou soluções, explore grupos diferentes ao longo das tentativas — não volte sempre ao mesmo grupo. Veja as SUGESTÕES ANTERIORES desta sessão (se houver) para notar quais grupos já apareceram e dê preferência a um grupo ainda não abordado. Não crie rodízio fixo nem force todos os grupos a aparecer — apenas evite repetir sempre o mesmo recorte.`
+COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários grupos de produtos, serviços ou soluções, ANTES de escrever liste mentalmente os grupos distintos que aparecem em "${mainActivity}" (cada item ou expressão separada por vírgula tende a indicar um grupo). Veja as SUGESTÕES ANTERIORES desta sessão (se houver), identifique a qual grupo cada uma pertence, e escolha para esta sugestão um grupo AINDA NÃO usado nas tentativas anteriores — desde que a atividade ofereça essa alternativa. Não crie rodízio fixo nem force todos os grupos a aparecer ao longo da sessão — apenas evite repetir o grupo da tentativa anterior quando houver alternativa real.`
             : '';
           const ancoragemAtividadeMarca = mainActivity.trim()
             ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA MARCA:
@@ -83,9 +83,18 @@ A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entende
 CENA CONCRETA: a sugestão deve partir de um elemento real e reconhecível dessa marca — um ingrediente, material, processo, ritual, território, gesto ou característica específica${mode === 'metodo' ? ' (sem dor do cliente, sem linguagem de venda)' : ''} — e NÃO de um conceito amplo que serviria para qualquer marca do segmento (ex.: "reconhecimento", "identificação", "vínculo", "valor percebido").
 TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial.
 
-COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários elementos, produtos ou frentes da marca, explore frentes diferentes ao longo das tentativas — não volte sempre à mesma. Veja as SUGESTÕES ANTERIORES desta sessão (se houver) para notar o que já apareceu e dê preferência a algo ainda não abordado. Não crie rodízio fixo nem force todos os elementos a aparecer.`
+COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários elementos, produtos ou frentes da marca, ANTES de escrever liste mentalmente os elementos/frentes distintos que aparecem em "${mainActivity}". Veja as SUGESTÕES ANTERIORES desta sessão (se houver), identifique a qual frente cada uma pertence, e escolha para esta sugestão uma frente AINDA NÃO usada nas tentativas anteriores — desde que a marca ofereça essa alternativa. Não crie rodízio fixo nem force todos os elementos a aparecer ao longo da sessão — apenas evite repetir a frente da tentativa anterior quando houver alternativa real.`
             : '';
           const ancoragemBlock = segment === 'MARCA' ? ancoragemAtividadeMarca : ancoragemAtividade;
+
+          // Reforço final (recência) — repete, já perto do JSON de saída, que o
+          // assunto vem da ATIVIDADE e que o nome da empresa/marca não é pista.
+          const sementeLembreteAtividade = mainActivity.trim()
+            ? `\nLEMBRETE FINAL: a semente concreta deve nomear algo presente em "${mainActivity}".${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — se o que ele sugere não estiver na ATIVIDADE, ignore essa pista.` : ''}\n`
+            : '';
+          const sementeLembreteMarca = mainActivity.trim()
+            ? `\nLEMBRETE FINAL: a semente concreta deve nomear um elemento real de "${mainActivity}".${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — se o que ele sugere não estiver na ATIVIDADE, ignore essa pista.` : ''}\n`
+            : '';
 
           const segmentLensBlock = `LENTE DO SEGMENTO (${segment}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segment]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.`;
 
@@ -255,7 +264,7 @@ Exemplos do método (não copie, use como referência de FORMATO):
 - "anúncios pagos não trazem vendas para a loja local"
 - "a empresa publica todo dia e continua invisível no Instagram"
 - "comunicação desorganizada transmite insegurança ao cliente sem perceber"
-
+${sementeLembreteAtividade}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada à atividade" }`;
 
@@ -293,7 +302,7 @@ Exemplos do método (não copie, use como referência de FORMATO e TOM):
 - "a loja de bairro vende todo dia pelo Instagram"
 - "o negócio local ganha autoridade com presença digital consistente"
 - "a marca cresce com consistência nas redes sociais"
-
+${sementeLembreteAtividade}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada a uma oportunidade real" }`;
 
@@ -327,7 +336,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO instituci
 - "a loja de bairro pertence à história da cidade"
 - "a marca local reafirma o jeito próprio de trabalhar"
 - "o negócio tem um propósito claro além da venda"
-
+${sementeLembreteMarca}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, ligada a um elemento real da marca, tom institucional" }`;
 
@@ -361,7 +370,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO):
 - "a marca constrói vínculo com a comunidade há duas décadas"
 - "pequenos detalhes definem como as pessoas lembram da marca"
 - "a marca atravessou gerações e ainda é referência no bairro"
-
+${sementeLembreteMarca}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, ligada a um fato real da trajetória, tom de legado e pertencimento" }`;
 
