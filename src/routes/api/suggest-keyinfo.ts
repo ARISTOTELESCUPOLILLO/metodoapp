@@ -36,10 +36,6 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const mode = String(body.mode || 'postunico') as 'postunico' | 'metodo';
           const attempt = Number(body.attempt || 0);
           const angulo: 'tensao' | 'motivacao' = attempt % 2 === 0 ? 'tensao' : 'motivacao';
-          const topicoGuia: { categoria: string; item: string; subtitulo: string } | null =
-            body.topicoGuia && body.topicoGuia.categoria && body.topicoGuia.item
-              ? { categoria: String(body.topicoGuia.categoria), item: String(body.topicoGuia.item), subtitulo: String(body.topicoGuia.subtitulo || '') }
-              : null;
 
           const previousSugs: string[] = Array.isArray(body.previousSuggestions)
             ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
@@ -52,36 +48,46 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           type Seg = typeof SEGMENTS[number];
           const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment) ? (body.segment as Seg) : 'SERVIÇOS';
 
-          // Eixos de leitura por segmento (ver botão "Ideias" / ideiasAssuntos.ts)
-          // — direcionam a sugestão sem virar biblioteca fixa de respostas.
+          // Eixos de leitura por segmento — direcionam a sugestão sem virar
+          // biblioteca fixa de respostas.
           const SEGMENT_LENS: Record<Seg, string> = {
             VAREJO: 'compra, uso, desejo, escolha, comparação, ocasião, presente, estação, produto, rotina do cliente',
             'SERVIÇOS': 'problema, dúvida, decisão, risco, confiança, processo, manutenção, prevenção, atendimento, resultado percebido',
             MARCA: 'reconhecimento, identificação, percepção, vínculo, bastidor, diferenciação, valor percebido, história, relação com o público',
           };
 
-          // Ancoragem na atividade — a categoria editorial e a lente do segmento
-          // dão o ÂNGULO; a atividade da empresa dá o ELEMENTO CONCRETO. Sem essa
-          // ponte, a sugestão fica genérica o bastante para servir a qualquer
-          // empresa do segmento. "Quando fizer sentido"/"não force" evita
-          // elemento artificial em atividades mais abstratas.
+          // Ancoragem na atividade — a ATIVIDADE é a fonte PRINCIPAL do
+          // assunto da sugestão; o nome da empresa serve só para
+          // identificação. Reúne 3 regras: (1) atividade como fonte
+          // principal de entendimento do negócio, (2) cena concreta — a
+          // sugestão nasce de uma situação real e reconhecível do ramo, não
+          // de um conceito amplo que serviria para qualquer empresa do
+          // segmento, e (3) cobertura — quando a atividade reúne vários
+          // grupos de produtos/serviços, variar entre eles ao longo das
+          // tentativas usando previousSuggestions, sem rodízio fixo nem
+          // biblioteca de respostas.
           const ancoragemAtividade = mainActivity.trim()
-            ? `ANCORAGEM NA ATIVIDADE:
-A empresa trabalha com: "${mainActivity}".
-Pense no que essa empresa especificamente faz, vende, resolve, explica ou escuta dos clientes — ferramentas, canais, produtos, procedimentos, situações típicas desse ramo no dia a dia.
-Quando fizer sentido para a atividade, a frase deve conter pelo menos um elemento concreto desse ramo — não apenas palavras genéricas que servem para qualquer empresa do segmento (ex.: "atendimento", "confiança", "agenda", "venda", "cliente"). Para atividades mais abstratas, não force um elemento artificial.
-TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, prefira reescrever ancorando em algo reconhecível do ramo "${mainActivity}".`
+            ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA EMPRESA:
+A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa empresa faz, vende, resolve ou oferece — é dali que a sugestão deve nascer. O NOME DA EMPRESA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
+
+CENA CONCRETA: a sugestão deve partir de uma situação real e reconhecível desse ramo — um produto, peça, ferramenta, canal, procedimento ou momento específico do dia a dia — e NÃO de um conceito amplo que serviria para qualquer empresa do segmento ${segment} (ex.: "atendimento gera confiança", "escolha certa evita problemas", "empresa próxima vira referência").
+Contraste esperado — em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (ferramentas e máquinas).
+TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial.
+
+COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários grupos de produtos, serviços ou soluções, explore grupos diferentes ao longo das tentativas — não volte sempre ao mesmo grupo. Veja as SUGESTÕES ANTERIORES desta sessão (se houver) para notar quais grupos já apareceram e dê preferência a um grupo ainda não abordado. Não crie rodízio fixo nem force todos os grupos a aparecer — apenas evite repetir sempre o mesmo recorte.`
             : '';
           const ancoragemAtividadeMarca = mainActivity.trim()
-            ? `ANCORAGEM NA ATIVIDADE:
-A marca trabalha com: "${mainActivity}".
-Pense em elementos próprios dessa marca: ingredientes, materiais, processos, rituais, território, gestos ou características que ela especificamente tem ou representa${mode === 'metodo' ? ' — sem dor do cliente, sem linguagem de venda' : ''}.
-Quando fizer sentido para a atividade, a frase deve conter pelo menos um elemento concreto desse ramo — não apenas palavras genéricas que servem para qualquer marca do segmento (ex.: "reconhecimento", "identificação", "vínculo", "valor percebido"). Para atividades mais abstratas, não force um elemento artificial.
-TESTE: se a frase serviria igual para qualquer outra marca do segmento, prefira reescrever ancorando em algo reconhecível da marca "${mainActivity}".`
+            ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA MARCA:
+A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa marca faz, oferece ou representa — é dali que a sugestão deve nascer. O NOME DA MARCA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
+
+CENA CONCRETA: a sugestão deve partir de um elemento real e reconhecível dessa marca — um ingrediente, material, processo, ritual, território, gesto ou característica específica${mode === 'metodo' ? ' (sem dor do cliente, sem linguagem de venda)' : ''} — e NÃO de um conceito amplo que serviria para qualquer marca do segmento (ex.: "reconhecimento", "identificação", "vínculo", "valor percebido").
+TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial.
+
+COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários elementos, produtos ou frentes da marca, explore frentes diferentes ao longo das tentativas — não volte sempre à mesma. Veja as SUGESTÕES ANTERIORES desta sessão (se houver) para notar o que já apareceu e dê preferência a algo ainda não abordado. Não crie rodízio fixo nem force todos os elementos a aparecer.`
             : '';
           const ancoragemBlock = segment === 'MARCA' ? ancoragemAtividadeMarca : ancoragemAtividade;
 
-          const segmentLensBlock = `LENTE DO SEGMENTO (${segment}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segment]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.${ancoragemBlock ? `\n\n${ancoragemBlock}` : ''}`;
+          const segmentLensBlock = `LENTE DO SEGMENTO (${segment}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segment]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.`;
 
           const AUDIENCES = ['B2C', 'B2B'] as const;
           type Aud = typeof AUDIENCES[number];
@@ -128,19 +134,16 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, prefira 
             ? ' No Método OP a Informação-chave abre uma SEQUÊNCIA — não é uma peça de promoção: ela NÃO promete oferta, desconto ou condição diretamente. SE a pista do usuário trouxer promoção/oferta com dados específicos (percentual, valor, brinde, prazo, data, "até X", "hoje", condição de compra), NÃO repita esses dados nem mantenha a promessa direta — extraia o ASSUNTO por trás da promoção (o produto/serviço/categoria em destaque) e reenquadre como abertura de sequência: preparação ou orientação para o momento ANTES dessa oferta. Exemplo: pista "30% off até domingo" → "como escolher peças certas antes da promoção". O assunto da pista NÃO deve ser descartado — apenas reenquadrado.'
             : '';
           const proibicoesInventar = (mode === 'metodo' || (objetivo !== 'promocao' && objetivo !== 'oportunidade'))
-            ? `PROIBIDO inventar promoção, desconto, percentual, prazo, data, urgência ou oferta que o usuário não tenha fornecido — isso inclui termos como "promoção", "desconto", "off", "grátis", "oferta especial", "lançamento", "agenda aberta", "hoje", "até domingo" (ou qualquer outro dia/data/prazo) e chamadas de urgência ("não perca", "última chance", "por tempo limitado"). Esses termos só podem aparecer se já estiverem na pista do usuário, no assunto obrigatório (Ideias) ou na atividade da empresa informada acima.${proibicoesInventarMop} PROIBIDO também inventar: eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
+            ? `PROIBIDO inventar promoção, desconto, percentual, prazo, data, urgência ou oferta que o usuário não tenha fornecido — isso inclui termos como "promoção", "desconto", "off", "grátis", "oferta especial", "lançamento", "agenda aberta", "hoje", "até domingo" (ou qualquer outro dia/data/prazo) e chamadas de urgência ("não perca", "última chance", "por tempo limitado"). Esses termos só podem aparecer se já estiverem na pista do usuário ou na atividade da empresa informada acima.${proibicoesInventarMop} PROIBIDO também inventar: eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
             : '';
 
           // allowedContext: termos de promoção/desconto/prazo/urgência só passam
           // pela checkInventedPromotion (D1) se já estiverem aqui — pista do
-          // usuário, assunto obrigatório (Ideias) ou atividade/empresa.
+          // usuário ou atividade/empresa.
           const allowedContext = [
             hint,
             mainActivity,
             companyName,
-            topicoGuia?.categoria,
-            topicoGuia?.subtitulo,
-            topicoGuia?.item,
           ].filter(Boolean).join(' ');
           // PU com objetivo 'promocao'/'oportunidade': o próprio objetivo da peça
           // pede tom promocional — a linguagem genérica ("promoção", "oferta",
@@ -220,16 +223,8 @@ NOTA DO MÉTODO: ${editorialProfile.notaMetodo}
 TERRITÓRIO e ÂNGULOS acima são direções de leitura do perfil, não frases prontas. Se a ATIVIDADE da empresa (informada no início) apontar para um contexto mais específico e reconhecível do que esses ângulos genéricos, a ATIVIDADE PREVALECE — priorize a situação real da empresa sobre o ângulo do perfil.`
             : '';
 
-          const topicoGuiaBlock = topicoGuia
-            ? `ASSUNTO OBRIGATÓRIO desta sugestão (siga sempre, mesmo que haja texto anterior no campo):
-Categoria: ${topicoGuia.categoria}${topicoGuia.subtitulo ? ` (${topicoGuia.subtitulo})` : ''}
-Perspectiva: "${topicoGuia.item}"
-Interprete este assunto dentro da atividade real da empresa acima. Mostre uma situação prática do dia a dia — não um conceito genérico. A atividade da empresa dá o contexto concreto.
-Gere a sugestão SOBRE este assunto específico. Não substitua este assunto pelo texto anterior do usuário.`
-            : '';
-
           const previousBlock = previousSugs.length
-            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos nem ângulos — gere algo completamente diferente):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
+            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos nem ângulos — gere algo completamente diferente; se a atividade reúne vários grupos de produtos/serviços, dê preferência a um grupo ainda não tocado por estas sugestões):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
             : '';
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
@@ -245,7 +240,7 @@ Gere a sugestão SOBRE este assunto específico. Não substitua este assunto pel
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
+${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO com base na ATIVIDADE da empresa e nas regras de ancoragem abaixo): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da empresa e das regras de ancoragem abaixo.'}
 
 ${audienceDirective}
 
@@ -253,7 +248,7 @@ ${momentoContextBlock}${progressaoMetodo}
 
 ${editorialBlock}
 
-${topicoGuiaBlock}
+${ancoragemBlock}
 
 ${previousBlock}
 
@@ -283,7 +278,7 @@ Retorne JSON EXATAMENTE assim:
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
+${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO com base na ATIVIDADE da empresa e nas regras de ancoragem abaixo): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da empresa e das regras de ancoragem abaixo.'}
 
 ${audienceDirective}
 
@@ -291,7 +286,7 @@ ${momentoContextBlock}${progressaoMetodo}
 
 ${editorialBlock}
 
-${topicoGuiaBlock}
+${ancoragemBlock}
 
 ${previousBlock}
 
@@ -324,13 +319,13 @@ Retorne JSON EXATAMENTE assim:
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 ${voiceBlock}SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
-${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
+${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO com base na ATIVIDADE da marca e nas regras de ancoragem abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da marca e das regras de ancoragem abaixo.'}
 
 ${preservaHint}
 
 ${editorialBlock}
 
-${topicoGuiaBlock}
+${ancoragemBlock}
 
 ${previousBlock}
 
@@ -361,13 +356,13 @@ Retorne JSON EXATAMENTE assim:
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
 ${voiceBlock}SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
-${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO sobre o ASSUNTO OBRIGATÓRIO abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie sobre o assunto obrigatório abaixo.'}
+${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO com base na ATIVIDADE da marca e nas regras de ancoragem abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da marca e das regras de ancoragem abaixo.'}
 
 ${preservaHint}
 
 ${editorialBlock}
 
-${topicoGuiaBlock}
+${ancoragemBlock}
 
 ${previousBlock}
 
@@ -554,8 +549,8 @@ Retorne JSON EXATAMENTE assim:
           }
 
           const OBJETIVO_RULES: Record<string, string> = {
-            promocao: 'REGRAS PARA PROMOÇÃO: use tom comercial/promocional — esse é o tom esperado para o objetivo (palavras como "promoção", "oferta", "aproveite", "garanta o seu" são bem-vindas). PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia, prazo, data/dia da semana, "última chance" ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário, no assunto do botão Ideias ou na atividade/empresa. Se nada disso foi informado, descreva a oportunidade comercial de forma genérica — sem números, datas ou condições inventadas.',
-            oportunidade: 'REGRAS PARA OPORTUNIDADE: represente a oportunidade por escassez, momento único ou contexto sazonal — sem especificar quando. PROIBIDO citar datas, prazos, dias ou períodos específicos, e PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário, no assunto do botão Ideias ou na atividade/empresa.',
+            promocao: 'REGRAS PARA PROMOÇÃO: use tom comercial/promocional — esse é o tom esperado para o objetivo (palavras como "promoção", "oferta", "aproveite", "garanta o seu" são bem-vindas). PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia, prazo, data/dia da semana, "última chance" ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário ou na atividade/empresa. Se nada disso foi informado, descreva a oportunidade comercial de forma genérica — sem números, datas ou condições inventadas.',
+            oportunidade: 'REGRAS PARA OPORTUNIDADE: represente a oportunidade por escassez, momento único ou contexto sazonal — sem especificar quando. PROIBIDO citar datas, prazos, dias ou períodos específicos, e PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário ou na atividade/empresa.',
             homenagem: `REGRAS PARA HOMENAGEM: datas comemorativas de referência (use APENAS se forem FUTURAS à DATA DE HOJE):
 - Dia das Mães: 2º domingo de maio
 - Dia dos Pais: 2º domingo de agosto
@@ -577,7 +572,7 @@ ATIVIDADE: ${mainActivity || '(não informada)'}
 ${voiceBlock}${segmentLensBlock}
 OBJETIVO: ${objetivo} (tom: ${tom})
 ${hint ? `PISTA DO USUÁRIO (refine/melhore a partir disso): "${hint}"` : 'O usuário não deu pista — invente algo plausível e útil para a atividade.'}
-${topicoGuiaBlock ? `\n${topicoGuiaBlock}\n` : ''}${previousBlock ? `\n${previousBlock}\n` : ''}
+${ancoragemBlock ? `\n${ancoragemBlock}\n` : ''}${previousBlock ? `\n${previousBlock}\n` : ''}
 A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica com nome ou fato real quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.
 
 ESTILO DA SUGESTÃO (POST ÚNICO): a peça é uma comunicação direta e autônoma — NÃO abre uma sequência. A sugestão pode ser uma afirmação, ou uma pergunta direta, comercial, situacional ou de reconhecimento (ex.: "Já trocou o pneu para o frio?", "Sábado tem horário especial?"), ou uma chamada — o que fizer mais sentido para o objetivo. EVITE formatos de dica educativa ou abertura de jornada (ex.: "como escolher...", "o que considerar antes de...", "passo a passo para..."): isso é formato de sequência do Método OP, não de post único.
@@ -591,8 +586,8 @@ Retorne JSON EXATAMENTE assim:
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
-            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) quando fizer sentido para a ATIVIDADE informada, a frase tem pelo menos um elemento concreto e reconhecível desse ramo — não só vocabulário genérico do segmento? Se sim para (2), troque por algo mais simples; se não para (3) e isso for natural para a atividade, ajuste antes de responder. Limite: entre 5 e 10 palavras por sugestão (máximo absoluto 12) — só passe de 10 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples, e nunca ultrapasse 12. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
-            : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, quando fizer sentido para a ATIVIDADE informada, prefira que a frase tenha pelo menos um elemento concreto e reconhecível desse ramo, em vez de só vocabulário genérico do segmento.';
+            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) a frase parte de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — e não de um conceito amplo que serviria para qualquer empresa do segmento? Se sim para (2), troque por algo mais simples; se não para (3) e a atividade permitir, ajuste para algo concreto desse ramo antes de responder. Limite: entre 5 e 10 palavras por sugestão (máximo absoluto 12) — só passe de 10 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples, e nunca ultrapasse 12. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
+            : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, prefira que a frase parta de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — em vez de um conceito amplo que serviria para qualquer empresa do segmento.';
 
           // D1 (validateSugestao) + 1 retry no máximo: se a sugestão sair vaga
           // (muito curta/longa, terminação pendurada ou frase-clichê), pede uma

@@ -71,7 +71,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const [refineCount, setRefineCount] = useState(0);
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
-  const lastCatIdxRef = useRef<number>(-1);
   const allSessionSuggestionsRef = useRef<string[]>([]);
 
   const SUGGEST_MAX = 3;
@@ -112,15 +111,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     setSuggestError(null);
     const attempt = suggestCount;
 
-    const cats = IDEIAS_ASSUNTOS[segment];
-    const catCount = cats.length;
-    let catIdx: number;
-    do { catIdx = Math.floor(Math.random() * catCount); } while (catCount > 1 && catIdx === lastCatIdxRef.current);
-    lastCatIdxRef.current = catIdx;
-    const catEscolhida = cats[catIdx];
-    const itemIdx = Math.floor(Math.random() * catEscolhida.itens.length);
-    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx], subtitulo: catEscolhida.subtitulo };
-
     try {
       const auth = await getAuthHeaders();
       const res = await fetch('/api/suggest-keyinfo', {
@@ -135,7 +125,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           hint: '',
           mode: 'metodo',
           attempt,
-          topicoGuia,
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
           brandVoice: data.brandVoice || '',

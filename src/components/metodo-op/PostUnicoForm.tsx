@@ -68,7 +68,6 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [suggestCount, setSuggestCount] = useState(0);
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
-  const lastCatIdxRef = useRef<number>(-1);
   const allSessionSuggestionsRef = useRef<string[]>([]);
   const SUGGEST_MAX = 3;
   const hasKeyInfo = !!data.keyInfo.trim();
@@ -193,32 +192,11 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   };
 
-  function getCategoriesForObjetivo(objetivo: PostUnicoObjetivo) {
-    const cats = IDEIAS_ASSUNTOS[kit.segment] || IDEIAS_ASSUNTOS['SERVIÇOS'];
-    switch (objetivo) {
-      case 'homenagem':    return cats.filter(c => ['Cliente', 'Novidade ou Oportunidade'].includes(c.titulo));
-      case 'aviso':        return cats.filter(c => ['Novidade ou Oportunidade', 'Produto ou Serviço'].includes(c.titulo));
-      case 'oportunidade': return cats.filter(c => ['Novidade ou Oportunidade', 'Produto ou Serviço'].includes(c.titulo));
-      case 'institucional':return cats.filter(c => ['Solução', 'Produto ou Serviço', 'Cliente'].includes(c.titulo));
-      case 'promocao':     return cats.filter(c => ['Novidade ou Oportunidade', 'Produto ou Serviço', 'Problema'].includes(c.titulo));
-      default:             return cats;
-    }
-  }
-
   async function fetchSuggestion() {
     if (suggestExhausted || hasKeyInfo) return;
     setSuggesting(true);
     setSuggestError(null);
     const attempt = suggestCount;
-
-    const cats = getCategoriesForObjetivo(data.objetivo);
-    const catCount = cats.length;
-    let catIdx: number;
-    do { catIdx = Math.floor(Math.random() * catCount); } while (catCount > 1 && catIdx === lastCatIdxRef.current);
-    lastCatIdxRef.current = catIdx;
-    const catEscolhida = cats[catIdx];
-    const itemIdx = Math.floor(Math.random() * catEscolhida.itens.length);
-    const topicoGuia = { categoria: catEscolhida.titulo, item: catEscolhida.itens[itemIdx], subtitulo: catEscolhida.subtitulo };
 
     try {
       const auth = await getAuthHeaders();
@@ -234,7 +212,6 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           hint: '',
           mode: 'postunico',
           attempt,
-          topicoGuia,
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
         }),

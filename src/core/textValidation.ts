@@ -403,9 +403,9 @@ const SUGESTAO_GENERIC_PATTERNS: RegExp[] = [
 
 // Validação leve da sugestão/keyInfo gerada pelo botão "Sugestão": comprimento
 // (ideal 5-10, máx. 12), terminação pendurada e frases-clichê genéricas. Não
-// inclui checagem de ancoragem com mainActivity/topicoGuia de propósito — uma
-// sugestão concreta pode não repetir nenhuma palavra literal da atividade, e
-// isso não deve reprová-la (decisão de produto).
+// inclui checagem de ancoragem com mainActivity de propósito — uma sugestão
+// concreta pode não repetir nenhuma palavra literal da atividade, e isso não
+// deve reprová-la (decisão de produto).
 export function validateSugestao(sugestao: string): string[] {
   const trimmed = sugestao.trim();
   const motivos: string[] = [];
