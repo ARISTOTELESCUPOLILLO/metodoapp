@@ -5,6 +5,7 @@ import type { PlanAccess } from '@/lib/planAccess';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { getAuthHeaders } from '../../services/authHeaders';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
+import ProductsChecklist from './ProductsChecklist';
 
 interface Props {
   data: ContentFormData;
@@ -24,6 +25,7 @@ interface Props {
   semPlano?: boolean;
   isAdmin?: boolean;
   planAccess?: PlanAccess;
+  products?: string[];
 }
 
 const SEQUENCE_SIZES = [3, 6, 9] as const;
@@ -60,7 +62,7 @@ const TRACK_OPTIONS: TrackOption[] = [
   },
 ];
 
-export default function ContentForm({ data, onChange, onGenerate, onClear, loading, segment, mood, onMoodChange, rendersRestantes, rendersTotal, imgsRestantes, imgsTotal, geracoesRestantes, geracoesTotal, semPlano, isAdmin, planAccess }: Props) {
+export default function ContentForm({ data, onChange, onGenerate, onClear, loading, segment, mood, onMoodChange, rendersRestantes, rendersTotal, imgsRestantes, imgsTotal, geracoesRestantes, geracoesTotal, semPlano, isAdmin, planAccess, products }: Props) {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
@@ -68,6 +70,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
   const allSessionSuggestionsRef = useRef<string[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>(() => products || []);
 
   const SUGGEST_MAX = 3;
   const hasKeyInfo = !!(data.keyInfo || '').trim();
@@ -93,6 +96,12 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     }
   }, [data.keyInfo]);
 
+  // Checklist de produtos/serviços — todos marcados por padrão; reseta
+  // quando a lista do Kit de Marca muda (ex.: kit carregado ou editado).
+  useEffect(() => {
+    setSelectedProducts(products || []);
+  }, [products]);
+
   async function fetchSuggestion() {
     if (suggestExhausted || hasKeyInfo) return;
     setSuggesting(true);
@@ -117,6 +126,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           previousSuggestions: allSessionSuggestionsRef.current,
           brandVoice: data.brandVoice || '',
           momento: data.businessMoment || '',
+          selectedProducts,
         }),
       });
       if (!res.ok) {
@@ -271,6 +281,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
             )}
           </div>
         </div>
+        <ProductsChecklist products={products || []} selected={selectedProducts} onChange={setSelectedProducts} />
         <textarea
           value={data.keyInfo || ''}
           onChange={(e) => update('keyInfo', e.target.value)}

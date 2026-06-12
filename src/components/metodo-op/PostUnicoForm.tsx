@@ -5,6 +5,7 @@ import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUn
 import { regenerateBlock } from '../../services/regenerateBlock';
 import { getAuthHeaders } from '../../services/authHeaders';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
+import ProductsChecklist from './ProductsChecklist';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
 import { truncateWords } from '@/core/textValidation';
@@ -69,6 +70,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
   const allSessionSuggestionsRef = useRef<string[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>(() => kit.products || []);
   const SUGGEST_MAX = 3;
   const hasKeyInfo = !!data.keyInfo.trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
@@ -98,6 +100,12 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
   }, [data.objetivo, kit.companyName]);
+
+  // Checklist de produtos/serviços — todos marcados por padrão; reseta
+  // quando a lista do Kit de Marca muda (ex.: kit carregado ou editado).
+  useEffect(() => {
+    setSelectedProducts(kit.products || []);
+  }, [kit.products]);
 
   useEffect(() => {
     if (!data.keyInfo) {
@@ -214,6 +222,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           attempt,
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
+          selectedProducts,
         }),
       });
       if (!res.ok) {
@@ -352,6 +361,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
             )}
           </div>
         </div>
+        <ProductsChecklist products={kit.products || []} selected={selectedProducts} onChange={setSelectedProducts} />
         <textarea
           value={data.keyInfo}
           onChange={(e) => update('keyInfo', e.target.value)}

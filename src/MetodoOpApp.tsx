@@ -396,6 +396,7 @@ export default function App() {
               mainActivity: kit.mainActivity,
               logoPosition: kit.logoPosition || 'bottom-right',
               assinatura: kit.assinatura,
+              products: kit.products ?? [],
             },
           });
         } else {
@@ -759,6 +760,7 @@ export default function App() {
               semPlano={semPlano}
               isAdmin={effectiveAdmin}
               planAccess={planAccess}
+              products={kit.products || []}
             />
           )}
           {modo === 'postUnico' && (

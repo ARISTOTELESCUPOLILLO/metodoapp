@@ -15,6 +15,23 @@ const OBJETIVO_TOM: Record<string, string> = {
   nenhum: 'neutro, livre — foco no fato concreto da empresa',
 };
 
+// Escolhe o item da lista de produtos/serviços marcados que vira a semente
+// concreta desta sugestão — rotação determinística por "attempt", evitando
+// (quando possível) repetir um item cujo assunto já apareceu nas sugestões
+// anteriores desta sessão.
+function pickConcreteItem(items: string[], attempt: number, previousSuggestions: string[]): string | null {
+  if (!items.length) return null;
+  const norm = (s: string) => s.toLowerCase().replace(/[áàãâä]/g, 'a').replace(/[éèêë]/g, 'e').replace(/[íìîï]/g, 'i').replace(/[óòõôö]/g, 'o').replace(/[úùûü]/g, 'u').replace(/ç/g, 'c');
+  const usedNorms = previousSuggestions.map(norm);
+  const startIdx = ((attempt % items.length) + items.length) % items.length;
+  for (let i = 0; i < items.length; i++) {
+    const idx = (startIdx + i) % items.length;
+    const n = norm(items[idx]);
+    if (!usedNorms.some((p) => p.includes(n) || n.includes(p))) return items[idx];
+  }
+  return items[startIdx];
+}
+
 export const Route = createFileRoute('/api/suggest-keyinfo')({
   server: {
     handlers: {
@@ -41,6 +58,10 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
             : [];
 
+          const selectedProducts: string[] = Array.isArray(body.selectedProducts)
+            ? body.selectedProducts.slice(0, 10).map((s: unknown) => String(s).slice(0, 80)).filter(Boolean)
+            : [];
+
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
           const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment) ? (body.segment as Seg) : 'SERVIÇOS';
@@ -55,34 +76,38 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
 
           // Ancoragem na atividade — a ATIVIDADE é a fonte PRINCIPAL do
           // assunto da sugestão; o nome da empresa serve só para
-          // identificação. Reúne 3 regras: (1) atividade como fonte
-          // principal de entendimento do negócio, (2) cena concreta — a
+          // identificação. Reúne 2 regras: (1) atividade como fonte
+          // principal de entendimento do negócio, e (2) cena concreta — a
           // sugestão nasce de uma situação real e reconhecível do ramo, não
           // de um conceito amplo que serviria para qualquer empresa do
-          // segmento, e (3) cobertura — quando a atividade reúne vários
-          // grupos de produtos/serviços, variar entre eles ao longo das
-          // tentativas usando previousSuggestions, sem rodízio fixo nem
-          // biblioteca de respostas.
+          // segmento. A escolha do assunto concreto em si vem de
+          // elementoConcretoBlock (lista de produtos/serviços do Kit).
           const ancoragemAtividade = mainActivity.trim()
             ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA EMPRESA:
 A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa empresa faz, vende, resolve ou oferece — é dali que a sugestão deve nascer. O NOME DA EMPRESA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
 
 CENA CONCRETA: a sugestão deve partir de uma situação real e reconhecível desse ramo — um produto, peça, ferramenta, canal, procedimento ou momento específico do dia a dia — e NÃO de um conceito amplo que serviria para qualquer empresa do segmento ${segment} (ex.: "atendimento gera confiança", "escolha certa evita problemas", "empresa próxima vira referência").
 Contraste esperado — exemplos de FORMATO de OUTROS RAMOS (não copie o vocabulário ou os produtos destes exemplos; servem só para mostrar o tipo de especificidade esperado — a sua sugestão deve usar vocabulário de "${mainActivity}", não destes exemplos): em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (exemplo do ramo consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (exemplo do ramo peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (exemplo do ramo ferramentas e máquinas).
-TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial.
-
-COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários grupos de produtos, serviços ou soluções, ANTES de escrever liste mentalmente os grupos distintos que aparecem em "${mainActivity}" (cada item ou expressão separada por vírgula tende a indicar um grupo). Veja as SUGESTÕES ANTERIORES desta sessão (se houver), identifique a qual grupo cada uma pertence, e escolha para esta sugestão um grupo AINDA NÃO usado nas tentativas anteriores — desde que a atividade ofereça essa alternativa. Não crie rodízio fixo nem force todos os grupos a aparecer ao longo da sessão — apenas evite repetir o grupo da tentativa anterior quando houver alternativa real.`
+TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial.`
             : '';
           const ancoragemAtividadeMarca = mainActivity.trim()
             ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA MARCA:
 A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa marca faz, oferece ou representa — é dali que a sugestão deve nascer. O NOME DA MARCA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
 
 CENA CONCRETA: a sugestão deve partir de um elemento real e reconhecível dessa marca — um ingrediente, material, processo, ritual, território, gesto ou característica específica${mode === 'metodo' ? ' (sem dor do cliente, sem linguagem de venda)' : ''} — e NÃO de um conceito amplo que serviria para qualquer marca do segmento (ex.: "reconhecimento", "identificação", "vínculo", "valor percebido").
-TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial.
-
-COBERTURA DA ATIVIDADE: se "${mainActivity}" reúne vários elementos, produtos ou frentes da marca, ANTES de escrever liste mentalmente os elementos/frentes distintos que aparecem em "${mainActivity}". Veja as SUGESTÕES ANTERIORES desta sessão (se houver), identifique a qual frente cada uma pertence, e escolha para esta sugestão uma frente AINDA NÃO usada nas tentativas anteriores — desde que a marca ofereça essa alternativa. Não crie rodízio fixo nem force todos os elementos a aparecer ao longo da sessão — apenas evite repetir a frente da tentativa anterior quando houver alternativa real.`
+TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial.`
             : '';
           const ancoragemBlock = segment === 'MARCA' ? ancoragemAtividadeMarca : ancoragemAtividade;
+
+          // Elemento concreto — semente determinística escolhida a partir da
+          // lista de produtos/serviços marcados pelo usuário no Kit de Marca.
+          // Substitui a antiga "COBERTURA DA ATIVIDADE" (rodízio mental por
+          // grupos da atividade) por um dado real e explícito.
+          const concreteItem = pickConcreteItem(selectedProducts, attempt, previousSugs);
+          const elementoConcretoBlock = concreteItem
+            ? `ELEMENTO CONCRETO DESTA SUGESTÃO: "${concreteItem}"
+Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele deve estar no CENTRO da sugestão: construa a cena, situação, dúvida, escolha, característica ou momento em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}`
+            : '';
 
           // Reforço final (recência) — repete, já perto do JSON de saída, que o
           // assunto vem da ATIVIDADE e que o nome da empresa/marca não é pista.
@@ -214,7 +239,7 @@ VOCABULÁRIO: use o vocabulário natural de quem trabalha ou é atendido em "${m
               : '');
 
           const previousBlock = previousSugs.length
-            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos nem ângulos — gere algo completamente diferente; se a atividade reúne vários grupos de produtos/serviços, dê preferência a um grupo ainda não tocado por estas sugestões):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
+            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos nem ângulos — gere algo completamente diferente):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
             : '';
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
@@ -237,6 +262,8 @@ ${audienceDirective}
 ${momentoContextBlock}
 
 ${editorialBlock}
+
+${elementoConcretoBlock}
 
 ${ancoragemBlock}
 
@@ -273,6 +300,8 @@ ${audienceDirective}
 ${momentoContextBlock}
 
 ${editorialBlock}
+
+${elementoConcretoBlock}
 
 ${ancoragemBlock}
 
@@ -311,6 +340,8 @@ ${preservaHint}
 
 ${editorialBlock}
 
+${elementoConcretoBlock}
+
 ${ancoragemBlock}
 
 ${previousBlock}
@@ -344,6 +375,8 @@ ${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO com 
 ${preservaHint}
 
 ${editorialBlock}
+
+${elementoConcretoBlock}
 
 ${ancoragemBlock}
 
@@ -399,7 +432,7 @@ ATIVIDADE: ${mainActivity || '(não informada)'}
 ${voiceBlock}${segmentLensBlock}
 OBJETIVO: ${objetivo} (tom: ${tom})
 ${hint ? `PISTA DO USUÁRIO (refine/melhore a partir disso): "${hint}"` : 'O usuário não deu pista — invente algo plausível e útil para a atividade.'}
-${ancoragemBlock ? `\n${ancoragemBlock}\n` : ''}${previousBlock ? `\n${previousBlock}\n` : ''}
+${elementoConcretoBlock ? `\n${elementoConcretoBlock}\n` : ''}${ancoragemBlock ? `\n${ancoragemBlock}\n` : ''}${previousBlock ? `\n${previousBlock}\n` : ''}
 A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica com nome ou fato real quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.
 
 ESTILO DA SUGESTÃO (POST ÚNICO): a peça é uma comunicação direta e autônoma — NÃO abre uma sequência. A sugestão pode ser uma afirmação, ou uma pergunta direta, comercial, situacional ou de reconhecimento (ex.: "Já trocou o pneu para o frio?", "Sábado tem horário especial?"), ou uma chamada — o que fizer mais sentido para o objetivo. EVITE formatos de dica educativa ou abertura de jornada (ex.: "como escolher...", "o que considerar antes de...", "passo a passo para..."): isso é formato de sequência do Método OP, não de post único.

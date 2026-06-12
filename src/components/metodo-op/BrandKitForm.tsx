@@ -51,11 +51,25 @@ const COLORS_PRESET = [
   '#d97706','#f4b000','#e5e7eb','#ffffff',
 ];
 
+const MIN_PRODUCTS = 3;
+const MAX_PRODUCTS = 10;
+
 export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, loading, saving, saved, lockedSegment }: Props) {
   const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false);
   const [isOpen, setIsOpen] = useState(!kit.companyName?.trim());
+  const [newProductItem, setNewProductItem] = useState('');
   const update = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) => onChange({ ...kit, [key]: value });
   const changeSegment = (segment: Segment) => onChange({ ...kit, segment, brandVoice: defaultVoice(segment) });
+
+  const products = kit.products || [];
+  const addProductItem = () => {
+    const v = newProductItem.trim();
+    if (!v || products.length >= MAX_PRODUCTS) return;
+    update('products', [...products, v]);
+    setNewProductItem('');
+  };
+  const removeProductItem = (idx: number) => update('products', products.filter((_, i) => i !== idx));
+  const productsValid = products.length >= MIN_PRODUCTS;
 
 
   return (
@@ -287,6 +301,62 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
         />
       </label>
 
+      <div style={{ display: 'grid', gap: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+            Produtos, serviços ou especialidades <span style={{ color: '#dc2626' }}>*</span>
+          </span>
+          <span style={{ fontSize: 11, color: productsValid ? '#94a3b8' : '#dc2626' }}>
+            {products.length}/{MAX_PRODUCTS} · mínimo {MIN_PRODUCTS}
+          </span>
+        </div>
+        <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
+          Liste o que {kit.segment === 'MARCA' ? 'a marca' : 'a empresa'} realmente vende, faz ou oferece — cada item é matéria-prima para a Sugestão (Informação-chave). Ex.: "Cadeiras ergonômicas para escritório", "Manutenção de ar-condicionado", "Ração para cães e gatos".
+        </p>
+        {products.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {products.map((item, i) => (
+              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 999, padding: '4px 6px 4px 12px', fontSize: 13, color: '#0f172a' }}>
+                {item}
+                <button
+                  type="button"
+                  onClick={() => removeProductItem(i)}
+                  aria-label={`Remover ${item}`}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 15, lineHeight: 1, padding: 0 }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        {products.length < MAX_PRODUCTS && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              value={newProductItem}
+              onChange={(e) => setNewProductItem(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addProductItem(); } }}
+              placeholder="Ex.: Troca de óleo e filtros"
+              style={{ flex: 1 }}
+            />
+            <button
+              type="button"
+              onClick={addProductItem}
+              disabled={!newProductItem.trim()}
+              style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 10, padding: '0 16px', fontWeight: 700, fontSize: 14, cursor: newProductItem.trim() ? 'pointer' : 'not-allowed', opacity: newProductItem.trim() ? 1 : 0.5 }}
+            >
+              + Adicionar
+            </button>
+          </div>
+        )}
+        {!productsValid && (
+          <span style={{ fontSize: 12, color: '#dc2626' }}>
+            Adicione pelo menos {MIN_PRODUCTS - products.length} item{MIN_PRODUCTS - products.length === 1 ? '' : 's'} para salvar o Kit.
+          </span>
+        )}
+      </div>
+
       <div style={{ display: 'grid', gap: 4 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
@@ -307,7 +377,13 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
 
       {onSave && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-          <button type="button" className="saveBtn" onClick={onSave} disabled={saving || loading}>
+          <button
+            type="button"
+            className="saveBtn"
+            onClick={onSave}
+            disabled={saving || loading || !productsValid}
+            title={!productsValid ? `Adicione pelo menos ${MIN_PRODUCTS} produtos/serviços para salvar` : undefined}
+          >
             {saving ? 'Salvando...' : saved ? '✓ Kit salvo' : '💾 Salvar Kit'}
           </button>
         </div>

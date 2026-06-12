@@ -65,6 +65,7 @@ export type Database = {
           logo_url: string | null
           main_activity: string | null
           primary_color: string | null
+          products: Json
           secondary_color: string | null
           secondary_font: string | null
           segment: string | null
@@ -85,6 +86,7 @@ export type Database = {
           logo_url?: string | null
           main_activity?: string | null
           primary_color?: string | null
+          products?: Json
           secondary_color?: string | null
           secondary_font?: string | null
           segment?: string | null
@@ -105,6 +107,7 @@ export type Database = {
           logo_url?: string | null
           main_activity?: string | null
           primary_color?: string | null
+          products?: Json
           secondary_color?: string | null
           secondary_font?: string | null
           segment?: string | null

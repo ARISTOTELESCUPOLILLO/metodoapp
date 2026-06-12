@@ -29,6 +29,9 @@ export interface BrandKit {
   mainActivity?: string;
   logoPosition?: LogoPosition;
   assinatura?: string;
+  // Produtos, serviços, categorias ou especialidades reais — matéria-prima
+  // concreta para a Sugestão (Informação-chave). Mínimo 3, máximo 10.
+  products?: string[];
 }
 
 export interface ContentFormData {

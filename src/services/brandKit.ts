@@ -20,6 +20,7 @@ function rowToKit(k: any): BrandKit {
     mainActivity: k.main_activity || '',
     logoPosition: (k.logo_position as LogoPosition) || 'bottom-right',
     assinatura: k.assinatura || '',
+    products: Array.isArray(k.products) ? k.products : [],
   };
 }
 
@@ -57,6 +58,7 @@ const KitSchema = z.object({
   mainActivity: z.string().default(''),
   logoPosition: z.string().default('bottom-right'),
   assinatura: z.string().max(100).optional(),
+  products: z.array(z.string().trim().min(1).max(80)).max(10).default([]),
 });
 
 // Server function: salva Kit de Marca de qualquer usuário (admin bypass RLS).
@@ -91,6 +93,7 @@ export const saveKitServer = createServerFn({ method: 'POST' })
       main_activity: data.mainActivity,
       logo_position: data.logoPosition,
       assinatura: data.assinatura ?? null,
+      products: data.products,
       updated_at: new Date().toISOString(),
     };
 
@@ -136,6 +139,7 @@ export async function saveKitForUser(kit: BrandKit, userId: string): Promise<Bra
     main_activity: kit.mainActivity,
     logo_position: kit.logoPosition || 'bottom-right',
     assinatura: kit.assinatura ?? null,
+    products: kit.products ?? [],
     updated_at: new Date().toISOString(),
   };
 
