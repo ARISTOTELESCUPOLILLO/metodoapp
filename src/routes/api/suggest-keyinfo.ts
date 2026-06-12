@@ -194,19 +194,6 @@ Foque em situações reais de trabalho: atendimento, resultado, organização, v
 Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".
 SUJEITO DA FRASE (B2B): qualquer palavra da língua portuguesa pode ser sujeito quando substantivada — substantivo concreto ou abstrato, adjetivo, verbo no infinitivo, locução. Não restrinja a papéis pessoais ("gestores", "equipes", "donos"). Exemplos válidos: "A organização que falta custa caro", "Não responder a tempo afasta cliente", "Confiar custa caro quando a marca falha", "O detalhe que o cliente percebe define a escolha", "Crescer exige comunicação alinhada". NUNCA use "clientes", "consumidores" ou "compradores" como sujeito principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
 
-          // ── Progressão do Método OP ────────────────────────────────────────
-          const progressaoB2C = segment === 'VAREJO'
-            ? 'IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR'
-            : segment === 'MARCA'
-              ? 'RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR'
-              : 'ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR';
-
-          const progressaoMetodo = isB2C
-            ? `PROGRESSÃO DO MÉTODO (B2C): ${progressaoB2C}.
-A Informação-chave é a SEMENTE da sequência. Ela deve carregar uma tensão ou aspiração que NATURALMENTE alimenta essa progressão — a peça inicial ativa o ponto de entrada do segmento, e os posts seguintes conduzem o público até a ação.`
-            : `PROGRESSÃO DO MÉTODO (B2B): ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR.
-A Informação-chave deve revelar um risco, ineficiência ou oportunidade estratégica que o decisor reconhece como real. A progressão constrói credibilidade antes de segurança — o empresário precisa confiar que você entende o cenário dele antes de sentir que pode confiar na solução.`;
-
           // ── Perfil Editorial ──────────────────────────────────────────────
           const editorialProfile = mode === 'metodo'
             ? detectEditorialProfile(mainActivity, segment, audience)
@@ -244,7 +231,7 @@ ${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refi
 
 ${audienceDirective}
 
-${momentoContextBlock}${progressaoMetodo}
+${momentoContextBlock}
 
 ${editorialBlock}
 
@@ -258,13 +245,11 @@ ${aberturaSequenciaGuide}
 
 ${segmentLensBlock}
 
-ÂNGULO: TENSÃO PSICOLÓGICA (dor / conflito / consequência).
-REGRA OP — escreva em 1 LINHA CURTA contendo 4 camadas implícitas:
-ASSUNTO + CONTEXTO + DOR/DESEJO + DIREÇÃO.
-Deve ATIVAR pelo menos um destes gatilhos: movimento, conflito, mudança, comparação, consequência.
+ÂNGULO: TENSÃO (problema, dúvida, erro comum ou escolha difícil real da atividade).
+A Informação-chave é uma SEMENTE CONCRETA — um produto, serviço, situação, dúvida, erro, escolha ou necessidade real do dia a dia dessa atividade. NÃO é preciso embutir a progressão psicológica completa (dor → desejo → confiança → ação): o Método OP constrói essa progressão DEPOIS, na sequência de posts.
 
 EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "organização", "tráfego pago").
-PREFIRA versões com tensão psicológica e direção da sequência.
+PREFIRA um fato, produto, situação ou decisão concreta e reconhecível dessa atividade.
 
 Exemplos do método (não copie, use como referência de FORMATO):
 - "anúncios pagos não trazem vendas para a loja local"
@@ -272,7 +257,7 @@ Exemplos do método (não copie, use como referência de FORMATO):
 - "comunicação desorganizada transmite insegurança ao cliente sem perceber"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, carregada de intenção" }`;
+{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada à atividade" }`;
 
           const metodoMotivacao = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -282,7 +267,7 @@ ${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refi
 
 ${audienceDirective}
 
-${momentoContextBlock}${progressaoMetodo}
+${momentoContextBlock}
 
 ${editorialBlock}
 
@@ -296,12 +281,10 @@ ${aberturaSequenciaGuide}
 
 ${segmentLensBlock}
 
-ÂNGULO: MOTIVAÇÃO POSITIVA (desejo / aspiração / conquista / oportunidade).
-IMPORTANTE: NÃO "implique" com o público. Não aponte erro, falha ou falta. Fale do que ele QUER alcançar, do próximo nível, da transformação positiva — como quem reconhece o esforço e mostra o caminho.
+ÂNGULO: OPORTUNIDADE (situação positiva, necessidade real ou oportunidade concreta da atividade).
+IMPORTANTE: NÃO "implique" com o público. Não aponte erro, falha ou falta.
 
-REGRA OP — escreva em 1 LINHA CURTA contendo 4 camadas implícitas:
-ASSUNTO + CONTEXTO + DESEJO/CONQUISTA/ASPIRAÇÃO + DIREÇÃO.
-Gatilhos válidos: movimento, transformação positiva, oportunidade, orgulho, evolução, próximo nível.
+A Informação-chave é uma SEMENTE CONCRETA — um produto, serviço, situação, necessidade ou oportunidade real do dia a dia dessa atividade. NÃO é preciso embutir a progressão psicológica completa (desejo → confiança → ação): o Método OP constrói essa progressão DEPOIS, na sequência de posts.
 
 EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "tráfego pago").
 EVITE qualquer formulação que soe como crítica ao público ("não conseguem", "não sabem", "fazem errado", "estão perdidos").
@@ -312,7 +295,7 @@ Exemplos do método (não copie, use como referência de FORMATO e TOM):
 - "a marca cresce com consistência nas redes sociais"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, carregada de aspiração positiva" }`;
+{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada a uma oportunidade real" }`;
 
           const marcaIdentidade = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -336,10 +319,7 @@ ${aberturaSequenciaGuide}
 ${segmentLensBlock}
 
 ÂNGULO: IDENTIDADE / POSICIONAMENTO.
-A Informação-chave deve revelar QUEM a marca é, o que ela representa, como quer ser percebida no território/categoria. Sem dor do cliente, sem promessa comercial, sem CTA, sem urgência, sem gatilho de venda.
-
-REGRA OP — 1 LINHA CURTA com 4 camadas implícitas:
-ASSUNTO + CONTEXTO + IDENTIDADE/PROPÓSITO + DIREÇÃO.
+A Informação-chave é uma SEMENTE CONCRETA — um elemento real da marca (produto, ingrediente, material, processo, ritual, território ou característica) que revele QUEM a marca é ou o que representa. Sem dor do cliente, sem promessa comercial, sem CTA, sem urgência, sem gatilho de venda. NÃO é preciso embutir a progressão completa de posicionamento — o Método OP constrói isso DEPOIS, na sequência de posts.
 
 PROIBIDO: linguagem de venda ("compre", "garanta", "oferta", "promoção"), dor do cliente ("não conseguem", "estão perdidos", "estagnação", "invisíveis"), urgência ("últimas vagas", "agora"), reinterpretação negativa de qualquer pista positiva do usuário.
 
@@ -349,7 +329,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO instituci
 - "o negócio tem um propósito claro além da venda"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, tom institucional de marca" }`;
+{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, ligada a um elemento real da marca, tom institucional" }`;
 
           const marcaLegado = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
 
@@ -373,10 +353,7 @@ ${aberturaSequenciaGuide}
 ${segmentLensBlock}
 
 ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
-Foco em história, repertório, tempo de mercado, vínculo afetivo com clientes, evolução da marca, presença no território. Tom de orgulho calmo, sem auto-elogio comercial.
-
-REGRA OP — 1 LINHA CURTA com 4 camadas implícitas:
-ASSUNTO + CONTEXTO + LEGADO/PERCEPÇÃO + DIREÇÃO.
+A Informação-chave é uma SEMENTE CONCRETA — um fato, elemento ou marco real da trajetória da marca (história, repertório, tempo de mercado, vínculo com clientes, presença no território). Tom de orgulho calmo, sem auto-elogio comercial. NÃO é preciso embutir a progressão completa de legado/percepção — o Método OP constrói isso DEPOIS, na sequência de posts.
 
 PROIBIDO: dor do cliente, crítica ao público, linguagem comercial agressiva, urgência, qualquer inversão negativa de uma pista positiva (ex.: transformar "20 anos de tradição" em "estagnação há 20 anos" é proibido).
 
@@ -386,7 +363,7 @@ Exemplos do método (não copie, use como referência de TOM e FORMATO):
 - "a marca atravessou gerações e ainda é referência no bairro"
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, tom de legado e pertencimento" }`;
+{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, ligada a um fato real da trajetória, tom de legado e pertencimento" }`;
 
           // ── Prompts de REFINAMENTO (campo com texto) ──────────────────────
 
@@ -398,7 +375,7 @@ ${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO i
 
 ${audienceDirective}
 
-${momentoContextBlock}${progressaoMetodo}
+${momentoContextBlock}
 
 ${editorialBlock}
 
@@ -436,7 +413,7 @@ ${voiceBlock}TEXTO DO USUÁRIO (mantenha este assunto — refine a forma, NÃO i
 
 ${audienceDirective}
 
-${momentoContextBlock}${progressaoMetodo}
+${momentoContextBlock}
 
 ${editorialBlock}
 
