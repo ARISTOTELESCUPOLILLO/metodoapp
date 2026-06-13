@@ -127,7 +127,6 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
           brandVoice: data.brandVoice || '',
-          momento: data.businessMoment || '',
           selectedProducts,
         }),
       });

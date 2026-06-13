@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { detectEditorialProfile } from '@/data/editorialProfiles';
 import { getVoiceProfile } from '@/data/brandVoice';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
@@ -32,6 +31,39 @@ function pickConcreteItem(items: string[], attempt: number, previousSuggestions:
   return items[startIdx];
 }
 
+// Gera um número estável a partir de uma string (empresa + atividade), usado
+// para variar a lente de abertura entre empresas sem depender de estado
+// externo.
+function seedFromString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+// Lentes de abertura — 15 formas internas de encontrar o ASSUNTO da
+// Informação-chave (Sugestão MOP) a partir do elemento concreto e da
+// atividade. São orientação de geração apenas: nunca aparecem no JSON de
+// saída nem na UI, e não criam tensão, promessa emocional, progressão ou
+// linguagem de campanha — apenas variam o ângulo de observação de um fato
+// concreto.
+const OPENING_LENSES: { nome: string; guia: string }[] = [
+  { nome: 'Situação real', guia: 'Parta de uma situação real e cotidiana ligada ao elemento concreto — algo que de fato acontece nesse ramo, descrito sem dramatizar.' },
+  { nome: 'Dúvida comum', guia: 'Parta de uma dúvida comum que clientes têm sobre o elemento concreto antes de usar, contratar ou comprar.' },
+  { nome: 'Oportunidade', guia: 'Parta de um contexto, uso ou momento em que o elemento concreto se encaixa bem — uma oportunidade objetiva, sem tom de campanha.' },
+  { nome: 'Processo', guia: 'Parta de uma etapa do processo do dia a dia que envolve o elemento concreto — como ele é feito, escolhido ou mantido.' },
+  { nome: 'Resultado observável', guia: 'Parta de um resultado concreto e observável que o elemento entrega ou permite — algo que se nota no dia a dia.' },
+  { nome: 'Uso no dia a dia', guia: 'Parta de como o elemento concreto aparece no dia a dia de quem usa, compra ou contrata.' },
+  { nome: 'Escolha antes da compra', guia: 'Parta de um critério ou detalhe que faz diferença na hora de escolher o elemento concreto.' },
+  { nome: 'Comparação prática', guia: 'Parta de uma comparação prática entre opções, tipos ou versões do elemento concreto.' },
+  { nome: 'Problema recorrente', guia: 'Parta de um problema recorrente e concreto ligado ao elemento — descrito como fato do dia a dia, sem dramatizar.' },
+  { nome: 'Necessidade percebida', guia: 'Parta de uma necessidade real e concreta que o elemento atende.' },
+  { nome: 'Benefício concreto', guia: 'Parta de um benefício direto e concreto do elemento — o que ele resolve ou facilita na prática.' },
+  { nome: 'Sinal de atenção', guia: 'Parta de um sinal ou detalhe perceptível que indica quando algo relacionado ao elemento concreto precisa de atenção.' },
+  { nome: 'Decisão comum do cliente', guia: 'Parta de uma decisão comum que o cliente toma envolvendo o elemento concreto.' },
+  { nome: 'Contexto de uso', guia: 'Parta do ambiente, local ou contexto em que o elemento concreto costuma ser usado.' },
+  { nome: 'Erro evitável', guia: 'Parta de um erro comum e evitável relacionado ao elemento concreto — descrito como fato, sem culpar o cliente.' },
+];
+
 export const Route = createFileRoute('/api/suggest-keyinfo')({
   server: {
     handlers: {
@@ -52,7 +84,6 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const hint = String(body.hint || '').slice(0, 1000).trim();
           const mode = String(body.mode || 'postunico') as 'postunico' | 'metodo';
           const attempt = Number(body.attempt || 0);
-          const angulo: 'tensao' | 'motivacao' = attempt % 2 === 0 ? 'tensao' : 'motivacao';
 
           const previousSugs: string[] = Array.isArray(body.previousSuggestions)
             ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
@@ -125,25 +156,6 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === 'MAR
           const audience: Aud = (AUDIENCES as readonly string[]).includes(body.audience) ? (body.audience as Aud) : 'B2C';
           const isB2C = audience === 'B2C';
 
-          const normalizeMomento = (s: string) =>
-            s.toLowerCase()
-              .replace(/[áàãâä]/g, 'a').replace(/[éèêë]/g, 'e')
-              .replace(/[íìîï]/g, 'i').replace(/[óòõôö]/g, 'o')
-              .replace(/[úùûü]/g, 'u').replace(/ç/g, 'c')
-              .replace(/\s+/g, '');
-          const momento = normalizeMomento(String(body.momento || ''));
-          const MOMENTO_CONTEXT: Record<string, string> = {
-            consolidacao: 'público já conhece e compra da marca — aprofundar relacionamento e fortalecer preferência.',
-            lancamento: 'público está tendo o PRIMEIRO contato com a marca — o emissor se apresenta para quem ainda não o conhece. NÃO é o lançamento de um produto; é o momento em que a marca aparece pela primeira vez para esse público.',
-            reativacao: 'público conhecia a marca mas parou de interagir — objetivo é reacender o interesse mostrando novidade ou evolução. NÃO é relançar um serviço; é reconectar com quem já esteve próximo.',
-            sazonalidade: 'aproveitar um contexto externo de data, período, tendência ou evento — o tema é a oportunidade do momento, não a marca em si.',
-            awareness: 'construir reconhecimento de marca em público que ainda não a conhece — sem pressão de conversão, sem CTA urgente.',
-          };
-          const momentoCtx = MOMENTO_CONTEXT[momento] || '';
-          const momentoContextBlock = momentoCtx && mode === 'metodo'
-            ? `CONTEXTO DO MOMENTO COMUNICATIVO: ${momentoCtx}\n`
-            : '';
-
           const brandVoice = String(body.brandVoice || '').slice(0, 80);
           const voiceProfile = getVoiceProfile(brandVoice);
           const voiceBlock = voiceProfile
@@ -160,9 +172,9 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === 'MAR
           // allowPromoLanguage: dados específicos (%, R$, brinde, prazo/data,
           // condição de compra) seguem bloqueados pelo D1 se o modelo não
           // seguir a instrução. Pista promocional não é descartada — é
-          // reenquadrada como abertura de sequência.
+          // descrita sem a promessa comercial.
           const proibicoesInventarMop = mode === 'metodo'
-            ? ' No Método OP a Informação-chave abre uma SEQUÊNCIA — não é uma peça de promoção: ela NÃO promete oferta, desconto ou condição diretamente. SE a pista do usuário trouxer promoção/oferta com dados específicos (percentual, valor, brinde, prazo, data, "até X", "hoje", condição de compra), NÃO repita esses dados nem mantenha a promessa direta — extraia o ASSUNTO por trás da promoção (o produto/serviço/categoria em destaque) e reenquadre como abertura de sequência: preparação ou orientação para o momento ANTES dessa oferta. Exemplo: pista "30% off até domingo" → "como escolher peças certas antes da promoção". O assunto da pista NÃO deve ser descartado — apenas reenquadrado.'
+            ? ' A Informação-chave é apenas o ASSUNTO desta peça — não é uma peça de promoção: ela NÃO promete oferta, desconto ou condição diretamente. SE a pista do usuário trouxer promoção/oferta com dados específicos (percentual, valor, brinde, prazo, data, "até X", "hoje", condição de compra), NÃO repita esses dados nem mantenha a promessa direta — extraia o ASSUNTO por trás da promoção (o produto/serviço/categoria em destaque) e descreva-o de forma objetiva, sem a promessa comercial. Exemplo: pista "30% off até domingo" → "como escolher peças certas para o carro". O assunto da pista NÃO deve ser descartado — apenas descrito sem a promessa.'
             : '';
           const proibicoesInventar = (mode === 'metodo' || (objetivo !== 'promocao' && objetivo !== 'oportunidade'))
             ? `PROIBIDO inventar promoção, desconto, percentual, prazo, data, urgência ou oferta que o usuário não tenha fornecido — isso inclui termos como "promoção", "desconto", "off", "grátis", "oferta especial", "lançamento", "agenda aberta", "hoje", "até domingo" (ou qualquer outro dia/data/prazo) e chamadas de urgência ("não perca", "última chance", "por tempo limitado"). Esses termos só podem aparecer se já estiverem na pista do usuário ou na atividade da empresa informada acima.${proibicoesInventarMop} PROIBIDO também inventar: eventos • garantias • condições especiais • números • promessas absolutas que o usuário não forneceu.`
@@ -183,22 +195,13 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === 'MAR
           // pela checkInventedPromotion, que agora roda SEMPRE.
           const allowPromoLanguagePU = mode === 'postunico' && (objetivo === 'promocao' || objetivo === 'oportunidade');
 
-          const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE OP:
-Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo. Entre 5 e 10 palavras (máximo absoluto 12).
+          const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE:
+${mode === 'metodo'
+  ? 'Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade — sem tensão emocional, sem promessa e sem linguagem de campanha.'
+  : 'Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo.'} Entre 5 e 10 palavras (máximo absoluto 12).
 SINTAXE: qualquer palavra substantivada pode ser sujeito — substantivo, adjetivo, verbo no infinitivo ou locução; não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
-Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.
-${proibicoesInventar}
+${mode === 'postunico' ? 'Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.\n' : ''}${proibicoesInventar}
 LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se precisar trocar uma palavra grande por palavras mais curtas e isso aproximar a frase do limite de 12, prefira isso a manter um termo difícil — mas nunca ultrapasse 12 palavras. EXCEÇÃO: se houver um elemento concreto central (produto, peça, serviço, objeto, procedimento) vindo do texto do usuário ou da atividade, esse termo pode ter mais de 3 sílabas (ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia") — não o troque por palavra genérica só para simplificar.`;
-
-          // ── Abertura de sequência (MOP) ───────────────────────────────────
-          // A Informação-chave do Método OP nasce como ponto de partida de uma
-          // sequência (Conhecer → Sentir → Agir), não como tema solto. As
-          // referências de formato abaixo são exemplos de INTENÇÃO de
-          // condução — não um molde fixo. Variar a estrutura entre tentativas
-          // evita que toda sugestão saia com a mesma fórmula.
-          const aberturaSequenciaGuide = `INTENÇÃO DE ABERTURA DE SEQUÊNCIA:
-A Informação-chave é o ponto de partida de uma sequência do Método OP (Conhecer → Sentir → Agir) — não um tema isolado. Ela deve carregar uma intenção de CONDUÇÃO: orientar, informar, esclarecer, explicar, alertar, demonstrar, comparar ou preparar o público para agir.
-Referências de formato (use como inspiração, NÃO como molde obrigatório — varie a estrutura entre as tentativas, não repita sempre a mesma forma): "como escolher...", "erro comum ao...", "o que observar antes de...", "antes de decidir...", "quando vale a pena...", "por que isso acontece...", "sinal de que é hora de...", "diferença entre... e...", "o que muda quando...", "o que considerar ao...". Nem toda sugestão precisa se encaixar nessas formas — o essencial é a intenção de condução, não a fórmula de superfície.`;
 
           // ── Público-alvo — regra crítica para B2C vs B2B ──────────────────
           const audienceDirective = isB2C
@@ -212,34 +215,8 @@ Foque em situações reais de trabalho: atendimento, resultado, organização, v
 Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".
 SUJEITO DA FRASE (B2B): qualquer palavra da língua portuguesa pode ser sujeito quando substantivada — substantivo concreto ou abstrato, adjetivo, verbo no infinitivo, locução. Não restrinja a papéis pessoais ("gestores", "equipes", "donos"). Exemplos válidos: "A organização que falta custa caro", "Não responder a tempo afasta cliente", "Confiar custa caro quando a marca falha", "O detalhe que o cliente percebe define a escolha", "Crescer exige comunicação alinhada". NUNCA use "clientes", "consumidores" ou "compradores" como sujeito principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
 
-          // ── Perfil Editorial ──────────────────────────────────────────────
-          const editorialProfile = mode === 'metodo'
-            ? detectEditorialProfile(mainActivity, segment, audience)
-            : null;
-
-          const editorialBlock = editorialProfile
-            ? `PERFIL EDITORIAL DETECTADO: ${editorialProfile.nome}
-TERRITÓRIO: ${editorialProfile.territorio}
-${angulo === 'tensao'
-  ? `ÂNGULOS DE TENSÃO para este perfil: ${editorialProfile.angulosTensao.join(' / ')}`
-  : `ÂNGULOS DE MOTIVAÇÃO para este perfil: ${editorialProfile.angulosMotivacao.join(' / ')}`}
-VOCABULÁRIO PROIBIDO adicional: ${editorialProfile.vocabularioProibido.join(', ')}
-NOTA DO MÉTODO: ${editorialProfile.notaMetodo}
-TERRITÓRIO e ÂNGULOS acima são direções de leitura do perfil, não frases prontas. Se a ATIVIDADE da empresa (informada no início) apontar para um contexto mais específico e reconhecível do que esses ângulos genéricos, a ATIVIDADE PREVALECE — priorize a situação real da empresa sobre o ângulo do perfil.`
-            // Sem perfil cadastrado para esta atividade (negócio novo/nicho não
-            // previsto): em vez de ficar sem direção (string vazia), pede para o
-            // próprio modelo ler a ATIVIDADE e construir a leitura de território
-            // e ângulo a partir dela — sem tomar de empréstimo território,
-            // ângulos ou vocabulário de outro segmento de negócio.
-            : (mode === 'metodo' && mainActivity.trim()
-              ? `PERFIL EDITORIAL: nenhum perfil específico cadastrado para esta atividade — não empreste território, ângulos ou vocabulário de outro tipo de negócio.
-TERRITÓRIO: leia "${mainActivity}" e identifique que tipo real de ${isB2C ? 'momento, necessidade, decisão ou desconforto da vida do cliente' : 'situação, risco ou decisão do dia a dia do negócio'} essa atividade toca — esse é o território desta sugestão.
-ÂNGULO: a partir desse território, o ângulo pedido mais abaixo (tensão, oportunidade, identidade ou legado) deve nascer de algo REAL e ESPECÍFICO de "${mainActivity}" — nunca de uma ideia genérica que serviria para qualquer negócio do segmento ${segment} (ex.: "falta de organização", "pouca visibilidade online", "crescer", "se destacar").
-VOCABULÁRIO: use o vocabulário natural de quem trabalha ou é atendido em "${mainActivity}" — evite termos típicos de outros setores.`
-              : '');
-
           const previousBlock = previousSugs.length
-            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos nem ângulos — gere algo completamente diferente):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
+            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos — gere algo completamente diferente, sobre outro produto, serviço ou situação):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
             : '';
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
@@ -249,177 +226,47 @@ VOCABULÁRIO: use o vocabulário natural de quem trabalha ou é atendido em "${m
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
 
-          // ── Prompts do Método ─────────────────────────────────────────────
+          // ── Lente de abertura (Sugestão MOP) ──────────────────────────────
+          // Varia a FORMA de encontrar o assunto entre as tentativas — nunca
+          // aparece no JSON de saída nem na UI, e não carrega tensão,
+          // promessa, progressão ou linguagem de campanha.
+          const lensIndex = (attempt + seedFromString(companyName + mainActivity)) % OPENING_LENSES.length;
+          const lens = OPENING_LENSES[lensIndex];
+          const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}`;
 
-          const metodoTensao = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
+          const sementeLembrete = segment === 'MARCA' ? sementeLembreteMarca : sementeLembreteAtividade;
+
+          // ── Prompt do Método (Sugestão = seleção de assunto) ──────────────
+          // A Sugestão MOP é só a escolha do ASSUNTO desta peça — tensão,
+          // motivação, momento do negócio, progressão e estágios pertencem à
+          // etapa do Método OP que vem DEPOIS, com a Informação-chave já
+          // escolhida pelo usuário.
+          const metodoPrompt = `Defina o ASSUNTO de uma Informação-chave para um conjunto de posts de Instagram em português brasileiro.
 
 EMPRESA: ${companyName || '(não informada)'}
 ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO com base na ATIVIDADE da empresa e nas regras de ancoragem abaixo): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da empresa e das regras de ancoragem abaixo.'}
+${voiceBlock}${hint
+  ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO com base na ATIVIDADE da empresa e nas regras de ancoragem abaixo): "${hint}"\n${preservaHint}`
+  : 'Campo vazio — crie a partir da ATIVIDADE da empresa, do elemento concreto e da lente interna abaixo.'}
 
 ${audienceDirective}
 
-${momentoContextBlock}
-
-${editorialBlock}
-
 ${elementoConcretoBlock}
 
 ${ancoragemBlock}
 
 ${previousBlock}
 
-${criteriosSugestaoOP}
-
-${aberturaSequenciaGuide}
-
-${segmentLensBlock}
-
-ÂNGULO: TENSÃO (problema, dúvida, erro comum ou escolha difícil real da atividade).
-A Informação-chave é uma SEMENTE CONCRETA — um produto, serviço, situação, dúvida, erro, escolha ou necessidade real do dia a dia dessa atividade. NÃO é preciso embutir a progressão psicológica completa (dor → desejo → confiança → ação): o Método OP constrói essa progressão DEPOIS, na sequência de posts.
-
-EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "organização", "tráfego pago").
-PREFIRA um fato, produto, situação ou decisão concreta e reconhecível dessa atividade.
-
-Exemplos do método (não copie, use como referência de FORMATO — desfecho concreto E carregado, nunca morno):
-- "anúncios pagos não trazem cliente pra dentro da loja"
-- "perfil que posta todo dia não aparece pra quem já segue"
-- "demora na resposta faz o cliente procurar outro lugar"
-
-CONTRASTE (evite a 1ª forma, prefira a 2ª — mesma carga emocional, desfecho amarrado à atividade):
-- "ERP confuso faz você perder vendas sem notar" → "ERP confuso dificulta acompanhar pedidos em aberto"
-- "consulta sem preparo gera dúvida no tutor" → "consulta sem preparo atrasa o diagnóstico inicial"
-- "correia desgastada compromete a produção" → "correia desgastada faz a máquina perder força no meio do turno"
-- "perfil parado some do radar" → "perfil parado some do feed de quem já te segue"
-- "gaveta emperrada faz papel sumir na hora certa" → "gaveta apertada trava na hora de achar o documento"
-- "armário vira esconderijo de caneta sumida" → "armário sem divisória empilha tudo e some o que importa"
-
-REGRA DE CARGA EM TENSÃO: o ELEMENTO CONCRETO desta sugestão deve aparecer pela FALTA, ATRASO, ERRO, AUSÊNCIA ou LIMITAÇÃO — nunca funcionando bem ou entregando benefício. Mesmo quando o elemento é um serviço de suporte ou solução, a tensão mora em ele faltar, atrasar ou chegar tarde.
-QUANDO O ELEMENTO É UM OBJETO PASSIVO (móvel, peça, produto que não "falha" sozinho): não force o objeto a quebrar, sumir ou se esconder. Desloque a tensão para a ESCOLHA, a MEDIDA, o ESPAÇO ou o USO ERRADO dele — ex.: "cadeira errada para o turno todo cansa as costas", "mesa pequena demais não cabe dois monitores", "armário sem divisória vira pilha de papel solto". A tensão mora na decisão de compra ou no encaixe com a rotina, não num acidente improvável com o objeto.
-${sementeLembreteAtividade}
-Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada à atividade" }`;
-
-          const metodoMotivacao = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
-
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO copie nem refine; gere algo NOVO com base na ATIVIDADE da empresa e nas regras de ancoragem abaixo): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da empresa e das regras de ancoragem abaixo.'}
-
-${audienceDirective}
-
-${momentoContextBlock}
-
-${editorialBlock}
-
-${elementoConcretoBlock}
-
-${ancoragemBlock}
-
-${previousBlock}
+${lensBlock}
 
 ${criteriosSugestaoOP}
 
-${aberturaSequenciaGuide}
+A Informação-chave é APENAS o ASSUNTO escolhido para esta peça — um produto, serviço, situação, dúvida, processo, escolha, comparação ou característica real e concreta dessa atividade. Ela NÃO precisa (e NÃO deve) carregar tensão, conflito, promessa emocional, urgência, comparação com concorrentes, nem qualquer ideia de progressão, estágio ou momento de relacionamento com o público — isso é decidido em outra etapa, depois que o assunto for escolhido.
 
-${segmentLensBlock}
-
-ÂNGULO: OPORTUNIDADE (situação positiva, necessidade real ou oportunidade concreta da atividade).
-IMPORTANTE: NÃO "implique" com o público. Não aponte erro, falha ou falta.
-
-A Informação-chave é uma SEMENTE CONCRETA — um produto, serviço, situação, necessidade ou oportunidade real do dia a dia dessa atividade. NÃO é preciso embutir a progressão psicológica completa (desejo → confiança → ação): o Método OP constrói essa progressão DEPOIS, na sequência de posts.
-
-EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "tráfego pago").
-EVITE qualquer formulação que soe como crítica ao público ("não conseguem", "não sabem", "fazem errado", "estão perdidos").
-
-Exemplos do método (não copie, use como referência de FORMATO e TOM — desfecho concreto E carregado, nunca morno):
-- "a loja de bairro vende todo dia pelo Instagram"
-- "quem segue o perfil chega no balcão sabendo o que quer"
-- "post certo na hora certa traz gente pro WhatsApp no mesmo dia"
-
-PROIBIDO terminar em TEMA/TÍTULO sem desfecho (ex.: "Consulta veterinária antes de mudar a ração do seu pet" — falta o efeito). Toda frase precisa fechar em uma consequência concreta: o que isso garante, evita ou muda.
-${sementeLembreteAtividade}
+PROIBIDO: linguagem de campanha ("não perca", "aproveite agora", "garanta já"), promessa emocional ("transforme", "mude sua vida", "realize seu sonho"), crítica ou cobrança ao cliente ("não sabem", "estão perdendo"), urgência, datas ou prazos não informados.
+${sementeLembrete}
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada a uma oportunidade real" }`;
-
-          const marcaIdentidade = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
-
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}SEGMENTO: MARCA (conteúdo institucional, identidade, posicionamento, percepção, propósito — NÃO é venda).
-${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO com base na ATIVIDADE da marca e nas regras de ancoragem abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da marca e das regras de ancoragem abaixo.'}
-
-${preservaHint}
-
-${editorialBlock}
-
-${elementoConcretoBlock}
-
-${ancoragemBlock}
-
-${previousBlock}
-
-${criteriosSugestaoOP}
-
-${aberturaSequenciaGuide}
-
-${segmentLensBlock}
-
-ÂNGULO: IDENTIDADE / POSICIONAMENTO.
-A Informação-chave é uma SEMENTE CONCRETA — um elemento real da marca (produto, ingrediente, material, processo, ritual, território ou característica) que revele QUEM a marca é ou o que representa. Sem dor do cliente, sem promessa comercial, sem CTA, sem urgência, sem gatilho de venda. NÃO é preciso embutir a progressão completa de posicionamento — o Método OP constrói isso DEPOIS, na sequência de posts.
-
-PROIBIDO: linguagem de venda ("compre", "garanta", "oferta", "promoção"), dor do cliente ("não conseguem", "estão perdidos", "estagnação", "invisíveis"), urgência ("últimas vagas", "agora"), reinterpretação negativa de qualquer pista positiva do usuário.
-
-Exemplos do método (não copie, use como referência de TOM e FORMATO institucional):
-- "a loja de bairro pertence à história da cidade"
-- "a marca local reafirma o jeito próprio de trabalhar"
-- "o negócio tem um propósito claro além da venda"
-${sementeLembreteMarca}
-Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, ligada a um elemento real da marca, tom institucional" }`;
-
-          const marcaLegado = `Construa UMA Informação-chave para uma SEQUÊNCIA do Método OP no Instagram em português brasileiro.
-
-EMPRESA: ${companyName || '(não informada)'}
-ATIVIDADE: ${mainActivity || '(não informada)'}
-${voiceBlock}SEGMENTO: MARCA (conteúdo institucional — NÃO é venda).
-${hint ? `TEXTO ATUAL DO USUÁRIO (contexto — NÃO repita; gere algo NOVO com base na ATIVIDADE da marca e nas regras de ancoragem abaixo, preservando o sentido positivo da marca): "${hint}"` : 'Campo vazio — crie a partir da ATIVIDADE da marca e das regras de ancoragem abaixo.'}
-
-${preservaHint}
-
-${editorialBlock}
-
-${elementoConcretoBlock}
-
-${ancoragemBlock}
-
-${previousBlock}
-
-${criteriosSugestaoOP}
-
-${aberturaSequenciaGuide}
-
-${segmentLensBlock}
-
-ÂNGULO: TRAJETÓRIA / LEGADO / VÍNCULO COM A COMUNIDADE.
-A Informação-chave é uma SEMENTE CONCRETA — um fato, elemento ou marco real da trajetória da marca (história, repertório, tempo de mercado, vínculo com clientes, presença no território). Tom de orgulho calmo, sem auto-elogio comercial. NÃO é preciso embutir a progressão completa de legado/percepção — o Método OP constrói isso DEPOIS, na sequência de posts.
-
-PROIBIDO: dor do cliente, crítica ao público, linguagem comercial agressiva, urgência, qualquer inversão negativa de uma pista positiva (ex.: transformar "20 anos de tradição" em "estagnação há 20 anos" é proibido).
-
-Exemplos do método (não copie, use como referência de TOM e FORMATO):
-- "a marca constrói vínculo com a comunidade há duas décadas"
-- "pequenos detalhes definem como as pessoas lembram da marca"
-- "a marca atravessou gerações e ainda é referência no bairro"
-${sementeLembreteMarca}
-Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, ligada a um fato real da trajetória, tom de legado e pertencimento" }`;
-
-          let metodoPrompt: string;
-          if (segment === 'MARCA') {
-            metodoPrompt = attempt % 2 === 0 ? marcaIdentidade : marcaLegado;
-          } else {
-            metodoPrompt = angulo === 'tensao' ? metodoTensao : metodoMotivacao;
-          }
+{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, objetiva e específica, ligada à atividade" }`;
 
           const OBJETIVO_RULES: Record<string, string> = {
             promocao: 'REGRAS PARA PROMOÇÃO: use tom comercial/promocional — esse é o tom esperado para o objetivo (palavras como "promoção", "oferta", "aproveite", "garanta o seu" são bem-vindas). PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia, prazo, data/dia da semana, "última chance" ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário ou na atividade/empresa. Se nada disso foi informado, descreva a oportunidade comercial de forma genérica — sem números, datas ou condições inventadas.',
@@ -459,7 +306,7 @@ Retorne JSON EXATAMENTE assim:
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
-            ? 'Você é estrategista do Método OP. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) a frase parte de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — e não de um conceito amplo que serviria para qualquer empresa do segmento? (4) a relação de causa→efeito da frase é literalmente verdadeira e um nativo a diria sem reler? Expressão idiomática só vale se o sentido literal também fizer sentido com o objeto citado — em dúvida, troque a expressão "vívida" por uma consequência simples e direta. Se sim para (2), troque por algo mais simples; se não para (3) e a atividade permitir, ajuste para algo concreto desse ramo antes de responder; se não para (4), reescreva a consequência de forma literal e direta antes de responder. Limite: entre 5 e 10 palavras por sugestão (máximo absoluto 12) — só passe de 10 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples, e nunca ultrapasse 12. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
+            ? 'Você é estrategista de conteúdo para redes sociais. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) a frase parte de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — e não de um conceito amplo que serviria para qualquer empresa do segmento? (4) a relação de causa→efeito da frase é literalmente verdadeira e um nativo a diria sem reler? Expressão idiomática só vale se o sentido literal também fizer sentido com o objeto citado — em dúvida, troque a expressão "vívida" por uma consequência simples e direta. Se sim para (2), troque por algo mais simples; se não para (3) e a atividade permitir, ajuste para algo concreto desse ramo antes de responder; se não para (4), reescreva a consequência de forma literal e direta antes de responder. Limite: entre 5 e 10 palavras por sugestão (máximo absoluto 12) — só passe de 10 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples, e nunca ultrapasse 12. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
             : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, prefira que a frase parta de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — em vez de um conceito amplo que serviria para qualquer empresa do segmento.';
 
           // D1 (validateSugestao) + 1 retry no máximo: se a sugestão sair vaga

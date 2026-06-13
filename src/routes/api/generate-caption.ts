@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { getVoiceProfile } from '@/data/brandVoice';
-import { stripTrailingCtaSentence, truncateWords } from '@/core/textValidation';
+import { stripTrailingCtaSentence, truncateWords, normalizeForCompare, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS } from '@/core/textValidation';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -54,6 +54,25 @@ function deriveFallbackHashtags(
     if (out.length >= 3) break;
   }
   return out;
+}
+
+// Compara a abertura (6 primeiras palavras, normalizadas) do novo "texto" com
+// a legenda anterior — usado para forçar uma nova tentativa quando a
+// regeneração da PU volta com abertura igual à anterior.
+function openingWords(text: string, n: number): string {
+  return normalizeForCompare(text)
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, n)
+    .join(' ');
+}
+
+function isCaptionTooSimilar(novoTexto: string, anterior: string): boolean {
+  if (!novoTexto || !anterior) return false;
+  const a = openingWords(novoTexto, 6);
+  const b = openingWords(anterior, 6);
+  return !!a && a === b;
 }
 
 // PROIBIDO ABSOLUTO (D1/E4) — formas substantivas (singular/plural) dos termos
@@ -157,7 +176,7 @@ Proibido mencionar literalmente o nome da voz no texto final.
             : '';
 
           const previousBlock = previousCaption
-            ? `LEGENDA ANTERIOR GERADA (NÃO repita — use estrutura, abertura e palavras-chave completamente diferentes): "${previousCaption}"\n`
+            ? `LEGENDA ANTERIOR GERADA (a nova versão precisa ser REALMENTE DIFERENTE): "${previousCaption}"\nNA NOVA VERSÃO: comece com uma frase de abertura diferente, use um novo CTA (diferente do anterior) e, quando possível, novas hashtags — não repita a estrutura, a frase inicial nem as palavras-chave principais da legenda anterior.\n`
             : '';
 
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
@@ -169,8 +188,8 @@ INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
 {
-  "texto": "frase principal da legenda, no tom certo, sem hashtags e sem emojis exagerados",
-  "cta": "uma chamada para ação que complementa o texto principal, sem hashtag",
+  "texto": "frase principal da legenda, até ${LEGENDA_CORPO_MAX_WORDS} palavras, no tom certo, sem hashtags e sem emojis exagerados, sem repetir o título/informação-chave inteira nem abrir assunto novo",
+  "cta": "uma chamada para ação que complementa o texto principal, até ${LEGENDA_CTA_MAX_WORDS} palavras, sem hashtag",
   "hashtags": ["tag1", "tag2", "tag3"]
 }
 
@@ -200,6 +219,7 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           let rawCta = '';
           let rawHashtags: string[] = [];
 
+          let retryInstruction = '';
           for (let attempt = 1; attempt <= MAX_CAPTION_ATTEMPTS; attempt++) {
             const result = await fetchOpenAIChat(apiKey, {
               model: 'gpt-4.1-mini',
@@ -207,9 +227,7 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
                 { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
                 {
                   role: 'user',
-                  content: attempt === 1
-                    ? userPrompt
-                    : `${userPrompt}\n\nATENÇÃO: a resposta anterior não preencheu "cta" e/ou "hashtags". Garanta que os três campos do JSON — "texto", "cta" e "hashtags" — estejam preenchidos.`,
+                  content: attempt === 1 ? userPrompt : `${userPrompt}\n\n${retryInstruction}`,
                 },
               ],
               temperature: 0.9,
@@ -231,7 +249,18 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
               ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean)
               : [];
 
-            if (rawCta !== '' && rawHashtags.length > 0) break;
+            const fieldsOk = rawCta !== '' && rawHashtags.length > 0;
+            if (!fieldsOk) {
+              retryInstruction = `ATENÇÃO: a resposta anterior não preencheu "cta" e/ou "hashtags". Garanta que os três campos do JSON — "texto", "cta" e "hashtags" — estejam preenchidos.`;
+              continue;
+            }
+
+            if (previousCaption && isCaptionTooSimilar(rawTexto, previousCaption)) {
+              retryInstruction = `ATENÇÃO: a resposta anterior começou com a mesma abertura da legenda anterior. Reescreva com uma frase de abertura DIFERENTE, novo CTA e, se possível, novas hashtags.`;
+              continue;
+            }
+
+            break;
           }
 
           // D1/E4 — ajuste determinístico do que antes era pedido ao modelo:
@@ -240,11 +269,12 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           // exatamente 3 hashtags válidas.
           let textoValue = stripTrailingCtaSentence(rawTexto);
           textoValue = sanitizeForbiddenTerms(textoValue);
-          textoValue = truncateWords(textoValue, 30);
+          textoValue = truncateWords(textoValue, LEGENDA_CORPO_MAX_WORDS);
           if (textoValue && !/[.!?]$/.test(textoValue)) textoValue += '.';
 
           let ctaValue = sanitizeForbiddenTerms(rawCta);
           if (!ctaValue) ctaValue = OBJETIVO_CTA_FALLBACK[objetivo] || OBJETIVO_CTA_FALLBACK.promocao;
+          ctaValue = truncateWords(ctaValue, LEGENDA_CTA_MAX_WORDS);
           if (!/[.!?]$/.test(ctaValue)) ctaValue += '.';
 
           let hashtagsArr = rawHashtags

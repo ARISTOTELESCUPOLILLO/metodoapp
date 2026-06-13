@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { truncateWords, validateTitulo, validateTexto, validateLegenda, normalizeLegenda } from '@/core/textValidation';
+import { truncateWords, validateTitulo, validateTexto, validateLegenda, normalizeLegenda, enforceLegendaLimits, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS, LEGENDA_HASHTAGS } from '@/core/textValidation';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 type Kind = 'titulo' | 'texto' | 'legenda';
@@ -13,11 +13,12 @@ function getRule(kind: Kind, formato: string): { label: string; rule: string; ma
     return {
       label: 'legenda do post',
       rule: `Estrutura OBRIGATÓRIA em exatamente 3 parágrafos, separados por LINHA EM BRANCO (uma quebra de linha dupla):
-1) Corpo: até 30 palavras, retomando o conceito central do título/imagem, terminando com PONTO FINAL. PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do parágrafo 2.
-2) CTA: EXATAMENTE 1 frase curta (máx. 6 palavras), terminando com PONTO FINAL — varie, ex.: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.". PROIBIDO incluir uma 2ª frase ou CTA indireto (ex.: "Acesse a bio...", "Acesse o site...") no mesmo parágrafo ou em parágrafo extra.
-3) Hashtags: EXATAMENTE 3, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia), coerentes com o segmento — nunca genéricas demais.
-Total corpo + CTA: até 40 palavras (sem contar as hashtags). Formato final exato: "{corpo}\\n\\n{CTA}\\n\\n#hash1 #hash2 #hash3". Nunca emojis nas hashtags.`,
-      max: 40,
+1) Corpo: até ${LEGENDA_CORPO_MAX_WORDS} palavras, retomando o conceito central do título/imagem — sem repetir o título inteiro, sem abrir assunto novo, sem texto explicativo longo — terminando com PONTO FINAL. PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do parágrafo 2.
+2) CTA: EXATAMENTE 1 frase curta (máx. ${LEGENDA_CTA_MAX_WORDS} palavras), terminando com PONTO FINAL — varie, ex.: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.". PROIBIDO incluir uma 2ª frase ou CTA indireto (ex.: "Acesse a bio...", "Acesse o site...") no mesmo parágrafo ou em parágrafo extra.
+3) Hashtags: EXATAMENTE ${LEGENDA_HASHTAGS}, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia), coerentes com o segmento — nunca genéricas demais.
+Formato final exato: "{corpo}\\n\\n{CTA}\\n\\n#hash1 #hash2 #hash3". Nunca emojis nas hashtags, nunca emojis exagerados no corpo ou no CTA.
+A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: não repita a abertura/primeira frase do corpo, nem o CTA, nem as hashtags da versão atual.`,
+      max: LEGENDA_CORPO_MAX_WORDS,
     };
   }
 
@@ -120,7 +121,7 @@ Retorne JSON EXATAMENTE assim:
           if (kind === 'texto') {
             value = truncateWords(value, rule.max);
           } else if (kind === 'legenda') {
-            value = normalizeLegenda(value);
+            value = enforceLegendaLimits(normalizeLegenda(value));
           }
 
           // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas

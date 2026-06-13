@@ -229,6 +229,9 @@ function EditableField(props: {
           {suggestions.length > 1 && (
             <p style={{ margin: '0 0 6px', fontSize: 11, color: '#64748b' }}>Compare e escolha a que preferir.</p>
           )}
+          {kind === 'legenda' && (
+            <p style={{ margin: '0 0 6px', fontSize: 11, color: '#92400e' }}>Pendente — clique em "Usar esta" para substituir a legenda atual.</p>
+          )}
           <div style={{ display: 'grid', gap: 8, gridTemplateColumns: suggestions.length > 1 ? 'repeat(auto-fit, minmax(200px, 1fr))' : '1fr' }}>
             {suggestions.map((sugg, idx) => (
               <div key={idx} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>

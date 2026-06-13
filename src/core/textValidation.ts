@@ -140,12 +140,19 @@ export function checkPunctuation(text: string, kind: 'titulo' | 'texto' | 'legen
 
 const HASHTAG_RE = /^#[a-z0-9]+$/;
 
-// REGRA DE LEGENDA (organizaMethodEngine.ts) — vale para feed estático,
-// carrossel, reels e estático final: 3 parágrafos separados por linha em
-// branco — corpo (até 30 palavras, termina em ./!/?), CTA (até 6 palavras,
-// termina em ./!/?) e, por último, EXATAMENTE 3 hashtags minúsculas, sem
-// acento e sem caracteres especiais. Reprova quando essa estrutura não é
-// respeitada, para que a regeneração (E3) recupere CTA + hashtags ausentes.
+// REGRA DE LEGENDA (organizaMethodEngine.ts, generate-caption.ts) — vale para
+// feed estático, carrossel, reels, estático final e Post Único: 3 parágrafos
+// separados por linha em branco — corpo (até LEGENDA_CORPO_MAX_WORDS palavras,
+// termina em ./!/?), CTA (até LEGENDA_CTA_MAX_WORDS palavras, termina em
+// ./!/?) e, por último, EXATAMENTE LEGENDA_HASHTAGS hashtags minúsculas, sem
+// acento e sem caracteres especiais. Eventual parágrafo de assinatura entre o
+// CTA e as hashtags não conta nos limites. Reprova quando essa estrutura não
+// é respeitada, para que a regeneração (E3) recupere CTA + hashtags ausentes
+// ou corte o que excede o limite de palavras.
+export const LEGENDA_CORPO_MAX_WORDS = 35;
+export const LEGENDA_CTA_MAX_WORDS = 5;
+export const LEGENDA_HASHTAGS = 3;
+
 export function checkLegendaStructure(legenda: string): string | null {
   const trimmed = legenda.trim();
   if (!trimmed) return null;
@@ -153,10 +160,10 @@ export function checkLegendaStructure(legenda: string): string | null {
   const hashtags = trimmed.match(/#[^\s#]+/g) || [];
 
   if (hashtags.length === 0) {
-    return 'legenda sem o parágrafo final de hashtags — faltam EXATAMENTE 3 (ver REGRA DE LEGENDA)';
+    return `legenda sem o parágrafo final de hashtags — faltam EXATAMENTE ${LEGENDA_HASHTAGS} (ver REGRA DE LEGENDA)`;
   }
-  if (hashtags.length !== 3) {
-    return `legenda com ${hashtags.length} hashtag(s) em vez de EXATAMENTE 3 (ver REGRA DE LEGENDA)`;
+  if (hashtags.length !== LEGENDA_HASHTAGS) {
+    return `legenda com ${hashtags.length} hashtag(s) em vez de EXATAMENTE ${LEGENDA_HASHTAGS} (ver REGRA DE LEGENDA)`;
   }
   const invalid = hashtags.filter((h) => !HASHTAG_RE.test(h));
   if (invalid.length > 0) {
@@ -180,6 +187,16 @@ export function checkLegendaStructure(legenda: string): string | null {
 
   if (paragraphs.length !== 3) {
     return `legenda com ${paragraphs.length} parágrafos em vez de EXATAMENTE 3 — corpo, CTA e hashtags (ver REGRA DE LEGENDA)`;
+  }
+
+  const corpoWords = paragraphs[0].split(/\s+/).filter(Boolean).length;
+  if (corpoWords > LEGENDA_CORPO_MAX_WORDS) {
+    return `corpo da legenda com ${corpoWords} palavras — acima do máximo de ${LEGENDA_CORPO_MAX_WORDS} (ver REGRA DE LEGENDA)`;
+  }
+
+  const ctaWords = ctaPara.split(/\s+/).filter(Boolean).length;
+  if (ctaWords > LEGENDA_CTA_MAX_WORDS) {
+    return `CTA da legenda com ${ctaWords} palavras — acima do máximo de ${LEGENDA_CTA_MAX_WORDS} (ver REGRA DE LEGENDA)`;
   }
 
   return null;
@@ -244,6 +261,39 @@ export function normalizeLegenda(legenda: string): string {
         paragraphs[ctaIdx] = sentences[0].trim();
       }
     }
+  }
+
+  return paragraphs.join('\n\n');
+}
+
+// Aplica a REGRA DE LEGENDA cortando mecanicamente o que excede o limite:
+// corpo até LEGENDA_CORPO_MAX_WORDS palavras, CTA até LEGENDA_CTA_MAX_WORDS
+// palavras, e no máximo LEGENDA_HASHTAGS hashtags. Espera a estrutura já
+// normalizada por normalizeLegenda (corpo, CTA, [assinatura,] hashtags) — um
+// eventual parágrafo de assinatura entre o CTA e as hashtags é preservado
+// sem entrar na contagem. Se a estrutura não tiver hashtags ao final, devolve
+// o texto como veio (cabe ao D1/E3 corrigir a estrutura antes do corte).
+export function enforceLegendaLimits(legenda: string): string {
+  const trimmed = legenda.trim();
+  if (!trimmed) return trimmed;
+
+  const paragraphs = trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (paragraphs.length < 3) return trimmed;
+
+  const lastIdx = paragraphs.length - 1;
+  if (!/^#/.test(paragraphs[lastIdx])) return trimmed;
+
+  paragraphs[0] = truncateWords(paragraphs[0], LEGENDA_CORPO_MAX_WORDS);
+  if (paragraphs[0] && !/[.!?]$/.test(paragraphs[0])) paragraphs[0] += '.';
+
+  const ctaIdx = lastIdx - 1;
+  let cta = truncateWords(paragraphs[ctaIdx], LEGENDA_CTA_MAX_WORDS);
+  if (cta && !/[.!?]$/.test(cta)) cta += '.';
+  paragraphs[ctaIdx] = cta;
+
+  const hashtags = paragraphs[lastIdx].match(/#[^\s#]+/g) || [];
+  if (hashtags.length > LEGENDA_HASHTAGS) {
+    paragraphs[lastIdx] = hashtags.slice(0, LEGENDA_HASHTAGS).join(' ');
   }
 
   return paragraphs.join('\n\n');
@@ -316,7 +366,7 @@ const NUMERIC_CLAIM_PATTERNS: RegExp[] = [
   /\b\d+\s*x\b/gi,
 ];
 
-function normalizeForCompare(s: string): string {
+export function normalizeForCompare(s: string): string {
   return stripAccents(s.toLowerCase());
 }
 

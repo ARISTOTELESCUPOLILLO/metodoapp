@@ -1,7 +1,7 @@
 import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from '../types';
 import { getVoiceProfile } from '../data/brandVoice';
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
-import { truncateWords, validatePieceFields, normalizeLegenda } from './textValidation';
+import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits } from './textValidation';
 
 interface MomentModulator {
   label: string;
@@ -172,7 +172,7 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} de produção):
 - Roteiro falado (campo "script"): ESTRUTURA em 2 partes — (1) mensagem principal de 14 a 16 palavras curtas + ponto final + (2) CTA genérico de 5 a 6 palavras. TOTAL: 19 a 22 palavras → ~7 segundos em voz.
   CTA OBRIGATORIAMENTE GENÉRICO — varie a cada geração, escolha entre: "Fale com a gente hoje.", "Entre em contato agora.", "Venha saber mais.", "Comece ainda hoje.", "Fale conosco agora.", "Dá pra começar hoje.", "A gente te ajuda.", "Vem com a gente.", "O primeiro passo é seu.", "Bora dar o próximo passo." — ou crie outro de mesmo tom. PROIBIDO mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
 - REGRA TTS — campo "script" (será LIDO em voz alta por sintetizador): USE palavras de 1 ou 2 sílabas sempre que possível. PROIBIDO: palavras com mais de 3 sílabas, siglas em caixa alta (APP→"app", CRM→"sistema", ROI→"retorno", KPI→"meta", IA→"inteligência"), anglicismos crus (link, lead, brief, deadline, framework), abreviações (vc, tb, p/). TRADUZA termos difíceis: "consultoria"→"apoio"; "estratégia"→"plano"; "posicionamento"→"presença". Exemplo correto (21 palavras, ~7s): "Sua marca fala. Seu time entrega. Seu cliente volta. É assim que se cresce. Fale com a gente hoje." O campo "screenText" PODE conter sigla (é lido com os olhos), mas o "script" NÃO PODE — precisa fluir natural em voz alta em português brasileiro.
-- Retornar em "reels": [{ "sequencia": 1, "hook", "screenText", "script", "imagePrompt", "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)" }]
+- Retornar em "reels": [{ "sequencia": 1, "hook", "screenText", "script", "imagePrompt", "legenda": "corpo até 35 palavras + CTA até 5 palavras, terminando com 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)" }]
 ${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} reels com abordagens visuais distintas.` : ''}`;
 
   const estaticoFinalBlock = `
@@ -180,7 +180,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fe
 - O Estático Final NÃO é um estático comum nem um reel congelado.
 - É um formato HÍBRIDO de fechamento visual com função psicológica própria: consolidação, resolução visual, fechamento emocional, organização da decisão.
 - Função na sequência: encerrar o ciclo narrativo aberto pelo estático e desenvolvido pelo carrossel.
-- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com corpo até 35 palavras e CTA até 5 palavras, terminando com 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - O TÍTULO do Estático Final deve carregar resolução, não provocação. Frase de conclusão, não de abertura.
 - O TEXTO deve consolidar a direção da sequência em uma afirmação clara e estável.
 - A IMAGEM deve traduzir literalmente o título e o texto, com cena de calma, foco e estabilidade — não tensão, não movimento.
@@ -211,7 +211,7 @@ A SEQUÊNCIA COMPLETA segue a progressão: ${progressionText}
 Os formatos são distribuídos pelo método — NÃO pelo usuário.
 
 ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
-- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com NO MÁXIMO 40 palavras, terminando com 1 CTA genérico e 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com corpo até 35 palavras e CTA até 5 palavras, terminando com 3 hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - Variar títulos entre afirmação, pergunta, contraste e observação cotidiana.
 - DIVERSIDADE LEXICAL OBRIGATÓRIA: os títulos dos estáticos de uma mesma sequência NÃO podem começar com a mesma palavra — garantir abertura distinta entre Estático 1, Estático 2 e Estático Final.
 - SUJEITO DO TÍTULO: aplica-se a regra de liberdade gramatical do item 11 (ver ANÁLISE INTERNA acima) — qualquer classe gramatical pode ser sujeito quando substantivada; proibida construção passiva sem agente.
@@ -224,19 +224,18 @@ CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 car
 - Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
 - Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. Card 5 pode citar o que a empresa entrega e tem CTA na legenda.
 - Cada card: titulo até 6 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter mais sílabas quando essencial para clareza, ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia"), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
-- Retornar em "carousel": [{ "sequencia": 1, "legenda": "até 40 palavras, terminando com 1 CTA genérico curto e 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "organização dos elementos no quadro" } }, ...] }]
+- Retornar em "carousel": [{ "sequencia": 1, "legenda": "corpo até 35 palavras + CTA até 5 palavras, terminando com 3 hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "organização dos elementos no quadro" } }, ...] }]
 ${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ''}
 ${closingBlock}
 
 REGRA DE LEGENDA (vale para feed estático, carrossel, reels e estático final):
 - A legenda tem 3 parágrafos separados por linha em branco. FORMATO OBRIGATÓRIO no JSON (use \\n\\n como separador literal):
   "{corpo da legenda terminando com ponto final.}\\n\\n{CTA curto terminando com ponto final.}\\n\\n#hash1 #hash2 #hash3"
-- Parágrafo 1 — corpo: ATÉ 30 palavras, terminando com PONTO FINAL. RETOMA o conceito central do título e da imagem — não introduz tema novo nem desconectado da peça (a legenda fecha o ciclo palavra→imagem→palavra). PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do Parágrafo 2. O corpo só descreve/retoma, nunca convida à ação.
-- Parágrafo 2 — CTA: EXATAMENTE 1 frase genérica curta (máx 6 palavras), terminando com PONTO FINAL. Varie entre as peças. Exemplos: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.", "Marque alguém que precisa ler isso.", "Envie para quem decide com você." PROIBIDO incluir uma 2ª frase ou CTA indireto (ex.: "Acesse a bio...", "Acesse o site...") no mesmo parágrafo ou em parágrafo extra — apenas essa única frase.
+- Parágrafo 1 — corpo: ATÉ 35 palavras, terminando com PONTO FINAL. RETOMA o conceito central do título e da imagem — não introduz tema novo nem desconectado da peça (a legenda fecha o ciclo palavra→imagem→palavra). Sem texto explicativo longo, sem repetir o título inteiro. PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do Parágrafo 2. O corpo só descreve/retoma, nunca convida à ação.
+- Parágrafo 2 — CTA: EXATAMENTE 1 frase genérica curta (máx 5 palavras), terminando com PONTO FINAL. Varie entre as peças. Exemplos: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.", "Marque quem precisa ver isso.", "Envie para quem decide isso." PROIBIDO incluir uma 2ª frase ou CTA indireto (ex.: "Acesse a bio...", "Acesse o site...") no mesmo parágrafo ou em parágrafo extra — apenas essa única frase.
 - Parágrafo 3 — hashtags: EXATAMENTE 3, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia).
-- Total corpo + CTA: ATÉ 40 palavras (sem contar as hashtags).
 - Hashtags coerentes com o segmento e a atividade da marca, nunca genéricas demais ("#instagram", "#post").
-- Nunca usar CAPS, nunca mais que 3 hashtags, nunca emojis dentro das hashtags.
+- Nunca usar CAPS, nunca mais que 3 hashtags, nunca emojis dentro das hashtags, nunca emojis exagerados no corpo ou no CTA.
 ` : '';
 
   const storiesRules = wantsStories ? `
@@ -527,7 +526,7 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
       ...item,
       titulo: (item.titulo || '').trim(),
       texto: truncateWords(item.texto || '', 15),
-      legenda: item.legenda ? normalizeLegenda(item.legenda) : item.legenda,
+      legenda: item.legenda ? enforceLegendaLimits(normalizeLegenda(item.legenda)) : item.legenda,
     }));
   }
   if (carousel) {
@@ -535,13 +534,13 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
       ...card,
       titulo: (card.titulo || '').trim(),
       texto: truncateWords(card.texto || '', 12),
-      ...(card.legenda ? { legenda: normalizeLegenda(card.legenda) } : {}),
+      ...(card.legenda ? { legenda: enforceLegendaLimits(normalizeLegenda(card.legenda)) } : {}),
     }));
   }
   if (reels) {
     reels = reels.map(r => ({
       ...r,
-      ...(r.legenda ? { legenda: normalizeLegenda(r.legenda) } : {}),
+      ...(r.legenda ? { legenda: enforceLegendaLimits(normalizeLegenda(r.legenda)) } : {}),
     }));
   }
 
