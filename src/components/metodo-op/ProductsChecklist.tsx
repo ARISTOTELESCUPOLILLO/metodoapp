@@ -50,7 +50,7 @@ export default function ProductsChecklist({ products, selected, onChange }: Prop
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
             {products.map((item, i) => (
-              <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#0f172a', cursor: 'pointer' }}>
+              <label key={i} className="checkRow" style={{ fontSize: 13, color: '#0f172a', cursor: 'pointer' }}>
                 <input type="checkbox" checked={selected.includes(item)} onChange={() => toggle(item)} />
                 {item}
               </label>

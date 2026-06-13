@@ -132,7 +132,7 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
         </div>
       </div>
 
-      <div style={{ maxHeight: isOpen ? 2000 : 0, overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
+      <div style={{ maxHeight: isOpen ? 5000 : 0, overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
       <div className="grid2">
         <label>Nome da marca
           <input value={kit.companyName} onChange={(e) => update('companyName', e.target.value)} placeholder="Oficina de Propaganda" />
