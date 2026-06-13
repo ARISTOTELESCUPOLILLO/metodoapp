@@ -281,10 +281,18 @@ A Informação-chave é uma SEMENTE CONCRETA — um produto, serviço, situaçã
 EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "organização", "tráfego pago").
 PREFIRA um fato, produto, situação ou decisão concreta e reconhecível dessa atividade.
 
-Exemplos do método (não copie, use como referência de FORMATO):
-- "anúncios pagos não trazem vendas para a loja local"
-- "a empresa publica todo dia e continua invisível no Instagram"
-- "comunicação desorganizada transmite insegurança ao cliente sem perceber"
+Exemplos do método (não copie, use como referência de FORMATO — desfecho concreto E carregado, nunca morno):
+- "anúncios pagos não trazem cliente pra dentro da loja"
+- "perfil que posta todo dia não aparece pra quem já segue"
+- "demora na resposta faz o cliente procurar outro lugar"
+
+CONTRASTE (evite a 1ª forma, prefira a 2ª — mesma carga emocional, desfecho amarrado à atividade):
+- "ERP confuso faz você perder vendas sem notar" → "ERP confuso dificulta acompanhar pedidos em aberto"
+- "consulta sem preparo gera dúvida no tutor" → "consulta sem preparo atrasa o diagnóstico inicial"
+- "correia desgastada compromete a produção" → "correia desgastada faz a máquina perder força no meio do turno"
+- "perfil parado some do radar" → "perfil parado some do feed de quem já te segue"
+
+REGRA DE CARGA EM TENSÃO: o ELEMENTO CONCRETO desta sugestão deve aparecer pela FALTA, ATRASO, ERRO, AUSÊNCIA ou LIMITAÇÃO — nunca funcionando bem ou entregando benefício. Mesmo quando o elemento é um serviço de suporte ou solução, a tensão mora em ele faltar, atrasar ou chegar tarde.
 ${sementeLembreteAtividade}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada à atividade" }`;
@@ -321,10 +329,12 @@ A Informação-chave é uma SEMENTE CONCRETA — um produto, serviço, situaçã
 EVITE termos genéricos isolados (ex.: "marketing digital", "consultoria", "tráfego pago").
 EVITE qualquer formulação que soe como crítica ao público ("não conseguem", "não sabem", "fazem errado", "estão perdidos").
 
-Exemplos do método (não copie, use como referência de FORMATO e TOM):
+Exemplos do método (não copie, use como referência de FORMATO e TOM — desfecho concreto E carregado, nunca morno):
 - "a loja de bairro vende todo dia pelo Instagram"
-- "o negócio local ganha autoridade com presença digital consistente"
-- "a marca cresce com consistência nas redes sociais"
+- "quem segue o perfil chega no balcão sabendo o que quer"
+- "post certo na hora certa traz gente pro WhatsApp no mesmo dia"
+
+PROIBIDO terminar em TEMA/TÍTULO sem desfecho (ex.: "Consulta veterinária antes de mudar a ração do seu pet" — falta o efeito). Toda frase precisa fechar em uma consequência concreta: o que isso garante, evita ou muda.
 ${sementeLembreteAtividade}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta e específica, ligada a uma oportunidade real" }`;
