@@ -198,7 +198,7 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === 'MAR
           const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE:
 ${mode === 'metodo'
   ? 'Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade — sem tensão emocional, sem promessa e sem linguagem de campanha.'
-  : 'Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo.'} Entre 5 e 10 palavras (máximo absoluto 12).
+  : 'Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo.'} ${mode === 'metodo' ? 'Entre 4 e 10 palavras (máximo absoluto 10).' : 'Entre 5 e 10 palavras (máximo absoluto 12).'}
 SINTAXE: qualquer palavra substantivada pode ser sujeito — substantivo, adjetivo, verbo no infinitivo ou locução; não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 ${mode === 'postunico' ? 'Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.\n' : ''}${proibicoesInventar}
 LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se precisar trocar uma palavra grande por palavras mais curtas e isso aproximar a frase do limite de 12, prefira isso a manter um termo difícil — mas nunca ultrapasse 12 palavras. EXCEÇÃO: se houver um elemento concreto central (produto, peça, serviço, objeto, procedimento) vindo do texto do usuário ou da atividade, esse termo pode ter mais de 3 sílabas (ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia") — não o troque por palavra genérica só para simplificar.`;
@@ -266,7 +266,7 @@ A Informação-chave é APENAS o ASSUNTO escolhido para esta peça — um produt
 PROIBIDO: linguagem de campanha ("não perca", "aproveite agora", "garanta já"), promessa emocional ("transforme", "mude sua vida", "realize seu sonho"), crítica ou cobrança ao cliente ("não sabem", "estão perdendo"), urgência, datas ou prazos não informados.
 ${sementeLembrete}
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 5 e 10 palavras (máximo absoluto 12), sem hashtag, sem emoji, sem aspas, concreta, objetiva e específica, ligada à atividade" }`;
+{ "sugestao": "1 linha, entre 4 e 10 palavras (máximo absoluto 10), sem hashtag, sem emoji, sem aspas, concreta, objetiva e específica, ligada à atividade" }`;
 
           const OBJETIVO_RULES: Record<string, string> = {
             promocao: 'REGRAS PARA PROMOÇÃO: use tom comercial/promocional — esse é o tom esperado para o objetivo (palavras como "promoção", "oferta", "aproveite", "garanta o seu" são bem-vindas). PROIBIDO inventar percentual de desconto, valor em reais, brinde/cortesia, prazo, data/dia da semana, "última chance" ou condição de compra (acima de/a partir de/sem juros/parcelamento) que o usuário não tenha informado. Esses dados só podem aparecer se já estiverem na pista do usuário ou na atividade/empresa. Se nada disso foi informado, descreva a oportunidade comercial de forma genérica — sem números, datas ou condições inventadas.',
@@ -306,14 +306,14 @@ Retorne JSON EXATAMENTE assim:
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
-            ? 'Você é estrategista de conteúdo para redes sociais. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) a frase parte de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — e não de um conceito amplo que serviria para qualquer empresa do segmento? (4) a relação de causa→efeito da frase é literalmente verdadeira e um nativo a diria sem reler? Expressão idiomática só vale se o sentido literal também fizer sentido com o objeto citado — em dúvida, troque a expressão "vívida" por uma consequência simples e direta. Se sim para (2), troque por algo mais simples; se não para (3) e a atividade permitir, ajuste para algo concreto desse ramo antes de responder; se não para (4), reescreva a consequência de forma literal e direta antes de responder. Limite: entre 5 e 10 palavras por sugestão (máximo absoluto 12) — só passe de 10 quando isso permitir trocar uma palavra grande por palavras mais curtas e simples, e nunca ultrapasse 12. Frases com mais de 12 palavras devem ser cortadas antes de retornar.'
+            ? 'Você é estrategista de conteúdo para redes sociais. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) a frase parte de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — e não de um conceito amplo que serviria para qualquer empresa do segmento? (4) a relação de causa→efeito da frase é literalmente verdadeira e um nativo a diria sem reler? Expressão idiomática só vale se o sentido literal também fizer sentido com o objeto citado — em dúvida, troque a expressão "vívida" por uma consequência simples e direta. Se sim para (2), troque por algo mais simples; se não para (3) e a atividade permitir, ajuste para algo concreto desse ramo antes de responder; se não para (4), reescreva a consequência de forma literal e direta antes de responder. Limite: entre 4 e 10 palavras por sugestão (máximo absoluto 10) — nunca ultrapasse 10. Frases com mais de 10 palavras devem ser cortadas antes de retornar.'
             : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, prefira que a frase parta de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — em vez de um conceito amplo que serviria para qualquer empresa do segmento.';
 
           // D1 (validateSugestao) + 1 retry no máximo: se a sugestão sair vaga
           // (muito curta/longa, terminação pendurada ou frase-clichê), pede uma
           // nova versão reforçando o motivo. Nunca retorna erro ao usuário por
-          // causa disso — devolve a melhor tentativa, sempre truncada a 12
-          // palavras (ver REGRA DE LIMITE).
+          // causa disso — devolve a melhor tentativa, sempre truncada ao máximo
+          // do modo (10 palavras no MOP, 12 na PU — ver REGRA DE LIMITE).
           const MAX_SUGGEST_ATTEMPTS = 2;
           let sugestao = '';
           let motivos: string[] = [];
@@ -342,10 +342,11 @@ Retorne JSON EXATAMENTE assim:
             let parsed: { sugestao?: string };
             try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
 
-            sugestao = truncateWords(String(parsed.sugestao || '').trim().replace(/^"|"$/g, ''), 12);
+            const sugestaoMaxWords = mode === 'metodo' ? 10 : 12;
+            sugestao = truncateWords(String(parsed.sugestao || '').trim().replace(/^"|"$/g, ''), sugestaoMaxWords);
             if (!sugestao) return Response.json({ error: 'Sugestão vazia' }, { status: 502 });
 
-            motivos = validateSugestao(sugestao);
+            motivos = validateSugestao(sugestao, sugestaoMaxWords);
             motivos = motivos.concat(checkInventedPromotion(sugestao, allowedContext, { allowPromoLanguage: allowPromoLanguagePU }));
             if (motivos.length === 0) break;
           }

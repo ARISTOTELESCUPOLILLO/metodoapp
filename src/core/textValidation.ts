@@ -465,14 +465,14 @@ const SUGESTAO_GENERIC_PATTERNS: RegExp[] = [
 // inclui checagem de ancoragem com mainActivity de propósito — uma sugestão
 // concreta pode não repetir nenhuma palavra literal da atividade, e isso não
 // deve reprová-la (decisão de produto).
-export function validateSugestao(sugestao: string): string[] {
+export function validateSugestao(sugestao: string, maxWords = 12): string[] {
   const trimmed = sugestao.trim();
   const motivos: string[] = [];
   if (!trimmed) return ['sugestão vazia'];
 
   const words = trimmed.split(/\s+/).filter(Boolean).length;
   if (words < 4) motivos.push(`sugestão muito curta (${words} palavra(s)) — abaixo do mínimo de 4`);
-  if (words > 12) motivos.push(`sugestão com ${words} palavras — acima do máximo de 12`);
+  if (words > maxWords) motivos.push(`sugestão com ${words} palavras — acima do máximo de ${maxWords}`);
 
   const dangling = checkDanglingEnding(trimmed);
   if (dangling) motivos.push(dangling);
