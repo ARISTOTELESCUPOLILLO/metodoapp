@@ -9,6 +9,7 @@ import ProductsChecklist from './ProductsChecklist';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
 import { truncateWords } from '@/core/textValidation';
+import { useTextCorrection } from '@/hooks/useTextCorrection';
 
 interface Props {
   data: PostUnicoFormData;
@@ -71,6 +72,9 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const initialKeyInfoRef = useRef<string | null>(null);
   const allSessionSuggestionsRef = useRef<string[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<string[]>(() => kit.products || []);
+  const keyInfoCorrection = useTextCorrection();
+  const copyTCorrection = useTextCorrection();
+  const copyXCorrection = useTextCorrection();
   const SUGGEST_MAX = 3;
   const hasKeyInfo = !!data.keyInfo.trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
@@ -336,6 +340,18 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
             </button>
             <button
               type="button"
+              onClick={() => keyInfoCorrection.correct(data.keyInfo || '', (corrected) => {
+                if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || '';
+                update('keyInfo', corrected);
+              })}
+              disabled={keyInfoCorrection.correcting || !hasKeyInfo}
+              title="Corrige ortografia e gramática do texto"
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: keyInfoCorrection.correcting || !hasKeyInfo ? 'not-allowed' : 'pointer', opacity: keyInfoCorrection.correcting || !hasKeyInfo ? 0.4 : 1 }}
+            >
+              {keyInfoCorrection.correcting ? 'Corrigindo…' : '🔤 Corrigir'}
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 update('keyInfo', '');
                 setSuggestCount(0);
@@ -369,6 +385,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           rows={4}
           style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${suggestExhausted ? '#fcd34d' : '#e2e8f0'}`, fontFamily: 'inherit', fontSize: 14, lineHeight: 1.45, resize: 'vertical', background: suggestExhausted ? '#fffbeb' : '#fff', color: '#0f172a' }}
         />
+        {keyInfoCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{keyInfoCorrection.msg}</p>}
+        {keyInfoCorrection.error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{keyInfoCorrection.error}</p>}
         {(suggesting || suggestions.length > 0 || suggestError) && (
           <div style={{ marginTop: 10, padding: 14, borderRadius: 12, background: suggestError ? '#fef2f2' : '#f8fafc', border: `1px solid ${suggestError ? '#fecaca' : '#e2e8f0'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -484,6 +502,15 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 >
                   {copyTBusy ? '…' : `✨ Gerar outro (${copyTRegenCount}/${COPY_REGEN_MAX})`}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => copyTCorrection.correct(copy.titulo, (corrected) => setCopyTSuggs(s => [...s, corrected]))}
+                  disabled={copyTCorrection.correcting || !copy.titulo.trim()}
+                  title="Corrige ortografia e gramática do título"
+                  style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: copyTCorrection.correcting || !copy.titulo.trim() ? 'not-allowed' : 'pointer', opacity: copyTCorrection.correcting || !copy.titulo.trim() ? 0.55 : 1 }}
+                >
+                  {copyTCorrection.correcting ? 'Corrigindo…' : '🔤 Corrigir português'}
+                </button>
                 {copyOriginal && copy.titulo !== copyOriginal.titulo && (
                   <button
                     type="button"
@@ -495,6 +522,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 )}
                 {copyTError && <span style={{ fontSize: 11, color: '#b91c1c' }}>{copyTError}</span>}
               </div>
+              {copyTCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{copyTCorrection.msg}</p>}
+              {copyTCorrection.error && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#b91c1c' }}>{copyTCorrection.error}</p>}
               {copyTSuggs.map((sugg, i) => (
                 <div key={i} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 10px', marginTop: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontWeight: 700 }}>{sugg}</span>
@@ -539,6 +568,15 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 >
                   {copyXBusy ? '…' : `✨ Gerar outro (${copyXRegenCount}/${COPY_REGEN_MAX})`}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => copyXCorrection.correct(copy.texto, (corrected) => setCopyXSuggs(s => [...s, corrected]))}
+                  disabled={copyXCorrection.correcting || !copy.texto.trim()}
+                  title="Corrige ortografia e gramática do texto"
+                  style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: copyXCorrection.correcting || !copy.texto.trim() ? 'not-allowed' : 'pointer', opacity: copyXCorrection.correcting || !copy.texto.trim() ? 0.55 : 1 }}
+                >
+                  {copyXCorrection.correcting ? 'Corrigindo…' : '🔤 Corrigir português'}
+                </button>
                 {copyOriginal && copy.texto !== copyOriginal.texto && (
                   <button
                     type="button"
@@ -550,6 +588,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 )}
                 {copyXError && <span style={{ fontSize: 11, color: '#b91c1c' }}>{copyXError}</span>}
               </div>
+              {copyXCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{copyXCorrection.msg}</p>}
+              {copyXCorrection.error && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#b91c1c' }}>{copyXCorrection.error}</p>}
               {copyXSuggs.map((sugg, i) => (
                 <div key={i} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 10px', marginTop: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                   <span>{sugg}</span>

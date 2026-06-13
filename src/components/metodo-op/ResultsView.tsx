@@ -48,6 +48,7 @@ import { useProfile } from '../../hooks/useProfile';
 
 import { useImageGenAlert } from './PreImageAlert';
 import { useIsMobile } from '../../hooks/use-mobile';
+import { useTextCorrection } from '../../hooks/useTextCorrection';
 import { ArchiveButton } from './ArchiveButton';
 
 function shareLegendaWhatsApp(tipo: 'Estático' | 'Estático Final' | 'Carrossel' | 'Reels', legenda: string) {
@@ -138,6 +139,7 @@ function EditableField(props: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const correction = useTextCorrection();
   const exhausted = count >= REGEN_MAX[kind];
   const changed = value !== original;
 
@@ -169,6 +171,15 @@ function EditableField(props: {
             style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: busy || exhausted ? 'not-allowed' : 'pointer', opacity: busy || exhausted ? 0.5 : 1 }}
           >
             {busy ? 'Gerando…' : exhausted ? `✨ ${REGEN_MAX[kind]}/${REGEN_MAX[kind]}` : `✨ Gerar outro (${count}/${REGEN_MAX[kind]})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => correction.correct(value, (corrected) => setSuggestions((arr) => [...arr, corrected]))}
+            disabled={correction.correcting || !value.trim()}
+            title="Corrige ortografia e gramática deste texto"
+            style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: correction.correcting || !value.trim() ? 'not-allowed' : 'pointer', opacity: correction.correcting || !value.trim() ? 0.5 : 1 }}
+          >
+            {correction.correcting ? 'Corrigindo…' : '🔤 Corrigir português'}
           </button>
           {changed && (
             <button
@@ -202,6 +213,8 @@ function EditableField(props: {
         </div>
       )}
       {error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{error}</p>}
+      {correction.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{correction.msg}</p>}
+      {correction.error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{correction.error}</p>}
       {exhausted && !error && suggestions.length === 0 && (
         <p style={{ margin: '4px 0 0', fontSize: 11, color: '#92400e' }}>Limite atingido — edite manualmente ou volte ao inicial.</p>
       )}

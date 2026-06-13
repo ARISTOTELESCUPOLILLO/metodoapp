@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { getAuthHeaders } from '../../services/authHeaders';
 import { IDEIAS_ASSUNTOS } from '@/data/ideiasAssuntos';
 import ProductsChecklist from './ProductsChecklist';
+import { useTextCorrection } from '@/hooks/useTextCorrection';
 
 interface Props {
   data: ContentFormData;
@@ -71,6 +72,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const initialKeyInfoRef = useRef<string | null>(null);
   const allSessionSuggestionsRef = useRef<string[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<string[]>(() => products || []);
+  const keyInfoCorrection = useTextCorrection();
 
   const SUGGEST_MAX = 3;
   const hasKeyInfo = !!(data.keyInfo || '').trim();
@@ -256,6 +258,18 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
             </button>
             <button
               type="button"
+              onClick={() => keyInfoCorrection.correct(data.keyInfo || '', (corrected) => {
+                if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || '';
+                update('keyInfo', corrected);
+              })}
+              disabled={keyInfoCorrection.correcting || !hasKeyInfo}
+              title="Corrige ortografia e gramática do texto"
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: keyInfoCorrection.correcting || !hasKeyInfo ? 'not-allowed' : 'pointer', opacity: keyInfoCorrection.correcting || !hasKeyInfo ? 0.4 : 1 }}
+            >
+              {keyInfoCorrection.correcting ? 'Corrigindo…' : '🔤 Corrigir'}
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 update('keyInfo', '');
                 setSuggestCount(0);
@@ -289,6 +303,8 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           rows={3}
           style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${suggestExhausted ? '#fcd34d' : '#e2e8f0'}`, fontFamily: 'inherit', fontSize: 14, lineHeight: 1.45, resize: 'vertical', background: suggestExhausted ? '#fffbeb' : '#fff', color: '#0f172a' }}
         />
+        {keyInfoCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{keyInfoCorrection.msg}</p>}
+        {keyInfoCorrection.error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{keyInfoCorrection.error}</p>}
         {(suggesting || suggestions.length > 0 || suggestError) && (
           <div style={{ marginTop: 10, padding: 14, borderRadius: 12, background: suggestError ? '#fef2f2' : '#f8fafc', border: `1px solid ${suggestError ? '#fecaca' : '#e2e8f0'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>

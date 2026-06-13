@@ -34,6 +34,7 @@ import { Route as ApiGenerateContentRouteImport } from './routes/api/generate-co
 import { Route as ApiGenerateCaptionRouteImport } from './routes/api/generate-caption'
 import { Route as ApiFalStatusRouteImport } from './routes/api/fal-status'
 import { Route as ApiDeleteVoiceRouteImport } from './routes/api/delete-voice'
+import { Route as ApiCorrectTextRouteImport } from './routes/api/correct-text'
 import { Route as ApiConfirmVoiceRouteImport } from './routes/api/confirm-voice'
 import { Route as ApiCloneVoiceRouteImport } from './routes/api/clone-voice'
 import { Route as AuthMetaCallbackRouteImport } from './routes/auth/meta/callback'
@@ -173,6 +174,11 @@ const ApiDeleteVoiceRoute = ApiDeleteVoiceRouteImport.update({
   path: '/api/delete-voice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCorrectTextRoute = ApiCorrectTextRouteImport.update({
+  id: '/api/correct-text',
+  path: '/api/correct-text',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiConfirmVoiceRoute = ApiConfirmVoiceRouteImport.update({
   id: '/api/confirm-voice',
   path: '/api/confirm-voice',
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/termos': typeof TermosRoute
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
+  '/api/correct-text': typeof ApiCorrectTextRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
   '/api/fal-status': typeof ApiFalStatusRoute
   '/api/generate-caption': typeof ApiGenerateCaptionRoute
@@ -297,6 +304,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
+  '/api/correct-text': typeof ApiCorrectTextRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
   '/api/fal-status': typeof ApiFalStatusRoute
   '/api/generate-caption': typeof ApiGenerateCaptionRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/termos': typeof TermosRoute
   '/api/clone-voice': typeof ApiCloneVoiceRoute
   '/api/confirm-voice': typeof ApiConfirmVoiceRoute
+  '/api/correct-text': typeof ApiCorrectTextRoute
   '/api/delete-voice': typeof ApiDeleteVoiceRoute
   '/api/fal-status': typeof ApiFalStatusRoute
   '/api/generate-caption': typeof ApiGenerateCaptionRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/api/clone-voice'
     | '/api/confirm-voice'
+    | '/api/correct-text'
     | '/api/delete-voice'
     | '/api/fal-status'
     | '/api/generate-caption'
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/api/clone-voice'
     | '/api/confirm-voice'
+    | '/api/correct-text'
     | '/api/delete-voice'
     | '/api/fal-status'
     | '/api/generate-caption'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/api/clone-voice'
     | '/api/confirm-voice'
+    | '/api/correct-text'
     | '/api/delete-voice'
     | '/api/fal-status'
     | '/api/generate-caption'
@@ -501,6 +513,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   ApiCloneVoiceRoute: typeof ApiCloneVoiceRoute
   ApiConfirmVoiceRoute: typeof ApiConfirmVoiceRoute
+  ApiCorrectTextRoute: typeof ApiCorrectTextRoute
   ApiDeleteVoiceRoute: typeof ApiDeleteVoiceRoute
   ApiFalStatusRoute: typeof ApiFalStatusRoute
   ApiGenerateCaptionRoute: typeof ApiGenerateCaptionRoute
@@ -703,6 +716,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDeleteVoiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/correct-text': {
+      id: '/api/correct-text'
+      path: '/api/correct-text'
+      fullPath: '/api/correct-text'
+      preLoaderRoute: typeof ApiCorrectTextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/confirm-voice': {
       id: '/api/confirm-voice'
       path: '/api/confirm-voice'
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   ApiCloneVoiceRoute: ApiCloneVoiceRoute,
   ApiConfirmVoiceRoute: ApiConfirmVoiceRoute,
+  ApiCorrectTextRoute: ApiCorrectTextRoute,
   ApiDeleteVoiceRoute: ApiDeleteVoiceRoute,
   ApiFalStatusRoute: ApiFalStatusRoute,
   ApiGenerateCaptionRoute: ApiGenerateCaptionRoute,

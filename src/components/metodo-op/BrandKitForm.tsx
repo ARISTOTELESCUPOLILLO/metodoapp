@@ -331,20 +331,20 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
           </div>
         )}
         {products.length < MAX_PRODUCTS && (
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input
               type="text"
               value={newProductItem}
               onChange={(e) => setNewProductItem(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addProductItem(); } }}
               placeholder="Ex.: Troca de óleo e filtros"
-              style={{ flex: 1 }}
+              style={{ flex: '1 1 160px', minWidth: 0 }}
             />
             <button
               type="button"
               onClick={addProductItem}
               disabled={!newProductItem.trim()}
-              style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 10, padding: '0 16px', fontWeight: 700, fontSize: 14, cursor: newProductItem.trim() ? 'pointer' : 'not-allowed', opacity: newProductItem.trim() ? 1 : 0.5 }}
+              style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 10, padding: '0 16px', minHeight: 40, fontWeight: 700, fontSize: 14, cursor: newProductItem.trim() ? 'pointer' : 'not-allowed', opacity: newProductItem.trim() ? 1 : 0.5, flexShrink: 0 }}
             >
               + Adicionar
             </button>

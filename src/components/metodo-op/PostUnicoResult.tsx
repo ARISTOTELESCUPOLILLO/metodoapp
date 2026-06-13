@@ -6,6 +6,7 @@ import { useImageGenAlert } from './PreImageAlert';
 import { ArchiveButton } from './ArchiveButton';
 import { MetaPublish } from './MetaPublish';
 import type { PostUnicoCaption } from '../../services/postUnico';
+import { useTextCorrection } from '../../hooks/useTextCorrection';
 
 function insertSignature(caption: string, signature: string): string {
   const trimmed = caption.trim();
@@ -67,6 +68,7 @@ export default function PostUnicoResult({
   const [selectedIdx, setSelectedIdx] = useState(0);
   const isMobile = useIsMobile();
   const { guard, dialog } = useImageGenAlert();
+  const captionCorrection = useTextCorrection();
   const CAPTION_MAX = 2;
   const captionExhausted = captionRegens >= CAPTION_MAX;
 
@@ -156,20 +158,33 @@ export default function PostUnicoResult({
         )}
 
         <div style={{ width: '100%', maxWidth: 480, marginTop: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
             <span className="eyebrow">Legenda sugerida</span>
-            {onRegenerateCaption && !captionLoading && !captionExhausted && (
-              <button
-                type="button"
-                onClick={handleRegenCaption}
-                style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-              >
-                Gerar outra legenda ({captionRegens}/{CAPTION_MAX})
-              </button>
-            )}
-            {captionExhausted && !captionLoading && (
-              <span style={{ fontSize: 11, color: '#64748b' }}>Limite atingido — edite manualmente</span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {!captionLoading && !captionError && activeCaption && (
+                <button
+                  type="button"
+                  onClick={() => captionCorrection.correct(captionText, (corrected) => setEditedCaption(corrected))}
+                  disabled={captionCorrection.correcting || !captionText.trim()}
+                  title="Corrige ortografia e gramática da legenda"
+                  style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: captionCorrection.correcting || !captionText.trim() ? 'not-allowed' : 'pointer', opacity: captionCorrection.correcting || !captionText.trim() ? 0.5 : 1 }}
+                >
+                  {captionCorrection.correcting ? 'Corrigindo…' : '🔤 Corrigir português'}
+                </button>
+              )}
+              {onRegenerateCaption && !captionLoading && !captionExhausted && (
+                <button
+                  type="button"
+                  onClick={handleRegenCaption}
+                  style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                >
+                  Gerar outra legenda ({captionRegens}/{CAPTION_MAX})
+                </button>
+              )}
+              {captionExhausted && !captionLoading && (
+                <span style={{ fontSize: 11, color: '#64748b' }}>Limite atingido — edite manualmente</span>
+              )}
+            </div>
           </div>
 
           {captionLoading && (
@@ -225,6 +240,8 @@ export default function PostUnicoResult({
                   background: captionExhausted ? '#fffbeb' : '#fafafa', color: '#0f172a',
                 }}
               />
+              {captionCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{captionCorrection.msg}</p>}
+              {captionCorrection.error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{captionCorrection.error}</p>}
             </>
           )}
         </div>
