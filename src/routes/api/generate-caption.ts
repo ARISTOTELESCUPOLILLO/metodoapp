@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { getVoiceProfile } from '@/data/brandVoice';
-import { stripTrailingCtaSentence } from '@/core/textValidation';
+import { stripTrailingCtaSentence, truncateWords } from '@/core/textValidation';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -55,6 +55,47 @@ function deriveFallbackHashtags(
   }
   return out;
 }
+
+// PROIBIDO ABSOLUTO (D1/E4) — formas substantivas (singular/plural) dos termos
+// que são nomes/códigos internos do sistema (ângulos "OP-0X"). Substitui por
+// sinônimos seguros e remove os códigos "OP-01".."OP-06" e "mood". Variantes
+// morfológicas (adjetivos/verbos como "claro", "impactante", "desviar") são
+// palavras de uso comum demais para trocar sem risco de soar estranho — ficam
+// de fora: na dúvida, a palavra permanece.
+const FORBIDDEN_NOUNS: { re: RegExp; singular: string; plural: string }[] = [
+  { re: /\bclareza(s)?\b/gi, singular: 'direção definida', plural: 'direções definidas' },
+  { re: /\bimpacto(s)?\b/gi, singular: 'efeito imediato', plural: 'efeitos imediatos' },
+  { re: /\bsilêncio(s)?\b/gi, singular: 'respiro', plural: 'respiros' },
+  { re: /\binstante(s)?\b/gi, singular: 'momento', plural: 'momentos' },
+  { re: /\bfragmento(s)?\b/gi, singular: 'recorte', plural: 'recortes' },
+  { re: /\bdesvio(s)?\b/gi, singular: 'outro caminho', plural: 'outros caminhos' },
+];
+
+// Substitui os termos de FORBIDDEN_NOUNS e remove códigos internos ("OP-01"
+// a "OP-06", "mood"), limpando espaços/pontuação deixados pela remoção.
+function sanitizeForbiddenTerms(text: string): string {
+  let out = text;
+  for (const { re, singular, plural } of FORBIDDEN_NOUNS) {
+    out = out.replace(re, (_m, suffix) => (suffix ? plural : singular));
+  }
+  out = out.replace(/\bOP-0[1-6]\b/gi, '').replace(/\bmood\b/gi, '');
+  return out.replace(/\s{2,}/g, ' ').replace(/\s+([.,!?;:])/g, '$1').trim();
+}
+
+// PROIBIDO ABSOLUTO em hashtags — aqui o filtro pode ser mais agressivo que em
+// FORBIDDEN_NOUNS: descartar uma hashtag não corrompe frase nenhuma, a
+// derivação/fallback preenche a vaga. Inclui também as variantes
+// adjetivas/verbais (claro, impactante, desviar...), já sem acento, pois
+// sanitizeTag normaliza antes da comparação.
+const FORBIDDEN_HASHTAG_STEMS = new Set([
+  'clareza', 'clarezas', 'claro', 'clara', 'claros', 'claras',
+  'impacto', 'impactos', 'impactar', 'impactante',
+  'instante', 'instantes', 'instantaneo', 'instantanea',
+  'fragmento', 'fragmentos', 'fragmentado', 'fragmentada',
+  'desvio', 'desvios', 'desviar',
+  'silencio', 'silencios', 'silencioso', 'silenciosa', 'silenciar',
+  'op01', 'op02', 'op03', 'op04', 'op05', 'op06', 'mood',
+]);
 
 export const Route = createFileRoute('/api/generate-caption')({
   server: {
@@ -128,21 +169,16 @@ INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
 {
-  "texto": "frase principal com no MÁXIMO 30 palavras, sem hashtags, sem emojis exagerados, no tom certo, terminando com ponto final",
-  "cta": "uma chamada curta para ação, no máximo 6 palavras, terminando com ponto final, sem hashtag — única frase de CTA da legenda",
+  "texto": "frase principal da legenda, no tom certo, sem hashtags e sem emojis exagerados",
+  "cta": "uma chamada para ação que complementa o texto principal, sem hashtag",
   "hashtags": ["tag1", "tag2", "tag3"]
 }
 
 Regras:
-- "texto" no máximo 30 palavras, terminando SEMPRE com PONTO FINAL. PROIBIDO terminar "texto" com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse..."): isso é função EXCLUSIVA do campo "cta" — "texto" só descreve/retoma, nunca convida à ação.
-- "cta" no máximo 6 palavras, terminando SEMPRE com PONTO FINAL — EXATAMENTE 1 frase, sem CTA indireto adicional (ex.: "Acesse a bio...", "Acesse o site...")
-- "hashtags" sempre 3 itens, em MINÚSCULAS, SEM acento, SEM o caractere #, sem espaços, relevantes ao segmento e à informação-chave
-- Português brasileiro
-- Nada de inglês, nada de markdown
-- PROIBIDO ABSOLUTO usar nos campos "texto", "cta" ou "hashtags" as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos. Use SEMPRE sinônimos ou perífrases (ex.: "clareza" → "direção definida", "leitura simples"; "impacto" → "efeito imediato"; "silêncio" → "pausa", "respiro"; "instante" → "momento"; "fragmento" → "recorte"; "desvio" → "outro caminho").
+- Português brasileiro, sem inglês, sem markdown.
+- "hashtags" relevantes ao segmento e à informação-chave.
 - PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
-- "texto" e "cta" devem SEMPRE começar com LETRA MAIÚSCULA e terminar com PONTO FINAL.
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === 'institucional' ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ''}
 ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ''}`;
@@ -155,13 +191,14 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
               .replace(/[^a-z0-9]/g, '')
               .slice(0, 30);
 
-          // D1+E3 — valida "cta" (não vazio, terminando em ./!/?) e
-          // "hashtags" (EXATAMENTE 3); se faltar algo, repete a chamada uma
-          // vez com reforço explícito antes de cair no fallback determinístico (E4).
+          // Se o modelo não retornar nada para "cta" e/ou "hashtags", repete a
+          // chamada uma vez antes de seguir para o ajuste determinístico (D1/E4)
+          // abaixo, que cuida de tamanho, CTA embutido no texto, hashtags e
+          // palavras proibidas — o modelo só escreve, o código ajusta as regras.
           const MAX_CAPTION_ATTEMPTS = 2;
-          let textoValue = '';
-          let ctaValue = '';
-          let hashtagsArr: string[] = [];
+          let rawTexto = '';
+          let rawCta = '';
+          let rawHashtags: string[] = [];
 
           for (let attempt = 1; attempt <= MAX_CAPTION_ATTEMPTS; attempt++) {
             const result = await fetchOpenAIChat(apiKey, {
@@ -172,7 +209,7 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
                   role: 'user',
                   content: attempt === 1
                     ? userPrompt
-                    : `${userPrompt}\n\nATENÇÃO: a resposta anterior não preencheu corretamente "cta" e/ou "hashtags". Garanta os TRÊS campos: "texto", "cta" (não vazio, terminando com PONTO FINAL) e "hashtags" (array com EXATAMENTE 3 itens válidos).`,
+                    : `${userPrompt}\n\nATENÇÃO: a resposta anterior não preencheu "cta" e/ou "hashtags". Garanta que os três campos do JSON — "texto", "cta" e "hashtags" — estejam preenchidos.`,
                 },
               ],
               temperature: 0.9,
@@ -188,27 +225,36 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
             let parsed: { texto?: string; cta?: string; hashtags?: unknown };
             try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
 
-            // Remove frase de CTA duplicada no fim de "texto" (ex.: "Salve para
-            // não esquecer."), que repetiria o campo "cta" dedicado.
-            textoValue = stripTrailingCtaSentence(String(parsed.texto || '').trim());
-            ctaValue = String(parsed.cta || '').trim();
-            hashtagsArr = Array.isArray(parsed.hashtags)
-              ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean).slice(0, 3)
+            rawTexto = String(parsed.texto || '').trim();
+            rawCta = String(parsed.cta || '').trim();
+            rawHashtags = Array.isArray(parsed.hashtags)
+              ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean)
               : [];
 
-            const ctaOk = ctaValue !== '' && /[.!?]$/.test(ctaValue);
-            const hashtagsOk = hashtagsArr.length === 3;
-            if (ctaOk && hashtagsOk) break;
+            if (rawCta !== '' && rawHashtags.length > 0) break;
+          }
 
-            if (attempt === MAX_CAPTION_ATTEMPTS) {
-              if (!ctaOk) ctaValue = OBJETIVO_CTA_FALLBACK[objetivo] || OBJETIVO_CTA_FALLBACK.promocao;
-              if (!hashtagsOk) {
-                const derived = deriveFallbackHashtags(mainActivity, companyName, keyInfo, sanitizeTag)
-                  .filter((t) => !hashtagsArr.includes(t));
-                const fallback = OBJETIVO_HASHTAG_FALLBACK[objetivo] || OBJETIVO_HASHTAG_FALLBACK.promocao;
-                hashtagsArr = [...new Set([...hashtagsArr, ...derived, ...fallback])].slice(0, 3);
-              }
-            }
+          // D1/E4 — ajuste determinístico do que antes era pedido ao modelo:
+          // remove CTA embutido no fim do "texto", troca/remove palavras
+          // proibidas, acerta tamanho e pontuação de "texto"/"cta", e garante
+          // exatamente 3 hashtags válidas.
+          let textoValue = stripTrailingCtaSentence(rawTexto);
+          textoValue = sanitizeForbiddenTerms(textoValue);
+          textoValue = truncateWords(textoValue, 30);
+          if (textoValue && !/[.!?]$/.test(textoValue)) textoValue += '.';
+
+          let ctaValue = sanitizeForbiddenTerms(rawCta);
+          if (!ctaValue) ctaValue = OBJETIVO_CTA_FALLBACK[objetivo] || OBJETIVO_CTA_FALLBACK.promocao;
+          if (!/[.!?]$/.test(ctaValue)) ctaValue += '.';
+
+          let hashtagsArr = rawHashtags
+            .filter((t) => !FORBIDDEN_HASHTAG_STEMS.has(t))
+            .slice(0, 3);
+          if (hashtagsArr.length < 3) {
+            const derived = deriveFallbackHashtags(mainActivity, companyName, keyInfo, sanitizeTag)
+              .filter((t) => !hashtagsArr.includes(t) && !FORBIDDEN_HASHTAG_STEMS.has(t));
+            const fallback = OBJETIVO_HASHTAG_FALLBACK[objetivo] || OBJETIVO_HASHTAG_FALLBACK.promocao;
+            hashtagsArr = [...new Set([...hashtagsArr, ...derived, ...fallback])].slice(0, 3);
           }
 
           if (debit && userId) {
