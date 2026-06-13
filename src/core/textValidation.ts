@@ -357,8 +357,17 @@ export function checkNumericClaims(text: string, keyInfo: string): string[] {
 // Combinadores por tipo de campo
 // ─────────────────────────────────────────────────────────────────────────
 
+// Faixa de palavras do título (mesma usada no prompt e em
+// applyDeterministicFallback): abaixo de 4, o título vira fragmento solto
+// ("Fila cresce"); acima de 6, não cabe na régua tipográfica do método.
+const TITULO_MIN_WORDS = 4;
+const TITULO_MAX_WORDS = 6;
+
 export function validateTitulo(titulo: string): string[] {
   const motivos: string[] = [];
+  const words = titulo.trim().split(/\s+/).filter(Boolean).length;
+  if (words < TITULO_MIN_WORDS) motivos.push(`título com ${words} palavra(s) — abaixo do mínimo de ${TITULO_MIN_WORDS}`);
+  if (words > TITULO_MAX_WORDS) motivos.push(`título com ${words} palavras — acima do máximo de ${TITULO_MAX_WORDS}`);
   const dangling = checkDanglingEnding(titulo);
   if (dangling) motivos.push(dangling);
   const punct = checkPunctuation(titulo, 'titulo');
@@ -505,6 +514,17 @@ export function applyDeterministicFallback(value: string, kind: 'titulo' | 'text
 
   const sentenceMatch = text.match(/^(.*[.!?])\s+\S/);
   if (sentenceMatch) text = sentenceMatch[1].trim();
+
+  // Título não é cortado no fluxo normal (normalizeMethodResult/
+  // regenerate-block já não truncam) — aqui, no último recurso (E4), se ainda
+  // sobrar acima do máximo após as tentativas de regeneração, corta em
+  // fronteira de palavra completa antes da limpeza de terminação pendurada.
+  if (kind === 'titulo') {
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length > TITULO_MAX_WORDS) {
+      text = words.slice(0, TITULO_MAX_WORDS).join(' ').replace(/[,;:\-–—]+$/, '').trim();
+    }
+  }
 
   for (let i = 0; i < 3; i++) {
     if (!checkDanglingEnding(text)) break;

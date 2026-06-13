@@ -112,8 +112,12 @@ Retorne JSON EXATAMENTE assim:
           let value = String(parsed.value || '').trim().replace(/^"|"$/g, '');
           if (!value) return Response.json({ error: 'Valor vazio' }, { status: 502 });
 
-          // Enforcement: garante que nunca volta acima do limite do método.
-          if (kind === 'titulo' || kind === 'texto') {
+          // Enforcement: para texto, garante que nunca volta acima do limite
+          // do método (corte mecânico aceitável em corpo de texto). Título
+          // NÃO é cortado aqui — cortar geraria fragmento; validateTitulo
+          // abaixo flags fora da faixa de 4-6 palavras e o cliente (E3) tenta
+          // de novo ou aplica a limpeza determinística (E4).
+          if (kind === 'texto') {
             value = truncateWords(value, rule.max);
           } else if (kind === 'legenda') {
             value = normalizeLegenda(value);

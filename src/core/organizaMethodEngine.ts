@@ -515,14 +515,17 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
     }
   }
 
-  // Guard de limite de palavras: garante que titulo/texto nunca ultrapassem os limites
-  // definidos no prompt, independente do que o LLM retornou. Mesmos limites do prompt.
-  // Legenda passa por normalizeLegenda: remove CTA duplicado no fim do corpo
-  // e CTA indireto (bio/site) extra no parágrafo de CTA (ver REGRA DE LEGENDA).
+  // Guard de limite de palavras: garante que texto nunca ultrapasse os limites
+  // definidos no prompt, independente do que o LLM retornou. Mesmos limites do
+  // prompt. Título NÃO é truncado aqui — cortar geraria fragmento ("...o
+  // motor"); título fora da faixa de palavras é flagado por validateTitulo
+  // (abaixo) e regenerado via E3/E4. Legenda passa por normalizeLegenda:
+  // remove CTA duplicado no fim do corpo e CTA indireto (bio/site) extra no
+  // parágrafo de CTA (ver REGRA DE LEGENDA).
   if (feed) {
     feed = feed.map(item => ({
       ...item,
-      titulo: truncateWords(item.titulo || '', 6),
+      titulo: (item.titulo || '').trim(),
       texto: truncateWords(item.texto || '', 15),
       legenda: item.legenda ? normalizeLegenda(item.legenda) : item.legenda,
     }));
@@ -530,7 +533,7 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
   if (carousel) {
     carousel = carousel.map((card: any) => ({
       ...card,
-      titulo: truncateWords(card.titulo || '', 6),
+      titulo: (card.titulo || '').trim(),
       texto: truncateWords(card.texto || '', 12),
       ...(card.legenda ? { legenda: normalizeLegenda(card.legenda) } : {}),
     }));
