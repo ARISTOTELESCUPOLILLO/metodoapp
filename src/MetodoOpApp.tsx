@@ -17,7 +17,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { saveKit, loadKit, saveForm, loadForm, clearAll } from './utils/storage';
 import { loadImageKit, saveImageKit, loadImageKitAsync, saveImageKitAsync } from './utils/imageKitStorage';
 import { clearSessionImages } from './utils/sessionImageCache';
-import { Audience, BrandKit, ContentFormData, ImageKit, MethodOpResult, MoodCode, PostUnicoFormData, PostUnicoVisualSelection, Segment } from './types';
+import { BrandKit, ContentFormData, ImageKit, MethodOpResult, MoodCode, PostUnicoFormData, PostUnicoVisualSelection } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useProfile } from './hooks/useProfile';
 import { useImpersonation, stopImpersonation } from './hooks/useImpersonation';
@@ -25,10 +25,6 @@ import { buildPlanAccess } from './lib/planAccess';
 import { PlanCard } from './components/metodo-op/PlanCard';
 import { setCurrentDebitSlot } from './services/imageGeneration';
 import './metodo-op.css';
-
-function defaultAudience(segment: Segment): Audience {
-  return segment === 'SERVIÇOS' ? 'B2B' : 'B2C';
-}
 
 const defaultKit: BrandKit = {
   companyName: '',
@@ -46,7 +42,7 @@ const defaultKit: BrandKit = {
 const defaultForm: ContentFormData = {
   companyName: '',
   segment: 'SERVIÇOS',
-  audience: defaultAudience('SERVIÇOS'),
+  audience: 'B2C',
   businessMoment: 'consolidação',
   keyInfo: '',
   brandVoice: defaultVoice('SERVIÇOS'),
@@ -348,7 +344,7 @@ export default function App() {
     if (kit.segment === lockedSegment) return;
     const voice = defaultVoice(lockedSegment);
     setKit((prev) => ({ ...prev, segment: lockedSegment, brandVoice: voice }));
-    setForm((prev) => ({ ...prev, segment: lockedSegment, brandVoice: voice, audience: defaultAudience(lockedSegment) }));
+    setForm((prev) => ({ ...prev, segment: lockedSegment, brandVoice: voice }));
   }, [lockedSegment]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Espelha sempre os dados do Kit de Marca no Post Único (campos travados)
@@ -367,7 +363,6 @@ export default function App() {
       companyName: next.companyName,
       segment: next.segment,
       brandVoice: next.brandVoice,
-      ...(next.segment !== prev.segment ? { audience: defaultAudience(next.segment) } : {}),
     }));
   }
 
