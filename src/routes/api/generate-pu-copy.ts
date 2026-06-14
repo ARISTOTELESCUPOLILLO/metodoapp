@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { truncateWords, validatePieceFields } from '@/core/textValidation';
+import { truncateWords, validatePieceFields, correctPortugueseSpelling } from '@/core/textValidation';
 import { getVoiceProfile } from '@/data/brandVoice';
 import { resolveEffectiveUser, checkBalance, debitUsage } from '@/lib/usage.server';
 import { COST_USD } from '@/lib/costs';
@@ -146,8 +146,8 @@ ${(objetivo === 'promocao' || objetivo === 'oportunidade') ? `- REGRA DE URGÊNC
             });
           }
 
-          let titulo = truncateWords(String(parsed.titulo || ''), 6);
-          let texto = truncateWords(String(parsed.texto || ''), 14);
+          let titulo = correctPortugueseSpelling(truncateWords(String(parsed.titulo || ''), 6));
+          let texto = correctPortugueseSpelling(truncateWords(String(parsed.texto || ''), 14));
 
           if (!titulo) return Response.json({ error: 'Título vazio na resposta da IA' }, { status: 502 });
           if (!texto) return Response.json({ error: 'Texto vazio na resposta da IA' }, { status: 502 });

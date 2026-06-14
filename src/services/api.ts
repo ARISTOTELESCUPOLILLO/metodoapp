@@ -240,7 +240,7 @@ ${cenaDetalhada}
 ${variationBlock}
 
 CONTEÚDO TEXTUAL:
-- Título principal em CAIXA ALTA (bold, corpo GRANDE — entre 25% e 35% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro): "${tituloUpper}"
+- Título principal em CAIXA ALTA (bold, corpo GRANDE — entre 35% e 45% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro): "${tituloUpper}"
 - Texto de apoio — SUBTÍTULO DE REVISTA (corpo entre 55% e 70% do título, legível sem zoom no celular, caixa normal, peso regular — nunca tamanho de legenda): "${texto}"
 - ${marcaInstruction}
 

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { truncateWords, validateTitulo, validateTexto, validateLegenda, normalizeLegenda, enforceLegendaLimits, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS, LEGENDA_HASHTAGS } from '@/core/textValidation';
+import { truncateWords, validateTitulo, validateTexto, validateLegenda, normalizeLegenda, enforceLegendaLimits, correctPortugueseSpelling, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS, LEGENDA_HASHTAGS } from '@/core/textValidation';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
 
 type Kind = 'titulo' | 'texto' | 'legenda';
@@ -110,7 +110,7 @@ Retorne JSON EXATAMENTE assim:
           let parsed: { value?: string };
           try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
 
-          let value = String(parsed.value || '').trim().replace(/^"|"$/g, '');
+          let value = correctPortugueseSpelling(String(parsed.value || '').trim().replace(/^"|"$/g, ''));
           if (!value) return Response.json({ error: 'Valor vazio' }, { status: 502 });
 
           // Enforcement: para texto, garante que nunca volta acima do limite

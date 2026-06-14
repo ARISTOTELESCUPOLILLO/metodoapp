@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { startImpersonation } from '@/hooks/useImpersonation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { assignPlanSlot, removePlanSlot } from '@/lib/planHistory.functions';
+import { deleteUser } from '@/lib/users.functions';
 
 import { computeCycle, cycleLabel, cycleColor } from '@/lib/cycle';
 
@@ -70,6 +71,7 @@ export function UsersTab() {
   const isMobile = useIsMobile();
   const assignPlanSlotFn = useServerFn(assignPlanSlot);
   const removePlanSlotFn = useServerFn(removePlanSlot);
+  const deleteUserFn = useServerFn(deleteUser);
   const [rows, setRows] = useState<Row[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,6 +224,21 @@ export function UsersTab() {
     await load();
     setBusy(null);
   }
+  async function handleDeleteUser(r: Row) {
+    if (r.is_admin) { alert('Não é possível excluir um administrador. Remova o papel de admin antes.'); return; }
+    if (!confirm(`Excluir PERMANENTEMENTE ${r.email}?\n\nIsso remove gerações, kit de marca, voz clonada e a conta do usuário. Esta ação NÃO PODE ser desfeita.`)) return;
+    const typed = prompt(`Confirmação dupla — digite EXCLUIR para confirmar a exclusão de ${r.email}:`);
+    if (typed !== 'EXCLUIR') { alert('Confirmação inválida. Exclusão cancelada.'); return; }
+    setBusy(r.id);
+    try {
+      await deleteUserFn({ data: { id: r.id } });
+      await load();
+    } catch (e) {
+      alert(`Erro ao excluir: ${(e as Error).message}`);
+    }
+    setBusy(null);
+  }
+
   function hasCinematicsPlan(r: Row): boolean {
     return [r.plano1_id, r.plano2_id, r.bonus_id].some(id => {
       const p = plans.find(pl => pl.id === id);
@@ -350,6 +367,7 @@ export function UsersTab() {
                 <button onClick={() => verGeracoes(r)} style={{ ...actionBtn, background: '#0f172a', color: '#fff', borderColor: '#0f172a' }}>Gerações</button>
                 <button onClick={() => resetCounters(r)} style={actionBtn}>Zerar</button>
                 <button onClick={() => resetPassword(r)} style={actionBtn}>Senha</button>
+                <button onClick={() => handleDeleteUser(r)} style={{ ...dangerBtn, gridColumn: '1 / -1' }} disabled={r.is_admin}>Excluir usuário</button>
               </div>
             </div>
           ))}
@@ -440,6 +458,7 @@ export function UsersTab() {
                         <button onClick={() => resetCounters(r)} style={{ ...actionBtn, fontSize: 11 }}>Zerar</button>
                         <button onClick={() => resetPassword(r)} style={{ ...actionBtn, fontSize: 11 }}>Senha</button>
                       </div>
+                      <button onClick={() => handleDeleteUser(r)} style={{ ...dangerBtn, fontSize: 11 }} disabled={r.is_admin}>Excluir usuário</button>
                     </div>
                   </Td>
                 </tr>
@@ -638,6 +657,10 @@ const pill = (color: string): React.CSSProperties => ({
   background: color, color: '#fff', border: 'none', padding: '3px 10px',
   borderRadius: 999, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'lowercase',
 });
+const dangerBtn: React.CSSProperties = {
+  background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '4px 8px',
+  borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600,
+};
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16,

@@ -1,7 +1,7 @@
 import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from '../types';
 import { getVoiceProfile } from '../data/brandVoice';
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
-import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits, checkObserverSubject, checkCrossPieceLabelRepeat } from './textValidation';
+import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits, checkObserverSubject, checkCrossPieceLabelRepeat, correctPortugueseSpelling } from './textValidation';
 
 interface MomentModulator {
   label: string;
@@ -525,23 +525,26 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
   if (feed) {
     feed = feed.map(item => ({
       ...item,
-      titulo: (item.titulo || '').trim(),
-      texto: truncateWords(item.texto || '', 15),
-      legenda: item.legenda ? enforceLegendaLimits(normalizeLegenda(item.legenda)) : item.legenda,
+      titulo: correctPortugueseSpelling((item.titulo || '').trim()),
+      texto: correctPortugueseSpelling(truncateWords(item.texto || '', 15)),
+      legenda: item.legenda ? correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(item.legenda))) : item.legenda,
     }));
   }
   if (carousel) {
     carousel = carousel.map((card: any) => ({
       ...card,
-      titulo: (card.titulo || '').trim(),
-      texto: truncateWords(card.texto || '', 12),
-      ...(card.legenda ? { legenda: enforceLegendaLimits(normalizeLegenda(card.legenda)) } : {}),
+      titulo: correctPortugueseSpelling((card.titulo || '').trim()),
+      texto: correctPortugueseSpelling(truncateWords(card.texto || '', 12)),
+      ...(card.legenda ? { legenda: correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(card.legenda))) } : {}),
     }));
   }
   if (reels) {
     reels = reels.map(r => ({
       ...r,
-      ...(r.legenda ? { legenda: enforceLegendaLimits(normalizeLegenda(r.legenda)) } : {}),
+      hook: correctPortugueseSpelling(r.hook || ''),
+      script: correctPortugueseSpelling(r.script || ''),
+      screenText: correctPortugueseSpelling(r.screenText || ''),
+      ...(r.legenda ? { legenda: correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(r.legenda))) } : {}),
     }));
   }
 

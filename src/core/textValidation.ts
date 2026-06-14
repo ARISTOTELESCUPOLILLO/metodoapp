@@ -28,6 +28,33 @@ export function truncateWords(s: string, max: number): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Correção ortográfica determinística — termos que a IA por vezes escreve na
+// grafia em inglês/latim em vez do equivalente em português brasileiro (ex.:
+// "lumbar" em vez de "lombar"). Substituição com preservação de caixa,
+// aplicada a título/texto/legenda antes da validação D1.
+// ─────────────────────────────────────────────────────────────────────────
+const SPELLING_CORRECTIONS: Record<string, string> = {
+  lumbar: 'lombar',
+};
+
+function matchCase(original: string, replacement: string): string {
+  if (original === original.toUpperCase()) return replacement.toUpperCase();
+  if (original[0] && original[0] === original[0].toUpperCase()) {
+    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+  }
+  return replacement;
+}
+
+export function correctPortugueseSpelling(text: string): string {
+  if (!text) return text;
+  let result = text;
+  for (const [wrong, right] of Object.entries(SPELLING_CORRECTIONS)) {
+    result = result.replace(new RegExp(`\\b${wrong}\\b`, 'gi'), (m) => matchCase(m, right));
+  }
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // D1 — heurísticas determinísticas pós-geração
 // ─────────────────────────────────────────────────────────────────────────
 
