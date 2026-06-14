@@ -94,7 +94,7 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           // Eixos de leitura por segmento — direcionam a sugestão sem virar
           // biblioteca fixa de respostas.
           const SEGMENT_LENS: Record<Seg, string> = {
-            VAREJO: 'compra, uso, desejo, escolha, comparação, ocasião, presente, estação, produto, rotina do cliente',
+            VAREJO: 'compra, uso, manutenção, reposição, escolha, comparação, disponibilidade, estação, produto, necessidade do cliente',
             'SERVIÇOS': 'problema, dúvida, decisão, risco, confiança, processo, manutenção, prevenção, atendimento, resultado percebido',
             MARCA: 'reconhecimento, identificação, percepção, vínculo, bastidor, diferenciação, valor percebido, história, relação com o público',
           };
