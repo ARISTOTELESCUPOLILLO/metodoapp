@@ -1,7 +1,7 @@
 import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from '../types';
 import { getVoiceProfile } from '../data/brandVoice';
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
-import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits } from './textValidation';
+import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits, checkObserverSubject, checkCrossPieceLabelRepeat } from './textValidation';
 
 interface MomentModulator {
   label: string;
@@ -81,14 +81,14 @@ function buildCommunicativeFunctionMap(
   progressionStages: string[]
 ): string {
   const fnMap: Record<string, { label: string; desc: string }> = {
-    'IDENTIFICAÇÃO':  { label: 'EDUCATIVO + INSPIRACIONAL', desc: 'nomeia a realidade do público como espelho — a marca entende, não vende' },
-    'RECONHECIMENTO': { label: 'INSPIRACIONAL',             desc: 'revela a marca e cria reconhecimento — sem CTA, sem argumento comercial' },
-    'DESEJO':         { label: 'INSPIRACIONAL',             desc: 'mostra o que é possível alcançar — cria desejo sem pressionar' },
-    'ENTENDIMENTO':   { label: 'EDUCATIVO + INFORMATIVO',   desc: 'esclarece o contexto ou problema — demonstra entendimento do receptor' },
-    'SEGURANÇA':      { label: 'INFORMATIVO + PERSUASIVO',  desc: 'apresenta evidências e casos concretos — começa a construir preferência' },
-    'CONFIANÇA':      { label: 'PERSUASIVO',                desc: 'consolida autoridade e relação — o receptor percebe a empresa como referência' },
-    'AUTORIDADE':     { label: 'PERSUASIVO',                desc: 'posiciona como referência — pode mencionar resultados e diferenciais' },
-    'AGIR':           { label: 'CONVENCIMENTO',             desc: 'convida à ação de forma consultiva — pode nomear o que a empresa oferece' },
+    'IDENTIFICAÇÃO':  { label: 'EDUCATIVO + INSPIRACIONAL', desc: 'FORMA observação-espelho: nomeia a realidade do público — a marca entende, não vende' },
+    'RECONHECIMENTO': { label: 'INSPIRACIONAL',             desc: 'FORMA afirmação de identidade: revela a marca — sem CTA, sem argumento comercial' },
+    'DESEJO':         { label: 'INSPIRACIONAL',             desc: 'FORMA cena desejável: mostra o que passa a ser possível — sem pressionar' },
+    'ENTENDIMENTO':   { label: 'EDUCATIVO + INFORMATIVO',   desc: 'FORMA observação-espelho: nomeia o contexto ou problema que o receptor vive' },
+    'SEGURANÇA':      { label: 'INFORMATIVO + PERSUASIVO',  desc: 'FORMA critério prático: entrega um ponto de avaliação concreto que o receptor já pode usar' },
+    'CONFIANÇA':      { label: 'PERSUASIVO',                desc: 'FORMA prova/consequência: mostra o resultado observável de aplicar esse critério' },
+    'AUTORIDADE':     { label: 'PERSUASIVO',                desc: 'FORMA afirmação de domínio: posiciona o que a marca entrega — pode citar resultados e diferenciais' },
+    'AGIR':           { label: 'CONVENCIMENTO',             desc: 'FORMA convite consultivo: indica o próximo passo — pode nomear o que a empresa oferece' },
   };
 
   const lines: string[] = [];
@@ -102,16 +102,16 @@ function buildCommunicativeFunctionMap(
   if (comp.carrossel > 0) {
     lines.push(
       `Carrossel — arco interno de 5 cards:`,
-      `  Card 1 (abertura)            → EDUCATIVO: abre com o problema ou aspiração que o público reconhece`,
-      `  Cards 2-3 (desenvolvimento)  → INFORMATIVO: detalha e exemplifica com evidência concreta da atividade`,
-      `  Card 4 (direção)             → PERSUASIVO: apresenta a direção — sem CTA, sem nomear a empresa`,
-      `  Card 5 (ação)                → CONVENCIMENTO: consolida e convida — pode citar o que a empresa entrega`
+      `  Card 1 (abertura)            → EDUCATIVO — FORMA observação-espelho: nomeia o problema ou aspiração que o público reconhece, sem citar a empresa`,
+      `  Cards 2-3 (desenvolvimento)  → INFORMATIVO — FORMA critério/prova concreta: detalha com evidência real da atividade, um ponto de avaliação por card`,
+      `  Card 4 (direção)             → PERSUASIVO — FORMA indicação de caminho: aponta a direção a seguir — sem CTA, sem nomear a empresa`,
+      `  Card 5 (ação)                → CONVENCIMENTO — FORMA convite consultivo: consolida e indica o próximo passo — pode citar o que a empresa entrega`
     );
   }
 
   const fechamentoTipo = isVisualOrExperimentacao ? 'Estático Final' : 'Reels';
   if (comp.fechamento > 0) {
-    lines.push(`${fechamentoTipo} → CONVENCIMENTO: consolida toda a progressão e convida à ação — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`);
+    lines.push(`${fechamentoTipo} → CONVENCIMENTO — FORMA convite consultivo + resolução: consolida a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`);
   }
 
   return lines.join('\n');
@@ -340,9 +340,9 @@ RECEPTOR: ${isB2B ? 'decisor empresarial' : 'consumidor final'} — situação a
 INTENÇÃO: conduzir o receptor da situação atual até a decisão de escolher esta empresa — usando educação, informação, inspiração, persuasão e convencimento como ferramentas progressivas e distintas.
 FUNÇÕES COMUNICATIVAS POR PEÇA:
 ${communicativeFunctionsMap}
-REGRA: peças EDUCATIVO/INSPIRACIONAL não fazem CTA nem mencionam a empresa. Peças INFORMATIVO/PERSUASIVO podem aludir à solução. Somente CONVENCIMENTO faz CTA explícito e nomeia o que a empresa oferece.`;
+REGRA: cada peça cumpre a FORMA indicada acima — CTA e menção à empresa só onde a FORMA expressamente permitir.`;
 
-  const titleSyntaxRule = `11. SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL TOTAL: qualquer classe gramatical da língua portuguesa pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, numeral, pronome ou locução. Exemplos de abertura válidos: "O melhor…", "A solução…", "A saudade…", "Decidir…", "Cuidar…", "Quem decide…", "O que define…", "Gestores…", "A equipe…". O que é PROIBIDO é a construção passiva sem agente (ex. proibido: "Operações sem atrasos garantidas", "Atendimento sem demora garantido", "Entrega sem falhas comprovada" — sem quem age). VARIE o sujeito entre pessoas, conceitos abstratos, verbos substantivados e qualificadores — não repita "gestores", "equipes" ou "decisores" em toda a sequência.`;
+  const titleSyntaxRule = `11. SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL COM FUNÇÃO: qualquer classe gramatical da língua portuguesa pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, numeral, pronome ou locução. Exemplos de abertura válidos: "O melhor…", "A solução…", "A saudade…", "Decidir…", "Cuidar…", "O que define…". O título CUMPRE A FORMA do seu estágio (ver FUNÇÕES COMUNICATIVAS POR PEÇA): entrega observação, critério, prova, posicionamento ou convite — nunca descreve o leitor de fora. PROIBIDO: (a) construção passiva sem agente (ex.: "Operações sem atrasos garantidas", "Entrega sem falhas comprovada" — sem quem age); (b) abrir o título nomeando o leitor de fora — "Quem decide…", "Gestores…", "Decisores…", "A equipe…", "Quem cuida…", "Quem usa…" + verbo descritivo. VARIE o sujeito entre pessoas, conceitos abstratos, verbos substantivados e qualificadores.`;
 
   return `Você é o motor estratégico do MÉTODO OP. Retorne SOMENTE JSON válido, sem markdown, sem comentários.
 ${trackHeader}
@@ -565,6 +565,20 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
       flags.push(...validatePieceFields(`reels[${i}]`, { titulo: r.hook, texto: r.script, legenda: r.legenda }, keyInfo));
     });
   }
+
+  // Medida C — "rótulo do leitor" (gestores/decisores/equipe/time) como
+  // sujeito do título: checkObserverSubject flaga qualquer ocorrência;
+  // checkCrossPieceLabelRepeat flaga repetição do mesmo rótulo entre peças
+  // da sequência (ver item 11 / FUNÇÕES COMUNICATIVAS POR PEÇA acima).
+  const allTitles: { campo: string; titulo: string }[] = [];
+  if (feed) feed.forEach((item, i) => { if (item.titulo) allTitles.push({ campo: `feed[${i}]`, titulo: item.titulo }); });
+  if (carousel) carousel.forEach((card: any, i) => { if (card.titulo) allTitles.push({ campo: `carousel[${i}]`, titulo: card.titulo }); });
+  if (reels) reels.forEach((r, i) => { if (r.hook) allTitles.push({ campo: `reels[${i}]`, titulo: r.hook }); });
+  for (const { campo, titulo } of allTitles) {
+    const observerSubject = checkObserverSubject(titulo);
+    if (observerSubject) flags.push({ campo: `${campo}.titulo`, motivo: observerSubject });
+  }
+  flags.push(...checkCrossPieceLabelRepeat(allTitles));
 
   // Validação de completude — detecta componentes esperados mas ausentes/incompletos.
   if (comp.carrossel > 0 && (!carousel || carousel.length === 0)) {
