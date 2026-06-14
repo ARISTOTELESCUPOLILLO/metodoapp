@@ -31,6 +31,38 @@ function pickConcreteItem(items: string[], attempt: number, previousSuggestions:
   return items[startIdx];
 }
 
+// Classifica o ELEMENTO CONCRETO desta sugestão como produto físico (VAREJO)
+// ou serviço/procedimento (SERVIÇOS) — independente do segmento cadastrado
+// da empresa. Usado na PU para escolher a LENTE DO SEGMENTO certa quando a
+// empresa registra itens dos dois tipos (ex.: empresa de SERVIÇOS que também
+// vende produtos de VAREJO no Kit de Marca).
+function classifyItemType(item: string): 'VAREJO' | 'SERVIÇOS' | null {
+  const norm = item.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  const SERVICO_KEYWORDS = [
+    'consulta', 'atendimento', 'sessao', 'sessoes', 'exame', 'avaliacao', 'diagnostico',
+    'tratamento', 'procedimento', 'terapia', 'manutencao', 'instalacao',
+    'conserto', 'reparo', 'revisao', 'montagem', 'limpeza', 'banho e tosa',
+    'tosa', 'aula', 'curso', 'treinamento', 'consultoria', 'assessoria',
+    'acompanhamento', 'suporte', 'plano', 'pacote', 'servico', 'entrega',
+    'aplicacao', 'vacina', 'cirurgia', 'castracao', 'adestramento', 'massagem',
+  ];
+
+  const PRODUTO_KEYWORDS = [
+    'racao', 'racoes', 'acessorio', 'produto', 'equipamento', 'peca',
+    'kit', 'roupa', 'calcado', 'bolsa', 'brinquedo', 'alimento', 'bebida',
+    'movel', 'moveis', 'decoracao', 'cosmetico', 'suplemento', 'ferramenta',
+    'material', 'coleira', 'caminha', 'aquario', 'gaiola',
+  ];
+
+  const hasService = SERVICO_KEYWORDS.some((kw) => norm.includes(kw));
+  const hasProduct = PRODUTO_KEYWORDS.some((kw) => norm.includes(kw));
+
+  if (hasService && !hasProduct) return 'SERVIÇOS';
+  if (hasProduct && !hasService) return 'VAREJO';
+  return null;
+}
+
 // Gera um número estável a partir de uma string (empresa + atividade), usado
 // para variar a lente de abertura entre empresas sem depender de estado
 // externo.
@@ -151,7 +183,17 @@ CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${c
             ? `\nLEMBRETE FINAL: a semente concreta deve nomear um elemento real de "${mainActivity}".${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — se o que ele sugere não estiver na ATIVIDADE, ignore essa pista.` : ''}\n`
             : '';
 
-          const segmentLensBlock = `LENTE DO SEGMENTO (${segment}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segment]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.`;
+          // PU: a LENTE DO SEGMENTO segue o TIPO do elemento concreto desta
+          // sugestão (produto físico vs serviço/procedimento) quando ele
+          // difere do segmento cadastrado da empresa — ex.: empresa de
+          // SERVIÇOS (Pronto Vet) sugerindo a partir de "Rações e acessórios
+          // para pet" usa a lente de VAREJO nesta sugestão, não a de
+          // SERVIÇOS. MARCA não entra nessa troca: seu eixo (reconhecimento,
+          // vínculo, percepção) não é substituído por um eixo de
+          // compra/atendimento.
+          const itemType = concreteItem ? classifyItemType(concreteItem) : null;
+          const segmentForLens: Seg = (itemType && itemType !== segment && segment !== 'MARCA') ? itemType : segment;
+          const segmentLensBlock = `LENTE DO SEGMENTO (${segmentForLens}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segmentForLens]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.`;
 
           const AUDIENCES = ['B2C', 'B2B'] as const;
           type Aud = typeof AUDIENCES[number];
