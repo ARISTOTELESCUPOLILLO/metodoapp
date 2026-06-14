@@ -171,7 +171,8 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
             ? `ELEMENTO CONCRETO DESTA SUGESTÃO: "${concreteItem}"
 Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}
 
-CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.`
+CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
+O CONTEXTO REAL DE USO não precisa ser um cenário, local ou momento (ex.: "durante a consulta", "na sala de espera", "na reunião") — pode ser apenas o RESULTADO ou EFEITO direto que "${concreteItem}" entrega, no formato "[item] para [resultado/efeito]". Use um cenário/local só quando ele for a forma mais natural de descrever esse uso; não force um cenário quando o resultado direto for mais simples e soar mais natural.`
             : '';
 
           // Reforço final (recência) — repete, já perto do JSON de saída, que o
