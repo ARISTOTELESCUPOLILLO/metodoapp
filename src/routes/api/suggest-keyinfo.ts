@@ -41,7 +41,7 @@ function seedFromString(s: string): number {
 }
 
 // Lentes de abertura — 15 formas internas de encontrar o ASSUNTO da
-// Informação-chave (Sugestão MOP) a partir do elemento concreto e da
+// Informação-chave (Sugestão MOP e PU) a partir do elemento concreto e da
 // atividade. São orientação de geração apenas: nunca aparecem no JSON de
 // saída nem na UI, e não criam tensão, promessa emocional, progressão ou
 // linguagem de campanha — apenas variam o ângulo de observação de um fato
@@ -195,13 +195,13 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === 'MAR
           // pela checkInventedPromotion, que agora roda SEMPRE.
           const allowPromoLanguagePU = mode === 'postunico' && (objetivo === 'promocao' || objetivo === 'oportunidade');
 
-          const criteriosSugestaoOP = `CRITÉRIOS DE QUALIDADE:
+          const criteriosQualidadeSugestao = `CRITÉRIOS DE QUALIDADE:
 ${mode === 'metodo'
   ? 'Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade — sem tensão emocional, sem promessa e sem linguagem de campanha.'
-  : 'Construa 1 frase direta e específica: assunto + situação concreta + tensão ou desejo.'} ${mode === 'metodo' ? 'Entre 4 e 10 palavras (máximo absoluto 10).' : 'Entre 5 e 10 palavras (máximo absoluto 12).'}
+  : 'Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade.'} Entre 4 e 10 palavras (máximo absoluto 10).
 SINTAXE: qualquer palavra substantivada pode ser sujeito — substantivo, adjetivo, verbo no infinitivo ou locução; não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 ${mode === 'postunico' ? 'Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.\n' : ''}${proibicoesInventar}
-LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se precisar trocar uma palavra grande por palavras mais curtas e isso aproximar a frase do limite de 12, prefira isso a manter um termo difícil — mas nunca ultrapasse 12 palavras. EXCEÇÃO: se houver um elemento concreto central (produto, peça, serviço, objeto, procedimento) vindo do texto do usuário ou da atividade, esse termo pode ter mais de 3 sílabas (ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia") — não o troque por palavra genérica só para simplificar.`;
+LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se precisar trocar uma palavra grande por palavras mais curtas e isso aproximar a frase do limite de 10, prefira isso a manter um termo difícil — mas nunca ultrapasse 10 palavras. EXCEÇÃO: se houver um elemento concreto central (produto, peça, serviço, objeto, procedimento) vindo do texto do usuário ou da atividade, esse termo pode ter mais de 3 sílabas (ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia") — não o troque por palavra genérica só para simplificar.`;
 
           // ── Público-alvo — regra crítica para B2C vs B2B ──────────────────
           const audienceDirective = isB2C
@@ -226,13 +226,17 @@ SUJEITO DA FRASE (B2B): qualquer palavra da língua portuguesa pode ser sujeito 
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
 
-          // ── Lente de abertura (Sugestão MOP) ──────────────────────────────
+          // ── Lente de abertura (Sugestão MOP e PU) ─────────────────────────
           // Varia a FORMA de encontrar o assunto entre as tentativas — nunca
           // aparece no JSON de saída nem na UI, e não carrega tensão,
           // promessa, progressão ou linguagem de campanha.
           const lensIndex = (attempt + seedFromString(companyName + mainActivity)) % OPENING_LENSES.length;
           const lens = OPENING_LENSES[lensIndex];
           const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}`;
+          // Na PU, a lente serve só para variar o ASSUNTO do post único — não
+          // altera o formato definido em ESTILO DA SUGESTÃO (POST ÚNICO) e não
+          // introduz tensão, motivação ou progressão de sequência.
+          const lensBlockPU = `${lensBlock} Use esta lente apenas para variar o ASSUNTO do post único — mantenha o formato definido em ESTILO DA SUGESTÃO e não introduza tensão, motivação ou progressão de sequência.`;
 
           const sementeLembrete = segment === 'MARCA' ? sementeLembreteMarca : sementeLembreteAtividade;
 
@@ -259,7 +263,7 @@ ${previousBlock}
 
 ${lensBlock}
 
-${criteriosSugestaoOP}
+${criteriosQualidadeSugestao}
 
 A Informação-chave é APENAS o ASSUNTO escolhido para esta peça — um produto, serviço, situação, dúvida, processo, escolha, comparação ou característica real e concreta dessa atividade. Ela NÃO precisa (e NÃO deve) carregar tensão, conflito, promessa emocional, urgência, comparação com concorrentes, nem qualquer ideia de progressão, estágio ou momento de relacionamento com o público — isso é decidido em outra etapa, depois que o assunto for escolhido.
 
@@ -299,15 +303,17 @@ ESTILO DA SUGESTÃO (POST ÚNICO): a peça é uma comunicação direta e autôno
 
 ${OBJETIVO_RULES[objetivo] || ''}
 
-${criteriosSugestaoOP}
+${lensBlockPU}
+
+${criteriosQualidadeSugestao}
 
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 frase, entre 5 e 10 palavras (máximo absoluto 12), em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
+{ "sugestao": "1 frase, entre 4 e 10 palavras (máximo absoluto 10), em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
 
           const userPrompt = mode === 'metodo' ? metodoPrompt : postUnicoPrompt;
           const systemMsg = mode === 'metodo'
             ? 'Você é estrategista de conteúdo para redes sociais. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO: repetir a mesma palavra ou derivação morfológica da mesma raiz no mesmo texto. PROIBIDO ABSOLUTO no texto final: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01" a "OP-06", "mood" — são termos reservados. Use sinônimos contextuais. Antes de retornar: (1) pessoa com ensino médio entende de primeira? (2) há termo técnico, palavra grande ou formal (ex.: "procedimentos", "organização", "eficiente", "compradores") que poderia virar uma palavra curta e popular? (3) a frase parte de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — e não de um conceito amplo que serviria para qualquer empresa do segmento? (4) a relação de causa→efeito da frase é literalmente verdadeira e um nativo a diria sem reler? Expressão idiomática só vale se o sentido literal também fizer sentido com o objeto citado — em dúvida, troque a expressão "vívida" por uma consequência simples e direta. Se sim para (2), troque por algo mais simples; se não para (3) e a atividade permitir, ajuste para algo concreto desse ramo antes de responder; se não para (4), reescreva a consequência de forma literal e direta antes de responder. Limite: entre 4 e 10 palavras por sugestão (máximo absoluto 10) — nunca ultrapasse 10. Frases com mais de 10 palavras devem ser cortadas antes de retornar.'
-            : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, prefira que a frase parta de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — em vez de um conceito amplo que serviria para qualquer empresa do segmento.';
+            : 'Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, prefira que a frase parta de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — em vez de um conceito amplo que serviria para qualquer empresa do segmento. Limite: entre 4 e 10 palavras por sugestão (máximo absoluto 10) — nunca ultrapasse 10. Frases com mais de 10 palavras devem ser cortadas antes de retornar.';
 
           // D1 (validateSugestao) + 1 retry no máximo: se a sugestão sair vaga
           // (muito curta/longa, terminação pendurada ou frase-clichê), pede uma
@@ -342,7 +348,7 @@ Retorne JSON EXATAMENTE assim:
             let parsed: { sugestao?: string };
             try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
 
-            const sugestaoMaxWords = mode === 'metodo' ? 10 : 12;
+            const sugestaoMaxWords = 10;
             sugestao = truncateWords(String(parsed.sugestao || '').trim().replace(/^"|"$/g, ''), sugestaoMaxWords);
             if (!sugestao) return Response.json({ error: 'Sugestão vazia' }, { status: 502 });
 
