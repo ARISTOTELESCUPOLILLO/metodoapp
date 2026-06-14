@@ -413,6 +413,19 @@ export function checkNumericClaims(text: string, keyInfo: string): string[] {
 const TITULO_MIN_WORDS = 4;
 const TITULO_MAX_WORDS = 6;
 
+// ANCORAGEM CONCRETA — ANTI-SÍMBOLO (organizaMethodEngine.ts,
+// generate-pu-copy.ts): "[abstrato] faz/traz/gera/vira/se torna/transforma
+// [outro abstrato]" — sujeito e predicado abstratos, sem cena fotografável
+// (ex.: "Responder faz diferença de verdade"). Reforça no D1 a regra do
+// prompt para o caso em que o modelo ainda assim a produzir.
+const ABSTRACT_PREDICATE_RE = /\b(faz|fazem|traz|trazem|gera|geram|vira|viram|transforma|transformam|se\s+torna|se\s+tornam)\s+(a\s+|o\s+|uma?\s+|um\s+)?(diferen[çc]as?|resultados?|mudan[çc]as?|sucesso|crescimento|solu[çc][õo]es?|valor|oportunidades?)\b/i;
+
+export function checkAbstractPredicate(titulo: string): string | null {
+  const m = titulo.match(ABSTRACT_PREDICATE_RE);
+  if (m) return `título usa padrão "${m[0]}" — predicado abstrato sem cena fotografável (ANTI-SÍMBOLO)`;
+  return null;
+}
+
 export function validateTitulo(titulo: string): string[] {
   const motivos: string[] = [];
   const words = titulo.trim().split(/\s+/).filter(Boolean).length;
@@ -422,6 +435,8 @@ export function validateTitulo(titulo: string): string[] {
   if (dangling) motivos.push(dangling);
   const punct = checkPunctuation(titulo, 'titulo');
   if (punct) motivos.push(punct);
+  const abstractPredicate = checkAbstractPredicate(titulo);
+  if (abstractPredicate) motivos.push(abstractPredicate);
   return motivos;
 }
 
