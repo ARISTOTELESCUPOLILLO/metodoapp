@@ -266,7 +266,9 @@ export default function App() {
     const userChanged = prevUserRef.current !== null && prevUserRef.current !== effectiveUserId;
     prevUserRef.current = effectiveUserId;
     if (userChanged) {
-      setForm({ ...defaultForm });
+      // audience (B2C/B2B) é preferência fixa do usuário, não do kit/empresa —
+      // não reseta ao entrar/sair de "atuando como" outro usuário.
+      setForm((prev) => ({ ...defaultForm, audience: prev.audience }));
       setPostUnico({ ...defaultPostUnico });
       setKit(defaultKit);
     }
