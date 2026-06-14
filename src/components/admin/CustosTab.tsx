@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { mopMonthlyCost } from '@/lib/costs';
 
 interface Log {
   user_id: string | null;
@@ -44,6 +45,26 @@ interface AppSettings {
   image_price_usd: number;
   render_price_usd: number;
   geracao_price_usd: number;
+}
+
+// Planos de Sequência (S3/S6/S9, Visual ou Cinemática) têm limite_geracoes=0
+// mas geram 1 ciclo MOP por semana (S3/S6) ou quinzena (S9) — extrai o
+// tamanho da sequência do código do plano (ex.: "S6V" → 6).
+function mopSequenceSize(codigo: string): number | null {
+  const m = codigo.match(/^S(3|6|9)/);
+  return m ? Number(m[1]) : null;
+}
+
+// Custo OpenAI mensal projetado de um plano: geração avulsa (Post Único,
+// limite_geracoes × preço) + ciclos MOP (planos de Sequência).
+function planMonthlyOpenaiCost(p: Plan, settings: AppSettings): number {
+  const seqSize = mopSequenceSize(p.codigo);
+  const custoMop = seqSize ? mopMonthlyCost(seqSize) : 0;
+  return p.limite_geracoes * settings.geracao_price_usd + custoMop;
+}
+
+function planMonthlyFalaiCost(p: Plan, settings: AppSettings): number {
+  return p.limite_imagens * settings.image_price_usd + p.limite_renders * settings.render_price_usd;
 }
 
 export function CustosTab() {
@@ -161,8 +182,8 @@ export function CustosTab() {
   const clienteFinanceiro = realProfiles.map(p => {
     const p1 = p.plano1_id ? planMap[p.plano1_id] : null;
     const p2 = p.plano2_id ? planMap[p.plano2_id] : null;
-    const custoProj1 = p1 ? (p1.limite_imagens * settings.image_price_usd + p1.limite_renders * settings.render_price_usd + p1.limite_geracoes * settings.geracao_price_usd) : 0;
-    const custoProj2 = p2 ? (p2.limite_imagens * settings.image_price_usd + p2.limite_renders * settings.render_price_usd + p2.limite_geracoes * settings.geracao_price_usd) : 0;
+    const custoProj1 = p1 ? (planMonthlyFalaiCost(p1, settings) + planMonthlyOpenaiCost(p1, settings)) : 0;
+    const custoProj2 = p2 ? (planMonthlyFalaiCost(p2, settings) + planMonthlyOpenaiCost(p2, settings)) : 0;
     const custoProjTotal = (custoProj1 + custoProj2) * rate;
     const precoVenda1 = Number((p as any).plano1_preco_brl || 0);
     const precoVenda2 = Number((p as any).plano2_preco_brl || 0);
@@ -184,7 +205,7 @@ export function CustosTab() {
     const renders = totalClientes * p.limite_renders;
     const geracoes = totalClientes * p.limite_geracoes;
     const custoFalaiPrev = (imgs * settings.image_price_usd + renders * settings.render_price_usd);
-    const custoOpenaiPrev = geracoes * settings.geracao_price_usd;
+    const custoOpenaiPrev = totalClientes * planMonthlyOpenaiCost(p, settings);
     const totalUsdPrev = custoFalaiPrev + custoOpenaiPrev;
     return { planId: p.id, codigo: p.codigo, nome: p.nome, totalClientes, imgs, renders, geracoes, custoFalaiPrev, custoOpenaiPrev, totalUsdPrev };
   }).filter(r => r.totalClientes > 0);
@@ -201,7 +222,7 @@ export function CustosTab() {
     const userIds = new Set(users.map(u => u.id));
     const planLogs = logs.filter(l => l.user_id && userIds.has(l.user_id));
     const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
-    const projecao = p.limite_imagens * settings.image_price_usd + p.limite_renders * settings.render_price_usd + p.limite_geracoes * settings.geracao_price_usd;
+    const projecao = planMonthlyFalaiCost(p, settings) + planMonthlyOpenaiCost(p, settings);
     // precoMin = tabela de preços: custo projetado em R$ × 3 (piso comercial)
     const precoMin = projecao * rate * 3;
     // precoMed = média dos preços efetivamente cobrados nos perfis dos clientes deste plano

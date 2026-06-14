@@ -140,7 +140,7 @@ ${(objetivo === 'promocao' || objetivo === 'oportunidade') ? `- REGRA DE URGÊNC
               modulo: 'pu',
               payload: { objetivo },
               geracoes: 1,
-              custoUsd: COST_USD.content,
+              custoUsd: COST_USD.content_pu,
               impersonatedBy,
               preferredSlot,
             });

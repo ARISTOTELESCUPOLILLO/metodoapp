@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
-import { COST_USD } from '@/lib/costs';
+import { mopContentCost } from '@/lib/costs';
 
 const LEITURA_CENICA_SCHEMA = {
   anyOf: [
@@ -363,7 +363,7 @@ export const Route = createFileRoute('/api/generate-content')({
 
                 // Debita sempre (para rastreio de custo; usuário efetivo já resolvido acima).
                 try {
-                  await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: COST_USD.content, impersonatedBy, preferredSlot: (preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined });
+                  await debitUsage(userId, 0, 0, { evento: 'gerar_conteudo_mop', modulo: 'mop', geracoes: 1, custoUsd: mopContentCost(effectiveSize), impersonatedBy, preferredSlot: (preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined) ?? undefined });
                 } catch (e) {
                   console.warn('[generate-content] debit failed', e);
                 }
