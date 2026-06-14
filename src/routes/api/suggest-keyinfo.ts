@@ -87,6 +87,14 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
             ? body.selectedProducts.slice(0, 10).map((s: unknown) => String(s).slice(0, 80)).filter(Boolean)
             : [];
 
+          // Elemento concreto — semente determinística escolhida a partir da
+          // lista de produtos/serviços marcados pelo usuário no Kit de Marca.
+          // Calculado antes da ancoragem na atividade porque define quem é o
+          // dono do CONTEXTO REAL DE USO (ver ancoragemAtividade abaixo): com
+          // elemento concreto, é o elementoConcretoBlock; sem ele, é a
+          // ancoragem na atividade (fallback).
+          const concreteItem = pickConcreteItem(selectedProducts, attempt, previousSugs);
+
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
           const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment) ? (body.segment as Seg) : 'SERVIÇOS';
@@ -113,22 +121,20 @@ A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entende
 
 CENA CONCRETA: a sugestão deve partir de uma situação real e reconhecível desse ramo — um produto, peça, ferramenta, canal, procedimento ou momento específico do dia a dia — e NÃO de um conceito amplo que serviria para qualquer empresa do segmento ${segment} (ex.: "atendimento gera confiança", "escolha certa evita problemas", "empresa próxima vira referência").
 Contraste esperado — exemplos de FORMATO de OUTROS RAMOS (não copie o vocabulário ou os produtos destes exemplos; servem só para mostrar o tipo de especificidade esperado — a sua sugestão deve usar vocabulário de "${mainActivity}", não destes exemplos): em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (exemplo do ramo consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (exemplo do ramo peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (exemplo do ramo ferramentas e máquinas).
-TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial. Essa cena é o CONTEXTO REAL DE USO da sugestão — a lente interna de geração (mais abaixo) escolhe apenas o ÂNGULO dentro dela, sem criar uma situação nova.`
+TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial.${concreteItem ? '' : ' Essa cena é o CONTEXTO REAL DE USO da sugestão — a lente interna de geração (mais abaixo) escolhe apenas o ÂNGULO dentro dela, sem criar uma situação nova.'}`
             : '';
           const ancoragemAtividadeMarca = mainActivity.trim()
             ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA MARCA:
 A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa marca faz, oferece ou representa — é dali que a sugestão deve nascer. O NOME DA MARCA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
 
 CENA CONCRETA: a sugestão deve partir de um elemento real e reconhecível dessa marca — um ingrediente, material, processo, ritual, território, gesto ou característica específica${mode === 'metodo' ? ' (sem dor do cliente, sem linguagem de venda)' : ''} — e NÃO de um conceito amplo que serviria para qualquer marca do segmento (ex.: "reconhecimento", "identificação", "vínculo", "valor percebido").
-TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial. Esse elemento é o CONTEXTO REAL DE USO da sugestão — a lente interna de geração (mais abaixo) escolhe apenas o ÂNGULO dentro dele, sem criar uma situação nova.`
+TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial.${concreteItem ? '' : ' Esse elemento é o CONTEXTO REAL DE USO da sugestão — a lente interna de geração (mais abaixo) escolhe apenas o ÂNGULO dentro dele, sem criar uma situação nova.'}`
             : '';
           const ancoragemBlock = segment === 'MARCA' ? ancoragemAtividadeMarca : ancoragemAtividade;
 
-          // Elemento concreto — semente determinística escolhida a partir da
-          // lista de produtos/serviços marcados pelo usuário no Kit de Marca.
-          // Substitui a antiga "COBERTURA DA ATIVIDADE" (rodízio mental por
-          // grupos da atividade) por um dado real e explícito.
-          const concreteItem = pickConcreteItem(selectedProducts, attempt, previousSugs);
+          // Elemento concreto — substitui a antiga "COBERTURA DA ATIVIDADE"
+          // (rodízio mental por grupos da atividade) por um dado real e
+          // explícito (concreteItem definido acima, antes da ancoragem).
           const elementoConcretoBlock = concreteItem
             ? `ELEMENTO CONCRETO DESTA SUGESTÃO: "${concreteItem}"
 Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}
