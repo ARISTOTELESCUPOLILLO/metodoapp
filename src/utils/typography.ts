@@ -21,7 +21,14 @@ export const SECONDARY_FONT_CSS: Record<SecondaryFont, string> = {
 // regras serifada/sem-serifa abaixo, aplicada à palavra-chave em destaque.
 const SECONDARY_FONT_SHAPES: Record<SecondaryFont, string> = {
   fina: 'cursiva conectada, traço fino e uniforme tipo caneta monoline, inclinação suave para a direita, com floreios discretos nas entradas e saídas das letras — estilo "assinatura elegante"',
-  grossa: 'cursiva conectada, traço caligráfico com forte contraste de espessura (hastes descendentes grossas, ascendentes finas) tipo pincel, inclinação para a direita, com floreios expressivos — estilo "caligrafia a pincel"',
+  grossa: 'cursiva conectada, traço de PINCEL GROSSO E ENCORPADO — linhas espessas e cheias do início ao fim de cada letra, sem afinar em curvas, hastes ou ligaduras, peso visual equivalente a um brush lettering BOLD/HEAVY, inclinação leve para a direita, floreios expressivos igualmente grossos — estilo "lettering a pincel bold", JAMAIS um traço fino, hairline ou delicado em qualquer trecho',
+};
+
+// Reforço extra de peso só para a variante "grossa" — a "fina" é
+// intencionalmente um traço monoline delicado tipo assinatura, então não
+// recebe essa cobrança de espessura.
+const SECONDARY_FONT_WEIGHT_REINFORCEMENT: Partial<Record<SecondaryFont, string>> = {
+  grossa: '\nREFORÇO DE TRAÇO NA MANUSCRITA: o traço dessa palavra deve ser GROSSO em toda a sua extensão, sem afinar em curvas, conexões ou floreios — compare com a espessura das letras do restante do título (caixa alta, bold) e garanta peso visual equivalente. PROIBIDO: traço fino, hairline, ou contraste forte entre partes grossas e finas dentro da própria palavra manuscrita.',
 };
 
 // Bloco de exceção pontual: quando o Kit de Marca tem uma tipografia
@@ -31,7 +38,7 @@ const SECONDARY_FONT_SHAPES: Record<SecondaryFont, string> = {
 // manuscritas" do bloco principal, só para essa palavra.
 export function buildScriptAccentBlock(style: SecondaryFont): string {
   return `EXCEÇÃO PONTUAL — PALAVRA-CHAVE EM MANUSCRITA: a MESMA palavra-chave do título que recebe a COR DE DESTAQUE (ver regra de acento de cor) deve TAMBÉM ser escrita em estilo manuscrito: ${SECONDARY_FONT_SHAPES[style]}. Aplique esse estilo a EXATAMENTE 1 palavra-chave do título — a de maior carga emocional ou benefício, com no máximo 10 letras — preservando os mesmos caracteres exatos, sem abreviar nem distorcer a ponto de ilegibilidade, sem sombra/contorno/brilho extra. TODAS as demais palavras do título seguem rigorosamente a regra tipográfica principal abaixo, incluindo a proibição de fontes manuscritas — que NÃO se aplica a essa única palavra-chave.
-REFORÇO DE COR NA MANUSCRITA: o traço fino e cursivo cobre muito menos área do que letras em caixa alta, então a cor de destaque aplicada nessa palavra tende a parecer apagada/fraca. Para compensar, use nessa palavra uma versão MAIS CLARA E VIBRANTE da cor de destaque (mesmo matiz, com luminosidade e saturação aumentadas), garantindo que ela continue se destacando com a mesma força das demais aplicações da cor de destaque na peça.`;
+REFORÇO DE COR NA MANUSCRITA: o traço cursivo cobre menos área do que letras em caixa alta, então a cor de destaque aplicada nessa palavra tende a parecer apagada/fraca. Para compensar, use nessa palavra uma versão MAIS CLARA E VIBRANTE da cor de destaque (mesmo matiz, com luminosidade e saturação aumentadas), garantindo que ela continue se destacando com a mesma força das demais aplicações da cor de destaque na peça.${SECONDARY_FONT_WEIGHT_REINFORCEMENT[style] || ''}`;
 }
 
 export type TypographyKind = 'serif' | 'sans';
