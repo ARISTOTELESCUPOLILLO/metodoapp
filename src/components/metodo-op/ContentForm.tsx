@@ -77,6 +77,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const SUGGEST_MAX = 3;
   const hasKeyInfo = !!(data.keyInfo || '').trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
+  const canClear = hasKeyInfo || suggestCount > 0;
   const initialKeyInfo = initialKeyInfoRef.current;
   const canRevertInitial = initialKeyInfo !== null && data.keyInfo !== initialKeyInfo;
 
@@ -90,11 +91,11 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
 
   useEffect(() => {
     if (!data.keyInfo) {
-      setSuggestCount(0);
       setSuggestions([]);
       setSuggestError(null);
       initialKeyInfoRef.current = null;
-      // allSessionSuggestionsRef NÃO é resetado — persiste para garantir inédito
+      // suggestCount e allSessionSuggestionsRef NÃO são resetados — preservam
+      // o rodízio de produto/lente entre pedidos de sugestão
     }
   }, [data.keyInfo]);
 
@@ -276,9 +277,9 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
                 setSuggestError(null);
                 initialKeyInfoRef.current = null;
               }}
-              disabled={!hasKeyInfo}
+              disabled={!canClear}
               title="Limpar texto e reiniciar"
-              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: !hasKeyInfo ? 'not-allowed' : 'pointer', opacity: !hasKeyInfo ? 0.4 : 1 }}
+              style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: !canClear ? 'not-allowed' : 'pointer', opacity: !canClear ? 0.4 : 1 }}
             >
               🗑 Limpar
             </button>
