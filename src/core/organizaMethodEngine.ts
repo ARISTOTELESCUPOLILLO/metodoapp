@@ -315,6 +315,7 @@ EIXO OBRIGATÓRIO DA SEQUÊNCIA — INFORMAÇÃO-CHAVE:
 - O fechamento da sequência deve consolidar a decisão em torno deste eixo.
 - Proibido peça que não se conecte de forma evidente ao eixo.
 - ANCORAGEM CONCRETA DO EIXO: a informação-chave nomeia um elemento concreto (produto, peça, serviço, canal, procedimento ou situação) — esse elemento, ou sinônimo direto, deve aparecer no título OU no texto do PRIMEIRO Estático E do Estático Final/última peça — abertura e fechamento da sequência precisam ser reconhecíveis como sendo sobre esse elemento, não sobre um tema genérico do segmento. As peças intermediárias podem tratar o eixo de forma mais abstrata.
+- EXCEÇÃO AO ITEM 8 (PROIBIDO REPETIR A MESMA PALAVRA): o NOME do produto/serviço/objeto concreto do eixo (ex.: "poltrona", "correia", "mangueira") é EXCEÇÃO à regra de não-repetição — pode e deve se repetir, com a MESMA palavra, em todas as peças que tratarem desse elemento. "Sinônimo direto" acima significa variação morfológica do mesmo item (singular/plural: "poltrona"/"poltronas") ou termo realmente equivalente no uso comum — NUNCA outro produto da mesma categoria ("poltrona"→"cadeira", "armário"→"estante", "mangueira"→"cano" são produtos DIFERENTES, e trocar um pelo outro muda o que está sendo vendido). A regra de não-repetição (item 8) e a diversidade lexical continuam valendo para o restante do vocabulário — verbos, adjetivos, conectores — ao redor desse núcleo.
 `
     : '';
 
