@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { getVoiceProfile } from '@/data/brandVoice';
 import { getUserIdFromRequest } from '@/lib/usage.server';
 import { fetchOpenAIChat } from '@/lib/openaiClient.server';
-import { truncateWords, validateSugestao, checkInventedPromotion } from '@/core/textValidation';
+import { truncateWords, validateSugestao, checkInventedPromotion, checkSupplierLanguage } from '@/core/textValidation';
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: 'comercial, desejo, chamada para ação clara',
@@ -134,8 +134,8 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           // Eixos de leitura por segmento — direcionam a sugestão sem virar
           // biblioteca fixa de respostas.
           const SEGMENT_LENS: Record<Seg, string> = {
-            VAREJO: 'compra, uso, manutenção, reposição, escolha, comparação, disponibilidade, estação, produto, necessidade do cliente',
-            'SERVIÇOS': 'problema, dúvida, decisão, risco, confiança, processo, manutenção, prevenção, atendimento, resultado percebido',
+            VAREJO: 'o momento em que o cliente usa o produto no dia a dia e sente a diferença — conforto, espaço, facilidade, agilidade, resultado — não um atributo do produto isolado (embalagem, especificação técnica, disponibilidade em estoque)',
+            'SERVIÇOS': 'o que muda na rotina do cliente antes ou depois do serviço — uma dúvida, decisão, dificuldade ou alívio que ele mesmo vive — não o processo ou método de quem presta o serviço',
             MARCA: 'reconhecimento, identificação, percepção, vínculo, bastidor, diferenciação, valor percebido, história, relação com o público',
           };
 
@@ -193,7 +193,9 @@ CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${c
           // compra/atendimento.
           const itemType = concreteItem ? classifyItemType(concreteItem) : null;
           const segmentForLens: Seg = (itemType && itemType !== segment && segment !== 'MARCA') ? itemType : segment;
-          const segmentLensBlock = `LENTE DO SEGMENTO (${segmentForLens}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segmentForLens]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.`;
+          const segmentLensBlock = `LENTE DO SEGMENTO (${segmentForLens}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segmentForLens]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.
+TESTE DE IDENTIFICAÇÃO DO CLIENTE: a frase final precisa ser algo que o CLIENTE (quem vê o post) diria, perguntaria, sentiria ou viveria. Se a frase descrever um atributo, processo ou metodologia do ponto de vista da empresa/fornecedor — e não uma situação, ganho ou rotina do cliente —, reescreva pelo que o cliente ganha ou pela situação que ele reconhece.
+PROIBIDO (ou variações próximas): "indicada por"/"indicado por", "ajustado conforme", "alinhada com análise", "humanizado"/"humanizada", "pronta(s)/pronto(s) para", "em tempo real", "bem vedada(s)" — são marcas de fala de catálogo ou de metodologia interna do fornecedor, não algo que o cliente diria.`;
 
           const AUDIENCES = ['B2C', 'B2B'] as const;
           type Aud = typeof AUDIENCES[number];
@@ -402,6 +404,7 @@ Retorne JSON EXATAMENTE assim:
 
             motivos = validateSugestao(sugestao, sugestaoMaxWords);
             motivos = motivos.concat(checkInventedPromotion(sugestao, allowedContext, { allowPromoLanguage: allowPromoLanguagePU }));
+            if (mode === 'postunico') motivos = motivos.concat(checkSupplierLanguage(sugestao));
             if (motivos.length === 0) break;
           }
 

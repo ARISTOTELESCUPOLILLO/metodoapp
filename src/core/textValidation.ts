@@ -543,6 +543,32 @@ export function checkInventedPromotion(sugestao: string, allowedContext: string,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU) — linguagem de fornecedor/catálogo (auditoria 2026-06-14):
+// termos que descrevem a frase do ponto de vista da empresa/fornecedor
+// (atributo de produto, metodologia, posicionamento) em vez de uma situação,
+// dúvida ou ganho que o CLIENTE final diria, perguntaria, sentiria ou viveria.
+// ─────────────────────────────────────────────────────────────────────────
+
+const SUPPLIER_LANGUAGE_PATTERNS: RegExp[] = [
+  /indicad[ao]\s+(pel|por)/i,
+  /ajustad[ao]\s+conforme/i,
+  /alinhad[ao]\s+com\s+an[áa]lise/i,
+  /humanizad[ao]/i,
+  /pront[ao]s?\s+para/i,
+  /em\s+tempo\s+real/i,
+  /bem\s+vedad[ao]s?/i,
+];
+
+export function checkSupplierLanguage(sugestao: string): string[] {
+  const trimmed = sugestao.trim();
+  for (const re of SUPPLIER_LANGUAGE_PATTERNS) {
+    const m = trimmed.match(re);
+    if (m) return [`sugestão usa fala de fornecedor/catálogo ("${m[0]}") em vez de algo que o cliente diria, perguntaria, sentiria ou viveria`];
+  }
+  return [];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // E4 — limpeza determinística (fallback final, sem chamada de API)
 // ─────────────────────────────────────────────────────────────────────────
 
