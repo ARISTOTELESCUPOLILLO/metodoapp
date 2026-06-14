@@ -40,21 +40,22 @@ function seedFromString(s: string): number {
   return Math.abs(h);
 }
 
-// Lentes de abertura — 8 formas internas de encontrar o ASSUNTO da
-// Informação-chave (Sugestão MOP e PU) a partir do elemento concreto e da
-// atividade. São orientação de geração apenas: nunca aparecem no JSON de
-// saída nem na UI, e não criam tensão, promessa emocional, progressão ou
-// linguagem de campanha — apenas variam o ângulo de observação de um fato
-// concreto.
+// Lentes de abertura — 8 formas internas de variar o ÂNGULO da
+// Informação-chave (Sugestão MOP e PU) sobre o CONTEXTO REAL DE USO já
+// identificado a partir do elemento concreto e da atividade. São orientação
+// de geração apenas: nunca aparecem no JSON de saída nem na UI, não criam
+// uma situação nova (o contexto real de uso já foi definido antes) e não
+// introduzem tensão, promessa emocional, progressão ou linguagem de
+// campanha — apenas escolhem um recorte dentro do contexto já identificado.
 const OPENING_LENSES: { nome: string; guia: string }[] = [
-  { nome: 'Situação real', guia: 'Parta de uma situação real e cotidiana ligada ao elemento concreto — algo que de fato acontece nesse ramo, descrito sem dramatizar.' },
-  { nome: 'Dúvida comum', guia: 'Parta de uma dúvida comum que clientes têm sobre o elemento concreto antes de usar, contratar ou comprar.' },
-  { nome: 'Oportunidade', guia: 'Parta de um contexto, uso ou momento em que o elemento concreto se encaixa bem — uma oportunidade objetiva, sem tom de campanha.' },
-  { nome: 'Processo', guia: 'Parta de uma etapa do processo do dia a dia que envolve o elemento concreto — como ele é feito, escolhido ou mantido.' },
-  { nome: 'Resultado observável', guia: 'Parta de um resultado concreto e observável que o elemento entrega ou permite — algo que se nota no dia a dia.' },
-  { nome: 'Escolha antes da compra', guia: 'Parta de um critério ou detalhe que faz diferença na hora de escolher o elemento concreto.' },
-  { nome: 'Necessidade percebida', guia: 'Parta de uma necessidade real e concreta que o elemento atende.' },
-  { nome: 'Erro evitável', guia: 'Parta de um erro comum e evitável relacionado ao elemento concreto — descrito como fato, sem culpar o cliente.' },
+  { nome: 'Situação real', guia: 'Dentro do contexto real de uso já identificado, escolha um momento específico e cotidiano em que ele acontece — descrito sem dramatizar.' },
+  { nome: 'Dúvida comum', guia: 'Dentro do contexto real de uso já identificado, escolha uma dúvida comum que clientes têm antes de usar, contratar ou comprar nesse contexto.' },
+  { nome: 'Oportunidade', guia: 'Dentro do contexto real de uso já identificado, escolha um momento em que o elemento se encaixa bem nesse contexto — uma oportunidade objetiva, sem tom de campanha.' },
+  { nome: 'Processo', guia: 'Dentro do contexto real de uso já identificado, escolha uma etapa do processo que envolve o elemento nesse contexto — como ele é feito, escolhido ou mantido.' },
+  { nome: 'Resultado observável', guia: 'Dentro do contexto real de uso já identificado, escolha um resultado concreto e observável que o elemento entrega ou permite nesse contexto.' },
+  { nome: 'Escolha antes da compra', guia: 'Dentro do contexto real de uso já identificado, escolha um critério ou detalhe que faz diferença na hora de escolher o elemento para esse uso.' },
+  { nome: 'Necessidade percebida', guia: 'Dentro do contexto real de uso já identificado, escolha a necessidade real que o elemento atende nesse contexto.' },
+  { nome: 'Erro evitável', guia: 'Dentro do contexto real de uso já identificado, escolha um erro comum e evitável relacionado a esse uso — descrito como fato, sem culpar o cliente.' },
 ];
 
 export const Route = createFileRoute('/api/suggest-keyinfo')({
@@ -112,14 +113,14 @@ A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entende
 
 CENA CONCRETA: a sugestão deve partir de uma situação real e reconhecível desse ramo — um produto, peça, ferramenta, canal, procedimento ou momento específico do dia a dia — e NÃO de um conceito amplo que serviria para qualquer empresa do segmento ${segment} (ex.: "atendimento gera confiança", "escolha certa evita problemas", "empresa próxima vira referência").
 Contraste esperado — exemplos de FORMATO de OUTROS RAMOS (não copie o vocabulário ou os produtos destes exemplos; servem só para mostrar o tipo de especificidade esperado — a sua sugestão deve usar vocabulário de "${mainActivity}", não destes exemplos): em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (exemplo do ramo consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (exemplo do ramo peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (exemplo do ramo ferramentas e máquinas).
-TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial.`
+TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial. Essa cena é o CONTEXTO REAL DE USO da sugestão — a lente interna de geração (mais abaixo) escolhe apenas o ÂNGULO dentro dela, sem criar uma situação nova.`
             : '';
           const ancoragemAtividadeMarca = mainActivity.trim()
             ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA MARCA:
 A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa marca faz, oferece ou representa — é dali que a sugestão deve nascer. O NOME DA MARCA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
 
 CENA CONCRETA: a sugestão deve partir de um elemento real e reconhecível dessa marca — um ingrediente, material, processo, ritual, território, gesto ou característica específica${mode === 'metodo' ? ' (sem dor do cliente, sem linguagem de venda)' : ''} — e NÃO de um conceito amplo que serviria para qualquer marca do segmento (ex.: "reconhecimento", "identificação", "vínculo", "valor percebido").
-TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial.`
+TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescreva ancorando em algo reconhecível da marca "${mainActivity}". Para atividades mais abstratas, não force um elemento artificial. Esse elemento é o CONTEXTO REAL DE USO da sugestão — a lente interna de geração (mais abaixo) escolhe apenas o ÂNGULO dentro dele, sem criar uma situação nova.`
             : '';
           const ancoragemBlock = segment === 'MARCA' ? ancoragemAtividadeMarca : ancoragemAtividade;
 
@@ -130,7 +131,9 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
           const concreteItem = pickConcreteItem(selectedProducts, attempt, previousSugs);
           const elementoConcretoBlock = concreteItem
             ? `ELEMENTO CONCRETO DESTA SUGESTÃO: "${concreteItem}"
-Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}`
+Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}
+
+CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.`
             : '';
 
           // Reforço final (recência) — repete, já perto do JSON de saída, que o
@@ -194,6 +197,7 @@ ${mode === 'metodo'
   : 'Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade.'} Entre 4 e 10 palavras (máximo absoluto 10).
 SINTAXE — NÚCLEO DA FRASE: o núcleo (sujeito da frase ou centro da locução) segue esta ordem de prioridade: (1) o ELEMENTO CONCRETO desta sugestão (produto/serviço ou variação direta dele), quando houver; (2) categoria, procedimento, ferramenta, equipamento, recurso ou solução real da atividade; (3) a própria ATIVIDADE da empresa, quando não houver elemento concreto. A frase pode ser uma locução sem verbo (ex.: "[item] para [situação/uso]") ou uma frase com sujeito e predicado — ambas válidas, desde que o núcleo siga essa ordem. NÃO use como núcleo principal: termos abstratos ("confiança", "qualidade", "segurança", "clareza", "crescimento", "inovação", "autoridade", "relacionamento", "resultado", "presença", "organização"), verbos no infinitivo nominalizados ("crescer", "confiar", "melhorar", "transformar", "organizar") ou locuções genéricas ("o cuidado", "o diferencial", "a escolha certa") — esses termos só valem como consequência, predicado ou qualificador, nunca como núcleo. Evite cláusulas relativas encadeadas ("que X que Y que Z").
 VEROSSIMILHANÇA: a frase precisa ser algo que poderia acontecer de verdade com este produto, serviço ou atividade — sem função, causa-efeito, condição, benefício técnico ou comportamento não informado e implausível para o segmento ${segment}. Teste: "isso poderia acontecer de verdade com esse produto/serviço/atividade?" — se não, reescreva.
+CONTEXTO REAL DE USO: a situação descrita deve ser específica do contexto de uso do elemento concreto (ou da atividade, se não houver elemento concreto) dentro de "${mainActivity}" — não um cenário genérico que serviria igual para o mesmo item ou atividade em outro contexto (uso doméstico, social, outro ramo, outro tipo de cliente). Teste: "essa situação só faz sentido porque está em '${mainActivity}', ou serviria igual em qualquer outro lugar?" — se servir igual em qualquer lugar, reescreva ancorando no contexto real desse ramo.
 NATURALIDADE: a frase deve parecer uma pauta de conteúdo real, do jeito que alguém do ramo falaria — não um slogan, conceito institucional ou frase tecnicamente correta porém artificial. Locuções sem verbo são bem-vindas quando soarem mais naturais que uma frase completa. Se a frase parecer academicamente correta mas estranha ao jeito comum de falar do segmento ${segment}, reescreva de forma mais direta e reconhecível.
 ${mode === 'postunico' ? 'Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.\n' : ''}${proibicoesInventar}
 LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se precisar trocar uma palavra grande por palavras mais curtas e isso aproximar a frase do limite de 10, prefira isso a manter um termo difícil — mas nunca ultrapasse 10 palavras. EXCEÇÃO: se houver um elemento concreto central (produto, peça, serviço, objeto, procedimento) vindo do texto do usuário ou da atividade, esse termo pode ter mais de 3 sílabas (ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia") — não o troque por palavra genérica só para simplificar.`;
@@ -227,7 +231,7 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
           // promessa, progressão ou linguagem de campanha.
           const lensIndex = (attempt + seedFromString(companyName + mainActivity)) % OPENING_LENSES.length;
           const lens = OPENING_LENSES[lensIndex];
-          const lensGuardrail = ' Esta lente define apenas o ÂNGULO da frase — não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal.';
+          const lensGuardrail = ' Esta lente define apenas o ÂNGULO da frase dentro do CONTEXTO REAL DE USO já identificado — não cria uma situação nova, não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal. A lente é um mecanismo interno: a frase final não deve deixar reconhecível qual lente foi usada — só devem aparecer produto/serviço, contexto real de uso e situação plausível em linguagem natural.';
           const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}${lensGuardrail}`;
           // Na PU, a lente serve só para variar o ASSUNTO do post único — não
           // altera o formato definido em ESTILO DA SUGESTÃO (POST ÚNICO) e não
