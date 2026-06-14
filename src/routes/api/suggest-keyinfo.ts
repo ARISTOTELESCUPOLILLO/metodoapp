@@ -40,7 +40,7 @@ function seedFromString(s: string): number {
   return Math.abs(h);
 }
 
-// Lentes de abertura — 15 formas internas de encontrar o ASSUNTO da
+// Lentes de abertura — 8 formas internas de encontrar o ASSUNTO da
 // Informação-chave (Sugestão MOP e PU) a partir do elemento concreto e da
 // atividade. São orientação de geração apenas: nunca aparecem no JSON de
 // saída nem na UI, e não criam tensão, promessa emocional, progressão ou
@@ -52,15 +52,8 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
   { nome: 'Oportunidade', guia: 'Parta de um contexto, uso ou momento em que o elemento concreto se encaixa bem — uma oportunidade objetiva, sem tom de campanha.' },
   { nome: 'Processo', guia: 'Parta de uma etapa do processo do dia a dia que envolve o elemento concreto — como ele é feito, escolhido ou mantido.' },
   { nome: 'Resultado observável', guia: 'Parta de um resultado concreto e observável que o elemento entrega ou permite — algo que se nota no dia a dia.' },
-  { nome: 'Uso no dia a dia', guia: 'Parta de como o elemento concreto aparece no dia a dia de quem usa, compra ou contrata.' },
   { nome: 'Escolha antes da compra', guia: 'Parta de um critério ou detalhe que faz diferença na hora de escolher o elemento concreto.' },
-  { nome: 'Comparação prática', guia: 'Parta de uma comparação prática entre opções, tipos ou versões do elemento concreto.' },
-  { nome: 'Problema recorrente', guia: 'Parta de um problema recorrente e concreto ligado ao elemento — descrito como fato do dia a dia, sem dramatizar.' },
   { nome: 'Necessidade percebida', guia: 'Parta de uma necessidade real e concreta que o elemento atende.' },
-  { nome: 'Benefício concreto', guia: 'Parta de um benefício direto e concreto do elemento — o que ele resolve ou facilita na prática.' },
-  { nome: 'Sinal de atenção', guia: 'Parta de um sinal ou detalhe perceptível que indica quando algo relacionado ao elemento concreto precisa de atenção.' },
-  { nome: 'Decisão comum do cliente', guia: 'Parta de uma decisão comum que o cliente toma envolvendo o elemento concreto.' },
-  { nome: 'Contexto de uso', guia: 'Parta do ambiente, local ou contexto em que o elemento concreto costuma ser usado.' },
   { nome: 'Erro evitável', guia: 'Parta de um erro comum e evitável relacionado ao elemento concreto — descrito como fato, sem culpar o cliente.' },
 ];
 
@@ -137,7 +130,7 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
           const concreteItem = pickConcreteItem(selectedProducts, attempt, previousSugs);
           const elementoConcretoBlock = concreteItem
             ? `ELEMENTO CONCRETO DESTA SUGESTÃO: "${concreteItem}"
-Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele deve estar no CENTRO da sugestão: construa a cena, situação, dúvida, escolha, característica ou momento em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}`
+Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}`
             : '';
 
           // Reforço final (recência) — repete, já perto do JSON de saída, que o
@@ -199,7 +192,9 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === 'MAR
 ${mode === 'metodo'
   ? 'Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade — sem tensão emocional, sem promessa e sem linguagem de campanha.'
   : 'Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade.'} Entre 4 e 10 palavras (máximo absoluto 10).
-SINTAXE: qualquer palavra substantivada pode ser sujeito — substantivo, adjetivo, verbo no infinitivo ou locução; não restrinja a papéis pessoais. Evite cláusulas relativas encadeadas ("que X que Y que Z").
+SINTAXE — NÚCLEO DA FRASE: o núcleo (sujeito da frase ou centro da locução) segue esta ordem de prioridade: (1) o ELEMENTO CONCRETO desta sugestão (produto/serviço ou variação direta dele), quando houver; (2) categoria, procedimento, ferramenta, equipamento, recurso ou solução real da atividade; (3) a própria ATIVIDADE da empresa, quando não houver elemento concreto. A frase pode ser uma locução sem verbo (ex.: "[item] para [situação/uso]") ou uma frase com sujeito e predicado — ambas válidas, desde que o núcleo siga essa ordem. NÃO use como núcleo principal: termos abstratos ("confiança", "qualidade", "segurança", "clareza", "crescimento", "inovação", "autoridade", "relacionamento", "resultado", "presença", "organização"), verbos no infinitivo nominalizados ("crescer", "confiar", "melhorar", "transformar", "organizar") ou locuções genéricas ("o cuidado", "o diferencial", "a escolha certa") — esses termos só valem como consequência, predicado ou qualificador, nunca como núcleo. Evite cláusulas relativas encadeadas ("que X que Y que Z").
+VEROSSIMILHANÇA: a frase precisa ser algo que poderia acontecer de verdade com este produto, serviço ou atividade — sem função, causa-efeito, condição, benefício técnico ou comportamento não informado e implausível para o segmento ${segment}. Teste: "isso poderia acontecer de verdade com esse produto/serviço/atividade?" — se não, reescreva.
+NATURALIDADE: a frase deve parecer uma pauta de conteúdo real, do jeito que alguém do ramo falaria — não um slogan, conceito institucional ou frase tecnicamente correta porém artificial. Locuções sem verbo são bem-vindas quando soarem mais naturais que uma frase completa. Se a frase parecer academicamente correta mas estranha ao jeito comum de falar do segmento ${segment}, reescreva de forma mais direta e reconhecível.
 ${mode === 'postunico' ? 'Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.\n' : ''}${proibicoesInventar}
 LINGUAGEM: uma ideia principal, ordem direta, palavras curtas e do dia a dia — priorize termos de até 3 sílabas sempre que houver opção mais simples (ex.: "jeito" em vez de "organização", "bom"/"rápido" em vez de "eficiente", "passos" em vez de "procedimentos", "clientes" em vez de "compradores", "perdem"/"deixam passar" em vez de "ignoram"). Uma pessoa com ensino médio deve entender de primeira, sem reler. PROIBIDO: "decisores", "receita previsível", "riscos operacionais", "maximizar resultados", "estruturar processos", "estratégias digitais eficazes", "impacto real", "organização", "eficiente", "procedimentos", "compradores", termos técnicos de consultoria e qualquer palavra formal/comprida quando existir alternativa popular mais curta. Prefira: "vendas" a "receita", "empresas" a "decisores", "melhorar" a "otimizar", "clientes" a "compradores", "jeito" a "organização", "bom" a "eficiente". Se precisar trocar uma palavra grande por palavras mais curtas e isso aproximar a frase do limite de 10, prefira isso a manter um termo difícil — mas nunca ultrapasse 10 palavras. EXCEÇÃO: se houver um elemento concreto central (produto, peça, serviço, objeto, procedimento) vindo do texto do usuário ou da atividade, esse termo pode ter mais de 3 sílabas (ex.: "equipamento", "manutenção", "lubrificante", "orçamento", "diagnóstico", "estratégia") — não o troque por palavra genérica só para simplificar.`;
 
@@ -213,7 +208,7 @@ Escreva como se estivesse falando com alguém que usa o produto/serviço na pró
 A Informação-chave deve falar com o dono, sócio, gestor ou responsável pelo negócio.
 Foque em situações reais de trabalho: atendimento, resultado, organização, vendas, prazo, confiança ou crescimento.
 Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".
-SUJEITO DA FRASE (B2B): qualquer palavra da língua portuguesa pode ser sujeito quando substantivada — substantivo concreto ou abstrato, adjetivo, verbo no infinitivo, locução. Não restrinja a papéis pessoais ("gestores", "equipes", "donos"). Exemplos válidos: "A organização que falta custa caro", "Não responder a tempo afasta cliente", "Confiar custa caro quando a marca falha", "O detalhe que o cliente percebe define a escolha", "Crescer exige comunicação alinhada". NUNCA use "clientes", "consumidores" ou "compradores" como sujeito principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
+NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo — produto/serviço/categoria/atividade no núcleo, nunca um papel pessoal ("gestores", "equipes", "donos") nem um conceito abstrato de gestão. Exemplos de FORMATO de referência (não copie o vocabulário, mostram apenas a estrutura): "mesa de reunião para equipes maiores", "módulo financeiro para contas a pagar", "correia industrial para manutenção preventiva". NUNCA use "clientes", "consumidores" ou "compradores" como núcleo principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
 
           const previousBlock = previousSugs.length
             ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos — gere algo completamente diferente, sobre outro produto, serviço ou situação):\n${previousSugs.map(s => `- "${s}"`).join('\n')}`
@@ -232,7 +227,8 @@ SUJEITO DA FRASE (B2B): qualquer palavra da língua portuguesa pode ser sujeito 
           // promessa, progressão ou linguagem de campanha.
           const lensIndex = (attempt + seedFromString(companyName + mainActivity)) % OPENING_LENSES.length;
           const lens = OPENING_LENSES[lensIndex];
-          const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}`;
+          const lensGuardrail = ' Esta lente define apenas o ÂNGULO da frase — não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal.';
+          const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}${lensGuardrail}`;
           // Na PU, a lente serve só para variar o ASSUNTO do post único — não
           // altera o formato definido em ESTILO DA SUGESTÃO (POST ÚNICO) e não
           // introduz tensão, motivação ou progressão de sequência.
@@ -318,8 +314,8 @@ Retorne JSON EXATAMENTE assim:
           // D1 (validateSugestao) + 1 retry no máximo: se a sugestão sair vaga
           // (muito curta/longa, terminação pendurada ou frase-clichê), pede uma
           // nova versão reforçando o motivo. Nunca retorna erro ao usuário por
-          // causa disso — devolve a melhor tentativa, sempre truncada ao máximo
-          // do modo (10 palavras no MOP, 12 na PU — ver REGRA DE LIMITE).
+          // causa disso — devolve a melhor tentativa, sempre truncada a
+          // sugestaoMaxWords (10 palavras, MOP e PU).
           const MAX_SUGGEST_ATTEMPTS = 2;
           let sugestao = '';
           let motivos: string[] = [];
