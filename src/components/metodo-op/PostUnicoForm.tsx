@@ -4,6 +4,7 @@ import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, Post
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
 import { regenerateBlock } from '../../services/regenerateBlock';
 import { autoRegenerateFlaggedPostUnico } from '../../services/autoRegenerate';
+import { judgeAndRegeneratePostUnico } from '../../services/judgeContent';
 import { getAuthHeaders } from '../../services/authHeaders';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
 import ProductsChecklist from './ProductsChecklist';
@@ -155,6 +156,20 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
       setCopy(result);
       setCopyOriginal(result);
       copyKeyInfoRef.current = data.keyInfo;
+
+      // D2 — juiz semântico em lote, best-effort, fora do caminho crítico:
+      // roda depois que o resultado já está na tela; se corrigir algo, atualiza.
+      judgeAndRegeneratePostUnico(result, {
+        companyName,
+        mainActivity,
+        keyInfo: data.keyInfo,
+        segment: kit.segment,
+      }).then((updated) => {
+        if (updated) {
+          setCopy(updated);
+          setCopyOriginal(updated);
+        }
+      });
     } catch (e) {
       setCopyError((e as Error).message);
     } finally {
