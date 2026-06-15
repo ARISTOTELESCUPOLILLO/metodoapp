@@ -4,6 +4,9 @@
   "account_id": "17247f43dbdfa8dc34da28ed25f8fe8c",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
   "main": "src/server.ts",
   "alias": {
     "tanstack-start-injected-head-scripts:v": "./src/lib/empty.ts",

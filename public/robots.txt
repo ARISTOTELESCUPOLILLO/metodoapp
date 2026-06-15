@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /admin
+Disallow: /conta
+Disallow: /historico
+Disallow: /ajustes
+Disallow: /login
+Disallow: /signup
+Disallow: /esqueci-senha
+Disallow: /reset-password
