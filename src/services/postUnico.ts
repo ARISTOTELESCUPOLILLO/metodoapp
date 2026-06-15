@@ -4,7 +4,7 @@ import type { FeedItem } from '../types';
 import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule, buildScriptAccentBlock } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
-import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule, buildProductHierarchyBlock } from '../core/visualDirection';
+import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule, buildProductHierarchyBlock, PersonagemGender } from '../core/visualDirection';
 import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
@@ -417,13 +417,14 @@ export function buildPostUnicoPrompt(params: {
   kit: BrandKit;
   copy?: PostUnicoCopy;
   references?: PostUnicoReferences;
+  forcedGender?: PersonagemGender;
 }): string {
-  const { data, kit, copy, references } = params;
+  const { data, kit, copy, references, forcedGender } = params;
   const isNenhum = data.objetivo === 'nenhum';
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
   const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo, !!references?.produtos?.length);
-  const variationBlock = data.direcao === 'mood' ? pickImageVariationBlock(data.mood, !!references?.avatar, copy?.titulo, copy?.texto) : '';
+  const variationBlock = data.direcao === 'mood' ? pickImageVariationBlock(data.mood, !!references?.avatar, copy?.titulo, copy?.texto, forcedGender) : '';
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
   const zona = logoZoneDescription(kit.logoPosition);
@@ -582,9 +583,10 @@ export async function generatePostUnico(params: {
   copy?: PostUnicoCopy;
   references?: PostUnicoReferences;
   preferredSlot?: string;
+  forcedGender?: PersonagemGender;
 }): Promise<string> {
-  const { data, kit, copy, references, preferredSlot } = params;
-  const prompt = buildPostUnicoPrompt({ data, kit, copy, references });
+  const { data, kit, copy, references, preferredSlot, forcedGender } = params;
+  const prompt = buildPostUnicoPrompt({ data, kit, copy, references, forcedGender });
 
   // Coleta refs ordenadas: avatar -> cenário -> produtos por número.
   const buildRefs = (withAvatar: boolean): string[] => {

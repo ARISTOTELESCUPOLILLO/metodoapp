@@ -243,6 +243,19 @@ const PERSONAGEM_GENDER_VARIATIONS: string[] = [
   'homem',
 ];
 
+export type PersonagemGender = 'mulher' | 'homem';
+
+// Dispara só quando o título/texto menciona "mulher(es)" literalmente — marcador
+// inequívoco de pessoa retratada. Termos genéricos do PÚBLICO (gestoras,
+// empresárias, executivas, decisoras) não entram aqui: descrevem para quem a
+// mensagem fala, não necessariamente quem aparece na imagem.
+const FEMININE_COPY_RE = /\bmulheres?\b/i;
+
+export function detectForcedGenderFromCopy(titulo?: string, texto?: string): PersonagemGender | null {
+  const copyText = `${titulo ?? ''} ${texto ?? ''}`;
+  return FEMININE_COPY_RE.test(copyText) ? 'mulher' : null;
+}
+
 // IMPACTO: 7 opções sorteáveis, aplicáveis a múltiplos segmentos.
 // Variações cobrindo ambientes, enquadramentos, posturas e tons emocionais
 // distintos para garantir diversidade visual real entre gerações consecutivas.
@@ -581,7 +594,7 @@ export function getMoodSignature(mood: MoodCode): string {
 
 // Sorteia uma variação de personagem/ruptura para injetar no prompt de IMAGEM a cada geração.
 // Garante que "Gerar outra" nunca reuse a mesma pose — chame a cada vez que o prompt for construído.
-export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string): string {
+export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string, forcedGender?: PersonagemGender): string {
   if (!mood) return '';
 
   const TEMA_DERIVATION_RULE = 'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material, direcionar produção ou apresentar plano a alguém; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas/modificadores do título ("rumo", "avançar", "longe", "crescimento", "rápido", "forte", "claro") = intenção ou qualidade do ofício — nunca deslocamento físico nem propriedade literal.';
@@ -618,16 +631,14 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
   // própria foto — sortear e injetar "PRECEDÊNCIA MÁXIMA" sobre outro gênero aqui
   // entra em conflito direto com a instrução de preservar identidade do avatar
   // (referenceAnchor: "NÃO mude o gênero"), e a IA acaba descartando o avatar e
-  // gerando uma pessoa genérica do gênero sorteado. Sem avatar, o sorteio segue
-  // normalmente — ele existe pra evitar viés sempre-masculino no personagem fictício.
-  // Se o copy já usou marcadores femininos explícitos, a imagem deve concordar.
-  const FEMININE_COPY_RE = /\bgestoras?\b|\bmulheres?\b|\bempresárias?\b|\bexecutivas?\b|\bdecisoras?\b/i;
-  const copyText = `${titulo ?? ''} ${texto ?? ''}`;
-  const detectedGender = FEMININE_COPY_RE.test(copyText) ? 'mulher' : null;
+  // gerando uma pessoa genérica do gênero sorteado. Sem avatar, prioridade é:
+  // gênero atribuído/persistido pelo chamador (forcedGender) > copy explícito
+  // ("mulher(es)") > sorteio — ele existe pra evitar viés sempre-masculino no
+  // personagem fictício quando nada mais decide.
   const genderBlock = hasAvatarRef
     ? ''
     : (() => {
-        const gender = detectedGender ?? pickRandom(PERSONAGEM_GENDER_VARIATIONS);
+        const gender = forcedGender ?? detectForcedGenderFromCopy(titulo, texto) ?? pickRandom(PERSONAGEM_GENDER_VARIATIONS);
         return `Gênero: ${gender} — sobrepõe gênero da CENA, preservando ação e contexto. `;
       })();
 

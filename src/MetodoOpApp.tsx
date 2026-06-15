@@ -12,6 +12,7 @@ import { defaultVoice } from './data/brandVoice';
 import { generateMethodContent } from './services/api';
 import { judgeAndRegenerateContent } from './services/judgeContent';
 import { generatePostUnico, generatePostUnicoCaption, type PostUnicoCaption, type PostUnicoReferences } from './services/postUnico';
+import { detectForcedGenderFromCopy, PersonagemGender } from './core/visualDirection';
 import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from './services/brandKit';
 import { useServerFn } from '@tanstack/react-start';
 import { saveKit, loadKit, saveForm, loadForm, clearAll } from './utils/storage';
@@ -116,6 +117,10 @@ export default function App() {
   });
   const [postUnico, setPostUnico] = useState<PostUnicoFormData>(loadPostUnico);
   const [postUnicoImg, setPostUnicoImg] = useState<string | undefined>();
+  // Gênero do personagem desta peça — atribuído na primeira geração e
+  // persistido entre regenerações ("gerar de novo" não troca o gênero por
+  // acaso). Resetado em handleClearPostUnico (peça nova).
+  const postUnicoGenderRef = useRef<PersonagemGender | undefined>(undefined);
   const [postUnicoStarted, setPostUnicoStarted] = useState(false);
   const [caption, setCaption] = useState<PostUnicoCaption | undefined>();
   const [captionLoading, setCaptionLoading] = useState(false);
@@ -450,6 +455,7 @@ export default function App() {
     setCaption(undefined);
     setCaptionError('');
     setError('');
+    postUnicoGenderRef.current = undefined;
   }
 
   async function handleClearMethodResult() {
@@ -563,7 +569,10 @@ export default function App() {
         if (lista.length) references.produtos = lista;
       }
       const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length);
-      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot });
+      if (postUnicoGenderRef.current === undefined) {
+        postUnicoGenderRef.current = detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ?? (Math.random() < 0.5 ? 'mulher' : 'homem');
+      }
+      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot, forcedGender: postUnicoGenderRef.current });
       // Persiste direto no localStorage (independe do componente seguir montado —
       // cobre o caso de geração em segundo plano após navegar para outra página).
       try { localStorage.setItem(`metodo-op-postunico-img-v1:${effectiveUserId}`, JSON.stringify(dataUrl)); } catch {}

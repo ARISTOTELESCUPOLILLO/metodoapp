@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 function insertSignature(caption: string, signature: string): string {
   const trimmed = caption.trim();
@@ -50,6 +50,7 @@ import { BrandKit, CarouselCard, FeedItem, ImageKit, MethodOpResult, MoodCode, R
 import { downloadDataUrl, downloadBlob, composeFeedPng, composeFinalPng, composeReelsPng, composeReelsTitlePng } from '../../utils/canvasComposer';
 import { burnTitleIntoVideo } from '../../utils/burnTitleIntoVideo';
 import { generatePostImage } from '../../services/api';
+import { detectForcedGenderFromCopy, PersonagemGender } from '../../core/visualDirection';
 import { generateSequencePdf } from '../../utils/generatePdf';
 import { mopName } from '../../utils/file';
 import { regenerateBlock, type RegenKind } from '../../services/regenerateBlock';
@@ -108,6 +109,28 @@ function kitHasRefsForFormat(
     (policy.cenarios > 0 && imageKit.cenarios.some((c) => !!c)) ||
     (policy.produtos > 0 && imageKit.produtos.some((p) => !!p))
   );
+}
+
+// Atribui o gênero do personagem para cada peça de um bloco (estático +
+// carrossel + fechamento): peças cujo título/texto cite "mulher(es)"
+// literalmente ficam com 'mulher' (B2); as demais são balanceadas para que o
+// bloco não concentre 5+ das N peças no mesmo gênero por sorteios
+// independentes. Resultado é calculado uma única vez por `result` (useMemo) e
+// reutilizado em "gerar de novo" — gênero não muda por acaso ao regenerar.
+function computeBlockGenders(pieces: { titulo: string; texto: string }[]): PersonagemGender[] {
+  const assigned: (PersonagemGender | null)[] = pieces.map(p => detectForcedGenderFromCopy(p.titulo, p.texto));
+  let countMulher = assigned.filter(g => g === 'mulher').length;
+  let countHomem = assigned.filter(g => g === 'homem').length;
+  for (let i = 0; i < assigned.length; i++) {
+    if (assigned[i]) continue;
+    let g: PersonagemGender;
+    if (countMulher < countHomem) g = 'mulher';
+    else if (countHomem < countMulher) g = 'homem';
+    else g = Math.random() < 0.5 ? 'mulher' : 'homem';
+    assigned[i] = g;
+    if (g === 'mulher') countMulher++; else countHomem++;
+  }
+  return assigned as PersonagemGender[];
 }
 
 const REGEN_MAX: Record<RegenKind, number> = { titulo: 2, texto: 2, legenda: 2 };
@@ -275,7 +298,7 @@ function EditableField(props: {
   );
 }
 
-function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null } & RefSelectorProps) {
+function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGender }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGender: PersonagemGender } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -309,6 +332,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
         secondaryFont: kit.secondaryFont,
         mood, vertical: 'post', logoPosition: kit.logoPosition,
         leituraCenica: (item as any).leituraCenica,
+        forcedGender,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -428,7 +452,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
   );
 }
 
-function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null } & RefSelectorProps) {
+function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGender }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGender: PersonagemGender } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -462,6 +486,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
         secondaryFont: kit.secondaryFont,
         mood, vertical: 'estatico_final', logoPosition: kit.logoPosition,
         leituraCenica: (item as any).leituraCenica,
+        forcedGender,
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -580,7 +605,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
 }
 
 
-function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null } & RefSelectorProps) {
+function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGenders }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGenders: PersonagemGender[] } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [previews, setPreviews] = useState<(string | null)[]>(() => cards.map((c) => getSessionImage(userId, `carousel:${dayNumber}:${c.card}`)));
   function updatePreview(index: number, value: string) {
@@ -619,6 +644,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         secondaryFont: kit.secondaryFont,
         mood, vertical: 'post', logoPosition: kit.logoPosition,
         leituraCenica: (card as any).leituraCenica,
+        forcedGender: forcedGenders[index],
       });
       const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[index], texto: textos[index], legenda: '', imagem: card.imagePrompt };
       const final = await composeFeedPng(kit, item, url);
@@ -729,6 +755,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             secondaryFont: kit.secondaryFont,
             mood, vertical: 'post', logoPosition: kit.logoPosition,
             leituraCenica: (card as any).leituraCenica,
+            forcedGender: forcedGenders[i],
           });
           const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[i], texto: textos[i], legenda: '', imagem: card.imagePrompt };
           const final = await composeFeedPng(kit, item, url);
@@ -1796,6 +1823,37 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
     : (cotaPersonalizados || ZERO_COTA);
   const extrasCarrossel = cotaPorTipo.carrossel || 0;
 
+  // Gênero do personagem por bloco (estático + carrossel + fechamento) — ver
+  // computeBlockGenders. Memoizado em `result`: persiste entre re-renders e
+  // entre "gerar de novo" de cada peça, e só recalcula quando um novo plano é
+  // gerado (result muda de referência).
+  const blockGenders = useMemo(() => {
+    const feed = result?.feed || [];
+    const estaticosM = feed.filter(f => f.formato !== 'Estático Final');
+    const estaticosFinaisM = feed.filter(f => f.formato === 'Estático Final');
+    const carouselsM: CarouselCard[][] = [];
+    if (result?.carousel?.length) {
+      for (let i = 0; i < result.carousel.length; i += 5) {
+        carouselsM.push(result.carousel.slice(i, i + 5));
+      }
+    }
+    const maxBlocksM = Math.max(estaticosM.length, carouselsM.length, estaticosFinaisM.length);
+    const blocks: { estatico: PersonagemGender; carrossel: PersonagemGender[]; final: PersonagemGender }[] = [];
+    for (let i = 0; i < maxBlocksM; i++) {
+      const pieces: { titulo: string; texto: string }[] = [];
+      if (estaticosM[i]) pieces.push({ titulo: estaticosM[i].titulo, texto: estaticosM[i].texto });
+      (carouselsM[i] || []).forEach(c => pieces.push({ titulo: c.titulo, texto: c.texto }));
+      if (estaticosFinaisM[i]) pieces.push({ titulo: estaticosFinaisM[i].titulo, texto: estaticosFinaisM[i].texto });
+      const genders = computeBlockGenders(pieces);
+      let p = 0;
+      const estatico: PersonagemGender = estaticosM[i] ? genders[p++] : 'homem';
+      const carrossel: PersonagemGender[] = (carouselsM[i] || []).map(() => genders[p++]);
+      const final: PersonagemGender = estaticosFinaisM[i] ? genders[p++] : 'homem';
+      blocks.push({ estatico, carrossel, final });
+    }
+    return blocks;
+  }, [result]);
+
   if (!result) return null;
 
 
@@ -1822,10 +1880,10 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
   }
 
   type DayItem =
-    | { type: 'feed'; day: number; item: FeedItem }
-    | { type: 'final'; day: number; item: FeedItem }
-    | { type: 'carousel'; day: number; cards: CarouselCard[] }
-    | { type: 'reels'; day: number; reels: ReelsGuide };
+    | { type: 'feed'; day: number; block: number; item: FeedItem }
+    | { type: 'final'; day: number; block: number; item: FeedItem }
+    | { type: 'carousel'; day: number; block: number; cards: CarouselCard[] }
+    | { type: 'reels'; day: number; block: number; reels: ReelsGuide };
 
   const allFeed = result.feed || [];
   const estaticos = allFeed.filter(f => f.formato !== 'Estático Final');
@@ -1844,10 +1902,10 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
 
   const maxBlocks = Math.max(estaticos.length, carousels.length, reelsList.length, estaticosFinais.length);
   for (let i = 0; i < maxBlocks; i++) {
-    if (estaticos[i]) sequence.push({ type: 'feed', day: day++, item: estaticos[i] });
-    if (carousels[i]) sequence.push({ type: 'carousel', day: day++, cards: carousels[i] });
-    if (reelsList[i]) sequence.push({ type: 'reels', day: day++, reels: reelsList[i] });
-    if (estaticosFinais[i]) sequence.push({ type: 'final', day: day++, item: estaticosFinais[i] });
+    if (estaticos[i]) sequence.push({ type: 'feed', day: day++, block: i, item: estaticos[i] });
+    if (carousels[i]) sequence.push({ type: 'carousel', day: day++, block: i, cards: carousels[i] });
+    if (reelsList[i]) sequence.push({ type: 'reels', day: day++, block: i, reels: reelsList[i] });
+    if (estaticosFinais[i]) sequence.push({ type: 'final', day: day++, block: i, item: estaticosFinais[i] });
   }
 
   return (
@@ -1888,14 +1946,15 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
             </div>
           )}
           {sequence.map((item) => {
+            const bg = blockGenders[item.block];
             if (item.type === 'feed') {
-              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
+              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGender={bg?.estatico ?? 'homem'} />;
             }
             if (item.type === 'final') {
-              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
+              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGender={bg?.final ?? 'homem'} />;
             }
             if (item.type === 'carousel') {
-              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
+              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGenders={bg?.carrossel ?? item.cards.map(() => 'homem' as PersonagemGender)} />;
             }
             if (item.type === 'reels') {
               return <ReelsCard key={`reels-${item.day}`} reels={item.reels} kit={kit} mood={mood} dayNumber={item.day} track={(result as any).track} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} />;
