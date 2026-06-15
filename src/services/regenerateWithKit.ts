@@ -63,6 +63,10 @@ export interface RegenerateInput {
     avatarNum?: 1 | 2 | null;
     cenarioNum?: number | null;
     produtosNums?: number[];
+    // Distribuição de fotos de produto no carrossel (VAREJO): quando true,
+    // o produto referenciado deve aparecer em DETALHE/RECORTE (não o produto
+    // inteiro) neste card — ver distributeProduto em ResultsView.tsx.
+    produtoDetalhe?: boolean;
   };
   // Atividade da empresa (ancoragem semântica) — reservado para futuro uso.
   mainActivity?: string;
@@ -195,7 +199,18 @@ const CENARIO_FRAMING_POOL: readonly string[] = [
   'enquadramento diagonal / outro canto do ambiente — plano médio-fechado, recorte diferente do mesmo local',
 ];
 
-function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?: { primary: string; accent: string }, cardCarrossel?: number, segment?: Segment): string {
+// Variações de enquadramento para o card de "PRODUTO EM DETALHE" do carrossel
+// (VAREJO) — quando a distribuição de fotos (distributeProduto, ResultsView)
+// decide que este card mostra um RECORTE/APROXIMAÇÃO do produto em vez do
+// produto inteiro. Escolha determinística por índice do card, mesma lógica
+// do CENARIO_FRAMING_POOL — dá variedade visual sem repetir o mesmo recorte.
+const PRODUTO_DETALHE_POOL: readonly string[] = [
+  'aproxime em DETALHE de uma parte específica do produto — uma textura, acabamento, etiqueta, encaixe ou material — sem mostrar o produto inteiro',
+  'plano de DETALHE em outro ângulo do mesmo produto — uma borda, canto, costura, botão ou elemento funcional, em close-up, sem mostrar o produto inteiro',
+  'RECORTE/aproximação de uma seção do produto em uso ou em destaque (ex.: mãos manipulando ou apresentando essa parte), sem revelar o produto completo',
+];
+
+function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?: { primary: string; accent: string }, cardCarrossel?: number, segment?: Segment, produtoDetalhe?: boolean): string {
   // Ordem dos prefixos espelha a ordem em que as imagens são enviadas
   // (avatar → cenário → produtos), pra que a numeração "imagem #1/#2/#3"
   // case com a posição em image_urls no servidor.
@@ -271,16 +286,30 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
   }
   if (refs.produtos?.length) {
     const n = refs.produtos.length;
-    lines.push(
-      `IMAGEM${n > 1 ? 'NS' : ''} #${idx}${n > 1 ? `..#${idx + n - 1}` : ''} = PRODUTO${n > 1 ? 'S' : ''} OBRIGATÓRIO${n > 1 ? 'S' : ''}. Use EXATAMENTE este produto, com mesmo formato, mesma cor, mesmo rótulo e mesma embalagem. Não invente outra versão, não troque a marca, não altere o design.`,
-    );
-    lines.push(
-      buildProductHierarchyBlock({
-        produtosCount: n,
-        hasCenario: !!refs.cenario,
-        hasAvatar: !!refs.avatar,
-      }),
-    );
+    if (n === 1 && produtoDetalhe) {
+      const detalhePick = cardCarrossel != null
+        ? PRODUTO_DETALHE_POOL[(cardCarrossel - 1) % PRODUTO_DETALHE_POOL.length]
+        : PRODUTO_DETALHE_POOL[0];
+      lines.push(
+        `IMAGEM #${idx} = PRODUTO DE REFERÊNCIA — DETALHE/RECORTE OBRIGATÓRIO (não o produto inteiro): ${detalhePick}. Mantenha fidelidade ao produto real: mesma cor, material, rótulo e acabamento da referência — apenas o ENQUADRAMENTO é parcial/aproximado. Não invente outro produto, não troque a marca, não altere o design.`,
+      );
+    } else {
+      lines.push(
+        `IMAGEM${n > 1 ? 'NS' : ''} #${idx}${n > 1 ? `..#${idx + n - 1}` : ''} = PRODUTO${n > 1 ? 'S' : ''} OBRIGATÓRIO${n > 1 ? 'S' : ''}. Use EXATAMENTE este produto, com mesmo formato, mesma cor, mesmo rótulo e mesma embalagem. Não invente outra versão, não troque a marca, não altere o design.`,
+      );
+    }
+    // Em modo detalhe/recorte, a hierarquia padrão de produto não se aplica:
+    // AVATAR_VS_PRODUTO_SINGULAR pede um ângulo que "revele a forma por
+    // inteiro" do produto, o que contradiria o recorte pedido acima.
+    if (!(n === 1 && produtoDetalhe)) {
+      lines.push(
+        buildProductHierarchyBlock({
+          produtosCount: n,
+          hasCenario: !!refs.cenario,
+          hasAvatar: !!refs.avatar,
+        }),
+      );
+    }
     if (n >= 2) {
       lines.push(
         `REGRA DE CONTAGEM — INEGOCIÁVEL: a imagem final DEVE conter EXATAMENTE ${n} produto${n > 1 ? 's' : ''} visíveis e identificáveis, todos enviados como referência. PROIBIDO omitir, esconder atrás de objetos, cortar fora do quadro ou substituir qualquer um deles. Se o plano aberto não acomodar os ${n}, APROXIME o enquadramento (close-up de produto, detalhe do pé com o tênis, bancada/prateleira com os ${n} itens lado a lado, flat-lay) em vez de mostrar um cenário amplo com apenas parte dos produtos. Conte os produtos na composição final: o número deve ser ${n}.`,
@@ -307,7 +336,7 @@ export async function regenerateWithKit(
   const anchorPrefix = buildAnchorPrefix(references, mood, {
     primary: kit.primaryColor || '#123a63',
     accent: kit.accentColor || kit.secondaryColor || '#f4b000',
-  }, slot.formato === 'carrossel' ? slot.cardCarrossel : undefined, kit.segment);
+  }, slot.formato === 'carrossel' ? slot.cardCarrossel : undefined, kit.segment, selecaoDireta?.produtoDetalhe);
 
   const inferred: 'post' | 'reels' = slot.formato === 'reels' ? 'reels' : 'post';
   const targetFormato = formato ?? inferred;

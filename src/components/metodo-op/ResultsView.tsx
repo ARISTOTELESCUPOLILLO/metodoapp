@@ -605,6 +605,24 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
 }
 
 
+// Distribuição de fotos de produto selecionadas (Kit Imagem) pelos cards do
+// carrossel de VAREJO — sem misturar produtos fora do conteúdo (só usa as
+// fotos selecionadas pelo usuário para este bloco) e sem exigir muitas fotos:
+// 1ª foto = card inicial (produto inteiro); última foto selecionada (até 4)
+// = card final (produto inteiro); fotos do meio (se houver) são distribuídas
+// entre os cards centrais em modo detalhe/recorte — se não houver foto
+// dedicada para um card central, repete (round-robin) uma das fotos do meio
+// (ou a única foto, se só 1 selecionada) em modo detalhe.
+function distributeProduto(produtosNums: number[], index: number, total: number): { num: number; isFull: boolean } | null {
+  const nums = produtosNums.slice(0, 4);
+  if (!nums.length) return null;
+  if (index === 0) return { num: nums[0], isFull: true };
+  if (index === total - 1) return { num: nums[nums.length - 1], isFull: true };
+  const middlePool = nums.length >= 3 ? nums.slice(1, -1) : nums;
+  const m = index - 1;
+  return { num: middlePool[m % middlePool.length], isFull: false };
+}
+
 function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGenders }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGenders: PersonagemGender[] } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [previews, setPreviews] = useState<(string | null)[]>(() => cards.map((c) => getSessionImage(userId, `carousel:${dayNumber}:${c.card}`)));
@@ -664,7 +682,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 
   // Lê seleção efetiva para um card: prefere storage do bloco (consolidado)
   // mapeando card[i] → produto[i]; fallback para storage individual por card.
-  function selecaoParaCard(index: number): { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[] } | null {
+  function selecaoParaCard(index: number): { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[]; produtoDetalhe?: boolean } | null {
     const card = cards[index];
     // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
     const avatarNumDe = (j: any): 1 | 2 | null =>
@@ -676,8 +694,22 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         const j = JSON.parse(raw);
         if (j.enabled) {
           const produtos: number[] = Array.isArray(j.produtosNums) ? j.produtosNums.filter((n: unknown) => typeof n === 'number') : [];
-          const pick = produtos[index] ?? produtos[0] ?? null;
           const avatarNum = avatarNumDe(j);
+          // VAREJO: distribui as fotos selecionadas pelos cards (1ª/última =
+          // produto inteiro, meio = detalhe/recorte) — ver distributeProduto.
+          // Outros segmentos mantêm o comportamento anterior (produto[index]
+          // com fallback para produto[0]).
+          if (segmento === 'VAREJO') {
+            const d = distributeProduto(produtos, index, cards.length);
+            return {
+              usarAvatar: avatarNum != null,
+              avatarNum,
+              cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
+              produtosNums: d ? [d.num] : [],
+              produtoDetalhe: d ? !d.isFull : false,
+            };
+          }
+          const pick = produtos[index] ?? produtos[0] ?? null;
           return {
             usarAvatar: avatarNum != null,
             avatarNum,
