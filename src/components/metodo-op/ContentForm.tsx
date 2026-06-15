@@ -301,7 +301,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           onChange={(e) => update('keyInfo', e.target.value)}
           placeholder={KEYINFO_EXAMPLE[segment]}
           rows={3}
-          style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${suggestExhausted ? '#fcd34d' : '#e2e8f0'}`, fontFamily: 'inherit', fontSize: 14, lineHeight: 1.45, resize: 'vertical', background: suggestExhausted ? '#fffbeb' : '#fff', color: '#0f172a' }}
+          style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${suggestExhausted ? '#fcd34d' : '#e2e8f0'}`, fontFamily: 'inherit', fontSize: 14, lineHeight: 1.45, resize: 'vertical', minHeight: 84, background: suggestExhausted ? '#fffbeb' : '#fff', color: '#0f172a' }}
         />
         {keyInfoCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{keyInfoCorrection.msg}</p>}
         {keyInfoCorrection.error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{keyInfoCorrection.error}</p>}
