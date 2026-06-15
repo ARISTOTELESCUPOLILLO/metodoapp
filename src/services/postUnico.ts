@@ -1,4 +1,4 @@
-import { BrandKit, LogoPosition, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo } from '../types';
+import { BrandKit, LogoPosition, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, ValidationFlag } from '../types';
 import { composeFeedPng } from '../utils/canvasComposer';
 import type { FeedItem } from '../types';
 import { generateImageAsync } from './imageGeneration';
@@ -201,6 +201,7 @@ function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo:
 export interface PostUnicoCopy {
   titulo: string;
   texto: string;
+  flags?: ValidationFlag[];
 }
 
 export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?: string, segment?: string, preferredSlot?: string): Promise<PostUnicoCopy> {
@@ -226,6 +227,7 @@ export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?
   return {
     titulo: String(json.titulo || '').trim(),
     texto: String(json.texto || '').trim(),
+    ...(Array.isArray(json.flags) && json.flags.length > 0 ? { flags: json.flags as ValidationFlag[] } : {}),
   };
 }
 

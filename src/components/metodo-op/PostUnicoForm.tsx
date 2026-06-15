@@ -3,6 +3,7 @@ import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } fro
 import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
 import { regenerateBlock } from '../../services/regenerateBlock';
+import { autoRegenerateFlaggedPostUnico } from '../../services/autoRegenerate';
 import { getAuthHeaders } from '../../services/authHeaders';
 import PostUnicoComposicaoVisual from './PostUnicoComposicaoVisual';
 import ProductsChecklist from './ProductsChecklist';
@@ -138,11 +139,19 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     setCopyLoading(true);
     setCopyError(null);
     try {
-      const result = await generatePostUnicoCopy({
+      const companyName = data.companyName || kit.companyName;
+      const mainActivity = data.mainActivity || kit.mainActivity || '';
+      const generated = await generatePostUnicoCopy({
         ...data,
-        companyName: data.companyName || kit.companyName,
-        mainActivity: data.mainActivity || kit.mainActivity || '',
+        companyName,
+        mainActivity,
       }, kit.brandVoice, kit.segment, puSlot);
+      // E3 — regenera título/texto flagados por D1 antes de exibir ao usuário.
+      const result = await autoRegenerateFlaggedPostUnico(
+        { titulo: generated.titulo, texto: generated.texto },
+        generated.flags,
+        { companyName, mainActivity, keyInfo: data.keyInfo }
+      );
       setCopy(result);
       setCopyOriginal(result);
       copyKeyInfoRef.current = data.keyInfo;

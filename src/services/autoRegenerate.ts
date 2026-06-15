@@ -74,6 +74,74 @@ function setField(result: MethodOpResult, prefix: string, field: FieldKind, valu
   }
 }
 
+// Variante para o Post Único — mesma lógica de regeneração por flags D1
+// (regenerate-block, no máximo 2 tentativas, E4 como último recurso), mas
+// para o par titulo/texto de uma peça só. Sem SKIP_REGEN_THRESHOLD: com no
+// máximo 2 campos em jogo, não há "muitas peças flagadas" a evitar.
+export interface PostUnicoCopyFields {
+  titulo: string;
+  texto: string;
+}
+
+export async function autoRegenerateFlaggedPostUnico(
+  copy: PostUnicoCopyFields,
+  flags: ValidationFlag[] | undefined,
+  ctx: AutoRegenContext
+): Promise<PostUnicoCopyFields> {
+  if (!flags || flags.length === 0) return copy;
+
+  // Flags sem sufixo .titulo/.texto (repetição morfológica, promessa numérica
+  // sem respaldo) cobrem a peça inteira — direciona para "texto", que tem mais
+  // liberdade de reformulação que o título (limite de sílabas por palavra).
+  const grouped = new Map<'titulo' | 'texto', string[]>();
+  for (const flag of flags) {
+    const m = flag.campo.match(/^copy\.(titulo|texto)$/);
+    const field: 'titulo' | 'texto' = m ? (m[1] as 'titulo' | 'texto') : 'texto';
+    const motivos = grouped.get(field);
+    if (motivos) motivos.push(flag.motivo);
+    else grouped.set(field, [flag.motivo]);
+  }
+
+  let titulo = copy.titulo;
+  let texto = copy.texto;
+
+  await Promise.all([...grouped.entries()].map(async ([field, motivos]) => {
+    let value = field === 'titulo' ? titulo : texto;
+    let motivoReprovacao = motivos.join('; ');
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const regen = await regenerateBlockWithFlags({
+          kind: field,
+          companyName: ctx.companyName,
+          mainActivity: ctx.mainActivity,
+          keyInfo: ctx.keyInfo,
+          formato: 'PostUnico',
+          tituloAtual: field === 'titulo' ? value : titulo,
+          textoAtual: field === 'texto' ? value : texto,
+          motivoReprovacao,
+        });
+        value = regen.value;
+        if (!regen.flags || regen.flags.length === 0) {
+          if (field === 'titulo') titulo = value; else texto = value;
+          return;
+        }
+        motivoReprovacao = regen.flags.join('; ');
+        if (attempt === MAX_ATTEMPTS) {
+          const fallback = applyDeterministicFallback(value, field);
+          if (field === 'titulo') titulo = fallback; else texto = fallback;
+          console.warn(`[autoRegenerate] copy.${field} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`);
+        }
+      } catch (e) {
+        console.warn(`[autoRegenerate] regenerate-block falhou para copy.${field}:`, (e as Error).message);
+        return;
+      }
+    }
+  }));
+
+  return { titulo, texto };
+}
+
 export async function autoRegenerateFlaggedFields(result: MethodOpResult, ctx: AutoRegenContext): Promise<MethodOpResult> {
   const flags = result.flags;
   if (!flags || flags.length === 0) return result;

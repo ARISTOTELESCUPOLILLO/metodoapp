@@ -146,7 +146,10 @@ ${(objetivo === 'promocao' || objetivo === 'oportunidade') ? `- REGRA DE URGÊNC
             });
           }
 
-          let titulo = correctPortugueseSpelling(truncateWords(String(parsed.titulo || ''), 6));
+          // Título NÃO é truncado aqui — cortar geraria fragmento; fora da
+          // faixa de 4-6 palavras é flagado por validateTitulo (D1) abaixo e
+          // regenerado pelo cliente (E3/E4), igual ao fluxo MOP.
+          const titulo = correctPortugueseSpelling(String(parsed.titulo || '').trim());
           let texto = correctPortugueseSpelling(truncateWords(String(parsed.texto || ''), 14));
 
           if (!titulo) return Response.json({ error: 'Título vazio na resposta da IA' }, { status: 502 });
