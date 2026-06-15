@@ -32,12 +32,37 @@ const SECONDARY_FONT_WEIGHT_REINFORCEMENT: Partial<Record<SecondaryFont, string>
 };
 
 // Bloco de exceção pontual: quando o Kit de Marca tem uma tipografia
-// secundária (manuscrita) escolhida, a MESMA palavra-chave que recebe a cor
-// de destaque (ver regra de acento de cor no prompt) também recebe esse
-// estilo manuscrito — abrindo exceção à proibição geral de "fontes
-// manuscritas" do bloco principal, só para essa palavra.
-export function buildScriptAccentBlock(style: SecondaryFont): string {
-  return `EXCEÇÃO PONTUAL — PALAVRA-CHAVE EM MANUSCRITA: a MESMA palavra-chave do título que recebe a COR DE DESTAQUE (ver regra de acento de cor) deve TAMBÉM ser escrita em estilo manuscrito: ${SECONDARY_FONT_SHAPES[style]}. Aplique esse estilo a EXATAMENTE 1 palavra-chave do título — a de maior carga emocional ou benefício, com no máximo 10 letras — preservando os mesmos caracteres exatos, sem abreviar nem distorcer a ponto de ilegibilidade, sem sombra/contorno/brilho extra. TODAS as demais palavras do título seguem rigorosamente a regra tipográfica principal abaixo, incluindo a proibição de fontes manuscritas — que NÃO se aplica a essa única palavra-chave.
+// secundária (manuscrita) escolhida, EXATAMENTE 1 palavra do título recebe
+// esse estilo — nunca a primeira palavra, alternando automaticamente entre
+// 3 papéis possíveis (fechamento da frase, palavra-chave do assunto, palavra
+// do benefício percebido), com "fechamento" priorizado. A escolha do papel é
+// determinística por título (mesmo princípio do pickImageVariationBlock):
+// garante variedade entre as peças de uma mesma sequência (títulos
+// diferentes) e estabilidade entre regenerações da mesma peça.
+type AccentRole = 'fechamento' | 'assunto' | 'beneficio';
+
+const ACCENT_ROLE_SEQUENCE: AccentRole[] = ['fechamento', 'assunto', 'fechamento', 'beneficio'];
+
+const ACCENT_ROLE_DESCRIPTION: Record<AccentRole, string> = {
+  fechamento: 'a ÚLTIMA palavra de conteúdo do título (fechamento da frase)',
+  assunto: 'a palavra-chave que nomeia o ASSUNTO ou tema central do título',
+  beneficio: 'a palavra que expressa o BENEFÍCIO ou resultado percebido pelo leitor',
+};
+
+function pickAccentRole(seed: string): AccentRole {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return ACCENT_ROLE_SEQUENCE[Math.abs(hash) % ACCENT_ROLE_SEQUENCE.length];
+}
+
+export function buildScriptAccentBlock(style: SecondaryFont, titulo: string): string {
+  const role = pickAccentRole(titulo);
+  const order = [role, ...(['fechamento', 'assunto', 'beneficio'] as AccentRole[]).filter((r) => r !== role)];
+  const priorityList = order.map((r, i) => `${i + 1}) ${ACCENT_ROLE_DESCRIPTION[r]}`).join('; ');
+
+  return `EXCEÇÃO PONTUAL — 1 PALAVRA DO TÍTULO EM MANUSCRITA: escolha EXATAMENTE 1 palavra do título para receber estilo manuscrito: ${SECONDARY_FONT_SHAPES[style]}. Preserve os mesmos caracteres exatos dessa palavra, sem abreviar nem distorcer a ponto de ilegibilidade, sem sombra/contorno/brilho extra. TODAS as demais palavras do título seguem rigorosamente a regra tipográfica principal abaixo, incluindo a proibição de fontes manuscritas — que NÃO se aplica a essa única palavra.
+COMO ESCOLHER A PALAVRA: o manuscrito é um ACENTO visual da mensagem, não o elemento principal do título — por isso NUNCA escolha a PRIMEIRA palavra do título, mesmo que pareça a mais forte. Avalie as opções nesta ordem de prioridade até encontrar uma palavra que se encaixe: ${priorityList}. A palavra escolhida deve ser uma palavra de conteúdo (substantivo, verbo ou adjetivo — nunca artigo, preposição, conjunção ou pronome), com NO MÁXIMO 8 LETRAS, do mesmo tamanho/altura de linha das demais palavras do título — sem dominar visualmente a composição. Se a opção prioritária não tiver uma palavra adequada (muito longa, é a primeira do título, ou inexistente no título), passe para a próxima opção da lista.
+ALINHAMENTO COM A COR DE DESTAQUE: esta é também a palavra que deve receber a COR DE DESTAQUE (ver regra de acento de cor no prompt) — não escolha uma palavra diferente para o acento de cor.
 REFORÇO DE COR NA MANUSCRITA: o traço cursivo cobre menos área do que letras em caixa alta, então a cor de destaque aplicada nessa palavra tende a parecer apagada/fraca. Para compensar, use nessa palavra uma versão MAIS CLARA E VIBRANTE da cor de destaque (mesmo matiz, com luminosidade e saturação aumentadas), garantindo que ela continue se destacando com a mesma força das demais aplicações da cor de destaque na peça.${SECONDARY_FONT_WEIGHT_REINFORCEMENT[style] || ''}`;
 }
 

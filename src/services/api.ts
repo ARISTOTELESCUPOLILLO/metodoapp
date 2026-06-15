@@ -180,7 +180,7 @@ function buildImagePrompt(params: {
 
   const typographyBlock = buildTypographyBlock(fontFamily);
   const typographyShort = buildTypographyShortRule(fontFamily);
-  const scriptAccentBlock = secondaryFont ? `\n${buildScriptAccentBlock(secondaryFont)}\n` : '';
+  const scriptAccentBlock = secondaryFont ? `\n${buildScriptAccentBlock(secondaryFont, titulo)}\n` : '';
 
   // Quando há `referenceAnchor`, ele já cobre a "referência visual" com prioridade
   // máxima lá no topo do prompt (ver referenceAnchorBlock) — não repetir aqui

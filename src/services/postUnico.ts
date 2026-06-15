@@ -433,7 +433,7 @@ export function buildPostUnicoPrompt(params: {
 
   const typographyBlock = buildTypographyBlock(kit.fontPair);
   const typographyShort = buildTypographyShortRule(kit.fontPair);
-  const scriptAccentBlock = kit.secondaryFont ? `\n${buildScriptAccentBlock(kit.secondaryFont)}\n` : '';
+  const scriptAccentBlock = kit.secondaryFont ? `\n${buildScriptAccentBlock(kit.secondaryFont, copy?.titulo || data.keyInfo || '')}\n` : '';
 
   const hasCopy = copy && (copy.titulo || copy.texto);
   const copyBlock = hasCopy
