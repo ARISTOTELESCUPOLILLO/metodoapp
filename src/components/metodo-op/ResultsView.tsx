@@ -23,6 +23,26 @@ function countWords(text: string, excludeTexts?: string[]): number {
   }
   return processed.trim().split(/\s+/).filter(w => w.length > 0 && !w.startsWith('#')).length;
 }
+
+// Nº de imagens geradas em paralelo no "Gerar todas" do carrossel.
+const GENERATE_ALL_CONCURRENCY = 3;
+
+// Roda `worker` para cada item de `items` com no máximo `concurrency` em
+// paralelo — usado em "Gerar todas" para não enfileirar as imagens 1 a 1.
+async function runWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  let next = 0;
+  async function runner() {
+    while (next < items.length) {
+      const i = next++;
+      await worker(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, runner));
+}
 import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
@@ -694,12 +714,10 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
     setBusyAllMode('noref');
     const total = cards.length;
     const failures: number[] = [];
+    let done = 0;
     setAllProgress({ done: 0, total });
     try {
-      for (let i = 0; i < total; i++) {
-        setAllProgress({ done: i, total });
-        setBusyIndex(i);
-        const card = cards[i];
+      await runWithConcurrency(cards, GENERATE_ALL_CONCURRENCY, async (card, i) => {
         try {
           const url = await generatePostImage({
             imagePrompt: card.imagePrompt,
@@ -718,16 +736,18 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         } catch (err) {
           console.error(`Falha card ${i + 1}:`, err);
           failures.push(i + 1);
+        } finally {
+          done++;
+          setAllProgress({ done, total });
         }
-      }
-      setAllProgress({ done: total, total });
+      });
       if (failures.length) {
+        failures.sort((a, b) => a - b);
         alert(`${failures.length} de ${total} card(s) falharam (cards ${failures.join(', ')}). Use "⬇ Gerar card" no card para tentar de novo.`);
       } else {
         onImageGenerated?.();
       }
     } finally {
-      setBusyIndex(null);
       setBusyAllMode(null);
       setTimeout(() => setAllProgress(null), 1500);
     }
@@ -745,15 +765,13 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
     setBusyAllMode('refs');
     const total = cards.length;
     const failures: number[] = [];
+    let done = 0;
     setAllProgress({ done: 0, total });
     try {
-      for (let i = 0; i < total; i++) {
-        setAllProgress({ done: i, total });
-        setBusyIndex(i);
-        const s = selecaoParaCard(i);
-        if (!s) continue;
-        const card = cards[i];
+      await runWithConcurrency(cards, GENERATE_ALL_CONCURRENCY, async (card, i) => {
         try {
+          const s = selecaoParaCard(i);
+          if (!s) return;
           const url = await regenerateWithKit({
             slot: { formato: 'carrossel', posicao: dayNumber, elemento: 'avatar', cardCarrossel: card.card, motivo: '' },
             kit, imageKit: imageKit ?? emptyImageKit, mood,
@@ -770,16 +788,18 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         } catch (err) {
           console.error(`Falha card ${i + 1}:`, err);
           failures.push(i + 1);
+        } finally {
+          done++;
+          setAllProgress({ done, total });
         }
-      }
-      setAllProgress({ done: total, total });
+      });
       if (failures.length) {
+        failures.sort((a, b) => a - b);
         alert(`Geração com referências: ${failures.length} de ${total} card(s) falharam (cards ${failures.join(', ')}). Use o botão "↻ Gerar outra com refs" no card para tentar de novo.`);
       } else {
         onImageGenerated?.();
       }
     } finally {
-      setBusyIndex(null);
       setBusyAllMode(null);
       setTimeout(() => setAllProgress(null), 1500);
     }

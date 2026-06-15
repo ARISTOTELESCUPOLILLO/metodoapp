@@ -69,7 +69,7 @@ export async function generateImageAsync(params: {
   // Com Kit Imagem (referenceImages) o modelo gpt-image-2/edit costuma levar bem mais tempo.
   // Default sem refs: 4min. Com refs: 6min.
   const hasRefs = Array.isArray(params.referenceImages) && params.referenceImages.length > 0;
-  const { prompt, format, logoDataUrl, referenceImages, modulo, preferredSlot, maxMs = hasRefs ? 360_000 : 240_000, pollMs = 2500, onProgress } = params;
+  const { prompt, format, logoDataUrl, referenceImages, modulo, preferredSlot, maxMs = hasRefs ? 360_000 : 240_000, pollMs = 1500, onProgress } = params;
 
   // Compacta refs + logo (lado <=1024, JPEG q=0.85) antes do POST.
   // Reduz drasticamente o payload base64 enviado ao /api/generate-image
