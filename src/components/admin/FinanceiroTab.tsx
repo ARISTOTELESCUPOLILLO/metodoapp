@@ -29,7 +29,7 @@ export function FinanceiroTab() {
   const [sub, setSub] = useState<Sub>('visao');
   return (
     <div>
-      <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid #e2e8f0', marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid #e2e8f0', marginBottom: 20, flexWrap: 'wrap' }}>
         {SUB_TABS.map((t) => (
           <button key={t.id} onClick={() => setSub(t.id)} style={subStyle(sub === t.id)}>
             {t.label}
