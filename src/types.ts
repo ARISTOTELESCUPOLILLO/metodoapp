@@ -102,6 +102,16 @@ export interface GenerationSummary {
   stories: number;
 }
 
+export interface AnchoraVisual {
+  genero: 'M' | 'F';
+  // 'protagonista' = personagem domina a cena (SERVIÇOS, MARCA)
+  // 'contexto_de_uso' = personagem complementa; produto/serviço é o foco (VAREJO)
+  papel: 'protagonista' | 'contexto_de_uso';
+  faixa_etaria: string;
+  marcadores_profissionais: string;
+  ambiente_base: string;
+}
+
 export interface MethodOpResult {
   feed?: FeedItem[];
   carousel?: CarouselCard[];
@@ -112,6 +122,7 @@ export interface MethodOpResult {
   // D1 — reprovações heurísticas pós-geração (não bloqueiam a entrega; usadas
   // pela orquestração de regeneração pontual no cliente, ver E3).
   flags?: ValidationFlag[];
+  ancora_visual?: AnchoraVisual;
 }
 
 export interface ValidationFlag {

@@ -290,7 +290,7 @@ Para cada dia com Feed + Stories: defina internamente a intenção (verbo + foco
 ` : '';
 
   const outputKeys = (() => {
-    const parts: string[] = [];
+    const parts: string[] = ['"ancora_visual"'];
     if (hasFeed) {
       parts.push('"feed"', '"carousel"');
       if (!isVisualOrExperimentacao) parts.push('"reels"');
@@ -355,6 +355,17 @@ CONTEXTO:
 ${activityLine}
 - Momento do negócio: ${moment.contextNote}
 ${keyInfoBlock}
+ÂNCORA NARRATIVA DA SEQUÊNCIA — DEFINIR ANTES DE GERAR QUALQUER PEÇA:
+Defina UMA VEZ o fio condutor visual desta sequência. Essa âncora guia APENAS as peças em que a IA gera imagem sem referência real do cliente (avatar, cenário ou produto enviado). Quando houver referência real, ela prevalece sobre a âncora.
+Segmento: ${data.segment} | Público: ${isB2B ? 'B2B' : 'B2C'} | Atividade: ${mainActivity || 'não informada'}
+Regras por segmento:
+- SERVIÇOS: personagem é o elemento principal — profissional em ação, papel = "protagonista"
+- MARCA: personagem representa cultura, bastidores ou identidade — papel = "protagonista"
+- VAREJO: PRODUTO é o protagonista — personagem aparece apenas como contexto de uso (quem usa o item), papel = "contexto_de_uso"; a âncora NÃO transforma a pessoa em centro da cena quando o foco deve ser o produto
+Critérios de gênero: B2B industrial/técnico/construção/logística → M preferencialmente; B2B serviços/saúde/educação/gestão → quem usa mais o serviço; B2C beleza/estética/moda/bem-estar → F preferencialmente; B2C geral → comprador típico do produto; MARCA → quem representa a empresa. Se atividade ou keyInfo mencionar "mulheres" ou "homens" como público → seguir à risca.
+A âncora NÃO força humano em todo card — apenas garante que quando uma pessoa aparecer, seja sempre o mesmo tipo de personagem, mantendo coerência visual da sequência.
+Retornar em "ancora_visual": { "genero": "M" ou "F", "papel": "protagonista" ou "contexto_de_uso", "faixa_etaria": "ex: 35–45 anos", "marcadores_profissionais": "ex: camisa polo azul, postura técnica, ferramentas na cintura", "ambiente_base": "ex: oficina organizada com equipamentos ao fundo" }
+
 ANÁLISE INTERNA — NÃO EXIBIR NO TEXTO FINAL:
 1. Ponto de entrada do público: ${seg.entrada}
 2. Bloqueio inicial típico: ${seg.bloqueio}
@@ -627,5 +638,6 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
     raw,
     summary,
     ...(flags.length > 0 ? { flags } : {}),
+    ...((raw as any)?.ancora_visual ? { ancora_visual: (raw as any).ancora_visual } : {}),
   };
 }

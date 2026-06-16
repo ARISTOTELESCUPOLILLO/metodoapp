@@ -46,7 +46,7 @@ async function runWithConcurrency<T>(
 import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
-import { BrandKit, CarouselCard, FeedItem, ImageKit, MethodOpResult, MoodCode, ReelsGuide, StoriesSequence } from '../../types';
+import { AnchoraVisual, BrandKit, CarouselCard, FeedItem, ImageKit, MethodOpResult, MoodCode, ReelsGuide, StoriesSequence } from '../../types';
 import { downloadDataUrl, downloadBlob, composeFeedPng, composeFinalPng, composeReelsPng, composeReelsTitlePng } from '../../utils/canvasComposer';
 import { burnTitleIntoVideo } from '../../utils/burnTitleIntoVideo';
 import { generatePostImage } from '../../services/api';
@@ -117,16 +117,22 @@ function kitHasRefsForFormat(
 // bloco não concentre 5+ das N peças no mesmo gênero por sorteios
 // independentes. Resultado é calculado uma única vez por `result` (useMemo) e
 // reutilizado em "gerar de novo" — gênero não muda por acaso ao regenerar.
-function computeBlockGenders(pieces: { titulo: string; texto: string }[]): PersonagemGender[] {
+function computeBlockGenders(pieces: { titulo: string; texto: string }[], anchorGender?: PersonagemGender): PersonagemGender[] {
   const assigned: (PersonagemGender | null)[] = pieces.map(p => detectForcedGenderFromCopy(p.titulo, p.texto));
   let countMulher = assigned.filter(g => g === 'mulher').length;
   let countHomem = assigned.filter(g => g === 'homem').length;
   for (let i = 0; i < assigned.length; i++) {
     if (assigned[i]) continue;
     let g: PersonagemGender;
-    if (countMulher < countHomem) g = 'mulher';
-    else if (countHomem < countMulher) g = 'homem';
-    else g = Math.random() < 0.5 ? 'mulher' : 'homem';
+    if (anchorGender) {
+      g = anchorGender;
+    } else if (countMulher < countHomem) {
+      g = 'mulher';
+    } else if (countHomem < countMulher) {
+      g = 'homem';
+    } else {
+      g = Math.random() < 0.5 ? 'mulher' : 'homem';
+    }
     assigned[i] = g;
     if (g === 'mulher') countMulher++; else countHomem++;
   }
@@ -1828,6 +1834,7 @@ const MOOD_NAMES: Record<string, string> = {
 
 export default function ResultsView({ result, kit, mood, onClear, onRetry, imageKit, sequenceSize, onImageGenerated, userId }: Props) {
   const [savingPdf, setSavingPdf] = useState(false);
+  const [anchorGenderFlipped, setAnchorGenderFlipped] = useState(false);
   const { guard, dialog } = useImageGenAlert();
   const { cotaPersonalizados, isAdmin, refresh: refreshProfile } = useProfile();
 
@@ -1855,6 +1862,15 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
     : (cotaPersonalizados || ZERO_COTA);
   const extrasCarrossel = cotaPorTipo.carrossel || 0;
 
+  // âncora desativada quando há avatar real no kit — avatar é referência mais forte
+  const hasAvatarReal = !!(imageKit?.avatar || imageKit?.avatar2);
+  const ancoragem: AnchoraVisual | undefined = hasAvatarReal ? undefined : (result as any)?.ancora_visual;
+  const anchorGenderEffective: PersonagemGender | undefined = ancoragem
+    ? (anchorGenderFlipped
+        ? (ancoragem.genero === 'F' ? 'homem' : 'mulher')
+        : (ancoragem.genero === 'F' ? 'mulher' : 'homem'))
+    : undefined;
+
   // Gênero do personagem por bloco (estático + carrossel + fechamento) — ver
   // computeBlockGenders. Memoizado em `result`: persiste entre re-renders e
   // entre "gerar de novo" de cada peça, e só recalcula quando um novo plano é
@@ -1876,7 +1892,7 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
       if (estaticosM[i]) pieces.push({ titulo: estaticosM[i].titulo, texto: estaticosM[i].texto });
       (carouselsM[i] || []).forEach(c => pieces.push({ titulo: c.titulo, texto: c.texto }));
       if (estaticosFinaisM[i]) pieces.push({ titulo: estaticosFinaisM[i].titulo, texto: estaticosFinaisM[i].texto });
-      const genders = computeBlockGenders(pieces);
+      const genders = computeBlockGenders(pieces, anchorGenderEffective);
       let p = 0;
       const estatico: PersonagemGender = estaticosM[i] ? genders[p++] : 'homem';
       const carrossel: PersonagemGender[] = (carouselsM[i] || []).map(() => genders[p++]);
@@ -1884,7 +1900,7 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
       blocks.push({ estatico, carrossel, final });
     }
     return blocks;
-  }, [result]);
+  }, [result, anchorGenderEffective]);
 
   if (!result) return null;
 
@@ -1959,6 +1975,27 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
           </button>
         </div>
       </div>
+
+      {ancoragem && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, margin: '8px 0 4px', fontSize: 13, color: '#1e40af', flexWrap: 'wrap' }}>
+          <span>
+            {ancoragem.papel === 'contexto_de_uso' ? 'Contexto de uso — personagem:' : 'Personagem da sequência:'}{' '}
+            <strong>{anchorGenderEffective === 'mulher' ? 'Feminino' : 'Masculino'}</strong>
+            {ancoragem.faixa_etaria ? ` · ${ancoragem.faixa_etaria}` : ''}
+            {ancoragem.marcadores_profissionais ? ` · ${ancoragem.marcadores_profissionais}` : ''}
+            {ancoragem.papel === 'contexto_de_uso' && (
+              <span style={{ opacity: 0.7, fontSize: 11, marginLeft: 6 }}>(produto é o protagonista)</span>
+            )}
+          </span>
+          <button
+            type="button"
+            onClick={() => setAnchorGenderFlipped(f => !f)}
+            style={{ marginLeft: 'auto', background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}
+          >
+            Trocar para {anchorGenderEffective === 'mulher' ? 'Masculino' : 'Feminino'}
+          </button>
+        </div>
+      )}
 
       {sequence.length > 0 && (
         <div className="resultBlock">
