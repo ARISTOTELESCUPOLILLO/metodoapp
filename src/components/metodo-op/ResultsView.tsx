@@ -1871,10 +1871,11 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
   // a supressão por avatar acontece POR CARD em regenerateWithKit (hasAvatarRef),
   // não aqui: ter avatar no kit ≠ avatar sendo usado nesta geração específica.
   const ancoragem: AnchoraVisual | undefined = (result as any)?.ancora_visual;
-  // String compacta injetada no prompt de imagem (genderBlock) nas gerações sem refs.
+  // Injeta no prompt de imagem apenas gênero + faixa etária — tipo do personagem.
+  // marcadores_profissionais NÃO vai ao gerador: roupa/ferramentas variam por card
+  // (a leituraCenica de cada card já carrega o contexto da âncora via GPT).
   const anchoraPersonagem: string | undefined = ancoragem
-    ? [ancoragem.genero === 'F' ? 'mulher' : 'homem', ancoragem.faixa_etaria, ancoragem.marcadores_profissionais]
-        .filter(Boolean).join(', ')
+    ? [ancoragem.faixa_etaria].filter(Boolean).join(', ') || undefined
     : undefined;
   const anchorGenderEffective: PersonagemGender | undefined = ancoragem
     ? (anchorGenderFlipped

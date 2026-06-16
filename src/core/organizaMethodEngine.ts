@@ -392,6 +392,7 @@ ${coordinationRules}
 ${hasFeed ? `
 ⚠️ COMPLETUDE OBRIGATÓRIA — VERIFIQUE ANTES DE RETORNAR:
 Esta sequência DEVE conter EXATAMENTE:
+□ "ancora_visual": objeto com genero, papel, faixa_etaria, marcadores_profissionais, ambiente_base — OBRIGATÓRIO, deve ser a PRIMEIRA chave do JSON
 □ "feed": ${comp.estatico} estático${comp.estatico > 1 ? 's' : ''} (formato "Estático")${isVisualOrExperimentacao ? ` + ${comp.fechamento} estático${comp.fechamento > 1 ? 's' : ''} final (formato "Estático Final")` : ' — fechamento vai em "reels", não em "feed"'}
 □ "carousel": ${comp.carrossel * 5} cards preenchidos (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} × 5 cards) — PROIBIDO retornar "carousel": []${!isVisualOrExperimentacao ? `\n□ "reels": ${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} com hook + screenText + script + imagePrompt + legenda` : ''}
 Cada peça: titulo + texto + legenda + imagePrompt — TODOS preenchidos. Resposta incompleta quebra a sequência do usuário.
@@ -420,6 +421,7 @@ INEDITISMO CONTROLADO:
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.
+A primeira chave do JSON DEVE ser "ancora_visual" — defina o personagem-tipo ANTES de gerar qualquer peça de conteúdo.
 `;
 }
 
