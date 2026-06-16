@@ -316,6 +316,18 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
       );
     }
   }
+  // Quando apenas avatar enviado (sem cenário e sem produto): suprimir construção
+  // de ambiente pelo modelo. O campo leituraCenica.ambiente continua indo ao prompt
+  // mas deve orientar vestuário/postura, não gerar fundo detalhado.
+  if (refs.avatar && !refs.cenario && !refs.produtos?.length) {
+    lines.push(
+      'FUNDO NEUTRO OBRIGATÓRIO: apenas avatar de referência enviado — sem imagem de cenário. ' +
+      'Usar FUNDO LIMPO, SUAVE e DESFOCADO: bokeh suave, gradiente neutro, textura vaga ou superfície indefinida. ' +
+      'NÃO construir ambiente físico específico, sala, escritório ou local identificável como fundo — mesmo que a leitura de cena abaixo descreva um local. ' +
+      'O campo "Ambiente" da leitura de cena orienta apenas VESTUÁRIO e POSTURA do personagem, não o fundo a renderizar. ' +
+      'NEGATIVE: detailed background, specific room interior, identifiable location behind person, sharp background, busy background, office furniture behind subject.',
+    );
+  }
   if (!lines.length) return '';
   return `${lines.join('\n')}\n\n`;
 }
