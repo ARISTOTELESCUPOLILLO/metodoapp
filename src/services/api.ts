@@ -116,6 +116,7 @@ MODULAÇÃO DE FECHAMENTO (formato Estático Final — peça de resolução narr
 - Sensação geral de resolução e fechamento emocional, não de provocação
 - Manter integralmente a identidade do mood escolhido (cores, tipografia, alinhamento, raiz visual)
 - Apenas modular intensidade: reduzir agressividade onde houver, aumentar contenção
+- PROIBIDO NO FECHAMENTO — PRESENÇA EM VEZ DE PARTIDA: personagem NUNCA em deslocamento saindo da cena, NUNCA olhando para o horizonte, NUNCA com olhar perdido na distância, NUNCA de costas caminhando para longe. O fechamento exige presença ANCORADA no espaço — pausa, estabilidade, gesto contido, olhar direcionado a algo concreto dentro da cena ou olhar para baixo/lado em concentração. INSTANTE NO FECHAMENTO: usar somente variações de pausa, micro-momento ou direção em pé — PROIBIDO qualquer variação de transição, deslocamento ou caminhada.
 `.trim();
 
 function buildImagePrompt(params: {
@@ -410,9 +411,9 @@ export async function generatePostImage(params: {
   // Regra de dispositivos digitais para Reels — alinhada com DEVICE_RULE de promptRules.ts.
   const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
 PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
-DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela DEVE mostrar conteúdo completamente desfocado/embaçado — bokeh intenso, glow difuso — ZERO legibilidade. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha. ÂNGULO DE CÂMERA — LAPTOP/NOTEBOOK: câmera NÃO enquadra a tela frontalmente; mostrar parte traseira/lateral do dispositivo ou mantê-lo parcialmente fora do quadro. Carcaça e tampa traseira lisas (sem imagem ou logo).
+DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela DEVE mostrar conteúdo desfocado/embaçado o suficiente para ser ilegível — bokeh suave que sugere interface ou atividade sem permitir leitura; presença visual de conteúdo é desejável, opacidade total não. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha. CARCAÇA E TAMPA — REGRA ABSOLUTA: tampa traseira e carcaça de qualquer dispositivo DEVEM ser completamente lisas — PROIBIDO especificamente: logo de maçã iluminado ou gravado, qualquer símbolo de fabricante, glowing backlit logo, gravação na tampa. Use laptop genérico sem marca. ÂNGULO DE CÂMERA — LAPTOP/NOTEBOOK: câmera NÃO enquadra a tela frontalmente; mostrar parte traseira/lateral do dispositivo ou mantê-lo parcialmente fora do quadro.
 MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
-NEGATIVE: no legible screen content, no recognizable logo on screen, no readable text on screen, no charts, no dashboard, no spreadsheet, no clear UI, no duplicated devices, no image or logo on device casing or back cover, no laptop screen facing camera, no focused laptop screen.`;
+NEGATIVE: no legible screen content, no recognizable logo on screen, no readable text on screen, no charts, no dashboard, no spreadsheet, no clear UI, no duplicated devices, no image or logo on device casing or back cover, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera.`;
 
   // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
   // precisa vir ANTES da descrição da cena para não perder força para ela.
