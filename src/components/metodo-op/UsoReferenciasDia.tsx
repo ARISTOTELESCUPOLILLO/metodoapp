@@ -236,14 +236,14 @@ export default function UsoReferenciasDia(props: Props) {
       fontSize: 12,
       color: enabled ? '#0e7490' : '#334155',
     }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, userSelect: 'none' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, userSelect: 'none', width: '100%' }}>
         <input
           type="checkbox"
-          style={{ margin: 0, flexShrink: 0, cursor: 'pointer' }}
+          style={{ width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, flexShrink: 0, cursor: 'pointer' }}
           checked={enabled}
           onChange={(e) => setEnabled(e.target.checked)}
         />
-        Usar Imagens de Referência
+        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Usar Imagens de Referência</span>
       </label>
 
       {enabled && (
@@ -371,7 +371,7 @@ function Tile({ checked, onToggle, url, label, badge }: {
           type="checkbox"
           checked={checked}
           onChange={onToggle}
-          style={{ position: 'absolute', top: 4, left: 4, margin: 0, cursor: 'pointer' }}
+          style={{ position: 'absolute', top: 4, left: 4, width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, cursor: 'pointer' }}
         />
         {badge !== undefined && (
           <span style={{

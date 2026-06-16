@@ -232,12 +232,15 @@ export default function PostUnicoResult({
               <textarea
                 value={captionText}
                 onChange={(e) => setEditedCaption(e.target.value)}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
                 rows={6}
                 style={{
                   width: '100%', padding: 12, borderRadius: 12,
                   border: `1px solid ${captionExhausted ? '#fcd34d' : '#e2e8f0'}`,
                   fontFamily: 'inherit', fontSize: 14, lineHeight: 1.5, resize: 'vertical',
                   background: captionExhausted ? '#fffbeb' : '#fafafa', color: '#0f172a',
+                  touchAction: 'pan-y', overscrollBehaviorX: 'contain',
                 }}
               />
               {captionCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{captionCorrection.msg}</p>}

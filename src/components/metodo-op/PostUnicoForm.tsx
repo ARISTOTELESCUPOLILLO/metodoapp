@@ -510,11 +510,14 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
                 value={copy.titulo}
                 onChange={e => setCopy(c => c ? { ...c, titulo: e.target.value } : c)}
                 onBlur={e => setCopy(c => c ? { ...c, titulo: truncateWords(e.target.value, 6) } : c)}
+                onTouchStart={e => e.stopPropagation()}
+                onTouchMove={e => e.stopPropagation()}
                 style={{
                   width: '100%', fontSize: 16, fontWeight: 800, color: '#0f172a',
                   border: `1px solid ${wordCount(copy.titulo) >= 6 ? '#fcd34d' : '#e2e8f0'}`,
                   background: wordCount(copy.titulo) >= 6 ? '#fffbeb' : '#fff',
                   borderRadius: 6, padding: '6px 8px', boxSizing: 'border-box',
+                  touchAction: 'pan-x', overscrollBehaviorX: 'contain',
                 }}
               />
               <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>

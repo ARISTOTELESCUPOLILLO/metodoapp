@@ -420,13 +420,21 @@ export function buildPostUnicoPrompt(params: {
   copy?: PostUnicoCopy;
   references?: PostUnicoReferences;
   forcedGender?: PersonagemGender;
+  /** true quando é "Gerar outra imagem" — força execução visual diferente da anterior. */
+  variationHint?: boolean;
 }): string {
-  const { data, kit, copy, references, forcedGender } = params;
+  const { data, kit, copy, references, forcedGender, variationHint } = params;
   const isNenhum = data.objetivo === 'nenhum';
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
   const direcao = direcaoBlock(data.direcao, data.mood, data.objetivo, !!references?.produtos?.length);
   const variationBlock = data.direcao === 'mood' ? pickImageVariationBlock(data.mood, !!references?.avatar, copy?.titulo, copy?.texto, forcedGender) : '';
+  // "Gerar outra imagem": mantém o MESMO título/texto, mas exige uma execução
+  // visual claramente diferente da anterior (enquadramento, ângulo, composição,
+  // cor de fundo, cena) — evita a peça sair idêntica na regeneração.
+  const regenVariationBlock = variationHint
+    ? `\n\n♻ NOVA VERSÃO: gere uma execução visual CLARAMENTE DIFERENTE da anterior — mude enquadramento, ângulo de câmera, composição, paleta de fundo e cena, mantendo o MESMO título e o MESMO texto de apoio. Não repita a imagem anterior.`
+    : '';
   const primary = kit.primaryColor || '#123a63';
   const accent = kit.accentColor || kit.secondaryColor || '#f4b000';
   const zona = logoZoneDescription(kit.logoPosition);
@@ -507,7 +515,7 @@ ${data.keyInfo.trim()
 ${copyBlock}
 ${CONCEITO_FIRST_RULE}
 ${papelBlock}
-${direcao}${variationBlock}
+${direcao}${variationBlock}${regenVariationBlock}
 
 ${buildColorBlock(primary, accent, data.direcao === 'mood', data.objetivo)}
 
@@ -586,9 +594,11 @@ export async function generatePostUnico(params: {
   references?: PostUnicoReferences;
   preferredSlot?: string;
   forcedGender?: PersonagemGender;
+  /** true quando é "Gerar outra imagem" — força execução visual diferente. */
+  variationHint?: boolean;
 }): Promise<string> {
-  const { data, kit, copy, references, preferredSlot, forcedGender } = params;
-  const prompt = buildPostUnicoPrompt({ data, kit, copy, references, forcedGender });
+  const { data, kit, copy, references, preferredSlot, forcedGender, variationHint } = params;
+  const prompt = buildPostUnicoPrompt({ data, kit, copy, references, forcedGender, variationHint });
 
   // Coleta refs ordenadas: avatar -> cenário -> produtos por número.
   const buildRefs = (withAvatar: boolean): string[] => {

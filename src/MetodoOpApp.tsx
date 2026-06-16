@@ -121,6 +121,9 @@ export default function App() {
   // persistido entre regenerações ("gerar de novo" não troca o gênero por
   // acaso). Resetado em handleClearPostUnico (peça nova).
   const postUnicoGenderRef = useRef<PersonagemGender | undefined>(undefined);
+  // Último título/texto confirmado do Post Único — reutilizado ao "Gerar outra
+  // imagem" (regeneração sem copy), para a peça não sair genérica/repetida.
+  const lastPuCopyRef = useRef<{ titulo: string; texto: string } | undefined>(undefined);
   const [postUnicoStarted, setPostUnicoStarted] = useState(false);
   const [caption, setCaption] = useState<PostUnicoCaption | undefined>();
   const [captionLoading, setCaptionLoading] = useState(false);
@@ -456,6 +459,7 @@ export default function App() {
     setCaptionError('');
     setError('');
     postUnicoGenderRef.current = undefined;
+    lastPuCopyRef.current = undefined;
   }
 
   async function handleClearMethodResult() {
@@ -524,7 +528,13 @@ export default function App() {
     }
   }
 
-  async function handleGeneratePostUnico(copy?: { titulo: string; texto: string }) {
+  async function handleGeneratePostUnico(copy?: { titulo: string; texto: string }, opts?: { regenerate?: boolean }) {
+    // "Gerar outra imagem" não recebe copy do botão; reusa o último título/texto
+    // confirmado para a imagem não sair genérica nem repetir o anterior (5.1).
+    const isRegenerate = !!opts?.regenerate;
+    const effectiveCopy = copy ?? (isRegenerate ? lastPuCopyRef.current : undefined);
+    if (copy) lastPuCopyRef.current = copy;
+    copy = effectiveCopy;
     setLoading(true);
     setError('');
     setPostUnicoImg(undefined);
@@ -572,7 +582,7 @@ export default function App() {
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current = detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ?? (Math.random() < 0.5 ? 'mulher' : 'homem');
       }
-      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot, forcedGender: postUnicoGenderRef.current });
+      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot, forcedGender: postUnicoGenderRef.current, variationHint: isRegenerate });
       // Persiste direto no localStorage (independe do componente seguir montado —
       // cobre o caso de geração em segundo plano após navegar para outra página).
       try { localStorage.setItem(`metodo-op-postunico-img-v1:${effectiveUserId}`, JSON.stringify(dataUrl)); } catch {}
@@ -817,7 +827,7 @@ export default function App() {
             <PostUnicoResult
               imageDataUrl={postUnicoImg}
               companyName={kit.companyName}
-              onRegenerate={handleGeneratePostUnico}
+              onRegenerate={() => handleGeneratePostUnico(undefined, { regenerate: true })}
               regenerating={loading}
               caption={caption}
               captionLoading={captionLoading}
