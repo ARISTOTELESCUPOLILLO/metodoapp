@@ -1881,6 +1881,7 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
   const [anchorGenderFlipped, setAnchorGenderFlipped] = useState(false);
   const [anchorAgeOverride, setAnchorAgeOverride] = useState<string | undefined>(undefined);
   const [anchorBannerOpen, setAnchorBannerOpen] = useState(false);
+  const [anchorMode, setAnchorMode] = useState<'ancora' | 'livre'>('ancora');
   const { guard, dialog } = useImageGenAlert();
   const { cotaPersonalizados, isAdmin, refresh: refreshProfile } = useProfile();
 
@@ -1913,18 +1914,20 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
   // não aqui: ter avatar no kit ≠ avatar sendo usado nesta geração específica.
   const ancoragem: AnchoraVisual | undefined = (result as any)?.ancora_visual;
   const anchorAgeEffective = anchorAgeOverride ?? ancoragem?.faixa_etaria ?? '';
-  const anchoraPersonagem: string | undefined = ancoragem
-    ? [anchorAgeEffective].filter(Boolean).join(', ') || undefined
-    : undefined;
-  const anchorGenderEffective: PersonagemGender | undefined = ancoragem
+  // No modo 'livre' o gerador de imagem não recebe constraint de tipo —
+  // gênero é balanceado livremente por peça (M/F alternados).
+  const anchorGenderEffective: PersonagemGender | undefined = (ancoragem && anchorMode === 'ancora')
     ? (anchorGenderFlipped
         ? (ancoragem.genero === 'F' ? 'homem' : 'mulher')
         : (ancoragem.genero === 'F' ? 'mulher' : 'homem'))
     : undefined;
-  const anchorControl: AnchorControl | undefined = ancoragem && anchorGenderEffective
+  const anchoraPersonagem: string | undefined = (ancoragem && anchorMode === 'ancora')
+    ? [anchorAgeEffective].filter(Boolean).join(', ') || undefined
+    : undefined;
+  const anchorControl: AnchorControl | undefined = ancoragem
     ? {
         ancoragem,
-        genderEffective: anchorGenderEffective,
+        genderEffective: anchorGenderEffective ?? (ancoragem.genero === 'F' ? 'mulher' : 'homem'),
         ageEffective: anchorAgeEffective,
         onFlipGender: () => setAnchorGenderFlipped(f => !f),
         onChangeAge: (age) => setAnchorAgeOverride(age),
@@ -2045,9 +2048,10 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
           >
             <span>
               Personagem da sequência:&nbsp;
-              <strong style={{ color: '#0f172a' }}>
-                {anchorControl.genderEffective === 'mulher' ? 'F' : 'M'} · {anchorControl.ageEffective.replace(' anos', '').replace(' ano', '')}
-              </strong>
+              {anchorMode === 'ancora'
+                ? <strong style={{ color: '#0f172a' }}>{anchorControl.genderEffective === 'mulher' ? 'F' : 'M'} · {anchorControl.ageEffective.replace(' anos', '').replace(' ano', '')}</strong>
+                : <strong style={{ color: '#64748b' }}>Livre</strong>
+              }
             </span>
             <span style={{ fontSize: 10, color: '#94a3b8' }}>{anchorBannerOpen ? '▲' : '▼'}</span>
           </button>
@@ -2055,21 +2059,32 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
             <div style={{ padding: '8px 14px', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <button
                 type="button"
-                onClick={anchorControl.onFlipGender}
-                style={{ fontSize: 12, padding: '4px 12px', border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+                onClick={() => setAnchorMode(m => m === 'ancora' ? 'livre' : 'ancora')}
+                style={{ fontSize: 12, padding: '4px 12px', border: '1px solid #e2e8f0', background: anchorMode === 'livre' ? '#f1f5f9' : '#0f172a', color: anchorMode === 'livre' ? '#475569' : '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
               >
-                Trocar p/ {anchorControl.genderEffective === 'mulher' ? 'Masculino' : 'Feminino'}
+                {anchorMode === 'ancora' ? 'Mudar p/ Livre' : 'Mudar p/ Âncora'}
               </button>
-              <select
-                value={anchorControl.ageEffective}
-                onChange={e => anchorControl.onChangeAge(e.target.value)}
-                style={{ fontSize: 12, padding: '4px 8px', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', color: '#475569', cursor: 'pointer' }}
-              >
-                {!AGE_OPTIONS.includes(anchorControl.ageEffective) && (
-                  <option value={anchorControl.ageEffective}>{anchorControl.ageEffective}</option>
-                )}
-                {AGE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+              {anchorMode === 'ancora' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={anchorControl.onFlipGender}
+                    style={{ fontSize: 12, padding: '4px 12px', border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Trocar p/ {anchorControl.genderEffective === 'mulher' ? 'Masculino' : 'Feminino'}
+                  </button>
+                  <select
+                    value={anchorControl.ageEffective}
+                    onChange={e => anchorControl.onChangeAge(e.target.value)}
+                    style={{ fontSize: 12, padding: '4px 8px', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', color: '#475569', cursor: 'pointer' }}
+                  >
+                    {!AGE_OPTIONS.includes(anchorControl.ageEffective) && (
+                      <option value={anchorControl.ageEffective}>{anchorControl.ageEffective}</option>
+                    )}
+                    {AGE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </>
+              )}
             </div>
           )}
         </div>
