@@ -72,6 +72,10 @@ export interface RegenerateInput {
   mainActivity?: string;
   // Override explícito do formato-alvo. Quando ausente, infere do slot.
   formato?: 'post' | 'reels';
+  // Âncora de personagem da sequência — faixa etária e papel compositivo.
+  // Garante consistência de identidade entre peças com refs e sem refs.
+  anchoraPersonagem?: string;
+  ancoragePapel?: string;
 }
 
 function buildReferences(
@@ -340,6 +344,7 @@ export async function regenerateWithKit(
     titulo, texto,
     imagePrompt, leituraCenica,
     produtosSelecionados, cenarioSelecionado, selecaoDireta, formato,
+    anchoraPersonagem, ancoragePapel,
   } = input;
 
   const references = buildReferences(slot.elemento, imageKit, produtosSelecionados, cenarioSelecionado, selecaoDireta);
@@ -381,6 +386,8 @@ export async function regenerateWithKit(
       // Sem logoDataUrl: a logo é aplicada por canvas (composeReelsPng).
       referenceImages: referenceImages.length ? referenceImages : undefined,
       hasAvatarRef,
+      anchoraPersonagem,
+      ancoragePapel,
     });
   }
 
@@ -402,6 +409,8 @@ export async function regenerateWithKit(
       leituraCenica,
       referenceImages: referenceImages.length ? referenceImages : undefined,
       hasAvatarRef,
+      anchoraPersonagem,
+      ancoragePapel,
     });
   }
 
@@ -425,6 +434,8 @@ export async function regenerateWithKit(
     leituraCenica,
     referenceImages: referenceImages.length ? referenceImages : undefined,
     hasAvatarRef,
+    anchoraPersonagem,
+    ancoragePapel,
   });
 }
 
