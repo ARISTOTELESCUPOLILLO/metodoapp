@@ -410,9 +410,9 @@ export async function generatePostImage(params: {
   // Regra de dispositivos digitais para Reels — alinhada com DEVICE_RULE de promptRules.ts.
   const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
 PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
-DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela pode mostrar conteúdo genérico desfocado/embaçado (texto borrado ilegível, interface desfocada) ou brilho difuso — NADA identificável. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara. Carcaça e tampa traseira lisas (sem imagem ou logo).
+DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela DEVE mostrar conteúdo completamente desfocado/embaçado — bokeh intenso, glow difuso — ZERO legibilidade. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha. ÂNGULO DE CÂMERA — LAPTOP/NOTEBOOK: câmera NÃO enquadra a tela frontalmente; mostrar parte traseira/lateral do dispositivo ou mantê-lo parcialmente fora do quadro. Carcaça e tampa traseira lisas (sem imagem ou logo).
 MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
-NEGATIVE: no legible screen content, no recognizable logo on screen, no readable text on screen, no charts, no dashboard, no clear UI, no duplicated devices, no image or logo on device casing or back cover.`;
+NEGATIVE: no legible screen content, no recognizable logo on screen, no readable text on screen, no charts, no dashboard, no spreadsheet, no clear UI, no duplicated devices, no image or logo on device casing or back cover, no laptop screen facing camera, no focused laptop screen.`;
 
   // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
   // precisa vir ANTES da descrição da cena para não perder força para ela.
