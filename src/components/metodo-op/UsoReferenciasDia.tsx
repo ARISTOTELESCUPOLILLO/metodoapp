@@ -236,9 +236,10 @@ export default function UsoReferenciasDia(props: Props) {
       fontSize: 12,
       color: enabled ? '#0e7490' : '#334155',
     }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700 }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, userSelect: 'none' }}>
         <input
           type="checkbox"
+          style={{ margin: 0, flexShrink: 0, cursor: 'pointer' }}
           checked={enabled}
           onChange={(e) => setEnabled(e.target.checked)}
         />

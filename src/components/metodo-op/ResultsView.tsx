@@ -344,7 +344,7 @@ function EditableField(props: {
   );
 }
 
-function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGender, anchoraPersonagem, anchorControl }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGender: PersonagemGender; anchoraPersonagem?: string; anchorControl?: AnchorControl } & RefSelectorProps) {
+function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGender, anchoraPersonagem }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGender: PersonagemGender; anchoraPersonagem?: string } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -452,7 +452,6 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
               }
             }}
           />
-          <AnchorIndicator control={anchorControl} hideWhenAvatar={sel.avatarNum != null} />
           <EditableField label="Título" kind="titulo" value={titulo} original={item.titulo} count={tCount} onChange={setTitulo} onRegenStart={() => setTCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} maxWords={6} />
           <EditableField label="Texto" kind="texto" value={texto} original={item.texto} count={xCount} onChange={setTexto} onRegenStart={() => setXCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline maxWords={15} />
           <EditableField label="Legenda" kind="legenda" value={legenda} original={item.legenda} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline maxWords={40} excludeTexts={kit.assinatura ? [kit.assinatura] : undefined} />
@@ -500,7 +499,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
   );
 }
 
-function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGender, anchoraPersonagem, anchorControl }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGender: PersonagemGender; anchoraPersonagem?: string; anchorControl?: AnchorControl } & RefSelectorProps) {
+function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGender, anchoraPersonagem }: { item: FeedItem; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGender: PersonagemGender; anchoraPersonagem?: string } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -606,7 +605,6 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
               }
             }}
           />
-          <AnchorIndicator control={anchorControl} hideWhenAvatar={sel.avatarNum != null} />
           <EditableField label="Título" kind="titulo" value={titulo} original={item.titulo} count={tCount} onChange={setTitulo} onRegenStart={() => setTCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} maxWords={6} />
           <EditableField label="Texto" kind="texto" value={texto} original={item.texto} count={xCount} onChange={setTexto} onRegenStart={() => setXCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline maxWords={15} />
           <EditableField label="Legenda" kind="legenda" value={legenda} original={item.legenda} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline maxWords={40} excludeTexts={kit.assinatura ? [kit.assinatura] : undefined} />
@@ -673,7 +671,7 @@ function distributeProduto(produtosNums: number[], index: number, total: number)
   return { num: middlePool[m % middlePool.length], isFull: false };
 }
 
-function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGenders, anchoraPersonagem, anchorControl }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGenders: PersonagemGender[]; anchoraPersonagem?: string; anchorControl?: AnchorControl } & RefSelectorProps) {
+function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, forcedGenders, anchoraPersonagem }: { cards: CarouselCard[]; kit: BrandKit; mood: MoodCode; dayNumber: number; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; forcedGenders: PersonagemGender[]; anchoraPersonagem?: string } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [previews, setPreviews] = useState<(string | null)[]>(() => cards.map((c) => getSessionImage(userId, `carousel:${dayNumber}:${c.card}`)));
   function updatePreview(index: number, value: string) {
@@ -984,7 +982,6 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             </button>
             <span style={{ fontSize: 11, color: '#64748b' }}>Revise títulos e textos antes de confirmar.</span>
           </div>
-          <AnchorIndicator control={anchorControl} hideWhenAvatar={blockSel.avatarNum != null} />
           {cards.map((card, index) => {
             const ctx = (kind: RegenKind) => ({
               kind, companyName: kit.companyName, mainActivity: kit.mainActivity, keyInfo,
@@ -1067,7 +1064,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 // 'sinalizacao' → vídeo silencioso + título queimado no canvas via FFmpeg
 type VideoMode = 'portugues' | 'kit-voz' | 'sinalizacao';
 
-function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, anchoraPersonagem, anchorControl }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; anchoraPersonagem?: string; anchorControl?: AnchorControl } & RefSelectorProps) {
+function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segmento, modelo, imageKit, extrasCarrossel, onImageGenerated, userId, anchoraPersonagem }: { reels: ReelsGuide; kit: BrandKit; mood: MoodCode; dayNumber: number; track?: string; keyInfo: string; guard: ReturnType<typeof useImageGenAlert>['guard']; onImageGenerated?: () => void; userId?: string | null; anchoraPersonagem?: string } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyRefs, setBusyRefs] = useState(false);
@@ -1568,8 +1565,6 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
               updateCoverPng(null);
             }}
           />
-          <AnchorIndicator control={anchorControl} hideWhenAvatar={false} />
-
           <EditableField label="Hook / Título do reels" kind="titulo" value={hook} original={reels.hook} count={hCount} onChange={setHook} onRegenStart={() => setHCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('titulo')} maxWords={6} />
           <EditableField label="Roteiro falado (TTS ou voz clonada)" kind="texto" value={script} original={reels.script} count={sCount} onChange={setScript} onRegenStart={() => setSCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('texto')} multiline maxWords={22} />
           <EditableField label="Legenda" kind="legenda" value={legenda} original={(reels.legenda || reels.script || '').trim()} count={lCount} onChange={setLegenda} onRegenStart={() => setLCount(c => c + 1)} onRegenDone={() => {}} ctxBuilder={() => ctx('legenda')} multiline maxWords={40} excludeTexts={kit.assinatura ? [kit.assinatura] : undefined} />
@@ -1885,6 +1880,7 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
   const [savingPdf, setSavingPdf] = useState(false);
   const [anchorGenderFlipped, setAnchorGenderFlipped] = useState(false);
   const [anchorAgeOverride, setAnchorAgeOverride] = useState<string | undefined>(undefined);
+  const [anchorBannerOpen, setAnchorBannerOpen] = useState(false);
   const { guard, dialog } = useImageGenAlert();
   const { cotaPersonalizados, isAdmin, refresh: refreshProfile } = useProfile();
 
@@ -2040,6 +2036,45 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
         </div>
       </div>
 
+      {anchorControl && (
+        <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
+          <button
+            type="button"
+            onClick={() => setAnchorBannerOpen(o => !o)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: '#f8fafc', border: 'none', cursor: 'pointer', fontSize: 12, color: '#475569' }}
+          >
+            <span>
+              Personagem da sequência:&nbsp;
+              <strong style={{ color: '#0f172a' }}>
+                {anchorControl.genderEffective === 'mulher' ? 'F' : 'M'} · {anchorControl.ageEffective.replace(' anos', '').replace(' ano', '')}
+              </strong>
+            </span>
+            <span style={{ fontSize: 10, color: '#94a3b8' }}>{anchorBannerOpen ? '▲' : '▼'}</span>
+          </button>
+          {anchorBannerOpen && (
+            <div style={{ padding: '8px 14px', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={anchorControl.onFlipGender}
+                style={{ fontSize: 12, padding: '4px 12px', border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+              >
+                Trocar p/ {anchorControl.genderEffective === 'mulher' ? 'Masculino' : 'Feminino'}
+              </button>
+              <select
+                value={anchorControl.ageEffective}
+                onChange={e => anchorControl.onChangeAge(e.target.value)}
+                style={{ fontSize: 12, padding: '4px 8px', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', color: '#475569', cursor: 'pointer' }}
+              >
+                {!AGE_OPTIONS.includes(anchorControl.ageEffective) && (
+                  <option value={anchorControl.ageEffective}>{anchorControl.ageEffective}</option>
+                )}
+                {AGE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
       {sequence.length > 0 && (
         <div className="resultBlock">
           <h3>Sequência do feed</h3>
@@ -2060,16 +2095,16 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
           {sequence.map((item) => {
             const bg = blockGenders[item.block];
             if (item.type === 'feed') {
-              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGender={bg?.estatico ?? 'homem'} anchoraPersonagem={anchoraPersonagem} anchorControl={anchorControl} />;
+              return <FeedCard key={`feed-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGender={bg?.estatico ?? 'homem'} anchoraPersonagem={anchoraPersonagem} />;
             }
             if (item.type === 'final') {
-              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGender={bg?.final ?? 'homem'} anchoraPersonagem={anchoraPersonagem} anchorControl={anchorControl} />;
+              return <FinalCard key={`final-${item.day}`} item={item.item} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGender={bg?.final ?? 'homem'} anchoraPersonagem={anchoraPersonagem} />;
             }
             if (item.type === 'carousel') {
-              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGenders={bg?.carrossel ?? item.cards.map(() => 'homem' as PersonagemGender)} anchoraPersonagem={anchoraPersonagem} anchorControl={anchorControl} />;
+              return <CarouselCardBlock key={`car-${item.day}`} cards={item.cards} kit={kit} mood={mood} dayNumber={item.day} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} forcedGenders={bg?.carrossel ?? item.cards.map(() => 'homem' as PersonagemGender)} anchoraPersonagem={anchoraPersonagem} />;
             }
             if (item.type === 'reels') {
-              return <ReelsCard key={`reels-${item.day}`} reels={item.reels} kit={kit} mood={mood} dayNumber={item.day} track={(result as any).track} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} anchoraPersonagem={anchoraPersonagem} anchorControl={anchorControl} />;
+              return <ReelsCard key={`reels-${item.day}`} reels={item.reels} kit={kit} mood={mood} dayNumber={item.day} track={(result as any).track} keyInfo={keyInfo} guard={guard} segmento={kit.segment} modelo={modelo} imageKit={imageKit} extrasCarrossel={extrasCarrossel} onImageGenerated={onImageGenerated} userId={userId} anchoraPersonagem={anchoraPersonagem} />;
             }
             return null;
           })}
