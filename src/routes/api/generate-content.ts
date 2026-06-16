@@ -129,6 +129,24 @@ const STORIES_SCHEMA = {
   ],
 } as const;
 
+const ANCORA_VISUAL_SCHEMA = {
+  anyOf: [
+    {
+      type: 'object',
+      properties: {
+        genero: { type: 'string', enum: ['M', 'F'] },
+        papel: { type: 'string', enum: ['protagonista', 'contexto_de_uso'] },
+        faixa_etaria: { type: 'string' },
+        marcadores_profissionais: { type: 'string' },
+        ambiente_base: { type: 'string' },
+      },
+      required: ['genero', 'papel', 'faixa_etaria', 'marcadores_profissionais', 'ambiente_base'],
+      additionalProperties: false,
+    },
+    { type: 'null' },
+  ],
+} as const;
+
 // Schema dependente da trilha: nas trilhas visual/experimentação o fechamento
 // é "Estático Final" dentro de "feed" — a chave "reels" não existe nessas
 // trilhas. Em response_format strict, toda chave em `properties` precisa
@@ -138,10 +156,11 @@ const STORIES_SCHEMA = {
 // schema quando ela não é usada, o conflito desaparece.
 function buildMetodoOpSchema(includeReels: boolean, includeStories: boolean) {
   const properties: Record<string, unknown> = {
+    ancora_visual: ANCORA_VISUAL_SCHEMA,
     feed: FEED_SCHEMA,
     carousel: CAROUSEL_SCHEMA,
   };
-  const required = ['feed', 'carousel'];
+  const required = ['ancora_visual', 'feed', 'carousel'];
   if (includeReels) {
     properties.reels = REELS_SCHEMA;
     required.push('reels');
