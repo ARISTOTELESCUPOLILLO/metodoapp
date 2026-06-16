@@ -154,8 +154,11 @@ function buildImagePrompt(params: {
   // Descrição do personagem-tipo da âncora da sequência (ex: "homem, 35-45 anos,
   // camisa polo azul, postura técnica"). Injetada no genderBlock quando não há avatar.
   anchoraPersonagem?: string;
+  // Papel da empresa na cena — 'contexto_de_uso' injeta regra compositiva que
+  // coloca o produto como protagonista visual (pessoa é coadjuvante).
+  ancoragePapel?: string;
 }): string {
-  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, secondaryFont, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem } = params;
+  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, secondaryFont, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem, ancoragePapel } = params;
   const isCover = format === 'reels_cover';
   const canvasSize = isCover ? '1080x1920' : '1080x1350';
   const canvasRatio = isCover ? '9:16 (reels vertical)' : '4:5 (feed)';
@@ -237,13 +240,20 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
   const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender, anchoraPersonagem);
 
+  // Regra compositiva de produto-protagonista — só para segmento VAREJO quando
+  // a âncora visual define papel=contexto_de_uso e não há avatar de referência
+  // (quando há avatar, a cena já está ancorada pela referência).
+  const papelBlock = (ancoragePapel === 'contexto_de_uso' && !hasAvatarRef && !isCover)
+    ? '\n⚠ PAPEL DO PRODUTO — COMPOSIÇÃO: o PRODUTO é o protagonista visual desta cena. A pessoa (se presente) aparece usando, segurando ou interagindo com ele em segundo plano. PROIBIDO: pessoa com mais área visual que o produto ou que roube o foco dele.\n'
+    : '';
+
   return `${DEVICE_RULE}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
 ${CONCEITO_FIRST_RULE}
 ${cenaDetalhada}
-${variationBlock}
+${papelBlock}${variationBlock}
 
 CONTEÚDO TEXTUAL:
 - Título principal em CAIXA ALTA (bold, corpo GRANDE — entre 35% e 45% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro): "${tituloUpper}"
@@ -362,8 +372,11 @@ export async function generatePostImage(params: {
   // Descrição do personagem-tipo da âncora da sequência MOP. Injetada no prompt
   // de imagem quando não há avatar, garantindo consistência visual entre cards.
   anchoraPersonagem?: string;
+  // Papel da empresa na cena (ainda_visual.papel). 'contexto_de_uso' injeta
+  // regra compositiva produto-protagonista em feed/carrossel/final.
+  ancoragePapel?: string;
 }): Promise<string> {
-  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem } = params;
+  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem, ancoragePapel } = params;
 
   const isReels = vertical === 'reels';
   const isCover = vertical === 'reels_cover';
@@ -445,6 +458,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         hasAvatarRef,
         forcedGender,
         anchoraPersonagem,
+        ancoragePapel,
       });
 
   return generateImageAsync({
