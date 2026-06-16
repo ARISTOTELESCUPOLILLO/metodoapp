@@ -594,7 +594,7 @@ export function getMoodSignature(mood: MoodCode): string {
 
 // Sorteia uma variação de personagem/ruptura para injetar no prompt de IMAGEM a cada geração.
 // Garante que "Gerar outra" nunca reuse a mesma pose — chame a cada vez que o prompt for construído.
-export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string, forcedGender?: PersonagemGender, anchoraPersonagem?: string): string {
+export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string, forcedGender?: PersonagemGender, anchoraPersonagem?: string, composicao?: string): string {
   if (!mood) return '';
 
   const TEMA_DERIVATION_RULE = 'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material, direcionar produção ou apresentar plano a alguém; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas/modificadores do título ("rumo", "avançar", "longe", "crescimento", "rápido", "forte", "claro") = intenção ou qualidade do ofício — nunca deslocamento físico nem propriedade literal.';
@@ -643,5 +643,8 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
         return `Gênero e tipo: ${gender}${anchoraDesc} — manter consistente na sequência, sobrepõe descrição da CENA, preservando ação e contexto. `;
       })();
 
-  return `\n⚠ VARIAÇÃO: ${cameraStr}${genderBlock}Estrutura: ${variation} ${TEMA_DERIVATION_RULE}`;
+  // Quando leituraCenica.composicao existe, a composição já está em cenaDetalhada —
+  // re-sortear aqui contradiz o que GPT-4.1 escreveu. Câmera e gênero ainda se aplicam.
+  const estruturaBlock = composicao ? '' : `Estrutura: ${variation} `;
+  return `\n⚠ VARIAÇÃO: ${cameraStr}${genderBlock}${estruturaBlock}${TEMA_DERIVATION_RULE}`;
 }

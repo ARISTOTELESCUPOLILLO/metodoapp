@@ -238,7 +238,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
 `;
 
-  const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender, anchoraPersonagem);
+  const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender, anchoraPersonagem, leituraCenica?.composicao);
 
   // Regra compositiva de produto-protagonista — só para segmento VAREJO quando
   // a âncora visual define papel=contexto_de_uso e não há avatar de referência
