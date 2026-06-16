@@ -114,7 +114,9 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [copyTSuggs, setCopyTSuggs] = useState<string[]>([]);
   const [copyXSuggs, setCopyXSuggs] = useState<string[]>([]);
   const COPY_REGEN_MAX = 2;
-  const copyKeyInfoRef = useRef<string>('');
+  // Inicializado com o valor atual de keyInfo (não vazio) para que o efeito de
+  // detecção de mudança não dispare falso-positivo ao remontar com copy já gerado.
+  const copyKeyInfoRef = useRef<string>(data.keyInfo);
   // Marca quando o usuário interagiu com o título/texto gerado (leitura com o
   // dedo no mobile = focus/seleção, ou edição). Enquanto verdadeiro, a resposta
   // tardia do juiz D2 (até 15s em voo) NÃO sobrescreve o que está na tela —
@@ -148,8 +150,13 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   }, [data.keyInfo]);
 
-  // Reseta copy quando o objetivo muda; NENHUM não suporta mood → força LIVRE
+  // Reseta copy quando o objetivo muda; NENHUM não suporta mood → força LIVRE.
+  // prevObjetivoRef evita que o efeito dispare no mount (remontagem ao voltar
+  // de outra aba não deve limpar o copy já gerado e persistido no app).
+  const prevObjetivoRef = useRef<string>(data.objetivo);
   useEffect(() => {
+    if (data.objetivo === prevObjetivoRef.current) return;
+    prevObjetivoRef.current = data.objetivo;
     clearCopy();
     if (data.objetivo === 'nenhum' && data.direcao === 'mood') {
       onChange({ ...data, direcao: 'livre', mood: undefined });
