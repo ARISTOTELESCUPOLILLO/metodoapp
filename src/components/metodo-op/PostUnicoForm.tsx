@@ -31,6 +31,14 @@ interface Props {
   isAdmin?: boolean;
   hasPostPlano?: boolean;
   puSlot?: string;
+  /** Contadores de regeneração de título/texto, elevados ao app para
+   *  persistirem entre trocas de aba (o componente desmonta e remontaria zerado). */
+  tituloRegenCount?: number;
+  textoRegenCount?: number;
+  onTituloRegen?: () => void;
+  onTextoRegen?: () => void;
+  /** Zera os contadores de regeneração de título/texto (ao limpar/gerar novo copy). */
+  onResetCopyRegen?: () => void;
 }
 
 const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
@@ -65,7 +73,7 @@ function wordCount(s: string): number {
   return s.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, imgsRestantes, imgsTotal, semPlano, isAdmin, hasPostPlano, puSlot }: Props) {
+export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, imgsRestantes, imgsTotal, semPlano, isAdmin, hasPostPlano, puSlot, tituloRegenCount, textoRegenCount, onTituloRegen, onTextoRegen, onResetCopyRegen }: Props) {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
@@ -89,8 +97,10 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [copyOriginal, setCopyOriginal] = useState<PostUnicoCopy | null>(null);
   const [copyLoading, setCopyLoading] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
-  const [copyTRegenCount, setCopyTRegenCount] = useState(0);
-  const [copyXRegenCount, setCopyXRegenCount] = useState(0);
+  // Contagens persistidas no app (não resetam ao trocar de aba). Os incrementos
+  // sobem por onTituloRegen/onTextoRegen; aqui só lemos o valor para render/limite.
+  const copyTRegenCount = tituloRegenCount ?? 0;
+  const copyXRegenCount = textoRegenCount ?? 0;
   const [copyTBusy, setCopyTBusy] = useState(false);
   const [copyXBusy, setCopyXBusy] = useState(false);
   const [copyTError, setCopyTError] = useState<string | null>(null);
@@ -99,6 +109,11 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [copyXSuggs, setCopyXSuggs] = useState<string[]>([]);
   const COPY_REGEN_MAX = 2;
   const copyKeyInfoRef = useRef<string>('');
+  // Marca quando o usuário interagiu com o título/texto gerado (leitura com o
+  // dedo no mobile = focus/seleção, ou edição). Enquanto verdadeiro, a resposta
+  // tardia do juiz D2 (até 15s em voo) NÃO sobrescreve o que está na tela —
+  // era essa troca silenciosa, e não o swipe, que "mudava o título" no mobile.
+  const copyTouchedRef = useRef(false);
 
   useEffect(() => {
     setSuggestCount(0);
@@ -153,19 +168,22 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         generated.flags,
         { companyName, mainActivity, keyInfo: data.keyInfo }
       );
+      copyTouchedRef.current = false;
       setCopy(result);
       setCopyOriginal(result);
       copyKeyInfoRef.current = data.keyInfo;
 
       // D2 — juiz semântico em lote, best-effort, fora do caminho crítico:
       // roda depois que o resultado já está na tela; se corrigir algo, atualiza.
+      // Só aplica se o usuário ainda não tocou no título/texto — evita
+      // sobrescrever, no meio da leitura/edição, o que ele já está lendo.
       judgeAndRegeneratePostUnico(result, {
         companyName,
         mainActivity,
         keyInfo: data.keyInfo,
         segment: kit.segment,
       }).then((updated) => {
-        if (updated) {
+        if (updated && !copyTouchedRef.current) {
           setCopy(updated);
           setCopyOriginal(updated);
         }
@@ -198,7 +216,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
       if (trimmed) {
         isTitulo ? setCopyTSuggs(s => [...s, trimmed]) : setCopyXSuggs(s => [...s, trimmed]);
       }
-      isTitulo ? setCopyTRegenCount(c => c + 1) : setCopyXRegenCount(c => c + 1);
+      isTitulo ? onTituloRegen?.() : onTextoRegen?.();
     } catch (e) {
       isTitulo ? setCopyTError((e as Error).message) : setCopyXError((e as Error).message);
     } finally {
@@ -210,8 +228,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     setCopy(null);
     setCopyOriginal(null);
     setCopyError(null);
-    setCopyTRegenCount(0);
-    setCopyXRegenCount(0);
+    onResetCopyRegen?.();
     setCopyTError(null);
     setCopyXError(null);
     setCopyTSuggs([]);
@@ -508,16 +525,14 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
               <input
                 type="text"
                 value={copy.titulo}
-                onChange={e => setCopy(c => c ? { ...c, titulo: e.target.value } : c)}
+                onFocus={() => { copyTouchedRef.current = true; }}
+                onChange={e => { copyTouchedRef.current = true; setCopy(c => c ? { ...c, titulo: e.target.value } : c); }}
                 onBlur={e => setCopy(c => c ? { ...c, titulo: truncateWords(e.target.value, 6) } : c)}
-                onTouchStart={e => e.stopPropagation()}
-                onTouchMove={e => e.stopPropagation()}
                 style={{
                   width: '100%', fontSize: 16, fontWeight: 800, color: '#0f172a',
                   border: `1px solid ${wordCount(copy.titulo) >= 6 ? '#fcd34d' : '#e2e8f0'}`,
                   background: wordCount(copy.titulo) >= 6 ? '#fffbeb' : '#fff',
                   borderRadius: 6, padding: '6px 8px', boxSizing: 'border-box',
-                  touchAction: 'pan-x', overscrollBehaviorX: 'contain',
                 }}
               />
               <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -576,7 +591,8 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
               </div>
               <textarea
                 value={copy.texto}
-                onChange={e => setCopy(c => c ? { ...c, texto: e.target.value } : c)}
+                onFocus={() => { copyTouchedRef.current = true; }}
+                onChange={e => { copyTouchedRef.current = true; setCopy(c => c ? { ...c, texto: e.target.value } : c); }}
                 onBlur={e => setCopy(c => c ? { ...c, texto: truncateWords(e.target.value, 14) } : c)}
                 rows={2}
                 style={{

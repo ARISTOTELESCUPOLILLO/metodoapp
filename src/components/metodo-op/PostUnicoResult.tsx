@@ -43,6 +43,10 @@ interface Props {
   direcao?: 'livre' | 'mood';
   mood?: string;
   assinatura?: string;
+  /** Contador de regeneração de legenda, elevado ao app para persistir entre
+   *  trocas de aba (o componente desmonta e remontaria zerado). */
+  captionRegenCount?: number;
+  onCaptionRegen?: () => void;
 }
 
 export default function PostUnicoResult({
@@ -60,9 +64,12 @@ export default function PostUnicoResult({
   direcao,
   mood,
   assinatura,
+  captionRegenCount,
+  onCaptionRegen,
 }: Props) {
   const [copied, setCopied] = useState(false);
-  const [captionRegens, setCaptionRegens] = useState(0);
+  // Contagem persistida no app (não reseta ao trocar de aba).
+  const captionRegens = captionRegenCount ?? 0;
   const [editedCaption, setEditedCaption] = useState<string | null>(null);
   const [captionHistory, setCaptionHistory] = useState<PostUnicoCaption[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -72,9 +79,9 @@ export default function PostUnicoResult({
   const CAPTION_MAX = 2;
   const captionExhausted = captionRegens >= CAPTION_MAX;
 
-  // Reseta contador e histórico de legenda a cada nova imagem gerada.
+  // Reseta histórico de legenda a cada nova imagem gerada. O contador de
+  // regeneração é zerado no app (setPuCaptionRegen) junto com a nova geração.
   useEffect(() => {
-    setCaptionRegens(0);
     setCaptionHistory([]);
     setSelectedIdx(0);
     setEditedCaption(null);
@@ -129,7 +136,7 @@ export default function PostUnicoResult({
 
   function handleRegenCaption() {
     if (captionExhausted || !onRegenerateCaption) return;
-    setCaptionRegens((c) => c + 1);
+    onCaptionRegen?.();
     setEditedCaption(null);
     onRegenerateCaption();
   }

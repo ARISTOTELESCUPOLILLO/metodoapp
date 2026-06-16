@@ -124,6 +124,13 @@ export default function App() {
   // Último título/texto confirmado do Post Único — reutilizado ao "Gerar outra
   // imagem" (regeneração sem copy), para a peça não sair genérica/repetida.
   const lastPuCopyRef = useRef<{ titulo: string; texto: string } | undefined>(undefined);
+  // Contadores de regeneração do Post Único elevados ao nível do app — antes
+  // viviam como useState dentro de PostUnicoForm/PostUnicoResult, que
+  // desmontam ao trocar de aba (modo), zerando a contagem ("0/2") ao voltar.
+  // Aqui persistem enquanto a peça não é limpa.
+  const [puTituloRegen, setPuTituloRegen] = useState(0);
+  const [puTextoRegen, setPuTextoRegen] = useState(0);
+  const [puCaptionRegen, setPuCaptionRegen] = useState(0);
   const [postUnicoStarted, setPostUnicoStarted] = useState(false);
   const [caption, setCaption] = useState<PostUnicoCaption | undefined>();
   const [captionLoading, setCaptionLoading] = useState(false);
@@ -460,6 +467,9 @@ export default function App() {
     setError('');
     postUnicoGenderRef.current = undefined;
     lastPuCopyRef.current = undefined;
+    setPuTituloRegen(0);
+    setPuTextoRegen(0);
+    setPuCaptionRegen(0);
   }
 
   async function handleClearMethodResult() {
@@ -541,6 +551,9 @@ export default function App() {
     setPostUnicoStarted(true);
     setCaption(undefined);
     setCaptionError('');
+    // Nova imagem → orçamento de regeneração de legenda zera (mantém o
+    // comportamento antigo do efeito [imageDataUrl] de PostUnicoResult).
+    setPuCaptionRegen(0);
     const data = {
       ...postUnico,
       companyName: postUnico.companyName || kit.companyName,
@@ -798,6 +811,11 @@ export default function App() {
               isAdmin={effectiveAdmin}
               hasPostPlano={profileLoading ? undefined : planAccess.hasPostUnico}
               puSlot={selectedSlot}
+              tituloRegenCount={puTituloRegen}
+              textoRegenCount={puTextoRegen}
+              onTituloRegen={() => setPuTituloRegen((c) => c + 1)}
+              onTextoRegen={() => setPuTextoRegen((c) => c + 1)}
+              onResetCopyRegen={() => { setPuTituloRegen(0); setPuTextoRegen(0); }}
             />
           )}
           {modo === 'imageKit' && (
@@ -839,6 +857,8 @@ export default function App() {
               direcao={postUnico.direcao}
               mood={postUnico.mood}
               assinatura={kit.assinatura || ''}
+              captionRegenCount={puCaptionRegen}
+              onCaptionRegen={() => setPuCaptionRegen((c) => c + 1)}
             />
           )}
           {modo === 'imageKit' && (
