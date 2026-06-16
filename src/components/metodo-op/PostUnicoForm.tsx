@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from 'lucide-react';
 import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
@@ -39,6 +39,12 @@ interface Props {
   onTextoRegen?: () => void;
   /** Zera os contadores de regeneração de título/texto (ao limpar/gerar novo copy). */
   onResetCopyRegen?: () => void;
+  /** Título/texto gerados, elevados ao app para persistirem entre trocas de aba
+   *  (o componente desmonta e remontaria com copy=null). Estado controlado. */
+  copy: PostUnicoCopy | null;
+  copyOriginal: PostUnicoCopy | null;
+  onCopyChange: Dispatch<SetStateAction<PostUnicoCopy | null>>;
+  onCopyOriginalChange: Dispatch<SetStateAction<PostUnicoCopy | null>>;
 }
 
 const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
@@ -73,7 +79,7 @@ function wordCount(s: string): number {
   return s.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, imgsRestantes, imgsTotal, semPlano, isAdmin, hasPostPlano, puSlot, tituloRegenCount, textoRegenCount, onTituloRegen, onTextoRegen, onResetCopyRegen }: Props) {
+export default function PostUnicoForm({ data, kit, imageKit, visualSelection, onVisualSelectionChange, onChange, onGenerate, onClear, loading, geracoesRestantes, geracoesTotal, imgsRestantes, imgsTotal, semPlano, isAdmin, hasPostPlano, puSlot, tituloRegenCount, textoRegenCount, onTituloRegen, onTextoRegen, onResetCopyRegen, copy, copyOriginal, onCopyChange: setCopy, onCopyOriginalChange: setCopyOriginal }: Props) {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
@@ -92,9 +98,9 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const initialKeyInfo = initialKeyInfoRef.current;
   const canRevertInitial = initialKeyInfo !== null && data.keyInfo !== initialKeyInfo;
 
-  // Etapa intermediária: título + texto gerados antes da imagem
-  const [copy, setCopy] = useState<PostUnicoCopy | null>(null);
-  const [copyOriginal, setCopyOriginal] = useState<PostUnicoCopy | null>(null);
+  // Etapa intermediária: título + texto gerados antes da imagem.
+  // `copy`/`copyOriginal` são controlados pelo app (props) para sobreviverem à
+  // troca de aba; `setCopy`/`setCopyOriginal` são os setters recebidos via props.
   const [copyLoading, setCopyLoading] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
   // Contagens persistidas no app (não resetam ao trocar de aba). Os incrementos

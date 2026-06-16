@@ -11,7 +11,7 @@ import ImageKitForm from './components/metodo-op/ImageKitForm';
 import { defaultVoice } from './data/brandVoice';
 import { generateMethodContent } from './services/api';
 import { judgeAndRegenerateContent } from './services/judgeContent';
-import { generatePostUnico, generatePostUnicoCaption, type PostUnicoCaption, type PostUnicoReferences } from './services/postUnico';
+import { generatePostUnico, generatePostUnicoCaption, type PostUnicoCaption, type PostUnicoReferences, type PostUnicoCopy } from './services/postUnico';
 import { detectForcedGenderFromCopy, PersonagemGender } from './core/visualDirection';
 import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from './services/brandKit';
 import { useServerFn } from '@tanstack/react-start';
@@ -131,6 +131,16 @@ export default function App() {
   const [puTituloRegen, setPuTituloRegen] = useState(0);
   const [puTextoRegen, setPuTextoRegen] = useState(0);
   const [puCaptionRegen, setPuCaptionRegen] = useState(0);
+  // Título/texto gerados do Post Único, elevados ao app — antes viviam como
+  // useState dentro de PostUnicoForm, que desmonta ao trocar de aba (modo),
+  // perdendo o copy ao voltar. Aqui persistem enquanto a peça não é limpa.
+  const [puCopy, setPuCopy] = useState<PostUnicoCopy | null>(null);
+  const [puCopyOriginal, setPuCopyOriginal] = useState<PostUnicoCopy | null>(null);
+  // Mantém lastPuCopyRef sincronizado com o copy atual, para que "Gerar outra
+  // imagem" (regeneração sem copy do botão) reutilize o último título/texto.
+  useEffect(() => {
+    if (puCopy) lastPuCopyRef.current = { titulo: puCopy.titulo, texto: puCopy.texto };
+  }, [puCopy]);
   const [postUnicoStarted, setPostUnicoStarted] = useState(false);
   const [caption, setCaption] = useState<PostUnicoCaption | undefined>();
   const [captionLoading, setCaptionLoading] = useState(false);
@@ -470,6 +480,8 @@ export default function App() {
     setPuTituloRegen(0);
     setPuTextoRegen(0);
     setPuCaptionRegen(0);
+    setPuCopy(null);
+    setPuCopyOriginal(null);
   }
 
   async function handleClearMethodResult() {
@@ -816,6 +828,10 @@ export default function App() {
               onTituloRegen={() => setPuTituloRegen((c) => c + 1)}
               onTextoRegen={() => setPuTextoRegen((c) => c + 1)}
               onResetCopyRegen={() => { setPuTituloRegen(0); setPuTextoRegen(0); }}
+              copy={puCopy}
+              copyOriginal={puCopyOriginal}
+              onCopyChange={setPuCopy}
+              onCopyOriginalChange={setPuCopyOriginal}
             />
           )}
           {modo === 'imageKit' && (
