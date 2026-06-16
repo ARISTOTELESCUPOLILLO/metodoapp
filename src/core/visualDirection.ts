@@ -569,13 +569,13 @@ TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - Regra prática: ambos título e texto de apoio devem ser lidos de imediato ao ver a peça no celular em tamanho normal — se precisar aproximar o celular para ler qualquer um deles, o tamanho está errado.
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
-- PROIBIDO qualquer tela visível com conteúdo em notebook, laptop, tablet, iPad, celular, iPhone, monitor ou qualquer dispositivo digital — tela frontal OU traseira.
-- CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, site, app, texto legível ou qualquer elemento visual.
-- DISPOSITIVO COMO OBJETO CONTEXTUAL: pode estar aberto, em uso, na mão, na mesa, apoiado ou em qualquer posição natural do contexto — NÃO forçar dispositivo fechado. Restrição é só o CONTEÚDO: tela frontal pode emitir brilho difuso ou luz ambiente desfocada (parece ligada e em uso), MAS sem texto, interface, gráfico, dashboard ou qualquer elemento legível — conteúdo zero, apenas luz. Carcaça e tampa traseira lisas (sem imagem, logo ou adesivo).
+- TELA DO DISPOSITIVO: DEVE mostrar conteúdo genérico desfocado/embaçado — texto borrado ilegível, gráfico fora de foco, interface desfocada — para parecer trabalho real em andamento. PROIBIDO tela apagada, escura ou em branco. O conteúdo existe mas NADA é identificável: nenhuma palavra lida, nenhum dado reconhecível, nenhuma interface clara.
+- CONTEÚDO PROIBIDO EM TELA (mesmo desfocado): logo de empresa real, marca reconhecível, site identificável, rosto humano.
+- DISPOSITIVO COMO OBJETO CONTEXTUAL: pode estar aberto, em uso, na mão, na mesa, apoiado ou em qualquer posição natural do contexto. Carcaça e tampa traseira lisas (sem imagem, logo ou adesivo).
 - MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
 - POSICIONAMENTO PROIBIDO: laptop aberto com tela voltada frontalmente para o observador e personagem posicionado ATRÁS — essa "barreira de laptop" é banida em TODOS os moods e segmentos.
 - SE A CENA ENVOLVER TELEFONE: deve ser smartphone/celular moderno (touchscreen, sem fio) — PROIBIDO telefone fixo, telefone com fio, orelhão, fax ou qualquer modelo retrô.
-- NEGATIVE: no readable content on screen, no text on screen, no charts on screen, no dashboard on screen, no UI on screen, no app interface on screen, no readable text on devices, no duplicated laptops, no extra devices, no logo or image or sticker or pattern or brand mark on device back panel or lid (plain matte casing only), no corded phone, no landline phone, no rotary phone, no retro telephone.
+- NEGATIVE: no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no real brand on screen, no duplicated laptops, no extra devices, no logo or image or sticker or pattern or brand mark on device back panel or lid (plain matte casing only), no corded phone, no landline phone, no rotary phone, no retro telephone.
 
 Os campos "clima" e "composicao" da leituraCenica DEVEM derivar diretamente da Tensão Dondis e da Gramática Visual acima — não são livres.
 Os campos "intencao", "personagem", "ambiente" e "expressao" continuam vindo da progressão psicológica da Matriz; a gramática visual apenas determina COMO a cena é fotografada, não O QUE ela diz.
