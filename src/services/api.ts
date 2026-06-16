@@ -151,8 +151,11 @@ function buildImagePrompt(params: {
   // Gênero atribuído pelo chamador para esta peça (balanceamento entre as N
   // peças da sequência + persistência entre regenerações). Ver generatePostImage.
   forcedGender?: PersonagemGender;
+  // Descrição do personagem-tipo da âncora da sequência (ex: "homem, 35-45 anos,
+  // camisa polo azul, postura técnica"). Injetada no genderBlock quando não há avatar.
+  anchoraPersonagem?: string;
 }): string {
-  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, secondaryFont, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef, forcedGender } = params;
+  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, secondaryFont, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem } = params;
   const isCover = format === 'reels_cover';
   const canvasSize = isCover ? '1080x1920' : '1080x1350';
   const canvasRatio = isCover ? '9:16 (reels vertical)' : '4:5 (feed)';
@@ -232,7 +235,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
 `;
 
-  const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender);
+  const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender, anchoraPersonagem);
 
   return `${DEVICE_RULE}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
@@ -356,8 +359,11 @@ export async function generatePostImage(params: {
   // mesma sequência e mantê-lo estável entre regenerações ("gerar de novo"
   // não deve trocar o gênero por acaso). Sem efeito quando hasAvatarRef.
   forcedGender?: PersonagemGender;
+  // Descrição do personagem-tipo da âncora da sequência MOP. Injetada no prompt
+  // de imagem quando não há avatar, garantindo consistência visual entre cards.
+  anchoraPersonagem?: string;
 }): Promise<string> {
-  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, forcedGender } = params;
+  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem } = params;
 
   const isReels = vertical === 'reels';
   const isCover = vertical === 'reels_cover';
@@ -416,7 +422,7 @@ ZONA DE RESPIRO INVIOLÁVEL: 150 px de margem livre nas QUATRO bordas (topo, bas
 IMAGEM FULL BLEED — REGRA ABSOLUTA: a imagem preenche o canvas 1080x1920 completamente de borda a borda. PROIBIDO: moldura externa, frame decorativo, borda de cor sólida ao redor da arte, vinheta escura periférica como contentor, margem vazia ou espaço branco/preto separando a imagem das bordas do canvas.
 FAIXA CENTRAL HORIZONTAL livre: entre 35% e 65% da altura do canvas, mantenha a área SEM detalhes que competem com texto — é onde a capa do vídeo entra nos primeiros 0,4 s. Posicione rosto, mãos e elementos-foco PREFERENCIALMENTE no terço SUPERIOR ou no terço INFERIOR, deixando o miolo do quadro mais limpo.
 
-${referenceAnchorBlock}CENA ADAPTADA PARA UM ÚNICO PORTA-VOZ: ${imagePrompt}.
+${referenceAnchorBlock}${anchoraPersonagem && !hasAvatarRef ? `PERSONAGEM-TIPO DA SEQUÊNCIA (manter consistente): ${anchoraPersonagem}.\n` : ''}CENA ADAPTADA PARA UM ÚNICO PORTA-VOZ: ${imagePrompt}.
 
 ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}`
     : buildImagePrompt({
@@ -438,6 +444,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         referenceAnchor,
         hasAvatarRef,
         forcedGender,
+        anchoraPersonagem,
       });
 
   return generateImageAsync({
