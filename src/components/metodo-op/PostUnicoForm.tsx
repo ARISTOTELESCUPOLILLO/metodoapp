@@ -146,7 +146,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
       // o rodízio de produto/lente entre pedidos de sugestão
     }
     if (copy && data.keyInfo !== copyKeyInfoRef.current) {
-      clearCopy();
+      clearCopy({ resetCounter: false });
     }
   }, [data.keyInfo]);
 
@@ -157,7 +157,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   useEffect(() => {
     if (data.objetivo === prevObjetivoRef.current) return;
     prevObjetivoRef.current = data.objetivo;
-    clearCopy();
+    clearCopy({ resetCounter: false });
     if (data.objetivo === 'nenhum' && data.direcao === 'mood') {
       onChange({ ...data, direcao: 'livre', mood: undefined });
     }
@@ -237,11 +237,13 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     }
   }
 
-  function clearCopy() {
+  // resetCounter=false: efeitos automáticos (mudança de keyInfo/objetivo) limpam
+  // o copy mas preservam o contador — só o usuário (Limpar e gerar novo) zera.
+  function clearCopy({ resetCounter = true }: { resetCounter?: boolean } = {}) {
     setCopy(null);
     setCopyOriginal(null);
     setCopyError(null);
-    onResetCopyRegen?.();
+    if (resetCounter) onResetCopyRegen?.();
     setCopyTError(null);
     setCopyXError(null);
     setCopyTSuggs([]);
@@ -663,7 +665,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
 
             <button
               type="button"
-              onClick={clearCopy}
+              onClick={() => clearCopy({ resetCounter: true })}
               style={{ background: '#fff', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
             >
               ✕ Limpar e gerar novo
