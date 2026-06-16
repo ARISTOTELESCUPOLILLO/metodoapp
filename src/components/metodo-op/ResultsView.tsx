@@ -1922,7 +1922,11 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
         : (ancoragem.genero === 'F' ? 'mulher' : 'homem'))
     : undefined;
   const anchoraPersonagem: string | undefined = (ancoragem && anchorMode === 'ancora')
-    ? [anchorAgeEffective].filter(Boolean).join(', ') || undefined
+    ? (() => {
+        const parts = [anchorAgeEffective, ancoragem.marcadores_profissionais].filter(Boolean);
+        if (ancoragem.papel === 'contexto_de_uso') parts.push('aparece como coadjuvante — o produto é protagonista visual');
+        return parts.join(', ') || undefined;
+      })()
     : undefined;
   const anchorControl: AnchorControl | undefined = ancoragem
     ? {
