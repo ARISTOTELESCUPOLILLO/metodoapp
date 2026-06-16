@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
+import { checkBalance, checkRateLimit, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
 import { mopContentCost } from '@/lib/costs';
 
 const LEITURA_CENICA_SCHEMA = {
@@ -174,6 +174,15 @@ export const Route = createFileRoute('/api/generate-content')({
             return Response.json({ error: 'Não autenticado' }, { status: 401 });
           }
           const { userId, impersonatedBy } = effective;
+          if (!impersonatedBy) {
+            const rate = await checkRateLimit(userId);
+            if (!rate.ok) {
+              return Response.json(
+                { error: 'Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.' },
+                { status: 429 },
+              );
+            }
+          }
           const balance = await checkBalance(userId, 0, 0, 1, preferredSlot as 'plano1' | 'plano2' | 'bonus' | undefined);
           if (!balance.ok) {
             const slot = preferredSlot as string | undefined;

@@ -48,6 +48,30 @@ export async function resolveEffectiveUser(
   return { userId: callerUserId };
 }
 
+const RATE_LIMIT_PER_HOUR = 15;
+
+export async function checkRateLimit(
+  userId: string,
+): Promise<{ ok: boolean; usedLastHour: number }> {
+  const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+    _user_id: userId,
+    _role: 'admin',
+  });
+  if (isAdmin === true) return { ok: true, usedLastHour: 0 };
+
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count, error } = await supabaseAdmin
+    .from('usage_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gt('qtd_geracoes', 0)
+    .gte('created_at', oneHourAgo);
+
+  if (error) return { ok: true, usedLastHour: 0 }; // fail open
+  const usedLastHour = count ?? 0;
+  return { ok: usedLastHour < RATE_LIMIT_PER_HOUR, usedLastHour };
+}
+
 export async function checkBalance(
   userId: string,
   imgs: number,
