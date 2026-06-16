@@ -1867,10 +1867,11 @@ export default function ResultsView({ result, kit, mood, onClear, onRetry, image
     : (cotaPersonalizados || ZERO_COTA);
   const extrasCarrossel = cotaPorTipo.carrossel || 0;
 
-  // âncora desativada quando há avatar real no kit — avatar é referência mais forte
-  const hasAvatarReal = !!(imageKit?.avatar || imageKit?.avatar2);
-  const ancoragem: AnchoraVisual | undefined = hasAvatarReal ? undefined : (result as any)?.ancora_visual;
-  // String compacta injetada no prompt de imagem (genderBlock). Undefined quando avatar presente.
+  // ancora_visual gerada pela IA junto com a sequência. Mostra sempre que existir —
+  // a supressão por avatar acontece POR CARD em regenerateWithKit (hasAvatarRef),
+  // não aqui: ter avatar no kit ≠ avatar sendo usado nesta geração específica.
+  const ancoragem: AnchoraVisual | undefined = (result as any)?.ancora_visual;
+  // String compacta injetada no prompt de imagem (genderBlock) nas gerações sem refs.
   const anchoraPersonagem: string | undefined = ancoragem
     ? [ancoragem.genero === 'F' ? 'mulher' : 'homem', ancoragem.faixa_etaria, ancoragem.marcadores_profissionais]
         .filter(Boolean).join(', ')
