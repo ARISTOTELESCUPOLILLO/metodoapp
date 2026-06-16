@@ -407,14 +407,12 @@ export async function generatePostImage(params: {
     ? `\n\nREFORÇO COM REFERÊNCIAS: A pessoa da imagem de referência deve aparecer como SUJEITO FÍSICO E REAL da cena — em pé, sentada ou em movimento na locação descrita, jamais como imagem projetada/exibida na tela ou tampa de qualquer dispositivo. Preserve exatamente: rosto, traços faciais, etnia, cabelo, barba, óculos — mantendo a identidade visual da pessoa. Mesmo ambiente e iluminação da cena. NÃO copie a roupa da referência — vista a pessoa com roupa coerente com o contexto da cena.`
     : '';
 
-  // Regra de dispositivos digitais — proíbe qualquer tela com conteúdo visível.
+  // Regra de dispositivos digitais para Reels — alinhada com DEVICE_RULE de promptRules.ts.
   const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
 PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
-PROIBIDO qualquer tela com conteúdo visível em notebook, laptop, tablet, iPad, celular, iPhone ou monitor — tela frontal ou traseira.
-CONTEÚDO PROIBIDO EM TELA: gráfico, dashboard, imagem, interface, app, texto legível ou qualquer elemento visual.
-DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. Restrição é só o conteúdo: tela frontal escura/neutra (sem nada visível), carcaça e tampa traseira lisas (sem imagem ou logo).
+DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela pode mostrar conteúdo genérico desfocado/embaçado (texto borrado ilegível, interface desfocada) ou brilho difuso — NADA identificável. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara. Carcaça e tampa traseira lisas (sem imagem ou logo).
 MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
-NEGATIVE: no visible screen content, no laptop screen facing viewer, no charts on screen, no dashboard, no UI, no app interface, no readable text on devices, no duplicated devices, screen must be blank dark off or out of focus.`;
+NEGATIVE: no legible screen content, no recognizable logo on screen, no readable text on screen, no charts, no dashboard, no clear UI, no duplicated devices, no image or logo on device casing or back cover.`;
 
   // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
   // precisa vir ANTES da descrição da cena para não perder força para ela.
