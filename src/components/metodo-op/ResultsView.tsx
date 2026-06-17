@@ -693,18 +693,27 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
 
 // Distribuição de fotos de produto selecionadas (Kit Imagem) pelos cards do
 // carrossel de VAREJO — sem misturar produtos fora do conteúdo (só usa as
-// fotos selecionadas pelo usuário para este bloco) e sem exigir muitas fotos:
-// 1ª foto = card inicial (produto inteiro); última foto selecionada (até 4)
-// = card final (produto inteiro); fotos do meio (se houver) são distribuídas
-// entre os cards centrais em modo detalhe/recorte — se não houver foto
-// dedicada para um card central, repete (round-robin) uma das fotos do meio
-// (ou a única foto, se só 1 selecionada) em modo detalhe.
+// fotos selecionadas pelo usuário para este bloco).
+//
+// Cobertura completa (fotos marcadas >= nº de cards): 1 foto distinta por
+// card, na ordem em que foram marcadas (o numerinho que aparece ao marcar
+// cada tile) — card 1 = foto 1, card 2 = foto 2, etc., sempre como produto
+// inteiro. Sem reaproveitamento, então não há por que recortar em detalhe.
+//
+// Cobertura parcial (menos fotos que cards): 1ª foto = card inicial (produto
+// inteiro); última foto selecionada = card final (produto inteiro); fotos do
+// meio (se houver) são distribuídas entre os cards centrais em modo
+// detalhe/recorte — se não houver foto dedicada para um card central, repete
+// (round-robin) uma das fotos do meio (ou a única foto, se só 1 selecionada)
+// em modo detalhe.
 function distributeProduto(produtosNums: number[], index: number, total: number): { num: number; isFull: boolean } | null {
-  const nums = produtosNums.slice(0, 4);
-  if (!nums.length) return null;
-  if (index === 0) return { num: nums[0], isFull: true };
-  if (index === total - 1) return { num: nums[nums.length - 1], isFull: true };
-  const middlePool = nums.length >= 3 ? nums.slice(1, -1) : nums;
+  if (!produtosNums.length) return null;
+  if (produtosNums.length >= total) {
+    return { num: produtosNums[index], isFull: true };
+  }
+  if (index === 0) return { num: produtosNums[0], isFull: true };
+  if (index === total - 1) return { num: produtosNums[produtosNums.length - 1], isFull: true };
+  const middlePool = produtosNums.length >= 3 ? produtosNums.slice(1, -1) : produtosNums;
   const m = index - 1;
   return { num: middlePool[m % middlePool.length], isFull: false };
 }
