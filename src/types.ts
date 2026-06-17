@@ -188,4 +188,8 @@ export interface PostUnicoVisualSelection {
   produtosSelecionados: number[];
   // Número (1..3) do cenário escolhido. Apenas 1 cenário por peça.
   cenarioSelecionado: number | null;
+  // Veste o avatar com a foto de uniforme cadastrada no Kit de Marca, em vez
+  // do figurino livre sorteado pelo motor. Só tem efeito com useAvatar=true
+  // e com kit.uniformeDataUrl cadastrado.
+  useUniforme: boolean;
 }

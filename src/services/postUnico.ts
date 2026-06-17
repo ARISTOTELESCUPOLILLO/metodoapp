@@ -238,6 +238,9 @@ export interface PostUnicoReferences {
   // 'fachada' = frente do estabelecimento; 'ambiente' (default) = interior.
   cenarioTipo?: 'fachada' | 'ambiente';
   produtos?: { num: number; dataUrl: string }[];
+  // Foto do uniforme da empresa (kit.uniformeDataUrl) — veste o personagem
+  // da peça com esta peça de roupa em vez do figurino livre sorteado.
+  uniforme?: string;
 }
 
 function isClothingFriendly(hex: string): boolean {
@@ -356,6 +359,7 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
   const parts: string[] = [];
   const elementos: string[] = [];
   if (refs.avatar) elementos.push('AVATAR');
+  if (refs.uniforme) elementos.push('UNIFORME');
   if (refs.cenario) elementos.push('CENÁRIO');
   if (refs.produtos && refs.produtos.length) elementos.push('PRODUTOS');
   if (!elementos.length) return '';
@@ -365,13 +369,18 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
   parts.push(segmentRules(segment));
 
   if (refs.avatar) {
-    const clothingHint = kitColors
-      ? (() => {
-          const pool = buildClothingPool(kitColors.primary, kitColors.accent);
-          return ` VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
-        })()
-      : '';
+    const clothingHint = refs.uniforme
+      ? ' VESTUÁRIO: ver instrução de UNIFORME abaixo — vista a peça do uniforme, não roupa livre.'
+      : kitColors
+        ? (() => {
+            const pool = buildClothingPool(kitColors.primary, kitColors.accent);
+            return ` VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
+          })()
+        : '';
     parts.push(`AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, de costas parcial, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro, três-quartos, OU peça sem rosto visível (mãos trabalhando, detalhe de gesto, ambiente com presença implícita). Escolha a combinação que melhor serve à mensagem desta peça específica.`);
+  }
+  if (refs.uniforme) {
+    parts.push(`UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si. NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem já definido pelo avatar.`);
   }
   if (refs.cenario) {
     if (objetivo === 'fatos') {
@@ -611,10 +620,13 @@ export async function generatePostUnico(params: {
   const { data, kit, copy, references, preferredSlot, forcedGender, variationHint } = params;
   const prompt = buildPostUnicoPrompt({ data, kit, copy, references, forcedGender, variationHint });
 
-  // Coleta refs ordenadas: avatar -> cenário -> produtos por número.
+  // Coleta refs ordenadas: avatar -> uniforme -> cenário -> produtos por número.
+  // Uniforme não é removido no retry sem avatar (foto sem rosto, não deve
+  // disparar a recusa de rosto do gpt-image que motiva esse retry).
   const buildRefs = (withAvatar: boolean): string[] => {
     const imgs: string[] = [];
     if (withAvatar && references?.avatar) imgs.push(references.avatar);
+    if (references?.uniforme) imgs.push(references.uniforme);
     if (references?.cenario) imgs.push(references.cenario);
     if (references?.produtos?.length) {
       for (const p of [...references.produtos].sort((a, b) => a.num - b.num)) {

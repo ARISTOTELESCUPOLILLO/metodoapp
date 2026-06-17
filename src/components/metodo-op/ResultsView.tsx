@@ -428,7 +428,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
         keyInfo: `${item.titulo || ''}. ${item.imagem || ''}`.slice(0, 500),
         titulo, texto, imagePrompt: item.imagem, leituraCenica: (item as any).leituraCenica,
         formato: 'post',
-        selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
+        selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums, useUniforme: sel.useUniforme },
         anchoraPersonagem, ancoragePapel,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -591,7 +591,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
         keyInfo: `${item.titulo || ''}. ${item.imagem || ''}`.slice(0, 500),
         titulo, texto, imagePrompt: item.imagem, leituraCenica: (item as any).leituraCenica,
         formato: 'post',
-        selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums },
+        selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums, useUniforme: sel.useUniforme },
         anchoraPersonagem, ancoragePapel,
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -795,7 +795,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
 
   // Lê seleção efetiva para um card: prefere storage do bloco (consolidado)
   // mapeando card[i] → produto[i]; fallback para storage individual por card.
-  function selecaoParaCard(index: number): { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[]; produtoDetalhe?: boolean } | null {
+  function selecaoParaCard(index: number): { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[]; produtoDetalhe?: boolean; useUniforme?: boolean } | null {
     const card = cards[index];
     // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
     const avatarNumDe = (j: any): 1 | 2 | null =>
@@ -818,6 +818,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
               cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
               produtosNums: d ? [d.num] : [],
               produtoDetalhe: d ? !d.isFull : false,
+              useUniforme: avatarNum != null && !!j.useUniforme,
             };
           }
           // Outros segmentos: 1 produto por card, revezando entre os
@@ -829,6 +830,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             avatarNum,
             cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
             produtosNums: pick != null ? [pick] : [],
+            useUniforme: avatarNum != null && !!j.useUniforme,
           };
         }
       }
@@ -845,6 +847,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         avatarNum,
         cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
         produtosNums: Array.isArray(j.produtosNums) ? j.produtosNums : [],
+        useUniforme: avatarNum != null && !!j.useUniforme,
       };
     } catch { return null; }
   }
@@ -1331,7 +1334,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
 
   async function runGenerateWithRefs() {
     const storageKey = `uso-ref:reels:${dayNumber}`;
-    let s: { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[] };
+    let s: { usarAvatar: boolean; avatarNum: 1 | 2 | null; cenarioNum: number | null; produtosNums: number[]; useUniforme?: boolean };
     try {
       const raw = localStorage.getItem(storageKey);
       const j = raw ? JSON.parse(raw) : {};
@@ -1342,6 +1345,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         avatarNum,
         cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
         produtosNums: Array.isArray(j.produtosNums) ? j.produtosNums : [],
+        useUniforme: avatarNum != null && !!j.useUniforme,
       };
     } catch { return; }
     setBusyRefs(true);

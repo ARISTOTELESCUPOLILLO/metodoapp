@@ -1,4 +1,4 @@
-import { ImageKit, MoodCode, PostUnicoVisualSelection } from '../../types';
+import { BrandKit, ImageKit, MoodCode, PostUnicoVisualSelection } from '../../types';
 import { produtosDisponiveis, cenariosDisponiveis, cenarioLabel } from '../../utils/imageKitStorage';
 import { policyPorFormato } from '../../core/referenciasPolicy';
 
@@ -9,12 +9,13 @@ const MAX_PRODUTOS_PU = policyPorFormato('VAREJO', 'estatico', 'PU2').produtos;
 
 interface Props {
   imageKit: ImageKit;
+  kit: BrandKit;
   selection: PostUnicoVisualSelection;
   onChange: (next: PostUnicoVisualSelection) => void;
   mood?: MoodCode;
 }
 
-export default function PostUnicoComposicaoVisual({ imageKit, selection, onChange, mood }: Props) {
+export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, onChange, mood }: Props) {
   const hasAvatar1 = !!imageKit.avatar;
   const hasAvatar2 = !!imageKit.avatar2;
   const hasAvatar = hasAvatar1 || hasAvatar2;
@@ -110,6 +111,18 @@ export default function PostUnicoComposicaoVisual({ imageKit, selection, onChang
           />
         ))}
       </div>
+
+      {!!kit.uniformeDataUrl && (
+        <label className="checkRow" style={{ marginTop: 8, opacity: selection.useAvatar ? 1 : 0.5 }}>
+          <input
+            type="checkbox"
+            checked={selection.useUniforme}
+            disabled={!selection.useAvatar}
+            onChange={(e) => onChange({ ...selection, useUniforme: e.target.checked })}
+          />
+          Gerar com uniforme da empresa{!selection.useAvatar && ' (marque um avatar acima para usar)'}
+        </label>
+      )}
 
       {(!hasAvatar || !hasCenario || !hasProdutos) && (
         <div style={{

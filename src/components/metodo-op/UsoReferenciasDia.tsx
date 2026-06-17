@@ -101,6 +101,7 @@ export default function UsoReferenciasDia(props: Props) {
   const [avatarNum, setAvatarNum] = useState<number | null>(null);
   const [cenarioNum, setCenarioNum] = useState<number | null>(null);
   const [produtosNums, setProdutosNums] = useState<number[]>([]);
+  const [useUniforme, setUseUniforme] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,6 +120,7 @@ export default function UsoReferenciasDia(props: Props) {
         }
         if (typeof s.cenarioNum === 'number' || s.cenarioNum === null) setCenarioNum(s.cenarioNum);
         if (Array.isArray(s.produtosNums)) setProdutosNums(s.produtosNums);
+        if (typeof s.useUniforme === 'boolean') setUseUniforme(s.useUniforme);
       }
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,10 +130,10 @@ export default function UsoReferenciasDia(props: Props) {
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return;
-      localStorage.setItem(storageKey, JSON.stringify({ enabled, avatarNum, cenarioNum, produtosNums }));
+      localStorage.setItem(storageKey, JSON.stringify({ enabled, avatarNum, cenarioNum, produtosNums, useUniforme }));
       window.dispatchEvent(new CustomEvent('uso-ref:changed', { detail: { key: storageKey } }));
     } catch { /* ignore */ }
-  }, [enabled, avatarNum, cenarioNum, produtosNums, storageKey]);
+  }, [enabled, avatarNum, cenarioNum, produtosNums, useUniforme, storageKey]);
 
   function toggleProduto(n: number) {
     setProdutosNums((prev) => {
@@ -179,6 +181,7 @@ export default function UsoReferenciasDia(props: Props) {
           avatarNum: avatarNum as 1 | 2 | null,
           cenarioNum: cenarioNum,
           produtosNums: produtosNumsParaUso,
+          useUniforme: avatarNum != null && useUniforme,
         },
       });
       onGerou(url, {
@@ -294,6 +297,19 @@ export default function UsoReferenciasDia(props: Props) {
             })}
           </div>
 
+          {!!kit.uniformeDataUrl && policy.avatar && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, cursor: avatarNum != null ? 'pointer' : 'default', opacity: avatarNum != null ? 1 : 0.5, fontSize: 11, fontWeight: 600 }}>
+              <input
+                type="checkbox"
+                style={{ width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, flexShrink: 0, cursor: avatarNum != null ? 'pointer' : 'default' }}
+                checked={useUniforme}
+                disabled={avatarNum == null}
+                onChange={(e) => setUseUniforme(e.target.checked)}
+              />
+              Gerar com uniforme da empresa{avatarNum == null && ' (marque um avatar acima para usar)'}
+            </label>
+          )}
+
           {algumFaltando && (
             <div style={{
               marginTop: 8, background: '#fffbeb', border: '1px solid #fcd34d',
@@ -394,11 +410,12 @@ export interface RefSelectionState {
   avatarNum: number | null;
   cenarioNum: number | null;
   produtosNums: number[];
+  useUniforme: boolean;
   hasAny: boolean;
 }
 
 const EMPTY_SEL: RefSelectionState = {
-  enabled: false, avatarNum: null, cenarioNum: null, produtosNums: [], hasAny: false,
+  enabled: false, avatarNum: null, cenarioNum: null, produtosNums: [], useUniforme: false, hasAny: false,
 };
 
 function readSel(storageKey: string): RefSelectionState {
@@ -414,8 +431,9 @@ function readSel(storageKey: string): RefSelectionState {
       : (s.usarAvatar ? 1 : null);
     const cenarioNum = (typeof s.cenarioNum === 'number') ? s.cenarioNum : null;
     const produtosNums = Array.isArray(s.produtosNums) ? s.produtosNums.filter((n: unknown) => typeof n === 'number') : [];
+    const useUniforme = avatarNum != null && !!s.useUniforme;
     const hasAny = enabled && (avatarNum != null || cenarioNum != null || produtosNums.length > 0);
-    return { enabled, avatarNum, cenarioNum, produtosNums, hasAny };
+    return { enabled, avatarNum, cenarioNum, produtosNums, useUniforme, hasAny };
   } catch {
     return EMPTY_SEL;
   }
@@ -432,6 +450,7 @@ function getSnapshot(storageKey: string): RefSelectionState {
     && cached.cenarioNum === fresh.cenarioNum
     && cached.produtosNums.length === fresh.produtosNums.length
     && cached.produtosNums.every((n, i) => n === fresh.produtosNums[i])
+    && cached.useUniforme === fresh.useUniforme
   ) {
     return cached;
   }

@@ -67,6 +67,9 @@ export interface RegenerateInput {
     // o produto referenciado deve aparecer em DETALHE/RECORTE (não o produto
     // inteiro) neste card — ver distributeProduto em ResultsView.tsx.
     produtoDetalhe?: boolean;
+    // Veste o avatar com a foto de uniforme do Kit de Marca (kit.uniformeDataUrl)
+    // em vez do figurino livre sorteado. Só tem efeito com usarAvatar=true.
+    useUniforme?: boolean;
   };
   // Atividade da empresa (ancoragem semântica) — reservado para futuro uso.
   mainActivity?: string;
@@ -133,6 +136,7 @@ function buildReferences(
 function refsToArray(refs: PostUnicoReferences): string[] {
   const out: string[] = [];
   if (refs.avatar) out.push(refs.avatar);
+  if (refs.uniforme) out.push(refs.uniforme);
   if (refs.cenario) out.push(refs.cenario);
   if (refs.produtos?.length) {
     for (const p of [...refs.produtos].sort((a, b) => a.num - b.num)) {
@@ -216,8 +220,8 @@ const PRODUTO_DETALHE_POOL: readonly string[] = [
 
 function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?: { primary: string; accent: string }, cardCarrossel?: number, segment?: Segment, produtoDetalhe?: boolean): string {
   // Ordem dos prefixos espelha a ordem em que as imagens são enviadas
-  // (avatar → cenário → produtos), pra que a numeração "imagem #1/#2/#3"
-  // case com a posição em image_urls no servidor.
+  // (avatar → uniforme → cenário → produtos), pra que a numeração
+  // "imagem #1/#2/#3" case com a posição em image_urls no servidor.
   const lines: string[] = [];
   let idx = 1;
   // Quando há produto referenciado, o cenário deixa de "travar" móveis/ângulo
@@ -225,14 +229,22 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
   // para dar protagonismo ao produto (ver buildProductHierarchyBlock abaixo).
   const temProduto = !!refs.produtos?.length;
   if (refs.avatar) {
-    const clothingHint = kitColors
-      ? (() => {
-          const pool = buildClothingPool(kitColors.primary, kitColors.accent);
-          return ` COR DO VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
-        })()
-      : '';
+    const clothingHint = refs.uniforme
+      ? ' COR/MODELO DO VESTUÁRIO: ver IMAGEM seguinte (UNIFORME OBRIGATÓRIO) — não escolha roupa livre.'
+      : kitColors
+        ? (() => {
+            const pool = buildClothingPool(kitColors.primary, kitColors.accent);
+            return ` COR DO VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
+          })()
+        : '';
     lines.push(
       `IMAGEM #${idx} = AVATAR (referência de IDENTIDADE, não de figurino). PRESERVE EXATAMENTE: rosto, traços faciais, idade, cabelo, barba, tom de pele, etnia, sexo, biótipo/estatura/porte físico, óculos e acessórios fixos do rosto. NÃO rejuvenesça, NÃO envelheça, NÃO troque etnia, NÃO mude o gênero, NÃO altere o porte físico. IGNORE a roupa, a cor da roupa, a pose exata e os acessórios de vestuário (relógio, anéis, colares) da foto — eles servem só pra mostrar a pessoa, não o figurino. Vista o avatar com roupa NOVA, coerente com a cena e o contexto da empresa descritos abaixo (pode ser polo, camisa social, jaleco, uniforme, regata de treino, moletom, terno — escolha o que faz sentido para a situação e o ambiente).${clothingHint}`,
+    );
+    idx++;
+  }
+  if (refs.uniforme) {
+    lines.push(
+      `IMAGEM #${idx} = UNIFORME OBRIGATÓRIO. Vista o personagem da cena EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si. NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem da cena.`,
     );
     idx++;
   }
@@ -348,6 +360,9 @@ export async function regenerateWithKit(
   } = input;
 
   const references = buildReferences(slot.elemento, imageKit, produtosSelecionados, cenarioSelecionado, selecaoDireta);
+  if (selecaoDireta?.useUniforme && references.avatar && kit.uniformeDataUrl) {
+    references.uniforme = kit.uniformeDataUrl;
+  }
   const referenceImages = refsToArray(references);
   const hasAvatarRef = !!references.avatar;
   const hasCenarioRef = !!references.cenario;

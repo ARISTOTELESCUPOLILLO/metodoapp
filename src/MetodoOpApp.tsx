@@ -87,6 +87,7 @@ const defaultVisualSelection: PostUnicoVisualSelection = {
   useProdutos: false,
   produtosSelecionados: [],
   cenarioSelecionado: null,
+  useUniforme: false,
 };
 
 export default function App() {
@@ -598,6 +599,7 @@ export default function App() {
       if (visualSelection.useAvatar) {
         const av = visualSelection.avatarSelecionado === 2 ? imageKit.avatar2 : imageKit.avatar;
         if (av) references.avatar = av;
+        if (visualSelection.useUniforme && kit.uniformeDataUrl) references.uniforme = kit.uniformeDataUrl;
       }
       if (visualSelection.useCenario) {
         const idx = (visualSelection.cenarioSelecionado ?? 1) - 1;
