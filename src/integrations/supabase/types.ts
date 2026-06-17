@@ -69,6 +69,7 @@ export type Database = {
           secondary_color: string | null
           secondary_font: string | null
           segment: string | null
+          uniforme_url: string | null
           updated_at: string
           user_id: string
         }
@@ -90,6 +91,7 @@ export type Database = {
           secondary_color?: string | null
           secondary_font?: string | null
           segment?: string | null
+          uniforme_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -111,6 +113,7 @@ export type Database = {
           secondary_color?: string | null
           secondary_font?: string | null
           segment?: string | null
+          uniforme_url?: string | null
           updated_at?: string
           user_id?: string
         }

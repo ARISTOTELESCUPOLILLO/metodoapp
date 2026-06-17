@@ -29,6 +29,10 @@ export interface BrandKit {
   mainActivity?: string;
   logoPosition?: LogoPosition;
   assinatura?: string;
+  // Foto do uniforme da empresa (plano médio, sem rosto) — usada como
+  // referência de cor/modelo/posição da logo ao vestir o avatar ou o
+  // personagem sem avatar nas peças, quando "Gerar com uniforme" é marcado.
+  uniformeDataUrl?: string;
   // Produtos, serviços, categorias ou especialidades reais — matéria-prima
   // concreta para a Sugestão (Informação-chave). Mínimo 3, máximo 10.
   products?: string[];

@@ -56,6 +56,7 @@ const MAX_PRODUCTS = 10;
 
 export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, loading, saving, saved, lockedSegment }: Props) {
   const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false);
+  const [confirmRemoveUniforme, setConfirmRemoveUniforme] = useState(false);
   const [isOpen, setIsOpen] = useState(!kit.companyName?.trim());
   const [newProductItem, setNewProductItem] = useState('');
   const update = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) => onChange({ ...kit, [key]: value });
@@ -234,6 +235,40 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
         </label>
       </div>
 
+      <div className="grid2">
+        <label>Uniforme da empresa (opcional)
+          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file) update('uniformeDataUrl', await fileToDataUrl(file));
+          }} />
+          <small style={{ color: '#64748b', fontWeight: 500, display: 'block', marginTop: 4 }}>
+            Foto plano médio da camisa/uniforme, sem rosto — usamos só cor, modelo e posição da logo. Habilita a opção "Gerar com uniforme" nas peças.
+          </small>
+          {kit.uniformeDataUrl && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+              <img src={kit.uniformeDataUrl} alt="uniforme" style={{ height: 64, objectFit: 'contain', borderRadius: 8, background: '#f1f5f9', padding: 4 }} />
+              <button
+                type="button"
+                onClick={() => setConfirmRemoveUniforme(true)}
+                style={{
+                  background: '#fff',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca',
+                  borderRadius: 8,
+                  padding: '6px 10px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+                title="Remover a foto do uniforme atual"
+              >
+                🗑 Remover uniforme
+              </button>
+            </div>
+          )}
+        </label>
+      </div>
+
       <div className="colorSection">
         <strong className="colorLabel">Cores da marca</strong>
         <div className="colorGrid">
@@ -403,6 +438,20 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
           setConfirmRemoveLogo(false);
         }}
         onCancel={() => setConfirmRemoveLogo(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmRemoveUniforme}
+        tone="danger"
+        title="Remover uniforme?"
+        message="A foto do uniforme atual será removida do formulário. A opção 'Gerar com uniforme' deixará de aparecer até subir uma nova foto e clicar em Salvar Kit."
+        confirmLabel="Remover"
+        cancelLabel="Cancelar"
+        onConfirm={() => {
+          update('uniformeDataUrl', undefined);
+          setConfirmRemoveUniforme(false);
+        }}
+        onCancel={() => setConfirmRemoveUniforme(false)}
       />
     </section>
   );
