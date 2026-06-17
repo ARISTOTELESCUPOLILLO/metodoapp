@@ -410,6 +410,17 @@ A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, n
       }),
     );
   }
+  // Quando apenas avatar enviado (sem cenário e sem produto): suprimir
+  // construção de ambiente pelo modelo — sem isso, a edição de imagem tende a
+  // reaproveitar/estender o fundo da própria foto do avatar como cenário.
+  if (refs.avatar && !refs.cenario && !(refs.produtos && refs.produtos.length)) {
+    parts.push(
+      'FUNDO NEUTRO OBRIGATÓRIO: apenas avatar de referência enviado — sem imagem de cenário. ' +
+      'Usar FUNDO LIMPO, SUAVE e DESFOCADO: bokeh suave, gradiente neutro, textura vaga ou superfície indefinida. ' +
+      'NÃO construir ambiente físico específico, sala, escritório ou local identificável como fundo — mesmo que outras partes deste prompt descrevam um local. ' +
+      'NEGATIVE: detailed background, specific room interior, identifiable location behind person, sharp background, busy background, office furniture behind subject.',
+    );
+  }
   parts.push(`INTEGRAÇÃO: combinar os elementos de forma natural, elegante e coerente — adapte iluminação, profundidade e atmosfera ao mood. Resultado deve parecer campanha visual profissional, não colagem.`);
   return parts.join('\n\n');
 }
