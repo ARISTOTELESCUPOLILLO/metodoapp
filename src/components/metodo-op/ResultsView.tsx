@@ -53,7 +53,7 @@ import { generatePostImage } from '../../services/api';
 import { detectForcedGenderFromCopy, PersonagemGender } from '../../core/visualDirection';
 import { generateSequencePdf } from '../../utils/generatePdf';
 import { mopName } from '../../utils/file';
-import { regenerateBlock, type RegenKind } from '../../services/regenerateBlock';
+import { regenerateBlockClean, type RegenKind } from '../../services/regenerateBlock';
 import {
   resolveModelo,
   ZERO_COTA,
@@ -219,7 +219,7 @@ function EditableField(props: {
   onChange: (v: string) => void;
   onRegenStart: () => void;
   onRegenDone: () => void;
-  ctxBuilder: () => Parameters<typeof regenerateBlock>[0];
+  ctxBuilder: () => Parameters<typeof regenerateBlockClean>[0];
   multiline?: boolean;
   maxWords?: number;
   excludeTexts?: string[];
@@ -237,7 +237,7 @@ function EditableField(props: {
     setBusy(true); setError(null);
     onRegenStart();
     try {
-      const next = await regenerateBlock(ctxBuilder());
+      const next = await regenerateBlockClean(ctxBuilder());
       const trimmed = (next || '').trim();
       if (trimmed) setSuggestions((arr) => [...arr, trimmed]);
     } catch (e) {

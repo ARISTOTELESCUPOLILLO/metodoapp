@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 
 import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from 'lucide-react';
 import { BrandKit, ImageKit, MoodCode, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { generatePostUnicoCopy, type PostUnicoCopy } from '../../services/postUnico';
-import { regenerateBlock } from '../../services/regenerateBlock';
+import { regenerateBlockClean } from '../../services/regenerateBlock';
 import { autoRegenerateFlaggedPostUnico } from '../../services/autoRegenerate';
 import { judgeAndRegeneratePostUnico } from '../../services/judgeContent';
 import { getAuthHeaders } from '../../services/authHeaders';
@@ -216,7 +216,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     isTitulo ? setCopyTBusy(true) : setCopyXBusy(true);
     isTitulo ? setCopyTError(null) : setCopyXError(null);
     try {
-      const next = await regenerateBlock({
+      const next = await regenerateBlockClean({
         kind,
         companyName: data.companyName || kit.companyName,
         mainActivity: data.mainActivity || kit.mainActivity || '',

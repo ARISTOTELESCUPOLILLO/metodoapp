@@ -1,3 +1,5 @@
+import { applyDeterministicFallback } from '../core/textValidation';
+
 export type RegenKind = 'titulo' | 'texto' | 'legenda';
 
 export interface RegenContext {
@@ -34,13 +36,32 @@ async function callRegenerateBlock(ctx: RegenContext): Promise<RegenResult> {
   };
 }
 
-export async function regenerateBlock(ctx: RegenContext): Promise<string> {
-  const { value } = await callRegenerateBlock(ctx);
-  return value;
-}
-
 // Variante usada pela orquestração de regeneração automática (E3) — também
 // devolve as reprovações D1 já recalculadas pelo servidor sobre o novo valor.
 export async function regenerateBlockWithFlags(ctx: RegenContext): Promise<RegenResult> {
   return callRegenerateBlock(ctx);
+}
+
+const MAX_ATTEMPTS = 2;
+
+// Variante usada pelos botões manuais de "Gerar outro" (UI) — antes
+// descartava as reprovações D1 do servidor (regenerateBlock simples) e podia
+// devolver ao usuário um texto que o próprio motor já sabia estar flagado.
+// Aplica a mesma garantia do E3 (autoRegenerate.ts): tenta de novo com o
+// motivo da reprovação e, se ainda flagar na 2ª tentativa, aplica a limpeza
+// determinística (E4) em vez de expor o texto reprovado como sugestão.
+export async function regenerateBlockClean(ctx: RegenContext): Promise<string> {
+  let value = '';
+  let motivoReprovacao = ctx.motivoReprovacao;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const regen = await callRegenerateBlock({ ...ctx, motivoReprovacao });
+    value = regen.value;
+    if (!regen.flags || regen.flags.length === 0) return value;
+    motivoReprovacao = regen.flags.join('; ');
+    if (attempt === MAX_ATTEMPTS) {
+      console.warn(`[regenerateBlockClean] ${ctx.kind} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`);
+      return applyDeterministicFallback(value, ctx.kind);
+    }
+  }
+  return value;
 }
