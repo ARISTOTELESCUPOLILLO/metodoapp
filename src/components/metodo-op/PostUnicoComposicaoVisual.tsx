@@ -134,7 +134,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
           border: `1px solid ${selection.personagemSemAvatar?.ativo ? '#67e8f9' : '#e2e8f0'}`,
           borderRadius: 8,
         }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', color: '#0f172a' }}>
+          <label className="checkRow" style={{ fontWeight: 700, fontSize: 12, color: '#0f172a' }}>
             <input
               type="checkbox"
               checked={!!selection.personagemSemAvatar?.ativo}
@@ -147,7 +147,12 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
                 },
               })}
             />
-            Gerar personagem com uniforme (sem avatar)
+            <span>Gerar personagem com uniforme (sem avatar)</span>
+            {selection.personagemSemAvatar?.ativo && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 8px', letterSpacing: 0.3 }}>
+                {selection.personagemSemAvatar.genero === 'mulher' ? 'F' : 'M'} · {selection.personagemSemAvatar.idade.replace(' anos', '').replace(' ano', '')}
+              </span>
+            )}
           </label>
           {selection.personagemSemAvatar?.ativo && (
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
