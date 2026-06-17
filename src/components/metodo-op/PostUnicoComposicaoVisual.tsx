@@ -173,7 +173,7 @@ function Tile({ checked, onToggle, url, label }: {
           type="checkbox"
           checked={checked}
           onChange={onToggle}
-          style={{ position: 'absolute', top: 4, left: 4, margin: 0, cursor: 'pointer' }}
+          style={{ position: 'absolute', top: 4, left: 4, width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, cursor: 'pointer' }}
         />
       </div>
       <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textAlign: 'center', lineHeight: 1.15 }}>{label}</span>
