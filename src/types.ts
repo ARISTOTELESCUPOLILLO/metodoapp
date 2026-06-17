@@ -192,4 +192,9 @@ export interface PostUnicoVisualSelection {
   // do figurino livre sorteado pelo motor. Só tem efeito com useAvatar=true
   // e com kit.uniformeDataUrl cadastrado.
   useUniforme: boolean;
+  // Personagem criado do zero (sem foto de avatar), vestido com o uniforme
+  // do Kit de Marca. Só tem efeito com useAvatar=false e kit.uniformeDataUrl
+  // cadastrado. Escolha vale por geração — pode ficar fixada como última
+  // escolha (persistida junto com o resto de visualSelection).
+  personagemSemAvatar?: { ativo: boolean; genero: 'mulher' | 'homem'; idade: string };
 }

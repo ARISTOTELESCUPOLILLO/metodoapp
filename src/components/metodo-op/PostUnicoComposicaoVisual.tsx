@@ -7,6 +7,9 @@ import { policyPorFormato } from '../../core/referenciasPolicy';
 // a partir da fonte única de verdade (referenciasPolicy.ts).
 const MAX_PRODUTOS_PU = policyPorFormato('VAREJO', 'estatico', 'PU2').produtos;
 
+// Mesma faixa etária usada no box "Personagem da sequência" do MOP (ResultsView.tsx).
+const AGE_OPTIONS = ['18–28 anos', '25–35 anos', '30–40 anos', '35–45 anos', '40–55 anos', '50–65 anos'];
+
 interface Props {
   imageKit: ImageKit;
   kit: BrandKit;
@@ -29,7 +32,8 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
   const refsAtivas =
     (selection.useAvatar ? 1 : 0) +
     (selection.useCenario && hasCenario && effectiveCenario ? 1 : 0) +
-    (selection.useProdutos && hasProdutos ? selection.produtosSelecionados.length : 0);
+    (selection.useProdutos && hasProdutos ? selection.produtosSelecionados.length : 0) +
+    (!selection.useAvatar && selection.personagemSemAvatar?.ativo && kit.uniformeDataUrl ? 1 : 0);
 
   function pickAvatar(slot: 1 | 2) {
     if (selection.useAvatar && selection.avatarSelecionado === slot) {
@@ -112,16 +116,67 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
         ))}
       </div>
 
-      {!!kit.uniformeDataUrl && (
-        <label className="checkRow" style={{ marginTop: 8, opacity: selection.useAvatar ? 1 : 0.5 }}>
+      {!!kit.uniformeDataUrl && selection.useAvatar && (
+        <label className="checkRow" style={{ marginTop: 8 }}>
           <input
             type="checkbox"
             checked={selection.useUniforme}
-            disabled={!selection.useAvatar}
             onChange={(e) => onChange({ ...selection, useUniforme: e.target.checked })}
           />
-          Gerar com uniforme da empresa{!selection.useAvatar && ' (marque um avatar acima para usar)'}
+          Gerar com uniforme da empresa
         </label>
+      )}
+
+      {!!kit.uniformeDataUrl && !selection.useAvatar && (
+        <div style={{
+          marginTop: 8, padding: '8px 10px',
+          background: selection.personagemSemAvatar?.ativo ? '#ecfeff' : '#f8fafc',
+          border: `1px solid ${selection.personagemSemAvatar?.ativo ? '#67e8f9' : '#e2e8f0'}`,
+          borderRadius: 8,
+        }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', color: '#0f172a' }}>
+            <input
+              type="checkbox"
+              checked={!!selection.personagemSemAvatar?.ativo}
+              onChange={(e) => onChange({
+                ...selection,
+                personagemSemAvatar: {
+                  ativo: e.target.checked,
+                  genero: selection.personagemSemAvatar?.genero ?? 'homem',
+                  idade: selection.personagemSemAvatar?.idade ?? AGE_OPTIONS[2],
+                },
+              })}
+            />
+            Gerar personagem com uniforme (sem avatar)
+          </label>
+          {selection.personagemSemAvatar?.ativo && (
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => onChange({
+                  ...selection,
+                  personagemSemAvatar: {
+                    ...selection.personagemSemAvatar!,
+                    genero: selection.personagemSemAvatar!.genero === 'mulher' ? 'homem' : 'mulher',
+                  },
+                })}
+                style={{ fontSize: 11, padding: '3px 10px', border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+              >
+                Trocar p/ {selection.personagemSemAvatar.genero === 'mulher' ? 'Masculino' : 'Feminino'}
+              </button>
+              <select
+                value={selection.personagemSemAvatar.idade}
+                onChange={(e) => onChange({
+                  ...selection,
+                  personagemSemAvatar: { ...selection.personagemSemAvatar!, idade: e.target.value },
+                })}
+                style={{ fontSize: 11, padding: '3px 6px', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', color: '#475569', cursor: 'pointer' }}
+              >
+                {AGE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
       )}
 
       {(!hasAvatar || !hasCenario || !hasProdutos) && (

@@ -619,11 +619,22 @@ export default function App() {
         }
         if (lista.length) references.produtos = lista;
       }
-      const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length);
+      // Personagem sem avatar + uniforme: cria um personagem do zero (sem
+      // foto de avatar) vestido com o uniforme do Kit, no sexo/idade
+      // escolhidos. Só aplica quando o avatar NÃO está marcado.
+      const personagemSemAvatar = !visualSelection.useAvatar && visualSelection.personagemSemAvatar?.ativo
+        ? visualSelection.personagemSemAvatar
+        : undefined;
+      if (personagemSemAvatar && kit.uniformeDataUrl) {
+        references.uniforme = kit.uniformeDataUrl;
+        references.personagemIdade = personagemSemAvatar.idade;
+      }
+      const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length || references.uniforme);
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current = detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ?? (Math.random() < 0.5 ? 'mulher' : 'homem');
       }
-      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot, forcedGender: postUnicoGenderRef.current, variationHint: isRegenerate });
+      const effectiveForcedGender = personagemSemAvatar?.genero ?? postUnicoGenderRef.current;
+      const dataUrl = await generatePostUnico({ data, kit, copy, references: hasRefs ? references : undefined, preferredSlot: selectedSlot, forcedGender: effectiveForcedGender, variationHint: isRegenerate });
       // Persiste direto no localStorage (independe do componente seguir montado —
       // cobre o caso de geração em segundo plano após navegar para outra página).
       try { localStorage.setItem(`metodo-op-postunico-img-v1:${effectiveUserId}`, JSON.stringify(dataUrl)); } catch {}

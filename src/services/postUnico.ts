@@ -241,6 +241,10 @@ export interface PostUnicoReferences {
   // Foto do uniforme da empresa (kit.uniformeDataUrl) — veste o personagem
   // da peça com esta peça de roupa em vez do figurino livre sorteado.
   uniforme?: string;
+  // Faixa etária do personagem sem avatar (ex.: "30–40 anos"), usada só
+  // quando uniforme está presente sem avatar — ver PERSONAGEM OBRIGATÓRIO
+  // em referencesBlock.
+  personagemIdade?: string;
 }
 
 function isClothingFriendly(hex: string): boolean {
@@ -354,7 +358,7 @@ function segmentRules(segment?: string): string {
   return 'CONTEXTO — SEGMENTO SERVIÇOS: prestação de serviços especializados. Avatar (quando presente) transmite autoridade, competência e confiança do profissional ou da equipe; cenário reforça o contexto profissional; a composição comunica expertise, credibilidade e entrega de valor. O tom visual e textual é confiante e orientado ao resultado.';
 }
 
-function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors?: { primary: string; accent: string }, objetivo?: PostUnicoObjetivo): string {
+function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors?: { primary: string; accent: string }, objetivo?: PostUnicoObjetivo, forcedGender?: PersonagemGender): string {
   if (!refs) return '';
   const parts: string[] = [];
   const elementos: string[] = [];
@@ -380,7 +384,15 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
     parts.push(`AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, de costas parcial, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro, três-quartos, OU peça sem rosto visível (mãos trabalhando, detalhe de gesto, ambiente com presença implícita). Escolha a combinação que melhor serve à mensagem desta peça específica.`);
   }
   if (refs.uniforme) {
-    parts.push(`UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si. NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem já definido pelo avatar.`);
+    const personagemClause = refs.avatar
+      ? ' NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem já definido pelo avatar.'
+      : ` NÃO copie a pessoa do uniforme — ela é só referência de roupa.`;
+    parts.push(`UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si.${personagemClause}`);
+    if (!refs.avatar) {
+      const idadeClause = refs.personagemIdade ? `, aparentando ${refs.personagemIdade}` : '';
+      const generoClause = forcedGender ? forcedGender : 'homem ou mulher';
+      parts.push(`PERSONAGEM OBRIGATÓRIO (sem avatar): esta peça DEVE ter um personagem humano claramente visível${idadeClause}, gênero: ${generoClause}, vestindo o uniforme descrito acima. Aparência publicitária e realista, sem caricatura. Invente o personagem livremente (rosto, etnia, expressão) — apenas a roupa é fixa (a do uniforme).`);
+    }
   }
   if (refs.cenario) {
     if (objetivo === 'fatos') {
@@ -489,7 +501,7 @@ Hierarquia tipográfica obrigatória:
   // posicionada junto das demais regras invioláveis, ANTES da descrição da peça
   // e da leitura de cena, para não competir e perder força para elas (mesma
   // estratégia aplicada no MOP — ver referenceAnchorBlock em api.ts).
-  const refsBlock = referencesBlock(references, kit.segment, { primary, accent }, data.objetivo);
+  const refsBlock = referencesBlock(references, kit.segment, { primary, accent }, data.objetivo, forcedGender);
   const referenceAnchorBlock = refsBlock
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
     : '';
