@@ -51,7 +51,31 @@
       "Bash(git status *)",
       "Bash(NODE_OPTIONS=--use-system-ca npm run build)",
       "Bash(find . -maxdepth 3 -iname \"*migration*\" -not -path \"./node_modules/*\" -not -path \"./supabase/migrations/*\")",
-      "Bash(ls scripts *)"
+      "Bash(ls scripts *)",
+      "Read(//e/CLIENTES/OPROPAGANDA/METODO OP _CLAUDE_CODE/**)",
+      "Bash(find . -maxdepth 4 -iname \"*ajuste*logo*\")",
+      "Bash(find / -maxdepth 6 -iname \"*AJUSTE_LOGO*\")",
+      "Read(//e/CLIENTES/OPROPAGANDA/**)",
+      "Bash(dir /a)",
+      "Bash(node --use-system-ca scripts/apply-migration.mjs supabase/migrations/20260612000002_add-products-brand-kits.sql)",
+      "Bash(node --use-system-ca scripts/_tmp-list-kits.mjs)",
+      "Bash(node --use-system-ca scripts/seed-products.mjs)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Read(//e//**)",
+      "Bash(node scripts/test-ferrimaq-tensao.mjs)",
+      "Bash(node --use-system-ca scripts/test-ferrimaq-tensao.mjs)",
+      "Bash(sed -i \"s/singular: 'pausa', plural: 'pausas'/singular: 'respiro', plural: 'respiros'/\" caption-unit-test.mjs)",
+      "Bash(NODE_OPTIONS=\"--use-system-ca\" npx --no-install tsx caption-unit-test.mjs)",
+      "Bash(curl *)",
+      "Bash(python3 *)",
+      "Bash(tasklist)",
+      "Bash(netstat -ano)",
+      "Bash(NODE_OPTIONS=\"--use-system-ca\" node test-sugestao-temp.mjs)",
+      "Bash(node tmp-fetch-companies.mjs)",
+      "Bash(NODE_OPTIONS=--use-system-ca node tmp-fetch-companies.mjs)",
+      "Bash(npm update *)"
     ]
   }
 }
