@@ -20,15 +20,15 @@ export const SECONDARY_FONT_CSS: Record<SecondaryFont, string> = {
 // Descrição de FORMA (não nome de fonte) para a IA — mesma estratégia das
 // regras serifada/sem-serifa abaixo, aplicada à palavra-chave em destaque.
 const SECONDARY_FONT_SHAPES: Record<SecondaryFont, string> = {
-  fina: 'cursiva conectada, traço fino e uniforme tipo caneta monoline, inclinação suave para a direita, com floreios discretos nas entradas e saídas das letras — estilo "assinatura elegante"',
-  grossa: 'cursiva conectada, traço de PINCEL GROSSO E ENCORPADO — linhas espessas e cheias do início ao fim de cada letra, sem afinar em curvas, hastes ou ligaduras, peso visual equivalente a um brush lettering BOLD/HEAVY, inclinação leve para a direita, floreios expressivos igualmente grossos — estilo "lettering a pincel bold", JAMAIS um traço fino, hairline ou delicado em qualquer trecho',
+  fina: 'cursiva conectada, traço tipo caneta monoline com leve corpo — fino, porém NÃO hairline ultra-delicado, com espessura perceptível e uniforme em toda a letra, inclinação suave para a direita, com floreios discretos nas entradas e saídas das letras — estilo "assinatura elegante com presença"',
+  grossa: 'cursiva conectada, traço de PINCEL GROSSO — linhas espessas e cheias do início ao fim de cada letra, sem afinar em curvas, hastes ou ligaduras, peso visual equivalente a um brush lettering BOLD (não o extremo EXTRA-BOLD/HEAVY), inclinação leve para a direita, floreios expressivos igualmente grossos — estilo "lettering a pincel bold", evite traço fino, hairline ou delicado em qualquer trecho',
 };
 
 // Reforço extra de peso só para a variante "grossa" — a "fina" é
 // intencionalmente um traço monoline delicado tipo assinatura, então não
 // recebe essa cobrança de espessura.
 const SECONDARY_FONT_WEIGHT_REINFORCEMENT: Partial<Record<SecondaryFont, string>> = {
-  grossa: '\nREFORÇO DE TRAÇO NA MANUSCRITA: o traço dessa palavra deve ser GROSSO em toda a sua extensão, sem afinar em curvas, conexões ou floreios — compare com a espessura das letras do restante do título (caixa alta, bold) e garanta peso visual equivalente. PROIBIDO: traço fino, hairline, ou contraste forte entre partes grossas e finas dentro da própria palavra manuscrita.',
+  grossa: '\nREFORÇO DE TRAÇO NA MANUSCRITA: o traço dessa palavra deve ser GROSSO em toda a sua extensão, sem afinar em curvas, conexões ou floreios — levemente mais fino que as letras do restante do título (caixa alta, bold), mas ainda claramente um traço grosso e cheio, nunca hairline. PROIBIDO: traço fino, hairline, ou contraste forte entre partes grossas e finas dentro da própria palavra manuscrita.',
 };
 
 // Bloco de exceção pontual: quando o Kit de Marca tem uma tipografia

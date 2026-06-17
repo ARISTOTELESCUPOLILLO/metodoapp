@@ -569,7 +569,7 @@ TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - Regra prática: ambos título e texto de apoio devem ser lidos de imediato ao ver a peça no celular em tamanho normal — se precisar aproximar o celular para ler qualquer um deles, o tamanho está errado.
 
 REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
-- TELA DO DISPOSITIVO: DEVE mostrar conteúdo genérico desfocado/embaçado — texto borrado ilegível, gráfico fora de foco, interface desfocada — para parecer trabalho real em andamento. PROIBIDO tela apagada, escura ou em branco. O conteúdo existe mas NADA é identificável: nenhuma palavra lida, nenhum dado reconhecível, nenhuma interface clara.
+- TELA DO DISPOSITIVO: DEVE mostrar conteúdo genérico com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, jamais um borrão pesado) — texto, gráfico ou interface quase nítidos, apenas levemente fora de foco — para parecer trabalho real em andamento. PROIBIDO tela apagada, escura ou em branco. PROIBIDO TAMBÉM desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização. O conteúdo existe mas NADA é identificável: nenhuma palavra lida, nenhum dado reconhecível, nenhuma interface clara.
 - CONTEÚDO PROIBIDO EM TELA (mesmo desfocado): logo de empresa real, marca reconhecível, site identificável, rosto humano.
 - DISPOSITIVO COMO OBJETO CONTEXTUAL: pode estar aberto, em uso, na mão, na mesa, apoiado ou em qualquer posição natural do contexto. Carcaça e tampa traseira lisas (sem imagem, logo ou adesivo).
 - MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
@@ -594,13 +594,18 @@ export function getMoodSignature(mood: MoodCode): string {
 
 // Sorteia uma variação de personagem/ruptura para injetar no prompt de IMAGEM a cada geração.
 // Garante que "Gerar outra" nunca reuse a mesma pose — chame a cada vez que o prompt for construído.
-export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string, forcedGender?: PersonagemGender, anchoraPersonagem?: string, composicao?: string): string {
+export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef?: boolean, titulo?: string, texto?: string, forcedGender?: PersonagemGender, anchoraPersonagem?: string, composicao?: string, hasCenarioRef?: boolean): string {
   if (!mood) return '';
 
   const TEMA_DERIVATION_RULE = 'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material, direcionar produção ou apresentar plano a alguém; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas/modificadores do título ("rumo", "avançar", "longe", "crescimento", "rápido", "forte", "claro") = intenção ou qualidade do ofício — nunca deslocamento físico nem propriedade literal.';
 
   if (mood === 'OP-05') {
-    const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
+    // Cada item de DESVIO_SYMBOLIC_RUPTURE_VARIATIONS termina com uma cláusula
+    // "AMBIENTE: ..." fixa — quando há foto real de cenário de referência, essa
+    // cláusula compete e contradiz o local registrado (ver hasCenarioRef em
+    // buildImagePrompt). Removemos a cláusula, mantendo o resto da ruptura.
+    const rupturaRaw = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
+    const ruptura = hasCenarioRef ? rupturaRaw.replace(/\s*AMBIENTE:.*$/, '') : rupturaRaw;
     const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
     return `\n⚠ VARIAÇÃO: Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} O elemento da ruptura deriva do tema — nunca clichê genérico (ver regra CONCEITO-FIRST). Uma ruptura por cena.`;
   }

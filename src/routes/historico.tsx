@@ -8,6 +8,7 @@ import { AuthGate } from '@/components/app/AuthGate';
 import { listMyGenerations, deleteGeneration } from '@/lib/assets.functions';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import { MetaPublish } from '@/components/metodo-op/MetaPublish';
+import { archiveFileName } from '@/utils/file';
 
 export const Route = createFileRoute('/historico')({
   component: () => (
@@ -272,7 +273,10 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
               <button
                 type="button"
                 title="Baixar imagem"
-                onClick={() => downloadFromUrl(a.url, `img-${String(a.ordem).padStart(2, '0')}.webp`)}
+                onClick={() => downloadFromUrl(a.url, archiveFileName({
+                  tipo: gen.tipo, slot: gen.slot, formato: gen.formato,
+                  createdAt: gen.createdAt, numero: a.ordem, ext: 'webp',
+                }))}
                 style={{
                   position: 'absolute',
                   bottom: 4,
@@ -304,7 +308,10 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
           />
           <button
             type="button"
-            onClick={() => downloadFromUrl(gen.videoUrl!, `reels-${gen.id}.mp4`)}
+            onClick={() => downloadFromUrl(gen.videoUrl!, archiveFileName({
+              tipo: gen.tipo, slot: gen.slot, formato: gen.formato,
+              createdAt: gen.createdAt, ext: 'mp4',
+            }))}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -366,7 +373,10 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
             </button>
             <button
               type="button"
-              onClick={() => downloadText(`legenda-${gen.id}.txt`, gen.legenda)}
+              onClick={() => downloadText(archiveFileName({
+                tipo: gen.tipo, slot: gen.slot, formato: gen.formato,
+                createdAt: gen.createdAt, ext: 'txt',
+              }), gen.legenda)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

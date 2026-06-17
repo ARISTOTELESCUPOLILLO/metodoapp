@@ -350,6 +350,7 @@ export async function regenerateWithKit(
   const references = buildReferences(slot.elemento, imageKit, produtosSelecionados, cenarioSelecionado, selecaoDireta);
   const referenceImages = refsToArray(references);
   const hasAvatarRef = !!references.avatar;
+  const hasCenarioRef = !!references.cenario;
   const anchorPrefix = buildAnchorPrefix(references, mood, {
     primary: kit.primaryColor || '#123a63',
     accent: kit.accentColor || kit.secondaryColor || '#f4b000',
@@ -386,6 +387,7 @@ export async function regenerateWithKit(
       // Sem logoDataUrl: a logo é aplicada por canvas (composeReelsPng).
       referenceImages: referenceImages.length ? referenceImages : undefined,
       hasAvatarRef,
+      hasCenarioRef,
       anchoraPersonagem,
       ancoragePapel,
     });
@@ -409,6 +411,7 @@ export async function regenerateWithKit(
       leituraCenica,
       referenceImages: referenceImages.length ? referenceImages : undefined,
       hasAvatarRef,
+      hasCenarioRef,
       anchoraPersonagem,
       ancoragePapel,
     });
@@ -434,6 +437,7 @@ export async function regenerateWithKit(
     leituraCenica,
     referenceImages: referenceImages.length ? referenceImages : undefined,
     hasAvatarRef,
+    hasCenarioRef,
     anchoraPersonagem,
     ancoragePapel,
   });

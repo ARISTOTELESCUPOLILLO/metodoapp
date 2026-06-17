@@ -45,3 +45,39 @@ export function mopName(opts: {
   const ext = opts.ext.replace(/^\./, '');
   return `mop_${slug}_${opts.tipo}_${stamp(opts.date)}.${ext}`;
 }
+
+const SLOT_LABEL_SLUG: Record<'plano1' | 'plano2' | 'bonus', string> = {
+  plano1: 'Plano1',
+  plano2: 'Plano2',
+  bonus: 'Bonus',
+};
+
+const FORMATO_ABREV: Record<'estatico' | 'carrossel' | 'estatico_final' | 'reels', string> = {
+  estatico: 'est',
+  carrossel: 'car',
+  estatico_final: 'esf',
+  reels: 'rls',
+};
+
+/**
+ * Nome de arquivo para downloads do Histórico (peças arquivadas):
+ *   [Plano].[dd-mm-aaaa_hhmm].[formato].[numero].[ext]
+ * O número final identifica a ordem do card no carrossel — nos demais
+ * formatos (imagem única) é sempre 1.
+ */
+export function archiveFileName(opts: {
+  tipo: 'S3V' | 'PU';
+  slot: 'plano1' | 'plano2' | 'bonus';
+  formato: 'estatico' | 'carrossel' | 'estatico_final' | 'reels';
+  createdAt: string | Date;
+  numero?: number;
+  ext: string;
+}): string {
+  const d = typeof opts.createdAt === 'string' ? new Date(opts.createdAt) : opts.createdAt;
+  const p2 = (n: number) => String(n).padStart(2, '0');
+  const dataHora = `${p2(d.getDate())}-${p2(d.getMonth() + 1)}-${d.getFullYear()}_${p2(d.getHours())}${p2(d.getMinutes())}`;
+  const formatoAbrev = opts.tipo === 'PU' ? 'post' : (FORMATO_ABREV[opts.formato] || opts.formato);
+  const numero = p2(opts.numero ?? 1);
+  const ext = opts.ext.replace(/^\./, '');
+  return `${SLOT_LABEL_SLUG[opts.slot]}.${dataHora}.${formatoAbrev}.${numero}.${ext}`;
+}

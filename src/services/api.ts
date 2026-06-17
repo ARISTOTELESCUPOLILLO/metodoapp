@@ -149,6 +149,10 @@ function buildImagePrompt(params: {
   // Ver nota em generatePostImage: quando true, suprime o sorteio de gênero
   // do personagem (o avatar de referência já define a identidade/gênero).
   hasAvatarRef?: boolean;
+  // Quando true, há uma imagem de CENÁRIO de referência enviada — suprime a
+  // linha "Ambiente" da leitura de cena (texto) para não competir com a foto
+  // real do local, que tem precedência (ver referenceAnchorBlock).
+  hasCenarioRef?: boolean;
   // Gênero atribuído pelo chamador para esta peça (balanceamento entre as N
   // peças da sequência + persistência entre regenerações). Ver generatePostImage.
   forcedGender?: PersonagemGender;
@@ -159,7 +163,7 @@ function buildImagePrompt(params: {
   // coloca o produto como protagonista visual (pessoa é coadjuvante).
   ancoragePapel?: string;
 }): string {
-  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, secondaryFont, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem, ancoragePapel } = params;
+  const { titulo, texto, imagePrompt, leituraCenica, primaryColor, accentColor, fontFamily, secondaryFont, moodInstructions, isFinal, hasLogo, logoPosition, format, hasRefs, mood, referenceAnchor, hasAvatarRef, hasCenarioRef, forcedGender, anchoraPersonagem, ancoragePapel } = params;
   const isCover = format === 'reels_cover';
   const canvasSize = isCover ? '1080x1920' : '1080x1350';
   const canvasRatio = isCover ? '9:16 (reels vertical)' : '4:5 (feed)';
@@ -192,14 +196,21 @@ function buildImagePrompt(params: {
   // Quando há `referenceAnchor`, ele já cobre a "referência visual" com prioridade
   // máxima lá no topo do prompt (ver referenceAnchorBlock) — não repetir aqui
   // dentro de um bullet, onde perderia força para o restante da leitura cênica.
+  // Personagem/Ambiente da leitura de cena competem com as referências de
+  // imagem (avatar/cenário) sobre "quem está na cena" e "onde a cena
+  // acontece" — quando a foto real já define isso, omitir a versão textual
+  // evita que o modelo concilie duas descrições divergentes (ver hasAvatarRef
+  // já suprimindo o sorteio de gênero em pickImageVariationBlock).
+  const cenaLinhas = [
+    `- Intenção emocional: ${leituraCenica?.intencao || ''}`,
+    ...(hasAvatarRef ? [] : [`- Personagem: ${leituraCenica?.personagem || ''}`]),
+    ...(hasCenarioRef ? [] : [`- Ambiente: ${leituraCenica?.ambiente || ''}`]),
+    `- Expressão: ${leituraCenica?.expressao || ''}`,
+    `- Clima/Luz: ${leituraCenica?.clima || ''}`,
+    `- Composição: ${leituraCenica?.composicao || ''}`,
+  ];
   const cenaDetalhada = leituraCenica
-    ? `CENA DETALHADA:
-- Intenção emocional: ${leituraCenica.intencao || ''}
-- Personagem: ${leituraCenica.personagem || ''}
-- Ambiente: ${leituraCenica.ambiente || ''}
-- Expressão: ${leituraCenica.expressao || ''}
-- Clima/Luz: ${leituraCenica.clima || ''}
-- Composição: ${leituraCenica.composicao || ''}${referenceAnchor ? '' : `\n- Referência visual adicional: ${imagePrompt}`}`
+    ? `CENA DETALHADA:\n${cenaLinhas.join('\n')}${referenceAnchor ? '' : `\n- Referência visual adicional: ${imagePrompt}`}`
     : `CENA FOTOGRÁFICA: ${imagePrompt}`;
 
   // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
@@ -239,7 +250,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
 
 `;
 
-  const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender, anchoraPersonagem, leituraCenica?.composicao);
+  const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender, anchoraPersonagem, leituraCenica?.composicao, hasCenarioRef);
 
   // Regra compositiva de produto-protagonista — só para segmento VAREJO quando
   // a âncora visual define papel=contexto_de_uso e não há avatar de referência
@@ -365,6 +376,10 @@ export async function generatePostImage(params: {
   // instrução de "gênero sorteado com precedência" entraria em conflito com a
   // regra de preservar a identidade do avatar, fazendo a IA descartar a referência.
   hasAvatarRef?: boolean;
+  // Indica que a referência de CENÁRIO (fachada/ambiente real do Kit Imagem)
+  // foi enviada — suprime a linha "Ambiente" da leitura de cena (texto), que
+  // entraria em conflito com a foto real do local.
+  hasCenarioRef?: boolean;
   // Gênero do personagem atribuído pelo chamador para esta peça específica —
   // usado para balancear a presença de homem/mulher entre as peças de uma
   // mesma sequência e mantê-lo estável entre regenerações ("gerar de novo"
@@ -377,7 +392,7 @@ export async function generatePostImage(params: {
   // regra compositiva produto-protagonista em feed/carrossel/final.
   ancoragePapel?: string;
 }): Promise<string> {
-  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, forcedGender, anchoraPersonagem, ancoragePapel } = params;
+  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, hasCenarioRef, forcedGender, anchoraPersonagem, ancoragePapel } = params;
 
   const isReels = vertical === 'reels';
   const isCover = vertical === 'reels_cover';
@@ -411,7 +426,7 @@ export async function generatePostImage(params: {
   // Regra de dispositivos digitais para Reels — alinhada com DEVICE_RULE de promptRules.ts.
   const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
 PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
-DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela DEVE mostrar conteúdo desfocado/embaçado o suficiente para ser ilegível — bokeh suave que sugere interface ou atividade sem permitir leitura; presença visual de conteúdo é desejável, opacidade total não. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha. CARCAÇA E TAMPA — REGRA ABSOLUTA: tampa traseira e carcaça de qualquer dispositivo DEVEM ser completamente lisas — PROIBIDO especificamente: logo de maçã iluminado ou gravado, qualquer símbolo de fabricante, glowing backlit logo, gravação na tampa. Use laptop genérico sem marca. ÂNGULO DE CÂMERA — LAPTOP/NOTEBOOK: câmera NÃO enquadra a tela frontalmente; mostrar parte traseira/lateral do dispositivo ou mantê-lo parcialmente fora do quadro.
+DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela DEVE mostrar conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado) que sugere interface ou atividade; presença visual de conteúdo é desejável, opacidade total não. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha, desfoque forte, borrão pesado ou qualquer efeito que pareça defeito de renderização — a tela deve parecer apenas levemente fora de foco, quase nítida. CARCAÇA E TAMPA — REGRA ABSOLUTA: tampa traseira e carcaça de qualquer dispositivo DEVEM ser completamente lisas — PROIBIDO especificamente: logo de maçã iluminado ou gravado, qualquer símbolo de fabricante, glowing backlit logo, gravação na tampa. Use laptop genérico sem marca. ÂNGULO DE CÂMERA — LAPTOP/NOTEBOOK: câmera NÃO enquadra a tela frontalmente; mostrar parte traseira/lateral do dispositivo ou mantê-lo parcialmente fora do quadro.
 MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
 NEGATIVE: no legible screen content, no recognizable logo on screen, no readable text on screen, no charts, no dashboard, no spreadsheet, no clear UI, no duplicated devices, no image or logo on device casing or back cover, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera.`;
 
@@ -455,6 +470,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         mood,
         referenceAnchor,
         hasAvatarRef,
+        hasCenarioRef,
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
