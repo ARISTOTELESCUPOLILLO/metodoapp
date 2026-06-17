@@ -63,6 +63,7 @@ import {
 import { emptyImageKit } from '../../utils/imageKitStorage';
 import { policyPorFormato } from '../../core/referenciasPolicy';
 import { getSessionImage, setSessionImage } from '../../utils/sessionImageCache';
+import { loadCopyEdit, saveCopyEdit } from '../../utils/copyEditsStorage';
 import UsoReferenciasDia, { useRefSelection } from './UsoReferenciasDia';
 import { regenerateWithKit } from '../../services/regenerateWithKit';
 import { useProfile } from '../../hooks/useProfile';
@@ -358,12 +359,18 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
   const storageKey = `uso-ref:estatico:${item.dia}`;
   const sel = useRefSelection(storageKey);
 
-  const [titulo, setTitulo] = useState(item.titulo);
-  const [texto, setTexto] = useState(item.texto);
-  const [legenda, setLegenda] = useState(item.legenda);
-  const [tCount, setTCount] = useState(0);
-  const [xCount, setXCount] = useState(0);
-  const [lCount, setLCount] = useState(0);
+  const savedCopyEdit = useMemo(() => loadCopyEdit(userId, cacheKey), [userId, cacheKey]);
+  const [titulo, setTitulo] = useState(savedCopyEdit?.titulo ?? item.titulo);
+  const [texto, setTexto] = useState(savedCopyEdit?.texto ?? item.texto);
+  const [legenda, setLegenda] = useState(savedCopyEdit?.legenda ?? item.legenda);
+  const [tCount, setTCount] = useState(savedCopyEdit?.tCount ?? 0);
+  const [xCount, setXCount] = useState(savedCopyEdit?.xCount ?? 0);
+  const [lCount, setLCount] = useState(savedCopyEdit?.lCount ?? 0);
+  // Persiste edição/regeneração + contadores — sem isso, sair da página
+  // (ex.: /historico) e voltar perdia o texto editado e zerava o contador.
+  useEffect(() => {
+    saveCopyEdit(userId, cacheKey, { titulo, texto, legenda, tCount, xCount, lCount });
+  }, [userId, cacheKey, titulo, texto, legenda, tCount, xCount, lCount]);
 
   async function runGenerate() {
     setBusy(true);
@@ -515,12 +522,16 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
   const storageKey = `uso-ref:estatico_final:${item.dia}`;
   const sel = useRefSelection(storageKey);
 
-  const [titulo, setTitulo] = useState(item.titulo);
-  const [texto, setTexto] = useState(item.texto);
-  const [legenda, setLegenda] = useState(item.legenda);
-  const [tCount, setTCount] = useState(0);
-  const [xCount, setXCount] = useState(0);
-  const [lCount, setLCount] = useState(0);
+  const savedCopyEdit = useMemo(() => loadCopyEdit(userId, cacheKey), [userId, cacheKey]);
+  const [titulo, setTitulo] = useState(savedCopyEdit?.titulo ?? item.titulo);
+  const [texto, setTexto] = useState(savedCopyEdit?.texto ?? item.texto);
+  const [legenda, setLegenda] = useState(savedCopyEdit?.legenda ?? item.legenda);
+  const [tCount, setTCount] = useState(savedCopyEdit?.tCount ?? 0);
+  const [xCount, setXCount] = useState(savedCopyEdit?.xCount ?? 0);
+  const [lCount, setLCount] = useState(savedCopyEdit?.lCount ?? 0);
+  useEffect(() => {
+    saveCopyEdit(userId, cacheKey, { titulo, texto, legenda, tCount, xCount, lCount });
+  }, [userId, cacheKey, titulo, texto, legenda, tCount, xCount, lCount]);
 
   async function runGenerate() {
     setBusy(true);
@@ -692,12 +703,23 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
   const blockSel = useRefSelection(blockStorageKey);
 
   // Estado por card: titulo/texto/legenda editáveis + contadores
-  const [titulos, setTitulos] = useState(cards.map(c => c.titulo));
-  const [textos, setTextos] = useState(cards.map(c => c.texto));
-  const [legendas, setLegendas] = useState(cards.map(c => c.legenda || ''));
-  const [tCounts, setTCounts] = useState(cards.map(() => 0));
-  const [xCounts, setXCounts] = useState(cards.map(() => 0));
-  const [lCounts, setLCounts] = useState(cards.map(() => 0));
+  const cardCopyKey = (index: number) => `carousel:${dayNumber}:${cards[index].card}`;
+  const savedCardEdits = useMemo(() => cards.map((c) => loadCopyEdit(userId, `carousel:${dayNumber}:${c.card}`)), [userId, dayNumber, cards]);
+  const [titulos, setTitulos] = useState(cards.map((c, i) => savedCardEdits[i]?.titulo ?? c.titulo));
+  const [textos, setTextos] = useState(cards.map((c, i) => savedCardEdits[i]?.texto ?? c.texto));
+  const [legendas, setLegendas] = useState(cards.map((c, i) => savedCardEdits[i]?.legenda ?? c.legenda ?? ''));
+  const [tCounts, setTCounts] = useState(cards.map((_, i) => savedCardEdits[i]?.tCount ?? 0));
+  const [xCounts, setXCounts] = useState(cards.map((_, i) => savedCardEdits[i]?.xCount ?? 0));
+  const [lCounts, setLCounts] = useState(cards.map((_, i) => savedCardEdits[i]?.lCount ?? 0));
+  useEffect(() => {
+    cards.forEach((_, i) => {
+      saveCopyEdit(userId, cardCopyKey(i), {
+        titulo: titulos[i], texto: textos[i], legenda: legendas[i],
+        tCount: tCounts[i], xCount: xCounts[i], lCount: lCounts[i],
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, dayNumber, titulos, textos, legendas, tCounts, xCounts, lCounts]);
 
   async function runGenerate(index: number) {
     setBusyIndex(index);
@@ -1180,12 +1202,17 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
   }, []);
 
   // Conteúdo editável do reels
-  const [hook, setHook] = useState(reels.hook);
-  const [script, setScript] = useState(reels.script);
-  const [legenda, setLegenda] = useState((reels.legenda || reels.script || '').trim());
-  const [hCount, setHCount] = useState(0);
-  const [sCount, setSCount] = useState(0);
-  const [lCount, setLCount] = useState(0);
+  const reelsCopyKey = `reels:${dayNumber}`;
+  const savedReelsCopyEdit = useMemo(() => loadCopyEdit(userId, reelsCopyKey), [userId, reelsCopyKey]);
+  const [hook, setHook] = useState(savedReelsCopyEdit?.titulo ?? reels.hook);
+  const [script, setScript] = useState(savedReelsCopyEdit?.texto ?? reels.script);
+  const [legenda, setLegenda] = useState(savedReelsCopyEdit?.legenda ?? (reels.legenda || reels.script || '').trim());
+  const [hCount, setHCount] = useState(savedReelsCopyEdit?.tCount ?? 0);
+  const [sCount, setSCount] = useState(savedReelsCopyEdit?.xCount ?? 0);
+  const [lCount, setLCount] = useState(savedReelsCopyEdit?.lCount ?? 0);
+  useEffect(() => {
+    saveCopyEdit(userId, reelsCopyKey, { titulo: hook, texto: script, legenda, tCount: hCount, xCount: sCount, lCount });
+  }, [userId, reelsCopyKey, hook, script, legenda, hCount, sCount, lCount]);
 
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 

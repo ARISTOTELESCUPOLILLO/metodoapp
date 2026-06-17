@@ -18,6 +18,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { saveKit, loadKit, saveForm, loadForm, clearAll } from './utils/storage';
 import { loadImageKit, saveImageKit, loadImageKitAsync, saveImageKitAsync } from './utils/imageKitStorage';
 import { clearSessionImages } from './utils/sessionImageCache';
+import { clearCopyEdits } from './utils/copyEditsStorage';
 import { BrandKit, ContentFormData, ImageKit, MethodOpResult, MoodCode, PostUnicoFormData, PostUnicoVisualSelection } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useProfile } from './hooks/useProfile';
@@ -489,6 +490,7 @@ export default function App() {
     setResult(undefined);
     setError('');
     clearSessionImages(effectiveUserId);
+    clearCopyEdits(effectiveUserId);
   }
 
   async function handleClearMethodGeneration() {
@@ -497,6 +499,7 @@ export default function App() {
     setResult(undefined);
     setError('');
     clearSessionImages(effectiveUserId);
+    clearCopyEdits(effectiveUserId);
   }
 
   async function handleGenerate() {
@@ -504,6 +507,7 @@ export default function App() {
     setError('');
     setResult(undefined);
     clearSessionImages(effectiveUserId);
+    clearCopyEdits(effectiveUserId);
     try {
       const generated = await generateMethodContent({
         ...form,
