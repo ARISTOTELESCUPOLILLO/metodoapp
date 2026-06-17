@@ -297,6 +297,7 @@ export default function App() {
       setForm((prev) => ({ ...defaultForm, audience: prev.audience }));
       setPostUnico({ ...defaultPostUnico });
       setKit(defaultKit);
+      setVisualSelection(defaultVisualSelection);
     }
     // Admin impersonando: usa server function que bypassa RLS do Supabase
     const loadFn = impersonation
@@ -322,6 +323,8 @@ export default function App() {
       setCaption(pCap ? JSON.parse(pCap) : undefined);
       const pStarted = localStorage.getItem(`metodo-op-postunico-started-v1:${effectiveUserId}`);
       setPostUnicoStarted(pStarted === 'true');
+      const vSel = localStorage.getItem(`metodo-op-postunico-visualselection-v1:${effectiveUserId}`);
+      setVisualSelection(vSel ? JSON.parse(vSel) : defaultVisualSelection);
     } catch {}
     // Carrega o Kit Imagem deste usuário: primeiro do cache local (instantâneo)
     // e depois sincroniza com o backend (autoritativo, sobrevive a troca de aparelho).
@@ -361,6 +364,13 @@ export default function App() {
     const k = `metodo-op-postunico-started-v1:${effectiveUserId}`;
     try { localStorage.setItem(k, postUnicoStarted ? 'true' : 'false'); } catch {}
   }, [postUnicoStarted, effectiveUserId]);
+  // Seleção visual da PU (avatar/cenário/produto) — sem isso, voltava ao
+  // default ao trocar de rota (ex.: /historico, que desmonta o MetodoOpApp).
+  useEffect(() => {
+    if (!effectiveUserId) return;
+    const k = `metodo-op-postunico-visualselection-v1:${effectiveUserId}`;
+    try { localStorage.setItem(k, JSON.stringify(visualSelection)); } catch {}
+  }, [visualSelection, effectiveUserId]);
 
 
   // Segmento fixado pelo admin — não-admin não pode alterar.

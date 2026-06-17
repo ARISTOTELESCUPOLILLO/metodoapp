@@ -148,16 +148,12 @@ export default function UsoReferenciasDia(props: Props) {
     (avatarNum != null ? 1 : 0) + (cenarioNum != null ? 1 : 0) + produtosNums.length;
   const podeGerar = !busy && enabled && totalSelecionado > 0;
 
-  // Carrossel: 1 produto por card. Quando este componente está num card
-  // específico, restringe `produtosNums` ao card.
-  const produtosNumsParaUso = useMemo(() => {
-    if (formato === 'carrossel' && cardCarrossel) {
-      // Card N usa o N-ésimo produto selecionado (se houver), senão o 1º.
-      const pick = produtosNums[cardCarrossel - 1] ?? produtosNums[0];
-      return pick ? [pick] : [];
-    }
-    return produtosNums;
-  }, [produtosNums, formato, cardCarrossel]);
+  // A distribuição "1 produto por card" do carrossel é feita pelo bloco
+  // consolidado em ResultsView.tsx (selecaoParaCard/distributeProduto) —
+  // este componente nunca é instanciado com cardCarrossel (sempre `compact`
+  // para carrossel, com o disparo de geração via footerAction), então usa
+  // sempre a seleção tal como o usuário marcou.
+  const produtosNumsParaUso = produtosNums;
 
   async function handleGerar() {
     if (!podeGerar) return;

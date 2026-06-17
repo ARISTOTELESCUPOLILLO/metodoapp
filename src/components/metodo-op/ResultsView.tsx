@@ -142,6 +142,21 @@ function computeBlockGenders(pieces: { titulo: string; texto: string }[], anchor
 
 const REGEN_MAX: Record<RegenKind, number> = { titulo: 2, texto: 2, legenda: 2 };
 
+// Resincroniza um campo editável local com o valor vindo de cima (ex.: D2,
+// o juiz semântico que corrige a peça em segundo plano depois que o card já
+// foi montado/aberto) — só sobrescreve quando o usuário ainda não alterou o
+// valor manualmente desde a última sincronização, pra não apagar uma edição
+// em andamento.
+function useSyncUpstream(upstream: string, current: string, setValue: (v: string) => void) {
+  const prevRef = useRef(upstream);
+  useEffect(() => {
+    if (upstream !== prevRef.current) {
+      if (current === prevRef.current) setValue(upstream);
+      prevRef.current = upstream;
+    }
+  }, [upstream]);
+}
+
 const AGE_OPTIONS = ['18–28 anos', '25–35 anos', '30–40 anos', '35–45 anos', '40–55 anos', '50–65 anos'];
 
 interface AnchorControl {
@@ -371,6 +386,11 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
   useEffect(() => {
     saveCopyEdit(userId, cacheKey, { titulo, texto, legenda, tCount, xCount, lCount });
   }, [userId, cacheKey, titulo, texto, legenda, tCount, xCount, lCount]);
+  // D2 (juiz semântico) pode corrigir item.titulo/texto/legenda depois que o
+  // card já foi montado/aberto — resincroniza se o usuário não editou.
+  useSyncUpstream(item.titulo, titulo, setTitulo);
+  useSyncUpstream(item.texto, texto, setTexto);
+  useSyncUpstream(item.legenda, legenda, setLegenda);
 
   async function runGenerate() {
     setBusy(true);
@@ -532,6 +552,9 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
   useEffect(() => {
     saveCopyEdit(userId, cacheKey, { titulo, texto, legenda, tCount, xCount, lCount });
   }, [userId, cacheKey, titulo, texto, legenda, tCount, xCount, lCount]);
+  useSyncUpstream(item.titulo, titulo, setTitulo);
+  useSyncUpstream(item.texto, texto, setTexto);
+  useSyncUpstream(item.legenda, legenda, setLegenda);
 
   async function runGenerate() {
     setBusy(true);
@@ -721,6 +744,20 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, dayNumber, titulos, textos, legendas, tCounts, xCounts, lCounts]);
 
+  // D2 pode corrigir card.titulo/texto/legenda depois que o bloco já foi
+  // montado/aberto — resincroniza por índice quem o usuário não editou.
+  const prevUpstreamCardsRef = useRef(cards.map((c) => ({ titulo: c.titulo, texto: c.texto, legenda: c.legenda || '' })));
+  useEffect(() => {
+    const prev = prevUpstreamCardsRef.current;
+    setTitulos((arr) => arr.map((cur, i) => (cards[i].titulo !== prev[i]?.titulo && cur === prev[i]?.titulo ? cards[i].titulo : cur)));
+    setTextos((arr) => arr.map((cur, i) => (cards[i].texto !== prev[i]?.texto && cur === prev[i]?.texto ? cards[i].texto : cur)));
+    setLegendas((arr) => arr.map((cur, i) => {
+      const upstream = cards[i].legenda || '';
+      return (upstream !== prev[i]?.legenda && cur === prev[i]?.legenda) ? upstream : cur;
+    }));
+    prevUpstreamCardsRef.current = cards.map((c) => ({ titulo: c.titulo, texto: c.texto, legenda: c.legenda || '' }));
+  }, [cards]);
+
   async function runGenerate(index: number) {
     setBusyIndex(index);
     setBusyMode('noref');
@@ -773,8 +810,6 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
           const avatarNum = avatarNumDe(j);
           // VAREJO: distribui as fotos selecionadas pelos cards (1ª/última =
           // produto inteiro, meio = detalhe/recorte) — ver distributeProduto.
-          // Outros segmentos mantêm o comportamento anterior (produto[index]
-          // com fallback para produto[0]).
           if (segmento === 'VAREJO') {
             const d = distributeProduto(produtos, index, cards.length);
             return {
@@ -785,12 +820,15 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
               produtoDetalhe: d ? !d.isFull : false,
             };
           }
-          const pick = produtos[index] ?? produtos[0] ?? null;
+          // Outros segmentos: 1 produto por card, revezando entre os
+          // selecionados (round-robin) em vez de travar no produto[0] quando
+          // há mais cards do que produtos selecionados.
+          const pick = produtos.length ? produtos[index % produtos.length] : null;
           return {
             usarAvatar: avatarNum != null,
             avatarNum,
             cenarioNum: typeof j.cenarioNum === 'number' ? j.cenarioNum : null,
-            produtosNums: pick ? [pick] : [],
+            produtosNums: pick != null ? [pick] : [],
           };
         }
       }
@@ -903,13 +941,14 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
     setBusyAllMode('refs');
     const total = cards.length;
     const failures: number[] = [];
+    const skipped: number[] = [];
     let done = 0;
     setAllProgress({ done: 0, total });
     try {
       await runWithConcurrency(cards, GENERATE_ALL_CONCURRENCY, async (card, i) => {
         try {
           const s = selecaoParaCard(i);
-          if (!s) return;
+          if (!s) { skipped.push(i + 1); return; }
           const url = await regenerateWithKit({
             slot: { formato: 'carrossel', posicao: dayNumber, elemento: 'avatar', cardCarrossel: card.card, motivo: '' },
             kit, imageKit: imageKit ?? emptyImageKit, mood,
@@ -932,9 +971,13 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
           setAllProgress({ done, total });
         }
       });
-      if (failures.length) {
+      if (failures.length || skipped.length) {
         failures.sort((a, b) => a - b);
-        alert(`Geração com referências: ${failures.length} de ${total} card(s) falharam (cards ${failures.join(', ')}). Use o botão "↻ Gerar outra com refs" no card para tentar de novo.`);
+        skipped.sort((a, b) => a - b);
+        const partes: string[] = [];
+        if (failures.length) partes.push(`${failures.length} falharam (cards ${failures.join(', ')})`);
+        if (skipped.length) partes.push(`${skipped.length} sem seleção de referência válida (cards ${skipped.join(', ')})`);
+        alert(`Geração com referências: ${partes.join('; ')}. Use o botão "↻ Gerar outra com refs" no card para tentar de novo.`);
       } else {
         onImageGenerated?.();
       }
@@ -1213,6 +1256,9 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
   useEffect(() => {
     saveCopyEdit(userId, reelsCopyKey, { titulo: hook, texto: script, legenda, tCount: hCount, xCount: sCount, lCount });
   }, [userId, reelsCopyKey, hook, script, legenda, hCount, sCount, lCount]);
+  useSyncUpstream(reels.hook, hook, setHook);
+  useSyncUpstream(reels.script, script, setScript);
+  useSyncUpstream((reels.legenda || reels.script || '').trim(), legenda, setLegenda);
 
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 

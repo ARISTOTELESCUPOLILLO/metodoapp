@@ -353,7 +353,7 @@ export async function regenerateWithKit(
   const hasCenarioRef = !!references.cenario;
   const anchorPrefix = buildAnchorPrefix(references, mood, {
     primary: kit.primaryColor || '#123a63',
-    accent: kit.accentColor || kit.secondaryColor || '#f4b000',
+    accent: kit.accentColor || '#f4b000',
   }, slot.formato === 'carrossel' ? slot.cardCarrossel : undefined, kit.segment, selecaoDireta?.produtoDetalhe);
 
   const inferred: 'post' | 'reels' = slot.formato === 'reels' ? 'reels' : 'post';
@@ -379,7 +379,7 @@ export async function regenerateWithKit(
       texto: '',
       companyName: kit.companyName,
       primaryColor: kit.primaryColor,
-      accentColor: kit.accentColor || kit.secondaryColor || '#f4b000',
+      accentColor: kit.accentColor || '#f4b000',
       fontFamily: kit.fontPair || 'Montserrat',
       secondaryFont: kit.secondaryFont,
       mood,
@@ -402,7 +402,7 @@ export async function regenerateWithKit(
       texto: texto || '',
       companyName: kit.companyName,
       primaryColor: kit.primaryColor,
-      accentColor: kit.accentColor || kit.secondaryColor || '#f4b000',
+      accentColor: kit.accentColor || '#f4b000',
       fontFamily: kit.fontPair || 'Montserrat',
       secondaryFont: kit.secondaryFont,
       mood,
@@ -428,7 +428,7 @@ export async function regenerateWithKit(
     texto: texto || '',
     companyName: kit.companyName,
     primaryColor: kit.primaryColor,
-    accentColor: kit.accentColor || kit.secondaryColor || '#f4b000',
+    accentColor: kit.accentColor || '#f4b000',
     fontFamily: kit.fontPair || 'Montserrat',
     secondaryFont: kit.secondaryFont,
     mood,
