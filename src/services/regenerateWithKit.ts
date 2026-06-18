@@ -11,7 +11,10 @@
 
 import type { BrandKit, ImageKit, MoodCode, Segment } from '../types';
 import type { PostUnicoReferences } from './postUnico';
+import { orderedReferenceImages } from './postUnico';
 import { generatePostImage } from './api';
+import { loadImageKitAsync } from '../utils/imageKitStorage';
+import { isClothingFriendly, buildClothingPool } from '../core/clothingPool';
 import type {
   ElementoPersonalizacao,
   SlotPersonalizacao,
@@ -70,6 +73,11 @@ export interface RegenerateInput {
     // Veste o avatar com a foto de uniforme do Kit de Marca (kit.uniformeDataUrl)
     // em vez do figurino livre sorteado. Só tem efeito com usarAvatar=true.
     useUniforme?: boolean;
+    // Personagem sem avatar + uniforme: cria um personagem do zero (sem foto
+    // de avatar) vestido com o uniforme do Kit, na idade indicada. Só tem
+    // efeito quando usarAvatar=false. Antes só existia no motor da PU
+    // (MetodoOpApp.tsx) — agora compartilhado via buildReferences.
+    personagemSemAvatar?: { ativo: boolean; idade?: string };
   };
   // Atividade da empresa (ancoragem semântica) — reservado para futuro uso.
   mainActivity?: string;
@@ -79,14 +87,31 @@ export interface RegenerateInput {
   // Garante consistência de identidade entre peças com refs e sem refs.
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  // Quando presente, recarrega o Kit Imagem do servidor antes de montar as
+  // referências — evita usar um snapshot em memória/cache que ainda tenha
+  // uma foto já deletada (referência fantasma, ex.: produto removido do Kit
+  // mas ainda enviado como referência obrigatória pro modelo de imagem).
+  userId?: string | null;
 }
 
-function buildReferences(
+// Fonte única de montagem de referências (avatar/cenário/produtos/uniforme)
+// — usada pelo MOP (regenerateWithKit, abaixo) e pela PU (MetodoOpApp.tsx),
+// que antes montava o objeto `references` manualmente e por isso só ela
+// suportava "personagem sem avatar + uniforme".
+export function buildReferences(
   elemento: ElementoPersonalizacao,
   imageKit: ImageKit,
   produtosSelecionados?: number[],
   cenarioSelecionado?: number | null,
-  selecaoDireta?: { usarAvatar: boolean; avatarNum?: 1 | 2 | null; cenarioNum?: number | null; produtosNums?: number[] },
+  selecaoDireta?: {
+    usarAvatar: boolean;
+    avatarNum?: 1 | 2 | null;
+    cenarioNum?: number | null;
+    produtosNums?: number[];
+    useUniforme?: boolean;
+    personagemSemAvatar?: { ativo: boolean; idade?: string };
+  },
+  uniformeDataUrl?: string,
 ): PostUnicoReferences {
   const refs: PostUnicoReferences = {};
   const wantsAvatar = selecaoDireta
@@ -130,21 +155,21 @@ function buildReferences(
       .filter((p): p is { num: number; dataUrl: string } => p !== null);
     if (lista.length) refs.produtos = lista;
   }
+  // Uniforme: veste o avatar (quando presente) OU cria um personagem do zero
+  // sem avatar vestido com o uniforme — mesma capacidade que antes só
+  // existia na PU.
+  if (selecaoDireta?.useUniforme && refs.avatar && uniformeDataUrl) {
+    refs.uniforme = uniformeDataUrl;
+  } else if (!refs.avatar && selecaoDireta?.personagemSemAvatar?.ativo && uniformeDataUrl) {
+    refs.uniforme = uniformeDataUrl;
+    refs.personagemIdade = selecaoDireta.personagemSemAvatar.idade;
+  }
   return refs;
 }
 
-function refsToArray(refs: PostUnicoReferences): string[] {
-  const out: string[] = [];
-  if (refs.avatar) out.push(refs.avatar);
-  if (refs.uniforme) out.push(refs.uniforme);
-  if (refs.cenario) out.push(refs.cenario);
-  if (refs.produtos?.length) {
-    for (const p of [...refs.produtos].sort((a, b) => a.num - b.num)) {
-      out.push(p.dataUrl);
-    }
-  }
-  return out;
-}
+// Ordenação de referências (avatar -> uniforme -> cenário -> produtos) agora
+// vem de orderedReferenceImages em postUnico.ts — fonte única compartilhada
+// com a trilha PU (antes duplicada aqui como refsToArray).
 
 /**
  * Regenera a imagem-base da peça com Kit Imagem aplicado.
@@ -164,34 +189,8 @@ function refsToArray(refs: PostUnicoReferences): string[] {
  */
 const MOODS_CLAROS: ReadonlySet<MoodCode> = new Set<MoodCode>(['OP-01', 'OP-06']);
 
-function isClothingFriendly(hex: string): boolean {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return false;
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  const s = max === min ? 0 : l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
-  if (l < 0.35) return true;
-  if (s < 0.25) return true;
-  return false;
-}
-
-function buildClothingPool(primary: string, accent: string): string[] {
-  const pool = [
-    'Roupa branca — neutra e limpa; cores da marca reservadas para fundo, grafismos ou tipografia.',
-    'Roupa preta — neutra e forte; cores da marca em outros elementos.',
-    'Cinza claro ou chumbo — versátil, harmoniza com qualquer paleta de marca.',
-    'Bege ou creme — neutro quente que complementa qualquer paleta.',
-  ];
-  if (isClothingFriendly(primary)) {
-    pool.push(`Peça principal (camisa, blazer ou jaqueta) na cor primária da marca (${primary}).`);
-  }
-  if (isClothingFriendly(accent) && accent.toLowerCase() !== primary.toLowerCase()) {
-    pool.push(`Destaque da cor de acento da marca (${accent}) em detalhe ou peça secundária sobre base neutra.`);
-  }
-  return pool;
-}
+// isClothingFriendly/buildClothingPool agora moram em core/clothingPool.ts —
+// compartilhadas com postUnico.ts (PU) pra evitar duplicação literal.
 
 // Variações de ângulo + distância de câmera para o cenário do carrossel —
 // o MESMO cenário é compartilhado pelos 5 cards, então sem variação os fundos
@@ -356,14 +355,23 @@ export async function regenerateWithKit(
     titulo, texto,
     imagePrompt, leituraCenica,
     produtosSelecionados, cenarioSelecionado, selecaoDireta, formato,
-    anchoraPersonagem, ancoragePapel,
+    anchoraPersonagem, ancoragePapel, userId,
   } = input;
 
-  const references = buildReferences(slot.elemento, imageKit, produtosSelecionados, cenarioSelecionado, selecaoDireta);
-  if (selecaoDireta?.useUniforme && references.avatar && kit.uniformeDataUrl) {
-    references.uniforme = kit.uniformeDataUrl;
+  // Recarrega o Kit do servidor (autoritativo) antes de montar as
+  // referências, em vez de confiar no snapshot recebido — que pode estar
+  // desatualizado em relação a um delete feito em outra aba/sessão.
+  let effectiveImageKit = imageKit;
+  if (userId !== undefined) {
+    try {
+      effectiveImageKit = await loadImageKitAsync(userId);
+    } catch {
+      effectiveImageKit = imageKit;
+    }
   }
-  const referenceImages = refsToArray(references);
+
+  const references = buildReferences(slot.elemento, effectiveImageKit, produtosSelecionados, cenarioSelecionado, selecaoDireta, kit.uniformeDataUrl);
+  const referenceImages = orderedReferenceImages(references);
   const hasAvatarRef = !!references.avatar;
   const hasCenarioRef = !!references.cenario;
   const anchorPrefix = buildAnchorPrefix(references, mood, {

@@ -6,6 +6,7 @@ import { buildTypographyBlock, buildTypographyShortRule, buildScriptAccentBlock 
 import { getAuthHeaders } from './authHeaders';
 import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule, buildProductHierarchyBlock, PersonagemGender } from '../core/visualDirection';
 import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
+import { buildClothingPool } from '../core/clothingPool';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: 'Promoção comercial — gerar desejo e ação',
@@ -247,33 +248,29 @@ export interface PostUnicoReferences {
   personagemIdade?: string;
 }
 
-function isClothingFriendly(hex: string): boolean {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return false;
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  const s = max === min ? 0 : l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
-  if (l < 0.35) return true;   // cores escuras: navy, vinho, verde-escuro → OK
-  if (s < 0.25) return true;   // muito dessaturadas: cinzas, pastéis neutros → OK
-  return false;                 // vivas + claras: laranja, amarelo, coral → não para roupa
-}
+// isClothingFriendly/buildClothingPool agora moram em core/clothingPool.ts —
+// compartilhadas com regenerateWithKit.ts (MOP) pra evitar duplicação literal.
 
-function buildClothingPool(primary: string, accent: string): string[] {
-  const pool = [
-    'Roupa branca — neutra e limpa; cores da marca reservadas para fundo, grafismos ou tipografia.',
-    'Roupa preta — neutra e forte; cores da marca em outros elementos da composição.',
-    'Cinza claro ou chumbo — versátil, harmoniza com qualquer paleta de marca.',
-    'Bege ou creme — neutro quente que complementa qualquer paleta.',
-  ];
-  if (isClothingFriendly(primary)) {
-    pool.push(`Peça principal (camisa, blazer ou jaqueta) na cor primária da marca (${primary}).`);
+// Ordem fixa das imagens de referência enviadas ao modelo: avatar -> uniforme
+// -> cenário -> produtos (por número). Compartilhada entre PU e MOP — os
+// rótulos "IMAGEM #N" só fazem sentido se essa ordem for idêntica nos dois
+// motores, e antes cada um tinha sua própria cópia (refsToArray/buildRefs).
+export function orderedReferenceImages(
+  refs?: PostUnicoReferences,
+  opts?: { withAvatar?: boolean },
+): string[] {
+  if (!refs) return [];
+  const withAvatar = opts?.withAvatar ?? true;
+  const imgs: string[] = [];
+  if (withAvatar && refs.avatar) imgs.push(refs.avatar);
+  if (refs.uniforme) imgs.push(refs.uniforme);
+  if (refs.cenario) imgs.push(refs.cenario);
+  if (refs.produtos?.length) {
+    for (const p of [...refs.produtos].sort((a, b) => a.num - b.num)) {
+      imgs.push(p.dataUrl);
+    }
   }
-  if (isClothingFriendly(accent) && accent.toLowerCase() !== primary.toLowerCase()) {
-    pool.push(`Destaque da cor de acento da marca (${accent}) em detalhe ou peça secundária sobre base neutra.`);
-  }
-  return pool;
+  return imgs;
 }
 
 // "nenhum" não entra aqui: forçar uma paleta pré-definida (mesmo que "neutra")
@@ -635,18 +632,7 @@ export async function generatePostUnico(params: {
   // Coleta refs ordenadas: avatar -> uniforme -> cenário -> produtos por número.
   // Uniforme não é removido no retry sem avatar (foto sem rosto, não deve
   // disparar a recusa de rosto do gpt-image que motiva esse retry).
-  const buildRefs = (withAvatar: boolean): string[] => {
-    const imgs: string[] = [];
-    if (withAvatar && references?.avatar) imgs.push(references.avatar);
-    if (references?.uniforme) imgs.push(references.uniforme);
-    if (references?.cenario) imgs.push(references.cenario);
-    if (references?.produtos?.length) {
-      for (const p of [...references.produtos].sort((a, b) => a.num - b.num)) {
-        imgs.push(p.dataUrl);
-      }
-    }
-    return imgs;
-  };
+  const buildRefs = (withAvatar: boolean): string[] => orderedReferenceImages(references, { withAvatar });
 
   const referenceImages = buildRefs(true);
 

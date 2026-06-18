@@ -11,7 +11,8 @@ import ImageKitForm from './components/metodo-op/ImageKitForm';
 import { defaultVoice } from './data/brandVoice';
 import { generateMethodContent } from './services/api';
 import { judgeAndRegenerateContent } from './services/judgeContent';
-import { generatePostUnico, generatePostUnicoCaption, type PostUnicoCaption, type PostUnicoReferences, type PostUnicoCopy } from './services/postUnico';
+import { generatePostUnico, generatePostUnicoCaption, type PostUnicoCaption, type PostUnicoCopy } from './services/postUnico';
+import { buildReferences } from './services/regenerateWithKit';
 import { detectForcedGenderFromCopy, PersonagemGender } from './core/visualDirection';
 import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from './services/brandKit';
 import { useServerFn } from '@tanstack/react-start';
@@ -594,41 +595,32 @@ export default function App() {
       .catch((e) => setCaptionError(String((e as Error).message || e)))
       .finally(() => setCaptionLoading(false));
     try {
-      // Constrói as referências visuais a partir do Kit Imagem + seleção.
-      const references: PostUnicoReferences = {};
-      if (visualSelection.useAvatar) {
-        const av = visualSelection.avatarSelecionado === 2 ? imageKit.avatar2 : imageKit.avatar;
-        if (av) references.avatar = av;
-        if (visualSelection.useUniforme && kit.uniformeDataUrl) references.uniforme = kit.uniformeDataUrl;
-      }
-      if (visualSelection.useCenario) {
-        const idx = (visualSelection.cenarioSelecionado ?? 1) - 1;
-        const fallbackIdx = imageKit.cenarios.findIndex((x) => !!x);
-        const finalIdx = imageKit.cenarios[idx] ? idx : fallbackIdx;
-        const c = finalIdx >= 0 ? imageKit.cenarios[finalIdx] : null;
-        if (c) {
-          references.cenario = c;
-          references.cenarioTipo = imageKit.cenarioTipos?.[finalIdx] || 'ambiente';
-        }
-      }
-      if (visualSelection.useProdutos && visualSelection.produtosSelecionados.length) {
-        const lista: { num: number; dataUrl: string }[] = [];
-        for (const num of visualSelection.produtosSelecionados) {
-          const url = imageKit.produtos[num - 1];
-          if (url) lista.push({ num, dataUrl: url });
-        }
-        if (lista.length) references.produtos = lista;
-      }
-      // Personagem sem avatar + uniforme: cria um personagem do zero (sem
-      // foto de avatar) vestido com o uniforme do Kit, no sexo/idade
-      // escolhidos. Só aplica quando o avatar NÃO está marcado.
-      const personagemSemAvatar = !visualSelection.useAvatar && visualSelection.personagemSemAvatar?.ativo
+      // Recarrega o Kit Imagem do servidor (autoritativo) antes de montar as
+      // referências — evita usar um snapshot em memória/cache que ainda
+      // tenha uma foto já deletada (referência fantasma).
+      const freshImageKit = await loadImageKitAsync(effectiveUserId).catch(() => imageKit);
+      setImageKit(freshImageKit);
+      // Constrói as referências visuais a partir do Kit Imagem + seleção,
+      // usando a mesma função compartilhada com o MOP (buildReferences) —
+      // antes a PU montava esse objeto à mão, com lógica duplicada/divergente.
+      const personagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
         ? visualSelection.personagemSemAvatar
         : undefined;
-      if (personagemSemAvatar && kit.uniformeDataUrl) {
-        references.uniforme = kit.uniformeDataUrl;
-        references.personagemIdade = personagemSemAvatar.idade;
-      }
+      const references = buildReferences(
+        'avatar',
+        freshImageKit,
+        undefined,
+        undefined,
+        {
+          usarAvatar: visualSelection.useAvatar,
+          avatarNum: visualSelection.avatarSelecionado ?? 1,
+          cenarioNum: visualSelection.useCenario ? (visualSelection.cenarioSelecionado ?? 1) : null,
+          produtosNums: visualSelection.useProdutos ? visualSelection.produtosSelecionados : undefined,
+          useUniforme: visualSelection.useUniforme,
+          personagemSemAvatar,
+        },
+        kit.uniformeDataUrl,
+      );
       const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length || references.uniforme);
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current = detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ?? (Math.random() < 0.5 ? 'mulher' : 'homem');

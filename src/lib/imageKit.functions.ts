@@ -158,7 +158,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
     // ── Kit Imagem — falha suave se não existir no teste ──────────────────
     const { data: sourceKit } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, cenarios_paths, produtos_paths')
+      .select('avatar_path, avatar_path_2, cenarios_paths, cenario_tipos, produtos_paths')
       .eq('user_id', sourceId).maybeSingle();
 
     const imageKitFound = !!sourceKit;
@@ -170,6 +170,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
     if (sourceKit) {
       const cenariosArr = (sourceKit.cenarios_paths || []) as string[];
       const produtosArr = (sourceKit.produtos_paths || []) as string[];
+      const cenarioTipos = ((sourceKit as any).cenario_tipos || []) as string[];
 
       const swapId = (p: string | null | undefined) =>
         p ? p.replace(sourceId, targetId) : null;
@@ -196,6 +197,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
           avatar_path: newAvatar,
           avatar_path_2: newAvatar2,
           cenarios_paths: newCenarios.map((p) => p || ''),
+          cenario_tipos: cenarioTipos,
           produtos_paths: newProdutos.map((p) => p || ''),
           updated_at: new Date().toISOString(),
         },
@@ -293,7 +295,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     // Carrega o que já existe pra saber o que apagar.
     const { data: existing } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, cenarios_paths, cenario_tipos, produtos_paths')
+      .select('avatar_path, avatar_path_2, cenarios_paths, cenario_tipos, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
 

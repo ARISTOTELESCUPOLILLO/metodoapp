@@ -429,7 +429,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
         titulo, texto, imagePrompt: item.imagem, leituraCenica: (item as any).leituraCenica,
         formato: 'post',
         selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums, useUniforme: sel.useUniforme },
-        anchoraPersonagem, ancoragePapel,
+        anchoraPersonagem, ancoragePapel, userId,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -592,7 +592,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
         titulo, texto, imagePrompt: item.imagem, leituraCenica: (item as any).leituraCenica,
         formato: 'post',
         selecaoDireta: { usarAvatar: sel.avatarNum != null, avatarNum: sel.avatarNum as 1 | 2 | null, cenarioNum: sel.cenarioNum, produtosNums: sel.produtosNums, useUniforme: sel.useUniforme },
-        anchoraPersonagem, ancoragePapel,
+        anchoraPersonagem, ancoragePapel, userId,
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -877,7 +877,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
         leituraCenica: (card as any).leituraCenica,
         formato: 'post',
         selecaoDireta: s,
-        anchoraPersonagem, ancoragePapel,
+        anchoraPersonagem, ancoragePapel, userId,
       });
       const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[index], texto: textos[index], legenda: '', imagem: card.imagePrompt };
       const final = await composeFeedPng(kit, item, url);
@@ -970,7 +970,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             leituraCenica: (card as any).leituraCenica,
             formato: 'post',
             selecaoDireta: s,
-            anchoraPersonagem, ancoragePapel,
+            anchoraPersonagem, ancoragePapel, userId,
           });
           const item: FeedItem = { dia: dayNumber, formato: 'Carrossel', titulo: titulos[i], texto: textos[i], legenda: '', imagem: card.imagePrompt };
           const final = await composeFeedPng(kit, item, url);
@@ -1367,7 +1367,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
         leituraCenica: (reels as any).leituraCenica,
         formato: 'reels',
         selecaoDireta: s,
-        anchoraPersonagem, ancoragePapel,
+        anchoraPersonagem, ancoragePapel, userId,
       });
       const final = await composeReelsPng(kit, url);
       updatePreview(final);
