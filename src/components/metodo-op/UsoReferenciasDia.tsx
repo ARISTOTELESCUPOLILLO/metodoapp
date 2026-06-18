@@ -8,13 +8,14 @@
 // Custo: GRÁTIS dentro do plano. O extra só entra para liberar uma
 // combinação que o plano não cobre (SERVIÇO/MARCA + produtos no carrossel).
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { BrandKit, ImageKit, MoodCode } from '../../types';
 import { regenerateWithKit } from '../../services/regenerateWithKit';
 import { cenarioLabel } from '../../utils/imageKitStorage';
 import type { ModeloOP, SlotFormato, SlotPersonalizacao } from '../../core/personalizacaoMop';
 import {
   descrevePolicy,
+  ordemGruposPorSegmento,
   policyComExtras,
   policyPorFormato,
   type RefPolicy,
@@ -144,13 +145,11 @@ export default function UsoReferenciasDia(props: Props) {
   function toggleProduto(n: number) {
     setProdutosNums((prev) => {
       if (prev.includes(n)) return prev.filter((x) => x !== n);
-      if (prev.length >= policy.produtos) {
-        // Substitui o mais antigo se já está no limite
-        return [...prev.slice(1), n];
-      }
+      if (prev.length >= policy.produtos) return prev; // no limite: precisa desmarcar antes de trocar
       return [...prev, n];
     });
   }
+  const produtosNoLimite = produtosNums.length >= policy.produtos;
 
   const totalSelecionado =
     (avatarNum != null ? 1 : 0) + (usarFachada ? 1 : 0) + (cenarioNum != null ? 1 : 0) + produtosNums.length;
@@ -259,6 +258,7 @@ export default function UsoReferenciasDia(props: Props) {
         <div style={{ marginTop: 8 }}>
           <p style={{ margin: '0 0 8px', fontSize: 11, opacity: 0.85 }}>
             Você pode escolher: <b>{descrevePolicy(policy)}</b>.
+            {produtosNoLimite && ' Limite de produtos atingido — desmarque um para escolher outro.'}
           </p>
 
           <div style={{
@@ -266,52 +266,70 @@ export default function UsoReferenciasDia(props: Props) {
             gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))',
             gap: 6,
           }}>
-            {policy.avatar && imageKit.avatar && (
-              <Tile
-                checked={avatarNum === 1}
-                onToggle={() => setAvatarNum((cur) => (cur === 1 ? null : 1))}
-                url={imageKit.avatar}
-                label={imageKit.avatar2 ? 'Avatar 1' : 'Avatar'}
-              />
-            )}
-            {policy.avatar && imageKit.avatar2 && (
-              <Tile
-                checked={avatarNum === 2}
-                onToggle={() => setAvatarNum((cur) => (cur === 2 ? null : 2))}
-                url={imageKit.avatar2}
-                label="Avatar 2"
-              />
-            )}
-            {policy.fachada && imageKit.fachada && (
-              <Tile
-                checked={usarFachada}
-                onToggle={() => setUsarFachada((cur) => !cur)}
-                url={imageKit.fachada}
-                label="Fachada"
-              />
-            )}
-            {policy.cenarios > 0 && cenariosDisp.map((n) => (
-              <Tile
-                key={`c${n}`}
-                checked={cenarioNum === n}
-                onToggle={() => setCenarioNum((cur) => (cur === n ? null : n))}
-                url={imageKit.cenarios[n - 1] || undefined}
-                label={cenarioLabel(imageKit, n)}
-              />
-            ))}
-            {policy.produtos > 0 && produtosDisp.map((n) => {
-              const ordem = produtosNums.indexOf(n);
-              const isCarrossel = formato === 'carrossel';
-              return (
-                <Tile
-                  key={`p${n}`}
-                  checked={produtosNums.includes(n)}
-                  onToggle={() => toggleProduto(n)}
-                  url={imageKit.produtos[n - 1] || undefined}
-                  label={`Produto ${n}`}
-                  badge={isCarrossel && ordem >= 0 ? ordem + 1 : undefined}
-                />
-              );
+            {ordemGruposPorSegmento(segmento).map((grupo) => {
+              if (grupo === 'avatar') {
+                return (
+                  <Fragment key="avatar-group">
+                    {policy.avatar && imageKit.avatar && (
+                      <Tile
+                        key="a1"
+                        checked={avatarNum === 1}
+                        onToggle={() => setAvatarNum((cur) => (cur === 1 ? null : 1))}
+                        url={imageKit.avatar}
+                        label={imageKit.avatar2 ? 'Avatar 1' : 'Avatar'}
+                      />
+                    )}
+                    {policy.avatar && imageKit.avatar2 && (
+                      <Tile
+                        key="a2"
+                        checked={avatarNum === 2}
+                        onToggle={() => setAvatarNum((cur) => (cur === 2 ? null : 2))}
+                        url={imageKit.avatar2}
+                        label="Avatar 2"
+                      />
+                    )}
+                  </Fragment>
+                );
+              }
+              if (grupo === 'fachada') {
+                return policy.fachada && imageKit.fachada && (
+                  <Tile
+                    key="fachada"
+                    checked={usarFachada}
+                    onToggle={() => setUsarFachada((cur) => !cur)}
+                    url={imageKit.fachada}
+                    label="Fachada"
+                  />
+                );
+              }
+              if (grupo === 'cenario') {
+                return policy.cenarios > 0 && cenariosDisp.map((n) => (
+                  <Tile
+                    key={`c${n}`}
+                    checked={cenarioNum === n}
+                    onToggle={() => setCenarioNum((cur) => (cur === n ? null : n))}
+                    url={imageKit.cenarios[n - 1] || undefined}
+                    label={cenarioLabel(imageKit, n)}
+                  />
+                ));
+              }
+              // produto
+              return policy.produtos > 0 && produtosDisp.map((n) => {
+                const ordem = produtosNums.indexOf(n);
+                const isCarrossel = formato === 'carrossel';
+                const checked = produtosNums.includes(n);
+                return (
+                  <Tile
+                    key={`p${n}`}
+                    checked={checked}
+                    disabled={!checked && produtosNoLimite}
+                    onToggle={() => toggleProduto(n)}
+                    url={imageKit.produtos[n - 1] || undefined}
+                    label={`Produto ${n}`}
+                    badge={isCarrossel && ordem >= 0 ? ordem + 1 : undefined}
+                  />
+                );
+              });
             })}
           </div>
 
@@ -370,18 +388,20 @@ export default function UsoReferenciasDia(props: Props) {
   );
 }
 
-function Tile({ checked, onToggle, url, label, badge }: {
-  checked: boolean; onToggle: () => void; url?: string; label: string; badge?: number;
+function Tile({ checked, onToggle, url, label, badge, disabled }: {
+  checked: boolean; onToggle: () => void; url?: string; label: string; badge?: number; disabled?: boolean;
 }) {
   return (
     <label
+      title={disabled ? 'Limite atingido — desmarque um item para trocar' : undefined}
       style={{
         position: 'relative',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-        padding: 4, borderRadius: 8, cursor: 'pointer',
+        padding: 4, borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
         background: checked ? '#cffafe' : '#fff',
         border: `1px solid ${checked ? '#0891b2' : '#e2e8f0'}`,
         fontSize: 10,
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       <div style={{
@@ -401,8 +421,9 @@ function Tile({ checked, onToggle, url, label, badge }: {
         <input
           type="checkbox"
           checked={checked}
+          disabled={disabled}
           onChange={onToggle}
-          style={{ position: 'absolute', top: 4, left: 4, width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, cursor: 'pointer' }}
+          style={{ position: 'absolute', top: 4, left: 4, width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, cursor: disabled ? 'not-allowed' : 'pointer' }}
         />
         {badge !== undefined && (
           <span style={{

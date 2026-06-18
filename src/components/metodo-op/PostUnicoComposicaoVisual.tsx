@@ -1,11 +1,9 @@
+import { Fragment } from 'react';
 import { BrandKit, ImageKit, MoodCode, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { produtosDisponiveis, cenariosDisponiveis, cenarioLabel } from '../../utils/imageKitStorage';
-import { policyPorFormato } from '../../core/referenciasPolicy';
+import { ordemGruposPorSegmento, PU_MAX_PRODUTOS } from '../../core/referenciasPolicy';
 
-// PU2/PU4/PU8 têm a mesma política em qualquer segmento/formato — usamos
-// 'estatico'/'PU2' apenas como parâmetro neutro para ler o limite de produtos
-// a partir da fonte única de verdade (referenciasPolicy.ts).
-const MAX_PRODUTOS_PU = policyPorFormato('VAREJO', 'estatico', 'PU2').produtos;
+const MAX_PRODUTOS_PU = PU_MAX_PRODUTOS;
 
 // Mesma faixa etária usada no box "Personagem da sequência" do MOP (ResultsView.tsx).
 const AGE_OPTIONS = ['18–28 anos', '25–35 anos', '30–40 anos', '35–45 anos', '40–55 anos', '50–65 anos'];
@@ -68,17 +66,14 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
       onChange({ ...selection, useCenario: true, cenarioSelecionado: num });
     }
   }
+  const produtosNoLimite = selection.produtosSelecionados.length >= MAX_PRODUTOS_PU;
+
   function toggleProduto(num: number) {
     const has = selection.produtosSelecionados.includes(num);
-    let next: number[];
-    if (has) {
-      next = selection.produtosSelecionados.filter((n) => n !== num);
-    } else if (selection.produtosSelecionados.length >= MAX_PRODUTOS_PU) {
-      // Substitui o mais antigo se já está no limite
-      next = [...selection.produtosSelecionados.slice(1), num];
-    } else {
-      next = [...selection.produtosSelecionados, num];
-    }
+    if (!has && produtosNoLimite) return; // no limite: usuário precisa desmarcar antes de trocar
+    const next = has
+      ? selection.produtosSelecionados.filter((n) => n !== num)
+      : [...selection.produtosSelecionados, num];
     onChange({ ...selection, useProdutos: next.length > 0, produtosSelecionados: next });
   }
 
@@ -91,6 +86,9 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
       </p>
       <p style={{ margin: '0 0 12px', fontSize: 12, color: '#0e7490' }}>
         Você pode combinar: <b>1 avatar + fachada + 1 cenário + até {MAX_PRODUTOS_PU} produtos</b>.
+        {produtosNoLimite && (
+          <> Limite de produtos atingido — desmarque um para escolher outro.</>
+        )}
       </p>
 
       <div style={{
@@ -98,48 +96,68 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
         gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))',
         gap: 6,
       }}>
-        {hasAvatar1 && (
-          <Tile
-            checked={selection.useAvatar && selection.avatarSelecionado === 1}
-            onToggle={() => pickAvatar(1)}
-            url={imageKit.avatar || undefined}
-            label="Avatar 1"
-          />
-        )}
-        {hasAvatar2 && (
-          <Tile
-            checked={selection.useAvatar && selection.avatarSelecionado === 2}
-            onToggle={() => pickAvatar(2)}
-            url={imageKit.avatar2 || undefined}
-            label="Avatar 2"
-          />
-        )}
-        {hasFachada && (
-          <Tile
-            checked={!!selection.useFachada}
-            onToggle={pickFachada}
-            url={imageKit.fachada || undefined}
-            label="Fachada"
-          />
-        )}
-        {cenarios.map((num) => (
-          <Tile
-            key={`c${num}`}
-            checked={selection.useCenario && effectiveCenario === num}
-            onToggle={() => pickCenario(num)}
-            url={imageKit.cenarios[num - 1] || undefined}
-            label={cenarioLabel(imageKit, num)}
-          />
-        ))}
-        {produtos.map((num) => (
-          <Tile
-            key={`p${num}`}
-            checked={selection.produtosSelecionados.includes(num)}
-            onToggle={() => toggleProduto(num)}
-            url={imageKit.produtos[num - 1] || undefined}
-            label={`Produto ${num}`}
-          />
-        ))}
+        {ordemGruposPorSegmento(kit.segment).map((grupo) => {
+          if (grupo === 'avatar') {
+            return (
+              <Fragment key="avatar-group">
+                {hasAvatar1 && (
+                  <Tile
+                    key="a1"
+                    checked={selection.useAvatar && selection.avatarSelecionado === 1}
+                    onToggle={() => pickAvatar(1)}
+                    url={imageKit.avatar || undefined}
+                    label="Avatar 1"
+                  />
+                )}
+                {hasAvatar2 && (
+                  <Tile
+                    key="a2"
+                    checked={selection.useAvatar && selection.avatarSelecionado === 2}
+                    onToggle={() => pickAvatar(2)}
+                    url={imageKit.avatar2 || undefined}
+                    label="Avatar 2"
+                  />
+                )}
+              </Fragment>
+            );
+          }
+          if (grupo === 'fachada') {
+            return hasFachada && (
+              <Tile
+                key="fachada"
+                checked={!!selection.useFachada}
+                onToggle={pickFachada}
+                url={imageKit.fachada || undefined}
+                label="Fachada"
+              />
+            );
+          }
+          if (grupo === 'cenario') {
+            return cenarios.map((num) => (
+              <Tile
+                key={`c${num}`}
+                checked={selection.useCenario && effectiveCenario === num}
+                onToggle={() => pickCenario(num)}
+                url={imageKit.cenarios[num - 1] || undefined}
+                label={cenarioLabel(imageKit, num)}
+              />
+            ));
+          }
+          // produto
+          return produtos.map((num) => {
+            const checked = selection.produtosSelecionados.includes(num);
+            return (
+              <Tile
+                key={`p${num}`}
+                checked={checked}
+                disabled={!checked && produtosNoLimite}
+                onToggle={() => toggleProduto(num)}
+                url={imageKit.produtos[num - 1] || undefined}
+                label={`Produto ${num}`}
+              />
+            );
+          });
+        })}
         {hasFato && (
           <Tile
             checked={!!selection.useFato}
@@ -275,18 +293,20 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
   );
 }
 
-function Tile({ checked, onToggle, url, label }: {
-  checked: boolean; onToggle: () => void; url?: string; label: string;
+function Tile({ checked, onToggle, url, label, disabled }: {
+  checked: boolean; onToggle: () => void; url?: string; label: string; disabled?: boolean;
 }) {
   return (
     <label
+      title={disabled ? 'Limite atingido — desmarque um item para trocar' : undefined}
       style={{
         position: 'relative',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-        padding: 4, borderRadius: 8, cursor: 'pointer',
+        padding: 4, borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
         background: checked ? '#cffafe' : '#fff',
         border: `1px solid ${checked ? '#0891b2' : '#e2e8f0'}`,
         fontSize: 10,
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       <div style={{
@@ -306,8 +326,9 @@ function Tile({ checked, onToggle, url, label }: {
         <input
           type="checkbox"
           checked={checked}
+          disabled={disabled}
           onChange={onToggle}
-          style={{ position: 'absolute', top: 4, left: 4, width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, cursor: 'pointer' }}
+          style={{ position: 'absolute', top: 4, left: 4, width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, cursor: disabled ? 'not-allowed' : 'pointer' }}
         />
       </div>
       <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textAlign: 'center', lineHeight: 1.15 }}>{label}</span>

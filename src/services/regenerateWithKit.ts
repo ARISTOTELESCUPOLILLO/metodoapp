@@ -1,6 +1,6 @@
 // Regen de peça do Método OP aplicando o Kit Imagem como referência visual.
-// Chamado pelo PersonalizacaoBadge — devolve a imagem-base (sem composição
-// final de logo). O caller (ResultsView) compõe logo + lettering exatamente
+// Chamado pelo ResultsView (via UsoReferenciasDia) — devolve a imagem-base
+// (sem composição final de logo). O caller compõe logo + lettering exatamente
 // como faz no fluxo normal (composeFeedPng / composeFinalPng / composeReelsPng).
 //
 // Bug histórico: antes a versão non-reels chamava generatePostUnico (motor do

@@ -26,6 +26,11 @@ export interface RefPolicy {
 
 export const NO_POLICY: RefPolicy = { avatar: false, fachada: false, cenarios: 0, produtos: 0 };
 
+// Limite de produtos na PU — mesmo valor em qualquer segmento/formato.
+// Fonte única de verdade: PostUnicoComposicaoVisual.tsx lê isso direto,
+// sem precisar chamar policyPorFormato com parâmetros neutros.
+export const PU_MAX_PRODUTOS = 3;
+
 function isEXP(m: ModeloOP | null): boolean {
   return m === 'EXP';
 }
@@ -44,7 +49,7 @@ export function policyPorFormato(
   }
   // PU — generoso em todos os formatos
   if (isPU(modelo)) {
-    return { avatar: true, fachada: true, cenarios: 2, produtos: 3 };
+    return { avatar: true, fachada: true, cenarios: 2, produtos: PU_MAX_PRODUTOS };
   }
 
   // MOP — carrossel: sem avatar; 1 cenário compartilhado pela sequência inteira
@@ -68,6 +73,18 @@ export function policyComExtras(
 // Conta quantas imagens, no total, o usuário pode escolher para esta peça.
 export function totalImagens(p: RefPolicy): number {
   return (p.avatar ? 1 : 0) + (p.fachada ? 1 : 0) + p.cenarios + p.produtos;
+}
+
+// Ordem dos grupos de tiles na UI de seleção (UsoReferenciasDia,
+// PostUnicoComposicaoVisual) — reflete a mesma prioridade que já orienta o
+// prompt (VAREJO→produto, SERVIÇOS→pessoa, MARCA→território), pra que a UI
+// mostre primeiro o que mais importa pra cada segmento.
+export type GrupoTile = 'avatar' | 'fachada' | 'cenario' | 'produto';
+const ORDEM_PADRAO: GrupoTile[] = ['avatar', 'fachada', 'cenario', 'produto'];
+export function ordemGruposPorSegmento(segment: Segment): GrupoTile[] {
+  if (segment === 'VAREJO') return ['produto', 'avatar', 'fachada', 'cenario'];
+  if (segment === 'MARCA') return ['cenario', 'fachada', 'avatar', 'produto'];
+  return ORDEM_PADRAO; // SERVIÇOS — avatar (pessoa) já lidera a ordem padrão
 }
 
 // Resumo humano da regra: "1 avatar, fachada, 1 cenário (dentre até 2 cadastrados), até 3 produtos".
