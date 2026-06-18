@@ -47,6 +47,9 @@ interface Props {
   // Quantas aplicações ainda restam (cota do tipo - usadas). Quando 0,
   // bloqueia o botão. Quando undefined, comportamento legado (sempre liberado).
   cotaRestante?: number;
+  // Repassado pro regenerateWithKit pra recarregar o Kit Imagem do servidor
+  // antes de gerar — evita referência fantasma de foto já deletada.
+  userId?: string | null;
 }
 
 // Mapeia átomos para sub-elementos legais.
@@ -57,7 +60,7 @@ function atomoParaElemento(a: ElementoAtomico): ElementoPersonalizacao {
 export default function PersonalizacaoBadge({
   slot, kit, imageKit, mood, keyInfo,
   titulo, texto, imagePrompt, leituraCenica,
-  onApplied, applied, formato, onRegisterApply, cotaRestante,
+  onApplied, applied, formato, onRegisterApply, cotaRestante, userId,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +113,7 @@ export default function PersonalizacaoBadge({
           ? [effectiveProductNum]
           : undefined,
         cenarioSelecionado: precisaCenario ? effectiveCenarioNum : undefined,
+        userId,
       });
       onApplied(url, precisaProduto && effectiveProductNum ? effectiveProductNum : undefined);
     } catch (e) {

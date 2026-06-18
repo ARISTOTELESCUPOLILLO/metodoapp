@@ -472,6 +472,7 @@ function FeedCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, modelo
             imagePrompt={item.imagem}
             leituraCenica={(item as any).leituraCenica}
             storageKey={storageKey}
+            userId={userId}
             onGerou={async (url) => {
               try {
                 const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -634,6 +635,7 @@ function FinalCard({ item, kit, mood, dayNumber, keyInfo, guard, segmento, model
             imagePrompt={item.imagem}
             leituraCenica={(item as any).leituraCenica}
             storageKey={storageKey}
+            userId={userId}
             onGerou={async (url) => {
               try {
                 const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -1026,6 +1028,7 @@ function CarouselCardBlock({ cards, kit, mood, dayNumber, keyInfo, guard, segmen
             imageKit={imageKit ?? emptyImageKit}
             mood={mood}
             storageKey={blockStorageKey}
+            userId={userId}
             compact
             onGerou={() => { /* disparo vem do botão "Gerar X cards com refs" */ }}
             footerAction={blockSel.hasAny && kitHasRefsForFormat(imageKit, 'carrossel', segmento, modelo) ? (
@@ -1643,6 +1646,7 @@ function ReelsCard({ reels, kit, mood, dayNumber, track, keyInfo, guard, segment
             imagePrompt={reels.imagePrompt}
             formatoOverride="reels"
             storageKey={`uso-ref:reels:${dayNumber}`}
+            userId={userId}
             onGerou={async (url) => {
               // Reels: a imagem vem limpa do motor (cenário/avatar já
               // aplicados). Aqui só sobrepõe a logo via canvas.

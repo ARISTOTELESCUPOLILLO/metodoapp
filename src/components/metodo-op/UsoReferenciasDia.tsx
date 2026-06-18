@@ -59,6 +59,9 @@ interface Props {
   // própria (ex.: "Gerar N cards com refs" do carrossel, que itera os cards
   // em sequência em vez de gerar uma única imagem via handleGerar).
   footerAction?: React.ReactNode;
+  // Repassado pro regenerateWithKit pra recarregar o Kit Imagem do servidor
+  // antes de gerar — evita referência fantasma de foto já deletada.
+  userId?: string | null;
 }
 
 export default function UsoReferenciasDia(props: Props) {
@@ -66,7 +69,7 @@ export default function UsoReferenciasDia(props: Props) {
     segmento, modelo, formato, posicao, cardCarrossel,
     extrasCarrossel, kit, imageKit, mood,
     titulo, texto, imagePrompt, leituraCenica, formatoOverride,
-    onGerou, storageKey, compact, footerAction,
+    onGerou, storageKey, compact, footerAction, userId,
   } = props;
 
   // Policy efetiva (com extras de carrossel quando se aplica)
@@ -183,6 +186,7 @@ export default function UsoReferenciasDia(props: Props) {
           produtosNums: produtosNumsParaUso,
           useUniforme: avatarNum != null && useUniforme,
         },
+        userId,
       });
       onGerou(url, {
         cobrouCarrosselProduto: false,
