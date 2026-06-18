@@ -95,6 +95,7 @@ export default function UsoReferenciasDia(props: Props) {
   );
   const temAlguma =
     (policy.avatar && (!!imageKit.avatar || !!imageKit.avatar2)) ||
+    (policy.fachada && !!imageKit.fachada) ||
     (policy.cenarios > 0 && cenariosDisp.length > 0) ||
     (policy.produtos > 0 && produtosDisp.length > 0);
 
@@ -102,6 +103,7 @@ export default function UsoReferenciasDia(props: Props) {
   const [enabled, setEnabled] = useState<boolean>(false);
   // Qual avatar está marcado (1, 2 ou nenhum). Único — só 1 avatar por geração.
   const [avatarNum, setAvatarNum] = useState<number | null>(null);
+  const [usarFachada, setUsarFachada] = useState(false);
   const [cenarioNum, setCenarioNum] = useState<number | null>(null);
   const [produtosNums, setProdutosNums] = useState<number[]>([]);
   const [useUniforme, setUseUniforme] = useState(false);
@@ -121,6 +123,7 @@ export default function UsoReferenciasDia(props: Props) {
           // Migração do formato antigo (boolean) → avatarNum (1|2|null).
           setAvatarNum(s.usarAvatar ? 1 : null);
         }
+        if (typeof s.usarFachada === 'boolean') setUsarFachada(s.usarFachada);
         if (typeof s.cenarioNum === 'number' || s.cenarioNum === null) setCenarioNum(s.cenarioNum);
         if (Array.isArray(s.produtosNums)) setProdutosNums(s.produtosNums);
         if (typeof s.useUniforme === 'boolean') setUseUniforme(s.useUniforme);
@@ -133,10 +136,10 @@ export default function UsoReferenciasDia(props: Props) {
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return;
-      localStorage.setItem(storageKey, JSON.stringify({ enabled, avatarNum, cenarioNum, produtosNums, useUniforme }));
+      localStorage.setItem(storageKey, JSON.stringify({ enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme }));
       window.dispatchEvent(new CustomEvent('uso-ref:changed', { detail: { key: storageKey } }));
     } catch { /* ignore */ }
-  }, [enabled, avatarNum, cenarioNum, produtosNums, useUniforme, storageKey]);
+  }, [enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme, storageKey]);
 
   function toggleProduto(n: number) {
     setProdutosNums((prev) => {
@@ -150,7 +153,7 @@ export default function UsoReferenciasDia(props: Props) {
   }
 
   const totalSelecionado =
-    (avatarNum != null ? 1 : 0) + (cenarioNum != null ? 1 : 0) + produtosNums.length;
+    (avatarNum != null ? 1 : 0) + (usarFachada ? 1 : 0) + (cenarioNum != null ? 1 : 0) + produtosNums.length;
   const podeGerar = !busy && enabled && totalSelecionado > 0;
 
   // A distribuição "1 produto por card" do carrossel é feita pelo bloco
@@ -182,6 +185,7 @@ export default function UsoReferenciasDia(props: Props) {
         selecaoDireta: {
           usarAvatar: avatarNum != null,
           avatarNum: avatarNum as 1 | 2 | null,
+          usarFachada,
           cenarioNum: cenarioNum,
           produtosNums: produtosNumsParaUso,
           useUniforme: avatarNum != null && useUniforme,
@@ -200,13 +204,14 @@ export default function UsoReferenciasDia(props: Props) {
   }
 
   // Política não permite NENHUMA imagem para este formato/segmento → não mostra nada.
-  const policyAllowsAny = policy.avatar || policy.cenarios > 0 || policy.produtos > 0;
+  const policyAllowsAny = policy.avatar || policy.fachada || policy.cenarios > 0 || policy.produtos > 0;
   if (!policyAllowsAny) return null;
 
   // Política permite imagens mas o Kit está vazio → mostra orientação.
   if (!temAlguma) {
     const itemsFaltando: string[] = [];
     if (policy.avatar && !imageKit.avatar && !imageKit.avatar2) itemsFaltando.push('avatar');
+    if (policy.fachada && !imageKit.fachada) itemsFaltando.push('fachada');
     if (policy.cenarios > 0 && cenariosDisp.length === 0) itemsFaltando.push('cenário');
     if (policy.produtos > 0 && produtosDisp.length === 0) itemsFaltando.push('produtos');
     return (
@@ -222,9 +227,10 @@ export default function UsoReferenciasDia(props: Props) {
 
   // Aviso amarelo se a política permite o tipo mas o Kit não tem a imagem.
   const faltaAvatar = policy.avatar && !imageKit.avatar && !imageKit.avatar2;
+  const faltaFachada = policy.fachada && !imageKit.fachada;
   const faltaCenario = policy.cenarios > 0 && cenariosDisp.length === 0;
   const faltaProduto = policy.produtos > 0 && produtosDisp.length === 0;
-  const algumFaltando = faltaAvatar || faltaCenario || faltaProduto;
+  const algumFaltando = faltaAvatar || faltaFachada || faltaCenario || faltaProduto;
 
   const borderColor = enabled ? '#67e8f9' : '#e2e8f0';
   const bg = enabled ? '#ecfeff' : '#f8fafc';
@@ -276,6 +282,14 @@ export default function UsoReferenciasDia(props: Props) {
                 label="Avatar 2"
               />
             )}
+            {policy.fachada && imageKit.fachada && (
+              <Tile
+                checked={usarFachada}
+                onToggle={() => setUsarFachada((cur) => !cur)}
+                url={imageKit.fachada}
+                label="Fachada"
+              />
+            )}
             {policy.cenarios > 0 && cenariosDisp.map((n) => (
               <Tile
                 key={`c${n}`}
@@ -320,6 +334,7 @@ export default function UsoReferenciasDia(props: Props) {
               color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
             }}>
               ⚠️ {faltaAvatar && 'Adicione um avatar no Kit Imagem para usar. '}
+              {faltaFachada && 'Adicione a fachada no Kit Imagem para usar. '}
               {faltaCenario && 'Adicione cenários no Kit Imagem para usar. '}
               {faltaProduto && 'Adicione produtos no Kit Imagem para usar.'}
             </div>
@@ -412,6 +427,7 @@ export interface RefSelectionState {
   enabled: boolean;
   // Qual avatar está marcado (1, 2 ou nenhum).
   avatarNum: number | null;
+  usarFachada: boolean;
   cenarioNum: number | null;
   produtosNums: number[];
   useUniforme: boolean;
@@ -419,7 +435,7 @@ export interface RefSelectionState {
 }
 
 const EMPTY_SEL: RefSelectionState = {
-  enabled: false, avatarNum: null, cenarioNum: null, produtosNums: [], useUniforme: false, hasAny: false,
+  enabled: false, avatarNum: null, usarFachada: false, cenarioNum: null, produtosNums: [], useUniforme: false, hasAny: false,
 };
 
 function readSel(storageKey: string): RefSelectionState {
@@ -433,11 +449,12 @@ function readSel(storageKey: string): RefSelectionState {
     const avatarNum = (typeof s.avatarNum === 'number' || s.avatarNum === null)
       ? s.avatarNum
       : (s.usarAvatar ? 1 : null);
+    const usarFachada = !!s.usarFachada;
     const cenarioNum = (typeof s.cenarioNum === 'number') ? s.cenarioNum : null;
     const produtosNums = Array.isArray(s.produtosNums) ? s.produtosNums.filter((n: unknown) => typeof n === 'number') : [];
     const useUniforme = avatarNum != null && !!s.useUniforme;
-    const hasAny = enabled && (avatarNum != null || cenarioNum != null || produtosNums.length > 0);
-    return { enabled, avatarNum, cenarioNum, produtosNums, useUniforme, hasAny };
+    const hasAny = enabled && (avatarNum != null || usarFachada || cenarioNum != null || produtosNums.length > 0);
+    return { enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme, hasAny };
   } catch {
     return EMPTY_SEL;
   }
@@ -451,6 +468,7 @@ function getSnapshot(storageKey: string): RefSelectionState {
   if (cached
     && cached.enabled === fresh.enabled
     && cached.avatarNum === fresh.avatarNum
+    && cached.usarFachada === fresh.usarFachada
     && cached.cenarioNum === fresh.cenarioNum
     && cached.produtosNums.length === fresh.produtosNums.length
     && cached.produtosNums.every((n, i) => n === fresh.produtosNums[i])

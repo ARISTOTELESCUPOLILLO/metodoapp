@@ -22,6 +22,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
   const hasAvatar1 = !!imageKit.avatar;
   const hasAvatar2 = !!imageKit.avatar2;
   const hasAvatar = hasAvatar1 || hasAvatar2;
+  const hasFachada = !!imageKit.fachada;
   const cenarios = cenariosDisponiveis(imageKit);
   const hasCenario = cenarios.length > 0;
   const produtos = produtosDisponiveis(imageKit);
@@ -31,6 +32,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
 
   const refsAtivas =
     (selection.useAvatar ? 1 : 0) +
+    (selection.useFachada && hasFachada ? 1 : 0) +
     (selection.useCenario && hasCenario && effectiveCenario ? 1 : 0) +
     (selection.useProdutos && hasProdutos ? selection.produtosSelecionados.length : 0) +
     (!selection.useAvatar && selection.personagemSemAvatar?.ativo && kit.uniformeDataUrl ? 1 : 0);
@@ -41,6 +43,9 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
     } else {
       onChange({ ...selection, useAvatar: true, avatarSelecionado: slot });
     }
+  }
+  function pickFachada() {
+    onChange({ ...selection, useFachada: !selection.useFachada });
   }
   function pickCenario(num: number) {
     const isCurrent = effectiveCenario === num && selection.useCenario;
@@ -72,7 +77,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
         <strong> Se você não marcar nenhuma, a peça é gerada apenas a partir do texto, sem usar referências visuais do seu kit.</strong>
       </p>
       <p style={{ margin: '0 0 12px', fontSize: 12, color: '#0e7490' }}>
-        Você pode combinar: <b>1 avatar + 1 cenário + até {MAX_PRODUTOS_PU} produtos</b>.
+        Você pode combinar: <b>1 avatar + fachada + 1 cenário + até {MAX_PRODUTOS_PU} produtos</b>.
       </p>
 
       <div style={{
@@ -94,6 +99,14 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
             onToggle={() => pickAvatar(2)}
             url={imageKit.avatar2 || undefined}
             label="Avatar 2"
+          />
+        )}
+        {hasFachada && (
+          <Tile
+            checked={!!selection.useFachada}
+            onToggle={pickFachada}
+            url={imageKit.fachada || undefined}
+            label="Fachada"
           />
         )}
         {cenarios.map((num) => (
@@ -184,13 +197,14 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
         </div>
       )}
 
-      {(!hasAvatar || !hasCenario || !hasProdutos) && (
+      {(!hasAvatar || !hasFachada || !hasCenario || !hasProdutos) && (
         <div style={{
           marginTop: 10, background: '#fffbeb', border: '1px solid #fcd34d',
           color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
         }}>
           ⚠️ {!hasAvatar && 'Adicione um avatar no Kit Imagem para usar. '}
-          {!hasCenario && 'Adicione cenários (até 3) no Kit Imagem para usar. '}
+          {!hasFachada && 'Adicione a fachada no Kit Imagem para usar. '}
+          {!hasCenario && 'Adicione cenários (até 2) no Kit Imagem para usar. '}
           {!hasProdutos && 'Adicione produtos no Kit Imagem para usar.'}
         </div>
       )}

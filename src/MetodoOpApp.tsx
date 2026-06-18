@@ -84,6 +84,7 @@ type Modo = 'metodo' | 'postUnico' | 'imageKit';
 const defaultVisualSelection: PostUnicoVisualSelection = {
   useAvatar: false,
   avatarSelecionado: 1,
+  useFachada: false,
   useCenario: false,
   useProdutos: false,
   produtosSelecionados: [],
@@ -614,6 +615,7 @@ export default function App() {
         {
           usarAvatar: visualSelection.useAvatar,
           avatarNum: visualSelection.avatarSelecionado ?? 1,
+          usarFachada: visualSelection.useFachada,
           cenarioNum: visualSelection.useCenario ? (visualSelection.cenarioSelecionado ?? 1) : null,
           produtosNums: visualSelection.useProdutos ? visualSelection.produtosSelecionados : undefined,
           useUniforme: visualSelection.useUniforme,
@@ -621,7 +623,7 @@ export default function App() {
         },
         kit.uniformeDataUrl,
       );
-      const hasRefs = !!(references.avatar || references.cenario || references.produtos?.length || references.uniforme);
+      const hasRefs = !!(references.avatar || references.fachada || references.cenario || references.produtos?.length || references.uniforme);
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current = detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ?? (Math.random() < 0.5 ? 'mulher' : 'homem');
       }

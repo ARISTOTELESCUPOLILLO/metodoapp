@@ -188,7 +188,7 @@ export default function PersonalizacaoBadge({
             num: n,
             url: imageKit.cenarios[n - 1] || undefined,
             label: cenarioLabel(imageKit, n),
-            shortLabel: imageKit.cenarioTipos?.[n - 1] === 'fachada' ? 'F' : `C${n}`,
+            shortLabel: `C${n}`,
           }))}
           selected={effectiveCenarioNum}
           onChange={setCenarioNum}

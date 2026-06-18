@@ -21,6 +21,7 @@ async function copyStorageFile(src: string, dest: string): Promise<boolean> {
 
 const BUCKET = 'image-kits';
 const SIGNED_URL_TTL = 60 * 60; // 1h é suficiente — o front segura em memória
+const CENARIO_SLOTS = 2;
 
 // ---------- helpers ----------
 
@@ -86,7 +87,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
 
     const { data: row, error } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, cenarios_paths, cenario_tipos, produtos_paths')
+      .select('avatar_path, avatar_path_2, fachada_path, cenarios_paths, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -96,8 +97,8 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
         userId: targetId,
         avatar: null,
         avatar2: null,
-        cenarios: [null, null, null] as (string | null)[],
-        cenarioTipos: [] as string[],
+        fachada: null,
+        cenarios: Array.from({ length: CENARIO_SLOTS }, () => null) as (string | null)[],
         produtos: [null, null, null, null, null, null, null, null] as (string | null)[],
       };
     }
@@ -105,10 +106,11 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
     const cenariosArr = (row.cenarios_paths || []) as string[];
     const produtosArr = (row.produtos_paths || []) as string[];
 
-    const [avatarUrl, avatar2Url, ...cenariosUrls] = await Promise.all([
+    const [avatarUrl, avatar2Url, fachadaUrl, ...cenariosUrls] = await Promise.all([
       signPath(row.avatar_path),
       signPath((row as any).avatar_path_2 || null),
-      ...Array.from({ length: 3 }, (_, i) => signPath(cenariosArr[i] || null)),
+      signPath((row as any).fachada_path || null),
+      ...Array.from({ length: CENARIO_SLOTS }, (_, i) => signPath(cenariosArr[i] || null)),
     ]);
     const produtosUrls = await Promise.all(
       Array.from({ length: 8 }, (_, i) => signPath(produtosArr[i] || null)),
@@ -118,8 +120,8 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
       userId: targetId,
       avatar: avatarUrl,
       avatar2: avatar2Url,
+      fachada: fachadaUrl,
       cenarios: cenariosUrls,
-      cenarioTipos: ((row as any).cenario_tipos || []) as string[],
       produtos: produtosUrls,
     };
   });
@@ -158,19 +160,19 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
     // ── Kit Imagem — falha suave se não existir no teste ──────────────────
     const { data: sourceKit } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, cenarios_paths, cenario_tipos, produtos_paths')
+      .select('avatar_path, avatar_path_2, fachada_path, cenarios_paths, produtos_paths')
       .eq('user_id', sourceId).maybeSingle();
 
     const imageKitFound = !!sourceKit;
     let newAvatar: string | null = null;
     let newAvatar2: string | null = null;
-    let newCenarios: (string | null)[] = [null, null, null];
+    let newFachada: string | null = null;
+    let newCenarios: (string | null)[] = Array.from({ length: CENARIO_SLOTS }, () => null);
     let newProdutos: (string | null)[] = Array.from({ length: 8 }, () => null);
 
     if (sourceKit) {
       const cenariosArr = (sourceKit.cenarios_paths || []) as string[];
       const produtosArr = (sourceKit.produtos_paths || []) as string[];
-      const cenarioTipos = ((sourceKit as any).cenario_tipos || []) as string[];
 
       const swapId = (p: string | null | undefined) =>
         p ? p.replace(sourceId, targetId) : null;
@@ -184,8 +186,9 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
 
       newAvatar  = await copySlot(sourceKit.avatar_path);
       newAvatar2 = await copySlot((sourceKit as any).avatar_path_2);
+      newFachada = await copySlot((sourceKit as any).fachada_path);
       newCenarios = await Promise.all(
-        Array.from({ length: 3 }, (_, i) => copySlot(cenariosArr[i] || null)),
+        Array.from({ length: CENARIO_SLOTS }, (_, i) => copySlot(cenariosArr[i] || null)),
       );
       newProdutos = await Promise.all(
         Array.from({ length: 8 }, (_, i) => copySlot(produtosArr[i] || null)),
@@ -196,8 +199,8 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
           user_id: targetId,
           avatar_path: newAvatar,
           avatar_path_2: newAvatar2,
+          fachada_path: newFachada,
           cenarios_paths: newCenarios.map((p) => p || ''),
-          cenario_tipos: cenarioTipos,
           produtos_paths: newProdutos.map((p) => p || ''),
           updated_at: new Date().toISOString(),
         },
@@ -274,8 +277,8 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       userId: z.string().uuid().optional(),
       avatar: SlotInput,
       avatar2: SlotInput,
-      cenarios: z.array(SlotInput).max(3).optional(),
-      cenarioTipos: z.array(z.enum(['fachada', 'ambiente'])).max(3).optional(),
+      fachada: SlotInput,
+      cenarios: z.array(SlotInput).max(CENARIO_SLOTS).optional(),
       produtos: z.array(SlotInput).max(8).optional(),
     }).parse(d),
   )
@@ -295,13 +298,12 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     // Carrega o que já existe pra saber o que apagar.
     const { data: existing } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, cenarios_paths, cenario_tipos, produtos_paths')
+      .select('avatar_path, avatar_path_2, fachada_path, cenarios_paths, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
 
     const oldAvatar = existing?.avatar_path || null;
     const oldCenarios = (existing?.cenarios_paths || []) as string[];
-    const oldCenarioTipos = ((existing as any)?.cenario_tipos || []) as string[];
     const oldProdutos = (existing?.produtos_paths || []) as string[];
 
     // Avatar 1
@@ -327,12 +329,25 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       newAvatar2 = path;
     }
 
-    // Cenários (3 slots)
-    const newCenarios: (string | null)[] = [
-      oldCenarios[0] || null, oldCenarios[1] || null, oldCenarios[2] || null,
-    ];
+    // Fachada — slot próprio (antes era um dos cenario_tipos).
+    const oldFachada = (existing as any)?.fachada_path || null;
+    let newFachada: string | null = oldFachada;
+    if (data.fachada === null) {
+      await removePath(oldFachada);
+      newFachada = null;
+    } else if (typeof data.fachada === 'string' && data.fachada.length > 0) {
+      const path = `${targetId}/fachada.webp`;
+      await uploadImage(path, data.fachada);
+      newFachada = path;
+    }
+
+    // Cenários (2 slots)
+    const newCenarios: (string | null)[] = Array.from(
+      { length: CENARIO_SLOTS },
+      (_, i) => oldCenarios[i] || null,
+    );
     if (data.cenarios) {
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < CENARIO_SLOTS; i++) {
         const v = data.cenarios[i];
         if (v === null) {
           await removePath(newCenarios[i]);
@@ -364,13 +379,8 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       }
     }
 
-    // Tipos de cenário (fachada/ambiente) — só sobrescreve se o cliente enviou.
-    const newCenarioTipos: string[] = data.cenarioTipos
-      ? data.cenarioTipos.slice(0, 3)
-      : oldCenarioTipos;
-
     // Compacta cenários/produtos pra arrays (mantendo a posição via length).
-    const cenariosForDb = newCenarios.map((c) => c || '').slice(0, 3);
+    const cenariosForDb = newCenarios.map((c) => c || '').slice(0, CENARIO_SLOTS);
     const produtosForDb = newProdutos.map((p) => p || '').slice(0, 8);
     // Array do Postgres não aceita null direto em text[] sem definir explicitamente,
     // então usamos string vazia como sentinela e o leitor trata como null.
@@ -384,8 +394,8 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
           user_id: targetId,
           avatar_path: newAvatar,
           avatar_path_2: newAvatar2,
+          fachada_path: newFachada,
           cenarios_paths: cenariosForDb,
-          cenario_tipos: newCenarioTipos,
           produtos_paths: produtosForDb,
           updated_at: new Date().toISOString(),
         },
@@ -394,9 +404,10 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     if (upErr) throw new Error(upErr.message);
 
     // Re-sign para devolver URLs prontos
-    const [avatarUrl, avatar2Url, ...cenariosUrls] = await Promise.all([
+    const [avatarUrl, avatar2Url, fachadaUrl, ...cenariosUrls] = await Promise.all([
       signPath(newAvatar),
       signPath(newAvatar2),
+      signPath(newFachada),
       ...newCenarios.map((p) => signPath(p)),
     ]);
     const produtosUrls = await Promise.all(newProdutos.map((p) => signPath(p)));
@@ -405,8 +416,8 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       userId: targetId,
       avatar: avatarUrl,
       avatar2: avatar2Url,
+      fachada: fachadaUrl,
       cenarios: cenariosUrls,
-      cenarioTipos: newCenarioTipos,
       produtos: produtosUrls,
     };
   });

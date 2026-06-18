@@ -154,22 +154,19 @@ export interface TemplateMood {
   color: string;
 }
 
-// Tipo de cada slot de cenário: "fachada" (frente do estabelecimento) ou
-// "ambiente" (interior — loja, escritório, oficina, atmosfera).
-export type CenarioTipo = 'fachada' | 'ambiente';
-
 // Kit Imagem — biblioteca visual da marca usada como referência na geração de imagens.
-// Avatar é único. Cenários têm 2 slots numerados FIXOS. Produtos têm 8 slots
-// numerados FIXOS — apagar o slot 3 não reorganiza nada; o slot fica vazio
-// até receber outra imagem.
+// Avatar é único. Fachada é única — slot próprio na sequência do Kit, ANTES
+// dos cenários (antes era um tipo dentro do pool de cenários; agora é uma
+// foto independente, como avatar/uniforme). Cenários têm 2 slots numerados
+// FIXOS. Produtos têm 8 slots numerados FIXOS — apagar o slot 3 não
+// reorganiza nada; o slot fica vazio até receber outra imagem.
 export interface ImageKit {
   avatar?: string;
   avatar2?: string;
-  // Tamanho fixo 3; cada posição é dataURL ou null.
+  // Foto da fachada/frente do estabelecimento.
+  fachada?: string;
+  // Tamanho fixo 2; cada posição é dataURL ou null.
   cenarios: (string | null)[];
-  // Tamanho fixo 3; classifica cada posição de `cenarios` como fachada ou
-  // ambiente. Default 'ambiente' — apenas 1 slot pode ser 'fachada'.
-  cenarioTipos: CenarioTipo[];
   // Tamanho fixo 8; cada posição é dataURL ou null.
   produtos: (string | null)[];
 }
@@ -180,6 +177,8 @@ export interface PostUnicoVisualSelection {
   useAvatar: boolean;
   // Qual avatar usar: 1 = principal, 2 = avatar 2.
   avatarSelecionado: 1 | 2;
+  // Usa a foto de fachada do Kit Imagem (slot próprio, fora do pool de cenários).
+  useFachada?: boolean;
   useCenario: boolean;
   // Marca o bloco "Usar Produtos". Se true mas a lista estiver vazia, o usuário
   // ainda não escolheu quais produtos — o envio ignora a categoria.

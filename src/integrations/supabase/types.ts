@@ -699,6 +699,7 @@ export type Database = {
         Row: {
           avatar_path: string | null
           avatar_path_2: string | null
+          fachada_path: string | null
           cenario_tipos: string[]
           cenarios_paths: string[]
           created_at: string
@@ -709,6 +710,7 @@ export type Database = {
         Insert: {
           avatar_path?: string | null
           avatar_path_2?: string | null
+          fachada_path?: string | null
           cenario_tipos?: string[]
           cenarios_paths?: string[]
           created_at?: string
@@ -719,6 +721,7 @@ export type Database = {
         Update: {
           avatar_path?: string | null
           avatar_path_2?: string | null
+          fachada_path?: string | null
           cenario_tipos?: string[]
           cenarios_paths?: string[]
           created_at?: string

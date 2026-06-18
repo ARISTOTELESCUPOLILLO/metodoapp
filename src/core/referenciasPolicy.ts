@@ -1,15 +1,15 @@
 // Política de uso de Imagens de Referência (IMG_RF).
 //
-// Regra unificada (atualizada):
+// Regra unificada — igual nos 3 segmentos (VAREJO/SERVIÇOS/MARCA); a fachada
+// entra como elemento padrão em toda peça, fora da contagem de cenários
+// (slot próprio no Kit Imagem, não faz parte do pool de cenários):
 //
-//   EXP        (todos os segmentos): 1 avatar + até 3 cenários + até 5 produtos
-//   PU 2/4/8   (todos os segmentos): 1 avatar + até 3 cenários + até 3 produtos
-//
-//   MOP (S*V / S*C) — TODOS os segmentos (SERVIÇOS, MARCA, VAREJO):
-//     estatico       : 1 avatar + até 3 cenários + até 3 produtos (apenas VAREJO; SERVIÇOS/MARCA sem produto)
-//     carrossel      : sem avatar — 1 cenário (compartilhado por todos os cards) + até 5 produtos (1/card)
-//     estatico_final : 1 avatar + até 3 cenários + até 3 produtos (apenas VAREJO; SERVIÇOS/MARCA sem produto)
-//     reels          : 1 avatar + até 3 cenários (NUNCA produto)
+//   EXP            : 1 avatar + 1 fachada + até 2 cenários + até 5 produtos
+//   PU 2/4/8       : 1 avatar + 1 fachada + até 2 cenários + até 3 produtos
+//   MOP estatico       : 1 avatar + 1 fachada + 1 cenário + até 3 produtos
+//   MOP carrossel      : sem avatar + 1 fachada + 1 cenário + até 5 produtos
+//   MOP estatico_final : 1 avatar + 1 fachada + 1 cenário + até 3 produtos
+//   MOP reels          : 1 avatar + 1 fachada + até 2 cenários, sem produto
 //
 // O freio para o carrossel é o toggle "usar referências" (default OFF) em
 // UsoReferenciasDia — não há mais sistema de "extras personalizados".
@@ -19,11 +19,12 @@ import type { ModeloOP, SlotFormato } from './personalizacaoMop';
 
 export interface RefPolicy {
   avatar: boolean;     // pode escolher avatar?
-  cenarios: number;    // quantos cenários (0..3)
+  fachada: boolean;    // pode usar a fachada do Kit?
+  cenarios: number;    // quantos cenários (0..2)
   produtos: number;    // quantos produtos (0..5)
 }
 
-export const NO_POLICY: RefPolicy = { avatar: false, cenarios: 0, produtos: 0 };
+export const NO_POLICY: RefPolicy = { avatar: false, fachada: false, cenarios: 0, produtos: 0 };
 
 function isEXP(m: ModeloOP | null): boolean {
   return m === 'EXP';
@@ -33,30 +34,26 @@ function isPU(m: ModeloOP | null): boolean {
 }
 
 export function policyPorFormato(
-  segmento: Segment,
+  _segmento: Segment,
   formato: SlotFormato,
   modelo: ModeloOP | null,
 ): RefPolicy {
   // EXP — generoso em todos os formatos
   if (isEXP(modelo)) {
-    return { avatar: true, cenarios: 3, produtos: 5 };
+    return { avatar: true, fachada: true, cenarios: 2, produtos: 5 };
   }
   // PU — generoso em todos os formatos
   if (isPU(modelo)) {
-    return { avatar: true, cenarios: 3, produtos: 3 };
+    return { avatar: true, fachada: true, cenarios: 2, produtos: 3 };
   }
 
   // MOP — carrossel: sem avatar; 1 cenário compartilhado pela sequência inteira
   // + até 5 produtos (cada card recebe 1 produto, na ordem marcada).
-  if (formato === 'carrossel')       return { avatar: false, cenarios: 1, produtos: 5 };
-  if (formato === 'reels')           return { avatar: true,  cenarios: 3, produtos: 0 };
+  if (formato === 'carrossel')       return { avatar: false, fachada: true, cenarios: 1, produtos: 5 };
+  if (formato === 'reels')           return { avatar: true,  fachada: true, cenarios: 2, produtos: 0 };
 
-  // S*V / S*C — estatico / estatico_final
-  if (segmento === 'VAREJO') {
-    return { avatar: true, cenarios: 3, produtos: 3 };
-  }
-  // SERVIÇOS / MARCA — estatico / estatico_final sem produto
-  return { avatar: true, cenarios: 3, produtos: 0 };
+  // S*V / S*C — estatico / estatico_final — igual nos 3 segmentos.
+  return { avatar: true, fachada: true, cenarios: 1, produtos: 3 };
 }
 
 // Compat: extras personalizados foram removidos. A função permanece para
@@ -70,15 +67,16 @@ export function policyComExtras(
 
 // Conta quantas imagens, no total, o usuário pode escolher para esta peça.
 export function totalImagens(p: RefPolicy): number {
-  return (p.avatar ? 1 : 0) + p.cenarios + p.produtos;
+  return (p.avatar ? 1 : 0) + (p.fachada ? 1 : 0) + p.cenarios + p.produtos;
 }
 
-// Resumo humano da regra: "1 avatar, 1 cenário (dentre até 3 cadastrados), até 3 produtos".
+// Resumo humano da regra: "1 avatar, fachada, 1 cenário (dentre até 2 cadastrados), até 3 produtos".
 // Cenário é sempre 1 por geração — o número em `p.cenarios` é quantas opções
 // cadastradas no Kit ficam disponíveis para escolha, não quantas são usadas juntas.
 export function descrevePolicy(p: RefPolicy): string {
   const parts: string[] = [];
   if (p.avatar) parts.push('1 avatar');
+  if (p.fachada) parts.push('fachada');
   if (p.cenarios > 0) {
     parts.push(p.cenarios > 1 ? `1 cenário (dentre até ${p.cenarios} cadastrados)` : '1 cenário');
   }

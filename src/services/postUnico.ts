@@ -234,10 +234,10 @@ export async function generatePostUnicoCopy(data: PostUnicoFormData, brandVoice?
 
 export interface PostUnicoReferences {
   avatar?: string;
+  // Foto da fachada/frente do estabelecimento — slot próprio no Kit Imagem,
+  // independente do cenário (antes era um "tipo" de cenário).
+  fachada?: string;
   cenario?: string;
-  // Tipo do cenário enviado, conforme marcado no Kit Imagem.
-  // 'fachada' = frente do estabelecimento; 'ambiente' (default) = interior.
-  cenarioTipo?: 'fachada' | 'ambiente';
   produtos?: { num: number; dataUrl: string }[];
   // Foto do uniforme da empresa (kit.uniformeDataUrl) — veste o personagem
   // da peça com esta peça de roupa em vez do figurino livre sorteado.
@@ -252,9 +252,11 @@ export interface PostUnicoReferences {
 // compartilhadas com regenerateWithKit.ts (MOP) pra evitar duplicação literal.
 
 // Ordem fixa das imagens de referência enviadas ao modelo: avatar -> uniforme
-// -> cenário -> produtos (por número). Compartilhada entre PU e MOP — os
-// rótulos "IMAGEM #N" só fazem sentido se essa ordem for idêntica nos dois
-// motores, e antes cada um tinha sua própria cópia (refsToArray/buildRefs).
+// -> fachada -> cenário -> produtos (por número) — espelha a sequência do
+// Kit Imagem (Identidade: avatar/uniforme/fachada; depois Ambiente: cenário).
+// Compartilhada entre PU e MOP — os rótulos "IMAGEM #N" só fazem sentido se
+// essa ordem for idêntica nos dois motores, e antes cada um tinha sua
+// própria cópia (refsToArray/buildRefs).
 export function orderedReferenceImages(
   refs?: PostUnicoReferences,
   opts?: { withAvatar?: boolean },
@@ -264,6 +266,7 @@ export function orderedReferenceImages(
   const imgs: string[] = [];
   if (withAvatar && refs.avatar) imgs.push(refs.avatar);
   if (refs.uniforme) imgs.push(refs.uniforme);
+  if (refs.fachada) imgs.push(refs.fachada);
   if (refs.cenario) imgs.push(refs.cenario);
   if (refs.produtos?.length) {
     for (const p of [...refs.produtos].sort((a, b) => a.num - b.num)) {
@@ -361,6 +364,7 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
   const elementos: string[] = [];
   if (refs.avatar) elementos.push('AVATAR');
   if (refs.uniforme) elementos.push('UNIFORME');
+  if (refs.fachada) elementos.push('FACHADA');
   if (refs.cenario) elementos.push('CENÁRIO');
   if (refs.produtos && refs.produtos.length) elementos.push('PRODUTOS');
   if (!elementos.length) return '';
@@ -391,6 +395,9 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
       parts.push(`PERSONAGEM OBRIGATÓRIO (sem avatar): esta peça DEVE ter um personagem humano claramente visível${idadeClause}, gênero: ${generoClause}, vestindo o uniforme descrito acima. Aparência publicitária e realista, sem caricatura. Invente o personagem livremente (rosto, etnia, expressão) — apenas a roupa é fixa (a do uniforme).`);
     }
   }
+  if (refs.fachada) {
+    parts.push(`FACHADA OBRIGATÓRIA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, os letreiros e a identidade visual permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
+  }
   if (refs.cenario) {
     if (objetivo === 'fatos') {
       parts.push(`⚠ OBJETIVO FATOS — PRESERVAÇÃO TOTAL DA FOTO DO EVENTO:
@@ -401,8 +408,6 @@ LUZ: respeite a luz real do evento (sol, lâmpada, luz de janela). PERMITIDO mel
 COMPOSIÇÃO: respeite o enquadramento e ponto de vista originais.
 PROIBIDO ABSOLUTAMENTE: alterar ou substituir pessoas, mudar ambiente, adicionar/remover elementos, dramatizar cores, inventar atmosfera, aplicar efeitos especiais.
 A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, nítida e tecnicamente melhorada.`);
-    } else if (refs.cenarioTipo === 'fachada') {
-      parts.push(`CENÁRIO OBRIGATÓRIO — FACHADA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, os letreiros e a identidade visual permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
     } else {
       const produtoGuard = segment !== 'VAREJO'
         ? ' Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço.'
@@ -428,10 +433,10 @@ A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, n
       }),
     );
   }
-  // Quando apenas avatar enviado (sem cenário e sem produto): suprimir
+  // Quando apenas avatar enviado (sem cenário, fachada ou produto): suprimir
   // construção de ambiente pelo modelo — sem isso, a edição de imagem tende a
   // reaproveitar/estender o fundo da própria foto do avatar como cenário.
-  if (refs.avatar && !refs.cenario && !(refs.produtos && refs.produtos.length)) {
+  if (refs.avatar && !refs.cenario && !refs.fachada && !(refs.produtos && refs.produtos.length)) {
     parts.push(
       'FUNDO NEUTRO OBRIGATÓRIO: apenas avatar de referência enviado — sem imagem de cenário. ' +
       'Usar FUNDO LIMPO, SUAVE e DESFOCADO: bokeh suave, gradiente neutro, textura vaga ou superfície indefinida. ' +
