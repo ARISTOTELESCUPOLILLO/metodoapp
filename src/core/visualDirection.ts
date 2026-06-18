@@ -600,6 +600,14 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
   const TEMA_DERIVATION_RULE = 'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material, direcionar produção ou apresentar plano a alguém; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas/modificadores do título ("rumo", "avançar", "longe", "crescimento", "rápido", "forte", "claro") = intenção ou qualidade do ofício — nunca deslocamento físico nem propriedade literal.';
 
   if (mood === 'OP-05') {
+    // Quando leituraCenica.composicao já existe, a ruptura simbólica e a câmera
+    // desta peça já foram sorteadas e escritas pela etapa de conteúdo (mesmo
+    // bloco "VARIAÇÕES SORTEADAS" em buildVisualDirectionBlock) — sortear de
+    // novo aqui pode tirar uma ruptura DIFERENTE da que o GPT já escreveu no
+    // imagePrompt/leituraCenica, produzindo duas rupturas contraditórias no
+    // mesmo prompt (ex.: ambiente industrial da ruptura já escrita vs. ambiente
+    // doméstico de uma ruptura re-sorteada "OBJETO DESLOCADO").
+    if (composicao) return '';
     // Cada item de DESVIO_SYMBOLIC_RUPTURE_VARIATIONS termina com uma cláusula
     // "AMBIENTE: ..." fixa — quando há foto real de cenário de referência, essa
     // cláusula compete e contradiz o local registrado (ver hasCenarioRef em
@@ -611,6 +619,9 @@ export function pickImageVariationBlock(mood: MoodCode | undefined, hasAvatarRef
   }
 
   if (mood === 'OP-06') {
+    // Mesmo motivo do OP-05 acima — o objeto isolado e a câmera desta peça já
+    // foram decididos pela etapa de conteúdo quando composicao existe.
+    if (composicao) return '';
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
     return `\n⚠ VARIAÇÃO: Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
   }
