@@ -400,7 +400,7 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
 
   if (refs.avatar) {
     const clothingHint = refs.uniforme
-      ? ' VESTUÁRIO: ver instrução de UNIFORME abaixo — vista a peça do uniforme, não roupa livre.'
+      ? ' VESTUÁRIO: vista o avatar com o uniforme obrigatório da próxima imagem de referência — não escolha figurino livre.'
       : kitColors
         ? (() => {
             const pool = buildClothingPool(kitColors.primary, kitColors.accent);

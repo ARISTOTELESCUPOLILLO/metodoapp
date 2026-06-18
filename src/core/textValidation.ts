@@ -176,7 +176,7 @@ const HASHTAG_RE = /^#[a-z0-9]+$/;
 // CTA e as hashtags não conta nos limites. Reprova quando essa estrutura não
 // é respeitada, para que a regeneração (E3) recupere CTA + hashtags ausentes
 // ou corte o que excede o limite de palavras.
-export const LEGENDA_CORPO_MAX_WORDS = 35;
+export const LEGENDA_CORPO_MAX_WORDS = 30;
 export const LEGENDA_CTA_MAX_WORDS = 5;
 export const LEGENDA_HASHTAGS = 3;
 

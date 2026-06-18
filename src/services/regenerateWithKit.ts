@@ -243,8 +243,11 @@ function buildAnchorPrefix(refs: PostUnicoReferences, mood: MoodCode, kitColors?
             return ` COR DO VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
           })()
         : '';
+    const figurinoSentence = refs.uniforme
+      ? 'Vista o avatar com o uniforme obrigatório da próxima imagem. Não escolha figurino livre.'
+      : 'Vista o avatar com roupa NOVA, coerente com a cena e o contexto da empresa descritos abaixo (pode ser polo, camisa social, jaleco, uniforme, regata de treino, moletom, terno — escolha o que faz sentido para a situação e o ambiente).';
     lines.push(
-      `IMAGEM #${idx} = AVATAR (referência de IDENTIDADE, não de figurino). PRESERVE EXATAMENTE: rosto, traços faciais, idade, cabelo, barba, tom de pele, etnia, sexo, biótipo/estatura/porte físico, óculos e acessórios fixos do rosto. NÃO rejuvenesça, NÃO envelheça, NÃO troque etnia, NÃO mude o gênero, NÃO altere o porte físico. IGNORE a roupa, a cor da roupa, a pose exata e os acessórios de vestuário (relógio, anéis, colares) da foto — eles servem só pra mostrar a pessoa, não o figurino. Vista o avatar com roupa NOVA, coerente com a cena e o contexto da empresa descritos abaixo (pode ser polo, camisa social, jaleco, uniforme, regata de treino, moletom, terno — escolha o que faz sentido para a situação e o ambiente).${clothingHint}`,
+      `IMAGEM #${idx} = AVATAR (referência de IDENTIDADE, não de figurino). PRESERVE EXATAMENTE: rosto, traços faciais, idade, cabelo, barba, tom de pele, etnia, sexo, biótipo/estatura/porte físico, óculos e acessórios fixos do rosto. NÃO rejuvenesça, NÃO envelheça, NÃO troque etnia, NÃO mude o gênero, NÃO altere o porte físico. IGNORE a roupa, a cor da roupa, a pose exata e os acessórios de vestuário (relógio, anéis, colares) da foto — eles servem só pra mostrar a pessoa, não o figurino. ${figurinoSentence}${clothingHint}`,
     );
     idx++;
   }
@@ -379,6 +382,7 @@ export async function regenerateWithKit(
   const referenceImages = orderedReferenceImages(references);
   const hasAvatarRef = !!references.avatar;
   const hasCenarioRef = !!(references.cenario || references.fachada);
+  const hasUniformeRef = !!references.uniforme;
   const anchorPrefix = buildAnchorPrefix(references, mood, {
     primary: kit.primaryColor || '#123a63',
     accent: kit.accentColor || '#f4b000',
@@ -416,6 +420,7 @@ export async function regenerateWithKit(
       referenceImages: referenceImages.length ? referenceImages : undefined,
       hasAvatarRef,
       hasCenarioRef,
+      hasUniformeRef,
       anchoraPersonagem,
       ancoragePapel,
     });
@@ -440,6 +445,7 @@ export async function regenerateWithKit(
       referenceImages: referenceImages.length ? referenceImages : undefined,
       hasAvatarRef,
       hasCenarioRef,
+      hasUniformeRef,
       anchoraPersonagem,
       ancoragePapel,
     });
@@ -466,6 +472,7 @@ export async function regenerateWithKit(
     referenceImages: referenceImages.length ? referenceImages : undefined,
     hasAvatarRef,
     hasCenarioRef,
+    hasUniformeRef,
     anchoraPersonagem,
     ancoragePapel,
   });

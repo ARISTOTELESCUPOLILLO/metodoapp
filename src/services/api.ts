@@ -391,8 +391,12 @@ export async function generatePostImage(params: {
   // Papel da empresa na cena (ainda_visual.papel). 'contexto_de_uso' injeta
   // regra compositiva produto-protagonista em feed/carrossel/final.
   ancoragePapel?: string;
+  // Indica que uma das `referenceImages` é o UNIFORME OBRIGATÓRIO do Kit de
+  // Marca (não a roupa do avatar). Quando true, o reforço de referências do
+  // Reels não pode instruir "não copie a roupa" — isso anularia o uniforme.
+  hasUniformeRef?: boolean;
 }): Promise<string> {
-  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, hasCenarioRef, forcedGender, anchoraPersonagem, ancoragePapel } = params;
+  const { imagePrompt, titulo, texto, primaryColor, accentColor, fontFamily, secondaryFont, mood, vertical, leituraCenica, logoDataUrl, logoPosition, referenceImages, referenceAnchor, hasAvatarRef, hasCenarioRef, forcedGender, anchoraPersonagem, ancoragePapel, hasUniformeRef } = params;
 
   const isReels = vertical === 'reels';
   const isCover = vertical === 'reels_cover';
@@ -418,9 +422,15 @@ export async function generatePostImage(params: {
 
   const frameHasRefs = isReels && !!(referenceImages && referenceImages.length);
   // Reforço extra de refs — só quando há imagens de referência para não repetir a regra base.
-  // IMPORTANTE: NÃO mencionar "mesma roupa" pois o anchor do avatar já instrui "IGNORE a roupa".
+  // Quando NÃO há uniforme: a roupa da referência é a do avatar, que deve ser
+  // ignorada (o anchor do avatar já instrui "IGNORE a roupa"). Quando HÁ
+  // uniforme, é o oposto — essa roupa é obrigatória e não pode ser descartada.
   const frameRefsReinforcement = frameHasRefs
-    ? `\n\nREFORÇO COM REFERÊNCIAS: A pessoa da imagem de referência deve aparecer como SUJEITO FÍSICO E REAL da cena — em pé, sentada ou em movimento na locação descrita, jamais como imagem projetada/exibida na tela ou tampa de qualquer dispositivo. Preserve exatamente: rosto, traços faciais, etnia, cabelo, barba, óculos — mantendo a identidade visual da pessoa. Mesmo ambiente e iluminação da cena. NÃO copie a roupa da referência — vista a pessoa com roupa coerente com o contexto da cena.`
+    ? `\n\nREFORÇO COM REFERÊNCIAS: A pessoa da imagem de referência deve aparecer como SUJEITO FÍSICO E REAL da cena — em pé, sentada ou em movimento na locação descrita, jamais como imagem projetada/exibida na tela ou tampa de qualquer dispositivo. Preserve exatamente: rosto, traços faciais, etnia, cabelo, barba, óculos — mantendo a identidade visual da pessoa. Mesmo ambiente e iluminação da cena. ${
+        hasUniformeRef
+          ? 'Preserve a identidade do avatar e aplique o uniforme obrigatório quando houver referência de uniforme. Ignore apenas a roupa original do avatar, não a roupa da referência de uniforme.'
+          : 'NÃO copie a roupa da referência — vista a pessoa com roupa coerente com o contexto da cena.'
+      }`
     : '';
 
   // Regra de dispositivos digitais para Reels — alinhada com DEVICE_RULE de promptRules.ts.
