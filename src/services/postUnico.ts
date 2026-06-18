@@ -15,6 +15,7 @@ const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   oportunidade: 'Oportunidade — sinalizar momento único, urgência elegante',
   institucional: 'Institucional — reforçar posicionamento, propósito e autoridade da marca',
   fatos: 'Fatos — registrar o evento como aconteceu, com fidelidade total ao real',
+  venda: 'Venda — apresentar produto/serviço em uso real, com fidelidade total à foto',
   nenhum: 'Criação livre — sem objetivo definido',
 };
 
@@ -25,6 +26,7 @@ const OBJETIVO_TONE: Record<PostUnicoObjetivo, string> = {
   oportunidade: 'urgência contida antes da ação, contraste entre espera e movimento, energia direcionada, tensão antes do clique',
   institucional: 'sobriedade contemporânea, autoridade calma, identidade de marca, atemporalidade',
   fatos: 'documental, fidelidade ao momento, autenticidade, registro visual limpo, sem dramatização',
+  venda: 'comercial, prático, demonstrativo, autêntico, sem dramatização',
   nenhum: 'neutro, totalmente livre',
 };
 
@@ -47,6 +49,7 @@ const OBJETIVO_SENSACAO: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> = 
   aviso: 'atenção, orientação, segurança ou alerta controlado',
   homenagem: 'gratidão, carinho, reconhecimento ou solenidade discreta',
   fatos: 'autenticidade, realidade, fidelidade ao registro',
+  venda: 'confiança prática, demonstração real, proximidade comercial',
 };
 
 // Orientação criativa compacta por objetivo — 1 frase de direção positiva.
@@ -57,6 +60,7 @@ const OBJETIVO_ORIENTACAO: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string> 
   aviso: 'Hierarquia visual clara e leitura rápida, mas elegante, humano e contextual.',
   homenagem: 'Humana, respeitosa, contextual — pode ser discreta, simbólica ou documental.',
   fatos: 'Preservar o registro real. Melhoria técnica apenas: clareza, nitidez, balanço de branco.',
+  venda: 'Preservar a foto do colaborador com o produto. Melhoria técnica apenas: clareza, nitidez, balanço de branco.',
 };
 
 // Exclusões visuais compactas por objetivo.
@@ -67,6 +71,7 @@ const OBJETIVO_VISUAL_EXCLUSIONS: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, s
   aviso: 'Evitar alerta exagerado, placa genérica, triângulo de perigo e visual burocrático.',
   homenagem: 'Evitar buquê isolado, confete solto, vela genérica e pose sentimental stock.',
   fatos: 'Preservar registro real. Não inventar cena, pessoas, ambiente ou atmosfera. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução.',
+  venda: 'Preservar registro real. Não inventar cena, pessoas, produto ou ambiente. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução.',
 };
 
 // Arquétipos para a combinação mais aberta do sistema — Direção Livre + Objetivo Nenhum.
@@ -123,6 +128,11 @@ const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]
     'CONCEITO DESTA GERAÇÃO — REGISTRO DOCUMENTAL FIEL: esta peça é um documento visual do evento. Preserve absolutamente: pessoas (mesmos rostos, posições, roupas), ambiente (mesma arquitetura, móveis, espaço), composição original. Melhore apenas: clareza, nitidez, balanço de branco, contraste para legibilidade. NÃO crie luz nova, NÃO mude atmosfera. O local e as pessoas devem ser reconhecíveis e idênticos ao original.',
     'CONCEITO DESTA GERAÇÃO — EVIDÊNCIA VISUAL DO MOMENTO: a imagem é prova de que o evento aconteceu. Pessoas em posições naturais originais, ambiente real preservado, luz ambiente respeitada. Calibração técnica permitida (brilho, contraste, nitidez). PROIBIDO: alterar qualquer pessoa, remover elementos, adicionar figuras, dramatizar visualmente. Resultado: o mesmo evento, visualmente mais claro e legível.',
     'CONCEITO DESTA GERAÇÃO — MOMENTO AUTÊNTICO REGISTRADO: capture a essência do evento sem interferência criativa. Preserve exatamente as pessoas presentes, o espaço onde ocorreu, a luz ambiente real. Apenas refinamento técnico é permitido. A peça final é o evento como aconteceu — não uma reinterpretação artística dele.',
+  ],
+  venda: [
+    'CONCEITO DESTA GERAÇÃO — APRESENTAÇÃO REAL DO PRODUTO: esta peça é um registro fiel do colaborador apresentando ou usando o produto. Preserve absolutamente: pessoa (mesmo rosto, postura, roupas), produto (mesma cor, formato, rótulo), ambiente original. Melhore apenas: clareza, nitidez, balanço de branco, contraste. NÃO crie cena nova, NÃO troque o produto.',
+    'CONCEITO DESTA GERAÇÃO — DEMONSTRAÇÃO AUTÊNTICA: a imagem comprova o uso real do produto pelo colaborador. Pessoa e produto em posição natural original, luz ambiente respeitada. Calibração técnica permitida. PROIBIDO: alterar pessoa, trocar produto, dramatizar visualmente. Resultado: a mesma cena, visualmente mais clara e legível.',
+    'CONCEITO DESTA GERAÇÃO — MOMENTO COMERCIAL REGISTRADO: capture a apresentação do produto sem interferência criativa. Preserve exatamente o colaborador, o produto e o espaço da foto original. Apenas refinamento técnico é permitido.',
   ],
 };
 
@@ -246,17 +256,23 @@ export interface PostUnicoReferences {
   // quando uniforme está presente sem avatar — ver PERSONAGEM OBRIGATÓRIO
   // em referencesBlock.
   personagemIdade?: string;
+  // Foto de um acontecimento (Kit Imagem, slot próprio) — objetivo "Fatos",
+  // aplicação direta sem reinvenção pela IA.
+  fato?: string;
+  // Foto de colaborador com o produto (Kit de Marca) — objetivo "Venda",
+  // mesmo tratamento de preservação do "Fato".
+  venda?: string;
 }
 
 // isClothingFriendly/buildClothingPool agora moram em core/clothingPool.ts —
 // compartilhadas com regenerateWithKit.ts (MOP) pra evitar duplicação literal.
 
 // Ordem fixa das imagens de referência enviadas ao modelo: avatar -> uniforme
-// -> fachada -> cenário -> produtos (por número) — espelha a sequência do
-// Kit Imagem (Identidade: avatar/uniforme/fachada; depois Ambiente: cenário).
-// Compartilhada entre PU e MOP — os rótulos "IMAGEM #N" só fazem sentido se
-// essa ordem for idêntica nos dois motores, e antes cada um tinha sua
-// própria cópia (refsToArray/buildRefs).
+// -> fachada -> cenário -> fato -> venda -> produtos (por número) — espelha
+// a sequência do Kit Imagem (Identidade: avatar/uniforme/fachada; depois
+// Ambiente: cenário; depois Fato/Venda, documentais). Compartilhada entre PU
+// e MOP — os rótulos "IMAGEM #N" só fazem sentido se essa ordem for idêntica
+// nos dois motores, e antes cada um tinha sua própria cópia (refsToArray/buildRefs).
 export function orderedReferenceImages(
   refs?: PostUnicoReferences,
   opts?: { withAvatar?: boolean },
@@ -268,6 +284,8 @@ export function orderedReferenceImages(
   if (refs.uniforme) imgs.push(refs.uniforme);
   if (refs.fachada) imgs.push(refs.fachada);
   if (refs.cenario) imgs.push(refs.cenario);
+  if (refs.fato) imgs.push(refs.fato);
+  if (refs.venda) imgs.push(refs.venda);
   if (refs.produtos?.length) {
     for (const p of [...refs.produtos].sort((a, b) => a.num - b.num)) {
       imgs.push(p.dataUrl);
@@ -322,6 +340,11 @@ const OBJETIVO_PALETAS: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]> =
     `PALETA DESTA PEÇA — CLAREZA DOCUMENTAL: azul acinzentado, cinza claro e branco. Evidência visual limpa — contraste suficiente para legibilidade, sem distorção das cores reais.`,
     `PALETA DESTA PEÇA — NATURALIDADE: marrom claro, bege e branco. Contexto humano real preservado — a paleta acompanha a temperatura de cor do ambiente original do evento.`,
   ],
+  venda: [
+    `PALETA DESTA PEÇA — AUTENTICIDADE COMERCIAL: tons neutros (bege claro, cinza suave e branco). Paleta fiel ao real — sem saturação artificial, sem dramatização cromática. Preserva a atmosfera visual da foto registrada.`,
+    `PALETA DESTA PEÇA — DEMONSTRAÇÃO REAL: azul claro dessaturado, cinza quente e branco. Registro limpo que respeita a luz e as cores originais da cena. Equilíbrio sem intervenção artificial.`,
+    `PALETA DESTA PEÇA — FIDELIDADE AO PRODUTO: areia, cinza neutro e branco. Documental e honesto — a paleta não inventa atmosfera, apenas organiza o que estava presente na foto.`,
+  ],
 };
 
 function buildColorBlock(primary: string, accent: string, isMood: boolean, objetivo?: PostUnicoObjetivo): string {
@@ -366,6 +389,8 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
   if (refs.uniforme) elementos.push('UNIFORME');
   if (refs.fachada) elementos.push('FACHADA');
   if (refs.cenario) elementos.push('CENÁRIO');
+  if (refs.fato) elementos.push('FATO');
+  if (refs.venda) elementos.push('VENDA');
   if (refs.produtos && refs.produtos.length) elementos.push('PRODUTOS');
   if (!elementos.length) return '';
 
@@ -399,28 +424,37 @@ function referencesBlock(refs?: PostUnicoReferences, segment?: string, kitColors
     parts.push(`FACHADA OBRIGATÓRIA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, os letreiros e a identidade visual permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`);
   }
   if (refs.cenario) {
-    if (objetivo === 'fatos') {
-      parts.push(`⚠ OBJETIVO FATOS — PRESERVAÇÃO TOTAL DA FOTO DO EVENTO:
-Esta peça é um REGISTRO DOCUMENTAL. A foto do cenário é o evento real — preserve-a fielmente.
+    const produtoGuard = segment !== 'VAREJO'
+      ? ' Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço.'
+      : '';
+    const temProduto = !!(refs.produtos && refs.produtos.length);
+    const ambienteClause = temProduto
+      ? 'preserve a arquitetura, paredes, piso, iluminação geral e identidade visual do ambiente — móveis e objetos do cenário aparecem apenas como FUNDO de apoio, atrás e ao redor do produto referenciado, nunca à frente dele nem maiores ou mais nítidos que ele'
+      : 'preserve a sala, móveis, equipamentos, paredes e ponto de vista';
+    const anguloClause = temProduto
+      ? 'Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local.'
+      : 'NÃO mude o ângulo.';
+    parts.push(`CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`);
+  }
+  if (refs.fato) {
+    parts.push(`⚠ FATO OBRIGATÓRIO — PRESERVAÇÃO TOTAL DA FOTO DO EVENTO:
+Esta peça é um REGISTRO DOCUMENTAL. A foto enviada é o evento real — preserve-a fielmente.
 PESSOAS: não altere rostos, poses, roupas nem número de pessoas. Mantenha exatamente como estão.
 AMBIENTE: preserve arquitetura, móveis, decoração e espaço físico. O local deve ser reconhecível e idêntico.
 LUZ: respeite a luz real do evento (sol, lâmpada, luz de janela). PERMITIDO melhorar tecnicamente: balanço de branco, contraste equilibrado, nitidez, clareza. PROIBIDO: criar luz cinematográfica artificial, mudar temperatura de cor radicalmente, dramatizar atmosfera.
 COMPOSIÇÃO: respeite o enquadramento e ponto de vista originais.
 PROIBIDO ABSOLUTAMENTE: alterar ou substituir pessoas, mudar ambiente, adicionar/remover elementos, dramatizar cores, inventar atmosfera, aplicar efeitos especiais.
 A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, nítida e tecnicamente melhorada.`);
-    } else {
-      const produtoGuard = segment !== 'VAREJO'
-        ? ' Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço.'
-        : '';
-      const temProduto = !!(refs.produtos && refs.produtos.length);
-      const ambienteClause = temProduto
-        ? 'preserve a arquitetura, paredes, piso, iluminação geral e identidade visual do ambiente — móveis e objetos do cenário aparecem apenas como FUNDO de apoio, atrás e ao redor do produto referenciado, nunca à frente dele nem maiores ou mais nítidos que ele'
-        : 'preserve a sala, móveis, equipamentos, paredes e ponto de vista';
-      const anguloClause = temProduto
-        ? 'Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local.'
-        : 'NÃO mude o ângulo.';
-      parts.push(`CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`);
-    }
+  }
+  if (refs.venda) {
+    parts.push(`⚠ VENDA OBRIGATÓRIA — PRESERVAÇÃO TOTAL DA FOTO DO COLABORADOR COM O PRODUTO:
+Esta peça é um REGISTRO REAL de apresentação/uso do produto. A foto enviada é a cena real — preserve-a fielmente.
+PESSOA: não altere rosto, pose, roupa. Mantenha exatamente como está.
+PRODUTO: preserve cor, formato, rótulo e embalagem — não troque, não invente outra versão.
+AMBIENTE: preserve o espaço físico onde a foto foi tirada.
+LUZ: respeite a luz real da foto. PERMITIDO melhorar tecnicamente: balanço de branco, contraste equilibrado, nitidez, clareza. PROIBIDO: criar luz cinematográfica artificial, dramatizar atmosfera.
+PROIBIDO ABSOLUTAMENTE: alterar ou substituir a pessoa, trocar o produto, mudar ambiente, adicionar/remover elementos, dramatizar cores, aplicar efeitos especiais.
+A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, nítida e tecnicamente melhorada.`);
   }
   if (refs.produtos && refs.produtos.length) {
     const lista = refs.produtos.map((p) => `Produto ${p.num}`).join(', ');
@@ -433,10 +467,11 @@ A imagem final deve ser reconhecidamente o MESMO evento — apenas mais clara, n
       }),
     );
   }
-  // Quando apenas avatar enviado (sem cenário, fachada ou produto): suprimir
-  // construção de ambiente pelo modelo — sem isso, a edição de imagem tende a
-  // reaproveitar/estender o fundo da própria foto do avatar como cenário.
-  if (refs.avatar && !refs.cenario && !refs.fachada && !(refs.produtos && refs.produtos.length)) {
+  // Quando apenas avatar enviado (sem cenário, fachada, fato, venda ou
+  // produto): suprimir construção de ambiente pelo modelo — sem isso, a
+  // edição de imagem tende a reaproveitar/estender o fundo da própria foto
+  // do avatar como cenário.
+  if (refs.avatar && !refs.cenario && !refs.fachada && !refs.fato && !refs.venda && !(refs.produtos && refs.produtos.length)) {
     parts.push(
       'FUNDO NEUTRO OBRIGATÓRIO: apenas avatar de referência enviado — sem imagem de cenário. ' +
       'Usar FUNDO LIMPO, SUAVE e DESFOCADO: bokeh suave, gradiente neutro, textura vaga ou superfície indefinida. ' +

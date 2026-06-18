@@ -55,6 +55,7 @@ const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
   { code: 'oportunidade',  label: 'Oportunidade',   desc: 'Momento único, urgência' },
   { code: 'promocao',      label: 'Promoção',       desc: 'Oferta, campanha comercial' },
   { code: 'fatos',         label: 'Fatos',          desc: 'Registrar evento — foto real do momento' },
+  { code: 'venda',         label: 'Venda',          desc: 'Colaborador com o produto — foto real' },
 ];
 
 const MOODS: { code: MoodCode; label: string }[] = [
@@ -719,6 +720,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         selection={visualSelection}
         onChange={onVisualSelectionChange}
         mood={data.direcao === 'mood' ? data.mood : undefined}
+        objetivo={data.objetivo}
       />
 
       {!hasLogo && (

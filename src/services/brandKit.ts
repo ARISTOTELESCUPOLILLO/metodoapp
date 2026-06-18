@@ -21,6 +21,7 @@ function rowToKit(k: any): BrandKit {
     logoPosition: (k.logo_position as LogoPosition) || 'bottom-right',
     assinatura: k.assinatura || '',
     uniformeDataUrl: k.uniforme_url || undefined,
+    vendaDataUrl: k.venda_url || undefined,
     products: Array.isArray(k.products) ? k.products : [],
   };
 }
@@ -60,6 +61,7 @@ const KitSchema = z.object({
   logoPosition: z.string().default('bottom-right'),
   assinatura: z.string().max(100).optional(),
   uniformeDataUrl: z.string().max(5_000_000).optional(),
+  vendaDataUrl: z.string().max(5_000_000).optional(),
   products: z.array(z.string().trim().min(1).max(80)).max(10).default([]),
 });
 
@@ -96,6 +98,7 @@ export const saveKitServer = createServerFn({ method: 'POST' })
       logo_position: data.logoPosition,
       assinatura: data.assinatura ?? null,
       uniforme_url: data.uniformeDataUrl ?? null,
+      venda_url: data.vendaDataUrl ?? null,
       products: data.products,
       updated_at: new Date().toISOString(),
     };
@@ -143,6 +146,7 @@ export async function saveKitForUser(kit: BrandKit, userId: string): Promise<Bra
     logo_position: kit.logoPosition || 'bottom-right',
     assinatura: kit.assinatura ?? null,
     uniforme_url: kit.uniformeDataUrl ?? null,
+    venda_url: kit.vendaDataUrl ?? null,
     products: kit.products ?? [],
     updated_at: new Date().toISOString(),
   };

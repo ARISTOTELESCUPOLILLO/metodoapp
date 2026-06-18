@@ -1,4 +1,4 @@
-import { BrandKit, ImageKit, MoodCode, PostUnicoVisualSelection } from '../../types';
+import { BrandKit, ImageKit, MoodCode, PostUnicoObjetivo, PostUnicoVisualSelection } from '../../types';
 import { produtosDisponiveis, cenariosDisponiveis, cenarioLabel } from '../../utils/imageKitStorage';
 import { policyPorFormato } from '../../core/referenciasPolicy';
 
@@ -16,9 +16,12 @@ interface Props {
   selection: PostUnicoVisualSelection;
   onChange: (next: PostUnicoVisualSelection) => void;
   mood?: MoodCode;
+  // Gate de visibilidade dos tiles de Fato/Venda — só fazem sentido com o
+  // objetivo de peça correspondente selecionado.
+  objetivo?: PostUnicoObjetivo;
 }
 
-export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, onChange, mood }: Props) {
+export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, onChange, mood, objetivo }: Props) {
   const hasAvatar1 = !!imageKit.avatar;
   const hasAvatar2 = !!imageKit.avatar2;
   const hasAvatar = hasAvatar1 || hasAvatar2;
@@ -27,6 +30,8 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
   const hasCenario = cenarios.length > 0;
   const produtos = produtosDisponiveis(imageKit);
   const hasProdutos = produtos.length > 0;
+  const hasFato = !!imageKit.fato && objetivo === 'fatos';
+  const hasVenda = !!kit.vendaDataUrl && objetivo === 'venda';
 
   const effectiveCenario = selection.cenarioSelecionado ?? null;
 
@@ -35,7 +40,9 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
     (selection.useFachada && hasFachada ? 1 : 0) +
     (selection.useCenario && hasCenario && effectiveCenario ? 1 : 0) +
     (selection.useProdutos && hasProdutos ? selection.produtosSelecionados.length : 0) +
-    (!selection.useAvatar && selection.personagemSemAvatar?.ativo && kit.uniformeDataUrl ? 1 : 0);
+    (!selection.useAvatar && selection.personagemSemAvatar?.ativo && kit.uniformeDataUrl ? 1 : 0) +
+    (selection.useFato && hasFato ? 1 : 0) +
+    (selection.useVenda && hasVenda ? 1 : 0);
 
   function pickAvatar(slot: 1 | 2) {
     if (selection.useAvatar && selection.avatarSelecionado === slot) {
@@ -46,6 +53,12 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
   }
   function pickFachada() {
     onChange({ ...selection, useFachada: !selection.useFachada });
+  }
+  function pickFato() {
+    onChange({ ...selection, useFato: !selection.useFato });
+  }
+  function pickVenda() {
+    onChange({ ...selection, useVenda: !selection.useVenda });
   }
   function pickCenario(num: number) {
     const isCurrent = effectiveCenario === num && selection.useCenario;
@@ -127,6 +140,22 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
             label={`Produto ${num}`}
           />
         ))}
+        {hasFato && (
+          <Tile
+            checked={!!selection.useFato}
+            onToggle={pickFato}
+            url={imageKit.fato || undefined}
+            label="Fato"
+          />
+        )}
+        {hasVenda && (
+          <Tile
+            checked={!!selection.useVenda}
+            onToggle={pickVenda}
+            url={kit.vendaDataUrl || undefined}
+            label="Venda"
+          />
+        )}
       </div>
 
       {!!kit.uniformeDataUrl && selection.useAvatar && (
@@ -206,6 +235,24 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
           {!hasFachada && 'Adicione a fachada no Kit Imagem para usar. '}
           {!hasCenario && 'Adicione cenários (até 2) no Kit Imagem para usar. '}
           {!hasProdutos && 'Adicione produtos no Kit Imagem para usar.'}
+        </div>
+      )}
+
+      {objetivo === 'fatos' && !imageKit.fato && (
+        <div style={{
+          marginTop: 10, background: '#fffbeb', border: '1px solid #fcd34d',
+          color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
+        }}>
+          ⚠️ Objetivo "Fatos" funciona melhor com uma foto do evento. Adicione em <strong>Kit Imagem → Fato</strong>.
+        </div>
+      )}
+
+      {objetivo === 'venda' && !kit.vendaDataUrl && (
+        <div style={{
+          marginTop: 10, background: '#fffbeb', border: '1px solid #fcd34d',
+          color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
+        }}>
+          ⚠️ Objetivo "Venda" funciona melhor com uma foto do colaborador com o produto. Adicione em <strong>Kit de Marca → Foto de Venda</strong>.
         </div>
       )}
 

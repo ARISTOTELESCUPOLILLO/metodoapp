@@ -16,6 +16,7 @@ export const emptyImageKit: ImageKit = {
   fachada: undefined,
   cenarios: Array.from({ length: CENARIO_SLOTS }, () => null),
   produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
+  fato: undefined,
 };
 
 function normalize(kit: any): ImageKit {
@@ -40,6 +41,7 @@ function normalize(kit: any): ImageKit {
     fachada: kit?.fachada || undefined,
     cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
     produtos: produtos.map((p: any) => (typeof p === 'string' && p ? p : null)),
+    fato: kit?.fato || undefined,
   };
 }
 
@@ -50,6 +52,7 @@ function freshEmpty(): ImageKit {
     fachada: undefined,
     cenarios: Array.from({ length: CENARIO_SLOTS }, () => null),
     produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
+    fato: undefined,
   };
 }
 
@@ -91,7 +94,8 @@ export function hasAnyImage(kit: ImageKit): boolean {
     !!kit.avatar2 ||
     !!kit.fachada ||
     kit.cenarios.some((c) => !!c) ||
-    kit.produtos.some((p) => !!p)
+    kit.produtos.some((p) => !!p) ||
+    !!kit.fato
   );
 }
 
@@ -129,6 +133,7 @@ function normalizeRemote(remote: {
   fachada?: string | null;
   cenarios?: (string | null)[] | null;
   produtos?: (string | null)[] | null;
+  fato?: string | null;
 }): _ImageKit {
   const cenarios = (remote.cenarios || []).slice(0, CENARIO_SLOTS);
   while (cenarios.length < CENARIO_SLOTS) cenarios.push(null);
@@ -140,6 +145,7 @@ function normalizeRemote(remote: {
     fachada: remote.fachada || undefined,
     cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
     produtos: produtos.map((p) => (typeof p === 'string' && p ? p : null)),
+    fato: remote.fato || undefined,
   };
 }
 
@@ -184,6 +190,7 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
   const fachadaPayload = slotPayload(prev.fachada, kit.fachada);
   const cenariosPayload = diffSlots(prev.cenarios, kit.cenarios);
   const produtosPayload = diffSlots(prev.produtos, kit.produtos);
+  const fatoPayload = slotPayload(prev.fato, kit.fato);
 
   const remote = await saveImageKitFor({
     data: {
@@ -193,6 +200,7 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
       fachada: fachadaPayload,
       cenarios: cenariosPayload as any,
       produtos: produtosPayload as any,
+      fato: fatoPayload,
     },
   });
   const saved = normalizeRemote(remote);

@@ -90,6 +90,8 @@ const defaultVisualSelection: PostUnicoVisualSelection = {
   produtosSelecionados: [],
   cenarioSelecionado: null,
   useUniforme: false,
+  useFato: false,
+  useVenda: false,
 };
 
 export default function App() {
@@ -623,7 +625,11 @@ export default function App() {
         },
         kit.uniformeDataUrl,
       );
-      const hasRefs = !!(references.avatar || references.fachada || references.cenario || references.produtos?.length || references.uniforme);
+      // Fato e Venda são conceitos exclusivos da PU (objetivo de peça) — não
+      // fazem parte do buildReferences compartilhado com o MOP, que nunca os usa.
+      if (visualSelection.useFato && freshImageKit.fato) references.fato = freshImageKit.fato;
+      if (visualSelection.useVenda && kit.vendaDataUrl) references.venda = kit.vendaDataUrl;
+      const hasRefs = !!(references.avatar || references.fachada || references.cenario || references.produtos?.length || references.uniforme || references.fato || references.venda);
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current = detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ?? (Math.random() < 0.5 ? 'mulher' : 'homem');
       }

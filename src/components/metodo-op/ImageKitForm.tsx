@@ -33,7 +33,7 @@ interface Props {
   saved?: boolean;
 }
 
-type SlotKind = 'avatar' | 'avatar2' | 'fachada' | { tipo: 'cenario'; index: number } | { tipo: 'produto'; index: number };
+type SlotKind = 'avatar' | 'avatar2' | 'fachada' | 'fato' | { tipo: 'cenario'; index: number } | { tipo: 'produto'; index: number };
 
 export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: Props) {
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +65,8 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
       onChange({ ...kit, avatar2: dataUrl || undefined });
     } else if (slot === 'fachada') {
       onChange({ ...kit, fachada: dataUrl || undefined });
+    } else if (slot === 'fato') {
+      onChange({ ...kit, fato: dataUrl || undefined });
     } else if (slot.tipo === 'cenario') {
       const next = [...kit.cenarios];
       next[slot.index] = dataUrl;
@@ -186,6 +188,21 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
         </div>
       </div>
 
+      <div className="formatBox">
+        <strong>Fato</strong>
+        <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#64748b' }}>
+          Fotografia de um acontecimento (visita, confraternização, feira). Usada no Post
+          Único com o objetivo "Fatos" — a foto é aplicada quase sem alteração, só com
+          marca/título/texto sobrepostos.
+        </p>
+        <SlotCard
+          dataUrl={kit.fato}
+          busy={busySlot === slotKey('fato')}
+          onPick={(f) => handleFile('fato', f)}
+          onClear={() => clearSlot('fato')}
+        />
+      </div>
+
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
         <button
           type="button"
@@ -203,7 +220,7 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
 }
 
 function slotKey(slot: SlotKind): string {
-  if (slot === 'avatar' || slot === 'avatar2' || slot === 'fachada') return slot;
+  if (slot === 'avatar' || slot === 'avatar2' || slot === 'fachada' || slot === 'fato') return slot;
   return `${slot.tipo}-${slot.index}`;
 }
 

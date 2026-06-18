@@ -70,6 +70,7 @@ export type Database = {
           secondary_font: string | null
           segment: string | null
           uniforme_url: string | null
+          venda_url: string | null
           updated_at: string
           user_id: string
         }
@@ -92,6 +93,7 @@ export type Database = {
           secondary_font?: string | null
           segment?: string | null
           uniforme_url?: string | null
+          venda_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -114,6 +116,7 @@ export type Database = {
           secondary_font?: string | null
           segment?: string | null
           uniforme_url?: string | null
+          venda_url?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -700,6 +703,7 @@ export type Database = {
           avatar_path: string | null
           avatar_path_2: string | null
           fachada_path: string | null
+          fato_path: string | null
           cenario_tipos: string[]
           cenarios_paths: string[]
           created_at: string
@@ -711,6 +715,7 @@ export type Database = {
           avatar_path?: string | null
           avatar_path_2?: string | null
           fachada_path?: string | null
+          fato_path?: string | null
           cenario_tipos?: string[]
           cenarios_paths?: string[]
           created_at?: string
@@ -722,6 +727,7 @@ export type Database = {
           avatar_path?: string | null
           avatar_path_2?: string | null
           fachada_path?: string | null
+          fato_path?: string | null
           cenario_tipos?: string[]
           cenarios_paths?: string[]
           created_at?: string
