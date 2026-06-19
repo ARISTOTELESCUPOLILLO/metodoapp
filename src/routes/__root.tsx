@@ -73,19 +73,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Método OP — Geração de Conteúdo e Imagem com IA" },
-      { name: "description", content: "O app Método OP ajuda sua empresa a criar conteúdos, imagens, reels e sequências estratégicas para redes sociais com mais direção, velocidade e identidade visual" },
+      {
+        name: "description",
+        content:
+          "O app Método OP ajuda sua empresa a criar conteúdos, imagens, reels e sequências estratégicas para redes sociais com mais direção, velocidade e identidade visual",
+      },
       { name: "author", content: "Método OP" },
       { property: "og:title", content: "Método OP — Geração de Conteúdo e Imagem com IA" },
-      { property: "og:description", content: "O app Método OP ajuda sua empresa a criar conteúdos, imagens, reels e sequências estratégicas para redes sociais com mais direção, velocidade e identidade visual" },
+      {
+        property: "og:description",
+        content:
+          "O app Método OP ajuda sua empresa a criar conteúdos, imagens, reels e sequências estratégicas para redes sociais com mais direção, velocidade e identidade visual",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Método OP — Geração de Conteúdo e Imagem com IA" },
-      { name: "twitter:description", content: "O app Método OP ajuda sua empresa a criar conteúdos, imagens, reels e sequências estratégicas para redes sociais com mais direção, velocidade e identidade visual" },
-      { property: "og:image", content: "https://metodoapp.oficinadepropaganda.com.br/social-share.jpg" },
+      {
+        name: "twitter:description",
+        content:
+          "O app Método OP ajuda sua empresa a criar conteúdos, imagens, reels e sequências estratégicas para redes sociais com mais direção, velocidade e identidade visual",
+      },
+      {
+        property: "og:image",
+        content: "https://metodoapp.oficinadepropaganda.com.br/social-share.jpg",
+      },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "675" },
       { property: "og:image:alt", content: "Método OP" },
-      { name: "twitter:image", content: "https://metodoapp.oficinadepropaganda.com.br/social-share.jpg" },
+      {
+        name: "twitter:image",
+        content: "https://metodoapp.oficinadepropaganda.com.br/social-share.jpg",
+      },
     ],
     links: [
       {

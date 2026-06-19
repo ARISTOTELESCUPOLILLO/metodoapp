@@ -1,4 +1,4 @@
-import { ImageKit } from '../types';
+import { ImageKit } from "../types";
 
 // Persistência local do Kit Imagem.
 // Estratégia: localStorage (rápido, simples, sem dependência de backend).
@@ -6,7 +6,7 @@ import { ImageKit } from '../types';
 // o consumidor pode mostrar uma mensagem ou (futuramente) fazer fallback
 // para upload em cloud storage.
 
-export const IMAGE_KIT_KEY = 'metodo-op-image-kit-v1';
+export const IMAGE_KIT_KEY = "metodo-op-image-kit-v1";
 export const PRODUTO_SLOTS = 8;
 export const CENARIO_SLOTS = 2;
 
@@ -29,7 +29,7 @@ function normalize(kit: any): ImageKit {
   let cenarios: (string | null)[];
   if (Array.isArray(kit?.cenarios)) {
     cenarios = kit.cenarios.slice(0, CENARIO_SLOTS);
-  } else if (typeof kit?.cenario === 'string' && kit.cenario) {
+  } else if (typeof kit?.cenario === "string" && kit.cenario) {
     cenarios = [kit.cenario, null];
   } else {
     cenarios = [];
@@ -40,8 +40,8 @@ function normalize(kit: any): ImageKit {
     avatar: kit?.avatar || undefined,
     avatar2: kit?.avatar2 || undefined,
     fachada: kit?.fachada || undefined,
-    cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
-    produtos: produtos.map((p: any) => (typeof p === 'string' && p ? p : null)),
+    cenarios: cenarios.map((c) => (typeof c === "string" && c ? c : null)),
+    produtos: produtos.map((p: any) => (typeof p === "string" && p ? p : null)),
     fato: kit?.fato || undefined,
     venda: kit?.venda || undefined,
   };
@@ -60,7 +60,7 @@ function freshEmpty(): ImageKit {
 }
 
 export function loadImageKit(userId?: string | null): ImageKit {
-  if (typeof window === 'undefined') return freshEmpty();
+  if (typeof window === "undefined") return freshEmpty();
   try {
     const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
     const raw = localStorage.getItem(key);
@@ -72,7 +72,7 @@ export function loadImageKit(userId?: string | null): ImageKit {
 }
 
 export function saveImageKit(kit: ImageKit, userId?: string | null): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
   const payload = JSON.stringify(normalize(kit));
   try {
@@ -84,7 +84,7 @@ export function saveImageKit(kit: ImageKit, userId?: string | null): void {
 }
 
 export function clearImageKit(userId?: string | null): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
     localStorage.removeItem(key);
@@ -104,15 +104,11 @@ export function hasAnyImage(kit: ImageKit): boolean {
 }
 
 export function produtosDisponiveis(kit: ImageKit): number[] {
-  return kit.produtos
-    .map((p, i) => (p ? i + 1 : null))
-    .filter((n): n is number => n !== null);
+  return kit.produtos.map((p, i) => (p ? i + 1 : null)).filter((n): n is number => n !== null);
 }
 
 export function cenariosDisponiveis(kit: ImageKit): number[] {
-  return kit.cenarios
-    .map((c, i) => (c ? i + 1 : null))
-    .filter((n): n is number => n !== null);
+  return kit.cenarios.map((c, i) => (c ? i + 1 : null)).filter((n): n is number => n !== null);
 }
 
 // Rótulo de exibição do cenário (1..2) — a fachada agora tem slot próprio,
@@ -128,8 +124,8 @@ export function cenarioLabel(_kit: ImageKit, num: number): string {
 // O localStorage acima vira só cache local de leitura rápida.
 // ============================================================
 
-import { ImageKit as _ImageKit } from '../types';
-import { loadImageKitFor, saveImageKitFor } from '../lib/imageKit.functions';
+import { ImageKit as _ImageKit } from "../types";
+import { loadImageKitFor, saveImageKitFor } from "../lib/imageKit.functions";
 
 function normalizeRemote(remote: {
   avatar?: string | null;
@@ -148,8 +144,8 @@ function normalizeRemote(remote: {
     avatar: remote.avatar || undefined,
     avatar2: remote.avatar2 || undefined,
     fachada: remote.fachada || undefined,
-    cenarios: cenarios.map((c) => (typeof c === 'string' && c ? c : null)),
-    produtos: produtos.map((p) => (typeof p === 'string' && p ? p : null)),
+    cenarios: cenarios.map((c) => (typeof c === "string" && c ? c : null)),
+    produtos: produtos.map((p) => (typeof p === "string" && p ? p : null)),
     fato: remote.fato || undefined,
     venda: remote.venda || undefined,
   };
@@ -161,10 +157,12 @@ export async function loadImageKitAsync(userId?: string | null): Promise<ImageKi
     const remote = await loadImageKitFor({ data: userId ? { userId } : {} });
     const kit = normalizeRemote(remote);
     // Atualiza o cache local pra próximas leituras instantâneas.
-    try { saveImageKit(kit, userId); } catch {}
+    try {
+      saveImageKit(kit, userId);
+    } catch {}
     return kit;
   } catch (e) {
-    console.warn('[imageKit] loadAsync falhou, usando cache local:', e);
+    console.warn("[imageKit] loadAsync falhou, usando cache local:", e);
     return loadImageKit(userId);
   }
 }
@@ -174,15 +172,21 @@ export async function loadImageKitAsync(userId?: string | null): Promise<ImageKi
 // - URL assinado http(s): já está no servidor → não reenvia (undefined)
 // - vazio quando antes tinha algo: apagar (null)
 // - vazio quando já estava vazio: nada (undefined)
-function slotPayload(prev: string | null | undefined, next: string | null | undefined): string | null | undefined {
+function slotPayload(
+  prev: string | null | undefined,
+  next: string | null | undefined,
+): string | null | undefined {
   const a = prev || null;
   const b = next || null;
   if (!b) return a ? null : undefined;
-  if (b.startsWith('data:')) return b; // upload novo
+  if (b.startsWith("data:")) return b; // upload novo
   return undefined; // signed URL já existente, sem mudança
 }
 
-function diffSlots(prev: (string | null)[], next: (string | null)[]): (string | null | undefined)[] {
+function diffSlots(
+  prev: (string | null)[],
+  next: (string | null)[],
+): (string | null | undefined)[] {
   const len = Math.max(prev.length, next.length);
   const out: (string | null | undefined)[] = [];
   for (let i = 0; i < len; i++) out.push(slotPayload(prev[i], next[i]));
@@ -213,6 +217,8 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
   });
   const saved = normalizeRemote(remote);
   // Espelha no cache local
-  try { saveImageKit(saved, userId); } catch {}
+  try {
+    saveImageKit(saved, userId);
+  } catch {}
   return saved;
 }

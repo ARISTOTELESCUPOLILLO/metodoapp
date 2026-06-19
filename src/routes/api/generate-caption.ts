@@ -1,38 +1,63 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { checkBalance, debitUsage, resolveEffectiveUser } from '@/lib/usage.server';
-import { getVoiceProfile } from '@/data/brandVoice';
-import { stripTrailingCtaSentence, truncateWords, normalizeForCompare, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS } from '@/core/textValidation';
-import { fetchOpenAIChat } from '@/lib/openaiClient.server';
+import { createFileRoute } from "@tanstack/react-router";
+import { checkBalance, debitUsage, resolveEffectiveUser } from "@/lib/usage.server";
+import { getVoiceProfile } from "@/data/brandVoice";
+import {
+  stripTrailingCtaSentence,
+  truncateWords,
+  normalizeForCompare,
+  LEGENDA_CORPO_MAX_WORDS,
+  LEGENDA_CTA_MAX_WORDS,
+} from "@/core/textValidation";
+import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 const OBJETIVO_TOM: Record<string, string> = {
-  promocao: 'comercial, desejo, chamada para ação clara',
-  homenagem: 'afetivo, respeitoso, contemplativo',
-  aviso: 'institucional, claro, objetivo',
-  oportunidade: 'urgência elegante, momento decisivo',
-  institucional: 'institucional de marca, posicionamento, propósito, sóbrio e confiante',
+  promocao: "comercial, desejo, chamada para ação clara",
+  homenagem: "afetivo, respeitoso, contemplativo",
+  aviso: "institucional, claro, objetivo",
+  oportunidade: "urgência elegante, momento decisivo",
+  institucional: "institucional de marca, posicionamento, propósito, sóbrio e confiante",
 };
 
 // E4 — fallback determinístico (sem chamada extra de API) quando o modelo,
 // mesmo após 1 nova tentativa, não preenche "cta" e/ou "hashtags".
 const OBJETIVO_CTA_FALLBACK: Record<string, string> = {
-  promocao: 'Aproveite agora.',
-  homenagem: 'Celebre com a gente.',
-  aviso: 'Saiba mais.',
-  oportunidade: 'Garanta a sua vaga.',
-  institucional: 'Conheça nosso trabalho.',
+  promocao: "Aproveite agora.",
+  homenagem: "Celebre com a gente.",
+  aviso: "Saiba mais.",
+  oportunidade: "Garanta a sua vaga.",
+  institucional: "Conheça nosso trabalho.",
 };
 
 const OBJETIVO_HASHTAG_FALLBACK: Record<string, string[]> = {
-  promocao: ['promocao', 'oferta', 'novidade'],
-  homenagem: ['gratidao', 'historia', 'conquista'],
-  aviso: ['aviso', 'informacao', 'novidade'],
-  oportunidade: ['oportunidade', 'novidade', 'momento'],
-  institucional: ['marca', 'qualidade', 'confianca'],
+  promocao: ["promocao", "oferta", "novidade"],
+  homenagem: ["gratidao", "historia", "conquista"],
+  aviso: ["aviso", "informacao", "novidade"],
+  oportunidade: ["oportunidade", "novidade", "momento"],
+  institucional: ["marca", "qualidade", "confianca"],
 };
 
 const HASHTAG_FALLBACK_STOPWORDS = new Set([
-  'de', 'da', 'do', 'das', 'dos', 'para', 'com', 'em', 'no', 'na', 'nos', 'nas',
-  'uma', 'uns', 'umas', 'que', 'por', 'sobre', 'entre', 'mais', 'menos',
+  "de",
+  "da",
+  "do",
+  "das",
+  "dos",
+  "para",
+  "com",
+  "em",
+  "no",
+  "na",
+  "nos",
+  "nas",
+  "uma",
+  "uns",
+  "umas",
+  "que",
+  "por",
+  "sobre",
+  "entre",
+  "mais",
+  "menos",
 ]);
 
 // Deriva até 3 hashtags a partir de palavras significativas do negócio
@@ -61,11 +86,11 @@ function deriveFallbackHashtags(
 // regeneração da PU volta com abertura igual à anterior.
 function openingWords(text: string, n: number): string {
   return normalizeForCompare(text)
-    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/[^a-z0-9\s]/g, "")
     .trim()
     .split(/\s+/)
     .slice(0, n)
-    .join(' ');
+    .join(" ");
 }
 
 function isCaptionTooSimilar(novoTexto: string, anterior: string): boolean {
@@ -82,12 +107,12 @@ function isCaptionTooSimilar(novoTexto: string, anterior: string): boolean {
 // palavras de uso comum demais para trocar sem risco de soar estranho — ficam
 // de fora: na dúvida, a palavra permanece.
 const FORBIDDEN_NOUNS: { re: RegExp; singular: string; plural: string }[] = [
-  { re: /\bclareza(s)?\b/gi, singular: 'direção definida', plural: 'direções definidas' },
-  { re: /\bimpacto(s)?\b/gi, singular: 'efeito imediato', plural: 'efeitos imediatos' },
-  { re: /\bsilêncio(s)?\b/gi, singular: 'respiro', plural: 'respiros' },
-  { re: /\binstante(s)?\b/gi, singular: 'momento', plural: 'momentos' },
-  { re: /\bfragmento(s)?\b/gi, singular: 'recorte', plural: 'recortes' },
-  { re: /\bdesvio(s)?\b/gi, singular: 'outro caminho', plural: 'outros caminhos' },
+  { re: /\bclareza(s)?\b/gi, singular: "direção definida", plural: "direções definidas" },
+  { re: /\bimpacto(s)?\b/gi, singular: "efeito imediato", plural: "efeitos imediatos" },
+  { re: /\bsilêncio(s)?\b/gi, singular: "respiro", plural: "respiros" },
+  { re: /\binstante(s)?\b/gi, singular: "momento", plural: "momentos" },
+  { re: /\bfragmento(s)?\b/gi, singular: "recorte", plural: "recortes" },
+  { re: /\bdesvio(s)?\b/gi, singular: "outro caminho", plural: "outros caminhos" },
 ];
 
 // Substitui os termos de FORBIDDEN_NOUNS e remove códigos internos ("OP-01"
@@ -97,8 +122,11 @@ function sanitizeForbiddenTerms(text: string): string {
   for (const { re, singular, plural } of FORBIDDEN_NOUNS) {
     out = out.replace(re, (_m, suffix) => (suffix ? plural : singular));
   }
-  out = out.replace(/\bOP-0[1-6]\b/gi, '').replace(/\bmood\b/gi, '');
-  return out.replace(/\s{2,}/g, ' ').replace(/\s+([.,!?;:])/g, '$1').trim();
+  out = out.replace(/\bOP-0[1-6]\b/gi, "").replace(/\bmood\b/gi, "");
+  return out
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,!?;:])/g, "$1")
+    .trim();
 }
 
 // PROIBIDO ABSOLUTO em hashtags — aqui o filtro pode ser mais agressivo que em
@@ -107,38 +135,68 @@ function sanitizeForbiddenTerms(text: string): string {
 // adjetivas/verbais (claro, impactante, desviar...), já sem acento, pois
 // sanitizeTag normaliza antes da comparação.
 const FORBIDDEN_HASHTAG_STEMS = new Set([
-  'clareza', 'clarezas', 'claro', 'clara', 'claros', 'claras',
-  'impacto', 'impactos', 'impactar', 'impactante',
-  'instante', 'instantes', 'instantaneo', 'instantanea',
-  'fragmento', 'fragmentos', 'fragmentado', 'fragmentada',
-  'desvio', 'desvios', 'desviar',
-  'silencio', 'silencios', 'silencioso', 'silenciosa', 'silenciar',
-  'op01', 'op02', 'op03', 'op04', 'op05', 'op06', 'mood',
+  "clareza",
+  "clarezas",
+  "claro",
+  "clara",
+  "claros",
+  "claras",
+  "impacto",
+  "impactos",
+  "impactar",
+  "impactante",
+  "instante",
+  "instantes",
+  "instantaneo",
+  "instantanea",
+  "fragmento",
+  "fragmentos",
+  "fragmentado",
+  "fragmentada",
+  "desvio",
+  "desvios",
+  "desviar",
+  "silencio",
+  "silencios",
+  "silencioso",
+  "silenciosa",
+  "silenciar",
+  "op01",
+  "op02",
+  "op03",
+  "op04",
+  "op05",
+  "op06",
+  "mood",
 ]);
 
-export const Route = createFileRoute('/api/generate-caption')({
+export const Route = createFileRoute("/api/generate-caption")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const companyName = String(body.companyName || '').slice(0, 200);
-          const mainActivity = String(body.mainActivity || '').slice(0, 300);
-          const objetivo = String(body.objetivo || 'promocao');
-          const keyInfo = String(body.keyInfo || '').slice(0, 1000);
-          const brandVoice = String(body.brandVoice || '').slice(0, 80);
-          const previousCaption = body.previousCaption ? String(body.previousCaption).slice(0, 400) : null;
+          const companyName = String(body.companyName || "").slice(0, 200);
+          const mainActivity = String(body.mainActivity || "").slice(0, 300);
+          const objetivo = String(body.objetivo || "promocao");
+          const keyInfo = String(body.keyInfo || "").slice(0, 1000);
+          const brandVoice = String(body.brandVoice || "").slice(0, 80);
+          const previousCaption = body.previousCaption
+            ? String(body.previousCaption).slice(0, 400)
+            : null;
           const debit = body.debit === true;
-          const preferredSlot = ['plano1', 'plano2', 'bonus'].includes(body.preferredSlot) ? body.preferredSlot as 'plano1' | 'plano2' | 'bonus' : undefined;
+          const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)
+            ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
+            : undefined;
 
           if (!keyInfo.trim()) {
-            return Response.json({ error: 'keyInfo obrigatório' }, { status: 400 });
+            return Response.json({ error: "keyInfo obrigatório" }, { status: 400 });
           }
 
           // Autenticação obrigatória em todos os casos.
           const effective = await resolveEffectiveUser(request);
           if (!effective) {
-            return Response.json({ error: 'Não autenticado' }, { status: 401 });
+            return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
           const userId = effective.userId;
           const impersonatedBy = effective.impersonatedBy;
@@ -149,7 +207,7 @@ export const Route = createFileRoute('/api/generate-caption')({
             const bal = await checkBalance(userId, 0, 0, 1);
             if (!bal.ok) {
               return Response.json(
-                { error: 'Limite de gerações do plano atingido — fale com o admin.' },
+                { error: "Limite de gerações do plano atingido — fale com o admin." },
                 { status: 402 },
               );
             }
@@ -158,7 +216,10 @@ export const Route = createFileRoute('/api/generate-caption')({
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
-            return Response.json({ error: 'OPENAI_API_KEY_CONTENT não configurada' }, { status: 500 });
+            return Response.json(
+              { error: "OPENAI_API_KEY_CONTENT não configurada" },
+              { status: 500 },
+            );
           }
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
@@ -173,11 +234,11 @@ export const Route = createFileRoute('/api/generate-caption')({
 Quando houver conflito entre tom do objetivo e direção de voz, PREVALECE a voz; o objetivo modula apenas a intenção comercial.
 Proibido mencionar literalmente o nome da voz no texto final.
 `
-            : '';
+            : "";
 
           const previousBlock = previousCaption
             ? `LEGENDA ANTERIOR GERADA (a nova versão precisa ser REALMENTE DIFERENTE): "${previousCaption}"\nNA NOVA VERSÃO: comece com uma frase de abertura diferente, use um novo CTA (diferente do anterior) e, quando possível, novas hashtags — não repita a estrutura, a frase inicial nem as palavras-chave principais da legenda anterior.\n`
-            : '';
+            : "";
 
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
 
@@ -199,15 +260,15 @@ Regras:
 - PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
-${objetivo === 'institucional' ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ''}
-${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ''}`;
+${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ""}
+${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}`;
 
           const sanitizeTag = (t: string) =>
             t
               .toLowerCase()
-              .normalize('NFD')
-              .replace(/[̀-ͯ]/g, '')
-              .replace(/[^a-z0-9]/g, '')
+              .normalize("NFD")
+              .replace(/[̀-ͯ]/g, "")
+              .replace(/[^a-z0-9]/g, "")
               .slice(0, 30);
 
           // Se o modelo não retornar nada para "cta" e/ou "hashtags", repete a
@@ -215,41 +276,49 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           // abaixo, que cuida de tamanho, CTA embutido no texto, hashtags e
           // palavras proibidas — o modelo só escreve, o código ajusta as regras.
           const MAX_CAPTION_ATTEMPTS = 2;
-          let rawTexto = '';
-          let rawCta = '';
+          let rawTexto = "";
+          let rawCta = "";
           let rawHashtags: string[] = [];
 
-          let retryInstruction = '';
+          let retryInstruction = "";
           for (let attempt = 1; attempt <= MAX_CAPTION_ATTEMPTS; attempt++) {
             const result = await fetchOpenAIChat(apiKey, {
-              model: 'gpt-4.1-mini',
+              model: "gpt-4.1-mini",
               messages: [
-                { role: 'system', content: 'Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.' },
                 {
-                  role: 'user',
+                  role: "system",
+                  content:
+                    "Você é redator publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido.",
+                },
+                {
+                  role: "user",
                   content: attempt === 1 ? userPrompt : `${userPrompt}\n\n${retryInstruction}`,
                 },
               ],
               temperature: 0.9,
-              response_format: { type: 'json_object' },
+              response_format: { type: "json_object" },
             });
 
             if (!result.ok) {
               return Response.json({ error: result.error }, { status: result.status });
             }
             const content = result.data.choices?.[0]?.message?.content;
-            if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
+            if (!content) return Response.json({ error: "Resposta vazia" }, { status: 502 });
 
             let parsed: { texto?: string; cta?: string; hashtags?: unknown };
-            try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
+            try {
+              parsed = JSON.parse(content);
+            } catch {
+              return Response.json({ error: "JSON inválido" }, { status: 502 });
+            }
 
-            rawTexto = String(parsed.texto || '').trim();
-            rawCta = String(parsed.cta || '').trim();
+            rawTexto = String(parsed.texto || "").trim();
+            rawCta = String(parsed.cta || "").trim();
             rawHashtags = Array.isArray(parsed.hashtags)
               ? parsed.hashtags.map((t) => sanitizeTag(String(t))).filter(Boolean)
               : [];
 
-            const fieldsOk = rawCta !== '' && rawHashtags.length > 0;
+            const fieldsOk = rawCta !== "" && rawHashtags.length > 0;
             if (!fieldsOk) {
               retryInstruction = `ATENÇÃO: a resposta anterior não preencheu "cta" e/ou "hashtags". Garanta que os três campos do JSON — "texto", "cta" e "hashtags" — estejam preenchidos.`;
               continue;
@@ -270,35 +339,49 @@ ${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           let textoValue = stripTrailingCtaSentence(rawTexto);
           textoValue = sanitizeForbiddenTerms(textoValue);
           textoValue = truncateWords(textoValue, LEGENDA_CORPO_MAX_WORDS);
-          if (textoValue && !/[.!?]$/.test(textoValue)) textoValue += '.';
+          if (textoValue && !/[.!?]$/.test(textoValue)) textoValue += ".";
 
           let ctaValue = sanitizeForbiddenTerms(rawCta);
-          if (!ctaValue) ctaValue = OBJETIVO_CTA_FALLBACK[objetivo] || OBJETIVO_CTA_FALLBACK.promocao;
+          if (!ctaValue)
+            ctaValue = OBJETIVO_CTA_FALLBACK[objetivo] || OBJETIVO_CTA_FALLBACK.promocao;
           ctaValue = truncateWords(ctaValue, LEGENDA_CTA_MAX_WORDS);
-          if (!/[.!?]$/.test(ctaValue)) ctaValue += '.';
+          if (!/[.!?]$/.test(ctaValue)) ctaValue += ".";
 
-          let hashtagsArr = rawHashtags
-            .filter((t) => !FORBIDDEN_HASHTAG_STEMS.has(t))
-            .slice(0, 3);
+          let hashtagsArr = rawHashtags.filter((t) => !FORBIDDEN_HASHTAG_STEMS.has(t)).slice(0, 3);
           if (hashtagsArr.length < 3) {
-            const derived = deriveFallbackHashtags(mainActivity, companyName, keyInfo, sanitizeTag)
-              .filter((t) => !hashtagsArr.includes(t) && !FORBIDDEN_HASHTAG_STEMS.has(t));
-            const fallback = OBJETIVO_HASHTAG_FALLBACK[objetivo] || OBJETIVO_HASHTAG_FALLBACK.promocao;
+            const derived = deriveFallbackHashtags(
+              mainActivity,
+              companyName,
+              keyInfo,
+              sanitizeTag,
+            ).filter((t) => !hashtagsArr.includes(t) && !FORBIDDEN_HASHTAG_STEMS.has(t));
+            const fallback =
+              OBJETIVO_HASHTAG_FALLBACK[objetivo] || OBJETIVO_HASHTAG_FALLBACK.promocao;
             hashtagsArr = [...new Set([...hashtagsArr, ...derived, ...fallback])].slice(0, 3);
           }
 
           if (debit && userId) {
             try {
-              await debitUsage(userId, 0, 0, { evento: 'gerar_post_unico', modulo: 'pu', geracoes: 1, custoUsd: isAdmin ? 0 : undefined, preferredSlot, impersonatedBy });
+              await debitUsage(userId, 0, 0, {
+                evento: "gerar_post_unico",
+                modulo: "pu",
+                geracoes: 1,
+                custoUsd: isAdmin ? 0 : undefined,
+                preferredSlot,
+                impersonatedBy,
+              });
             } catch (e) {
-              console.warn('[generate-caption] debit failed', e);
+              console.warn("[generate-caption] debit failed", e);
             }
           }
 
-          const cap = (s: string) => { const t = s.trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
+          const cap = (s: string) => {
+            const t = s.trim();
+            return t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+          };
           return Response.json({
             texto: cap(textoValue),
-            cta:   cap(ctaValue),
+            cta: cap(ctaValue),
             hashtags: hashtagsArr,
           });
         } catch (e) {

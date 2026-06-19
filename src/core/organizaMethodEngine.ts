@@ -1,7 +1,26 @@
-import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from '../types';
-import { getVoiceProfile } from '../data/brandVoice';
-import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
-import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits, checkObserverSubject, checkCrossPieceLabelRepeat, checkCrossPieceTitleRepeat, correctPortugueseSpelling, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS, LEGENDA_HASHTAGS } from './textValidation';
+import {
+  ContentFormData,
+  MethodOpResult,
+  FeedItem,
+  GenerationSummary,
+  Track,
+  ValidationFlag,
+} from "../types";
+import { getVoiceProfile } from "../data/brandVoice";
+import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from "./visualDirection";
+import {
+  truncateWords,
+  validatePieceFields,
+  normalizeLegenda,
+  enforceLegendaLimits,
+  checkObserverSubject,
+  checkCrossPieceLabelRepeat,
+  checkCrossPieceTitleRepeat,
+  correctPortugueseSpelling,
+  LEGENDA_CORPO_MAX_WORDS,
+  LEGENDA_CTA_MAX_WORDS,
+  LEGENDA_HASHTAGS,
+} from "./textValidation";
 
 interface MomentModulator {
   label: string;
@@ -12,46 +31,65 @@ interface MomentModulator {
 }
 
 const momentModulators: Record<string, MomentModulator> = {
-  'lançamento': {
-    label: 'Lançamento',
-    entryModifier: 'modulada por DESCOBERTA e NOVIDADE — o 1º conteúdo apresenta o que ainda não é percebido pelo público, despertando curiosidade legítima sobre algo novo.',
-    securityAngle: 'ancorada na previsibilidade e clareza da adoção do que está sendo introduzido (reduzir incerteza diante do novo)',
-    storyEntryModifier: 'modulada por descoberta e novidade — abrir o dia revelando algo que o público ainda não percebeu sobre o tema.',
-    contextNote: 'Lançamento (empresa nova ou novo produto/serviço — ativação via descoberta)',
+  lançamento: {
+    label: "Lançamento",
+    entryModifier:
+      "modulada por DESCOBERTA e NOVIDADE — o 1º conteúdo apresenta o que ainda não é percebido pelo público, despertando curiosidade legítima sobre algo novo.",
+    securityAngle:
+      "ancorada na previsibilidade e clareza da adoção do que está sendo introduzido (reduzir incerteza diante do novo)",
+    storyEntryModifier:
+      "modulada por descoberta e novidade — abrir o dia revelando algo que o público ainda não percebeu sobre o tema.",
+    contextNote: "Lançamento (empresa nova ou novo produto/serviço — ativação via descoberta)",
   },
-  'consolidação': {
-    label: 'Consolidação',
-    entryModifier: 'ativação padrão da entrada do segmento, sem modulação adicional — reforçar autoridade e prova sobre o que já é percebido.',
-    securityAngle: 'ancorada em estabilidade comprovada e previsibilidade operacional consolidada',
-    storyEntryModifier: 'ativação padrão da entrada do segmento, aplicada ao contexto do negócio.',
-    contextNote: 'Consolidação (operação estável buscando crescer — ativação padrão do segmento)',
+  consolidação: {
+    label: "Consolidação",
+    entryModifier:
+      "ativação padrão da entrada do segmento, sem modulação adicional — reforçar autoridade e prova sobre o que já é percebido.",
+    securityAngle: "ancorada em estabilidade comprovada e previsibilidade operacional consolidada",
+    storyEntryModifier: "ativação padrão da entrada do segmento, aplicada ao contexto do negócio.",
+    contextNote: "Consolidação (operação estável buscando crescer — ativação padrão do segmento)",
   },
-  'reativação': {
-    label: 'Reativação',
-    entryModifier: 'modulada por RECONEXÃO e RELEVÂNCIA RENOVADA — reabre uma conversa que ficou em aberto, recuperando a atenção de quem já conhece mas se afastou.',
-    securityAngle: 'ancorada em reduzir o risco percebido de retomar (mostrar que o caminho de volta é seguro e previsível)',
-    storyEntryModifier: 'modulada por reconexão — abrir o dia reativando uma percepção que pode ter esfriado no público.',
-    contextNote: 'Reativação (cliente parado, retomada após pausa — ativação via reconexão)',
+  reativação: {
+    label: "Reativação",
+    entryModifier:
+      "modulada por RECONEXÃO e RELEVÂNCIA RENOVADA — reabre uma conversa que ficou em aberto, recuperando a atenção de quem já conhece mas se afastou.",
+    securityAngle:
+      "ancorada em reduzir o risco percebido de retomar (mostrar que o caminho de volta é seguro e previsível)",
+    storyEntryModifier:
+      "modulada por reconexão — abrir o dia reativando uma percepção que pode ter esfriado no público.",
+    contextNote: "Reativação (cliente parado, retomada após pausa — ativação via reconexão)",
   },
-  'sazonalidade': {
-    label: 'Sazonalidade',
-    entryModifier: 'modulada pelo CONTEXTO TEMPORAL VIGENTE — ancora a entrada no momento atual (data, temporada, ciclo), conectando a oferta ao agora.',
-    securityAngle: 'ancorada na previsibilidade de aproveitar o momento certo, sem improviso',
-    storyEntryModifier: 'modulada pelo contexto temporal — abrir o dia ancorando o tema no momento sazonal vigente.',
-    contextNote: 'Sazonalidade (data comemorativa ou alta/baixa temporada — ativação ancorada no agora)',
+  sazonalidade: {
+    label: "Sazonalidade",
+    entryModifier:
+      "modulada pelo CONTEXTO TEMPORAL VIGENTE — ancora a entrada no momento atual (data, temporada, ciclo), conectando a oferta ao agora.",
+    securityAngle: "ancorada na previsibilidade de aproveitar o momento certo, sem improviso",
+    storyEntryModifier:
+      "modulada pelo contexto temporal — abrir o dia ancorando o tema no momento sazonal vigente.",
+    contextNote:
+      "Sazonalidade (data comemorativa ou alta/baixa temporada — ativação ancorada no agora)",
   },
 };
 
 const segmentConfigB2C = {
-  'SERVIÇOS': { entrada: 'clareza e organização mental', bloqueio: 'confusão e desconfiança' },
-  'VAREJO':   { entrada: 'identificação e movimento',   bloqueio: 'indecisão e inércia' },
-  'MARCA':    { entrada: 'reconhecimento e vínculo',    bloqueio: 'desconexão e falta de familiaridade' },
+  SERVIÇOS: { entrada: "clareza e organização mental", bloqueio: "confusão e desconfiança" },
+  VAREJO: { entrada: "identificação e movimento", bloqueio: "indecisão e inércia" },
+  MARCA: { entrada: "reconhecimento e vínculo", bloqueio: "desconexão e falta de familiaridade" },
 } as const;
 
 const segmentConfigB2B = {
-  'SERVIÇOS': { entrada: 'eficiência e previsibilidade operacional', bloqueio: 'risco de mudança e falta de referências' },
-  'VAREJO':   { entrada: 'margem e giro de estoque',                 bloqueio: 'custo de troca e incerteza de demanda' },
-  'MARCA':    { entrada: 'posicionamento e diferenciação no mercado', bloqueio: 'comoditização e falta de percepção de valor' },
+  SERVIÇOS: {
+    entrada: "eficiência e previsibilidade operacional",
+    bloqueio: "risco de mudança e falta de referências",
+  },
+  VAREJO: {
+    entrada: "margem e giro de estoque",
+    bloqueio: "custo de troca e incerteza de demanda",
+  },
+  MARCA: {
+    entrada: "posicionamento e diferenciação no mercado",
+    bloqueio: "comoditização e falta de percepção de valor",
+  },
 } as const;
 
 const SEQUENCE_COMPOSITION = {
@@ -60,81 +98,116 @@ const SEQUENCE_COMPOSITION = {
   9: { estatico: 3, carrossel: 3, fechamento: 3 },
 };
 
-function buildPostProgression(qty: number, entrada: string, isB2BOperational: boolean, moment: MomentModulator): string {
+function buildPostProgression(
+  qty: number,
+  entrada: string,
+  isB2BOperational: boolean,
+  moment: MomentModulator,
+): string {
   const ativacao = isB2BOperational
     ? `Ativação da ENTRADA (${entrada}) via gatilho de SEGURANÇA ${moment.securityAngle}: enfatizar estabilidade, proteção, previsibilidade operacional, redução de incerteza e controle de processo. Modulação do momento "${moment.label}": ${moment.entryModifier}`
     : `Ativação da ENTRADA: ${entrada}, aplicada ao contexto real do negócio. Modulação do momento "${moment.label}": ${moment.entryModifier}`;
 
   const segurancaNote = isB2BOperational
-    ? ' → Como o início já ativou Segurança, esta etapa deve aprofundar com provas concretas. NÃO repetir estabilidade/proteção.'
-    : '';
+    ? " → Como o início já ativou Segurança, esta etapa deve aprofundar com provas concretas. NÃO repetir estabilidade/proteção."
+    : "";
 
   if (qty === 1) return `- Post 1: ${ativacao}`;
   if (qty === 2) return `- Post 1: ${ativacao}\n- Post 2: Confiança e autoridade`;
-  if (qty === 3) return `- Post 1: ${ativacao}\n- Post 2: Confiança e segurança${segurancaNote}\n- Post 3: Autoridade e ação`;
+  if (qty === 3)
+    return `- Post 1: ${ativacao}\n- Post 2: Confiança e segurança${segurancaNote}\n- Post 3: Autoridade e ação`;
   return `- Post 1: ${ativacao}\n- Post 2: Amplia o contexto\n- Post 3: Aplica entendimento\n- Post 4: Segurança${segurancaNote}\n- Post 5: Confiança ou autoridade\n- Post 6: Conduz à ação`;
 }
 
 function buildCommunicativeFunctionMap(
   comp: { estatico: number; carrossel: number; fechamento: number },
   isVisualOrExperimentacao: boolean,
-  progressionStages: string[]
+  progressionStages: string[],
 ): string {
   const fnMap: Record<string, { label: string; desc: string }> = {
-    'IDENTIFICAÇÃO':  { label: 'EDUCATIVO + INSPIRACIONAL', desc: 'FORMA observação-espelho: nomeia a realidade do público — a marca entende, não vende' },
-    'RECONHECIMENTO': { label: 'INSPIRACIONAL',             desc: 'FORMA afirmação de identidade: revela a marca — sem CTA, sem argumento comercial' },
-    'DESEJO':         { label: 'INSPIRACIONAL',             desc: 'FORMA cena desejável: mostra o que passa a ser possível — sem pressionar' },
-    'ENTENDIMENTO':   { label: 'EDUCATIVO + INFORMATIVO',   desc: 'FORMA observação-espelho: nomeia o contexto ou problema que o receptor vive' },
-    'SEGURANÇA':      { label: 'INFORMATIVO + PERSUASIVO',  desc: 'FORMA critério prático: entrega um ponto de avaliação concreto que o receptor já pode usar' },
-    'CONFIANÇA':      { label: 'PERSUASIVO',                desc: 'FORMA prova/consequência: mostra o resultado observável de aplicar esse critério' },
-    'AUTORIDADE':     { label: 'PERSUASIVO',                desc: 'FORMA afirmação de domínio: posiciona o que a marca entrega — pode citar resultados e diferenciais' },
-    'AGIR':           { label: 'CONVENCIMENTO',             desc: 'FORMA convite consultivo: indica o próximo passo — pode nomear o que a empresa oferece' },
+    IDENTIFICAÇÃO: {
+      label: "EDUCATIVO + INSPIRACIONAL",
+      desc: "FORMA observação-espelho: nomeia a realidade do público — a marca entende, não vende",
+    },
+    RECONHECIMENTO: {
+      label: "INSPIRACIONAL",
+      desc: "FORMA afirmação de identidade: revela a marca — sem CTA, sem argumento comercial",
+    },
+    DESEJO: {
+      label: "INSPIRACIONAL",
+      desc: "FORMA cena desejável: mostra o que passa a ser possível — sem pressionar",
+    },
+    ENTENDIMENTO: {
+      label: "EDUCATIVO + INFORMATIVO",
+      desc: "FORMA observação-espelho: nomeia o contexto ou problema que o receptor vive",
+    },
+    SEGURANÇA: {
+      label: "INFORMATIVO + PERSUASIVO",
+      desc: "FORMA critério prático: entrega um ponto de avaliação concreto que o receptor já pode usar",
+    },
+    CONFIANÇA: {
+      label: "PERSUASIVO",
+      desc: "FORMA prova/consequência: mostra o resultado observável de aplicar esse critério",
+    },
+    AUTORIDADE: {
+      label: "PERSUASIVO",
+      desc: "FORMA afirmação de domínio: posiciona o que a marca entrega — pode citar resultados e diferenciais",
+    },
+    AGIR: {
+      label: "CONVENCIMENTO",
+      desc: "FORMA convite consultivo: indica o próximo passo — pode nomear o que a empresa oferece",
+    },
   };
 
   const lines: string[] = [];
 
   for (let i = 0; i < comp.estatico; i++) {
     const stage = progressionStages[i] || progressionStages[0];
-    const fn = fnMap[stage] || { label: 'EDUCATIVO + INFORMATIVO', desc: 'contextualiza e informa' };
+    const fn = fnMap[stage] || {
+      label: "EDUCATIVO + INFORMATIVO",
+      desc: "contextualiza e informa",
+    };
     lines.push(`Estático ${i + 1} [${stage}] → ${fn.label}: ${fn.desc}`);
   }
 
   if (comp.carrossel > 0) {
-    const card5Desc = comp.carrossel > 1
-      ? `Card 5 (ação)                → CONVENCIMENTO — FORMA por posição: nos carrosséis 1 a ${comp.carrossel - 1}, "síntese sem convite": resume o avanço e aponta direção, SEM citar a empresa e SEM CTA comercial explícito; SOMENTE no carrossel ${comp.carrossel} (o último), FORMA "convite consultivo": consolida e indica o próximo passo — pode citar o que a empresa entrega`
-      : `Card 5 (ação)                → CONVENCIMENTO — FORMA convite consultivo: consolida e indica o próximo passo — pode citar o que a empresa entrega`;
+    const card5Desc =
+      comp.carrossel > 1
+        ? `Card 5 (ação)                → CONVENCIMENTO — FORMA por posição: nos carrosséis 1 a ${comp.carrossel - 1}, "síntese sem convite": resume o avanço e aponta direção, SEM citar a empresa e SEM CTA comercial explícito; SOMENTE no carrossel ${comp.carrossel} (o último), FORMA "convite consultivo": consolida e indica o próximo passo — pode citar o que a empresa entrega`
+        : `Card 5 (ação)                → CONVENCIMENTO — FORMA convite consultivo: consolida e indica o próximo passo — pode citar o que a empresa entrega`;
     lines.push(
       `Carrossel — arco interno de 5 cards:`,
       `  Card 1 (abertura)            → EDUCATIVO — FORMA observação-espelho: nomeia o problema ou aspiração que o público reconhece, sem citar a empresa`,
       `  Cards 2-3 (desenvolvimento)  → INFORMATIVO — FORMA EVIDÊNCIA CONCRETA (Dia 2 = evidência, NÃO metáfora): o TÍTULO destes cards deve trazer um fato, número, situação real ou comparação observável — NÃO metáfora nem adjetivo de qualidade solto ("redondo", "certo", "sólido", "ideal"). Ex.: prefira "Folga errada some o rolamento" a "Motor redondo pede cuidado certo". OPÇÃO (não obrigação): pode usar formato de lista numerada quando fizer sentido (ex.: "N sinais de que...", "N motivos para..."), mas NÃO é regra fixa nem deve se repetir como fórmula entre gerações — é só UMA entre várias formas de evidência concreta (dado real, comparação, situação observável). Um ponto de avaliação por card`,
       `  Card 4 (direção)             → PERSUASIVO — FORMA indicação de caminho: aponta a direção a seguir — sem CTA, sem nomear a empresa`,
-      `  ${card5Desc}`
+      `  ${card5Desc}`,
     );
   }
 
-  const fechamentoTipo = isVisualOrExperimentacao ? 'Estático Final' : 'Reels';
+  const fechamentoTipo = isVisualOrExperimentacao ? "Estático Final" : "Reels";
   if (comp.fechamento > 0) {
-    const fechamentoDesc = comp.fechamento > 1
-      ? `${fechamentoTipo} → CONVENCIMENTO — FORMA por posição: do 1º ao ${comp.fechamento - 1}º ${fechamentoTipo}, "síntese sem convite": consolida a camada da progressão concluída até ali, SEM citar a empresa e sem convite explícito; SOMENTE no ${comp.fechamento}º ${fechamentoTipo} (o último da sequência), FORMA "convite consultivo + resolução": consolida toda a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`
-      : `${fechamentoTipo} → CONVENCIMENTO — FORMA convite consultivo + resolução: consolida a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`;
+    const fechamentoDesc =
+      comp.fechamento > 1
+        ? `${fechamentoTipo} → CONVENCIMENTO — FORMA por posição: do 1º ao ${comp.fechamento - 1}º ${fechamentoTipo}, "síntese sem convite": consolida a camada da progressão concluída até ali, SEM citar a empresa e sem convite explícito; SOMENTE no ${comp.fechamento}º ${fechamentoTipo} (o último da sequência), FORMA "convite consultivo + resolução": consolida toda a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`
+        : `${fechamentoTipo} → CONVENCIMENTO — FORMA convite consultivo + resolução: consolida a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`;
     lines.push(fechamentoDesc);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 export function buildMetodoOpPrompt(data: ContentFormData): string {
-  const isB2B = data.audience === 'B2B';
+  const isB2B = data.audience === "B2B";
   const segConfig = isB2B ? segmentConfigB2B : segmentConfigB2C;
   const seg = segConfig[data.segment];
-  const moment = momentModulators[data.businessMoment] || momentModulators['consolidação'];
-  const isB2BOperational = isB2B && (data.segment === 'SERVIÇOS' || data.segment === 'VAREJO');
-  const wantsStories = data.outputMode === 'stories' || data.outputMode === 'feed+stories';
-  const hasFeed = data.outputMode === 'feed' || data.outputMode === 'feed+stories';
+  const moment = momentModulators[data.businessMoment] || momentModulators["consolidação"];
+  const isB2BOperational = isB2B && (data.segment === "SERVIÇOS" || data.segment === "VAREJO");
+  const wantsStories = data.outputMode === "stories" || data.outputMode === "feed+stories";
+  const hasFeed = data.outputMode === "feed" || data.outputMode === "feed+stories";
 
-  const track: Track = data.track || 'cinematica';
-  const isVisual = track === 'visual';
-  const isExperimentacao = track === 'experimentacao';
+  const track: Track = data.track || "cinematica";
+  const isVisual = track === "visual";
+  const isExperimentacao = track === "experimentacao";
   const isVisualOrExperimentacao = isVisual || isExperimentacao;
 
   const requestedSize = (data.sequenceSize || 6) as 3 | 6 | 9;
@@ -142,16 +215,16 @@ export function buildMetodoOpPrompt(data: ContentFormData): string {
   const comp = SEQUENCE_COMPOSITION[size];
 
   const progressionText = isB2B
-    ? 'ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR'
-    : data.segment === 'VAREJO'
-      ? 'IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR'
-      : data.segment === 'MARCA'
-        ? 'RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR'
-        : 'ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR';
+    ? "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR"
+    : data.segment === "VAREJO"
+      ? "IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR"
+      : data.segment === "MARCA"
+        ? "RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR"
+        : "ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR";
 
   const audienceDirection = isB2B
-    ? 'Conteúdo SEMPRE para o decisor empresarial (gestor, diretor ou responsável pela área), NUNCA para o consumidor final.'
-    : 'Conteúdo SEMPRE para o consumidor final (cliente do cliente), NUNCA para o empresário.';
+    ? "Conteúdo SEMPRE para o decisor empresarial (gestor, diretor ou responsável pela área), NUNCA para o consumidor final."
+    : "Conteúdo SEMPRE para o consumidor final (cliente do cliente), NUNCA para o empresário.";
 
   const vendaRule = isB2B
     ? `- Venda só pode aparecer no último conteúdo da sequência.\n- O último conteúdo DEVE conter convite claro para reunião, diagnóstico ou proposta personalizada.\n- Proibido CTA agressivo, pressão ou urgência artificial.`
@@ -165,11 +238,11 @@ export function buildMetodoOpPrompt(data: ContentFormData): string {
   // Cinemática: REELS (movimento, retenção, expansão emocional)
   // Visual / Experimentação: ESTÁTICO FINAL (resolução, fechamento, imagem fixa)
   const composicaoLine = isVisualOrExperimentacao
-    ? `${size} peças no total: ${comp.estatico} estático${comp.estatico > 1 ? 's' : ''} + ${comp.carrossel} carrossel${comp.carrossel > 1 ? 'is' : ''} + ${comp.fechamento} estático${comp.fechamento > 1 ? 's' : ''} final${comp.fechamento > 1 ? 'is' : ''}`
-    : `${size} peças no total: ${comp.estatico} estático${comp.estatico > 1 ? 's' : ''} + ${comp.carrossel} carrossel${comp.carrossel > 1 ? 'is' : ''} + ${comp.fechamento} reels`;
+    ? `${size} peças no total: ${comp.estatico} estático${comp.estatico > 1 ? "s" : ""} + ${comp.carrossel} carrossel${comp.carrossel > 1 ? "is" : ""} + ${comp.fechamento} estático${comp.fechamento > 1 ? "s" : ""} final${comp.fechamento > 1 ? "is" : ""}`
+    : `${size} peças no total: ${comp.estatico} estático${comp.estatico > 1 ? "s" : ""} + ${comp.carrossel} carrossel${comp.carrossel > 1 ? "is" : ""} + ${comp.fechamento} reels`;
 
   const reelsBlock = `
-REELS (${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} de produção):
+REELS (${comp.fechamento} guia${comp.fechamento > 1 ? "s" : ""} de produção):
 - Cada Reels: até 15 segundos, imagem PURA (sem texto, sem logo), sempre com UMA ÚNICA PESSOA adulta como porta-voz.
 - O imagePrompt do Reels DEVE descrever uma FOTO ÚNICA, sem colagem, sem sequência de quadros, sem reunião e sem várias pessoas.
 - Se a ideia envolver clientes, equipe, reunião ou atendimento, traduza visualmente para uma pessoa sozinha olhando para a câmera.
@@ -179,10 +252,10 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} de produção):
   CTA OBRIGATORIAMENTE GENÉRICO — varie a cada geração, escolha entre: "Fale com a gente hoje.", "Entre em contato agora.", "Venha saber mais.", "Comece ainda hoje.", "Fale conosco agora.", "Dá pra começar hoje.", "A gente te ajuda.", "Vem com a gente.", "O primeiro passo é seu.", "Bora dar o próximo passo." — ou crie outro de mesmo tom. PROIBIDO mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
 - REGRA TTS — campo "script" (será LIDO em voz alta por sintetizador): USE palavras de 1 ou 2 sílabas sempre que possível. PROIBIDO: palavras com mais de 3 sílabas, siglas em caixa alta (APP→"app", CRM→"sistema", ROI→"retorno", KPI→"meta", IA→"inteligência"), anglicismos crus (link, lead, brief, deadline, framework), abreviações (vc, tb, p/). TRADUZA termos difíceis: "consultoria"→"apoio"; "estratégia"→"plano"; "posicionamento"→"presença". Exemplo correto (21 palavras, ~7s): "Sua marca fala. Seu time entrega. Seu cliente volta. É assim que se cresce. Fale com a gente hoje." O campo "screenText" PODE conter sigla (é lido com os olhos), mas o "script" NÃO PODE — precisa fluir natural em voz alta em português brasileiro.
 - Retornar em "reels": [{ "sequencia": 1, "hook", "screenText", "script", "imagePrompt", "legenda": "corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras + CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)" }]
-${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} reels com abordagens visuais E estruturais distintas (script com sujeito/estrutura diferentes, não só troca de verbo). Convite consultivo + CTA comercial explícito SÓ no reels ${comp.fechamento} (o último); os reels anteriores fecham em síntese/direção, sem nomear a empresa.` : ''}`;
+${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} reels com abordagens visuais E estruturais distintas (script com sujeito/estrutura diferentes, não só troca de verbo). Convite consultivo + CTA comercial explícito SÓ no reels ${comp.fechamento} (o último); os reels anteriores fecham em síntese/direção, sem nomear a empresa.` : ""}`;
 
   const estaticoFinalBlock = `
-ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fechamento narrativo):
+ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? "s" : ""} de fechamento narrativo):
 - O Estático Final NÃO é um estático comum nem um reel congelado.
 - É um formato HÍBRIDO de fechamento visual com função psicológica própria: consolidação, resolução visual, fechamento emocional, organização da decisão.
 - Função na sequência: encerrar o ciclo narrativo aberto pelo estático e desenvolvido pelo carrossel.
@@ -193,7 +266,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fe
 - A IMAGEM deve traduzir literalmente o título e o texto, com cena de calma, foco e estabilidade — não tensão, não movimento.
 - Retornar dentro do array "feed" com formato exato "Estático Final" (com acento e espaço, exatamente assim).
 - Estrutura de cada item: { "dia", "formato": "Estático Final", "titulo", "texto", "legenda", "imagem", "leituraCenica": { "intencao": "sensação de fechamento que esta peça consolida", "personagem": "quem aparece na cena, em postura de calma e direção definida", "ambiente": "ambiente estável, com poucos elementos competindo pela atenção", "expressao": "expressão serena, decidida, sem dramaticidade", "clima": "luz suave, atmosfera de resolução, hora estável do dia", "composicao": "composição centralizada ou em equilíbrio claro, com espaço negativo amplo, sem ruído gráfico" } }
-${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} Estáticos Finais com abordagens narrativas E estruturais distintas (sujeito/molde de frase diferentes, não só sinônimo do mesmo molde), cada um fechando uma camada diferente da sequência. Convite consultivo + nomear a empresa SÓ no Estático Final ${comp.fechamento} (o último); os anteriores fecham em síntese, sem citar a empresa.` : ''}`;
+${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} Estáticos Finais com abordagens narrativas E estruturais distintas (sujeito/molde de frase diferentes, não só sinônimo do mesmo molde), cada um fechando uma camada diferente da sequência. Convite consultivo + nomear a empresa SÓ no Estático Final ${comp.fechamento} (o último); os anteriores fecham em síntese, sem citar a empresa.` : ""}`;
 
   const closingBlock = isVisualOrExperimentacao ? estaticoFinalBlock : reelsBlock;
 
@@ -201,23 +274,24 @@ ${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} Estáticos Finais com aborda
   // Linguagem absoluta e instrução negativa explícita são mais eficazes que descrições suaves.
   const trackHeader = isVisualOrExperimentacao
     ? `
-⚠️ TRILHA ${isExperimentacao ? 'EXPERIMENTAÇÃO' : 'VISUAL'} — REGRAS INVIOLÁVEIS:
+⚠️ TRILHA ${isExperimentacao ? "EXPERIMENTAÇÃO" : "VISUAL"} — REGRAS INVIOLÁVEIS:
 1. FECHAMENTO obrigatório: peças com formato "Estático Final" dentro do array "feed".
-2. Chaves do JSON: EXCLUSIVAMENTE "feed", "carousel"${wantsStories ? ', "stories"' : ''}. NADA MAIS.
+2. Chaves do JSON: EXCLUSIVAMENTE "feed", "carousel"${wantsStories ? ', "stories"' : ""}. NADA MAIS.
 
 `
     : `
 TRILHA SOLICITADA: CINEMÁTICA (sequência com movimento, fechamento em Reels).
-Chaves esperadas no JSON: "feed", "carousel", "reels"${wantsStories ? ', "stories"' : ''}.
+Chaves esperadas no JSON: "feed", "carousel", "reels"${wantsStories ? ', "stories"' : ""}.
 `;
 
-  const feedRules = hasFeed ? `
+  const feedRules = hasFeed
+    ? `
 SEQUÊNCIA DO FEED (${composicaoLine}):
 
 A SEQUÊNCIA COMPLETA segue a progressão: ${progressionText}
 Os formatos são distribuídos pelo método — NÃO pelo usuário.
 
-ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
+ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? "s" : ""}):
 - Cada estático: título com NO MÁXIMO 5 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 4 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 5+ sílabas como "lubrificante" devem ser trocados por sinônimo mais curto, ex.: "óleo"), sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras e CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - Variar títulos entre afirmação, pergunta, contraste e observação cotidiana.
 - DIVERSIDADE LEXICAL OBRIGATÓRIA: os títulos dos estáticos de uma mesma sequência NÃO podem começar com a mesma palavra — garantir abertura distinta entre Estático 1, Estático 2 e Estático Final.
@@ -228,14 +302,14 @@ ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
 - ARCO VISUAL DA SEQUÊNCIA — OBRIGATÓRIO: as leituraCenicas devem criar progressão de câmera ao longo da sequência completa. Estático 1 (abertura): plano ABERTO — personagem integrado ao ambiente, espaço e contexto visíveis, câmera mais afastada; registrar "plano aberto" no campo 'composicao'. Estático Final/Reels (fechamento): plano MÉDIO-FECHADO ou CLOSE — personagem em destaque, composição mais centralizada, menos elementos de ambiente; registrar "plano médio-fechado" ou "close-up" no campo 'composicao'. Nunca dois estáticos consecutivos com o mesmo enquadramento.
 - Retornar em "feed": [{ "dia", "formato":"Estático", "titulo", "texto", "legenda", "imagem", "leituraCenica": { "intencao": "o que este post ativa emocionalmente", "personagem": "quem aparece na cena e o que faz", "ambiente": "onde a cena acontece com detalhes físicos", "expressao": "expressão facial e corporal do personagem", "clima": "luz, hora do dia, atmosfera", "composicao": "enquadramento e distância de câmera (plano aberto / plano médio / plano médio-fechado / close-up) + como os elementos se organizam no quadro" } }]
 
-CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 cards cada):
+CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? "s" : ""} de 5 cards cada):
 - Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
-- Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. ${comp.carrossel > 1 ? `Card 5 SÓ pode citar o que a empresa entrega e ter CTA comercial na legenda no carrossel ${comp.carrossel} (o último da sequência) — nos carrosséis anteriores, Card 5 fecha em síntese/direção, sem citar a empresa.` : 'Card 5 pode citar o que a empresa entrega e tem CTA na legenda.'}
+- Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. ${comp.carrossel > 1 ? `Card 5 SÓ pode citar o que a empresa entrega e ter CTA comercial na legenda no carrossel ${comp.carrossel} (o último da sequência) — nos carrosséis anteriores, Card 5 fecha em síntese/direção, sem citar a empresa.` : "Card 5 pode citar o que a empresa entrega e tem CTA na legenda."}
 - Cada card: titulo até 5 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 4 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 5+ sílabas como "lubrificante" devem ser trocados por sinônimo mais curto, ex.: "óleo"), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
 - FORMA DO TÍTULO nos Cards 2-3 (desenvolvimento) — EVIDÊNCIA CONCRETA, NÃO METÁFORA: este é o estágio de evidência da sequência (Dia 2). O TÍTULO dos cards 2 e 3 deve trazer EVIDÊNCIA CONCRETA — um fato, número, situação real ou comparação observável — e NÃO metáfora nem adjetivo de qualidade solto ("redondo", "certo", "sólido", "ideal", "perfeito"). Isto é DIFERENTE da ANCORAGEM CONCRETA — ANTI-SÍMBOLO acima (que trata da tradução VISUAL): aqui é sobre o CONTEÚDO do título em si — evidência vs. metáfora. Ex.: prefira "Folga errada gasta o rolamento" a "Motor redondo pede cuidado certo". OPÇÃO (não obrigação): pode usar formato de lista numerada quando fizer sentido (ex.: "N sinais de que...", "N motivos para..."), mas NÃO é obrigatório nem deve se repetir como fórmula fixa entre gerações — é UMA opção entre várias formas de evidência concreta (dado real, comparação, situação observável, etc.).
 - ARCO VISUAL INTERNO DO CARROSSEL — OBRIGATÓRIO: os 5 cards devem ter enquadramento progressivo de câmera, criando narrativa visual de abertura a fechamento. Card 1 (abertura): PLANO ABERTO — personagem e ambiente visíveis, câmera afastada; 'composicao' = "plano aberto". Cards 2-3 (desenvolvimento): PLANO MÉDIO — ação ou objeto em destaque, ângulo engajado; 'composicao' = "plano médio". Card 4 (direção): PLANO MÉDIO-FECHADO — detalhe do trabalho, produto ou gesto; 'composicao' = "plano médio-fechado". Card 5 (ação): CLOSE-UP ou enquadramento íntimo — expressão ou gesto de resolução, câmera mais próxima; 'composicao' = "close-up". PROIBIDO repetir o mesmo enquadramento em cards consecutivos — cada card deve ter distância de câmera diferente do anterior.
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras + CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "enquadramento e distância de câmera (plano aberto / plano médio / plano médio-fechado / close-up) + organização dos elementos" } }, ...] }]
-${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ''}
+${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ""}
 ${closingBlock}
 
 REGRA DE LEGENDA (vale para feed estático, carrossel, reels e estático final):
@@ -246,9 +320,11 @@ REGRA DE LEGENDA (vale para feed estático, carrossel, reels e estático final):
 - Parágrafo 3 — hashtags: EXATAMENTE ${LEGENDA_HASHTAGS}, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia).
 - Hashtags coerentes com o segmento e a atividade da marca, nunca genéricas demais ("#instagram", "#post").
 - Nunca usar CAPS, nunca mais que ${LEGENDA_HASHTAGS} hashtags, nunca emojis dentro das hashtags, nunca emojis exagerados no corpo ou no CTA.
-` : '';
+`
+    : "";
 
-  const storiesRules = wantsStories ? `
+  const storiesRules = wantsStories
+    ? `
 STORIES (CONTEÚDO TEXTUAL, SEM IMAGEM):
 - Gerar exatamente ${data.storiesDays} sequência(s), uma por dia.
 - Cada sequência deve ter ${data.storiesQuantity} stories.
@@ -257,9 +333,12 @@ STORIES (CONTEÚDO TEXTUAL, SEM IMAGEM):
 - Post textual: frase curta, até 8 palavras.
 - A primeira story de cada dia deve ativar a entrada psicológica do segmento (${seg.entrada}).
 - Retornar em "stories": [{ "dia", "sequencia", "stories": [{ "ordem", "tipo":"vídeo"|"post", "texto" }] }]
-` : '';
+`
+    : "";
 
-  const coordinationRules = hasFeed && wantsStories ? `
+  const coordinationRules =
+    hasFeed && wantsStories
+      ? `
 MATRIZ DE INTENÇÃO — COORDENAÇÃO FEED ↔ STORIES:
 Esta seção só roda porque Feed e Stories foram solicitados juntos.
 
@@ -295,7 +374,8 @@ Essas proibições forçam o Story a entrar por outro ângulo, mesmo tratando do
 
 RESUMO OPERACIONAL:
 Para cada dia com Feed + Stories: defina internamente a intenção (verbo + foco) → Feed planta → Stories executam por APROFUNDAMENTO, CURIOSIDADE ou CONVERSÃO — nunca por repetição.
-` : '';
+`
+      : "";
 
   const outputKeys = (() => {
     const parts: string[] = ['"ancora_visual"'];
@@ -304,32 +384,32 @@ Para cada dia com Feed + Stories: defina internamente a intenção (verbo + foco
       if (!isVisualOrExperimentacao) parts.push('"reels"');
     }
     if (wantsStories) parts.push('"stories"');
-    return parts.join(', ');
+    return parts.join(", ");
   })();
 
-  const mainActivity = (data.mainActivity || '').trim();
-  const keyInfo = (data.keyInfo || '').trim();
+  const mainActivity = (data.mainActivity || "").trim();
+  const keyInfo = (data.keyInfo || "").trim();
   const voiceProfile = getVoiceProfile(data.brandVoice);
 
   const activityLine = mainActivity
     ? `- Atividade principal: ${mainActivity}
   → Use a atividade para escolher cenários, objetos em cena, vocabulário do setor e exemplos concretos. Proibido cenários genéricos quando a atividade for específica.`
-    : '';
+    : "";
 
   const keyInfoBlock = keyInfo
     ? `
 EIXO OBRIGATÓRIO DA SEQUÊNCIA — INFORMAÇÃO-CHAVE:
 "${keyInfo}"
-- TODA peça (estáticos, carrosséis e ${isVisualOrExperimentacao ? 'estáticos finais' : 'reels'}) deve orbitar este eixo.
+- TODA peça (estáticos, carrosséis e ${isVisualOrExperimentacao ? "estáticos finais" : "reels"}) deve orbitar este eixo.
 - O eixo determina o ÂNGULO de cada post dentro da progressão psicológica — não substitui a progressão.
 - O fechamento da sequência deve consolidar a decisão em torno deste eixo.
 - Proibido peça que não se conecte de forma evidente ao eixo.
 - ANCORAGEM CONCRETA DO EIXO: a informação-chave nomeia um elemento concreto (produto, peça, serviço, canal, procedimento ou situação) — esse elemento, ou sinônimo direto, deve aparecer no título OU no texto do PRIMEIRO Estático E do Estático Final/última peça — abertura e fechamento da sequência precisam ser reconhecíveis como sendo sobre esse elemento, não sobre um tema genérico do segmento. As peças intermediárias podem tratar o eixo de forma mais abstrata.
 - ABERTURA E FECHAMENTO NÃO PODEM SOAR COMO A MESMA FRASE: ancorar o mesmo elemento concreto no título do primeiro Estático e no título do Estático Final/última peça NÃO significa repetir a mesma estrutura com só o verbo final trocado (ex.: "[elemento] ativa" / "[elemento] resolve" são a MESMA frase disfarçada — proibido). Se as duas peças ancoram o elemento no TÍTULO, os títulos precisam ter sujeito, estrutura sintática e ângulo claramente diferentes (não apenas o verbo). Alternativa preferível: uma das duas peças ancora o elemento no TEXTO (não no título), liberando o título para um ângulo totalmente distinto — observação/contexto na abertura, decisão/convite no fechamento (conforme a função comunicativa de cada peça, ver mapa de funções abaixo).
-- VOCABULÁRIO-POR-PÚBLICO NA ANCORAGEM: ao repetir o elemento concreto do eixo (ou sinônimo direto) no título/texto de abertura e fechamento, use o termo na forma como o PÚBLICO-ALVO desta peça (${isB2B ? 'decisor empresarial — gestor, diretor ou responsável pela área' : 'consumidor final — cliente do cliente'}) o reconheceria no dia a dia — não a forma como o segmento, o fornecedor ou o redator o nomeiam internamente. Sigla ou termo técnico (ex.: TEF, ERP, KPI, NF-e) É a forma CORRETA quando esse é o vocabulário natural do público-alvo desta peça — ${isB2B ? 'como neste caso, em que o público é o decisor empresarial: se o ofício/rotina dele envolve o termo, use a sigla sem medo, sem traduzir nem explicar — traduzir aqui empobreceria a precisão e soaria condescendente' : 'mas o público desta peça é o consumidor final, que normalmente NÃO usa siglas internas de fornecedor/segmento no dia a dia — só mantenha a sigla se ela for genuinamente parte do vocabulário cotidiano desse consumidor; caso contrário, prefira o termo que ele de fato usaria'}. Só traduza/explique/substitua quando a sigla pertencer a um vocabulário interno do fornecedor ou do segmento que o público-alvo desta peça especificamente NÃO usaria no dia a dia. Nunca proíba um termo técnico legítimo só por ser sigla — o critério é exclusivamente: o público-alvo DESTA peça reconhece e usa esse termo?
+- VOCABULÁRIO-POR-PÚBLICO NA ANCORAGEM: ao repetir o elemento concreto do eixo (ou sinônimo direto) no título/texto de abertura e fechamento, use o termo na forma como o PÚBLICO-ALVO desta peça (${isB2B ? "decisor empresarial — gestor, diretor ou responsável pela área" : "consumidor final — cliente do cliente"}) o reconheceria no dia a dia — não a forma como o segmento, o fornecedor ou o redator o nomeiam internamente. Sigla ou termo técnico (ex.: TEF, ERP, KPI, NF-e) É a forma CORRETA quando esse é o vocabulário natural do público-alvo desta peça — ${isB2B ? "como neste caso, em que o público é o decisor empresarial: se o ofício/rotina dele envolve o termo, use a sigla sem medo, sem traduzir nem explicar — traduzir aqui empobreceria a precisão e soaria condescendente" : "mas o público desta peça é o consumidor final, que normalmente NÃO usa siglas internas de fornecedor/segmento no dia a dia — só mantenha a sigla se ela for genuinamente parte do vocabulário cotidiano desse consumidor; caso contrário, prefira o termo que ele de fato usaria"}. Só traduza/explique/substitua quando a sigla pertencer a um vocabulário interno do fornecedor ou do segmento que o público-alvo desta peça especificamente NÃO usaria no dia a dia. Nunca proíba um termo técnico legítimo só por ser sigla — o critério é exclusivamente: o público-alvo DESTA peça reconhece e usa esse termo?
 - EXCEÇÃO AO ITEM 8 (PROIBIDO REPETIR A MESMA PALAVRA): o NOME do produto/serviço/objeto concreto do eixo — o SUBSTANTIVO-NÚCLEO apenas (ex.: "poltrona", "correia", "mangueira", "ordem de serviço") — é EXCEÇÃO à regra de não-repetição — pode e deve se repetir, com a MESMA palavra, em todas as peças que tratarem desse elemento. "Sinônimo direto" acima significa variação morfológica do mesmo item (singular/plural: "poltrona"/"poltronas") ou termo realmente equivalente no uso comum — NUNCA outro produto da mesma categoria ("poltrona"→"cadeira", "armário"→"estante", "mangueira"→"cano" são produtos DIFERENTES, e trocar um pelo outro muda o que está sendo vendido). ESTA EXCEÇÃO NÃO COBRE adjetivos ou qualificadores que acompanham o núcleo na informação-chave original (ex.: se a informação-chave diz "ordem de serviço DIGITAL", o adjetivo "digital" NÃO é parte do núcleo protegido — repeti-lo colado ao núcleo em mais de uma peça da sequência é exatamente o tipo de repetição que o item 8 proíbe, e costuma ser o que faz duas peças parecerem a mesma frase). A regra de não-repetição (item 8) e a diversidade lexical continuam valendo para o restante do vocabulário — verbos, adjetivos, conectores — ao redor desse núcleo.
 `
-    : '';
+    : "";
 
   const voiceBlock = voiceProfile
     ? `DIREÇÃO DE VOZ — "${voiceProfile.label}":
@@ -340,15 +420,19 @@ EIXO OBRIGATÓRIO DA SEQUÊNCIA — INFORMAÇÃO-CHAVE:
 - Calibração de abertura (referência interna, NÃO copiar literalmente): "${voiceProfile.exemploAbertura}"
 A voz se aplica a TODOS os títulos, textos, legendas, cards de carrossel, screenText e roteiro de reels — sem exceção.
 Proibido mencionar literalmente o nome da voz no texto final.`
-    : `Voz da marca: ${data.brandVoice || 'padrão do segmento'}.
+    : `Voz da marca: ${data.brandVoice || "padrão do segmento"}.
 A voz governa ritmo, vocabulário e registro emocional.
 Proibido mencionar literalmente a voz no texto final.`;
 
-  const progressionStages = progressionText.split(' → ');
-  const communicativeFunctionsMap = buildCommunicativeFunctionMap(comp, isVisualOrExperimentacao, progressionStages);
+  const progressionStages = progressionText.split(" → ");
+  const communicativeFunctionsMap = buildCommunicativeFunctionMap(
+    comp,
+    isVisualOrExperimentacao,
+    progressionStages,
+  );
   const mercadologicalFrameBlock = `10. FRAME DE COMUNICAÇÃO MERCADOLÓGICA:
 EMISSOR: ${data.companyName} — fala com voz própria e consistente. Não precisa ser nomeada em cada peça: a coerência de voz, os exemplos concretos da atividade e o eixo da keyInfo identificam o emissor. Nomear a empresa repetidamente torna a comunicação fraca.
-RECEPTOR: ${isB2B ? 'decisor empresarial' : 'consumidor final'} — situação atual: "${seg.entrada}" / bloqueio a superar: "${seg.bloqueio}".
+RECEPTOR: ${isB2B ? "decisor empresarial" : "consumidor final"} — situação atual: "${seg.entrada}" / bloqueio a superar: "${seg.bloqueio}".
 INTENÇÃO: conduzir o receptor da situação atual até a decisão de escolher esta empresa — usando educação, informação, inspiração, persuasão e convencimento como ferramentas progressivas e distintas.
 FUNÇÕES COMUNICATIVAS POR PEÇA:
 ${communicativeFunctionsMap}
@@ -361,13 +445,13 @@ ${trackHeader}
 CONTEXTO:
 - Empresa: ${data.companyName}
 - Segmento: ${data.segment}
-- Público-alvo: ${isB2B ? 'B2B (empresas e decisores empresariais)' : 'B2C (consumidor final)'}
+- Público-alvo: ${isB2B ? "B2B (empresas e decisores empresariais)" : "B2C (consumidor final)"}
 ${activityLine}
 - Momento do negócio: ${moment.contextNote}
 ${keyInfoBlock}
 ÂNCORA NARRATIVA DA SEQUÊNCIA — DEFINIR ANTES DE GERAR QUALQUER PEÇA:
 Defina UMA VEZ o fio condutor visual desta sequência. Essa âncora guia APENAS as peças em que a IA gera imagem sem referência real do cliente (avatar, cenário ou produto enviado). Quando houver referência real, ela prevalece sobre a âncora.
-Segmento: ${data.segment} | Público: ${isB2B ? 'B2B' : 'B2C'} | Atividade: ${mainActivity || 'não informada'}
+Segmento: ${data.segment} | Público: ${isB2B ? "B2B" : "B2C"} | Atividade: ${mainActivity || "não informada"}
 Regras por segmento:
 - SERVIÇOS: personagem é o elemento principal — profissional em ação, papel = "protagonista"
 - MARCA: personagem representa cultura, bastidores ou identidade — papel = "protagonista"
@@ -399,14 +483,18 @@ ${vendaRule}
 ${feedRules}
 ${storiesRules}
 ${coordinationRules}
-${hasFeed ? `
+${
+  hasFeed
+    ? `
 ⚠️ COMPLETUDE OBRIGATÓRIA — VERIFIQUE ANTES DE RETORNAR:
 Esta sequência DEVE conter EXATAMENTE:
 □ "ancora_visual": objeto com genero, papel, faixa_etaria, marcadores_profissionais, ambiente_base — OBRIGATÓRIO, deve ser a PRIMEIRA chave do JSON
-□ "feed": ${comp.estatico} estático${comp.estatico > 1 ? 's' : ''} (formato "Estático")${isVisualOrExperimentacao ? ` + ${comp.fechamento} estático${comp.fechamento > 1 ? 's' : ''} final (formato "Estático Final")` : ' — fechamento vai em "reels", não em "feed"'}
-□ "carousel": ${comp.carrossel * 5} cards preenchidos (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} × 5 cards) — PROIBIDO retornar "carousel": []${!isVisualOrExperimentacao ? `\n□ "reels": ${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} com hook + screenText + script + imagePrompt + legenda` : ''}
+□ "feed": ${comp.estatico} estático${comp.estatico > 1 ? "s" : ""} (formato "Estático")${isVisualOrExperimentacao ? ` + ${comp.fechamento} estático${comp.fechamento > 1 ? "s" : ""} final (formato "Estático Final")` : ' — fechamento vai em "reels", não em "feed"'}
+□ "carousel": ${comp.carrossel * 5} cards preenchidos (${comp.carrossel} sequência${comp.carrossel > 1 ? "s" : ""} × 5 cards) — PROIBIDO retornar "carousel": []${!isVisualOrExperimentacao ? `\n□ "reels": ${comp.fechamento} guia${comp.fechamento > 1 ? "s" : ""} com hook + screenText + script + imagePrompt + legenda` : ""}
 Cada peça: titulo + texto + legenda + imagePrompt — TODOS preenchidos. Resposta incompleta quebra a sequência do usuário.
-` : ''}
+`
+    : ""
+}
 ${buildVisualDirectionBlock(data.mood, data.segment)}
 
 DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
@@ -419,7 +507,7 @@ PRINCÍPIO-RAIZ — CICLO DA PALAVRA: a imagem responde ao título. Antes de des
 - Regra de dispositivos digitais (notebook, celular, tablet etc.) no imagePrompt e na leituraCenica: ver "REGRA DE DISPOSITIVOS DIGITAIS" acima — vale igualmente aqui.
 - Estático e Carrossel: composição vertical 1080x1350.
 - Estático Final: composição vertical 1080x1350, com mais respiro, menos ruído e foco centralizado.
-${!isVisualOrExperimentacao ? '- Reels: composição vertical 1080x1920, imagem pura sem texto, sem logo, sem colagem e com somente uma pessoa no quadro.' : ''}
+${!isVisualOrExperimentacao ? "- Reels: composição vertical 1080x1920, imagem pura sem texto, sem logo, sem colagem e com somente uma pessoa no quadro." : ""}
 - Sufixo técnico OBRIGATÓRIO ao final de cada imagePrompt (substitui qualquer sufixo genérico): "${getMoodSignature(data.mood)}".
 
 INEDITISMO CONTROLADO:
@@ -435,10 +523,12 @@ A primeira chave do JSON DEVE ser "ancora_visual" — defina o personagem-tipo A
 `;
 }
 
-function buildSummary(result: Pick<MethodOpResult, 'feed' | 'carousel' | 'reels' | 'stories'>): GenerationSummary {
+function buildSummary(
+  result: Pick<MethodOpResult, "feed" | "carousel" | "reels" | "stories">,
+): GenerationSummary {
   const feed = result.feed || [];
-  const estaticos = feed.filter(f => f.formato === 'Estático').length;
-  const estaticosFinais = feed.filter(f => f.formato === 'Estático Final').length;
+  const estaticos = feed.filter((f) => f.formato === "Estático").length;
+  const estaticosFinais = feed.filter((f) => f.formato === "Estático Final").length;
 
   const carouselCards = result.carousel?.length || 0;
   const carrosseis = Math.ceil(carouselCards / 5);
@@ -454,14 +544,19 @@ function buildSummary(result: Pick<MethodOpResult, 'feed' | 'carousel' | 'reels'
 // Um aviso é gravado no console para você monitorar via DevTools sem poluir a UI do usuário.
 function shouldDiscardReels(track: Track | undefined, hasReels: boolean): boolean {
   if (!hasReels) return false;
-  return track === 'visual' || track === 'experimentacao';
+  return track === "visual" || track === "experimentacao";
 }
 
-export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 | 6 | 9, keyInfo?: string): MethodOpResult {
-  const isExperimentacao = track === 'experimentacao';
+export function normalizeMethodResult(
+  raw: any,
+  track?: Track,
+  sequenceSize?: 3 | 6 | 9,
+  keyInfo?: string,
+): MethodOpResult {
+  const isExperimentacao = track === "experimentacao";
   const effectiveSize: 3 | 6 | 9 = isExperimentacao ? 3 : ((sequenceSize || 6) as 3 | 6 | 9);
   const comp = SEQUENCE_COMPOSITION[effectiveSize];
-  let carousel: import('../types').CarouselCard[] | undefined;
+  let carousel: import("../types").CarouselCard[] | undefined;
   if (Array.isArray(raw?.carousel)) {
     if (raw.carousel[0]?.cards) {
       carousel = raw.carousel.flatMap((seq: any) => {
@@ -476,11 +571,11 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
     }
   }
 
-  let reels: import('../types').ReelsGuide[] | undefined;
+  let reels: import("../types").ReelsGuide[] | undefined;
   if (Array.isArray(raw?.reels)) {
-    reels = raw.reels.filter(Boolean) as import('../types').ReelsGuide[];
+    reels = raw.reels.filter(Boolean) as import("../types").ReelsGuide[];
   } else if (raw?.reels) {
-    reels = [raw.reels as import('../types').ReelsGuide];
+    reels = [raw.reels as import("../types").ReelsGuide];
   }
 
   // Defesa em profundidade: se a trilha pedida não comporta reels e a IA mandou,
@@ -488,7 +583,7 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
   if (shouldDiscardReels(track, !!(reels && reels.length))) {
     console.warn(
       `[Método OP] A IA retornou "reels" na trilha "${track}". Descartado para preservar coerência da trilha pedida.`,
-      { trackPedida: track, reelsDescartado: reels }
+      { trackPedida: track, reelsDescartado: reels },
     );
     reels = undefined;
   }
@@ -496,12 +591,12 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
   let feed: FeedItem[] | undefined = Array.isArray(raw?.feed) ? raw.feed : undefined;
   if (Array.isArray(raw?.estaticoFinal) && raw.estaticoFinal.length > 0) {
     const extras: FeedItem[] = raw.estaticoFinal.map((item: any, idx: number) => ({
-      dia: item.dia ?? ((feed?.length || 0) + idx + 1),
-      formato: 'Estático Final' as const,
-      titulo: item.titulo || '',
-      texto: item.texto || '',
-      legenda: item.legenda || '',
-      imagem: item.imagem || item.imagePrompt || '',
+      dia: item.dia ?? (feed?.length || 0) + idx + 1,
+      formato: "Estático Final" as const,
+      titulo: item.titulo || "",
+      texto: item.texto || "",
+      legenda: item.legenda || "",
+      imagem: item.imagem || item.imagePrompt || "",
       ...(item.leituraCenica ? { leituraCenica: item.leituraCenica } : {}),
     }));
     feed = [...(feed || []), ...extras];
@@ -509,13 +604,13 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
 
   // Filtro defensivo adicional: se a trilha não comporta reels, remove qualquer
   // item de feed com formato "Reels" que tenha vindo embutido.
-  if (track === 'visual' || track === 'experimentacao') {
+  if (track === "visual" || track === "experimentacao") {
     if (feed) {
       const before = feed.length;
-      feed = feed.filter(f => f.formato !== ('Reels' as any));
+      feed = feed.filter((f) => f.formato !== ("Reels" as any));
       if (feed.length < before) {
         console.warn(
-          `[Método OP] Itens com formato "Reels" foram filtrados do feed na trilha "${track}".`
+          `[Método OP] Itens com formato "Reels" foram filtrados do feed na trilha "${track}".`,
         );
       }
     }
@@ -523,8 +618,8 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
 
   // Cap estrutural pela composição da trilha/tamanho — evita "4ª peça" quando a IA gera além.
   if (feed) {
-    const estaticos = feed.filter(f => f.formato !== 'Estático Final').slice(0, comp.estatico);
-    const finais = feed.filter(f => f.formato === 'Estático Final').slice(0, comp.fechamento);
+    const estaticos = feed.filter((f) => f.formato !== "Estático Final").slice(0, comp.estatico);
+    const finais = feed.filter((f) => f.formato === "Estático Final").slice(0, comp.fechamento);
     feed = [...estaticos, ...finais];
   }
   if (carousel) {
@@ -548,28 +643,38 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
   // remove CTA duplicado no fim do corpo e CTA indireto (bio/site) extra no
   // parágrafo de CTA (ver REGRA DE LEGENDA).
   if (feed) {
-    feed = feed.map(item => ({
+    feed = feed.map((item) => ({
       ...item,
-      titulo: correctPortugueseSpelling((item.titulo || '').trim()),
-      texto: correctPortugueseSpelling(truncateWords(item.texto || '', 15)),
-      legenda: item.legenda ? correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(item.legenda))) : item.legenda,
+      titulo: correctPortugueseSpelling((item.titulo || "").trim()),
+      texto: correctPortugueseSpelling(truncateWords(item.texto || "", 15)),
+      legenda: item.legenda
+        ? correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(item.legenda)))
+        : item.legenda,
     }));
   }
   if (carousel) {
     carousel = carousel.map((card: any) => ({
       ...card,
-      titulo: correctPortugueseSpelling((card.titulo || '').trim()),
-      texto: correctPortugueseSpelling(truncateWords(card.texto || '', 12)),
-      ...(card.legenda ? { legenda: correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(card.legenda))) } : {}),
+      titulo: correctPortugueseSpelling((card.titulo || "").trim()),
+      texto: correctPortugueseSpelling(truncateWords(card.texto || "", 12)),
+      ...(card.legenda
+        ? {
+            legenda: correctPortugueseSpelling(
+              enforceLegendaLimits(normalizeLegenda(card.legenda)),
+            ),
+          }
+        : {}),
     }));
   }
   if (reels) {
-    reels = reels.map(r => ({
+    reels = reels.map((r) => ({
       ...r,
-      hook: correctPortugueseSpelling(r.hook || ''),
-      script: correctPortugueseSpelling(r.script || ''),
-      screenText: correctPortugueseSpelling(r.screenText || ''),
-      ...(r.legenda ? { legenda: correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(r.legenda))) } : {}),
+      hook: correctPortugueseSpelling(r.hook || ""),
+      script: correctPortugueseSpelling(r.script || ""),
+      screenText: correctPortugueseSpelling(r.screenText || ""),
+      ...(r.legenda
+        ? { legenda: correctPortugueseSpelling(enforceLegendaLimits(normalizeLegenda(r.legenda))) }
+        : {}),
     }));
   }
 
@@ -580,17 +685,35 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
   const flags: ValidationFlag[] = [];
   if (feed) {
     feed.forEach((item, i) => {
-      flags.push(...validatePieceFields(`feed[${i}]`, { titulo: item.titulo, texto: item.texto, legenda: item.legenda }, keyInfo));
+      flags.push(
+        ...validatePieceFields(
+          `feed[${i}]`,
+          { titulo: item.titulo, texto: item.texto, legenda: item.legenda },
+          keyInfo,
+        ),
+      );
     });
   }
   if (carousel) {
     carousel.forEach((card: any, i) => {
-      flags.push(...validatePieceFields(`carousel[${i}]`, { titulo: card.titulo, texto: card.texto, legenda: card.legenda }, keyInfo));
+      flags.push(
+        ...validatePieceFields(
+          `carousel[${i}]`,
+          { titulo: card.titulo, texto: card.texto, legenda: card.legenda },
+          keyInfo,
+        ),
+      );
     });
   }
   if (reels) {
     reels.forEach((r, i) => {
-      flags.push(...validatePieceFields(`reels[${i}]`, { titulo: r.hook, texto: r.script, legenda: r.legenda }, keyInfo));
+      flags.push(
+        ...validatePieceFields(
+          `reels[${i}]`,
+          { titulo: r.hook, texto: r.script, legenda: r.legenda },
+          keyInfo,
+        ),
+      );
     });
   }
 
@@ -599,9 +722,18 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
   // checkCrossPieceLabelRepeat flaga repetição do mesmo rótulo entre peças
   // da sequência (ver item 11 / FUNÇÕES COMUNICATIVAS POR PEÇA acima).
   const allTitles: { campo: string; titulo: string }[] = [];
-  if (feed) feed.forEach((item, i) => { if (item.titulo) allTitles.push({ campo: `feed[${i}]`, titulo: item.titulo }); });
-  if (carousel) carousel.forEach((card: any, i) => { if (card.titulo) allTitles.push({ campo: `carousel[${i}]`, titulo: card.titulo }); });
-  if (reels) reels.forEach((r, i) => { if (r.hook) allTitles.push({ campo: `reels[${i}]`, titulo: r.hook }); });
+  if (feed)
+    feed.forEach((item, i) => {
+      if (item.titulo) allTitles.push({ campo: `feed[${i}]`, titulo: item.titulo });
+    });
+  if (carousel)
+    carousel.forEach((card: any, i) => {
+      if (card.titulo) allTitles.push({ campo: `carousel[${i}]`, titulo: card.titulo });
+    });
+  if (reels)
+    reels.forEach((r, i) => {
+      if (r.hook) allTitles.push({ campo: `reels[${i}]`, titulo: r.hook });
+    });
   for (const { campo, titulo } of allTitles) {
     const observerSubject = checkObserverSubject(titulo);
     if (observerSubject) flags.push({ campo: `${campo}.titulo`, motivo: observerSubject });
@@ -616,39 +748,57 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
 
   // Validação de completude — detecta componentes esperados mas ausentes/incompletos.
   if (comp.carrossel > 0 && (!carousel || carousel.length === 0)) {
-    console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: carrossel esperado mas ausente ou vazio.',
-      { esperados: comp.carrossel * 5, recebidos: carousel?.length ?? 0, rawCarousel: raw?.carousel });
+    console.warn("[Método OP] SEQUÊNCIA INCOMPLETA: carrossel esperado mas ausente ou vazio.", {
+      esperados: comp.carrossel * 5,
+      recebidos: carousel?.length ?? 0,
+      rawCarousel: raw?.carousel,
+    });
   } else if (comp.carrossel > 0 && carousel && carousel.length < comp.carrossel * 5) {
-    console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: carrossel com cards faltando.',
-      { esperados: comp.carrossel * 5, recebidos: carousel.length });
+    console.warn("[Método OP] SEQUÊNCIA INCOMPLETA: carrossel com cards faltando.", {
+      esperados: comp.carrossel * 5,
+      recebidos: carousel.length,
+    });
   }
   if (carousel && carousel.length > 0) {
     const cardsVazios = carousel.filter((c: any) => !c.titulo || !c.texto || !c.imagePrompt);
     if (cardsVazios.length > 0) {
-      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: cards de carrossel com campos vazios.',
-        { cardsVazios: cardsVazios.length, cards: cardsVazios.map((c: any) => c.card) });
+      console.warn("[Método OP] SEQUÊNCIA INCOMPLETA: cards de carrossel com campos vazios.", {
+        cardsVazios: cardsVazios.length,
+        cards: cardsVazios.map((c: any) => c.card),
+      });
     }
   }
   if (feed) {
-    const estaticosRecebidos = feed.filter(f => f.formato === 'Estático').length;
-    const finaisRecebidos = feed.filter(f => f.formato === 'Estático Final').length;
+    const estaticosRecebidos = feed.filter((f) => f.formato === "Estático").length;
+    const finaisRecebidos = feed.filter((f) => f.formato === "Estático Final").length;
     if (estaticosRecebidos < comp.estatico) {
-      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: estáticos faltando.',
-        { esperados: comp.estatico, recebidos: estaticosRecebidos });
+      console.warn("[Método OP] SEQUÊNCIA INCOMPLETA: estáticos faltando.", {
+        esperados: comp.estatico,
+        recebidos: estaticosRecebidos,
+      });
     }
-    if ((track === 'visual' || track === 'experimentacao') && finaisRecebidos < comp.fechamento) {
-      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: estático final faltando.',
-        { esperados: comp.fechamento, recebidos: finaisRecebidos });
+    if ((track === "visual" || track === "experimentacao") && finaisRecebidos < comp.fechamento) {
+      console.warn("[Método OP] SEQUÊNCIA INCOMPLETA: estático final faltando.", {
+        esperados: comp.fechamento,
+        recebidos: finaisRecebidos,
+      });
     }
   }
-  if (track === 'cinematica' || !track) {
+  if (track === "cinematica" || !track) {
     if (comp.fechamento > 0 && (!reels || reels.length === 0)) {
-      console.warn('[Método OP] SEQUÊNCIA INCOMPLETA: reels esperado mas ausente.',
-        { esperados: comp.fechamento, recebidos: reels?.length ?? 0 });
+      console.warn("[Método OP] SEQUÊNCIA INCOMPLETA: reels esperado mas ausente.", {
+        esperados: comp.fechamento,
+        recebidos: reels?.length ?? 0,
+      });
     }
   }
 
-  const partial = { feed, carousel, reels, stories: Array.isArray(raw?.stories) ? raw.stories : undefined };
+  const partial = {
+    feed,
+    carousel,
+    reels,
+    stories: Array.isArray(raw?.stories) ? raw.stories : undefined,
+  };
   const summary = buildSummary(partial);
 
   return {

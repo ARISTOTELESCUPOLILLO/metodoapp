@@ -1,9 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router';
-import MetodoOpApp from '@/MetodoOpApp';
-import { AuthGate } from '@/components/app/AuthGate';
-import { TopBar } from '@/components/app/TopBar';
+import { createFileRoute } from "@tanstack/react-router";
+import MetodoOpApp from "@/MetodoOpApp";
+import { AuthGate } from "@/components/app/AuthGate";
+import { TopBar } from "@/components/app/TopBar";
 
-export const Route = createFileRoute('/app')({
+export const Route = createFileRoute("/app")({
   component: AppPage,
 });
 

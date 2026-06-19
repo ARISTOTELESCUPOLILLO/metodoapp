@@ -1,13 +1,13 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute('/esqueci-senha')({
+export const Route = createFileRoute("/esqueci-senha")({
   component: ForgotPage,
 });
 
 function ForgotPage() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +49,14 @@ function ForgotPage() {
               disabled={loading}
               className="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold disabled:opacity-50"
             >
-              {loading ? 'Enviando…' : 'Enviar link'}
+              {loading ? "Enviando…" : "Enviar link"}
             </button>
           </form>
         )}
         <div className="mt-4 text-sm text-center">
-          <Link to="/login" className="underline text-muted-foreground">Voltar ao login</Link>
+          <Link to="/login" className="underline text-muted-foreground">
+            Voltar ao login
+          </Link>
         </div>
       </div>
     </div>

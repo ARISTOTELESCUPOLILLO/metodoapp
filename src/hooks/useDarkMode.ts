@@ -1,20 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-const DARK_KEY = 'metodo-op-dark-mode';
+const DARK_KEY = "metodo-op-dark-mode";
 
 function readPreference(): boolean {
   try {
     const v = localStorage.getItem(DARK_KEY);
-    if (v !== null) return v === 'true';
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-  } catch { return false; }
+    if (v !== null) return v === "true";
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  } catch {
+    return false;
+  }
 }
 
 function applyDark(dark: boolean) {
   if (dark) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
   } else {
-    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove("dark");
   }
 }
 
@@ -27,8 +29,10 @@ export function useDarkMode(): [boolean, () => void] {
 
   useEffect(() => {
     applyDark(isDark);
-    try { localStorage.setItem(DARK_KEY, String(isDark)); } catch {}
+    try {
+      localStorage.setItem(DARK_KEY, String(isDark));
+    } catch {}
   }, [isDark]);
 
-  return [isDark, () => setIsDark(v => !v)];
+  return [isDark, () => setIsDark((v) => !v)];
 }

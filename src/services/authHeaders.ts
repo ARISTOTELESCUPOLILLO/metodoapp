@@ -1,5 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
-import { getImpersonation } from '@/hooks/useImpersonation';
+import { supabase } from "@/integrations/supabase/client";
+import { getImpersonation } from "@/hooks/useImpersonation";
 
 export async function getAuthHeaders(): Promise<Record<string, string>> {
   try {
@@ -8,7 +8,7 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
     const imp = getImpersonation();
     return {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(imp ? { 'X-Impersonate-User-Id': imp.userId } : {}),
+      ...(imp ? { "X-Impersonate-User-Id": imp.userId } : {}),
     };
   } catch {
     return {};

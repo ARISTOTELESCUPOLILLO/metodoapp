@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { correctPortuguese } from '../services/textCorrection';
+import { useState } from "react";
+import { correctPortuguese } from "../services/textCorrection";
 
 // Encapsula a chamada de correção ortográfica/gramatical (pt-BR) usada nos
 // campos editáveis pelo usuário (Informação-chave, título, texto, legenda).
@@ -19,7 +19,7 @@ export function useTextCorrection() {
       if (corrected && corrected !== value.trim()) {
         apply(corrected);
       } else {
-        setMsg('Nenhum erro encontrado.');
+        setMsg("Nenhum erro encontrado.");
       }
     } catch (e) {
       setError((e as Error).message);

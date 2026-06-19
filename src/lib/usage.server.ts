@@ -2,21 +2,21 @@
 // Usa supabaseAdmin para validar o token do usuário e chamar a RPC debit_usage,
 // e registra um log em usage_logs para o painel admin.
 
-import { supabaseAdmin } from '@/integrations/supabase/client.server';
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-export type DebitKind = 'image' | 'render' | 'geracao';
+export type DebitKind = "image" | "render" | "geracao";
 
 export async function getUserIdFromRequest(request: Request): Promise<string | null> {
-  const auth = request.headers.get('authorization') || request.headers.get('Authorization');
+  const auth = request.headers.get("authorization") || request.headers.get("Authorization");
   if (!auth) return null;
-  const token = auth.replace(/^Bearer\s+/i, '').trim();
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
   if (!token) return null;
   // Decode JWT locally to avoid network/SSL issues on validation.
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+    const padded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
     if (!payload?.sub) return null;
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
     return payload.sub as string;
@@ -34,11 +34,11 @@ export async function resolveEffectiveUser(
   const callerUserId = await getUserIdFromRequest(request);
   if (!callerUserId) return null;
 
-  const rawImpersonate = request.headers.get('x-impersonate-user-id');
+  const rawImpersonate = request.headers.get("x-impersonate-user-id");
   if (rawImpersonate) {
-    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
       _user_id: callerUserId,
-      _role: 'admin',
+      _role: "admin",
     });
     if (isAdmin === true) {
       return { userId: rawImpersonate, impersonatedBy: callerUserId };
@@ -53,19 +53,19 @@ const RATE_LIMIT_PER_HOUR = 15;
 export async function checkRateLimit(
   userId: string,
 ): Promise<{ ok: boolean; usedLastHour: number }> {
-  const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+  const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
     _user_id: userId,
-    _role: 'admin',
+    _role: "admin",
   });
   if (isAdmin === true) return { ok: true, usedLastHour: 0 };
 
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { count, error } = await supabaseAdmin
-    .from('usage_logs')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .gt('qtd_geracoes', 0)
-    .gte('created_at', oneHourAgo);
+    .from("usage_logs")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gt("qtd_geracoes", 0)
+    .gte("created_at", oneHourAgo);
 
   if (error) return { ok: true, usedLastHour: 0 }; // fail open
   const usedLastHour = count ?? 0;
@@ -77,48 +77,116 @@ export async function checkBalance(
   imgs: number,
   renders: number,
   geracoes = 0,
-  preferredSlot?: 'plano1' | 'plano2' | 'bonus',
+  preferredSlot?: "plano1" | "plano2" | "bonus",
 ): Promise<{ ok: boolean; isAdmin: boolean }> {
   const { data: p, error } = await supabaseAdmin
-    .from('profiles')
+    .from("profiles")
     .select(
-      'plano1_id, plano1_imgs_limite, plano1_imgs_usadas, plano1_renders_limite, plano1_renders_usados, plano1_geracoes_limite, plano1_geracoes_usadas, plano1_expira_em, plano2_id, plano2_imgs_limite, plano2_imgs_usadas, plano2_renders_limite, plano2_renders_usados, plano2_geracoes_limite, plano2_geracoes_usadas, plano2_expira_em, bonus_id, bonus_imgs_limite, bonus_imgs_usadas, bonus_renders_limite, bonus_renders_usados, bonus_geracoes_limite, bonus_geracoes_usadas, bonus_expira_em',
+      "plano1_id, plano1_imgs_limite, plano1_imgs_usadas, plano1_renders_limite, plano1_renders_usados, plano1_geracoes_limite, plano1_geracoes_usadas, plano1_expira_em, plano2_id, plano2_imgs_limite, plano2_imgs_usadas, plano2_renders_limite, plano2_renders_usados, plano2_geracoes_limite, plano2_geracoes_usadas, plano2_expira_em, bonus_id, bonus_imgs_limite, bonus_imgs_usadas, bonus_renders_limite, bonus_renders_usados, bonus_geracoes_limite, bonus_geracoes_usadas, bonus_expira_em",
     )
-    .eq('id', userId)
+    .eq("id", userId)
     .maybeSingle();
   if (error || !p) return { ok: false, isAdmin: false };
 
   const fits = (lim: number, used: number, need: number) => lim === 0 || lim - used >= need;
-  const notExpired = (expiraEm: string | null) => expiraEm == null || new Date(expiraEm) > new Date();
+  const notExpired = (expiraEm: string | null) =>
+    expiraEm == null || new Date(expiraEm) > new Date();
   const slotOk = (
     id: string | null,
-    iLim: number, iUsed: number,
-    rLim: number, rUsed: number,
-    gLim: number, gUsed: number,
+    iLim: number,
+    iUsed: number,
+    rLim: number,
+    rUsed: number,
+    gLim: number,
+    gUsed: number,
     expiraEm: string | null,
-  ) => !!id
-    && notExpired(expiraEm)
-    && fits(iLim, iUsed, imgs)
-    && fits(rLim, rUsed, renders)
-    && fits(gLim, gUsed, geracoes);
+  ) =>
+    !!id &&
+    notExpired(expiraEm) &&
+    fits(iLim, iUsed, imgs) &&
+    fits(rLim, rUsed, renders) &&
+    fits(gLim, gUsed, geracoes);
 
   // Cada plano é independente: checar apenas o slot preferido.
   // Sem fallback para outros slots — se esgotou, esgotou.
-  if (preferredSlot === 'plano1') {
-    return { ok: slotOk(p.plano1_id, p.plano1_imgs_limite, p.plano1_imgs_usadas, p.plano1_renders_limite, p.plano1_renders_usados, (p as any).plano1_geracoes_limite ?? 0, (p as any).plano1_geracoes_usadas ?? 0, (p as any).plano1_expira_em ?? null), isAdmin: false };
+  if (preferredSlot === "plano1") {
+    return {
+      ok: slotOk(
+        p.plano1_id,
+        p.plano1_imgs_limite,
+        p.plano1_imgs_usadas,
+        p.plano1_renders_limite,
+        p.plano1_renders_usados,
+        (p as any).plano1_geracoes_limite ?? 0,
+        (p as any).plano1_geracoes_usadas ?? 0,
+        (p as any).plano1_expira_em ?? null,
+      ),
+      isAdmin: false,
+    };
   }
-  if (preferredSlot === 'plano2') {
-    return { ok: slotOk(p.plano2_id, p.plano2_imgs_limite, p.plano2_imgs_usadas, p.plano2_renders_limite, p.plano2_renders_usados, (p as any).plano2_geracoes_limite ?? 0, (p as any).plano2_geracoes_usadas ?? 0, (p as any).plano2_expira_em ?? null), isAdmin: false };
+  if (preferredSlot === "plano2") {
+    return {
+      ok: slotOk(
+        p.plano2_id,
+        p.plano2_imgs_limite,
+        p.plano2_imgs_usadas,
+        p.plano2_renders_limite,
+        p.plano2_renders_usados,
+        (p as any).plano2_geracoes_limite ?? 0,
+        (p as any).plano2_geracoes_usadas ?? 0,
+        (p as any).plano2_expira_em ?? null,
+      ),
+      isAdmin: false,
+    };
   }
-  if (preferredSlot === 'bonus') {
-    return { ok: slotOk(p.bonus_id, p.bonus_imgs_limite, p.bonus_imgs_usadas, p.bonus_renders_limite, p.bonus_renders_usados, (p as any).bonus_geracoes_limite ?? 0, (p as any).bonus_geracoes_usadas ?? 0, (p as any).bonus_expira_em ?? null), isAdmin: false };
+  if (preferredSlot === "bonus") {
+    return {
+      ok: slotOk(
+        p.bonus_id,
+        p.bonus_imgs_limite,
+        p.bonus_imgs_usadas,
+        p.bonus_renders_limite,
+        p.bonus_renders_usados,
+        (p as any).bonus_geracoes_limite ?? 0,
+        (p as any).bonus_geracoes_usadas ?? 0,
+        (p as any).bonus_expira_em ?? null,
+      ),
+      isAdmin: false,
+    };
   }
 
   // Sem preferredSlot: compat retroativo — verifica qualquer slot disponível.
   const ok =
-    slotOk(p.plano1_id, p.plano1_imgs_limite, p.plano1_imgs_usadas, p.plano1_renders_limite, p.plano1_renders_usados, (p as any).plano1_geracoes_limite ?? 0, (p as any).plano1_geracoes_usadas ?? 0, (p as any).plano1_expira_em ?? null) ||
-    slotOk(p.plano2_id, p.plano2_imgs_limite, p.plano2_imgs_usadas, p.plano2_renders_limite, p.plano2_renders_usados, (p as any).plano2_geracoes_limite ?? 0, (p as any).plano2_geracoes_usadas ?? 0, (p as any).plano2_expira_em ?? null) ||
-    slotOk(p.bonus_id, p.bonus_imgs_limite, p.bonus_imgs_usadas, p.bonus_renders_limite, p.bonus_renders_usados, (p as any).bonus_geracoes_limite ?? 0, (p as any).bonus_geracoes_usadas ?? 0, (p as any).bonus_expira_em ?? null);
+    slotOk(
+      p.plano1_id,
+      p.plano1_imgs_limite,
+      p.plano1_imgs_usadas,
+      p.plano1_renders_limite,
+      p.plano1_renders_usados,
+      (p as any).plano1_geracoes_limite ?? 0,
+      (p as any).plano1_geracoes_usadas ?? 0,
+      (p as any).plano1_expira_em ?? null,
+    ) ||
+    slotOk(
+      p.plano2_id,
+      p.plano2_imgs_limite,
+      p.plano2_imgs_usadas,
+      p.plano2_renders_limite,
+      p.plano2_renders_usados,
+      (p as any).plano2_geracoes_limite ?? 0,
+      (p as any).plano2_geracoes_usadas ?? 0,
+      (p as any).plano2_expira_em ?? null,
+    ) ||
+    slotOk(
+      p.bonus_id,
+      p.bonus_imgs_limite,
+      p.bonus_imgs_usadas,
+      p.bonus_renders_limite,
+      p.bonus_renders_usados,
+      (p as any).bonus_geracoes_limite ?? 0,
+      (p as any).bonus_geracoes_usadas ?? 0,
+      (p as any).bonus_expira_em ?? null,
+    );
 
   return { ok, isAdmin: false };
 }
@@ -134,7 +202,7 @@ export async function debitUsage(
     geracoes?: number;
     custoUsd?: number;
     impersonatedBy?: string;
-    preferredSlot?: 'plano1' | 'plano2' | 'bonus';
+    preferredSlot?: "plano1" | "plano2" | "bonus";
   },
 ): Promise<{ slot: string }> {
   const geracoes = meta.geracoes ?? 0;
@@ -143,7 +211,7 @@ export async function debitUsage(
   let rpcError: Error | null = null;
 
   // Admin e usuário comum: mesmo caminho — RPC verifica limites do slot preferido.
-  const { data: slotData, error } = await supabaseAdmin.rpc('debit_usage', {
+  const { data: slotData, error } = await supabaseAdmin.rpc("debit_usage", {
     _user_id: userId,
     _imgs: imgs,
     _renders: renders,
@@ -152,8 +220,8 @@ export async function debitUsage(
   } as any);
   if (error) {
     // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.
-    rpcError = new Error(error.message || 'Falha ao debitar consumo.');
-    slot = 'sem-plano';
+    rpcError = new Error(error.message || "Falha ao debitar consumo.");
+    slot = "sem-plano";
   } else {
     slot = (slotData as string) ?? null;
   }
@@ -161,7 +229,7 @@ export async function debitUsage(
   // Log SEMPRE — inclusive quando plano esgotado ou inexistente (slot='sem-plano').
   // Nunca cancela o log por causa de falha no RPC.
   try {
-    await supabaseAdmin.from('usage_logs').insert({
+    await supabaseAdmin.from("usage_logs").insert({
       user_id: userId,
       evento: meta.evento,
       modulo: meta.modulo ?? null,
@@ -174,11 +242,11 @@ export async function debitUsage(
       ...(meta.impersonatedBy ? { impersonated_by: meta.impersonatedBy } : {}),
     } as any);
   } catch (e) {
-    console.warn('[usage_logs] insert failed', e);
+    console.warn("[usage_logs] insert failed", e);
   }
 
   // Re-lança após o log para que o caller saiba que não há plano elegível.
   if (rpcError) throw rpcError;
 
-  return { slot: slot || 'desconhecido' };
+  return { slot: slot || "desconhecido" };
 }

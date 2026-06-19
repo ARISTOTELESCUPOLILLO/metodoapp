@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
-import { BrandKit, CarouselCard, FeedItem, MoodCode } from '../types';
+import JSZip from "jszip";
+import { BrandKit, CarouselCard, FeedItem, MoodCode } from "../types";
 
 // Saída final 1080x1350 (feed Instagram 4:5) com 110px de respiro uniforme.
 // A imagem original 1024x1536 do gpt-image-1 é recortada via cover; o prompt
@@ -59,9 +59,9 @@ function pickStandoutColor(kit: BrandKit): { color: string; outline?: string } {
   }
 
   if (!best || best.contrast < 4.5) {
-    return { color: '#ffffff', outline: kit.primaryColor || undefined };
+    return { color: "#ffffff", outline: kit.primaryColor || undefined };
   }
-  return { color: best.hex.startsWith('#') ? best.hex : `#${best.hex}` };
+  return { color: best.hex.startsWith("#") ? best.hex : `#${best.hex}` };
 }
 
 // Posicionamento do título no overlay canvas por mood (para burnTitleIntoVideo).
@@ -73,22 +73,28 @@ interface MoodTypographyConfig {
 }
 
 const MOOD_TYPOGRAPHY: Record<string, MoodTypographyConfig> = {
-  'OP-01': { align: 'left',   xOffset: (_, p) => p,           verticalBias:  0.08 },
-  'OP-02': { align: 'center', xOffset: (w)    => w / 2,       verticalBias: -0.10 },
-  'OP-03': { align: 'left',   xOffset: (_, p) => p,           verticalBias:  0.12 },
-  'OP-04': { align: 'left',   xOffset: (_, p) => p,           verticalBias:  0.06 },
-  'OP-05': { align: 'right',  xOffset: (w, p) => w - p,       verticalBias:  0.10 },
-  'OP-06': { align: 'center', xOffset: (w)    => w / 2,       verticalBias: -0.06 },
+  "OP-01": { align: "left", xOffset: (_, p) => p, verticalBias: 0.08 },
+  "OP-02": { align: "center", xOffset: (w) => w / 2, verticalBias: -0.1 },
+  "OP-03": { align: "left", xOffset: (_, p) => p, verticalBias: 0.12 },
+  "OP-04": { align: "left", xOffset: (_, p) => p, verticalBias: 0.06 },
+  "OP-05": { align: "right", xOffset: (w, p) => w - p, verticalBias: 0.1 },
+  "OP-06": { align: "center", xOffset: (w) => w / 2, verticalBias: -0.06 },
 };
 
 function getMoodTypographyConfig(mood?: MoodCode): MoodTypographyConfig {
-  return (mood && MOOD_TYPOGRAPHY[mood]) || { align: 'center', xOffset: (w) => w / 2, verticalBias: 0.07 };
+  return (
+    (mood && MOOD_TYPOGRAPHY[mood]) || {
+      align: "center",
+      xOffset: (w) => w / 2,
+      verticalBias: 0.07,
+    }
+  );
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
@@ -105,16 +111,16 @@ function fillCanvas(ctx: CanvasRenderingContext2D, img: HTMLImageElement, w: num
 // Calcula a coordenada (x, y) para desenhar a logo conforme a posição escolhida no kit.
 // Posições disponíveis: 'bottom-right' (padrão), 'top-center', 'bottom-center'.
 function logoCoords(
-  position: BrandKit['logoPosition'],
+  position: BrandKit["logoPosition"],
   w: number,
   h: number,
   pad: number,
   lw: number,
   lh: number,
 ): { x: number; y: number } {
-  const pos = position || 'bottom-right';
-  if (pos === 'top-center')    return { x: (w - lw) / 2, y: pad };
-  if (pos === 'bottom-center') return { x: (w - lw) / 2, y: h - pad - lh };
+  const pos = position || "bottom-right";
+  if (pos === "top-center") return { x: (w - lw) / 2, y: pad };
+  if (pos === "bottom-center") return { x: (w - lw) / 2, y: h - pad - lh };
   return { x: w - pad - lw, y: h - pad - lh };
 }
 
@@ -141,15 +147,19 @@ async function drawLogoOnly(
   }
 }
 
-export async function composeFeedPng(kit: BrandKit, _item: FeedItem, baseImage?: string): Promise<string> {
+export async function composeFeedPng(
+  kit: BrandKit,
+  _item: FeedItem,
+  baseImage?: string,
+): Promise<string> {
   const w = FEED_W;
   const h = FEED_H;
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
 
-  ctx.fillStyle = kit.primaryColor || '#123a63';
+  ctx.fillStyle = kit.primaryColor || "#123a63";
   ctx.fillRect(0, 0, w, h);
 
   if (baseImage) {
@@ -160,18 +170,22 @@ export async function composeFeedPng(kit: BrandKit, _item: FeedItem, baseImage?:
   }
 
   await drawLogoOnly(ctx, kit, w, h, PAD);
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL("image/png");
 }
 
-export async function composeFinalPng(kit: BrandKit, _item: FeedItem, baseImage?: string): Promise<string> {
+export async function composeFinalPng(
+  kit: BrandKit,
+  _item: FeedItem,
+  baseImage?: string,
+): Promise<string> {
   const w = FEED_W;
   const h = FEED_H;
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
 
-  ctx.fillStyle = kit.primaryColor || '#123a63';
+  ctx.fillStyle = kit.primaryColor || "#123a63";
   ctx.fillRect(0, 0, w, h);
 
   if (baseImage) {
@@ -182,18 +196,18 @@ export async function composeFinalPng(kit: BrandKit, _item: FeedItem, baseImage?
   }
 
   await drawLogoOnly(ctx, kit, w, h, PAD);
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL("image/png");
 }
 
 export async function composeReelsPng(kit: BrandKit, baseImage?: string): Promise<string> {
   const w = REELS_W;
   const h = REELS_H;
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
 
-  ctx.fillStyle = kit.primaryColor || '#123a63';
+  ctx.fillStyle = kit.primaryColor || "#123a63";
   ctx.fillRect(0, 0, w, h);
 
   if (baseImage) {
@@ -206,7 +220,7 @@ export async function composeReelsPng(kit: BrandKit, baseImage?: string): Promis
   // Logo na posição escolhida no Kit (default: canto inferior direito) com respiro de 150px.
   await drawLogoOnly(ctx, kit, w, h, REELS_PAD, REELS_LOGO_MAX_W, REELS_LOGO_MAX_H);
 
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL("image/png");
 }
 
 // Gera PNG 1080x1920 TRANSPARENTE com o título do reels centralizado.
@@ -214,16 +228,21 @@ export async function composeReelsPng(kit: BrandKit, baseImage?: string): Promis
 // Fonte = kit.fontPair (helvética ou serifada conforme a escolha do kit).
 // Texto branco com sombra preta forte → legível sobre qualquer foto.
 // Respiro lateral de 150px, quebra de linha automática, no máximo 4 linhas.
-export async function composeReelsTitlePng(kit: BrandKit, title: string, baseImage?: string, mood?: MoodCode): Promise<Blob> {
+export async function composeReelsTitlePng(
+  kit: BrandKit,
+  title: string,
+  baseImage?: string,
+  mood?: MoodCode,
+): Promise<Blob> {
   const w = REELS_W;
   const h = REELS_H;
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
 
   // Fundo: imagem do reels full-bleed (mesma vibe da capa final).
-  ctx.fillStyle = kit.primaryColor || '#123a63';
+  ctx.fillStyle = kit.primaryColor || "#123a63";
   ctx.fillRect(0, 0, w, h);
   if (baseImage) {
     try {
@@ -237,23 +256,23 @@ export async function composeReelsTitlePng(kit: BrandKit, title: string, baseIma
   const bandH = Math.round(h * 0.45);
   const bandY = Math.round((h - bandH) / 2 + approxLineHeight);
   const grad = ctx.createLinearGradient(0, bandY, 0, bandY + bandH);
-  grad.addColorStop(0, 'rgba(0,0,0,0)');
-  grad.addColorStop(0.5, 'rgba(0,0,0,0.55)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  grad.addColorStop(0, "rgba(0,0,0,0)");
+  grad.addColorStop(0.5, "rgba(0,0,0,0.55)");
+  grad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = grad;
   ctx.fillRect(0, bandY, w, bandH);
 
   const maxTextWidth = w - REELS_PAD * 2;
-  const fontFamily = kit.fontPair || 'Inter';
+  const fontFamily = kit.fontPair || "Inter";
 
   // Encontra o maior tamanho de fonte que cabe em até 4 linhas dentro do respiro.
   const wrap = (size: number): string[] => {
     ctx.font = `700 ${size}px "${fontFamily}", sans-serif`;
     const words = title.trim().split(/\s+/);
     const lines: string[] = [];
-    let current = '';
+    let current = "";
     for (const word of words) {
-      const tentative = current ? current + ' ' + word : word;
+      const tentative = current ? current + " " + word : word;
       if (ctx.measureText(tentative).width <= maxTextWidth) {
         current = tentative;
       } else {
@@ -268,7 +287,10 @@ export async function composeReelsTitlePng(kit: BrandKit, title: string, baseIma
   // Lettering 10% menor que antes (140→126, mín 48→44).
   let fontSize = 126;
   let lines = wrap(fontSize);
-  while ((lines.length > 4 || lines.some(l => ctx.measureText(l).width > maxTextWidth)) && fontSize > 44) {
+  while (
+    (lines.length > 4 || lines.some((l) => ctx.measureText(l).width > maxTextWidth)) &&
+    fontSize > 44
+  ) {
     fontSize -= 6;
     lines = wrap(fontSize);
   }
@@ -280,15 +302,15 @@ export async function composeReelsTitlePng(kit: BrandKit, title: string, baseIma
   const totalHeight = lineHeight * lines.length;
   // Posição vertical: cada mood tem um bias próprio (fração da altura).
   // O bias 0.07 (default) corresponde ao comportamento anterior (1 lineHeight abaixo do centro).
-  const startY = (h - totalHeight) / 2 + fontSize * 0.85 + (h * moodCfg.verticalBias);
+  const startY = (h - totalHeight) / 2 + fontSize * 0.85 + h * moodCfg.verticalBias;
 
   // Cor do título vinda do kit (a que mais contrasta com fundo escuro).
   const { color: titleColor, outline } = pickStandoutColor(kit);
 
   ctx.font = `700 ${fontSize}px "${fontFamily}", sans-serif`;
   ctx.textAlign = moodCfg.align;
-  ctx.textBaseline = 'alphabetic';
-  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.textBaseline = "alphabetic";
+  ctx.shadowColor = "rgba(0,0,0,0.85)";
   ctx.shadowBlur = 24;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 4;
@@ -306,29 +328,35 @@ export async function composeReelsTitlePng(kit: BrandKit, title: string, baseIma
   });
 
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob falhou'))), 'image/png');
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob falhou"))), "image/png");
   });
 }
 
-export async function composeCarouselZip(kit: BrandKit, cards: CarouselCard[], baseImages: string[] = []): Promise<Blob> {
+export async function composeCarouselZip(
+  kit: BrandKit,
+  cards: CarouselCard[],
+  baseImages: string[] = [],
+): Promise<Blob> {
   const zip = new JSZip();
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i];
     const item: FeedItem = {
-      dia: i + 1, formato: 'Carrossel',
+      dia: i + 1,
+      formato: "Carrossel",
       titulo: card?.titulo || `Card ${i + 1}`,
-      texto: card?.texto || '',
-      legenda: '', imagem: card?.imagePrompt || '',
+      texto: card?.texto || "",
+      legenda: "",
+      imagem: card?.imagePrompt || "",
     };
     const dataUrl = await composeFeedPng(kit, item, baseImages[i]);
-    const base64 = dataUrl.split(',')[1];
+    const base64 = dataUrl.split(",")[1];
     zip.file(`card-${i + 1}.png`, base64, { base64: true });
   }
-  return zip.generateAsync({ type: 'blob' });
+  return zip.generateAsync({ type: "blob" });
 }
 
 export function downloadDataUrl(dataUrl: string, filename: string) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = dataUrl;
   a.download = filename;
   a.click();
@@ -336,7 +364,7 @@ export function downloadDataUrl(dataUrl: string, filename: string) {
 
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();

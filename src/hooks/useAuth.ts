@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { stopImpersonation } from './useImpersonation';
+import { useEffect, useState } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { stopImpersonation } from "./useImpersonation";
 
 export interface AuthState {
   session: Session | null;
@@ -18,7 +18,7 @@ export function useAuth(): AuthState {
       // Limpa impersonação no logout — impersonação agora vive em localStorage
       // (sobrevive ao background do mobile), então precisa ser limpa
       // explicitamente para não vazar entre contas no mesmo dispositivo.
-      if (event === 'SIGNED_OUT') stopImpersonation();
+      if (event === "SIGNED_OUT") stopImpersonation();
       setState({ session, user: session?.user ?? null, loading: false });
     });
     // 2) Then fetch existing session
@@ -41,7 +41,11 @@ export async function signOut() {
         `metodo-op-postunico-img-v1:${userId}`,
         `metodo-op-postunico-caption-v1:${userId}`,
         `metodo-op-postunico-started-v1:${userId}`,
-      ].forEach(k => { try { localStorage.removeItem(k); } catch {} });
+      ].forEach((k) => {
+        try {
+          localStorage.removeItem(k);
+        } catch {}
+      });
     }
   } catch {}
   // Permite que um login realmente novo (mesma aba) re-execute o
@@ -49,7 +53,7 @@ export async function signOut() {
   // deixadas por impersonações.
   try {
     for (const k of Object.keys(sessionStorage)) {
-      if (k.startsWith('metodo-op-modo-init-v1:')) sessionStorage.removeItem(k);
+      if (k.startsWith("metodo-op-modo-init-v1:")) sessionStorage.removeItem(k);
     }
   } catch {}
   await supabase.auth.signOut();

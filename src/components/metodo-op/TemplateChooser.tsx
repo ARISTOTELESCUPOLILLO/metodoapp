@@ -1,14 +1,14 @@
-import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from 'lucide-react';
-import { getRecommendedMoods, templateMoods } from '../../data/templateCatalog';
-import { MoodCode, Segment } from '../../types';
+import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from "lucide-react";
+import { getRecommendedMoods, templateMoods } from "../../data/templateCatalog";
+import { MoodCode, Segment } from "../../types";
 
 const MOOD_ICONS: Record<MoodCode, LucideIcon> = {
-  'OP-01': Lightbulb,
-  'OP-02': Zap,
-  'OP-03': Camera,
-  'OP-04': Layers,
-  'OP-05': Shuffle,
-  'OP-06': VolumeX,
+  "OP-01": Lightbulb,
+  "OP-02": Zap,
+  "OP-03": Camera,
+  "OP-04": Layers,
+  "OP-05": Shuffle,
+  "OP-06": VolumeX,
 };
 
 interface Props {
@@ -32,14 +32,27 @@ export default function TemplateChooser({ segment, selected, onSelect }: Props) 
         {moods.map((mood) => (
           <button
             key={mood.code}
-            className={`moodCard ${selected === mood.code ? 'active' : ''}`}
+            className={`moodCard ${selected === mood.code ? "active" : ""}`}
             onClick={() => onSelect(mood.code)}
             type="button"
           >
-            <span className="moodMini" style={{ background: mood.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {(() => { const Icon = MOOD_ICONS[mood.code]; return Icon ? <Icon size={22} color="white" strokeWidth={1.8} /> : null; })()}
+            <span
+              className="moodMini"
+              style={{
+                background: mood.color,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {(() => {
+                const Icon = MOOD_ICONS[mood.code];
+                return Icon ? <Icon size={22} color="white" strokeWidth={1.8} /> : null;
+              })()}
             </span>
-            <strong>{mood.code} · {mood.name}</strong>
+            <strong>
+              {mood.code} · {mood.name}
+            </strong>
           </button>
         ))}
       </div>

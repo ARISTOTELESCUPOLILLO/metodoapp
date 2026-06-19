@@ -1,24 +1,23 @@
-import { BrandKit } from '../types';
+import { BrandKit } from "../types";
 
 export async function applyLogoToImage(
   imageUrl: string,
   kit: BrandKit,
-  format: 'post' | 'reels' = 'post'
+  format: "post" | "reels" = "post",
 ): Promise<string> {
   const W = 1024;
-  const H = format === 'reels' ? 1820 : 1536;
+  const H = format === "reels" ? 1820 : 1536;
   const PAD = 80;
 
-
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
 
   // Desenha imagem de fundo
   await new Promise<void>((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       const scale = Math.max(W / img.width, H / img.height);
       const sw = img.width * scale;
@@ -36,10 +35,13 @@ export async function applyLogoToImage(
       logo.onload = () => {
         const ratio = logo.width / logo.height;
         const [LOGO_MAX_W, LOGO_MAX_H] =
-          ratio >= 2.0 ? [240, 90] :
-          ratio >= 1.3 ? [200, 110] :
-          ratio >= 0.8 ? [150, 150] :
-                         [110, 170];
+          ratio >= 2.0
+            ? [240, 90]
+            : ratio >= 1.3
+              ? [200, 110]
+              : ratio >= 0.8
+                ? [150, 150]
+                : [110, 170];
         const scale = Math.min(LOGO_MAX_W / logo.width, LOGO_MAX_H / logo.height);
         const lw = logo.width * scale;
         const lh = logo.height * scale;
@@ -57,5 +59,5 @@ export async function applyLogoToImage(
     });
   }
 
-  return canvas.toDataURL('image/jpeg', 0.92);
+  return canvas.toDataURL("image/jpeg", 0.92);
 }

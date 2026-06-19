@@ -7,21 +7,25 @@
 const cache = new Map<string, string>();
 
 function fullKey(userId: string | null | undefined, key: string): string {
-  return `${userId || 'anon'}:${key}`;
+  return `${userId || "anon"}:${key}`;
 }
 
 export function getSessionImage(userId: string | null | undefined, key: string): string | null {
   return cache.get(fullKey(userId, key)) ?? null;
 }
 
-export function setSessionImage(userId: string | null | undefined, key: string, value: string | null): void {
+export function setSessionImage(
+  userId: string | null | undefined,
+  key: string,
+  value: string | null,
+): void {
   const k = fullKey(userId, key);
   if (value) cache.set(k, value);
   else cache.delete(k);
 }
 
 export function clearSessionImages(userId: string | null | undefined): void {
-  const prefix = `${userId || 'anon'}:`;
+  const prefix = `${userId || "anon"}:`;
   for (const k of Array.from(cache.keys())) {
     if (k.startsWith(prefix)) cache.delete(k);
   }

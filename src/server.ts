@@ -12,7 +12,7 @@ let serverEntryPromise: Promise<ServerEntry> | undefined;
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
     serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => ((m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry)),
+      (m) => (m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry),
     );
   }
   return serverEntryPromise;
@@ -67,29 +67,35 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 }
 
 const SECURITY_HEADERS: Record<string, string> = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'SAMEORIGIN',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'X-XSS-Protection': '1; mode=block',
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "X-XSS-Protection": "1; mode=block",
 };
 
 // Injeta os headers de segurança sem consumir o body (preserva streaming / SSE).
 function addSecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers);
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
-  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 // Redireciona HTTP → HTTPS via cabeçalho CF-Visitor (Cloudflare injeta o scheme real).
 function httpsRedirect(request: Request): Response | null {
   try {
-    const visitor = request.headers.get('CF-Visitor');
-    if (visitor && JSON.parse(visitor).scheme === 'http') {
+    const visitor = request.headers.get("CF-Visitor");
+    if (visitor && JSON.parse(visitor).scheme === "http") {
       const url = new URL(request.url);
-      url.protocol = 'https:';
+      url.protocol = "https:";
       return Response.redirect(url.toString(), 301);
     }
-  } catch { /* ignora */ }
+  } catch {
+    /* ignora */
+  }
   return null;
 }
 

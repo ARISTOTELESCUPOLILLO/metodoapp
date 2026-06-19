@@ -1,6 +1,6 @@
-import { applyDeterministicFallback } from '../core/textValidation';
+import { applyDeterministicFallback } from "../core/textValidation";
 
-export type RegenKind = 'titulo' | 'texto' | 'legenda';
+export type RegenKind = "titulo" | "texto" | "legenda";
 
 export interface RegenContext {
   kind: RegenKind;
@@ -20,9 +20,9 @@ export interface RegenResult {
 }
 
 async function callRegenerateBlock(ctx: RegenContext): Promise<RegenResult> {
-  const res = await fetch('/api/regenerate-block', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const res = await fetch("/api/regenerate-block", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(ctx),
   });
   if (!res.ok) {
@@ -31,7 +31,7 @@ async function callRegenerateBlock(ctx: RegenContext): Promise<RegenResult> {
   }
   const json = await res.json();
   return {
-    value: String(json.value || '').trim(),
+    value: String(json.value || "").trim(),
     flags: Array.isArray(json.flags) ? json.flags : undefined,
   };
 }
@@ -51,15 +51,17 @@ const MAX_ATTEMPTS = 2;
 // motivo da reprovação e, se ainda flagar na 2ª tentativa, aplica a limpeza
 // determinística (E4) em vez de expor o texto reprovado como sugestão.
 export async function regenerateBlockClean(ctx: RegenContext): Promise<string> {
-  let value = '';
+  let value = "";
   let motivoReprovacao = ctx.motivoReprovacao;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const regen = await callRegenerateBlock({ ...ctx, motivoReprovacao });
     value = regen.value;
     if (!regen.flags || regen.flags.length === 0) return value;
-    motivoReprovacao = regen.flags.join('; ');
+    motivoReprovacao = regen.flags.join("; ");
     if (attempt === MAX_ATTEMPTS) {
-      console.warn(`[regenerateBlockClean] ${ctx.kind} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`);
+      console.warn(
+        `[regenerateBlockClean] ${ctx.kind} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`,
+      );
       return applyDeterministicFallback(value, ctx.kind);
     }
   }

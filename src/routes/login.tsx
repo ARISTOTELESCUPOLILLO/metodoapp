@@ -1,16 +1,16 @@
-import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,10 +18,12 @@ function LoginPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: '/app' });
+      if (data.session) navigate({ to: "/app" });
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) navigate({ to: '/app' });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) navigate({ to: "/app" });
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -34,22 +36,22 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      if (error.message === 'Invalid login credentials') {
-        setError('Email ou senha inválidos.');
-      } else if (error.message === 'Email not confirmed') {
-        setError('E-mail ainda não confirmado. Clique em Reenviar para receber um novo link.');
+      if (error.message === "Invalid login credentials") {
+        setError("Email ou senha inválidos.");
+      } else if (error.message === "Email not confirmed") {
+        setError("E-mail ainda não confirmado. Clique em Reenviar para receber um novo link.");
         setShowResend(true);
       } else {
         setError(error.message);
       }
       return;
     }
-    navigate({ to: '/app' });
+    navigate({ to: "/app" });
   }
 
   async function resendConfirmation() {
-    await supabase.auth.resend({ type: 'signup', email });
-    setError('E-mail de confirmação reenviado. Verifique sua caixa de entrada.');
+    await supabase.auth.resend({ type: "signup", email });
+    setError("E-mail de confirmação reenviado. Verifique sua caixa de entrada.");
     setShowResend(false);
   }
 
@@ -71,9 +73,9 @@ function LoginPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-foreground">Senha</label>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: "relative" }}>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -82,9 +84,21 @@ function LoginPage() {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(v => !v)}
-                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0, display: 'flex', alignItems: 'center' }}
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                onClick={() => setShowPassword((v) => !v)}
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -105,12 +119,21 @@ function LoginPage() {
             disabled={loading}
             className="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold disabled:opacity-50"
           >
-            {loading ? 'Entrando…' : 'Entrar'}
+            {loading ? "Entrando…" : "Entrar"}
           </button>
         </form>
         <div className="mt-6 text-sm text-center text-muted-foreground space-y-2">
-          <div><Link to="/esqueci-senha" className="underline">Esqueci minha senha</Link></div>
-          <div>Tem um convite? <Link to="/signup" className="underline">Criar conta</Link></div>
+          <div>
+            <Link to="/esqueci-senha" className="underline">
+              Esqueci minha senha
+            </Link>
+          </div>
+          <div>
+            Tem um convite?{" "}
+            <Link to="/signup" className="underline">
+              Criar conta
+            </Link>
+          </div>
         </div>
       </div>
     </div>

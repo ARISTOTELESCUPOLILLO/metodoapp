@@ -8,21 +8,21 @@
 // Custo: GRÁTIS dentro do plano. O extra só entra para liberar uma
 // combinação que o plano não cobre (SERVIÇO/MARCA + produtos no carrossel).
 
-import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import type { BrandKit, ImageKit, MoodCode } from '../../types';
-import { regenerateWithKit } from '../../services/regenerateWithKit';
-import { cenarioLabel } from '../../utils/imageKitStorage';
-import type { ModeloOP, SlotFormato, SlotPersonalizacao } from '../../core/personalizacaoMop';
+import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import type { BrandKit, ImageKit, MoodCode } from "../../types";
+import { regenerateWithKit } from "../../services/regenerateWithKit";
+import { cenarioLabel } from "../../utils/imageKitStorage";
+import type { ModeloOP, SlotFormato, SlotPersonalizacao } from "../../core/personalizacaoMop";
 import {
   descrevePolicy,
   ordemGruposPorSegmento,
   policyComExtras,
   policyPorFormato,
   type RefPolicy,
-} from '../../core/referenciasPolicy';
+} from "../../core/referenciasPolicy";
 
 interface Props {
-  segmento: BrandKit['segment'];
+  segmento: BrandKit["segment"];
   modelo: ModeloOP | null;
   formato: SlotFormato;
   // Posição da peça (1-based). Usado só para o slot sintético.
@@ -40,15 +40,22 @@ interface Props {
   texto?: string;
   imagePrompt?: string;
   leituraCenica?: {
-    intencao?: string; personagem?: string; ambiente?: string;
-    expressao?: string; clima?: string; composicao?: string;
+    intencao?: string;
+    personagem?: string;
+    ambiente?: string;
+    expressao?: string;
+    clima?: string;
+    composicao?: string;
   };
   // Override explícito do alvo da geração (post|reels). Quando ausente,
   // infere por formato (reels → reels, demais → post).
-  formatoOverride?: 'post' | 'reels';
+  formatoOverride?: "post" | "reels";
   // Disparado após a geração com sucesso — recebe a dataURL final.
   // Quando o uso debitou extra carrossel-produto, `cobrouCarrosselProduto` = true.
-  onGerou: (dataUrl: string, info: { cobrouCarrosselProduto: boolean; produtoNum?: number }) => void;
+  onGerou: (
+    dataUrl: string,
+    info: { cobrouCarrosselProduto: boolean; produtoNum?: number },
+  ) => void;
   // Persistência do estado UI por peça (localStorage key).
   storageKey: string;
   // Modo compacto: esconde o botão "Gerar com referências" interno.
@@ -67,10 +74,25 @@ interface Props {
 
 export default function UsoReferenciasDia(props: Props) {
   const {
-    segmento, modelo, formato, posicao, cardCarrossel,
-    extrasCarrossel, kit, imageKit, mood,
-    titulo, texto, imagePrompt, leituraCenica, formatoOverride,
-    onGerou, storageKey, compact, footerAction, userId,
+    segmento,
+    modelo,
+    formato,
+    posicao,
+    cardCarrossel,
+    extrasCarrossel,
+    kit,
+    imageKit,
+    mood,
+    titulo,
+    texto,
+    imagePrompt,
+    leituraCenica,
+    formatoOverride,
+    onGerou,
+    storageKey,
+    compact,
+    footerAction,
+    userId,
   } = props;
 
   // Policy efetiva (com extras de carrossel quando se aplica)
@@ -84,14 +106,15 @@ export default function UsoReferenciasDia(props: Props) {
   );
   // (extra de carrossel já está embutido na `policy.produtos` via policyComExtras)
 
-
   // Disponibilidade real no Kit
   const cenariosDisp = useMemo(
-    () => imageKit.cenarios.map((c, i) => (c ? i + 1 : null)).filter((n): n is number => n !== null),
+    () =>
+      imageKit.cenarios.map((c, i) => (c ? i + 1 : null)).filter((n): n is number => n !== null),
     [imageKit.cenarios],
   );
   const produtosDisp = useMemo(
-    () => imageKit.produtos.map((p, i) => (p ? i + 1 : null)).filter((n): n is number => n !== null),
+    () =>
+      imageKit.produtos.map((p, i) => (p ? i + 1 : null)).filter((n): n is number => n !== null),
     [imageKit.produtos],
   );
   const temAlguma =
@@ -114,32 +137,39 @@ export default function UsoReferenciasDia(props: Props) {
   // Hydrate do localStorage
   useEffect(() => {
     try {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
+      const raw = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
       if (raw) {
         const s = JSON.parse(raw);
-        if (typeof s.enabled === 'boolean') setEnabled(s.enabled);
-        if (typeof s.avatarNum === 'number' || s.avatarNum === null) {
+        if (typeof s.enabled === "boolean") setEnabled(s.enabled);
+        if (typeof s.avatarNum === "number" || s.avatarNum === null) {
           setAvatarNum(s.avatarNum);
-        } else if (typeof s.usarAvatar === 'boolean') {
+        } else if (typeof s.usarAvatar === "boolean") {
           // Migração do formato antigo (boolean) → avatarNum (1|2|null).
           setAvatarNum(s.usarAvatar ? 1 : null);
         }
-        if (typeof s.usarFachada === 'boolean') setUsarFachada(s.usarFachada);
-        if (typeof s.cenarioNum === 'number' || s.cenarioNum === null) setCenarioNum(s.cenarioNum);
+        if (typeof s.usarFachada === "boolean") setUsarFachada(s.usarFachada);
+        if (typeof s.cenarioNum === "number" || s.cenarioNum === null) setCenarioNum(s.cenarioNum);
         if (Array.isArray(s.produtosNums)) setProdutosNums(s.produtosNums);
-        if (typeof s.useUniforme === 'boolean') setUseUniforme(s.useUniforme);
+        if (typeof s.useUniforme === "boolean") setUseUniforme(s.useUniforme);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
   // Persist
   useEffect(() => {
     try {
-      if (typeof window === 'undefined') return;
-      localStorage.setItem(storageKey, JSON.stringify({ enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme }));
-      window.dispatchEvent(new CustomEvent('uso-ref:changed', { detail: { key: storageKey } }));
-    } catch { /* ignore */ }
+      if (typeof window === "undefined") return;
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({ enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme }),
+      );
+      window.dispatchEvent(new CustomEvent("uso-ref:changed", { detail: { key: storageKey } }));
+    } catch {
+      /* ignore */
+    }
   }, [enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme, storageKey]);
 
   function toggleProduto(n: number) {
@@ -152,7 +182,10 @@ export default function UsoReferenciasDia(props: Props) {
   const produtosNoLimite = produtosNums.length >= policy.produtos;
 
   const totalSelecionado =
-    (avatarNum != null ? 1 : 0) + (usarFachada ? 1 : 0) + (cenarioNum != null ? 1 : 0) + produtosNums.length;
+    (avatarNum != null ? 1 : 0) +
+    (usarFachada ? 1 : 0) +
+    (cenarioNum != null ? 1 : 0) +
+    produtosNums.length;
   const podeGerar = !busy && enabled && totalSelecionado > 0;
 
   // A distribuição "1 produto por card" do carrossel é feita pelo bloco
@@ -164,22 +197,26 @@ export default function UsoReferenciasDia(props: Props) {
 
   async function handleGerar() {
     if (!podeGerar) return;
-    setBusy(true); setError(null);
+    setBusy(true);
+    setError(null);
     try {
       const slot: SlotPersonalizacao = {
         formato,
         posicao,
-        elemento: 'avatar', // ignorado pois selecaoDireta tem precedência
+        elemento: "avatar", // ignorado pois selecaoDireta tem precedência
         cardCarrossel,
-        motivo: '',
+        motivo: "",
       };
       const url = await regenerateWithKit({
         slot,
         kit,
         imageKit,
         mood,
-        keyInfo: `${titulo || ''}. ${imagePrompt || ''}`.slice(0, 500),
-        titulo, texto, imagePrompt, leituraCenica,
+        keyInfo: `${titulo || ""}. ${imagePrompt || ""}`.slice(0, 500),
+        titulo,
+        texto,
+        imagePrompt,
+        leituraCenica,
         formato: formatoOverride,
         selecaoDireta: {
           usarAvatar: avatarNum != null,
@@ -196,30 +233,39 @@ export default function UsoReferenciasDia(props: Props) {
         produtoNum: produtosNumsParaUso[0],
       });
     } catch (e) {
-      setError((e as Error).message || 'Falha ao gerar com referências.');
+      setError((e as Error).message || "Falha ao gerar com referências.");
     } finally {
       setBusy(false);
     }
   }
 
   // Política não permite NENHUMA imagem para este formato/segmento → não mostra nada.
-  const policyAllowsAny = policy.avatar || policy.fachada || policy.cenarios > 0 || policy.produtos > 0;
+  const policyAllowsAny =
+    policy.avatar || policy.fachada || policy.cenarios > 0 || policy.produtos > 0;
   if (!policyAllowsAny) return null;
 
   // Política permite imagens mas o Kit está vazio → mostra orientação.
   if (!temAlguma) {
     const itemsFaltando: string[] = [];
-    if (policy.avatar && !imageKit.avatar && !imageKit.avatar2) itemsFaltando.push('avatar');
-    if (policy.fachada && !imageKit.fachada) itemsFaltando.push('fachada');
-    if (policy.cenarios > 0 && cenariosDisp.length === 0) itemsFaltando.push('cenário');
-    if (policy.produtos > 0 && produtosDisp.length === 0) itemsFaltando.push('produtos');
+    if (policy.avatar && !imageKit.avatar && !imageKit.avatar2) itemsFaltando.push("avatar");
+    if (policy.fachada && !imageKit.fachada) itemsFaltando.push("fachada");
+    if (policy.cenarios > 0 && cenariosDisp.length === 0) itemsFaltando.push("cenário");
+    if (policy.produtos > 0 && produtosDisp.length === 0) itemsFaltando.push("produtos");
     return (
-      <div style={{
-        background: '#fefce8', border: '1px solid #fde047', borderRadius: 10,
-        padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#713f12',
-      }}>
+      <div
+        style={{
+          background: "#fefce8",
+          border: "1px solid #fde047",
+          borderRadius: 10,
+          padding: "8px 12px",
+          marginBottom: 10,
+          fontSize: 12,
+          color: "#713f12",
+        }}
+      >
         📦 Esta peça aceita <strong>imagens de referência</strong> ({descrevePolicy(policy)}).
-        Adicione {itemsFaltando.join(', ')} ao <strong>Kit Imagem</strong> para poder gerar com referências.
+        Adicione {itemsFaltando.join(", ")} ao <strong>Kit Imagem</strong> para poder gerar com
+        referências.
       </div>
     );
   }
@@ -231,43 +277,75 @@ export default function UsoReferenciasDia(props: Props) {
   const faltaProduto = policy.produtos > 0 && produtosDisp.length === 0;
   const algumFaltando = faltaAvatar || faltaFachada || faltaCenario || faltaProduto;
 
-  const borderColor = enabled ? '#67e8f9' : '#e2e8f0';
-  const bg = enabled ? '#ecfeff' : '#f8fafc';
+  const borderColor = enabled ? "#67e8f9" : "#e2e8f0";
+  const bg = enabled ? "#ecfeff" : "#f8fafc";
 
   return (
-    <div style={{
-      background: bg,
-      border: `1px solid ${borderColor}`,
-      borderRadius: 10,
-      padding: '8px 10px',
-      marginBottom: 10,
-      fontSize: 12,
-      color: enabled ? '#0e7490' : '#334155',
-    }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, userSelect: 'none', width: '100%' }}>
+    <div
+      style={{
+        background: bg,
+        border: `1px solid ${borderColor}`,
+        borderRadius: 10,
+        padding: "8px 10px",
+        marginBottom: 10,
+        fontSize: 12,
+        color: enabled ? "#0e7490" : "#334155",
+      }}
+    >
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          cursor: "pointer",
+          fontWeight: 700,
+          userSelect: "none",
+          width: "100%",
+        }}
+      >
         <input
           type="checkbox"
-          style={{ width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, flexShrink: 0, cursor: 'pointer' }}
+          style={{
+            width: 16,
+            height: 16,
+            minWidth: 16,
+            margin: 0,
+            padding: 0,
+            flexShrink: 0,
+            cursor: "pointer",
+          }}
           checked={enabled}
           onChange={(e) => setEnabled(e.target.checked)}
         />
-        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Usar Imagens de Referência</span>
+        <span
+          style={{
+            flex: 1,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Usar Imagens de Referência
+        </span>
       </label>
 
       {enabled && (
         <div style={{ marginTop: 8 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 11, opacity: 0.85 }}>
+          <p style={{ margin: "0 0 8px", fontSize: 11, opacity: 0.85 }}>
             Você pode escolher: <b>{descrevePolicy(policy)}</b>.
-            {produtosNoLimite && ' Limite de produtos atingido — desmarque um para escolher outro.'}
+            {produtosNoLimite && " Limite de produtos atingido — desmarque um para escolher outro."}
           </p>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))',
-            gap: 6,
-          }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(78px, 1fr))",
+              gap: 6,
+            }}
+          >
             {ordemGruposPorSegmento(segmento).map((grupo) => {
-              if (grupo === 'avatar') {
+              if (grupo === "avatar") {
                 return (
                   <Fragment key="avatar-group">
                     {policy.avatar && imageKit.avatar && (
@@ -276,7 +354,7 @@ export default function UsoReferenciasDia(props: Props) {
                         checked={avatarNum === 1}
                         onToggle={() => setAvatarNum((cur) => (cur === 1 ? null : 1))}
                         url={imageKit.avatar}
-                        label={imageKit.avatar2 ? 'Avatar 1' : 'Avatar'}
+                        label={imageKit.avatar2 ? "Avatar 1" : "Avatar"}
                       />
                     )}
                     {policy.avatar && imageKit.avatar2 && (
@@ -291,152 +369,260 @@ export default function UsoReferenciasDia(props: Props) {
                   </Fragment>
                 );
               }
-              if (grupo === 'fachada') {
-                return policy.fachada && imageKit.fachada && (
-                  <Tile
-                    key="fachada"
-                    checked={usarFachada}
-                    onToggle={() => setUsarFachada((cur) => !cur)}
-                    url={imageKit.fachada}
-                    label="Fachada"
-                  />
+              if (grupo === "fachada") {
+                return (
+                  policy.fachada &&
+                  imageKit.fachada && (
+                    <Tile
+                      key="fachada"
+                      checked={usarFachada}
+                      onToggle={() => setUsarFachada((cur) => !cur)}
+                      url={imageKit.fachada}
+                      label="Fachada"
+                    />
+                  )
                 );
               }
-              if (grupo === 'cenario') {
-                return policy.cenarios > 0 && cenariosDisp.map((n) => (
-                  <Tile
-                    key={`c${n}`}
-                    checked={cenarioNum === n}
-                    onToggle={() => setCenarioNum((cur) => (cur === n ? null : n))}
-                    url={imageKit.cenarios[n - 1] || undefined}
-                    label={cenarioLabel(imageKit, n)}
-                  />
-                ));
+              if (grupo === "cenario") {
+                return (
+                  policy.cenarios > 0 &&
+                  cenariosDisp.map((n) => (
+                    <Tile
+                      key={`c${n}`}
+                      checked={cenarioNum === n}
+                      onToggle={() => setCenarioNum((cur) => (cur === n ? null : n))}
+                      url={imageKit.cenarios[n - 1] || undefined}
+                      label={cenarioLabel(imageKit, n)}
+                    />
+                  ))
+                );
               }
               // produto
-              return policy.produtos > 0 && produtosDisp.map((n) => {
-                const ordem = produtosNums.indexOf(n);
-                const isCarrossel = formato === 'carrossel';
-                const checked = produtosNums.includes(n);
-                return (
-                  <Tile
-                    key={`p${n}`}
-                    checked={checked}
-                    disabled={!checked && produtosNoLimite}
-                    onToggle={() => toggleProduto(n)}
-                    url={imageKit.produtos[n - 1] || undefined}
-                    label={`Produto ${n}`}
-                    badge={isCarrossel && ordem >= 0 ? ordem + 1 : undefined}
-                  />
-                );
-              });
+              return (
+                policy.produtos > 0 &&
+                produtosDisp.map((n) => {
+                  const ordem = produtosNums.indexOf(n);
+                  const isCarrossel = formato === "carrossel";
+                  const checked = produtosNums.includes(n);
+                  return (
+                    <Tile
+                      key={`p${n}`}
+                      checked={checked}
+                      disabled={!checked && produtosNoLimite}
+                      onToggle={() => toggleProduto(n)}
+                      url={imageKit.produtos[n - 1] || undefined}
+                      label={`Produto ${n}`}
+                      badge={isCarrossel && ordem >= 0 ? ordem + 1 : undefined}
+                    />
+                  );
+                })
+              );
             })}
           </div>
 
           {!!kit.uniformeDataUrl && policy.avatar && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, cursor: avatarNum != null ? 'pointer' : 'default', opacity: avatarNum != null ? 1 : 0.5, fontSize: 11, fontWeight: 600 }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 8,
+                cursor: avatarNum != null ? "pointer" : "default",
+                opacity: avatarNum != null ? 1 : 0.5,
+                fontSize: 11,
+                fontWeight: 600,
+              }}
+            >
               <input
                 type="checkbox"
-                style={{ width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, flexShrink: 0, cursor: avatarNum != null ? 'pointer' : 'default' }}
+                style={{
+                  width: 16,
+                  height: 16,
+                  minWidth: 16,
+                  margin: 0,
+                  padding: 0,
+                  flexShrink: 0,
+                  cursor: avatarNum != null ? "pointer" : "default",
+                }}
                 checked={useUniforme}
                 disabled={avatarNum == null}
                 onChange={(e) => setUseUniforme(e.target.checked)}
               />
-              Gerar com uniforme da empresa{avatarNum == null && ' (marque um avatar acima para usar)'}
+              Gerar com uniforme da empresa
+              {avatarNum == null && " (marque um avatar acima para usar)"}
             </label>
           )}
 
           {algumFaltando && (
-            <div style={{
-              marginTop: 8, background: '#fffbeb', border: '1px solid #fcd34d',
-              color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
-            }}>
-              ⚠️ {faltaAvatar && 'Adicione um avatar no Kit Imagem para usar. '}
-              {faltaFachada && 'Adicione a fachada no Kit Imagem para usar. '}
-              {faltaCenario && 'Adicione cenários no Kit Imagem para usar. '}
-              {faltaProduto && 'Adicione produtos no Kit Imagem para usar.'}
+            <div
+              style={{
+                marginTop: 8,
+                background: "#fffbeb",
+                border: "1px solid #fcd34d",
+                color: "#92400e",
+                borderRadius: 6,
+                padding: "6px 8px",
+                fontSize: 11,
+              }}
+            >
+              ⚠️ {faltaAvatar && "Adicione um avatar no Kit Imagem para usar. "}
+              {faltaFachada && "Adicione a fachada no Kit Imagem para usar. "}
+              {faltaCenario && "Adicione cenários no Kit Imagem para usar. "}
+              {faltaProduto && "Adicione produtos no Kit Imagem para usar."}
             </div>
           )}
 
           {footerAction ? (
             <div style={{ marginTop: 8 }}>{footerAction}</div>
-          ) : !compact && (
-            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                onClick={handleGerar}
-                disabled={!podeGerar}
-                style={{
-                  background: podeGerar ? '#0891b2' : '#94a3b8',
-                  color: '#fff', border: 'none', borderRadius: 8,
-                  padding: '6px 12px', fontSize: 12, fontWeight: 700,
-                  cursor: podeGerar ? 'pointer' : 'not-allowed',
-                  opacity: busy ? 0.6 : 1,
-                }}
-              >
-                {busy ? 'Gerando…' : '✨ Gerar com referências'}
-              </button>
-            </div>
+          ) : (
+            !compact && (
+              <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={handleGerar}
+                  disabled={!podeGerar}
+                  style={{
+                    background: podeGerar ? "#0891b2" : "#94a3b8",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: podeGerar ? "pointer" : "not-allowed",
+                    opacity: busy ? 0.6 : 1,
+                  }}
+                >
+                  {busy ? "Gerando…" : "✨ Gerar com referências"}
+                </button>
+              </div>
+            )
           )}
         </div>
       )}
 
-      {error && (
-        <p style={{ margin: '6px 0 0', color: '#b91c1c', fontSize: 11 }}>{error}</p>
-      )}
+      {error && <p style={{ margin: "6px 0 0", color: "#b91c1c", fontSize: 11 }}>{error}</p>}
     </div>
   );
 }
 
-function Tile({ checked, onToggle, url, label, badge, disabled }: {
-  checked: boolean; onToggle: () => void; url?: string; label: string; badge?: number; disabled?: boolean;
+function Tile({
+  checked,
+  onToggle,
+  url,
+  label,
+  badge,
+  disabled,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  url?: string;
+  label: string;
+  badge?: number;
+  disabled?: boolean;
 }) {
   return (
     <label
-      title={disabled ? 'Limite atingido — desmarque um item para trocar' : undefined}
+      title={disabled ? "Limite atingido — desmarque um item para trocar" : undefined}
       style={{
-        position: 'relative',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-        padding: 4, borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
-        background: checked ? '#cffafe' : '#fff',
-        border: `1px solid ${checked ? '#0891b2' : '#e2e8f0'}`,
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+        padding: 4,
+        borderRadius: 8,
+        cursor: disabled ? "not-allowed" : "pointer",
+        background: checked ? "#cffafe" : "#fff",
+        border: `1px solid ${checked ? "#0891b2" : "#e2e8f0"}`,
         fontSize: 10,
         opacity: disabled ? 0.45 : 1,
       }}
     >
-      <div style={{
-        position: 'relative', width: '100%', aspectRatio: '1 / 1',
-        borderRadius: 6, overflow: 'hidden', background: '#fff',
-        border: '1px solid #cbd5e1',
-      }}>
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: "1 / 1",
+          borderRadius: 6,
+          overflow: "hidden",
+          background: "#fff",
+          border: "1px solid #cbd5e1",
+        }}
+      >
         {url ? (
-          <img src={url} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img
+            src={url}
+            alt={label}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
         ) : (
-          <span style={{
-            position: 'absolute', inset: 0, display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, color: '#94a3b8',
-          }}>—</span>
+          <span
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 10,
+              color: "#94a3b8",
+            }}
+          >
+            —
+          </span>
         )}
         <input
           type="checkbox"
           checked={checked}
           disabled={disabled}
           onChange={onToggle}
-          style={{ position: 'absolute', top: 4, left: 4, width: 16, height: 16, minWidth: 16, margin: 0, padding: 0, cursor: disabled ? 'not-allowed' : 'pointer' }}
+          style={{
+            position: "absolute",
+            top: 4,
+            left: 4,
+            width: 16,
+            height: 16,
+            minWidth: 16,
+            margin: 0,
+            padding: 0,
+            cursor: disabled ? "not-allowed" : "pointer",
+          }}
         />
         {badge !== undefined && (
-          <span style={{
-            position: 'absolute', top: 4, right: 4,
-            minWidth: 18, height: 18, padding: '0 5px',
-            borderRadius: 9, background: '#0891b2', color: '#fff',
-            fontSize: 11, fontWeight: 800,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 1px 2px rgba(0,0,0,.25)',
-          }}>{badge}</span>
+          <span
+            style={{
+              position: "absolute",
+              top: 4,
+              right: 4,
+              minWidth: 18,
+              height: 18,
+              padding: "0 5px",
+              borderRadius: 9,
+              background: "#0891b2",
+              color: "#fff",
+              fontSize: 11,
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 1px 2px rgba(0,0,0,.25)",
+            }}
+          >
+            {badge}
+          </span>
         )}
       </div>
-      <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textAlign: 'center', lineHeight: 1.15 }}>{label}</span>
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#0f172a",
+          textAlign: "center",
+          lineHeight: 1.15,
+        }}
+      >
+        {label}
+      </span>
     </label>
   );
 }
@@ -456,25 +642,38 @@ export interface RefSelectionState {
 }
 
 const EMPTY_SEL: RefSelectionState = {
-  enabled: false, avatarNum: null, usarFachada: false, cenarioNum: null, produtosNums: [], useUniforme: false, hasAny: false,
+  enabled: false,
+  avatarNum: null,
+  usarFachada: false,
+  cenarioNum: null,
+  produtosNums: [],
+  useUniforme: false,
+  hasAny: false,
 };
 
 function readSel(storageKey: string): RefSelectionState {
   try {
-    if (typeof window === 'undefined') return EMPTY_SEL;
+    if (typeof window === "undefined") return EMPTY_SEL;
     const raw = localStorage.getItem(storageKey);
     if (!raw) return EMPTY_SEL;
     const s = JSON.parse(raw);
     const enabled = !!s.enabled;
     // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
-    const avatarNum = (typeof s.avatarNum === 'number' || s.avatarNum === null)
-      ? s.avatarNum
-      : (s.usarAvatar ? 1 : null);
+    const avatarNum =
+      typeof s.avatarNum === "number" || s.avatarNum === null
+        ? s.avatarNum
+        : s.usarAvatar
+          ? 1
+          : null;
     const usarFachada = !!s.usarFachada;
-    const cenarioNum = (typeof s.cenarioNum === 'number') ? s.cenarioNum : null;
-    const produtosNums = Array.isArray(s.produtosNums) ? s.produtosNums.filter((n: unknown) => typeof n === 'number') : [];
+    const cenarioNum = typeof s.cenarioNum === "number" ? s.cenarioNum : null;
+    const produtosNums = Array.isArray(s.produtosNums)
+      ? s.produtosNums.filter((n: unknown) => typeof n === "number")
+      : [];
     const useUniforme = avatarNum != null && !!s.useUniforme;
-    const hasAny = enabled && (avatarNum != null || usarFachada || cenarioNum != null || produtosNums.length > 0);
+    const hasAny =
+      enabled &&
+      (avatarNum != null || usarFachada || cenarioNum != null || produtosNums.length > 0);
     return { enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme, hasAny };
   } catch {
     return EMPTY_SEL;
@@ -486,14 +685,15 @@ const selCache = new Map<string, RefSelectionState>();
 function getSnapshot(storageKey: string): RefSelectionState {
   const fresh = readSel(storageKey);
   const cached = selCache.get(storageKey);
-  if (cached
-    && cached.enabled === fresh.enabled
-    && cached.avatarNum === fresh.avatarNum
-    && cached.usarFachada === fresh.usarFachada
-    && cached.cenarioNum === fresh.cenarioNum
-    && cached.produtosNums.length === fresh.produtosNums.length
-    && cached.produtosNums.every((n, i) => n === fresh.produtosNums[i])
-    && cached.useUniforme === fresh.useUniforme
+  if (
+    cached &&
+    cached.enabled === fresh.enabled &&
+    cached.avatarNum === fresh.avatarNum &&
+    cached.usarFachada === fresh.usarFachada &&
+    cached.cenarioNum === fresh.cenarioNum &&
+    cached.produtosNums.length === fresh.produtosNums.length &&
+    cached.produtosNums.every((n, i) => n === fresh.produtosNums[i]) &&
+    cached.useUniforme === fresh.useUniforme
   ) {
     return cached;
   }
@@ -504,17 +704,19 @@ function getSnapshot(storageKey: string): RefSelectionState {
 export function useRefSelection(storageKey: string): RefSelectionState {
   return useSyncExternalStore(
     (cb) => {
-      if (typeof window === 'undefined') return () => {};
-      const onStorage = (e: StorageEvent) => { if (e.key === storageKey) cb(); };
+      if (typeof window === "undefined") return () => {};
+      const onStorage = (e: StorageEvent) => {
+        if (e.key === storageKey) cb();
+      };
       const onLocal = (e: Event) => {
         const ce = e as CustomEvent<{ key: string }>;
         if (ce.detail?.key === storageKey) cb();
       };
-      window.addEventListener('storage', onStorage);
-      window.addEventListener('uso-ref:changed', onLocal as EventListener);
+      window.addEventListener("storage", onStorage);
+      window.addEventListener("uso-ref:changed", onLocal as EventListener);
       return () => {
-        window.removeEventListener('storage', onStorage);
-        window.removeEventListener('uso-ref:changed', onLocal as EventListener);
+        window.removeEventListener("storage", onStorage);
+        window.removeEventListener("uso-ref:changed", onLocal as EventListener);
       };
     },
     () => getSnapshot(storageKey),

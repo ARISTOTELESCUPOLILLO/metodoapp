@@ -1,16 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useServerFn } from '@tanstack/react-start';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Download, Trash2, Copy, FileText, Play } from 'lucide-react';
-import { TopBar } from '@/components/app/TopBar';
-import { AuthGate } from '@/components/app/AuthGate';
-import { listMyGenerations, deleteGeneration } from '@/lib/assets.functions';
-import { useImpersonation } from '@/hooks/useImpersonation';
-import { MetaPublish } from '@/components/metodo-op/MetaPublish';
-import { archiveFileName } from '@/utils/file';
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Download, Trash2, Copy, FileText, Play } from "lucide-react";
+import { TopBar } from "@/components/app/TopBar";
+import { AuthGate } from "@/components/app/AuthGate";
+import { listMyGenerations, deleteGeneration } from "@/lib/assets.functions";
+import { useImpersonation } from "@/hooks/useImpersonation";
+import { MetaPublish } from "@/components/metodo-op/MetaPublish";
+import { archiveFileName } from "@/utils/file";
 
-export const Route = createFileRoute('/historico')({
+export const Route = createFileRoute("/historico")({
   component: () => (
     <AuthGate>
       <HistoricoPage />
@@ -21,16 +21,16 @@ export const Route = createFileRoute('/historico')({
 type Gen = Awaited<ReturnType<typeof listMyGenerations>>[number];
 
 const SLOT_LABEL: Record<string, string> = {
-  plano1: 'Plano 1',
-  plano2: 'Plano 2',
-  bonus: 'Bônus',
+  plano1: "Plano 1",
+  plano2: "Plano 2",
+  bonus: "Bônus",
 };
 
 const FORMATO_LABEL: Record<string, string> = {
-  estatico: 'Estático',
-  carrossel: 'Carrossel',
-  estatico_final: 'Estático Final',
-  reels: 'Reels',
+  estatico: "Estático",
+  carrossel: "Carrossel",
+  estatico_final: "Estático Final",
+  reels: "Reels",
 };
 
 function diasRestantes(expiresAt: string): number {
@@ -39,7 +39,7 @@ function diasRestantes(expiresAt: string): number {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('pt-BR');
+  return new Date(iso).toLocaleDateString("pt-BR");
 }
 
 function HistoricoPage() {
@@ -49,7 +49,7 @@ function HistoricoPage() {
   const qc = useQueryClient();
   const asUserId = impersonation?.userId;
   const { data, isLoading, error } = useQuery({
-    queryKey: ['historico', asUserId ?? 'self'],
+    queryKey: ["historico", asUserId ?? "self"],
     queryFn: () => fetchList({ data: asUserId ? { asUserId } : undefined }),
   });
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -58,7 +58,7 @@ function HistoricoPage() {
     mutationFn: (id: string) => removeFn({ data: { id, ...(asUserId ? { asUserId } : {}) } }),
     onSuccess: () => {
       setConfirmId(null);
-      qc.invalidateQueries({ queryKey: ['historico', asUserId ?? 'self'] });
+      qc.invalidateQueries({ queryKey: ["historico", asUserId ?? "self"] });
     },
   });
 
@@ -75,45 +75,87 @@ function HistoricoPage() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f9' }}>
+    <div style={{ minHeight: "100vh", background: "#f1f5f9" }}>
       <TopBar />
-      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 16px 60px' }}>
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 16px 60px" }}>
         <header style={{ marginBottom: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1 style={{ margin: 0, fontSize: 24, color: '#0f172a' }}>Histórico de gerações</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <h1 style={{ margin: 0, fontSize: 24, color: "#0f172a" }}>Histórico de gerações</h1>
             <button
               type="button"
-              onClick={() => { if (window.history.length > 1) window.history.back(); else window.location.href = '/'; }}
-              style={{ marginLeft: 'auto', background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              onClick={() => {
+                if (window.history.length > 1) window.history.back();
+                else window.location.href = "/";
+              }}
+              style={{
+                marginLeft: "auto",
+                background: "#f8fafc",
+                color: "#0f172a",
+                border: "1px solid #cbd5e1",
+                borderRadius: 8,
+                padding: "6px 12px",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
               title="Voltar para a página anterior"
             >
               ✕ Fechar
             </button>
           </div>
-          <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14 }}>
-            Limite por formato: 6 boxes por plano (estático, carrossel, estático final, reels). O mais antigo é
-            substituído automaticamente. Arquivos expiram em 30 dias.
+          <p style={{ margin: "6px 0 0", color: "#64748b", fontSize: 14 }}>
+            Limite por formato: 6 boxes por plano (estático, carrossel, estático final, reels). O
+            mais antigo é substituído automaticamente. Arquivos expiram em 30 dias.
           </p>
           {impersonation && (
-            <div style={{ marginTop: 12, background: '#dbeafe', border: '1px solid #93c5fd', color: '#1e3a8a', padding: '10px 14px', borderRadius: 10, fontSize: 14 }}>
-              👤 Vendo histórico de <strong>{impersonation.nome}</strong> ({impersonation.email}). Toda exclusão é feita na conta dele.
+            <div
+              style={{
+                marginTop: 12,
+                background: "#dbeafe",
+                border: "1px solid #93c5fd",
+                color: "#1e3a8a",
+                padding: "10px 14px",
+                borderRadius: 10,
+                fontSize: 14,
+              }}
+            >
+              👤 Vendo histórico de <strong>{impersonation.nome}</strong> ({impersonation.email}).
+              Toda exclusão é feita na conta dele.
             </div>
           )}
         </header>
 
         {isLoading && <p>Carregando…</p>}
-        {error && <p style={{ color: '#b91c1c' }}>Erro ao carregar histórico.</p>}
+        {error && <p style={{ color: "#b91c1c" }}>Erro ao carregar histórico.</p>}
 
         {!isLoading && !error && days.length === 0 && (
-          <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma geração arquivada ainda. Use o botão "Arquivar" em cada box após gerar uma sequência.</p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>
+            Nenhuma geração arquivada ainda. Use o botão "Arquivar" em cada box após gerar uma
+            sequência.
+          </p>
         )}
 
         {days.map((d) => (
           <section key={d.day} style={{ marginTop: 24 }}>
-            <h2 style={{ fontSize: 16, color: '#0f172a', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2
+              style={{
+                fontSize: 16,
+                color: "#0f172a",
+                margin: "0 0 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
               📅 {d.day}
             </h2>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+            <div
+              style={{
+                display: "grid",
+                gap: 12,
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              }}
+            >
               {d.items.map((g) => (
                 <GenerationCard key={g.id} gen={g} onAskDelete={setConfirmId} />
               ))}
@@ -134,9 +176,9 @@ function HistoricoPage() {
 }
 
 function downloadText(filename: string, text: string) {
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
@@ -149,7 +191,7 @@ async function downloadFromUrl(url: string, filename: string) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = blobUrl;
     a.download = filename;
     document.body.appendChild(a);
@@ -157,7 +199,7 @@ async function downloadFromUrl(url: string, filename: string) {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
   } catch {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 }
 
@@ -165,16 +207,17 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
   const dias = diasRestantes(gen.expiresAt);
   const expiraSoon = dias <= 5;
   const formatoLabel = FORMATO_LABEL[gen.formato] || gen.formato;
-  const dayLabel = gen.tipo === 'PU'
-    ? `Post Único — ${formatoLabel}`
-    : gen.dia
-      ? `Dia ${gen.dia} — ${formatoLabel}`
-      : formatoLabel;
+  const dayLabel =
+    gen.tipo === "PU"
+      ? `Post Único — ${formatoLabel}`
+      : gen.dia
+        ? `Dia ${gen.dia} — ${formatoLabel}`
+        : formatoLabel;
   const [copied, setCopied] = useState(false);
 
   async function copyLegenda() {
     try {
-      await navigator.clipboard.writeText(gen.legenda || '');
+      await navigator.clipboard.writeText(gen.legenda || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -185,33 +228,33 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
   return (
     <article
       style={{
-        background: '#fff',
+        background: "#fff",
         borderRadius: 12,
         padding: 10,
-        boxShadow: '0 1px 3px rgba(15,23,42,.08)',
-        border: '1px solid #e2e8f0',
+        boxShadow: "0 1px 3px rgba(15,23,42,.08)",
+        border: "1px solid #e2e8f0",
       }}
     >
       <header
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
+          display: "flex",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
           gap: 6,
-          alignItems: 'center',
+          alignItems: "center",
           marginBottom: 8,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-          <strong style={{ fontSize: 13, color: '#0f172a' }}>{dayLabel}</strong>
-          <span style={{ fontSize: 11, color: '#64748b' }}>{SLOT_LABEL[gen.slot]}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+          <strong style={{ fontSize: 13, color: "#0f172a" }}>{dayLabel}</strong>
+          <span style={{ fontSize: 11, color: "#64748b" }}>{SLOT_LABEL[gen.slot]}</span>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 11 }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 11 }}>
           <span
             style={{
-              background: expiraSoon ? '#fde68a' : '#e0f2fe',
-              color: expiraSoon ? '#78350f' : '#0c4a6e',
-              padding: '2px 6px',
+              background: expiraSoon ? "#fde68a" : "#e0f2fe",
+              color: expiraSoon ? "#78350f" : "#0c4a6e",
+              padding: "2px 6px",
               borderRadius: 6,
               fontWeight: 600,
             }}
@@ -223,14 +266,14 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
             onClick={() => onAskDelete(gen.id)}
             title="Excluir"
             style={{
-              background: '#fee2e2',
-              color: '#b91c1c',
-              border: 'none',
+              background: "#fee2e2",
+              color: "#b91c1c",
+              border: "none",
               padding: 6,
               borderRadius: 8,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
             }}
           >
             <Trash2 size={14} />
@@ -241,54 +284,64 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
       {/* Imagens */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: gen.assets.length === 1 ? '1fr' : 'repeat(auto-fill, minmax(80px, 1fr))',
+          display: "grid",
+          gridTemplateColumns:
+            gen.assets.length === 1 ? "1fr" : "repeat(auto-fill, minmax(80px, 1fr))",
           gap: 6,
-          justifyItems: gen.assets.length === 1 ? 'center' : 'stretch',
+          justifyItems: gen.assets.length === 1 ? "center" : "stretch",
         }}
       >
         {gen.assets.map((a) => {
-          const isSingleReels = gen.assets.length === 1 && gen.formato === 'reels';
+          const isSingleReels = gen.assets.length === 1 && gen.formato === "reels";
           const isSingle = gen.assets.length === 1;
           return (
             <div
               key={a.id}
               style={{
-                position: 'relative',
-                width: '100%',
-                maxWidth: isSingleReels ? 140 : isSingle ? 200 : '100%',
+                position: "relative",
+                width: "100%",
+                maxWidth: isSingleReels ? 140 : isSingle ? 200 : "100%",
               }}
             >
               <img
                 src={a.url}
                 alt={`Imagem ${a.ordem}`}
                 style={{
-                  width: '100%',
-                  aspectRatio: isSingleReels ? '9 / 16' : '1 / 1',
-                  objectFit: 'cover',
+                  width: "100%",
+                  aspectRatio: isSingleReels ? "9 / 16" : "1 / 1",
+                  objectFit: "cover",
                   borderRadius: 8,
-                  background: '#f1f5f9',
+                  background: "#f1f5f9",
                 }}
               />
               <button
                 type="button"
                 title="Baixar imagem"
-                onClick={() => downloadFromUrl(a.url, archiveFileName({
-                  tipo: gen.tipo, slot: gen.slot, formato: gen.formato,
-                  createdAt: gen.createdAt, numero: a.ordem, ext: 'webp',
-                }))}
+                onClick={() =>
+                  downloadFromUrl(
+                    a.url,
+                    archiveFileName({
+                      tipo: gen.tipo,
+                      slot: gen.slot,
+                      formato: gen.formato,
+                      createdAt: gen.createdAt,
+                      numero: a.ordem,
+                      ext: "webp",
+                    }),
+                  )
+                }
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   bottom: 4,
                   right: 4,
-                  background: 'rgba(15,23,42,.85)',
-                  color: '#fff',
+                  background: "rgba(15,23,42,.85)",
+                  color: "#fff",
                   padding: 4,
                   borderRadius: 6,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  border: 'none',
-                  cursor: 'pointer',
+                  display: "inline-flex",
+                  alignItems: "center",
+                  border: "none",
+                  cursor: "pointer",
                 }}
               >
                 <Download size={11} />
@@ -300,31 +353,47 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
 
       {/* Vídeo (reels) */}
       {gen.videoUrl && (
-        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div
+          style={{ marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center" }}
+        >
           <video
             src={gen.videoUrl}
             controls
-            style={{ width: '100%', maxWidth: 180, maxHeight: 280, background: '#000', borderRadius: 8 }}
+            style={{
+              width: "100%",
+              maxWidth: 180,
+              maxHeight: 280,
+              background: "#000",
+              borderRadius: 8,
+            }}
           />
           <button
             type="button"
-            onClick={() => downloadFromUrl(gen.videoUrl!, archiveFileName({
-              tipo: gen.tipo, slot: gen.slot, formato: gen.formato,
-              createdAt: gen.createdAt, ext: 'mp4',
-            }))}
+            onClick={() =>
+              downloadFromUrl(
+                gen.videoUrl!,
+                archiveFileName({
+                  tipo: gen.tipo,
+                  slot: gen.slot,
+                  formato: gen.formato,
+                  createdAt: gen.createdAt,
+                  ext: "mp4",
+                }),
+              )
+            }
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
+              display: "inline-flex",
+              alignItems: "center",
               gap: 4,
-              background: '#0f172a',
-              color: '#fff',
-              border: 'none',
-              padding: '4px 10px',
+              background: "#0f172a",
+              color: "#fff",
+              border: "none",
+              padding: "4px 10px",
               borderRadius: 6,
               fontSize: 11,
               fontWeight: 600,
               marginTop: 6,
-              cursor: 'pointer',
+              cursor: "pointer",
             }}
           >
             <Download size={11} /> MP4
@@ -335,60 +404,70 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
       {/* Legenda */}
       {gen.legenda && (
         <div style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 3 }}>Legenda</div>
+          <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600, marginBottom: 3 }}>
+            Legenda
+          </div>
           <div
             style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
               borderRadius: 6,
-              padding: '6px 8px',
+              padding: "6px 8px",
               fontSize: 11,
-              color: '#0f172a',
-              whiteSpace: 'pre-wrap',
+              color: "#0f172a",
+              whiteSpace: "pre-wrap",
               maxHeight: 110,
-              overflowY: 'auto',
+              overflowY: "auto",
             }}
           >
             {gen.legenda}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
             <button
               type="button"
               onClick={copyLegenda}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
+                display: "inline-flex",
+                alignItems: "center",
                 gap: 4,
-                background: copied ? '#16a34a' : '#0f172a',
-                color: '#fff',
-                border: 'none',
-                padding: '6px 10px',
+                background: copied ? "#16a34a" : "#0f172a",
+                color: "#fff",
+                border: "none",
+                padding: "6px 10px",
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: "pointer",
               }}
             >
-              <Copy size={12} /> {copied ? 'Copiado!' : 'Copiar legenda'}
+              <Copy size={12} /> {copied ? "Copiado!" : "Copiar legenda"}
             </button>
             <button
               type="button"
-              onClick={() => downloadText(archiveFileName({
-                tipo: gen.tipo, slot: gen.slot, formato: gen.formato,
-                createdAt: gen.createdAt, ext: 'txt',
-              }), gen.legenda)}
+              onClick={() =>
+                downloadText(
+                  archiveFileName({
+                    tipo: gen.tipo,
+                    slot: gen.slot,
+                    formato: gen.formato,
+                    createdAt: gen.createdAt,
+                    ext: "txt",
+                  }),
+                  gen.legenda,
+                )
+              }
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
+                display: "inline-flex",
+                alignItems: "center",
                 gap: 4,
-                background: '#f8fafc',
-                color: '#0f172a',
-                border: '1px solid #cbd5e1',
-                padding: '6px 10px',
+                background: "#f8fafc",
+                color: "#0f172a",
+                border: "1px solid #cbd5e1",
+                padding: "6px 10px",
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: "pointer",
               }}
             >
               <FileText size={12} /> Baixar .txt
@@ -399,7 +478,7 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
 
       {/* Publicar no Meta */}
       {gen.assets.length > 0 && (
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f1f5f9" }}>
           <MetaPublish imageDataUrl={gen.assets[0].url} caption={gen.legenda} />
         </div>
       )}
@@ -420,35 +499,35 @@ function ConfirmDialog({
     <div
       role="dialog"
       style={{
-        position: 'fixed',
+        position: "fixed",
         inset: 0,
-        background: 'rgba(15,23,42,.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        background: "rgba(15,23,42,.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         zIndex: 50,
       }}
       onClick={onCancel}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 14, padding: 22, maxWidth: 380, width: '90%' }}
+        style={{ background: "#fff", borderRadius: 14, padding: 22, maxWidth: 380, width: "90%" }}
       >
-        <h3 style={{ margin: '0 0 8px', fontSize: 18, color: '#0f172a' }}>Excluir este box?</h3>
-        <p style={{ margin: '0 0 16px', color: '#64748b', fontSize: 14 }}>
+        <h3 style={{ margin: "0 0 8px", fontSize: 18, color: "#0f172a" }}>Excluir este box?</h3>
+        <p style={{ margin: "0 0 16px", color: "#64748b", fontSize: 14 }}>
           Esta ação remove as imagens, o vídeo e a legenda deste box. Não é possível desfazer.
         </p>
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button
             type="button"
             onClick={onCancel}
             disabled={loading}
             style={{
-              padding: '8px 14px',
+              padding: "8px 14px",
               borderRadius: 10,
-              border: '1px solid #cbd5e1',
-              background: '#fff',
-              cursor: 'pointer',
+              border: "1px solid #cbd5e1",
+              background: "#fff",
+              cursor: "pointer",
               fontWeight: 600,
             }}
           >
@@ -459,16 +538,16 @@ function ConfirmDialog({
             onClick={onConfirm}
             disabled={loading}
             style={{
-              padding: '8px 14px',
+              padding: "8px 14px",
               borderRadius: 10,
-              border: 'none',
-              background: '#b91c1c',
-              color: '#fff',
-              cursor: 'pointer',
+              border: "none",
+              background: "#b91c1c",
+              color: "#fff",
+              cursor: "pointer",
               fontWeight: 700,
             }}
           >
-            {loading ? 'Excluindo…' : 'Excluir'}
+            {loading ? "Excluindo…" : "Excluir"}
           </button>
         </div>
       </div>

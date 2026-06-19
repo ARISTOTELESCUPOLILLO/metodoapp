@@ -1,7 +1,7 @@
 // Acesso client-side à voz clonada do usuário.
 // Persistência via Supabase (tabela voice_clones + bucket voice-samples).
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface VoiceClone {
   id: string;
@@ -19,22 +19,22 @@ export interface VoiceClone {
 export async function ttsWithUserVoice(text: string, avatarSlot = 1): Promise<string> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
-  const res = await fetch('/api/tts-voice', {
-    method: 'POST',
+  const res = await fetch("/api/tts-voice", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ text, avatarSlot }),
   });
   const j = await res.json();
-  if (!res.ok) throw new Error(j.error || 'Falha no TTS.');
+  if (!res.ok) throw new Error(j.error || "Falha no TTS.");
   return j.audioUrl as string;
 }
 
 export async function getVoiceSampleUrl(samplePath: string): Promise<string> {
-  const { data, error } = await supabase
-    .storage.from('voice-samples')
+  const { data, error } = await supabase.storage
+    .from("voice-samples")
     .createSignedUrl(samplePath, 3600);
   if (error) throw new Error(error.message);
   return data.signedUrl;
@@ -42,13 +42,13 @@ export async function getVoiceSampleUrl(samplePath: string): Promise<string> {
 
 export async function loadVoiceForUser(userId: string, avatarSlot = 1): Promise<VoiceClone | null> {
   const { data, error } = await supabase
-    .from('voice_clones' as any)
-    .select('*')
-    .eq('user_id', userId)
-    .eq('avatar_slot', avatarSlot)
+    .from("voice_clones" as any)
+    .select("*")
+    .eq("user_id", userId)
+    .eq("avatar_slot", avatarSlot)
     .maybeSingle();
   if (error) {
-    console.warn('[loadVoiceForUser]', error.message);
+    console.warn("[loadVoiceForUser]", error.message);
     return null;
   }
   return (data as unknown as VoiceClone) || null;
@@ -57,17 +57,17 @@ export async function loadVoiceForUser(userId: string, avatarSlot = 1): Promise<
 export async function deleteVoiceForUser(_userId: string, avatarSlot = 1): Promise<void> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
-  const res = await fetch('/api/delete-voice', {
-    method: 'POST',
+  const res = await fetch("/api/delete-voice", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ avatarSlot }),
   });
   if (!res.ok) {
     const j = await res.json().catch(() => ({}));
-    throw new Error((j as any).error || 'Não foi possível apagar a voz.');
+    throw new Error((j as any).error || "Não foi possível apagar a voz.");
   }
 }
 
@@ -85,35 +85,38 @@ export async function cloneVoiceFromSample(params: {
 }): Promise<{ voice: VoiceClone; previewAudioUrl: string }> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
-  const res = await fetch('/api/clone-voice', {
-    method: 'POST',
+  const res = await fetch("/api/clone-voice", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ ...params, avatarSlot: params.avatarSlot ?? 1 }),
   });
   const j = await res.json();
-  if (!res.ok) throw new Error(j.message || j.error || 'Falha ao clonar voz.');
+  if (!res.ok) throw new Error(j.message || j.error || "Falha ao clonar voz.");
   return { voice: j.voice as VoiceClone, previewAudioUrl: j.previewAudioUrl as string };
 }
 
 /**
  * Aprova ou descarta a voz que está pendente. Aprovar consome 1 render.
  */
-export async function confirmVoice(decisao: 'aprovar' | 'descartar', avatarSlot = 1): Promise<VoiceClone | null> {
+export async function confirmVoice(
+  decisao: "aprovar" | "descartar",
+  avatarSlot = 1,
+): Promise<VoiceClone | null> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
-  const res = await fetch('/api/confirm-voice', {
-    method: 'POST',
+  const res = await fetch("/api/confirm-voice", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ decisao, avatarSlot }),
   });
   const j = await res.json();
-  if (!res.ok) throw new Error(j.message || j.error || 'Falha ao confirmar voz.');
+  if (!res.ok) throw new Error(j.message || j.error || "Falha ao confirmar voz.");
   if (j.discarded) return null;
   return j.voice as VoiceClone;
 }

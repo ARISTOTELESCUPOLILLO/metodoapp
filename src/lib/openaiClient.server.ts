@@ -3,7 +3,7 @@
 // generate-caption, suggest-keyinfo). Adiciona timeout (~25s) + 1 retry de
 // conexão, com mensagens amigáveis no mesmo padrão de generate-content.ts.
 
-const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
 export type OpenAIChatResult =
   | { ok: true; data: any }
@@ -22,34 +22,34 @@ export async function fetchOpenAIChat(
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const res = await fetch(OPENAI_CHAT_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
         body: requestBody,
         signal: controller.signal,
       });
       if (!res.ok) {
-        const txt = await res.text().catch(() => '');
+        const txt = await res.text().catch(() => "");
         return { ok: false, status: 502, error: `OpenAI: ${txt}` };
       }
       const data = await res.json();
       return { ok: true, data };
     } catch (e) {
       if (attempt < maxAttempts) continue;
-      const aborted = (e as Error).name === 'AbortError';
+      const aborted = (e as Error).name === "AbortError";
       return {
         ok: false,
         status: 504,
         error: aborted
-          ? 'O servidor demorou demais pra responder. Tente novamente em alguns segundos.'
-          : 'Falha ao conectar ao gerador de conteúdo.',
+          ? "O servidor demorou demais pra responder. Tente novamente em alguns segundos."
+          : "Falha ao conectar ao gerador de conteúdo.",
       };
     } finally {
       clearTimeout(timer);
     }
   }
 
-  return { ok: false, status: 504, error: 'Falha ao conectar ao gerador de conteúdo.' };
+  return { ok: false, status: 504, error: "Falha ao conectar ao gerador de conteúdo." };
 }

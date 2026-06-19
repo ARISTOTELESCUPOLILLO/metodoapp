@@ -15,7 +15,7 @@ export interface CopyEditEntry {
 type CopyEditsMap = Record<string, CopyEditEntry>;
 
 function storageKey(userId: string | null | undefined): string {
-  return `metodo-op-copyedits-v1:${userId || 'anon'}`;
+  return `metodo-op-copyedits-v1:${userId || "anon"}`;
 }
 
 function loadAll(userId: string | null | undefined): CopyEditsMap {
@@ -27,11 +27,18 @@ function loadAll(userId: string | null | undefined): CopyEditsMap {
   }
 }
 
-export function loadCopyEdit(userId: string | null | undefined, itemKey: string): CopyEditEntry | undefined {
+export function loadCopyEdit(
+  userId: string | null | undefined,
+  itemKey: string,
+): CopyEditEntry | undefined {
   return loadAll(userId)[itemKey];
 }
 
-export function saveCopyEdit(userId: string | null | undefined, itemKey: string, patch: Partial<CopyEditEntry>): void {
+export function saveCopyEdit(
+  userId: string | null | undefined,
+  itemKey: string,
+  patch: Partial<CopyEditEntry>,
+): void {
   try {
     const all = loadAll(userId);
     all[itemKey] = { ...all[itemKey], ...patch };
@@ -40,5 +47,7 @@ export function saveCopyEdit(userId: string | null | undefined, itemKey: string,
 }
 
 export function clearCopyEdits(userId: string | null | undefined): void {
-  try { localStorage.removeItem(storageKey(userId)); } catch {}
+  try {
+    localStorage.removeItem(storageKey(userId));
+  } catch {}
 }

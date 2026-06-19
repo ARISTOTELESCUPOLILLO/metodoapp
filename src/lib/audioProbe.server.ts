@@ -4,7 +4,7 @@
 //
 // Retorna { durationS, format }. Lança Error('audio_unsupported_format') quando não consegue parsear.
 
-export type ProbedFormat = 'webm' | 'mp4' | 'wav' | 'mp3' | 'unknown';
+export type ProbedFormat = "webm" | "mp4" | "wav" | "mp3" | "unknown";
 
 export interface AudioProbe {
   durationS: number;
@@ -46,18 +46,22 @@ function readFloat32BE(buf: Uint8Array, off: number): number {
 // ---------- EBML / WebM ----------
 // Lê VINT (variable-length integer). Retorna {value, size}. Se `keepMarker` true, mantém o bit marcador
 // (usado pelo IDs do EBML). Caso contrário, remove (usado para tamanhos / valores).
-function readVint(buf: Uint8Array, off: number, keepMarker: boolean): { value: number; size: number } {
-  if (off >= buf.length) throw new Error('vint_out_of_range');
+function readVint(
+  buf: Uint8Array,
+  off: number,
+  keepMarker: boolean,
+): { value: number; size: number } {
+  if (off >= buf.length) throw new Error("vint_out_of_range");
   const first = buf[off];
-  if (first === 0) throw new Error('vint_invalid');
+  if (first === 0) throw new Error("vint_invalid");
   let mask = 0x80;
   let size = 1;
   while (size <= 8 && (first & mask) === 0) {
     mask >>= 1;
     size++;
   }
-  if (size > 8) throw new Error('vint_too_large');
-  let value = keepMarker ? first : (first & (mask - 1));
+  if (size > 8) throw new Error("vint_too_large");
+  let value = keepMarker ? first : first & (mask - 1);
   for (let i = 1; i < size; i++) {
     value = value * 256 + buf[off + i];
   }
@@ -74,17 +78,25 @@ function probeWebm(buf: Uint8Array): number | null {
 
   // Skip top-level EBML header
   try {
-    const id = readVint(buf, off, true); off += id.size;
-    const sz = readVint(buf, off, false); off += sz.size;
+    const id = readVint(buf, off, true);
+    off += id.size;
+    const sz = readVint(buf, off, false);
+    off += sz.size;
     off += sz.value; // pula EBML header
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 
   // Agora deve estar em Segment (18538067)
   if (off + 4 > buf.length) return null;
-  if (!(buf[off] === 0x18 && buf[off + 1] === 0x53 && buf[off + 2] === 0x80 && buf[off + 3] === 0x67)) return null;
+  if (
+    !(buf[off] === 0x18 && buf[off + 1] === 0x53 && buf[off + 2] === 0x80 && buf[off + 3] === 0x67)
+  )
+    return null;
   off += 4;
   // tamanho do Segment (pode ser unknown size = todos os bits 1) — vamos só varrer
-  const segSz = readVint(buf, off, false); off += segSz.size;
+  const segSz = readVint(buf, off, false);
+  off += segSz.size;
   const segEnd = Math.min(SCAN, segSz.value > 0 && segSz.value < SCAN ? off + segSz.value : SCAN);
 
   let timecodeScale = 1_000_000; // ns por tick (default Matroska)
@@ -94,9 +106,13 @@ function probeWebm(buf: Uint8Array): number | null {
     let id: { value: number; size: number };
     let sz: { value: number; size: number };
     try {
-      id = readVint(buf, off, true); off += id.size;
-      sz = readVint(buf, off, false); off += sz.size;
-    } catch { break; }
+      id = readVint(buf, off, true);
+      off += id.size;
+      sz = readVint(buf, off, false);
+      off += sz.size;
+    } catch {
+      break;
+    }
     const elemEnd = off + sz.value;
     if (elemEnd > buf.length) break;
 
@@ -107,9 +123,13 @@ function probeWebm(buf: Uint8Array): number | null {
         let cid: { value: number; size: number };
         let csz: { value: number; size: number };
         try {
-          cid = readVint(buf, inOff, true); inOff += cid.size;
-          csz = readVint(buf, inOff, false); inOff += csz.size;
-        } catch { break; }
+          cid = readVint(buf, inOff, true);
+          inOff += cid.size;
+          csz = readVint(buf, inOff, false);
+          inOff += csz.size;
+        } catch {
+          break;
+        }
         if (cid.value === 0x2ad7b1 && csz.value <= 8) {
           timecodeScale = readUIntBE(buf, inOff, csz.value);
         } else if (cid.value === 0x4489) {
@@ -147,13 +167,13 @@ function probeMp4(buf: Uint8Array): number | null {
     if (size < headerLen) return null;
     const bodyOff = off + headerLen;
     const bodyEnd = off + size;
-    if (type === 'moov') {
+    if (type === "moov") {
       // procura mvhd
       let mo = bodyOff;
       while (mo + 8 <= bodyEnd) {
         const ms = readUIntBE(buf, mo, 4);
         const mt = String.fromCharCode(buf[mo + 4], buf[mo + 5], buf[mo + 6], buf[mo + 7]);
-        if (mt === 'mvhd') {
+        if (mt === "mvhd") {
           const version = buf[mo + 8];
           let timescale: number, duration: number;
           if (version === 1) {
@@ -181,17 +201,18 @@ function probeMp4(buf: Uint8Array): number | null {
 
 // ---------- WAV ----------
 function probeWav(buf: Uint8Array): number | null {
-  if (!startsWith(buf, [0x52, 0x49, 0x46, 0x46]) || !startsWith(buf, [0x57, 0x41, 0x56, 0x45], 8)) return null;
+  if (!startsWith(buf, [0x52, 0x49, 0x46, 0x46]) || !startsWith(buf, [0x57, 0x41, 0x56, 0x45], 8))
+    return null;
   let off = 12;
   let byteRate = 0;
   let dataSize = 0;
   while (off + 8 <= buf.length) {
     const id = String.fromCharCode(buf[off], buf[off + 1], buf[off + 2], buf[off + 3]);
     const sz = readUIntLE(buf, off + 4, 4);
-    if (id === 'fmt ') {
+    if (id === "fmt ") {
       // bytesPerSec @ offset 8 do payload do chunk fmt
       byteRate = readUIntLE(buf, off + 8 + 8, 4);
-    } else if (id === 'data') {
+    } else if (id === "data") {
       dataSize = sz;
       break;
     }
@@ -207,7 +228,7 @@ const MPEG_BITRATES_V2_L3 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128,
 const MPEG_SAMPLE_RATES: Record<number, number[]> = {
   3: [44100, 48000, 32000], // MPEG 1
   2: [22050, 24000, 16000], // MPEG 2
-  0: [11025, 12000, 8000],  // MPEG 2.5
+  0: [11025, 12000, 8000], // MPEG 2.5
 };
 
 function findMp3FrameSync(buf: Uint8Array, start: number, end: number): number {
@@ -222,7 +243,8 @@ function probeMp3(buf: Uint8Array): number | null {
   let off = 0;
   if (buf.length > 10 && buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) {
     // tamanho synchsafe (4 bytes, 7 bits cada)
-    const tagSize = ((buf[6] & 0x7f) << 21) | ((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
+    const tagSize =
+      ((buf[6] & 0x7f) << 21) | ((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
     off = 10 + tagSize;
   }
   const firstFrame = findMp3FrameSync(buf, off, Math.min(buf.length, off + 64 * 1024));
@@ -233,8 +255,16 @@ function probeMp3(buf: Uint8Array): number | null {
   const layerBits = (b1 >> 1) & 0x03;
   const bitrateIdx = (b2 >> 4) & 0x0f;
   const sampleIdx = (b2 >> 2) & 0x03;
-  if (versionBits === 1 || layerBits === 0 || bitrateIdx === 0 || bitrateIdx === 15 || sampleIdx === 3) return null;
-  const sampleRate = MPEG_SAMPLE_RATES[versionBits === 3 ? 3 : versionBits === 2 ? 2 : 0]?.[sampleIdx];
+  if (
+    versionBits === 1 ||
+    layerBits === 0 ||
+    bitrateIdx === 0 ||
+    bitrateIdx === 15 ||
+    sampleIdx === 3
+  )
+    return null;
+  const sampleRate =
+    MPEG_SAMPLE_RATES[versionBits === 3 ? 3 : versionBits === 2 ? 2 : 0]?.[sampleIdx];
   if (!sampleRate) return null;
   const isV1L3 = versionBits === 3 && layerBits === 1;
   const bitrate = (isV1L3 ? MPEG_BITRATES_V1_L3 : MPEG_BITRATES_V2_L3)[bitrateIdx] * 1000;
@@ -244,10 +274,15 @@ function probeMp3(buf: Uint8Array): number | null {
   // Em frames MPEG1 stereo o offset é 36; MPEG1 mono 21; MPEG2 stereo 21; MPEG2 mono 13
   const channelMode = (buf[firstFrame + 3] >> 6) & 0x03; // 3 = mono
   const isMono = channelMode === 3;
-  const xingOff = firstFrame + 4 + ((isV1L3) ? (isMono ? 17 : 32) : (isMono ? 9 : 17));
+  const xingOff = firstFrame + 4 + (isV1L3 ? (isMono ? 17 : 32) : isMono ? 9 : 17);
   if (xingOff + 8 < buf.length) {
-    const tag = String.fromCharCode(buf[xingOff], buf[xingOff + 1], buf[xingOff + 2], buf[xingOff + 3]);
-    if (tag === 'Xing' || tag === 'Info') {
+    const tag = String.fromCharCode(
+      buf[xingOff],
+      buf[xingOff + 1],
+      buf[xingOff + 2],
+      buf[xingOff + 3],
+    );
+    if (tag === "Xing" || tag === "Info") {
       const flags = readUIntBE(buf, xingOff + 4, 4);
       if (flags & 0x0001) {
         const totalFrames = readUIntBE(buf, xingOff + 8, 4);
@@ -268,15 +303,18 @@ export function probeAudio(input: Buffer | Uint8Array, mimeHint?: string): Audio
   const buf = ab(input);
 
   // Tenta na ordem mais provável pelo mime
-  const tryers: Array<['webm' | 'mp4' | 'wav' | 'mp3', (b: Uint8Array) => number | null]> = [];
-  const m = (mimeHint || '').toLowerCase();
-  if (m.includes('webm') || m.includes('ogg')) tryers.push(['webm', probeWebm]);
-  if (m.includes('mp4') || m.includes('m4a') || m.includes('aac')) tryers.push(['mp4', probeMp4]);
-  if (m.includes('wav')) tryers.push(['wav', probeWav]);
-  if (m.includes('mpeg') || m.includes('mp3')) tryers.push(['mp3', probeMp3]);
+  const tryers: Array<["webm" | "mp4" | "wav" | "mp3", (b: Uint8Array) => number | null]> = [];
+  const m = (mimeHint || "").toLowerCase();
+  if (m.includes("webm") || m.includes("ogg")) tryers.push(["webm", probeWebm]);
+  if (m.includes("mp4") || m.includes("m4a") || m.includes("aac")) tryers.push(["mp4", probeMp4]);
+  if (m.includes("wav")) tryers.push(["wav", probeWav]);
+  if (m.includes("mpeg") || m.includes("mp3")) tryers.push(["mp3", probeMp3]);
   // Fallback genérico: tenta todos
-  const all: Array<['webm' | 'mp4' | 'wav' | 'mp3', (b: Uint8Array) => number | null]> = [
-    ['webm', probeWebm], ['mp4', probeMp4], ['wav', probeWav], ['mp3', probeMp3],
+  const all: Array<["webm" | "mp4" | "wav" | "mp3", (b: Uint8Array) => number | null]> = [
+    ["webm", probeWebm],
+    ["mp4", probeMp4],
+    ["wav", probeWav],
+    ["mp3", probeMp3],
   ];
   for (const t of all) {
     if (!tryers.some(([f]) => f === t[0])) tryers.push(t);
@@ -291,5 +329,5 @@ export function probeAudio(input: Buffer | Uint8Array, mimeHint?: string): Audio
     }
   }
 
-  throw new Error('audio_unsupported_format');
+  throw new Error("audio_unsupported_format");
 }

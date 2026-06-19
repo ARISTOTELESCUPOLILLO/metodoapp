@@ -4,23 +4,29 @@
 // (modelo, segmento, posição) que existia aqui foi removida junto com o
 // PersonalizacaoBadge.tsx (componente morto, sem import ativo).
 
-import type { Track } from '../types';
+import type { Track } from "../types";
 
 export type ModeloOP =
-  | 'EXP'
-  | 'PU2' | 'PU4' | 'PU8'
-  | 'S3V' | 'S6V' | 'S9V'
-  | 'S3C' | 'S6C' | 'S9C';
+  | "EXP"
+  | "PU2"
+  | "PU4"
+  | "PU8"
+  | "S3V"
+  | "S6V"
+  | "S9V"
+  | "S3C"
+  | "S6C"
+  | "S9C";
 
 export type ElementoPersonalizacao =
-  | 'avatar'
-  | 'produto'
-  | 'cenario'
-  | 'cenario+avatar'
-  | 'avatar+produto';
+  | "avatar"
+  | "produto"
+  | "cenario"
+  | "cenario+avatar"
+  | "avatar+produto";
 
 // Tipo da peça-alvo dentro do feed gerado
-export type SlotFormato = 'estatico' | 'estatico_final' | 'carrossel' | 'reels';
+export type SlotFormato = "estatico" | "estatico_final" | "carrossel" | "reels";
 
 export interface SlotPersonalizacao {
   // Tipo da peça
@@ -39,16 +45,16 @@ export interface SlotPersonalizacao {
 // PU2/PU4/PU8 ainda não existem como modo de geração no MOP — ficam aqui
 // reservados pra Fase 2.
 export function resolveModelo(track: Track | undefined, sequenceSize: 3 | 6 | 9): ModeloOP | null {
-  if (track === 'experimentacao') return 'EXP';
-  if (track === 'visual') {
-    if (sequenceSize === 3) return 'S3V';
-    if (sequenceSize === 6) return 'S6V';
-    if (sequenceSize === 9) return 'S9V';
+  if (track === "experimentacao") return "EXP";
+  if (track === "visual") {
+    if (sequenceSize === 3) return "S3V";
+    if (sequenceSize === 6) return "S6V";
+    if (sequenceSize === 9) return "S9V";
   }
-  if (track === 'cinematica' || !track) {
-    if (sequenceSize === 3) return 'S3C';
-    if (sequenceSize === 6) return 'S6C';
-    if (sequenceSize === 9) return 'S9C';
+  if (track === "cinematica" || !track) {
+    if (sequenceSize === 3) return "S3C";
+    if (sequenceSize === 6) return "S6C";
+    if (sequenceSize === 9) return "S9C";
   }
   return null;
 }
@@ -89,13 +95,17 @@ export const ZERO_COTA: CotaPorTipo = { estatico: 0, carrossel: 0, estatico_fina
 // extras atribuídos àquele plano. Extras de um plano vazio são ignorados.
 export function computeCota(entries: PlanoComExtras[]): CotaPorTipo {
   const n = (v: any) => Number(v || 0);
-  return entries.reduce<CotaPorTipo>((acc, e) => {
-    if (!e.plan) return acc;
-    return {
-      estatico:       acc.estatico       + n(e.plan?.base_estatico)       + n(e.extras?.estatico),
-      carrossel:      acc.carrossel      + n(e.plan?.base_carrossel)      + n(e.extras?.carrossel),
-      estatico_final: acc.estatico_final + n(e.plan?.base_estatico_final) + n(e.extras?.estatico_final),
-      reels:          acc.reels          + n(e.plan?.base_reels)          + n(e.extras?.reels),
-    };
-  }, { ...ZERO_COTA });
+  return entries.reduce<CotaPorTipo>(
+    (acc, e) => {
+      if (!e.plan) return acc;
+      return {
+        estatico: acc.estatico + n(e.plan?.base_estatico) + n(e.extras?.estatico),
+        carrossel: acc.carrossel + n(e.plan?.base_carrossel) + n(e.extras?.carrossel),
+        estatico_final:
+          acc.estatico_final + n(e.plan?.base_estatico_final) + n(e.extras?.estatico_final),
+        reels: acc.reels + n(e.plan?.base_reels) + n(e.extras?.reels),
+      };
+    },
+    { ...ZERO_COTA },
+  );
 }

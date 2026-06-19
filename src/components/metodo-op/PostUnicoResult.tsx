@@ -1,30 +1,38 @@
-import { useEffect, useState } from 'react';
-import { downloadDataUrl } from '../../utils/canvasComposer';
-import { mopName } from '../../utils/file';
-import { useIsMobile } from '../../hooks/use-mobile';
-import { useImageGenAlert } from './PreImageAlert';
-import { ArchiveButton } from './ArchiveButton';
-import { MetaPublish } from './MetaPublish';
-import type { PostUnicoCaption } from '../../services/postUnico';
-import { useTextCorrection } from '../../hooks/useTextCorrection';
+import { useEffect, useState } from "react";
+import { downloadDataUrl } from "../../utils/canvasComposer";
+import { mopName } from "../../utils/file";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { useImageGenAlert } from "./PreImageAlert";
+import { ArchiveButton } from "./ArchiveButton";
+import { MetaPublish } from "./MetaPublish";
+import type { PostUnicoCaption } from "../../services/postUnico";
+import { useTextCorrection } from "../../hooks/useTextCorrection";
 
 function insertSignature(caption: string, signature: string): string {
   const trimmed = caption.trim();
-  const lines = trimmed.split('\n');
+  const lines = trimmed.split("\n");
   let hashStart = lines.length;
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i].trim();
-    if (line === '' || /^(#\w+\s*)+$/.test(line)) { hashStart = i; } else { break; }
+    if (line === "" || /^(#\w+\s*)+$/.test(line)) {
+      hashStart = i;
+    } else {
+      break;
+    }
   }
-  if (hashStart === lines.length) return trimmed + '\n\n' + signature;
-  const before = lines.slice(0, hashStart).join('\n').trimEnd();
-  const hashBlock = lines.slice(hashStart).join('\n').trimStart();
-  return before + '\n\n' + signature + '\n\n' + hashBlock;
+  if (hashStart === lines.length) return trimmed + "\n\n" + signature;
+  const before = lines.slice(0, hashStart).join("\n").trimEnd();
+  const hashBlock = lines.slice(hashStart).join("\n").trimStart();
+  return before + "\n\n" + signature + "\n\n" + hashBlock;
 }
 
 const MOOD_NAMES: Record<string, string> = {
-  'OP-01': 'Clareza', 'OP-02': 'Impacto', 'OP-03': 'Instante',
-  'OP-04': 'Fragmento', 'OP-05': 'Desvio', 'OP-06': 'Silêncio',
+  "OP-01": "Clareza",
+  "OP-02": "Impacto",
+  "OP-03": "Instante",
+  "OP-04": "Fragmento",
+  "OP-05": "Desvio",
+  "OP-06": "Silêncio",
 };
 
 interface Props {
@@ -39,8 +47,8 @@ interface Props {
   onClear?: () => void;
   started?: boolean;
   /** Slot do plano que será usado ao arquivar (plano1 | plano2 | bonus). */
-  slot?: 'plano1' | 'plano2' | 'bonus';
-  direcao?: 'livre' | 'mood';
+  slot?: "plano1" | "plano2" | "bonus";
+  direcao?: "livre" | "mood";
   mood?: string;
   assinatura?: string;
   /** Contador de regeneração de legenda, elevado ao app para persistir entre
@@ -104,15 +112,16 @@ export default function PostUnicoResult({
     });
   }, [caption]);
 
-  const hasAnything = !!imageDataUrl || !!caption || captionLoading || !!captionError || !!started || !!regenerating;
+  const hasAnything =
+    !!imageDataUrl || !!caption || captionLoading || !!captionError || !!started || !!regenerating;
   if (!hasAnything) return null;
 
   const isReady = !!imageDataUrl;
   const activeCaption = captionHistory[selectedIdx] ?? caption;
-  const captionText = editedCaption ?? activeCaption?.full ?? '';
+  const captionText = editedCaption ?? activeCaption?.full ?? "";
 
-  const filename = mopName({ company: companyName, tipo: 'pu01', ext: 'png' });
-  const txtFilename = mopName({ company: companyName, tipo: 'pu01_legenda', ext: 'txt' });
+  const filename = mopName({ company: companyName, tipo: "pu01", ext: "png" });
+  const txtFilename = mopName({ company: companyName, tipo: "pu01_legenda", ext: "txt" });
 
   async function handleCopy() {
     if (!captionText) return;
@@ -125,9 +134,9 @@ export default function PostUnicoResult({
 
   function handleDownloadTxt() {
     if (!captionText) return;
-    const blob = new Blob([captionText], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([captionText], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = txtFilename;
     a.click();
@@ -145,68 +154,146 @@ export default function PostUnicoResult({
     <section className="panel">
       <div className="sectionHeader">
         <div>
-          <span className="eyebrow">{isReady ? 'Peça pronta' : 'Em geração'}</span>
-          <h2>{isReady ? 'Post Único gerado' : 'Gerando peça...'}</h2>
+          <span className="eyebrow">{isReady ? "Peça pronta" : "Em geração"}</span>
+          <h2>{isReady ? "Post Único gerado" : "Gerando peça..."}</h2>
           {(direcao || mood) && (
-            <span style={{ display: 'inline-block', marginTop: 4, fontSize: 11, fontWeight: 600, letterSpacing: 0.4, color: '#92400e', background: 'rgba(244,176,0,.12)', border: '1px solid rgba(244,176,0,.35)', borderRadius: 6, padding: '2px 8px' }}>
-              {direcao === 'livre' ? 'Livre — IA' : `${MOOD_NAMES[mood ?? ''] ?? mood} · ${mood}`}
+            <span
+              style={{
+                display: "inline-block",
+                marginTop: 4,
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: 0.4,
+                color: "#92400e",
+                background: "rgba(244,176,0,.12)",
+                border: "1px solid rgba(244,176,0,.35)",
+                borderRadius: 6,
+                padding: "2px 8px",
+              }}
+            >
+              {direcao === "livre" ? "Livre — IA" : `${MOOD_NAMES[mood ?? ""] ?? mood} · ${mood}`}
             </span>
           )}
         </div>
         <p>1080×1350px e logo aplicada. Pronta para o feed.</p>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
         {imageDataUrl && (
           <img
             src={imageDataUrl}
             alt="Post único gerado"
-            style={{ width: '100%', maxWidth: 480, borderRadius: 16, boxShadow: '0 14px 40px rgba(15,23,42,.12)' }}
+            style={{
+              width: "100%",
+              maxWidth: 480,
+              borderRadius: 16,
+              boxShadow: "0 14px 40px rgba(15,23,42,.12)",
+            }}
           />
         )}
 
-        <div style={{ width: '100%', maxWidth: 480, marginTop: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ width: "100%", maxWidth: 480, marginTop: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 8,
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
             <span className="eyebrow">Legenda sugerida</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               {!captionLoading && !captionError && activeCaption && (
                 <button
                   type="button"
-                  onClick={() => captionCorrection.correct(captionText, (corrected) => setEditedCaption(corrected))}
+                  onClick={() =>
+                    captionCorrection.correct(captionText, (corrected) =>
+                      setEditedCaption(corrected),
+                    )
+                  }
                   disabled={captionCorrection.correcting || !captionText.trim()}
                   title="Corrige ortografia e gramática da legenda"
-                  style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#0f172a', cursor: captionCorrection.correcting || !captionText.trim() ? 'not-allowed' : 'pointer', opacity: captionCorrection.correcting || !captionText.trim() ? 0.5 : 1 }}
+                  style={{
+                    background: "none",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 8,
+                    padding: "2px 8px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "#0f172a",
+                    cursor:
+                      captionCorrection.correcting || !captionText.trim()
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity: captionCorrection.correcting || !captionText.trim() ? 0.5 : 1,
+                  }}
                 >
-                  {captionCorrection.correcting ? 'Corrigindo…' : '🔤 Corrigir português'}
+                  {captionCorrection.correcting ? "Corrigindo…" : "🔤 Corrigir português"}
                 </button>
               )}
               {onRegenerateCaption && !captionLoading && !captionExhausted && (
                 <button
                   type="button"
                   onClick={handleRegenCaption}
-                  style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#64748b",
+                    fontSize: 12,
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    padding: 0,
+                  }}
                 >
                   Gerar outra legenda ({captionRegens}/{CAPTION_MAX})
                 </button>
               )}
               {captionExhausted && !captionLoading && (
-                <span style={{ fontSize: 11, color: '#64748b' }}>Limite atingido — edite manualmente</span>
+                <span style={{ fontSize: 11, color: "#64748b" }}>
+                  Limite atingido — edite manualmente
+                </span>
               )}
             </div>
           </div>
 
           {captionLoading && (
-            <div style={{ padding: 14, borderRadius: 12, background: '#f1f5f9', color: '#64748b', fontSize: 14 }}>
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 12,
+                background: "#f1f5f9",
+                color: "#64748b",
+                fontSize: 14,
+              }}
+            >
               Gerando legenda…
             </div>
           )}
 
           {!captionLoading && captionError && (
-            <div style={{ padding: 14, borderRadius: 12, background: '#fef2f2', color: '#b91c1c', fontSize: 13 }}>
-              Legenda indisponível. {onRegenerateCaption && !captionExhausted && (
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 12,
+                background: "#fef2f2",
+                color: "#b91c1c",
+                fontSize: 13,
+              }}
+            >
+              Legenda indisponível.{" "}
+              {onRegenerateCaption && !captionExhausted && (
                 <button
                   type="button"
                   onClick={handleRegenCaption}
-                  style={{ background: 'none', border: 'none', color: '#b91c1c', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#b91c1c",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
                 >
                   Tentar de novo
                 </button>
@@ -217,21 +304,28 @@ export default function PostUnicoResult({
           {!captionLoading && !captionError && activeCaption && (
             <>
               {captionHistory.length > 1 && (
-                <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                   {captionHistory.map((_, i) => (
                     <button
                       key={i}
                       type="button"
-                      onClick={() => { setSelectedIdx(i); setEditedCaption(null); }}
+                      onClick={() => {
+                        setSelectedIdx(i);
+                        setEditedCaption(null);
+                      }}
                       style={{
-                        padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600,
-                        cursor: 'pointer',
-                        border: `1px solid ${selectedIdx === i ? '#0f172a' : '#cbd5e1'}`,
-                        background: selectedIdx === i ? '#0f172a' : '#fff',
-                        color: selectedIdx === i ? '#fff' : '#0f172a',
+                        padding: "4px 10px",
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        border: `1px solid ${selectedIdx === i ? "#0f172a" : "#cbd5e1"}`,
+                        background: selectedIdx === i ? "#0f172a" : "#fff",
+                        color: selectedIdx === i ? "#fff" : "#0f172a",
                       }}
                     >
-                      Legenda {i + 1}{i === 0 ? ' (inicial)' : ''}
+                      Legenda {i + 1}
+                      {i === 0 ? " (inicial)" : ""}
                     </button>
                   ))}
                 </div>
@@ -243,38 +337,67 @@ export default function PostUnicoResult({
                 onTouchMove={(e) => e.stopPropagation()}
                 rows={6}
                 style={{
-                  width: '100%', padding: 12, borderRadius: 12,
-                  border: `1px solid ${captionExhausted ? '#fcd34d' : '#e2e8f0'}`,
-                  fontFamily: 'inherit', fontSize: 14, lineHeight: 1.5, resize: 'vertical',
-                  background: captionExhausted ? '#fffbeb' : '#fafafa', color: '#0f172a',
-                  touchAction: 'pan-y', overscrollBehaviorX: 'contain',
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 12,
+                  border: `1px solid ${captionExhausted ? "#fcd34d" : "#e2e8f0"}`,
+                  fontFamily: "inherit",
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  resize: "vertical",
+                  background: captionExhausted ? "#fffbeb" : "#fafafa",
+                  color: "#0f172a",
+                  touchAction: "pan-y",
+                  overscrollBehaviorX: "contain",
                 }}
               />
-              {captionCorrection.msg && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#16a34a' }}>{captionCorrection.msg}</p>}
-              {captionCorrection.error && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#b91c1c' }}>{captionCorrection.error}</p>}
+              {captionCorrection.msg && (
+                <p style={{ margin: "4px 0 0", fontSize: 11, color: "#16a34a" }}>
+                  {captionCorrection.msg}
+                </p>
+              )}
+              {captionCorrection.error && (
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>
+                  {captionCorrection.error}
+                </p>
+              )}
             </>
           )}
         </div>
 
         {/* Barra única de ações — todos os botões juntos */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 480 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+            justifyContent: "center",
+            width: "100%",
+            maxWidth: 480,
+          }}
+        >
           {(() => {
             const lightBtn = {
-              background: '#f8fafc',
-              color: '#0f172a',
-              border: '1px solid #cbd5e1',
+              background: "#f8fafc",
+              color: "#0f172a",
+              border: "1px solid #cbd5e1",
               borderRadius: 12,
-              padding: '10px 16px',
+              padding: "10px 16px",
               fontWeight: 700,
               fontSize: 14,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap' as const,
+              cursor: "pointer",
+              whiteSpace: "nowrap" as const,
             };
             return (
               <>
                 {imageDataUrl && (
                   <>
-                    <button className="primaryBtn" type="button" style={{ width: 'auto' }} onClick={() => downloadDataUrl(imageDataUrl, filename)}>
+                    <button
+                      className="primaryBtn"
+                      type="button"
+                      style={{ width: "auto" }}
+                      onClick={() => downloadDataUrl(imageDataUrl, filename)}
+                    >
                       Baixar PNG
                     </button>
                     <ArchiveButton
@@ -282,27 +405,52 @@ export default function PostUnicoResult({
                       formato="estatico"
                       slot={slot}
                       legenda={captionText}
-                      titulo={companyName ? `Post Único — ${companyName}` : 'Post Único'}
+                      titulo={companyName ? `Post Único — ${companyName}` : "Post Único"}
                       imageDataUrls={[imageDataUrl]}
                       disabledReason="Gere o Post Único antes de arquivar"
                     />
                   </>
                 )}
                 {onRegenerate && (
-                  <button type="button" onClick={() => guard({ hasPreview: true, tipo: 'Estático', run: onRegenerate })} disabled={regenerating} style={{ ...lightBtn, opacity: regenerating ? 0.6 : 1, cursor: regenerating ? 'not-allowed' : 'pointer' }}>
-                    {regenerating ? 'Gerando…' : 'Gerar outra imagem'}
+                  <button
+                    type="button"
+                    onClick={() => guard({ hasPreview: true, tipo: "Estático", run: onRegenerate })}
+                    disabled={regenerating}
+                    style={{
+                      ...lightBtn,
+                      opacity: regenerating ? 0.6 : 1,
+                      cursor: regenerating ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {regenerating ? "Gerando…" : "Gerar outra imagem"}
                   </button>
                 )}
                 {caption && !captionLoading && !captionError && (
                   <>
-                    <button className="primaryBtn" type="button" style={{ width: 'auto' }} onClick={handleCopy}>
-                      {copied ? '✓ Copiado!' : 'Copiar legenda'}
+                    <button
+                      className="primaryBtn"
+                      type="button"
+                      style={{ width: "auto" }}
+                      onClick={handleCopy}
+                    >
+                      {copied ? "✓ Copiado!" : "Copiar legenda"}
                     </button>
                     <button
                       type="button"
                       disabled={!(assinatura && !captionText.includes(assinatura))}
-                      onClick={() => { if (assinatura && !captionText.includes(assinatura)) setEditedCaption(insertSignature(captionText, assinatura)); }}
-                      style={{ ...lightBtn, background: (assinatura && !captionText.includes(assinatura)) ? '#0f172a' : '#e2e8f0', color: (assinatura && !captionText.includes(assinatura)) ? '#fff' : '#94a3b8', border: 'none', cursor: (assinatura && !captionText.includes(assinatura)) ? 'pointer' : 'default' }}
+                      onClick={() => {
+                        if (assinatura && !captionText.includes(assinatura))
+                          setEditedCaption(insertSignature(captionText, assinatura));
+                      }}
+                      style={{
+                        ...lightBtn,
+                        background:
+                          assinatura && !captionText.includes(assinatura) ? "#0f172a" : "#e2e8f0",
+                        color: assinatura && !captionText.includes(assinatura) ? "#fff" : "#94a3b8",
+                        border: "none",
+                        cursor:
+                          assinatura && !captionText.includes(assinatura) ? "pointer" : "default",
+                      }}
                     >
                       Inserir Assinatura
                     </button>
@@ -312,13 +460,18 @@ export default function PostUnicoResult({
                     {isMobile && (
                       <button
                         type="button"
-                        style={{ ...lightBtn, background: '#25D366', color: '#fff', border: '1px solid #1ebe5d' }}
+                        style={{
+                          ...lightBtn,
+                          background: "#25D366",
+                          color: "#fff",
+                          border: "1px solid #1ebe5d",
+                        }}
                         onClick={() => {
                           const d = new Date();
-                          const p = (n: number) => String(n).padStart(2, '0');
+                          const p = (n: number) => String(n).padStart(2, "0");
                           const data = `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
                           const text = `Legenda Post Único – ${data}\n\n${captionText.trim()}`;
-                          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
                         }}
                       >
                         Compartilhar no WhatsApp
@@ -326,14 +479,18 @@ export default function PostUnicoResult({
                     )}
                   </>
                 )}
-                {imageDataUrl && (
-                  <MetaPublish
-                    imageDataUrl={imageDataUrl}
-                    caption={captionText}
-                  />
-                )}
+                {imageDataUrl && <MetaPublish imageDataUrl={imageDataUrl} caption={captionText} />}
                 {onClear && (
-                  <button type="button" onClick={onClear} disabled={regenerating} style={{ ...lightBtn, opacity: regenerating ? 0.6 : 1, cursor: regenerating ? 'not-allowed' : 'pointer' }}>
+                  <button
+                    type="button"
+                    onClick={onClear}
+                    disabled={regenerating}
+                    style={{
+                      ...lightBtn,
+                      opacity: regenerating ? 0.6 : 1,
+                      cursor: regenerating ? "not-allowed" : "pointer",
+                    }}
+                  >
                     Limpar conteúdo
                   </button>
                 )}

@@ -1,19 +1,27 @@
-export type Segment = 'SERVIÇOS' | 'VAREJO' | 'MARCA';
-export type Audience = 'B2C' | 'B2B';
-export type BusinessMoment = 'lançamento' | 'consolidação' | 'reativação' | 'sazonalidade';
-export type OutputMode = 'feed' | 'stories' | 'feed+stories';
-export type OutputFormat = 'feed' | 'carrossel' | 'reels' | 'stories' | 'estatico_final';
-export type MoodCode = 'OP-01' | 'OP-02' | 'OP-03' | 'OP-04' | 'OP-05' | 'OP-06';
-export type FontPair = 'Inter' | 'Montserrat' | 'Playfair Display' | 'Roboto Slab' | 'Poppins' | 'Lora' | 'Raleway' | 'Merriweather';
+export type Segment = "SERVIÇOS" | "VAREJO" | "MARCA";
+export type Audience = "B2C" | "B2B";
+export type BusinessMoment = "lançamento" | "consolidação" | "reativação" | "sazonalidade";
+export type OutputMode = "feed" | "stories" | "feed+stories";
+export type OutputFormat = "feed" | "carrossel" | "reels" | "stories" | "estatico_final";
+export type MoodCode = "OP-01" | "OP-02" | "OP-03" | "OP-04" | "OP-05" | "OP-06";
+export type FontPair =
+  | "Inter"
+  | "Montserrat"
+  | "Playfair Display"
+  | "Roboto Slab"
+  | "Poppins"
+  | "Lora"
+  | "Raleway"
+  | "Merriweather";
 // Tipografia secundária opcional (manuscrita) — destaca 1 palavra-chave do título.
-export type SecondaryFont = 'fina' | 'grossa';
-export type LogoPosition = 'bottom-right' | 'top-center' | 'bottom-center';
+export type SecondaryFont = "fina" | "grossa";
+export type LogoPosition = "bottom-right" | "top-center" | "bottom-center";
 
 // Trilha narrativa do Método OP — define qual peça fecha a sequência
 // 'cinematica'      → reels no fechamento (comportamento atual, default)
 // 'visual'          → estatico_final no fechamento
 // 'experimentacao'  → estatico_final em sequência reduzida de 2 períodos
-export type Track = 'cinematica' | 'visual' | 'experimentacao';
+export type Track = "cinematica" | "visual" | "experimentacao";
 
 export interface BrandKit {
   companyName: string;
@@ -61,7 +69,7 @@ export interface ContentFormData {
 
 export interface FeedItem {
   dia: number;
-  formato: 'Estático' | 'Carrossel' | 'Reels' | 'Estático Final';
+  formato: "Estático" | "Carrossel" | "Reels" | "Estático Final";
   titulo: string;
   texto: string;
   legenda: string;
@@ -70,7 +78,7 @@ export interface FeedItem {
 
 export interface StoryItem {
   ordem: number;
-  tipo: 'vídeo' | 'post';
+  tipo: "vídeo" | "post";
   texto: string;
 }
 
@@ -107,10 +115,10 @@ export interface GenerationSummary {
 }
 
 export interface AnchoraVisual {
-  genero: 'M' | 'F';
+  genero: "M" | "F";
   // 'protagonista' = personagem domina a cena (SERVIÇOS, MARCA)
   // 'contexto_de_uso' = personagem complementa; produto/serviço é o foco (VAREJO)
-  papel: 'protagonista' | 'contexto_de_uso';
+  papel: "protagonista" | "contexto_de_uso";
   faixa_etaria: string;
   marcadores_profissionais: string;
   ambiente_base: string;
@@ -134,8 +142,16 @@ export interface ValidationFlag {
   motivo: string;
 }
 
-export type PostUnicoObjetivo = 'promocao' | 'homenagem' | 'aviso' | 'oportunidade' | 'institucional' | 'fatos' | 'venda' | 'nenhum';
-export type PostUnicoDirecao = 'livre' | 'mood';
+export type PostUnicoObjetivo =
+  | "promocao"
+  | "homenagem"
+  | "aviso"
+  | "oportunidade"
+  | "institucional"
+  | "fatos"
+  | "venda"
+  | "nenhum";
+export type PostUnicoDirecao = "livre" | "mood";
 
 export interface PostUnicoFormData {
   companyName: string;
@@ -202,7 +218,7 @@ export interface PostUnicoVisualSelection {
   // do Kit de Marca. Só tem efeito com useAvatar=false e kit.uniformeDataUrl
   // cadastrado. Escolha vale por geração — pode ficar fixada como última
   // escolha (persistida junto com o resto de visualSelection).
-  personagemSemAvatar?: { ativo: boolean; genero: 'mulher' | 'homem'; idade: string };
+  personagemSemAvatar?: { ativo: boolean; genero: "mulher" | "homem"; idade: string };
   // Usa a foto de Fato do Kit Imagem (objetivo "Fatos") — aplicação direta
   // sem reinvenção pela IA, só overlay de marca/título/texto.
   useFato?: boolean;

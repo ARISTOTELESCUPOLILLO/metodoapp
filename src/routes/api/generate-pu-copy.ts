@@ -1,63 +1,78 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { truncateWords, validatePieceFields, correctPortugueseSpelling } from '@/core/textValidation';
-import { getVoiceProfile } from '@/data/brandVoice';
-import { resolveEffectiveUser, checkBalance, debitUsage } from '@/lib/usage.server';
-import { COST_USD } from '@/lib/costs';
-import { fetchOpenAIChat } from '@/lib/openaiClient.server';
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  truncateWords,
+  validatePieceFields,
+  correctPortugueseSpelling,
+} from "@/core/textValidation";
+import { getVoiceProfile } from "@/data/brandVoice";
+import { resolveEffectiveUser, checkBalance, debitUsage } from "@/lib/usage.server";
+import { COST_USD } from "@/lib/costs";
+import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 const OBJETIVO_TOM: Record<string, string> = {
-  promocao: 'comercial, desejo, chamada para ação clara',
-  homenagem: 'afetivo, respeitoso, contemplativo',
-  aviso: 'institucional, claro, objetivo',
-  oportunidade: 'urgência elegante, momento decisivo',
-  institucional: 'institucional de marca, posicionamento, propósito, sóbrio e confiante',
-  fatos: 'documental, registro fiel, objetivo',
-  nenhum: 'neutro, livre — foco no contexto real da empresa',
+  promocao: "comercial, desejo, chamada para ação clara",
+  homenagem: "afetivo, respeitoso, contemplativo",
+  aviso: "institucional, claro, objetivo",
+  oportunidade: "urgência elegante, momento decisivo",
+  institucional: "institucional de marca, posicionamento, propósito, sóbrio e confiante",
+  fatos: "documental, registro fiel, objetivo",
+  nenhum: "neutro, livre — foco no contexto real da empresa",
 };
 
 const OBJETIVO_INTENCAO: Record<string, string> = {
-  institucional: 'Construa confiança, presença e identidade. Mostre como a empresa atua, cuida ou se posiciona. Evite promessa comercial, urgência e frase grandiosa.',
-  promocao: 'Gere desejo e movimento comercial. Destaque produto, benefício ou condição de forma simples e atrativa. Sem inventar preço, desconto ou prazo não informado.',
-  oportunidade: 'Mostre chance, momento favorável ou próximo passo concreto. Sem urgência falsa, clichê motivacional ou promessa de futuro garantido.',
-  aviso: 'Informe com objetividade e leitura rápida. Sem dramatização, suspense ou excesso de gentileza que esconda a informação.',
-  homenagem: 'Reconheça, valorize ou celebre com humanidade e simplicidade. Sem clichê sentimental, frase de calendário ou emoção forçada.',
-  fatos: 'Registre o que aconteceu com fidelidade e objetividade. Sem dramatizar, inventar emoção ou transformar em campanha.',
-  nenhum: 'Seja útil para comunicação de negócio, marca, produto ou serviço. Evite frase decorativa, motivacional genérica ou texto sem função mercadológica.',
+  institucional:
+    "Construa confiança, presença e identidade. Mostre como a empresa atua, cuida ou se posiciona. Evite promessa comercial, urgência e frase grandiosa.",
+  promocao:
+    "Gere desejo e movimento comercial. Destaque produto, benefício ou condição de forma simples e atrativa. Sem inventar preço, desconto ou prazo não informado.",
+  oportunidade:
+    "Mostre chance, momento favorável ou próximo passo concreto. Sem urgência falsa, clichê motivacional ou promessa de futuro garantido.",
+  aviso:
+    "Informe com objetividade e leitura rápida. Sem dramatização, suspense ou excesso de gentileza que esconda a informação.",
+  homenagem:
+    "Reconheça, valorize ou celebre com humanidade e simplicidade. Sem clichê sentimental, frase de calendário ou emoção forçada.",
+  fatos:
+    "Registre o que aconteceu com fidelidade e objetividade. Sem dramatizar, inventar emoção ou transformar em campanha.",
+  nenhum:
+    "Seja útil para comunicação de negócio, marca, produto ou serviço. Evite frase decorativa, motivacional genérica ou texto sem função mercadológica.",
 };
 
-export const Route = createFileRoute('/api/generate-pu-copy')({
+export const Route = createFileRoute("/api/generate-pu-copy")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const companyName = String(body.companyName || '').slice(0, 200);
-          const mainActivity = String(body.mainActivity || '').slice(0, 300);
-          const objetivo = String(body.objetivo || 'promocao');
-          const keyInfo = String(body.keyInfo || '').slice(0, 1000);
-          const brandVoice = String(body.brandVoice || '').slice(0, 80);
-          const segment = String(body.segment || '').slice(0, 30);
-          const preferredSlot = ['plano1', 'plano2', 'bonus'].includes(body.preferredSlot) ? body.preferredSlot as 'plano1' | 'plano2' | 'bonus' : undefined;
-
+          const companyName = String(body.companyName || "").slice(0, 200);
+          const mainActivity = String(body.mainActivity || "").slice(0, 300);
+          const objetivo = String(body.objetivo || "promocao");
+          const keyInfo = String(body.keyInfo || "").slice(0, 1000);
+          const brandVoice = String(body.brandVoice || "").slice(0, 80);
+          const segment = String(body.segment || "").slice(0, 30);
+          const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)
+            ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
+            : undefined;
 
           if (!keyInfo.trim()) {
-            return Response.json({ error: 'keyInfo obrigatório' }, { status: 400 });
+            return Response.json({ error: "keyInfo obrigatório" }, { status: 400 });
           }
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
-            return Response.json({ error: 'OPENAI_API_KEY_CONTENT não configurada' }, { status: 500 });
+            return Response.json(
+              { error: "OPENAI_API_KEY_CONTENT não configurada" },
+              { status: 500 },
+            );
           }
 
           const effective = await resolveEffectiveUser(request);
           if (!effective) {
-            return Response.json({ error: 'Não autenticado' }, { status: 401 });
+            return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
           const userId = effective.userId;
           const impersonatedBy = effective.impersonatedBy;
           const bal = await checkBalance(userId, 0, 0, 1);
           if (!bal.ok) {
-            return Response.json({ error: 'Limite de gerações atingido.' }, { status: 402 });
+            return Response.json({ error: "Limite de gerações atingido." }, { status: 402 });
           }
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
@@ -72,23 +87,23 @@ export const Route = createFileRoute('/api/generate-pu-copy')({
 Quando houver conflito entre tom do objetivo e direção de voz, PREVALECE a voz; o objetivo modula apenas a intenção comercial.
 Proibido mencionar literalmente o nome da voz no texto final.
 `
-            : '';
+            : "";
 
           const segmentLabel: Record<string, string> = {
-            VAREJO: 'Varejo — comercialização de produtos ao consumidor final',
-            MARCA: 'Marca — construção de identidade e posicionamento',
-            'SERVIÇOS': 'Serviços — prestação de serviços especializados',
+            VAREJO: "Varejo — comercialização de produtos ao consumidor final",
+            MARCA: "Marca — construção de identidade e posicionamento",
+            SERVIÇOS: "Serviços — prestação de serviços especializados",
           };
           const segmentBlock = segment
             ? `SEGMENTO: ${segmentLabel[segment] || segment} — adapte vocabulário, estilo e apelo do texto ao perfil deste tipo de negócio.\n`
-            : '';
+            : "";
 
           const userPrompt = `Você cria o título e o texto de apoio que aparecerão TIPOGRAFADOS dentro de uma peça publicitária para Instagram.
 
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
 ${segmentBlock}${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
-${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` : ''}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
+${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` : ""}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
 {
@@ -111,33 +126,41 @@ Regras:
 - PROIBIDO ABSOLUTO usar as palavras: "clareza", "impacto", "instante", "fragmento", "desvio", "silêncio", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". Use sinônimos.
 - PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
-${objetivo === 'institucional' ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ''}
-${objetivo === 'homenagem' ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ''}
-${(objetivo === 'promocao' || objetivo === 'oportunidade') ? `- REGRA DE URGÊNCIA NO TÍTULO (vale só para "titulo" — NÃO se aplica ao "texto"): PROIBIDO usar no "titulo" advérbios e chamadas de urgência temporal — "hoje", "agora", "já", "ainda hoje", "neste momento", "aproveite agora", "garanta já", "corra", "última chance", "só hoje" (e variações morfológicas dessas palavras). Essas chamadas deixam o título artificial e repetitivo. A promoção/oportunidade pode continuar existindo — mas o título expressa valor, produto, condição ou contexto favorável, sem depender de urgência clichê. Ex. proibidos: "aproveite agora esta condição", "garanta já sua oferta", "hoje é dia de renovar", "oportunidade só hoje", "compre agora sem perder". Ex. preferidos: "condição especial para renovar", "oportunidade para escolher melhor", "oferta pensada para sua rotina", "produto certo para sua escolha", "escolha melhor com condição especial".` : ''}`;
+${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ""}
+${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ""}
+${objetivo === "promocao" || objetivo === "oportunidade" ? `- REGRA DE URGÊNCIA NO TÍTULO (vale só para "titulo" — NÃO se aplica ao "texto"): PROIBIDO usar no "titulo" advérbios e chamadas de urgência temporal — "hoje", "agora", "já", "ainda hoje", "neste momento", "aproveite agora", "garanta já", "corra", "última chance", "só hoje" (e variações morfológicas dessas palavras). Essas chamadas deixam o título artificial e repetitivo. A promoção/oportunidade pode continuar existindo — mas o título expressa valor, produto, condição ou contexto favorável, sem depender de urgência clichê. Ex. proibidos: "aproveite agora esta condição", "garanta já sua oferta", "hoje é dia de renovar", "oportunidade só hoje", "compre agora sem perder". Ex. preferidos: "condição especial para renovar", "oportunidade para escolher melhor", "oferta pensada para sua rotina", "produto certo para sua escolha", "escolha melhor com condição especial".` : ""}`;
 
           const result = await fetchOpenAIChat(apiKey, {
-            model: 'gpt-4.1',
+            model: "gpt-4.1",
             messages: [
-              { role: 'system', content: 'Você é diretor de criação publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. Prefira sempre a palavra mais simples: "ganho" em vez de "resultado percebido", "melhorar" em vez de "otimizar", "vender" em vez de "converter". Antes de retornar: título soa natural? texto é claro para ensino médio? algum termo reservado (clareza/impacto/instante/fragmento/desvio/silêncio) apareceu? Se sim, reescreva.' },
-              { role: 'user', content: userPrompt },
+              {
+                role: "system",
+                content:
+                  'Você é diretor de criação publicitário brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. Prefira sempre a palavra mais simples: "ganho" em vez de "resultado percebido", "melhorar" em vez de "otimizar", "vender" em vez de "converter". Antes de retornar: título soa natural? texto é claro para ensino médio? algum termo reservado (clareza/impacto/instante/fragmento/desvio/silêncio) apareceu? Se sim, reescreva.',
+              },
+              { role: "user", content: userPrompt },
             ],
             temperature: 0.95,
-            response_format: { type: 'json_object' },
+            response_format: { type: "json_object" },
           });
 
           if (!result.ok) {
             return Response.json({ error: result.error }, { status: result.status });
           }
           const content = result.data.choices?.[0]?.message?.content;
-          if (!content) return Response.json({ error: 'Resposta vazia' }, { status: 502 });
+          if (!content) return Response.json({ error: "Resposta vazia" }, { status: 502 });
 
           let parsed: { titulo?: string; texto?: string };
-          try { parsed = JSON.parse(content); } catch { return Response.json({ error: 'JSON inválido' }, { status: 502 }); }
+          try {
+            parsed = JSON.parse(content);
+          } catch {
+            return Response.json({ error: "JSON inválido" }, { status: 502 });
+          }
 
           if (userId) {
             await debitUsage(userId, 0, 0, {
-              evento: 'gerar_copia_pu',
-              modulo: 'pu',
+              evento: "gerar_copia_pu",
+              modulo: "pu",
               payload: { objetivo },
               geracoes: 1,
               custoUsd: COST_USD.content_pu,
@@ -149,18 +172,20 @@ ${(objetivo === 'promocao' || objetivo === 'oportunidade') ? `- REGRA DE URGÊNC
           // Título NÃO é truncado aqui — cortar geraria fragmento; fora da
           // faixa de 4-6 palavras é flagado por validateTitulo (D1) abaixo e
           // regenerado pelo cliente (E3/E4), igual ao fluxo MOP.
-          const titulo = correctPortugueseSpelling(String(parsed.titulo || '').trim());
-          let texto = correctPortugueseSpelling(truncateWords(String(parsed.texto || ''), 14));
+          const titulo = correctPortugueseSpelling(String(parsed.titulo || "").trim());
+          let texto = correctPortugueseSpelling(truncateWords(String(parsed.texto || ""), 14));
 
-          if (!titulo) return Response.json({ error: 'Título vazio na resposta da IA' }, { status: 502 });
-          if (!texto) return Response.json({ error: 'Texto vazio na resposta da IA' }, { status: 502 });
+          if (!titulo)
+            return Response.json({ error: "Título vazio na resposta da IA" }, { status: 502 });
+          if (!texto)
+            return Response.json({ error: "Texto vazio na resposta da IA" }, { status: 502 });
 
           // Garante ponto final no texto quando a IA esquece.
-          if (!/[.!?]$/.test(texto)) texto = texto + '.';
+          if (!/[.!?]$/.test(texto)) texto = texto + ".";
 
           // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas
           // sinalizam para a orquestração de regeneração no cliente (E3).
-          const flags = validatePieceFields('copy', { titulo, texto }, keyInfo);
+          const flags = validatePieceFields("copy", { titulo, texto }, keyInfo);
 
           return Response.json({ titulo, texto, ...(flags.length > 0 ? { flags } : {}) });
         } catch (e) {

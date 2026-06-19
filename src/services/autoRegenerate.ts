@@ -6,11 +6,11 @@
 // (D2), para evitar o loop juiz → regen → juiz.
 // Se a 2ª tentativa ainda reprovar, aplica a limpeza determinística (E4).
 
-import { MethodOpResult, ValidationFlag } from '../types';
-import { regenerateBlockWithFlags } from './regenerateBlock';
-import { applyDeterministicFallback } from '../core/textValidation';
+import { MethodOpResult, ValidationFlag } from "../types";
+import { regenerateBlockWithFlags } from "./regenerateBlock";
+import { applyDeterministicFallback } from "../core/textValidation";
 
-type FieldKind = 'titulo' | 'texto' | 'legenda';
+type FieldKind = "titulo" | "texto" | "legenda";
 
 interface AutoRegenContext {
   companyName?: string;
@@ -25,10 +25,10 @@ const SKIP_REGEN_THRESHOLD = 0.3;
 
 function resolveFormato(result: MethodOpResult, prefix: string): string {
   const feedMatch = prefix.match(/^feed\[(\d+)\]$/);
-  if (feedMatch) return result.feed?.[Number(feedMatch[1])]?.formato || 'Estático';
-  if (/^carousel\[\d+\]$/.test(prefix)) return 'Carrossel';
-  if (/^reels\[\d+\]$/.test(prefix)) return 'Reels';
-  return 'Estático';
+  if (feedMatch) return result.feed?.[Number(feedMatch[1])]?.formato || "Estático";
+  if (/^carousel\[\d+\]$/.test(prefix)) return "Carrossel";
+  if (/^reels\[\d+\]$/.test(prefix)) return "Reels";
+  return "Estático";
 }
 
 function getField(result: MethodOpResult, prefix: string, field: FieldKind): string | undefined {
@@ -42,8 +42,8 @@ function getField(result: MethodOpResult, prefix: string, field: FieldKind): str
   if (reelsMatch) {
     const item = result.reels?.[Number(reelsMatch[1])];
     if (!item) return undefined;
-    if (field === 'titulo') return item.hook;
-    if (field === 'texto') return item.script;
+    if (field === "titulo") return item.hook;
+    if (field === "texto") return item.script;
     return item.legenda;
   }
   return undefined;
@@ -68,8 +68,8 @@ function setField(result: MethodOpResult, prefix: string, field: FieldKind, valu
   if (reelsMatch) {
     const item = result.reels?.[Number(reelsMatch[1])];
     if (!item) return;
-    if (field === 'titulo') item.hook = value;
-    else if (field === 'texto') item.script = value;
+    if (field === "titulo") item.hook = value;
+    else if (field === "texto") item.script = value;
     else item.legenda = value;
   }
 }
@@ -86,17 +86,17 @@ export interface PostUnicoCopyFields {
 export async function autoRegenerateFlaggedPostUnico(
   copy: PostUnicoCopyFields,
   flags: ValidationFlag[] | undefined,
-  ctx: AutoRegenContext
+  ctx: AutoRegenContext,
 ): Promise<PostUnicoCopyFields> {
   if (!flags || flags.length === 0) return copy;
 
   // Flags sem sufixo .titulo/.texto (repetição morfológica, promessa numérica
   // sem respaldo) cobrem a peça inteira — direciona para "texto", que tem mais
   // liberdade de reformulação que o título (limite de sílabas por palavra).
-  const grouped = new Map<'titulo' | 'texto', string[]>();
+  const grouped = new Map<"titulo" | "texto", string[]>();
   for (const flag of flags) {
     const m = flag.campo.match(/^copy\.(titulo|texto)$/);
-    const field: 'titulo' | 'texto' = m ? (m[1] as 'titulo' | 'texto') : 'texto';
+    const field: "titulo" | "texto" = m ? (m[1] as "titulo" | "texto") : "texto";
     const motivos = grouped.get(field);
     if (motivos) motivos.push(flag.motivo);
     else grouped.set(field, [flag.motivo]);
@@ -105,44 +105,56 @@ export async function autoRegenerateFlaggedPostUnico(
   let titulo = copy.titulo;
   let texto = copy.texto;
 
-  await Promise.all([...grouped.entries()].map(async ([field, motivos]) => {
-    let value = field === 'titulo' ? titulo : texto;
-    let motivoReprovacao = motivos.join('; ');
+  await Promise.all(
+    [...grouped.entries()].map(async ([field, motivos]) => {
+      let value = field === "titulo" ? titulo : texto;
+      let motivoReprovacao = motivos.join("; ");
 
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      try {
-        const regen = await regenerateBlockWithFlags({
-          kind: field,
-          companyName: ctx.companyName,
-          mainActivity: ctx.mainActivity,
-          keyInfo: ctx.keyInfo,
-          formato: 'PostUnico',
-          tituloAtual: field === 'titulo' ? value : titulo,
-          textoAtual: field === 'texto' ? value : texto,
-          motivoReprovacao,
-        });
-        value = regen.value;
-        if (!regen.flags || regen.flags.length === 0) {
-          if (field === 'titulo') titulo = value; else texto = value;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          const regen = await regenerateBlockWithFlags({
+            kind: field,
+            companyName: ctx.companyName,
+            mainActivity: ctx.mainActivity,
+            keyInfo: ctx.keyInfo,
+            formato: "PostUnico",
+            tituloAtual: field === "titulo" ? value : titulo,
+            textoAtual: field === "texto" ? value : texto,
+            motivoReprovacao,
+          });
+          value = regen.value;
+          if (!regen.flags || regen.flags.length === 0) {
+            if (field === "titulo") titulo = value;
+            else texto = value;
+            return;
+          }
+          motivoReprovacao = regen.flags.join("; ");
+          if (attempt === MAX_ATTEMPTS) {
+            const fallback = applyDeterministicFallback(value, field);
+            if (field === "titulo") titulo = fallback;
+            else texto = fallback;
+            console.warn(
+              `[autoRegenerate] copy.${field} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`,
+            );
+          }
+        } catch (e) {
+          console.warn(
+            `[autoRegenerate] regenerate-block falhou para copy.${field}:`,
+            (e as Error).message,
+          );
           return;
         }
-        motivoReprovacao = regen.flags.join('; ');
-        if (attempt === MAX_ATTEMPTS) {
-          const fallback = applyDeterministicFallback(value, field);
-          if (field === 'titulo') titulo = fallback; else texto = fallback;
-          console.warn(`[autoRegenerate] copy.${field} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`);
-        }
-      } catch (e) {
-        console.warn(`[autoRegenerate] regenerate-block falhou para copy.${field}:`, (e as Error).message);
-        return;
       }
-    }
-  }));
+    }),
+  );
 
   return { titulo, texto };
 }
 
-export async function autoRegenerateFlaggedFields(result: MethodOpResult, ctx: AutoRegenContext): Promise<MethodOpResult> {
+export async function autoRegenerateFlaggedFields(
+  result: MethodOpResult,
+  ctx: AutoRegenContext,
+): Promise<MethodOpResult> {
   const flags = result.flags;
   if (!flags || flags.length === 0) return result;
 
@@ -161,7 +173,7 @@ export async function autoRegenerateFlaggedFields(result: MethodOpResult, ctx: A
       field = m[2] as FieldKind;
     } else {
       prefix = flag.campo;
-      field = getField(result, prefix, 'texto') !== undefined ? 'texto' : 'legenda';
+      field = getField(result, prefix, "texto") !== undefined ? "texto" : "legenda";
     }
     const key = `${prefix}.${field}`;
     const entry = grouped.get(key);
@@ -169,53 +181,63 @@ export async function autoRegenerateFlaggedFields(result: MethodOpResult, ctx: A
     else grouped.set(key, { prefix, field, motivos: [flag.motivo] });
   }
 
-  const totalPieces = (result.feed?.length || 0) + (result.carousel?.length || 0) + (result.reels?.length || 0);
+  const totalPieces =
+    (result.feed?.length || 0) + (result.carousel?.length || 0) + (result.reels?.length || 0);
   const flaggedPieces = new Set([...grouped.values()].map((g) => g.prefix)).size;
   const skipRegeneration = totalPieces > 0 && flaggedPieces / totalPieces > SKIP_REGEN_THRESHOLD;
 
-  await Promise.all([...grouped.values()].map(async ({ prefix, field, motivos }) => {
-    const current = getField(result, prefix, field) || '';
+  await Promise.all(
+    [...grouped.values()].map(async ({ prefix, field, motivos }) => {
+      const current = getField(result, prefix, field) || "";
 
-    if (skipRegeneration) {
-      setField(result, prefix, field, applyDeterministicFallback(current, field));
-      console.warn(`[autoRegenerate] >${SKIP_REGEN_THRESHOLD * 100}% das peças flagadas — limpeza determinística em ${prefix}.${field}: ${motivos.join('; ')}`);
-      return;
-    }
-
-    let value = current;
-    let motivoReprovacao = motivos.join('; ');
-
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      try {
-        const regen = await regenerateBlockWithFlags({
-          kind: field,
-          companyName: ctx.companyName,
-          mainActivity: ctx.mainActivity,
-          keyInfo: ctx.keyInfo,
-          formato: resolveFormato(result, prefix),
-          tituloAtual: field === 'titulo' ? value : getField(result, prefix, 'titulo'),
-          textoAtual: field === 'texto' ? value : getField(result, prefix, 'texto'),
-          legendaAtual: field === 'legenda' ? value : getField(result, prefix, 'legenda'),
-          motivoReprovacao,
-        });
-        value = regen.value;
-        if (!regen.flags || regen.flags.length === 0) {
-          setField(result, prefix, field, value);
-          return;
-        }
-        motivoReprovacao = regen.flags.join('; ');
-        if (attempt === MAX_ATTEMPTS) {
-          setField(result, prefix, field, applyDeterministicFallback(value, field));
-          console.warn(`[autoRegenerate] ${prefix}.${field} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`);
-        }
-      } catch (e) {
-        // Falha de rede/timeout no regenerate-block — mantém o valor atual
-        // (nunca bloquear a sequência inteira por causa de 1 item).
-        console.warn(`[autoRegenerate] regenerate-block falhou para ${prefix}.${field}:`, (e as Error).message);
+      if (skipRegeneration) {
+        setField(result, prefix, field, applyDeterministicFallback(current, field));
+        console.warn(
+          `[autoRegenerate] >${SKIP_REGEN_THRESHOLD * 100}% das peças flagadas — limpeza determinística em ${prefix}.${field}: ${motivos.join("; ")}`,
+        );
         return;
       }
-    }
-  }));
+
+      let value = current;
+      let motivoReprovacao = motivos.join("; ");
+
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          const regen = await regenerateBlockWithFlags({
+            kind: field,
+            companyName: ctx.companyName,
+            mainActivity: ctx.mainActivity,
+            keyInfo: ctx.keyInfo,
+            formato: resolveFormato(result, prefix),
+            tituloAtual: field === "titulo" ? value : getField(result, prefix, "titulo"),
+            textoAtual: field === "texto" ? value : getField(result, prefix, "texto"),
+            legendaAtual: field === "legenda" ? value : getField(result, prefix, "legenda"),
+            motivoReprovacao,
+          });
+          value = regen.value;
+          if (!regen.flags || regen.flags.length === 0) {
+            setField(result, prefix, field, value);
+            return;
+          }
+          motivoReprovacao = regen.flags.join("; ");
+          if (attempt === MAX_ATTEMPTS) {
+            setField(result, prefix, field, applyDeterministicFallback(value, field));
+            console.warn(
+              `[autoRegenerate] ${prefix}.${field} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`,
+            );
+          }
+        } catch (e) {
+          // Falha de rede/timeout no regenerate-block — mantém o valor atual
+          // (nunca bloquear a sequência inteira por causa de 1 item).
+          console.warn(
+            `[autoRegenerate] regenerate-block falhou para ${prefix}.${field}:`,
+            (e as Error).message,
+          );
+          return;
+        }
+      }
+    }),
+  );
 
   return { ...result, flags: undefined };
 }

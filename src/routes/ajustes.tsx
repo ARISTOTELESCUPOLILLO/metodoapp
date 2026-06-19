@@ -1,10 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { AuthGate } from '@/components/app/AuthGate';
-import { TopBar } from '@/components/app/TopBar';
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { AuthGate } from "@/components/app/AuthGate";
+import { TopBar } from "@/components/app/TopBar";
 
-export const Route = createFileRoute('/ajustes')({
+export const Route = createFileRoute("/ajustes")({
   component: () => (
     <AuthGate requireAdmin>
       <TopBar />
@@ -17,27 +17,32 @@ function AjustesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [imagePrice, setImagePrice] = useState('');
-  const [imagePriceBase, setImagePriceBase] = useState('');
-  const [renderPrice, setRenderPrice] = useState('');
-  const [geracaoPrice, setGeracaoPrice] = useState('');
-  const [usdRate, setUsdRate] = useState('');
-  const [falaiBalance, setFalaiBalance] = useState('');
-  const [openaiBalance, setOpenaiBalance] = useState('');
+  const [imagePrice, setImagePrice] = useState("");
+  const [imagePriceBase, setImagePriceBase] = useState("");
+  const [renderPrice, setRenderPrice] = useState("");
+  const [geracaoPrice, setGeracaoPrice] = useState("");
+  const [usdRate, setUsdRate] = useState("");
+  const [falaiBalance, setFalaiBalance] = useState("");
+  const [openaiBalance, setOpenaiBalance] = useState("");
 
   useEffect(() => {
-    supabase.from('app_settings').select('*').eq('id', true).maybeSingle().then(({ data }) => {
-      if (data) {
-        setImagePrice(String(data.image_price_usd));
-        setImagePriceBase(String((data as any).image_base_price_usd || ''));
-        setRenderPrice(String(data.render_price_usd));
-        setGeracaoPrice(String((data as any).geracao_price_usd || ''));
-        setUsdRate(String(data.usd_brl_rate));
-        setFalaiBalance(String((data as any).falai_balance_usd || ''));
-        setOpenaiBalance(String((data as any).openai_balance_usd || ''));
-      }
-      setLoading(false);
-    });
+    supabase
+      .from("app_settings")
+      .select("*")
+      .eq("id", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setImagePrice(String(data.image_price_usd));
+          setImagePriceBase(String((data as any).image_base_price_usd || ""));
+          setRenderPrice(String(data.render_price_usd));
+          setGeracaoPrice(String((data as any).geracao_price_usd || ""));
+          setUsdRate(String(data.usd_brl_rate));
+          setFalaiBalance(String((data as any).falai_balance_usd || ""));
+          setOpenaiBalance(String((data as any).openai_balance_usd || ""));
+        }
+        setLoading(false);
+      });
   }, []);
 
   async function save(e: React.FormEvent) {
@@ -45,7 +50,7 @@ function AjustesPage() {
     setSaving(true);
     setMsg(null);
     const { error } = await supabase
-      .from('app_settings')
+      .from("app_settings")
       .update({
         image_price_usd: Number(imagePrice),
         image_base_price_usd: Number(imagePriceBase),
@@ -55,22 +60,33 @@ function AjustesPage() {
         falai_balance_usd: Number(falaiBalance),
         openai_balance_usd: Number(openaiBalance),
       } as any)
-      .eq('id', true);
+      .eq("id", true);
     setSaving(false);
-    setMsg(error ? `Erro: ${error.message}` : 'Valores salvos.');
+    setMsg(error ? `Erro: ${error.message}` : "Valores salvos.");
   }
 
   if (loading) return <div style={{ padding: 24 }}>Carregando…</div>;
 
   return (
-    <div style={{ maxWidth: 540, margin: '32px auto', padding: '0 16px' }}>
+    <div style={{ maxWidth: 540, margin: "32px auto", padding: "0 16px" }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Ajustes de custo</h1>
-      <p style={{ color: '#64748b', fontSize: 13, marginBottom: 20 }}>
+      <p style={{ color: "#64748b", fontSize: 13, marginBottom: 20 }}>
         Valores usados para calcular custo nos relatórios e logs de uso.
       </p>
 
-      <form onSubmit={save} style={{ display: 'grid', gap: 14 }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#475569', margin: 0, textTransform: 'uppercase', letterSpacing: 0.5 }}>Saldos das APIs</p>
+      <form onSubmit={save} style={{ display: "grid", gap: 14 }}>
+        <p
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#475569",
+            margin: 0,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Saldos das APIs
+        </p>
         <Field
           label="Saldo depositado na fal.ai (US$)"
           value={falaiBalance}
@@ -84,7 +100,18 @@ function AjustesPage() {
           hint="Total disponível na conta OpenAI. Atualizar quando fizer recarga."
         />
 
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#475569', margin: '8px 0 0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Preços unitários</p>
+        <p
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#475569",
+            margin: "8px 0 0",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Preços unitários
+        </p>
         <Field
           label="Imagem c/ refs (US$ por imagem)"
           value={imagePrice}
@@ -116,37 +143,61 @@ function AjustesPage() {
           hint="Usado para mostrar custo em reais nos painéis."
         />
 
-        <div style={{
-          background: '#f1f5f9', padding: 12, borderRadius: 8, fontSize: 13, color: '#334155',
-        }}>
-          fal.ai: US$ {Number(falaiBalance || 0).toFixed(2)} · OpenAI: US$ {Number(openaiBalance || 0).toFixed(2)} ·
-          {' '}Câmbio: R$ {Number(usdRate || 0).toFixed(2)}/US$
+        <div
+          style={{
+            background: "#f1f5f9",
+            padding: 12,
+            borderRadius: 8,
+            fontSize: 13,
+            color: "#334155",
+          }}
+        >
+          fal.ai: US$ {Number(falaiBalance || 0).toFixed(2)} · OpenAI: US${" "}
+          {Number(openaiBalance || 0).toFixed(2)} · Câmbio: R$ {Number(usdRate || 0).toFixed(2)}/US$
         </div>
 
-        {msg && <p style={{ fontSize: 13, color: msg.startsWith('Erro') ? '#b91c1c' : '#15803d' }}>{msg}</p>}
+        {msg && (
+          <p style={{ fontSize: 13, color: msg.startsWith("Erro") ? "#b91c1c" : "#15803d" }}>
+            {msg}
+          </p>
+        )}
 
         <button
           type="submit"
           disabled={saving}
           style={{
-            background: '#0f213f', color: '#fff', border: 'none',
-            padding: '10px 16px', borderRadius: 8, fontWeight: 600,
-            cursor: 'pointer', justifySelf: 'start', opacity: saving ? .6 : 1,
+            background: "#0f213f",
+            color: "#fff",
+            border: "none",
+            padding: "10px 16px",
+            borderRadius: 8,
+            fontWeight: 600,
+            cursor: "pointer",
+            justifySelf: "start",
+            opacity: saving ? 0.6 : 1,
           }}
         >
-          {saving ? 'Salvando…' : 'Salvar ajustes'}
+          {saving ? "Salvando…" : "Salvar ajustes"}
         </button>
       </form>
     </div>
   );
 }
 
-function Field({ label, value, onChange, hint }: {
-  label: string; value: string; onChange: (v: string) => void; hint?: string;
+function Field({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  hint?: string;
 }) {
   return (
-    <label style={{ display: 'grid', gap: 4 }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{label}</span>
+    <label style={{ display: "grid", gap: 4 }}>
+      <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{label}</span>
       <input
         type="number"
         step="0.01"
@@ -154,11 +205,14 @@ function Field({ label, value, onChange, hint }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1',
-          fontSize: 14, background: '#fff',
+          padding: "8px 10px",
+          borderRadius: 6,
+          border: "1px solid #cbd5e1",
+          fontSize: 14,
+          background: "#fff",
         }}
       />
-      {hint && <span style={{ fontSize: 12, color: '#64748b' }}>{hint}</span>}
+      {hint && <span style={{ fontSize: 12, color: "#64748b" }}>{hint}</span>}
     </label>
   );
 }

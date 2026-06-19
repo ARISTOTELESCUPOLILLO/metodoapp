@@ -7,21 +7,33 @@
 // cena é definido por tipo para que a tampa/verso errado não possa aparecer por
 // geometria. Sorteado a cada chamada (mesmo padrão de pickImageVariationBlock em
 // visualDirection.ts) para também evitar que a peça sempre mostre notebook.
-const DEVICE_CELULAR = 'CELULAR/SMARTPHONE: tela voltada para cima sobre a mesa OU na mão da pessoa, mostrando a tela ao observador. A parte de trás do aparelho nunca fica voltada para a câmera.';
-const DEVICE_TABLET = 'TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa OU em mãos mostrando a tela ao observador. A tampa/verso nunca fica voltada para a câmera.';
-const DEVICE_NOTEBOOK = 'NOTEBOOK/LAPTOP: SOMENTE de perfil lateral — câmera paralela ao eixo da dobradiça, mostrando a espessura do aparelho aberto em ângulo "V", nunca de frente nem de costas. A tampa traseira nunca fica visível para a câmera.';
-const DEVICE_MONITOR = 'MONITOR DE DESKTOP: pessoa posicionada de frente para o monitor — a câmera enquadra a pessoa e a tela de lado/oblíqua, nunca a parte traseira do gabinete em destaque, nenhum logo de fabricante em evidência.';
-const DEVICE_TELA_FUNDO = 'TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.';
+const DEVICE_CELULAR =
+  "CELULAR/SMARTPHONE: tela voltada para cima sobre a mesa OU na mão da pessoa, mostrando a tela ao observador. A parte de trás do aparelho nunca fica voltada para a câmera.";
+const DEVICE_TABLET =
+  "TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa OU em mãos mostrando a tela ao observador. A tampa/verso nunca fica voltada para a câmera.";
+const DEVICE_NOTEBOOK =
+  'NOTEBOOK/LAPTOP: SOMENTE de perfil lateral — câmera paralela ao eixo da dobradiça, mostrando a espessura do aparelho aberto em ângulo "V", nunca de frente nem de costas. A tampa traseira nunca fica visível para a câmera.';
+const DEVICE_MONITOR =
+  "MONITOR DE DESKTOP: pessoa posicionada de frente para o monitor — a câmera enquadra a pessoa e a tela de lado/oblíqua, nunca a parte traseira do gabinete em destaque, nenhum logo de fabricante em evidência.";
+const DEVICE_TELA_FUNDO =
+  "TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.";
 
 // Pool ponderado por repetição (não uniforme): celular/tablet/monitor saem bem
 // com mais frequência (confirmado em uso real); notebook reduzido por ainda
 // gerar tampa com conteúdo incorreto às vezes; tela/TV de fundo reduzida por
 // ser um uso pouco comum no dia a dia do público — não removida, só mais rara.
 const DEVICE_TYPE_POOL: string[] = [
-  DEVICE_CELULAR, DEVICE_CELULAR, DEVICE_CELULAR,
-  DEVICE_TABLET, DEVICE_TABLET, DEVICE_TABLET,
-  DEVICE_MONITOR, DEVICE_MONITOR, DEVICE_MONITOR,
-  DEVICE_NOTEBOOK, DEVICE_NOTEBOOK,
+  DEVICE_CELULAR,
+  DEVICE_CELULAR,
+  DEVICE_CELULAR,
+  DEVICE_TABLET,
+  DEVICE_TABLET,
+  DEVICE_TABLET,
+  DEVICE_MONITOR,
+  DEVICE_MONITOR,
+  DEVICE_MONITOR,
+  DEVICE_NOTEBOOK,
+  DEVICE_NOTEBOOK,
   DEVICE_TELA_FUNDO,
 ];
 

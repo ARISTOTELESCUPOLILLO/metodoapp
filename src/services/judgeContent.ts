@@ -5,9 +5,13 @@
 // que a heurística D1 não cobre. Best-effort: timeout curto e qualquer falha
 // é silenciosa, pois o conteúdo já está na tela.
 
-import { MethodOpResult, Segment, ValidationFlag } from '../types';
-import { autoRegenerateFlaggedFields, autoRegenerateFlaggedPostUnico, PostUnicoCopyFields } from './autoRegenerate';
-import { supabase } from '@/integrations/supabase/client';
+import { MethodOpResult, Segment, ValidationFlag } from "../types";
+import {
+  autoRegenerateFlaggedFields,
+  autoRegenerateFlaggedPostUnico,
+  PostUnicoCopyFields,
+} from "./autoRegenerate";
+import { supabase } from "@/integrations/supabase/client";
 
 interface JudgeContext {
   companyName?: string;
@@ -27,13 +31,31 @@ interface JudgeItem {
 function buildItems(result: MethodOpResult): JudgeItem[] {
   const items: JudgeItem[] = [];
   result.feed?.forEach((item, i) => {
-    items.push({ id: `feed[${i}]`, formato: item.formato, titulo: item.titulo, texto: item.texto, legenda: item.legenda });
+    items.push({
+      id: `feed[${i}]`,
+      formato: item.formato,
+      titulo: item.titulo,
+      texto: item.texto,
+      legenda: item.legenda,
+    });
   });
   result.carousel?.forEach((card, i) => {
-    items.push({ id: `carousel[${i}]`, formato: 'Carrossel', titulo: card.titulo, texto: card.texto, legenda: card.legenda });
+    items.push({
+      id: `carousel[${i}]`,
+      formato: "Carrossel",
+      titulo: card.titulo,
+      texto: card.texto,
+      legenda: card.legenda,
+    });
   });
   result.reels?.forEach((r, i) => {
-    items.push({ id: `reels[${i}]`, formato: 'Reels', titulo: r.hook, texto: r.script, legenda: r.legenda });
+    items.push({
+      id: `reels[${i}]`,
+      formato: "Reels",
+      titulo: r.hook,
+      texto: r.script,
+      legenda: r.legenda,
+    });
   });
   return items;
 }
@@ -44,7 +66,11 @@ const JUDGE_TIMEOUT_MS = 15_000;
 // (avaliacoes) cruas, ou `null` se não houver itens, a request falhar ou
 // o timeout estourar. Best-effort: falha do juiz não afeta o usuário
 // (conteúdo já está na tela).
-async function callJudgeContent(items: JudgeItem[], ctx: JudgeContext, timeoutMs: number = JUDGE_TIMEOUT_MS): Promise<{ id?: string; campo?: string; motivo?: string }[] | null> {
+async function callJudgeContent(
+  items: JudgeItem[],
+  ctx: JudgeContext,
+  timeoutMs: number = JUDGE_TIMEOUT_MS,
+): Promise<{ id?: string; campo?: string; motivo?: string }[] | null> {
   if (items.length === 0) return null;
 
   const controller = new AbortController();
@@ -52,10 +78,10 @@ async function callJudgeContent(items: JudgeItem[], ctx: JudgeContext, timeoutMs
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    const res = await fetch('/api/judge-content', {
-      method: 'POST',
+    const res = await fetch("/api/judge-content", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
@@ -80,7 +106,10 @@ async function callJudgeContent(items: JudgeItem[], ctx: JudgeContext, timeoutMs
 
 // Retorna o resultado atualizado (se algum item foi corrigido pela
 // regeneração automática) ou `null` se nada mudou / o juiz falhou.
-export async function judgeAndRegenerateContent(result: MethodOpResult, ctx: JudgeContext): Promise<MethodOpResult | null> {
+export async function judgeAndRegenerateContent(
+  result: MethodOpResult,
+  ctx: JudgeContext,
+): Promise<MethodOpResult | null> {
   const items = buildItems(result);
   const avaliacoes = await callJudgeContent(items, ctx);
   if (!avaliacoes || avaliacoes.length === 0) return null;
@@ -102,13 +131,18 @@ export async function judgeAndRegenerateContent(result: MethodOpResult, ctx: Jud
 // à espera visível do usuário — diferente do MOP, onde roda em background.
 const PU_JUDGE_TIMEOUT_MS = 8_000;
 
-export async function judgeAndRegeneratePostUnico(copy: PostUnicoCopyFields, ctx: JudgeContext): Promise<PostUnicoCopyFields | null> {
-  const items: JudgeItem[] = [{ id: 'copy', formato: 'PostUnico', titulo: copy.titulo, texto: copy.texto }];
+export async function judgeAndRegeneratePostUnico(
+  copy: PostUnicoCopyFields,
+  ctx: JudgeContext,
+): Promise<PostUnicoCopyFields | null> {
+  const items: JudgeItem[] = [
+    { id: "copy", formato: "PostUnico", titulo: copy.titulo, texto: copy.texto },
+  ];
   const avaliacoes = await callJudgeContent(items, ctx, PU_JUDGE_TIMEOUT_MS);
   if (!avaliacoes || avaliacoes.length === 0) return null;
 
   const flags: ValidationFlag[] = avaliacoes
-    .filter((a) => a.id === 'copy' && a.campo && a.motivo)
+    .filter((a) => a.id === "copy" && a.campo && a.motivo)
     .map((a) => ({ campo: `copy.${a.campo}`, motivo: String(a.motivo) }));
   if (flags.length === 0) return null;
 

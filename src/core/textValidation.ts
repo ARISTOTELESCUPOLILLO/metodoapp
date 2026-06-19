@@ -3,28 +3,29 @@
 // normalizeMethodResult, regenerate-block, generate-pu-copy e PostUnicoForm
 // (substitui as cópias antes duplicadas em cada um desses arquivos).
 
-import type { ValidationFlag } from '../types';
+import type { ValidationFlag } from "../types";
 
 export type { ValidationFlag };
 
-const TRUNCATE_TRAILING_WORDS = 'e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo';
+const TRUNCATE_TRAILING_WORDS =
+  "e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo";
 
 export function truncateWords(s: string, max: number): string {
-  const text = String(s ?? '');
+  const text = String(s ?? "");
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length <= max) return text.trim();
 
-  const truncated = words.slice(0, max).join(' ')
-    .replace(/[,;:\-–—]+$/, '');
+  const truncated = words
+    .slice(0, max)
+    .join(" ")
+    .replace(/[,;:\-–—]+$/, "");
 
   // Prefere corte em limite de frase completa dentro do trecho
   const m = truncated.match(/^(.*[.!?])\s+\S/);
   if (m) return m[1].trim();
 
   // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
-  return truncated
-    .replace(new RegExp(`\\s+(${TRUNCATE_TRAILING_WORDS})\\s*$`, 'i'), '')
-    .trim();
+  return truncated.replace(new RegExp(`\\s+(${TRUNCATE_TRAILING_WORDS})\\s*$`, "i"), "").trim();
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ export function truncateWords(s: string, max: number): string {
 // aplicada a título/texto/legenda antes da validação D1.
 // ─────────────────────────────────────────────────────────────────────────
 const SPELLING_CORRECTIONS: Record<string, string> = {
-  lumbar: 'lombar',
+  lumbar: "lombar",
 };
 
 function matchCase(original: string, replacement: string): string {
@@ -49,7 +50,7 @@ export function correctPortugueseSpelling(text: string): string {
   if (!text) return text;
   let result = text;
   for (const [wrong, right] of Object.entries(SPELLING_CORRECTIONS)) {
-    result = result.replace(new RegExp(`\\b${wrong}\\b`, 'gi'), (m) => matchCase(m, right));
+    result = result.replace(new RegExp(`\\b${wrong}\\b`, "gi"), (m) => matchCase(m, right));
   }
   return result;
 }
@@ -64,28 +65,150 @@ export function correctPortugueseSpelling(text: string): string {
 // advérbios comparativos pendentes, verbos auxiliares sem complemento e
 // conjunções subordinativas.
 const DANGLING_END_WORDS = new Set([
-  'e', 'ou', 'mas', 'que', 'se', 'nem', 'de', 'da', 'do', 'das', 'dos', 'para', 'com', 'em',
-  'a', 'o', 'as', 'os', 'ao', 'aos', 'à', 'às', 'por', 'pois', 'até', 'ante', 'após', 'sob',
-  'sobre', 'entre', 'contra', 'desde', 'durante', 'sem', 'via',
-  'é', 'foi', 'era', 'será', 'está', 'estava', 'ficou', 'parece', 'fica', 'são', 'eram',
-  'serão', 'sendo', 'tendo',
+  "e",
+  "ou",
+  "mas",
+  "que",
+  "se",
+  "nem",
+  "de",
+  "da",
+  "do",
+  "das",
+  "dos",
+  "para",
+  "com",
+  "em",
+  "a",
+  "o",
+  "as",
+  "os",
+  "ao",
+  "aos",
+  "à",
+  "às",
+  "por",
+  "pois",
+  "até",
+  "ante",
+  "após",
+  "sob",
+  "sobre",
+  "entre",
+  "contra",
+  "desde",
+  "durante",
+  "sem",
+  "via",
+  "é",
+  "foi",
+  "era",
+  "será",
+  "está",
+  "estava",
+  "ficou",
+  "parece",
+  "fica",
+  "são",
+  "eram",
+  "serão",
+  "sendo",
+  "tendo",
   // artigos indefinidos
-  'um', 'uma', 'uns', 'umas',
+  "um",
+  "uma",
+  "uns",
+  "umas",
   // pronomes relativos/possessivos/demonstrativos
-  'qual', 'quais', 'cujo', 'cuja', 'cujos', 'cujas',
-  'meu', 'minha', 'meus', 'minhas', 'teu', 'tua', 'teus', 'tuas',
-  'seu', 'sua', 'seus', 'suas', 'nosso', 'nossa', 'nossos', 'nossas',
-  'este', 'esta', 'estes', 'estas', 'esse', 'essa', 'esses', 'essas',
-  'aquele', 'aquela', 'aqueles', 'aquelas', 'isto', 'isso', 'aquilo',
+  "qual",
+  "quais",
+  "cujo",
+  "cuja",
+  "cujos",
+  "cujas",
+  "meu",
+  "minha",
+  "meus",
+  "minhas",
+  "teu",
+  "tua",
+  "teus",
+  "tuas",
+  "seu",
+  "sua",
+  "seus",
+  "suas",
+  "nosso",
+  "nossa",
+  "nossos",
+  "nossas",
+  "este",
+  "esta",
+  "estes",
+  "estas",
+  "esse",
+  "essa",
+  "esses",
+  "essas",
+  "aquele",
+  "aquela",
+  "aqueles",
+  "aquelas",
+  "isto",
+  "isso",
+  "aquilo",
   // advérbios comparativos/intensificadores pendentes
-  'mais', 'tão', 'menos', 'muito', 'muita', 'muitos', 'muitas', 'pouco', 'pouca', 'tanto', 'tanta',
+  "mais",
+  "tão",
+  "menos",
+  "muito",
+  "muita",
+  "muitos",
+  "muitas",
+  "pouco",
+  "pouca",
+  "tanto",
+  "tanta",
   // verbos auxiliares/modais sem complemento
-  'vai', 'vou', 'vamos', 'vão', 'vais', 'pode', 'podem', 'posso', 'podemos',
-  'quer', 'querem', 'quero', 'queremos', 'deve', 'devem', 'devo', 'devemos',
-  'vem', 'vêm', 'têm', 'tem', 'consegue', 'conseguem', 'precisa', 'precisam',
+  "vai",
+  "vou",
+  "vamos",
+  "vão",
+  "vais",
+  "pode",
+  "podem",
+  "posso",
+  "podemos",
+  "quer",
+  "querem",
+  "quero",
+  "queremos",
+  "deve",
+  "devem",
+  "devo",
+  "devemos",
+  "vem",
+  "vêm",
+  "têm",
+  "tem",
+  "consegue",
+  "conseguem",
+  "precisa",
+  "precisam",
   // conjunções subordinativas
-  'porque', 'quando', 'embora', 'caso', 'enquanto', 'portanto', 'então', 'logo', 'assim',
-  'contudo', 'todavia', 'entretanto', 'porém',
+  "porque",
+  "quando",
+  "embora",
+  "caso",
+  "enquanto",
+  "portanto",
+  "então",
+  "logo",
+  "assim",
+  "contudo",
+  "todavia",
+  "entretanto",
+  "porém",
 ]);
 
 // Consoantes finais raras em palavras nativas do português — sinal de
@@ -93,12 +216,12 @@ const DANGLING_END_WORDS = new Set([
 const ATYPICAL_FINAL_CONSONANTS = /[bcdfghjkpqtvwy]$/i;
 
 function stripAccents(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 function lastToken(text: string): string {
   const words = text.trim().split(/\s+/).filter(Boolean);
-  return words[words.length - 1] || '';
+  return words[words.length - 1] || "";
 }
 
 // Item 1: detecta finalização "pendurada" — palavra que sugere corte
@@ -109,10 +232,10 @@ export function checkDanglingEnding(text: string): string | null {
   if (!trimmed) return null;
 
   if (/[,;:\-–—]$/.test(trimmed) || /\.\.\.$|…$/.test(trimmed)) {
-    return 'termina com pontuação de transição (vírgula/dois-pontos/hífen/reticências), sugerindo corte';
+    return "termina com pontuação de transição (vírgula/dois-pontos/hífen/reticências), sugerindo corte";
   }
 
-  const last = lastToken(trimmed).replace(/[.!?,;:'"()«»“”]+$/g, '');
+  const last = lastToken(trimmed).replace(/[.!?,;:'"()«»“”]+$/g, "");
   if (!last) return null;
 
   const lastNorm = stripAccents(last.toLowerCase());
@@ -127,32 +250,36 @@ export function checkDanglingEnding(text: string): string | null {
   return null;
 }
 
-const QUESTION_STARTERS = /^(por que|por quê|como|quando|onde|qual|quais|quem|o que|que|será que|pra que|para que|quanto|quanta|quantos|quantas)\b/i;
+const QUESTION_STARTERS =
+  /^(por que|por quê|como|quando|onde|qual|quais|quem|o que|que|será que|pra que|para que|quanto|quanta|quantos|quantas)\b/i;
 
 // Itens 2/4: pontuação final esperada por tipo de campo + parênteses/aspas
 // desbalanceados (sinal de frase quebrada).
-export function checkPunctuation(text: string, kind: 'titulo' | 'texto' | 'legenda'): string | null {
+export function checkPunctuation(
+  text: string,
+  kind: "titulo" | "texto" | "legenda",
+): string | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
 
   const opens = (trimmed.match(/\(/g) || []).length;
   const closes = (trimmed.match(/\)/g) || []).length;
-  if (opens !== closes) return 'parênteses desbalanceados';
+  if (opens !== closes) return "parênteses desbalanceados";
   const quotes = (trimmed.match(/"/g) || []).length;
-  if (quotes % 2 !== 0) return 'aspas desbalanceadas';
+  if (quotes % 2 !== 0) return "aspas desbalanceadas";
 
-  if (kind === 'titulo') {
+  if (kind === "titulo") {
     const isPergunta = QUESTION_STARTERS.test(trimmed);
     if (isPergunta && !/\?$/.test(trimmed)) {
       return 'título é uma pergunta mas não termina com "?"';
     }
     if (!isPergunta && /[.!]$/.test(trimmed)) {
-      return 'título não-pergunta termina com ponto/exclamação (deveria não ter pontuação final)';
+      return "título não-pergunta termina com ponto/exclamação (deveria não ter pontuação final)";
     }
     return null;
   }
 
-  if (kind === 'legenda') {
+  if (kind === "legenda") {
     // A legenda termina com o parágrafo de hashtags (sem pontuação final) —
     // a pontuação do parágrafo de CTA é validada por checkLegendaStructure.
     return null;
@@ -194,22 +321,25 @@ export function checkLegendaStructure(legenda: string): string | null {
   }
   const invalid = hashtags.filter((h) => !HASHTAG_RE.test(h));
   if (invalid.length > 0) {
-    return `hashtags fora do padrão — devem ser minúsculas, sem acento e sem caracteres especiais (${invalid.join(' ')})`;
+    return `hashtags fora do padrão — devem ser minúsculas, sem acento e sem caracteres especiais (${invalid.join(" ")})`;
   }
 
-  const paragraphs = trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = trimmed
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (paragraphs.length < 3) {
-    return 'legenda sem a estrutura de 3 parágrafos separados por linha em branco — corpo, CTA e hashtags (ver REGRA DE LEGENDA)';
+    return "legenda sem a estrutura de 3 parágrafos separados por linha em branco — corpo, CTA e hashtags (ver REGRA DE LEGENDA)";
   }
 
   const lastPara = paragraphs[paragraphs.length - 1];
   if (!/^#/.test(lastPara)) {
-    return 'parágrafo final da legenda não está isolado apenas com as hashtags (ver REGRA DE LEGENDA)';
+    return "parágrafo final da legenda não está isolado apenas com as hashtags (ver REGRA DE LEGENDA)";
   }
 
   const ctaPara = paragraphs[paragraphs.length - 2];
   if (!/[.!?]$/.test(ctaPara)) {
-    return 'parágrafo de CTA da legenda não termina com ponto final (ver REGRA DE LEGENDA)';
+    return "parágrafo de CTA da legenda não termina com ponto final (ver REGRA DE LEGENDA)";
   }
 
   if (paragraphs.length !== 3) {
@@ -233,7 +363,8 @@ export function checkLegendaStructure(legenda: string): string | null {
 // ("chamada para ação"). Usado para detectar quando o corpo da legenda (ou o
 // "texto" do Post Único) termina com uma frase que duplica o parágrafo/campo
 // de CTA dedicado.
-const CTA_IMPERATIVE_RE = /^(compartilhe|salve|comente|marque|acesse|confira|aproveite|garanta|conhe[cç]a|saiba|visite|clique|siga|envie|chame|fale|pe[cç]a|agende|baixe|curta|deixe|mande|venha|descubra|corra|reserve|adquira|solicite|celebre|participe|inscreva-se|cadastre-se|entre em contato|n[aã]o perca|responda|vote|avalie|experimente|escolha)\b/i;
+const CTA_IMPERATIVE_RE =
+  /^(compartilhe|salve|comente|marque|acesse|confira|aproveite|garanta|conhe[cç]a|saiba|visite|clique|siga|envie|chame|fale|pe[cç]a|agende|baixe|curta|deixe|mande|venha|descubra|corra|reserve|adquira|solicite|celebre|participe|inscreva-se|cadastre-se|entre em contato|n[aã]o perca|responda|vote|avalie|experimente|escolha)\b/i;
 
 function splitSentences(text: string): string[] {
   return text.match(/[^.!?]+[.!?]+/g) || [];
@@ -248,7 +379,10 @@ export function stripTrailingCtaSentence(text: string): string {
   if (sentences.length < 2) return trimmed;
   const last = sentences[sentences.length - 1].trim();
   if (!CTA_IMPERATIVE_RE.test(last)) return trimmed;
-  return sentences.slice(0, -1).map((s) => s.trim()).join(' ');
+  return sentences
+    .slice(0, -1)
+    .map((s) => s.trim())
+    .join(" ");
 }
 
 // Normaliza a legenda (corpo + CTA + hashtags, ver REGRA DE LEGENDA) para
@@ -261,7 +395,10 @@ export function normalizeLegenda(legenda: string): string {
   const trimmed = legenda.trim();
   if (!trimmed) return trimmed;
 
-  let paragraphs = trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  let paragraphs = trimmed
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (paragraphs.length < 2) return trimmed;
 
   const lastIdx = paragraphs.length - 1;
@@ -279,7 +416,10 @@ export function normalizeLegenda(legenda: string): string {
   // indireto (bio/site) colado junto do CTA direto.
   const ctaIdx = paragraphs.length - 2;
   if (ctaIdx > 0) {
-    const lines = paragraphs[ctaIdx].split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    const lines = paragraphs[ctaIdx]
+      .split(/\n+/)
+      .map((l) => l.trim())
+      .filter(Boolean);
     if (lines.length > 1) {
       paragraphs[ctaIdx] = lines[0];
     } else {
@@ -290,7 +430,7 @@ export function normalizeLegenda(legenda: string): string {
     }
   }
 
-  return paragraphs.join('\n\n');
+  return paragraphs.join("\n\n");
 }
 
 // Aplica a REGRA DE LEGENDA cortando mecanicamente o que excede o limite:
@@ -304,26 +444,29 @@ export function enforceLegendaLimits(legenda: string): string {
   const trimmed = legenda.trim();
   if (!trimmed) return trimmed;
 
-  const paragraphs = trimmed.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = trimmed
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (paragraphs.length < 3) return trimmed;
 
   const lastIdx = paragraphs.length - 1;
   if (!/^#/.test(paragraphs[lastIdx])) return trimmed;
 
   paragraphs[0] = truncateWords(paragraphs[0], LEGENDA_CORPO_MAX_WORDS);
-  if (paragraphs[0] && !/[.!?]$/.test(paragraphs[0])) paragraphs[0] += '.';
+  if (paragraphs[0] && !/[.!?]$/.test(paragraphs[0])) paragraphs[0] += ".";
 
   const ctaIdx = lastIdx - 1;
   let cta = truncateWords(paragraphs[ctaIdx], LEGENDA_CTA_MAX_WORDS);
-  if (cta && !/[.!?]$/.test(cta)) cta += '.';
+  if (cta && !/[.!?]$/.test(cta)) cta += ".";
   paragraphs[ctaIdx] = cta;
 
   const hashtags = paragraphs[lastIdx].match(/#[^\s#]+/g) || [];
   if (hashtags.length > LEGENDA_HASHTAGS) {
-    paragraphs[lastIdx] = hashtags.slice(0, LEGENDA_HASHTAGS).join(' ');
+    paragraphs[lastIdx] = hashtags.slice(0, LEGENDA_HASHTAGS).join(" ");
   }
 
-  return paragraphs.join('\n\n');
+  return paragraphs.join("\n\n");
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -331,23 +474,123 @@ export function enforceLegendaLimits(legenda: string): string {
 // ─────────────────────────────────────────────────────────────────────────
 
 const STOPWORDS = new Set([
-  'a', 'o', 'as', 'os', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em', 'no', 'na', 'nos', 'nas',
-  'e', 'ou', 'mas', 'que', 'se', 'nem', 'para', 'com', 'por', 'ao', 'aos', 'à', 'às',
-  'é', 'são', 'foi', 'era', 'será', 'está', 'estava', 'ser', 'ter', 'tem', 'têm',
-  'seu', 'sua', 'seus', 'suas', 'este', 'esta', 'esse', 'essa', 'isso', 'isto',
-  'mais', 'menos', 'muito', 'muita', 'pouco', 'pouca', 'já', 'não', 'sem', 'sobre', 'entre', 'até',
-  'como', 'quando', 'onde', 'qual', 'quem', 'você', 'nosso', 'nossa', 'pelo', 'pela', 'pelos', 'pelas',
+  "a",
+  "o",
+  "as",
+  "os",
+  "um",
+  "uma",
+  "uns",
+  "umas",
+  "de",
+  "da",
+  "do",
+  "das",
+  "dos",
+  "em",
+  "no",
+  "na",
+  "nos",
+  "nas",
+  "e",
+  "ou",
+  "mas",
+  "que",
+  "se",
+  "nem",
+  "para",
+  "com",
+  "por",
+  "ao",
+  "aos",
+  "à",
+  "às",
+  "é",
+  "são",
+  "foi",
+  "era",
+  "será",
+  "está",
+  "estava",
+  "ser",
+  "ter",
+  "tem",
+  "têm",
+  "seu",
+  "sua",
+  "seus",
+  "suas",
+  "este",
+  "esta",
+  "esse",
+  "essa",
+  "isso",
+  "isto",
+  "mais",
+  "menos",
+  "muito",
+  "muita",
+  "pouco",
+  "pouca",
+  "já",
+  "não",
+  "sem",
+  "sobre",
+  "entre",
+  "até",
+  "como",
+  "quando",
+  "onde",
+  "qual",
+  "quem",
+  "você",
+  "nosso",
+  "nossa",
+  "pelo",
+  "pela",
+  "pelos",
+  "pelas",
 ]);
 
 const STEM_SUFFIXES = [
-  'acoes', 'acao', 'agens', 'agem', 'mente', 'ando', 'endo', 'indo',
-  'ados', 'adas', 'idos', 'idas', 'ado', 'ada', 'ido', 'ida',
-  'avel', 'aveis', 'oso', 'osa', 'osos', 'osas',
-  'al', 'ais', 'ar', 'er', 'ir', 'es', 'os', 'as', 'a', 'o', 'e', 's',
+  "acoes",
+  "acao",
+  "agens",
+  "agem",
+  "mente",
+  "ando",
+  "endo",
+  "indo",
+  "ados",
+  "adas",
+  "idos",
+  "idas",
+  "ado",
+  "ada",
+  "ido",
+  "ida",
+  "avel",
+  "aveis",
+  "oso",
+  "osa",
+  "osos",
+  "osas",
+  "al",
+  "ais",
+  "ar",
+  "er",
+  "ir",
+  "es",
+  "os",
+  "as",
+  "a",
+  "o",
+  "e",
+  "s",
 ];
 
 function stem(word: string): string {
-  let w = stripAccents(word.toLowerCase()).replace(/[^a-z]/g, '');
+  let w = stripAccents(word.toLowerCase()).replace(/[^a-z]/g, "");
   for (const suf of STEM_SUFFIXES) {
     if (w.length - suf.length >= 3 && w.endsWith(suf)) {
       w = w.slice(0, -suf.length);
@@ -384,7 +627,17 @@ export function checkMorphRepetition(texts: string[]): string | null {
 // Item 7 (subcaso numérico) — promessa numérica/oferta dura sem respaldo na keyInfo
 // ─────────────────────────────────────────────────────────────────────────
 
-const HARD_OFFER_TERMS = ['grátis', 'gratuito', 'gratuita', 'garantido', 'garantida', 'garantia', 'frete grátis', 'sem juros', 'cashback'];
+const HARD_OFFER_TERMS = [
+  "grátis",
+  "gratuito",
+  "gratuita",
+  "garantido",
+  "garantida",
+  "garantia",
+  "frete grátis",
+  "sem juros",
+  "cashback",
+];
 
 const NUMERIC_CLAIM_PATTERNS: RegExp[] = [
   /\d+([.,]\d+)?\s*%/g,
@@ -403,14 +656,14 @@ export function normalizeForCompare(s: string): string {
 // não reprova nada.
 export function checkNumericClaims(text: string, keyInfo: string): string[] {
   const flags: string[] = [];
-  const keyNorm = normalizeForCompare(keyInfo || '');
+  const keyNorm = normalizeForCompare(keyInfo || "");
   if (!keyNorm) return flags;
 
   for (const pattern of NUMERIC_CLAIM_PATTERNS) {
     const matches = text.match(pattern) || [];
     for (const raw of matches) {
       const token = raw.trim();
-      const digits = token.replace(/[^\d]/g, '');
+      const digits = token.replace(/[^\d]/g, "");
       if (!digits) continue;
       if (!keyNorm.includes(digits)) {
         flags.push(`menciona "${token}" sem respaldo na informação-chave`);
@@ -421,7 +674,7 @@ export function checkNumericClaims(text: string, keyInfo: string): string[] {
   const textNorm = normalizeForCompare(text);
   for (const term of HARD_OFFER_TERMS) {
     const termNorm = normalizeForCompare(term);
-    const firstWord = termNorm.split(' ')[0];
+    const firstWord = termNorm.split(" ")[0];
     if (textNorm.includes(termNorm) && !keyNorm.includes(firstWord)) {
       flags.push(`promete "${term}" sem respaldo na informação-chave`);
     }
@@ -449,11 +702,13 @@ const TITULO_MAX_WORDS = 5;
 // [outro abstrato]" — sujeito e predicado abstratos, sem cena fotografável
 // (ex.: "Responder faz diferença de verdade"). Reforça no D1 a regra do
 // prompt para o caso em que o modelo ainda assim a produzir.
-const ABSTRACT_PREDICATE_RE = /\b(faz|fazem|traz|trazem|gera|geram|vira|viram|transforma|transformam|se\s+torna|se\s+tornam)\s+(a\s+|o\s+|uma?\s+|um\s+)?(diferen[çc]as?|resultados?|mudan[çc]as?|sucesso|crescimento|solu[çc][õo]es?|valor|oportunidades?)\b/i;
+const ABSTRACT_PREDICATE_RE =
+  /\b(faz|fazem|traz|trazem|gera|geram|vira|viram|transforma|transformam|se\s+torna|se\s+tornam)\s+(a\s+|o\s+|uma?\s+|um\s+)?(diferen[çc]as?|resultados?|mudan[çc]as?|sucesso|crescimento|solu[çc][õo]es?|valor|oportunidades?)\b/i;
 
 export function checkAbstractPredicate(titulo: string): string | null {
   const m = titulo.match(ABSTRACT_PREDICATE_RE);
-  if (m) return `título usa padrão "${m[0]}" — predicado abstrato sem cena fotografável (ANTI-SÍMBOLO)`;
+  if (m)
+    return `título usa padrão "${m[0]}" — predicado abstrato sem cena fotografável (ANTI-SÍMBOLO)`;
   return null;
 }
 
@@ -463,11 +718,13 @@ export function checkAbstractPredicate(titulo: string): string | null {
 // (não entrega ganho de negócio específico da atividade — ver commit
 // 21add66, que corrigiu só o Estático Final do MOP; este regex cobre o
 // mesmo problema em QUALQUER título, PU ou MOP, qualquer formato).
-const ABSTRACT_CLOSING_RE = /\b(decis[ãa]o|escolha|caminho|aposta|dire[çc][ãa]o|jornada|passo|rumo)\s+(cert[ao]|feita)\b|\b(confian[çc]a|tranquilidade|paz\s+de\s+esp[íi]rito|rotina\s+resolvida|futuro\s+garantido)\s*[!.]?\s*$/i;
+const ABSTRACT_CLOSING_RE =
+  /\b(decis[ãa]o|escolha|caminho|aposta|dire[çc][ãa]o|jornada|passo|rumo)\s+(cert[ao]|feita)\b|\b(confian[çc]a|tranquilidade|paz\s+de\s+esp[íi]rito|rotina\s+resolvida|futuro\s+garantido)\s*[!.]?\s*$/i;
 
 export function checkAbstractClosing(titulo: string): string | null {
   const m = titulo.match(ABSTRACT_CLOSING_RE);
-  if (m) return `título termina em fechamento abstrato/intercambiável ("${m[0]}") — troque por um ganho de negócio específico da atividade`;
+  if (m)
+    return `título termina em fechamento abstrato/intercambiável ("${m[0]}") — troque por um ganho de negócio específico da atividade`;
   return null;
 }
 
@@ -481,14 +738,19 @@ export function checkAbstractClosing(titulo: string): string | null {
 // não afeta o Post Único.
 // ─────────────────────────────────────────────────────────────────────────
 
-const OBSERVER_NOUNS = '(?:gestor(?:es)?|decisor(?:es)?|equipes?|times?|administrador(?:es)?|respons[áa]ve(?:l|is)|profissionais)';
+const OBSERVER_NOUNS =
+  "(?:gestor(?:es)?|decisor(?:es)?|equipes?|times?|administrador(?:es)?|respons[áa]ve(?:l|is)|profissionais)";
 // Verbos de estado/percepção/decisão que, após "quem", descrevem o leitor de
 // fora (ex.: "Quem usa decide", "Quem cuida pensa") — diferente de um título
 // tipo "Quem registra vendas controla estoque", que é uma observação sobre um
 // PROCESSO (ação → consequência), não um rótulo do leitor.
-const OBSERVER_QUEM_VERBS = '(?:cuida|cuidam|usa|usam|decide|decidem|escolhe|escolhem|administra|administram|gerencia|gerenciam|pensa|pensam|sabe|sabem|entende|entendem|percebe|percebem|prefere|preferem|confia|confiam|busca|buscam|precisa|precisam|quer|querem|vive|vivem|resolve|resolvem)';
-const OBSERVER_SUBJECT_RE = new RegExp(`^(?:quem\\s+${OBSERVER_QUEM_VERBS}|(?:a|as|o|os)\\s+${OBSERVER_NOUNS}|${OBSERVER_NOUNS})\\b`, 'i');
-const OBSERVER_LABEL_RE = new RegExp(`\\b${OBSERVER_NOUNS}\\b`, 'i');
+const OBSERVER_QUEM_VERBS =
+  "(?:cuida|cuidam|usa|usam|decide|decidem|escolhe|escolhem|administra|administram|gerencia|gerenciam|pensa|pensam|sabe|sabem|entende|entendem|percebe|percebem|prefere|preferem|confia|confiam|busca|buscam|precisa|precisam|quer|querem|vive|vivem|resolve|resolvem)";
+const OBSERVER_SUBJECT_RE = new RegExp(
+  `^(?:quem\\s+${OBSERVER_QUEM_VERBS}|(?:a|as|o|os)\\s+${OBSERVER_NOUNS}|${OBSERVER_NOUNS})\\b`,
+  "i",
+);
+const OBSERVER_LABEL_RE = new RegExp(`\\b${OBSERVER_NOUNS}\\b`, "i");
 
 export function checkObserverSubject(titulo: string): string | null {
   const m = titulo.trim().match(OBSERVER_SUBJECT_RE);
@@ -498,20 +760,22 @@ export function checkObserverSubject(titulo: string): string | null {
 
 function canonicalObserverLabel(word: string): string {
   const w = stripAccents(word.toLowerCase());
-  if (w.startsWith('gestor')) return 'gestor';
-  if (w.startsWith('decisor')) return 'decisor';
-  if (w.startsWith('equipe')) return 'equipe';
-  if (w.startsWith('time')) return 'time';
-  if (w.startsWith('administrador')) return 'administrador';
-  if (w.startsWith('responsave')) return 'responsavel';
-  if (w.startsWith('profissio')) return 'profissional';
+  if (w.startsWith("gestor")) return "gestor";
+  if (w.startsWith("decisor")) return "decisor";
+  if (w.startsWith("equipe")) return "equipe";
+  if (w.startsWith("time")) return "time";
+  if (w.startsWith("administrador")) return "administrador";
+  if (w.startsWith("responsave")) return "responsavel";
+  if (w.startsWith("profissio")) return "profissional";
   return w;
 }
 
 // Flaga quando o mesmo rótulo do leitor (gestor/decisor/equipe/time...)
 // aparece nos títulos de mais de uma peça da sequência — sinal de que o
 // rótulo está substituindo a FORMA específica de cada estágio.
-export function checkCrossPieceLabelRepeat(pieces: { campo: string; titulo: string }[]): ValidationFlag[] {
+export function checkCrossPieceLabelRepeat(
+  pieces: { campo: string; titulo: string }[],
+): ValidationFlag[] {
   const flags: ValidationFlag[] = [];
   const seen = new Map<string, string>();
   for (const { campo, titulo } of pieces) {
@@ -520,7 +784,10 @@ export function checkCrossPieceLabelRepeat(pieces: { campo: string; titulo: stri
     const label = canonicalObserverLabel(m[0]);
     const prevCampo = seen.get(label);
     if (prevCampo) {
-      flags.push({ campo: `${campo}.titulo`, motivo: `título repete o rótulo do leitor ("${m[0]}"), já usado em ${prevCampo} — varie o sujeito ou entregue a FORMA do estágio sem rotular o leitor` });
+      flags.push({
+        campo: `${campo}.titulo`,
+        motivo: `título repete o rótulo do leitor ("${m[0]}"), já usado em ${prevCampo} — varie o sujeito ou entregue a FORMA do estágio sem rotular o leitor`,
+      });
     } else {
       seen.set(label, campo);
     }
@@ -537,12 +804,14 @@ export function checkCrossPieceLabelRepeat(pieces: { campo: string; titulo: stri
 // aqui o que se compara é o PREFIXO comum de palavras do título inteiro.
 function titleWords(titulo: string): string[] {
   return stripAccents(titulo.toLowerCase())
-    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
     .filter(Boolean);
 }
 
-export function checkCrossPieceTitleRepeat(pieces: { campo: string; titulo: string }[]): ValidationFlag[] {
+export function checkCrossPieceTitleRepeat(
+  pieces: { campo: string; titulo: string }[],
+): ValidationFlag[] {
   const flags: ValidationFlag[] = [];
   const wordLists = pieces.map((p) => ({ campo: p.campo, words: titleWords(p.titulo) }));
   for (let i = 0; i < wordLists.length; i++) {
@@ -550,7 +819,8 @@ export function checkCrossPieceTitleRepeat(pieces: { campo: string; titulo: stri
       const a = wordLists[i].words;
       const b = wordLists[j].words;
       let prefixLen = 0;
-      while (prefixLen < a.length && prefixLen < b.length && a[prefixLen] === b[prefixLen]) prefixLen++;
+      while (prefixLen < a.length && prefixLen < b.length && a[prefixLen] === b[prefixLen])
+        prefixLen++;
       const shorter = Math.min(a.length, b.length);
       // >=2 palavras iniciais idênticas cobrindo ao menos metade do título
       // mais curto — limiar pensado para pegar títulos de 4-6 palavras
@@ -571,11 +841,13 @@ export function checkCrossPieceTitleRepeat(pieces: { campo: string; titulo: stri
 export function validateTitulo(titulo: string): string[] {
   const motivos: string[] = [];
   const words = titulo.trim().split(/\s+/).filter(Boolean).length;
-  if (words < TITULO_MIN_WORDS) motivos.push(`título com ${words} palavra(s) — abaixo do mínimo de ${TITULO_MIN_WORDS}`);
-  if (words > TITULO_MAX_WORDS) motivos.push(`título com ${words} palavras — acima do máximo de ${TITULO_MAX_WORDS}`);
+  if (words < TITULO_MIN_WORDS)
+    motivos.push(`título com ${words} palavra(s) — abaixo do mínimo de ${TITULO_MIN_WORDS}`);
+  if (words > TITULO_MAX_WORDS)
+    motivos.push(`título com ${words} palavras — acima do máximo de ${TITULO_MAX_WORDS}`);
   const dangling = checkDanglingEnding(titulo);
   if (dangling) motivos.push(dangling);
-  const punct = checkPunctuation(titulo, 'titulo');
+  const punct = checkPunctuation(titulo, "titulo");
   if (punct) motivos.push(punct);
   const abstractPredicate = checkAbstractPredicate(titulo);
   if (abstractPredicate) motivos.push(abstractPredicate);
@@ -588,14 +860,14 @@ export function validateTexto(texto: string): string[] {
   const motivos: string[] = [];
   const dangling = checkDanglingEnding(texto);
   if (dangling) motivos.push(dangling);
-  const punct = checkPunctuation(texto, 'texto');
+  const punct = checkPunctuation(texto, "texto");
   if (punct) motivos.push(punct);
   return motivos;
 }
 
 export function validateLegenda(legenda: string): string[] {
   const motivos: string[] = [];
-  const punct = checkPunctuation(legenda, 'legenda');
+  const punct = checkPunctuation(legenda, "legenda");
   if (punct) motivos.push(punct);
   const structure = checkLegendaStructure(legenda);
   if (structure) motivos.push(structure);
@@ -627,17 +899,18 @@ const SUGESTAO_GENERIC_PATTERNS: RegExp[] = [
 export function validateSugestao(sugestao: string, maxWords = 12): string[] {
   const trimmed = sugestao.trim();
   const motivos: string[] = [];
-  if (!trimmed) return ['sugestão vazia'];
+  if (!trimmed) return ["sugestão vazia"];
 
   const words = trimmed.split(/\s+/).filter(Boolean).length;
   if (words < 4) motivos.push(`sugestão muito curta (${words} palavra(s)) — abaixo do mínimo de 4`);
-  if (words > maxWords) motivos.push(`sugestão com ${words} palavras — acima do máximo de ${maxWords}`);
+  if (words > maxWords)
+    motivos.push(`sugestão com ${words} palavras — acima do máximo de ${maxWords}`);
 
   const dangling = checkDanglingEnding(trimmed);
   if (dangling) motivos.push(dangling);
 
   if (SUGESTAO_GENERIC_PATTERNS.some((re) => re.test(trimmed))) {
-    motivos.push('sugestão usa frase genérica/clichê — falta concretude');
+    motivos.push("sugestão usa frase genérica/clichê — falta concretude");
   }
 
   return motivos;
@@ -656,21 +929,24 @@ export function validateSugestao(sugestao: string, maxWords = 12): string[] {
 // constarem no `allowedContext`. Padrões aplicados sobre texto normalizado
 // (minúsculo, sem acento).
 const INVENTED_PROMO_GENERIC_GROUPS: { label: string; re: RegExp }[] = [
-  { label: 'promoção/promocional', re: /\bpromoc/ },
-  { label: 'desconto', re: /\bdesconto/ },
-  { label: 'oferta', re: /\boferta/ },
-  { label: 'lançamento', re: /\blancamento/ },
-  { label: 'liquidação/saldão', re: /\bliquidac|\bsaldao/ },
-  { label: 'agenda/vagas aberta(s)', re: /\b(agenda|vagas?)\s+abert/ },
+  { label: "promoção/promocional", re: /\bpromoc/ },
+  { label: "desconto", re: /\bdesconto/ },
+  { label: "oferta", re: /\boferta/ },
+  { label: "lançamento", re: /\blancamento/ },
+  { label: "liquidação/saldão", re: /\bliquidac|\bsaldao/ },
+  { label: "agenda/vagas aberta(s)", re: /\b(agenda|vagas?)\s+abert/ },
 ];
 
 const INVENTED_PROMO_SPECIFIC_GROUPS: { label: string; re: RegExp }[] = [
   { label: 'percentual (%) / "off"', re: /\d+\s*%|\boff\b/ },
-  { label: 'valor em reais (R$)', re: /r\$\s*[\d.,]+/ },
-  { label: 'brinde/grátis/cortesia', re: /\bbrinde|\bgratis|\bgratuit|\bcortesia/ },
-  { label: 'condição de compra (acima de, a partir de, sem juros...)', re: /\b(acima de|a partir de|na compra de|compre\s+e\s+ganhe|sem juros)\b/ },
+  { label: "valor em reais (R$)", re: /r\$\s*[\d.,]+/ },
+  { label: "brinde/grátis/cortesia", re: /\bbrinde|\bgratis|\bgratuit|\bcortesia/ },
   {
-    label: 'prazo/data/urgência (hoje, até X, esta semana, última chance...)',
+    label: "condição de compra (acima de, a partir de, sem juros...)",
+    re: /\b(acima de|a partir de|na compra de|compre\s+e\s+ganhe|sem juros)\b/,
+  },
+  {
+    label: "prazo/data/urgência (hoje, até X, esta semana, última chance...)",
     re: /\b(hoje|amanha|esta semana|essa semana|este fim de semana|por tempo limitado|ultimas? (vagas?|unidades?|chances?|dias?)|nao perca|so hoje|ate (domingo|segunda|terca|quarta|quinta|sexta|sabado))\b/,
   },
 ];
@@ -686,7 +962,11 @@ const INVENTED_PROMO_GROUPS: { label: string; re: RegExp }[] = [
 // + atividade/empresa — termos só são permitidos se já constarem ali.
 // Com `opts.allowPromoLanguage` (PU promoção/oportunidade), a linguagem
 // promocional genérica é liberada e só os dados ESPECÍFICOS são bloqueados.
-export function checkInventedPromotion(sugestao: string, allowedContext: string, opts?: { allowPromoLanguage?: boolean }): string[] {
+export function checkInventedPromotion(
+  sugestao: string,
+  allowedContext: string,
+  opts?: { allowPromoLanguage?: boolean },
+): string[] {
   const motivos: string[] = [];
   const sugNorm = normalizeForCompare(sugestao);
   const ctxNorm = normalizeForCompare(allowedContext);
@@ -694,7 +974,9 @@ export function checkInventedPromotion(sugestao: string, allowedContext: string,
   const groups = opts?.allowPromoLanguage ? INVENTED_PROMO_SPECIFIC_GROUPS : INVENTED_PROMO_GROUPS;
   for (const { label, re } of groups) {
     if (re.test(sugNorm) && !re.test(ctxNorm)) {
-      motivos.push(`sugestão inventa "${label}" sem isso constar na informação/contexto do usuário`);
+      motivos.push(
+        `sugestão inventa "${label}" sem isso constar na informação/contexto do usuário`,
+      );
     }
   }
 
@@ -722,7 +1004,10 @@ export function checkSupplierLanguage(sugestao: string): string[] {
   const trimmed = sugestao.trim();
   for (const re of SUPPLIER_LANGUAGE_PATTERNS) {
     const m = trimmed.match(re);
-    if (m) return [`sugestão usa fala de fornecedor/catálogo ("${m[0]}") em vez de algo que o cliente diria, perguntaria, sentiria ou viveria`];
+    if (m)
+      return [
+        `sugestão usa fala de fornecedor/catálogo ("${m[0]}") em vez de algo que o cliente diria, perguntaria, sentiria ou viveria`,
+      ];
   }
   return [];
 }
@@ -735,11 +1020,14 @@ export function checkSupplierLanguage(sugestao: string): string[] {
 // tentativas e o campo ainda reprova D1. Corta para a última frase completa
 // (se houver), remove palavra(s) final(is) que sugerem corte e repontua —
 // um título de 4 palavras limpo é melhor que um de 6 quebrado.
-export function applyDeterministicFallback(value: string, kind: 'titulo' | 'texto' | 'legenda'): string {
+export function applyDeterministicFallback(
+  value: string,
+  kind: "titulo" | "texto" | "legenda",
+): string {
   let text = value.trim();
   if (!text) return text;
 
-  if (kind === 'legenda') {
+  if (kind === "legenda") {
     // Estrutura multi-parágrafo (corpo + CTA + hashtags) — a limpeza de
     // frase única abaixo cortaria a legenda no fim do 1º parágrafo,
     // destruindo CTA e hashtags. Mantém o texto como veio da última
@@ -754,10 +1042,14 @@ export function applyDeterministicFallback(value: string, kind: 'titulo' | 'text
   // regenerate-block já não truncam) — aqui, no último recurso (E4), se ainda
   // sobrar acima do máximo após as tentativas de regeneração, corta em
   // fronteira de palavra completa antes da limpeza de terminação pendurada.
-  if (kind === 'titulo') {
+  if (kind === "titulo") {
     const words = text.split(/\s+/).filter(Boolean);
     if (words.length > TITULO_MAX_WORDS) {
-      text = words.slice(0, TITULO_MAX_WORDS).join(' ').replace(/[,;:\-–—]+$/, '').trim();
+      text = words
+        .slice(0, TITULO_MAX_WORDS)
+        .join(" ")
+        .replace(/[,;:\-–—]+$/, "")
+        .trim();
     }
   }
 
@@ -766,18 +1058,21 @@ export function applyDeterministicFallback(value: string, kind: 'titulo' | 'text
     const words = text.split(/\s+/).filter(Boolean);
     if (words.length <= 1) break;
     words.pop();
-    text = words.join(' ').replace(/[,;:\-–—]+$/, '').trim();
+    text = words
+      .join(" ")
+      .replace(/[,;:\-–—]+$/, "")
+      .trim();
   }
 
-  if (kind === 'texto') {
-    if (!/[.!?]$/.test(text)) text += '.';
+  if (kind === "texto") {
+    if (!/[.!?]$/.test(text)) text += ".";
   } else {
     const isPergunta = QUESTION_STARTERS.test(text);
-    text = text.replace(/[.!]+$/, '');
+    text = text.replace(/[.!]+$/, "");
     if (isPergunta) {
-      if (!/\?$/.test(text)) text += '?';
+      if (!/\?$/.test(text)) text += "?";
     } else {
-      text = text.replace(/\?+$/, '');
+      text = text.replace(/\?+$/, "");
     }
   }
 
@@ -791,18 +1086,21 @@ export function applyDeterministicFallback(value: string, kind: 'titulo' | 'text
 export function validatePieceFields(
   prefix: string,
   fields: { titulo?: string; texto?: string; legenda?: string },
-  keyInfo?: string
+  keyInfo?: string,
 ): ValidationFlag[] {
   const flags: ValidationFlag[] = [];
 
   if (fields.titulo) {
-    for (const motivo of validateTitulo(fields.titulo)) flags.push({ campo: `${prefix}.titulo`, motivo });
+    for (const motivo of validateTitulo(fields.titulo))
+      flags.push({ campo: `${prefix}.titulo`, motivo });
   }
   if (fields.texto) {
-    for (const motivo of validateTexto(fields.texto)) flags.push({ campo: `${prefix}.texto`, motivo });
+    for (const motivo of validateTexto(fields.texto))
+      flags.push({ campo: `${prefix}.texto`, motivo });
   }
   if (fields.legenda) {
-    for (const motivo of validateLegenda(fields.legenda)) flags.push({ campo: `${prefix}.legenda`, motivo });
+    for (const motivo of validateLegenda(fields.legenda))
+      flags.push({ campo: `${prefix}.legenda`, motivo });
   }
 
   const morphTexts = [fields.titulo, fields.texto].filter((t): t is string => !!t);
@@ -812,7 +1110,7 @@ export function validatePieceFields(
   }
 
   if (keyInfo) {
-    const combined = [fields.titulo, fields.texto, fields.legenda].filter(Boolean).join(' ');
+    const combined = [fields.titulo, fields.texto, fields.legenda].filter(Boolean).join(" ");
     for (const motivo of checkNumericClaims(combined, keyInfo)) {
       flags.push({ campo: prefix, motivo });
     }

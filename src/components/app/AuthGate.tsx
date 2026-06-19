@@ -1,8 +1,8 @@
-import { useNavigate } from '@tanstack/react-router';
-import { useEffect, type ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useProfile } from '@/hooks/useProfile';
-import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, type ReactNode } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   children: ReactNode;
@@ -22,9 +22,11 @@ export function AuthGate({ children, requireAdmin }: Props) {
     // com uma releitura direta da sessão antes de chutar para /login.
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && !data.session) navigate({ to: '/login' });
+      if (!cancelled && !data.session) navigate({ to: "/login" });
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [loading, user, navigate]);
 
   if (loading) {
@@ -44,7 +46,7 @@ function AdminCheck({ children }: { children: ReactNode }) {
   const { isAdmin, loading } = useProfile();
   const navigate = useNavigate();
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: '/' });
+    if (!loading && !isAdmin) navigate({ to: "/" });
   }, [loading, isAdmin, navigate]);
   if (loading) {
     return (

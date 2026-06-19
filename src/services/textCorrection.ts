@@ -1,12 +1,12 @@
-import { getAuthHeaders } from './authHeaders';
+import { getAuthHeaders } from "./authHeaders";
 
 // Corrige ortografia, acentuação, concordância e pontuação de um texto em
 // português brasileiro, sem alterar sentido, tom ou tamanho.
 export async function correctPortuguese(text: string): Promise<string> {
   const auth = await getAuthHeaders();
-  const res = await fetch('/api/correct-text', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...auth },
+  const res = await fetch("/api/correct-text", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...auth },
     body: JSON.stringify({ text }),
   });
   if (!res.ok) {

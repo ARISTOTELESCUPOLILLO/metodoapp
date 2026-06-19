@@ -2,17 +2,25 @@
 // Mantém a conexão HTTP curta — cada chamada dura poucos segundos,
 // evitando o "upstream request timeout" da plataforma.
 
-import { supabase } from '@/integrations/supabase/client';
-import { getImpersonation } from '@/hooks/useImpersonation';
-import { prepareReferenceImage, prepareReferenceImages } from '@/utils/prepareReference';
+import { supabase } from "@/integrations/supabase/client";
+import { getImpersonation } from "@/hooks/useImpersonation";
+import { prepareReferenceImage, prepareReferenceImages } from "@/utils/prepareReference";
 
 // Slot de débito ativo — atualizado via setCurrentDebitSlot() pelo MetodoOpApp
 // quando o usuário seleciona um card de plano. Usado como fallback quando
 // generateImageAsync não recebe preferredSlot explícito.
 let _currentDebitSlot: string | undefined;
-export function setCurrentDebitSlot(slot: string | undefined) { _currentDebitSlot = slot; }
+export function setCurrentDebitSlot(slot: string | undefined) {
+  _currentDebitSlot = slot;
+}
 
-type StartResp = { requestId?: string; modelPath?: string; statusUrl?: string; responseUrl?: string; error?: string };
+type StartResp = {
+  requestId?: string;
+  modelPath?: string;
+  statusUrl?: string;
+  responseUrl?: string;
+  error?: string;
+};
 type StatusResp = { status?: string; error?: string };
 type ResultResp = { dataUrl?: string; imageUrl?: string; contentType?: string; error?: string };
 
@@ -23,18 +31,20 @@ async function authHeader(): Promise<Record<string, string>> {
     const imp = getImpersonation();
     return {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(imp ? { 'X-Impersonate-User-Id': imp.userId } : {}),
+      ...(imp ? { "X-Impersonate-User-Id": imp.userId } : {}),
     };
   } catch {
     return {};
   }
 }
 
-async function postJson<T>(body: unknown): Promise<{ ok: boolean; status: number; data: T; raw: string }> {
+async function postJson<T>(
+  body: unknown,
+): Promise<{ ok: boolean; status: number; data: T; raw: string }> {
   const auth = await authHeader();
-  const res = await fetch('/api/generate-image', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...auth },
+  const res = await fetch("/api/generate-image", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...auth },
     body: JSON.stringify(body),
   });
   const raw = await res.text();
@@ -50,14 +60,14 @@ async function postJson<T>(body: unknown): Promise<{ ok: boolean; status: number
 function friendlyError(status: number, raw: string, fallback: string): string {
   const snippet = raw.slice(0, 160).trim();
   if (status === 504 || /upstream|timeout|gateway/i.test(snippet)) {
-    return 'Tempo esgotado no servidor de imagem. Tente novamente em alguns segundos.';
+    return "Tempo esgotado no servidor de imagem. Tente novamente em alguns segundos.";
   }
   return fallback || snippet || `Erro ${status}`;
 }
 
 export async function generateImageAsync(params: {
   prompt: string;
-  format?: 'post' | 'reels';
+  format?: "post" | "reels";
   logoDataUrl?: string;
   referenceImages?: string[];
   modulo?: string;
@@ -69,7 +79,17 @@ export async function generateImageAsync(params: {
   // Com Kit Imagem (referenceImages) o modelo gpt-image-2/edit costuma levar bem mais tempo.
   // Default sem refs: 4min. Com refs: 6min.
   const hasRefs = Array.isArray(params.referenceImages) && params.referenceImages.length > 0;
-  const { prompt, format, logoDataUrl, referenceImages, modulo, preferredSlot, maxMs = hasRefs ? 360_000 : 240_000, pollMs = 1500, onProgress } = params;
+  const {
+    prompt,
+    format,
+    logoDataUrl,
+    referenceImages,
+    modulo,
+    preferredSlot,
+    maxMs = hasRefs ? 360_000 : 240_000,
+    pollMs = 1500,
+    onProgress,
+  } = params;
 
   // Compacta refs + logo (lado <=1024, JPEG q=0.85) antes do POST.
   // Reduz drasticamente o payload base64 enviado ao /api/generate-image
@@ -82,43 +102,46 @@ export async function generateImageAsync(params: {
   // Log discreto quando algo foi descartado pelo preparador.
   const refsIn = referenceImages?.length || 0;
   if (refsIn && refsSmall.length !== refsIn) {
-    console.warn('[imageGeneration] refs descartadas no preparo', { in: refsIn, out: refsSmall.length });
+    console.warn("[imageGeneration] refs descartadas no preparo", {
+      in: refsIn,
+      out: refsSmall.length,
+    });
   }
   if (logoDataUrl && !logoSmall) {
-    console.warn('[imageGeneration] logo descartada no preparo (formato não suportado)');
+    console.warn("[imageGeneration] logo descartada no preparo (formato não suportado)");
   }
 
   // 1) START — 1 retry automático em caso de 5xx transiente (ex.: fal.ai/OpenAI 500)
   const startBody = {
-    action: 'start',
+    action: "start",
     prompt,
     format,
     logoDataUrl: logoSmall || undefined,
     referenceImages: refsSmall.length ? refsSmall : undefined,
-    modulo: modulo || 'metodo-op',
+    modulo: modulo || "metodo-op",
     ...(preferredSlot ? { preferredSlot } : {}),
   };
   let start = await postJson<StartResp>(startBody);
   if (!start.ok && start.status >= 500) {
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise((r) => setTimeout(r, 3000));
     start = await postJson<StartResp>(startBody);
   }
   if (!start.ok || !start.data.requestId) {
     throw new Error(
-      friendlyError(start.status, start.raw, start.data.error || 'Falha ao iniciar a geração.'),
+      friendlyError(start.status, start.raw, start.data.error || "Falha ao iniciar a geração."),
     );
   }
   const { requestId, modelPath, statusUrl, responseUrl } = start.data;
 
   // 2) POLL — passa URLs opacas devolvidas pelo FAL quando disponíveis
   const t0 = Date.now();
-  let lastStatus = 'IN_QUEUE';
+  let lastStatus = "IN_QUEUE";
   let consecutiveFailures = 0;
   const MAX_CONSECUTIVE_FAILURES = 5;
   while (Date.now() - t0 < maxMs) {
     await new Promise((r) => setTimeout(r, pollMs));
     const st = await postJson<StatusResp>({
-      action: 'status',
+      action: "status",
       statusUrl,
       requestId,
       modelPath,
@@ -131,7 +154,7 @@ export async function generateImageAsync(params: {
       consecutiveFailures++;
       if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
         throw new Error(
-          'Não foi possível consultar o progresso da geração. Tente novamente em alguns segundos.',
+          "Não foi possível consultar o progresso da geração. Tente novamente em alguns segundos.",
         );
       }
       continue;
@@ -139,42 +162,42 @@ export async function generateImageAsync(params: {
     consecutiveFailures = 0;
     lastStatus = st.data.status || lastStatus;
     onProgress?.(lastStatus);
-    if (lastStatus === 'COMPLETED') break;
-    if (lastStatus === 'FAILED' || lastStatus === 'ERROR') {
-      throw new Error('Geração da peça falhou no servidor de imagem. Tente novamente.');
+    if (lastStatus === "COMPLETED") break;
+    if (lastStatus === "FAILED" || lastStatus === "ERROR") {
+      throw new Error("Geração da peça falhou no servidor de imagem. Tente novamente.");
     }
   }
-  if (lastStatus !== 'COMPLETED') {
-    throw new Error('A imagem ainda não ficou pronta. Tente novamente.');
+  if (lastStatus !== "COMPLETED") {
+    throw new Error("A imagem ainda não ficou pronta. Tente novamente.");
   }
 
   // 3) RESULT
   const slotToDebit = preferredSlot ?? _currentDebitSlot;
   const rr = await postJson<ResultResp>({
-    action: 'result',
+    action: "result",
     responseUrl,
     requestId,
     modelPath,
-    modulo: modulo || 'metodo-op',
+    modulo: modulo || "metodo-op",
     ...(slotToDebit ? { preferredSlot: slotToDebit } : {}),
   });
   const rawUrl = rr.data.dataUrl || rr.data.imageUrl;
   if (!rr.ok || !rawUrl) {
     throw new Error(
-      friendlyError(rr.status, rr.raw, rr.data.error || 'Imagem ausente na resposta.'),
+      friendlyError(rr.status, rr.raw, rr.data.error || "Imagem ausente na resposta."),
     );
   }
   // Se já é data URL (legado), retorna direto.
-  if (rawUrl.startsWith('data:')) return rawUrl;
+  if (rawUrl.startsWith("data:")) return rawUrl;
   // É uma URL CDN — faz o download no browser (sem limite de Worker).
   try {
-    const imgResp = await fetch(rawUrl, { mode: 'cors' });
+    const imgResp = await fetch(rawUrl, { mode: "cors" });
     if (!imgResp.ok) throw new Error(`status ${imgResp.status}`);
     const blob = await imgResp.blob();
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error('Erro ao converter imagem.'));
+      reader.onerror = () => reject(new Error("Erro ao converter imagem."));
       reader.readAsDataURL(blob);
     });
   } catch {
