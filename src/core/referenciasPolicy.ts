@@ -1,14 +1,17 @@
 // Política de uso de Imagens de Referência (IMG_RF).
 //
-// Regra unificada — igual nos 3 segmentos (VAREJO/SERVIÇOS/MARCA); a fachada
-// entra como elemento padrão em toda peça, fora da contagem de cenários
-// (slot próprio no Kit Imagem, não faz parte do pool de cenários):
+// Regra unificada nos 3 segmentos (VAREJO/SERVIÇOS/MARCA), EXCETO produto no
+// MOP estático/estático_final (só VAREJO — ver auditoria 2026-06-20: tinha
+// sido liberado pra todos por efeito colateral do commit d311f49, sem relação
+// com o que aquele commit dizia fazer; restaurado por decisão de negócio). A
+// fachada entra como elemento padrão em toda peça, fora da contagem de
+// cenários (slot próprio no Kit Imagem, não faz parte do pool de cenários):
 //
 //   EXP            : 1 avatar + 1 fachada + até 2 cenários + até 5 produtos
 //   PU 2/4/8       : 1 avatar + 1 fachada + até 2 cenários + até 3 produtos
-//   MOP estatico       : 1 avatar + 1 fachada + 1 cenário + até 3 produtos
-//   MOP carrossel      : sem avatar + 1 fachada + 1 cenário + até 5 produtos
-//   MOP estatico_final : 1 avatar + 1 fachada + 1 cenário + até 3 produtos
+//   MOP estatico       : 1 avatar + 1 fachada + 1 cenário + até 3 produtos (apenas VAREJO; SERVIÇOS/MARCA sem produto)
+//   MOP carrossel      : sem avatar + 1 fachada + 1 cenário + até 5 produtos (todos os segmentos)
+//   MOP estatico_final : 1 avatar + 1 fachada + 1 cenário + até 3 produtos (apenas VAREJO; SERVIÇOS/MARCA sem produto)
 //   MOP reels          : 1 avatar + 1 fachada + até 2 cenários, sem produto
 //
 // O freio para o carrossel é o toggle "usar referências" (default OFF) em
@@ -39,7 +42,7 @@ function isPU(m: ModeloOP | null): boolean {
 }
 
 export function policyPorFormato(
-  _segmento: Segment,
+  segmento: Segment,
   formato: SlotFormato,
   modelo: ModeloOP | null,
 ): RefPolicy {
@@ -53,12 +56,17 @@ export function policyPorFormato(
   }
 
   // MOP — carrossel: sem avatar; 1 cenário compartilhado pela sequência inteira
-  // + até 5 produtos (cada card recebe 1 produto, na ordem marcada).
+  // + até 5 produtos (cada card recebe 1 produto, na ordem marcada). Igual
+  // nos 3 segmentos.
   if (formato === 'carrossel')       return { avatar: false, fachada: true, cenarios: 1, produtos: 5 };
   if (formato === 'reels')           return { avatar: true,  fachada: true, cenarios: 2, produtos: 0 };
 
-  // S*V / S*C — estatico / estatico_final — igual nos 3 segmentos.
-  return { avatar: true, fachada: true, cenarios: 1, produtos: 3 };
+  // S*V / S*C — estatico / estatico_final: produto restrito a VAREJO (decisão
+  // de negócio confirmada 2026-06-20) — SERVIÇOS/MARCA sem produto.
+  if (segmento === 'VAREJO') {
+    return { avatar: true, fachada: true, cenarios: 1, produtos: 3 };
+  }
+  return { avatar: true, fachada: true, cenarios: 1, produtos: 0 };
 }
 
 // Compat: extras personalizados foram removidos. A função permanece para

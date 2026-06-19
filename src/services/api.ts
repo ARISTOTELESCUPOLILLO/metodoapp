@@ -253,10 +253,18 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
   const variationBlock = pickImageVariationBlock(mood, hasAvatarRef, titulo, texto, forcedGender, anchoraPersonagem, leituraCenica?.composicao, hasCenarioRef);
 
   // Regra compositiva de produto-protagonista — só para segmento VAREJO quando
-  // a âncora visual define papel=contexto_de_uso e não há avatar de referência
-  // (quando há avatar, a cena já está ancorada pela referência).
-  const papelBlock = (ancoragePapel === 'contexto_de_uso' && !hasAvatarRef && !isCover)
-    ? '\n⚠ PAPEL DO PRODUTO — COMPOSIÇÃO: o PRODUTO é o protagonista visual desta cena. A pessoa (se presente) aparece usando, segurando ou interagindo com ele em segundo plano. PROIBIDO: pessoa com mais área visual que o produto ou que roube o foco dele.\n'
+  // a âncora visual define papel=contexto_de_uso (ancoragePapel só assume esse
+  // valor nesse segmento — ver organizaMethodEngine.ts). Antes era suprimida
+  // quando havia avatar de referência, na suposição de que buildProductHierarchyBlock
+  // (visualDirection.ts, via referenceAnchorBlock) já cobria a hierarquia —
+  // mas aquele bloco só entra quando HÁ produto de referência selecionado
+  // (refs.produtos.length > 0); com avatar referenciado e nenhuma foto de
+  // produto marcada, a cena ficava sem QUALQUER regra de protagonismo. Mantém
+  // sempre, com texto adaptado para o caso de avatar presente.
+  const papelBlock = (ancoragePapel === 'contexto_de_uso' && !isCover)
+    ? (hasAvatarRef
+        ? '\n⚠ PAPEL DO PRODUTO — COMPOSIÇÃO: o PRODUTO é o protagonista visual desta cena. O avatar de referência APRESENTA ou USA o produto — segurando, indicando, demonstrando — sem cobrir, competir ou roubar o foco dele. PROIBIDO: avatar com mais área visual que o produto ou pose que esconda o produto.\n'
+        : '\n⚠ PAPEL DO PRODUTO — COMPOSIÇÃO: o PRODUTO é o protagonista visual desta cena. A pessoa (se presente) aparece usando, segurando ou interagindo com ele em segundo plano. PROIBIDO: pessoa com mais área visual que o produto ou que roube o foco dele.\n')
     : '';
 
   return `${buildDeviceRule()}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
