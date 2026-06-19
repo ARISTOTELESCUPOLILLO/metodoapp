@@ -7,16 +7,26 @@
 // cena é definido por tipo para que a tampa/verso errado não possa aparecer por
 // geometria. Sorteado a cada chamada (mesmo padrão de pickImageVariationBlock em
 // visualDirection.ts) para também evitar que a peça sempre mostre notebook.
-const DEVICE_TYPE_VARIATIONS: string[] = [
-  'CELULAR/SMARTPHONE: tela voltada para cima sobre a mesa OU na mão da pessoa, mostrando a tela ao observador. A parte de trás do aparelho nunca fica voltada para a câmera.',
-  'TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa OU em mãos mostrando a tela ao observador. A tampa/verso nunca fica voltada para a câmera.',
-  'NOTEBOOK/LAPTOP: SOMENTE de perfil lateral — câmera paralela ao eixo da dobradiça, mostrando a espessura do aparelho aberto em ângulo "V", nunca de frente nem de costas. A tampa traseira nunca fica visível para a câmera.',
-  'MONITOR DE DESKTOP: pessoa posicionada de frente para o monitor — a câmera enquadra a pessoa e a tela de lado/oblíqua, nunca a parte traseira do gabinete em destaque, nenhum logo de fabricante em evidência.',
-  'TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.',
+const DEVICE_CELULAR = 'CELULAR/SMARTPHONE: tela voltada para cima sobre a mesa OU na mão da pessoa, mostrando a tela ao observador. A parte de trás do aparelho nunca fica voltada para a câmera.';
+const DEVICE_TABLET = 'TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa OU em mãos mostrando a tela ao observador. A tampa/verso nunca fica voltada para a câmera.';
+const DEVICE_NOTEBOOK = 'NOTEBOOK/LAPTOP: SOMENTE de perfil lateral — câmera paralela ao eixo da dobradiça, mostrando a espessura do aparelho aberto em ângulo "V", nunca de frente nem de costas. A tampa traseira nunca fica visível para a câmera.';
+const DEVICE_MONITOR = 'MONITOR DE DESKTOP: pessoa posicionada de frente para o monitor — a câmera enquadra a pessoa e a tela de lado/oblíqua, nunca a parte traseira do gabinete em destaque, nenhum logo de fabricante em evidência.';
+const DEVICE_TELA_FUNDO = 'TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.';
+
+// Pool ponderado por repetição (não uniforme): celular/tablet/monitor saem bem
+// com mais frequência (confirmado em uso real); notebook reduzido por ainda
+// gerar tampa com conteúdo incorreto às vezes; tela/TV de fundo reduzida por
+// ser um uso pouco comum no dia a dia do público — não removida, só mais rara.
+const DEVICE_TYPE_POOL: string[] = [
+  DEVICE_CELULAR, DEVICE_CELULAR, DEVICE_CELULAR,
+  DEVICE_TABLET, DEVICE_TABLET, DEVICE_TABLET,
+  DEVICE_MONITOR, DEVICE_MONITOR, DEVICE_MONITOR,
+  DEVICE_NOTEBOOK, DEVICE_NOTEBOOK,
+  DEVICE_TELA_FUNDO,
 ];
 
 export function pickDeviceTypeLine(): string {
-  return DEVICE_TYPE_VARIATIONS[Math.floor(Math.random() * DEVICE_TYPE_VARIATIONS.length)];
+  return DEVICE_TYPE_POOL[Math.floor(Math.random() * DEVICE_TYPE_POOL.length)];
 }
 
 export function buildDeviceRule(): string {
@@ -25,6 +35,7 @@ export function buildDeviceRule(): string {
 COMPOSIÇÃO POR TIPO DE DISPOSITIVO — define o ÂNGULO da cena para que a tampa/carcaça errada não possa aparecer por geometria (em vez de só proibir). SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração:
 TIPO DESTA GERAÇÃO: ${pickDeviceTypeLine()}
 DIVERSIFICAÇÃO OBRIGATÓRIA: não repita sempre notebook entre as peças de uma mesma sequência — alterne com celular, tablet, monitor de desktop ou tela/TV de fundo conforme a atividade da empresa e o que a cena pede.
+PROTAGONISMO: o dispositivo digital é elemento de APOIO à cena, nunca o protagonista visual — o foco principal é a pessoa e a ação dela. Mantenha o dispositivo proporcionalmente pequeno no quadro, nunca em primeiro plano ocupando a maior área da composição. EXCEÇÃO: quando o próprio dispositivo for o produto sendo vendido (ex.: loja de eletrônicos/celulares/informática) — nesse caso ele pode ocupar o centro da composição como protagonista.
 
 CARCAÇA E TAMPA — REGRA ABSOLUTA (vale mesmo com a composição correta, como reforço): tampa, verso e carcaça de qualquer dispositivo DEVEM ser completamente lisas, sem nenhuma marca, símbolo, logo, maçã, ícone, adesivo, gravação ou iluminação. Use equipamento genérico, sem marca. MÁXIMO 1 DISPOSITIVO por cena.
 NEGATIVE: no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no images or graphics on device casing or back cover, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen, no laptop screen facing camera directly.`;
