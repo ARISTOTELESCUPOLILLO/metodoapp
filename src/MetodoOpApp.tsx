@@ -528,7 +528,7 @@ export default function App() {
     clearSessionImages(effectiveUserId);
     clearCopyEdits(effectiveUserId);
     try {
-      const generated = await generateMethodContent({
+      let generated = await generateMethodContent({
         ...form,
         companyName: kit.companyName,
         segment: kit.segment,
@@ -536,19 +536,26 @@ export default function App() {
         mainActivity: kit.mainActivity || '',
         mood: mood ?? 'OP-01',
       }, selectedSlot);
+
+      // D2 — juiz semântico: roda ANTES de exibir o resultado na tela (mesma
+      // correção aplicada à PU). Antes rodava em background depois do
+      // resultado já estar visível — quando corrigia algo, as peças trocavam
+      // de título/texto sozinhas alguns segundos depois (flash). Aguardar
+      // aqui elimina a troca silenciosa: só existe UM resultado exibido.
+      try {
+        const updated = await judgeAndRegenerateContent(generated, {
+          companyName: kit.companyName,
+          mainActivity: kit.mainActivity || '',
+          keyInfo: form.keyInfo,
+          segment: kit.segment,
+        });
+        if (updated) generated = updated;
+      } catch {
+        // best-effort — se o juiz falhar, segue com o resultado original.
+      }
+
       setResult(generated);
       refreshProfile();
-
-      // D2 — juiz semântico em lote, best-effort, fora do caminho crítico:
-      // roda depois que o resultado já está na tela; se corrigir algo, atualiza.
-      judgeAndRegenerateContent(generated, {
-        companyName: kit.companyName,
-        mainActivity: kit.mainActivity || '',
-        keyInfo: form.keyInfo,
-        segment: kit.segment,
-      }).then((updated) => {
-        if (updated) setResult(updated);
-      });
     } catch (e) {
       setError(String((e as Error).message || e));
     } finally {
