@@ -57,7 +57,6 @@ const MAX_PRODUCTS = 10;
 export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, loading, saving, saved, lockedSegment }: Props) {
   const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false);
   const [confirmRemoveUniforme, setConfirmRemoveUniforme] = useState(false);
-  const [confirmRemoveVenda, setConfirmRemoveVenda] = useState(false);
   const [isOpen, setIsOpen] = useState(!kit.companyName?.trim());
   const [newProductItem, setNewProductItem] = useState('');
   const update = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) => onChange({ ...kit, [key]: value });
@@ -270,40 +269,6 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
         </label>
       </div>
 
-      <div className="grid2">
-        <label>Foto de Venda (opcional)
-          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (file) update('vendaDataUrl', await fileToDataUrl(file));
-          }} />
-          <small style={{ color: '#64748b', fontWeight: 500, display: 'block', marginTop: 4 }}>
-            Foto de colaborador apresentando ou usando o produto. Habilita o objetivo "Venda" no Post Único — aplicação direta, sem reinvenção pela IA.
-          </small>
-          {kit.vendaDataUrl && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-              <img src={kit.vendaDataUrl} alt="venda" style={{ height: 64, objectFit: 'contain', borderRadius: 8, background: '#f1f5f9', padding: 4 }} />
-              <button
-                type="button"
-                onClick={() => setConfirmRemoveVenda(true)}
-                style={{
-                  background: '#fff',
-                  color: '#b91c1c',
-                  border: '1px solid #fecaca',
-                  borderRadius: 8,
-                  padding: '6px 10px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-                title="Remover a foto de venda atual"
-              >
-                🗑 Remover foto de venda
-              </button>
-            </div>
-          )}
-        </label>
-      </div>
-
       <div className="colorSection">
         <strong className="colorLabel">Cores da marca</strong>
         <div className="colorGrid">
@@ -487,20 +452,6 @@ export default function BrandKitForm({ kit, onChange, onSave, onLoad, onClear, l
           setConfirmRemoveUniforme(false);
         }}
         onCancel={() => setConfirmRemoveUniforme(false)}
-      />
-
-      <ConfirmDialog
-        open={confirmRemoveVenda}
-        tone="danger"
-        title="Remover foto de venda?"
-        message="A foto de venda atual será removida do formulário. O objetivo 'Venda' deixará de aparecer até subir uma nova foto e clicar em Salvar Kit."
-        confirmLabel="Remover"
-        cancelLabel="Cancelar"
-        onConfirm={() => {
-          update('vendaDataUrl', undefined);
-          setConfirmRemoveVenda(false);
-        }}
-        onCancel={() => setConfirmRemoveVenda(false)}
       />
     </section>
   );

@@ -33,10 +33,6 @@ export interface BrandKit {
   // referência de cor/modelo/posição da logo ao vestir o avatar ou o
   // personagem sem avatar nas peças, quando "Gerar com uniforme" é marcado.
   uniformeDataUrl?: string;
-  // Foto de colaborador com o produto (apresentação, uso prático) — usada na
-  // PU com objetivo "Venda", aplicação direta sem reinvenção pela IA (mesmo
-  // tratamento de "Fatos").
-  vendaDataUrl?: string;
   // Produtos, serviços, categorias ou especialidades reais — matéria-prima
   // concreta para a Sugestão (Informação-chave). Mínimo 3, máximo 10.
   products?: string[];
@@ -176,6 +172,10 @@ export interface ImageKit {
   // Foto de um acontecimento (visita, confraternização, feira) — usada na PU
   // com objetivo "Fatos", aplicação direta sem reinvenção pela IA.
   fato?: string;
+  // Foto de colaborador com o produto (apresentação, uso prático) — usada na
+  // PU com objetivo "Venda", aplicação direta sem reinvenção pela IA (mesmo
+  // tratamento de "Fato").
+  venda?: string;
 }
 
 // Seleção da Composição Visual no Post Único — diz quais elementos do Kit Imagem
@@ -206,7 +206,7 @@ export interface PostUnicoVisualSelection {
   // Usa a foto de Fato do Kit Imagem (objetivo "Fatos") — aplicação direta
   // sem reinvenção pela IA, só overlay de marca/título/texto.
   useFato?: boolean;
-  // Usa a foto de Venda do Kit de Marca (objetivo "Venda") — mesmo
+  // Usa a foto de Venda do Kit Imagem (objetivo "Venda") — mesmo
   // tratamento de preservação do "Fato".
   useVenda?: boolean;
 }

@@ -628,7 +628,7 @@ export default function App() {
       // Fato e Venda são conceitos exclusivos da PU (objetivo de peça) — não
       // fazem parte do buildReferences compartilhado com o MOP, que nunca os usa.
       if (visualSelection.useFato && freshImageKit.fato) references.fato = freshImageKit.fato;
-      if (visualSelection.useVenda && kit.vendaDataUrl) references.venda = kit.vendaDataUrl;
+      if (visualSelection.useVenda && freshImageKit.venda) references.venda = freshImageKit.venda;
       const hasRefs = !!(references.avatar || references.fachada || references.cenario || references.produtos?.length || references.uniforme || references.fato || references.venda);
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current = detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ?? (Math.random() < 0.5 ? 'mulher' : 'homem');

@@ -87,7 +87,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
 
     const { data: row, error } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, fachada_path, fato_path, cenarios_paths, produtos_paths')
+      .select('avatar_path, avatar_path_2, fachada_path, fato_path, venda_path, cenarios_paths, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -101,17 +101,19 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
         cenarios: Array.from({ length: CENARIO_SLOTS }, () => null) as (string | null)[],
         produtos: [null, null, null, null, null, null, null, null] as (string | null)[],
         fato: null,
+        venda: null,
       };
     }
 
     const cenariosArr = (row.cenarios_paths || []) as string[];
     const produtosArr = (row.produtos_paths || []) as string[];
 
-    const [avatarUrl, avatar2Url, fachadaUrl, fatoUrl, ...cenariosUrls] = await Promise.all([
+    const [avatarUrl, avatar2Url, fachadaUrl, fatoUrl, vendaUrl, ...cenariosUrls] = await Promise.all([
       signPath(row.avatar_path),
       signPath((row as any).avatar_path_2 || null),
       signPath((row as any).fachada_path || null),
       signPath((row as any).fato_path || null),
+      signPath((row as any).venda_path || null),
       ...Array.from({ length: CENARIO_SLOTS }, (_, i) => signPath(cenariosArr[i] || null)),
     ]);
     const produtosUrls = await Promise.all(
@@ -126,6 +128,7 @@ export const loadImageKitFor = createServerFn({ method: 'POST' })
       cenarios: cenariosUrls,
       produtos: produtosUrls,
       fato: fatoUrl,
+      venda: vendaUrl,
     };
   });
 
@@ -163,7 +166,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
     // ── Kit Imagem — falha suave se não existir no teste ──────────────────
     const { data: sourceKit } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, fachada_path, fato_path, cenarios_paths, produtos_paths')
+      .select('avatar_path, avatar_path_2, fachada_path, fato_path, venda_path, cenarios_paths, produtos_paths')
       .eq('user_id', sourceId).maybeSingle();
 
     const imageKitFound = !!sourceKit;
@@ -171,6 +174,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
     let newAvatar2: string | null = null;
     let newFachada: string | null = null;
     let newFato: string | null = null;
+    let newVenda: string | null = null;
     let newCenarios: (string | null)[] = Array.from({ length: CENARIO_SLOTS }, () => null);
     let newProdutos: (string | null)[] = Array.from({ length: 8 }, () => null);
 
@@ -192,6 +196,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
       newAvatar2 = await copySlot((sourceKit as any).avatar_path_2);
       newFachada = await copySlot((sourceKit as any).fachada_path);
       newFato = await copySlot((sourceKit as any).fato_path);
+      newVenda = await copySlot((sourceKit as any).venda_path);
       newCenarios = await Promise.all(
         Array.from({ length: CENARIO_SLOTS }, (_, i) => copySlot(cenariosArr[i] || null)),
       );
@@ -206,6 +211,7 @@ export const migrateImageKitFor = createServerFn({ method: 'POST' })
           avatar_path_2: newAvatar2,
           fachada_path: newFachada,
           fato_path: newFato,
+          venda_path: newVenda,
           cenarios_paths: newCenarios.map((p) => p || ''),
           produtos_paths: newProdutos.map((p) => p || ''),
           updated_at: new Date().toISOString(),
@@ -287,6 +293,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       cenarios: z.array(SlotInput).max(CENARIO_SLOTS).optional(),
       produtos: z.array(SlotInput).max(8).optional(),
       fato: SlotInput,
+      venda: SlotInput,
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -305,7 +312,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     // Carrega o que já existe pra saber o que apagar.
     const { data: existing } = await supabaseAdmin
       .from('user_image_kits')
-      .select('avatar_path, avatar_path_2, fachada_path, fato_path, cenarios_paths, produtos_paths')
+      .select('avatar_path, avatar_path_2, fachada_path, fato_path, venda_path, cenarios_paths, produtos_paths')
       .eq('user_id', targetId)
       .maybeSingle();
 
@@ -358,6 +365,18 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       const path = `${targetId}/fato.webp`;
       await uploadImage(path, data.fato);
       newFato = path;
+    }
+
+    // Venda — fotografia de colaborador com o produto.
+    const oldVenda = (existing as any)?.venda_path || null;
+    let newVenda: string | null = oldVenda;
+    if (data.venda === null) {
+      await removePath(oldVenda);
+      newVenda = null;
+    } else if (typeof data.venda === 'string' && data.venda.length > 0) {
+      const path = `${targetId}/venda.webp`;
+      await uploadImage(path, data.venda);
+      newVenda = path;
     }
 
     // Cenários (2 slots)
@@ -415,6 +434,7 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
           avatar_path_2: newAvatar2,
           fachada_path: newFachada,
           fato_path: newFato,
+          venda_path: newVenda,
           cenarios_paths: cenariosForDb,
           produtos_paths: produtosForDb,
           updated_at: new Date().toISOString(),
@@ -424,11 +444,12 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
     if (upErr) throw new Error(upErr.message);
 
     // Re-sign para devolver URLs prontos
-    const [avatarUrl, avatar2Url, fachadaUrl, fatoUrl, ...cenariosUrls] = await Promise.all([
+    const [avatarUrl, avatar2Url, fachadaUrl, fatoUrl, vendaUrl, ...cenariosUrls] = await Promise.all([
       signPath(newAvatar),
       signPath(newAvatar2),
       signPath(newFachada),
       signPath(newFato),
+      signPath(newVenda),
       ...newCenarios.map((p) => signPath(p)),
     ]);
     const produtosUrls = await Promise.all(newProdutos.map((p) => signPath(p)));
@@ -441,5 +462,6 @@ export const saveImageKitFor = createServerFn({ method: 'POST' })
       cenarios: cenariosUrls,
       produtos: produtosUrls,
       fato: fatoUrl,
+      venda: vendaUrl,
     };
   });

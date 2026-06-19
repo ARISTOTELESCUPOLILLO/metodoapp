@@ -33,7 +33,7 @@ interface Props {
   saved?: boolean;
 }
 
-type SlotKind = 'avatar' | 'avatar2' | 'fachada' | 'fato' | { tipo: 'cenario'; index: number } | { tipo: 'produto'; index: number };
+type SlotKind = 'avatar' | 'avatar2' | 'fachada' | 'fato' | 'venda' | { tipo: 'cenario'; index: number } | { tipo: 'produto'; index: number };
 
 export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: Props) {
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +67,8 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
       onChange({ ...kit, fachada: dataUrl || undefined });
     } else if (slot === 'fato') {
       onChange({ ...kit, fato: dataUrl || undefined });
+    } else if (slot === 'venda') {
+      onChange({ ...kit, venda: dataUrl || undefined });
     } else if (slot.tipo === 'cenario') {
       const next = [...kit.cenarios];
       next[slot.index] = dataUrl;
@@ -203,6 +205,21 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
         />
       </div>
 
+      <div className="formatBox">
+        <strong>Venda</strong>
+        <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#64748b' }}>
+          Foto de colaborador apresentando ou usando o produto. Usada no Post Único com o
+          objetivo "Venda" — a foto é aplicada quase sem alteração, só com marca/título/texto
+          sobrepostos (mesmo tratamento de "Fato").
+        </p>
+        <SlotCard
+          dataUrl={kit.venda}
+          busy={busySlot === slotKey('venda')}
+          onPick={(f) => handleFile('venda', f)}
+          onClear={() => clearSlot('venda')}
+        />
+      </div>
+
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
         <button
           type="button"
@@ -220,7 +237,7 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
 }
 
 function slotKey(slot: SlotKind): string {
-  if (slot === 'avatar' || slot === 'avatar2' || slot === 'fachada' || slot === 'fato') return slot;
+  if (slot === 'avatar' || slot === 'avatar2' || slot === 'fachada' || slot === 'fato' || slot === 'venda') return slot;
   return `${slot.tipo}-${slot.index}`;
 }
 

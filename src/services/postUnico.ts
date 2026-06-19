@@ -259,8 +259,8 @@ export interface PostUnicoReferences {
   // Foto de um acontecimento (Kit Imagem, slot próprio) — objetivo "Fatos",
   // aplicação direta sem reinvenção pela IA.
   fato?: string;
-  // Foto de colaborador com o produto (Kit de Marca) — objetivo "Venda",
-  // mesmo tratamento de preservação do "Fato".
+  // Foto de colaborador com o produto (Kit Imagem, slot próprio) — objetivo
+  // "Venda", mesmo tratamento de preservação do "Fato".
   venda?: string;
 }
 

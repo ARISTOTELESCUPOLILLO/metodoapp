@@ -29,7 +29,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
   const produtos = produtosDisponiveis(imageKit);
   const hasProdutos = produtos.length > 0;
   const hasFato = !!imageKit.fato && objetivo === 'fatos';
-  const hasVenda = !!kit.vendaDataUrl && objetivo === 'venda';
+  const hasVenda = !!imageKit.venda && objetivo === 'venda';
 
   const effectiveCenario = selection.cenarioSelecionado ?? null;
 
@@ -170,7 +170,7 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
           <Tile
             checked={!!selection.useVenda}
             onToggle={pickVenda}
-            url={kit.vendaDataUrl || undefined}
+            url={imageKit.venda || undefined}
             label="Venda"
           />
         )}
@@ -265,12 +265,12 @@ export default function PostUnicoComposicaoVisual({ imageKit, kit, selection, on
         </div>
       )}
 
-      {objetivo === 'venda' && !kit.vendaDataUrl && (
+      {objetivo === 'venda' && !imageKit.venda && (
         <div style={{
           marginTop: 10, background: '#fffbeb', border: '1px solid #fcd34d',
           color: '#92400e', borderRadius: 6, padding: '6px 8px', fontSize: 11,
         }}>
-          ⚠️ Objetivo "Venda" funciona melhor com uma foto do colaborador com o produto. Adicione em <strong>Kit de Marca → Foto de Venda</strong>.
+          ⚠️ Objetivo "Venda" funciona melhor com uma foto do colaborador com o produto. Adicione em <strong>Kit Imagem → Venda</strong>.
         </div>
       )}
 
