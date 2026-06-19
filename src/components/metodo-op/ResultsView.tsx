@@ -1440,9 +1440,7 @@ function CarouselCardBlock({
 
   // Lê seleção efetiva para um card: prefere storage do bloco (consolidado)
   // mapeando card[i] → produto[i]; fallback para storage individual por card.
-  function selecaoParaCard(
-    index: number,
-  ): {
+  function selecaoParaCard(index: number): {
     usarAvatar: boolean;
     avatarNum: 1 | 2 | null;
     usarFachada?: boolean;
