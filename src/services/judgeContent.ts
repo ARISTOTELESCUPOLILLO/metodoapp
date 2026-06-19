@@ -44,11 +44,11 @@ const JUDGE_TIMEOUT_MS = 15_000;
 // (avaliacoes) cruas, ou `null` se não houver itens, a request falhar ou
 // o timeout estourar. Best-effort: falha do juiz não afeta o usuário
 // (conteúdo já está na tela).
-async function callJudgeContent(items: JudgeItem[], ctx: JudgeContext): Promise<{ id?: string; campo?: string; motivo?: string }[] | null> {
+async function callJudgeContent(items: JudgeItem[], ctx: JudgeContext, timeoutMs: number = JUDGE_TIMEOUT_MS): Promise<{ id?: string; campo?: string; motivo?: string }[] | null> {
   if (items.length === 0) return null;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), JUDGE_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
@@ -97,9 +97,14 @@ export async function judgeAndRegenerateContent(result: MethodOpResult, ctx: Jud
 // Variante para o Post Único — mesmo juiz D2, aplicado à peça única
 // (titulo/texto). Retorna o par atualizado (se algo foi corrigido pela
 // regeneração automática) ou `null` se nada mudou / o juiz falhou.
+// Timeout menor que o padrão (8s, não 15s): aqui o D2 roda ANTES de exibir
+// o resultado na tela (ver PostUnicoForm.fetchCopy), então o tempo dele soma
+// à espera visível do usuário — diferente do MOP, onde roda em background.
+const PU_JUDGE_TIMEOUT_MS = 8_000;
+
 export async function judgeAndRegeneratePostUnico(copy: PostUnicoCopyFields, ctx: JudgeContext): Promise<PostUnicoCopyFields | null> {
   const items: JudgeItem[] = [{ id: 'copy', formato: 'PostUnico', titulo: copy.titulo, texto: copy.texto }];
-  const avaliacoes = await callJudgeContent(items, ctx);
+  const avaliacoes = await callJudgeContent(items, ctx, PU_JUDGE_TIMEOUT_MS);
   if (!avaliacoes || avaliacoes.length === 0) return null;
 
   const flags: ValidationFlag[] = avaliacoes

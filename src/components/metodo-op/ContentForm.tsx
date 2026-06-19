@@ -15,7 +15,7 @@ interface Props {
   onClear: () => void;
   loading: boolean;
   segment: Segment;
-  mood: MoodCode;
+  mood: MoodCode | null;
   onMoodChange: (mood: MoodCode) => void;
   rendersRestantes?: number;
   rendersTotal?: number;
@@ -458,6 +458,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           (currentTrack !== 'experimentacao' && !sizeAllowed(currentTrack, data.sequenceSize))
         );
         const mostrarAviso = isAdmin || semPlano;
+        const semMood = !mood && data.outputMode !== 'stories';
         return (
           <>
             {mostrarAviso && (
@@ -470,12 +471,13 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
                 className="primaryBtn"
                 type="button"
                 onClick={onGenerate}
-                disabled={loading || semSaldo || semGeracoes || (!isAdmin && semPlano) || semPlanoTrilha}
+                disabled={loading || semSaldo || semGeracoes || (!isAdmin && semPlano) || semPlanoTrilha || semMood}
                 title={
                   semGeracoes ? 'Limite de gerações do plano atingido — fale com o admin'
                   : semSaldo ? 'Limite de imagens do plano atingido — fale com o admin'
                   : (!isAdmin && semPlano) ? 'Sem plano ativo — fale com o admin'
                   : semPlanoTrilha ? 'Combinação fora dos seus planos — escolha outra trilha/tamanho'
+                  : semMood ? 'Escolha uma forma visual (mood) acima antes de gerar'
                   : undefined
                 }
                 style={{ flex: 1 }}

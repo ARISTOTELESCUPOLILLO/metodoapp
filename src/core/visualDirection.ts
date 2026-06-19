@@ -249,10 +249,21 @@ export type PersonagemGender = 'mulher' | 'homem';
 // inequívoco de pessoa retratada. Termos genéricos do PÚBLICO (gestoras,
 // empresárias, executivas, decisoras) não entram aqui: descrevem para quem a
 // mensagem fala, não necessariamente quem aparece na imagem.
-const FEMININE_COPY_RE = /\bmulheres?\b/i;
+// Nota: "(es)?" (não "es?") é necessário para casar tanto o singular "mulher"
+// quanto o plural "mulheres" — "mulheres?" sozinho nunca casava o singular.
+const FEMININE_COPY_RE = /\bmulher(es)?\b/i;
+
+// "Mulher(es)" também aparece com frequência descrevendo o PÚBLICO/cliente da
+// peça ("para as mulheres da sua loja", "mulheres que buscam X"), não a pessoa
+// retratada na cena — esses padrões são removidos do texto ANTES do teste
+// acima para não forçar gênero por engano (ex.: VAREJO com personagem
+// ancorado manualmente como homem, mas o texto fala do público feminino).
+// O lookbehind evita exigir \b antes de "à/às" (letra acentuada, fora do \w
+// padrão do regex em modo não-unicode — \b não detecta fronteira ali).
+const FEMININE_AUDIENCE_RE = /\b(para|de|com|entre)\s+(as?\s+)?mulher(es)?\b|(?<![a-zà-ÿ])(às|à|pelas|pela)\s+mulher(es)?\b|\bas\s+mulher(es)?\s+(da|do|de|que)\b|\bmulher(es)?\s+que\b/gi;
 
 export function detectForcedGenderFromCopy(titulo?: string, texto?: string): PersonagemGender | null {
-  const copyText = `${titulo ?? ''} ${texto ?? ''}`;
+  const copyText = `${titulo ?? ''} ${texto ?? ''}`.replace(FEMININE_AUDIENCE_RE, '');
   return FEMININE_COPY_RE.test(copyText) ? 'mulher' : null;
 }
 

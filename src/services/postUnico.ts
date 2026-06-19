@@ -138,7 +138,7 @@ const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, 'nenhum'>, string[]
 
 function direcaoBlock(direcao: PostUnicoDirecao, mood?: MoodCode, objetivo?: PostUnicoObjetivo, hasProdutos?: boolean): string {
   if (direcao === 'mood' && mood) {
-    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood)}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.`;
+    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood)}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
   }
   const obj = objetivo ?? 'nenhum';
 
@@ -183,29 +183,29 @@ function logoZoneDescription(position: LogoPosition | undefined): { reservaTopo:
   // texto, rosto, objeto-foco e lettering exatamente sobre o ponto da logo,
   // mantendo contraste local suficiente para a marca ser legível.
   const base =
-    'Área reservada inviolável (~18% × ~10%): PROIBIDO ABSOLUTO ali: texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO PELA LOGO — ela será sobreposta depois. Área deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — em volta da zona e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível.';
+    'Área reservada inviolável (~18% × ~10%): PROIBIDO ABSOLUTO ali: texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO PELA LOGO — ela será sobreposta depois. Área deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — em volta da zona e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível. NEGATIVE: solid color block behind logo area, colored badge, colored panel, banner shape.';
   // Para logo centralizada (topo/base), o ponto da logo fica no MEIO de uma linha
   // que normalmente atravessa o canvas de ponta a ponta. Um "retângulo pequeno"
   // não basta: título/texto de apoio que ocupem essa linha colidem com a logo no
   // centro. Por isso a zona aqui é uma FAIXA HORIZONTAL COMPLETA — nenhuma linha
   // de texto pode cruzá-la, mesmo parcialmente.
   const faixa =
-    'A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ~14% da altura. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa.';
+    'A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ~14% da altura. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.';
   if (pos === 'top-center') {
     return {
       reservaTopo: `Ponto da logo: TOPO CENTRAL. ${faixa}`,
-      regraFinal: 'Faixa superior completa livre de texto, logo central legível, sem dead space',
+      regraFinal: 'Faixa superior é continuação natural da cena — SEM barra, painel ou bloco de cor sólida, livre de texto, logo central legível, sem dead space.',
     };
   }
   if (pos === 'bottom-center') {
     return {
       reservaTopo: `Ponto da logo: BASE CENTRAL. ${faixa}`,
-      regraFinal: 'Faixa inferior completa livre de texto, logo central legível, sem dead space',
+      regraFinal: 'Faixa inferior é continuação natural da cena — SEM barra, painel ou bloco de cor sólida, livre de texto, logo central legível, sem dead space.',
     };
   }
   return {
     reservaTopo: `Ponto da logo: CANTO INFERIOR DIREITO. ${base}`,
-    regraFinal: 'Canto inferior direito legível para a logo, sem dead space',
+    regraFinal: 'Canto inferior direito é continuação natural da cena — SEM badge, painel ou bloco de cor sólida atrás da logo, legível, sem dead space.',
   };
 }
 

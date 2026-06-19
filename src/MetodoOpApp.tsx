@@ -107,12 +107,12 @@ export default function App() {
   const [imageKit, setImageKit] = useState<ImageKit>(() => loadImageKit(null));
   const [imageKitSaved, setImageKitSaved] = useState(false);
   const [visualSelection, setVisualSelection] = useState<PostUnicoVisualSelection>(defaultVisualSelection);
-  const [mood, setMood] = useState<MoodCode>(() => {
+  const [mood, setMood] = useState<MoodCode | null>(() => {
     try {
       const m = localStorage.getItem('metodo-op-mood');
       if (m && ['OP-01','OP-02','OP-03','OP-04','OP-05','OP-06'].includes(m)) return m as MoodCode;
     } catch {}
-    return 'OP-01';
+    return null;
   });
   const [result, setResult] = useState<MethodOpResult | undefined>();
   const [loading, setLoading] = useState(false);
@@ -267,7 +267,7 @@ export default function App() {
   useEffect(() => { saveForm(form as any); }, [form]);
   useEffect(() => { savePostUnico(postUnico); }, [postUnico]);
   useEffect(() => { localStorage.setItem('metodo-op-modo', modo); }, [modo]);
-  useEffect(() => { try { localStorage.setItem('metodo-op-mood', mood); } catch {} }, [mood]);
+  useEffect(() => { if (mood) { try { localStorage.setItem('metodo-op-mood', mood); } catch {} } }, [mood]);
 
   // Auto-seleciona o modo de acordo com o plano1 ao logar — UMA vez por login
   // real nesta aba. sessionStorage (em vez de useRef) sobrevive à remontagem
@@ -518,6 +518,10 @@ export default function App() {
   }
 
   async function handleGenerate() {
+    if (!mood && form.outputMode !== 'stories') {
+      setError('Escolha uma forma visual (mood) antes de gerar.');
+      return;
+    }
     setLoading(true);
     setError('');
     setResult(undefined);
@@ -530,7 +534,7 @@ export default function App() {
         segment: kit.segment,
         brandVoice: kit.brandVoice,
         mainActivity: kit.mainActivity || '',
-        mood,
+        mood: mood ?? 'OP-01',
       }, selectedSlot);
       setResult(generated);
       refreshProfile();
@@ -882,7 +886,7 @@ export default function App() {
           ) : null}
           {/* ResultsView fica sempre montado para não perder imagens geradas ao trocar de aba */}
           <div style={{ display: modo === 'metodo' ? undefined : 'none' }}>
-            <ResultsView result={result} kit={kit} mood={mood} onClear={handleClearMethodResult} onRetry={handleGenerate} imageKit={imageKit} sequenceSize={form.sequenceSize} onImageGenerated={refreshProfile} userId={effectiveUserId} />
+            <ResultsView result={result} kit={kit} mood={mood ?? 'OP-01'} onClear={handleClearMethodResult} onRetry={handleGenerate} imageKit={imageKit} sequenceSize={form.sequenceSize} onImageGenerated={refreshProfile} userId={effectiveUserId} />
           </div>
           {modo === 'postUnico' && (
             <PostUnicoResult

@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from 'lucide-react';
 import { getRecommendedMoods, templateMoods } from '../../data/templateCatalog';
 import { MoodCode, Segment } from '../../types';
@@ -14,17 +13,13 @@ const MOOD_ICONS: Record<MoodCode, LucideIcon> = {
 
 interface Props {
   segment: Segment;
-  selected: MoodCode;
+  selected: MoodCode | null;
   onSelect: (code: MoodCode) => void;
 }
 
 export default function TemplateChooser({ segment, selected, onSelect }: Props) {
   const moods = getRecommendedMoods(segment);
 
-  useEffect(() => {
-    const first = moods.find(m => m.recommendedFor.includes(segment));
-    if (first) onSelect(first.code);
-  }, [segment]);
   return (
     <section className="panel">
       <div className="sectionHeader">

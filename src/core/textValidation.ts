@@ -453,6 +453,20 @@ export function checkAbstractPredicate(titulo: string): string | null {
   return null;
 }
 
+// Fechamento abstrato/emocional genérico no final do título — substantivo +
+// "certo(a)" ou clichê equivalente (ex.: "...decisão certa", "...escolha
+// certa", "...caminho certo"). Intercambiável entre qualquer empresa/segmento
+// (não entrega ganho de negócio específico da atividade — ver commit
+// 21add66, que corrigiu só o Estático Final do MOP; este regex cobre o
+// mesmo problema em QUALQUER título, PU ou MOP, qualquer formato).
+const ABSTRACT_CLOSING_RE = /\b(decis[ãa]o|escolha|caminho|aposta|dire[çc][ãa]o|jornada|passo|rumo)\s+(cert[ao]|feita)\b|\b(confian[çc]a|tranquilidade|paz\s+de\s+esp[íi]rito|rotina\s+resolvida|futuro\s+garantido)\s*[!.]?\s*$/i;
+
+export function checkAbstractClosing(titulo: string): string | null {
+  const m = titulo.match(ABSTRACT_CLOSING_RE);
+  if (m) return `título termina em fechamento abstrato/intercambiável ("${m[0]}") — troque por um ganho de negócio específico da atividade`;
+  return null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Medida C (sequência MOP) — "rótulo do leitor" como sujeito do título
 // substitui a FORMA do estágio que o título deveria entregar (ver item 11 /
@@ -521,6 +535,8 @@ export function validateTitulo(titulo: string): string[] {
   if (punct) motivos.push(punct);
   const abstractPredicate = checkAbstractPredicate(titulo);
   if (abstractPredicate) motivos.push(abstractPredicate);
+  const abstractClosing = checkAbstractClosing(titulo);
+  if (abstractClosing) motivos.push(abstractClosing);
   return motivos;
 }
 

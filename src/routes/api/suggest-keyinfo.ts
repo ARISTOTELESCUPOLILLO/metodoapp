@@ -63,15 +63,6 @@ function classifyItemType(item: string): 'VAREJO' | 'SERVIÇOS' | null {
   return null;
 }
 
-// Gera um número estável a partir de uma string (empresa + atividade), usado
-// para variar a lente de abertura entre empresas sem depender de estado
-// externo.
-function seedFromString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
 // Lentes de abertura — 8 formas internas de variar o ÂNGULO da
 // Informação-chave (Sugestão MOP e PU) sobre o CONTEXTO REAL DE USO já
 // identificado a partir do elemento concreto e da atividade. São orientação
@@ -82,12 +73,15 @@ function seedFromString(s: string): number {
 const OPENING_LENSES: { nome: string; guia: string }[] = [
   { nome: 'Situação real', guia: 'Dentro do contexto real de uso já identificado, escolha um momento específico e cotidiano em que ele acontece — descrito sem dramatizar.' },
   { nome: 'Dúvida comum', guia: 'Dentro do contexto real de uso já identificado, escolha uma dúvida comum que clientes têm antes de usar, contratar ou comprar nesse contexto.' },
-  { nome: 'Oportunidade', guia: 'Dentro do contexto real de uso já identificado, escolha um momento em que o elemento se encaixa bem nesse contexto — uma oportunidade objetiva, sem tom de campanha.' },
+  { nome: 'Oportunidade', guia: 'Dentro do contexto real de uso já identificado, escolha um momento ou ocasião ESPECÍFICA (estação, fase, evento, situação concreta do calendário ou da rotina do cliente) em que o elemento se encaixa bem — descrito com um detalhe real e datável, nunca uma afirmação vaga de que "serve bem" ou "é uma boa opção".' },
   { nome: 'Processo', guia: 'Dentro do contexto real de uso já identificado, escolha uma etapa do processo que envolve o elemento nesse contexto — como ele é feito, escolhido ou mantido.' },
-  { nome: 'Resultado observável', guia: 'Dentro do contexto real de uso já identificado, escolha um resultado concreto e observável que o elemento entrega ou permite nesse contexto.' },
+  { nome: 'Resultado observável', guia: 'Dentro do contexto real de uso já identificado, escolha um resultado MEDÍVEL OU VISÍVEL (tempo ganho/perdido, problema resolvido, estado antes/depois, frequência, quantidade) que o elemento entrega ou permite nesse contexto — nunca uma sensação vaga de melhoria genérica.' },
   { nome: 'Escolha antes da compra', guia: 'Dentro do contexto real de uso já identificado, escolha um critério ou detalhe que faz diferença na hora de escolher o elemento para esse uso.' },
-  { nome: 'Necessidade percebida', guia: 'Dentro do contexto real de uso já identificado, escolha a necessidade real que o elemento atende nesse contexto.' },
+  { nome: 'Necessidade percebida', guia: 'Dentro do contexto real de uso já identificado, escolha uma necessidade CONCRETA e específica (nunca abstrata como "praticidade", "organização" ou "qualidade de vida") que o elemento atende — ancorada numa situação real e nomeável em que essa necessidade aparece.' },
   { nome: 'Erro evitável', guia: 'Dentro do contexto real de uso já identificado, escolha um erro comum e evitável relacionado a esse uso — descrito como fato, sem culpar o cliente.' },
+  { nome: 'Comparação concreta', guia: 'Dentro do contexto real de uso já identificado, compare duas opções, modelos, tamanhos, versões ou jeitos reais de usar/escolher o elemento — apontando uma diferença prática e específica entre eles, nunca uma comparação genérica tipo "X é melhor que Y".' },
+  { nome: 'Sinal de hora de agir', guia: 'Dentro do contexto real de uso já identificado, escolha um sinal concreto e perceptível (desgaste, comportamento, data, sintoma, mudança visível) que indica a hora de trocar, revisar, repor, renovar ou cuidar do elemento.' },
+  { nome: 'Detalhe que passa despercebido', guia: 'Dentro do contexto real de uso já identificado, escolha um detalhe específico do elemento que o cliente costuma não notar ou só percebe tarde demais — um aspecto concreto, nunca uma qualidade abstrata como "atenção aos detalhes".' },
 ];
 
 export const Route = createFileRoute('/api/suggest-keyinfo')({
@@ -281,7 +275,13 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
           // Varia a FORMA de encontrar o assunto entre as tentativas — nunca
           // aparece no JSON de saída nem na UI, e não carrega tensão,
           // promessa, progressão ou linguagem de campanha.
-          const lensIndex = (attempt + seedFromString(companyName + mainActivity)) % OPENING_LENSES.length;
+          // O ponto de partida é sorteado a cada request (não fixo por
+          // empresa) — antes usava um seed determinístico de companyName,
+          // o que fazia toda sessão nova da mesma empresa começar sempre na
+          // mesma lente. `attempt` continua somado para garantir que, DENTRO
+          // de uma sessão, cada nova tentativa percorra uma lente diferente
+          // das já usadas (sem repetir até esgotar o conjunto).
+          const lensIndex = (attempt + Math.floor(Math.random() * OPENING_LENSES.length)) % OPENING_LENSES.length;
           const lens = OPENING_LENSES[lensIndex];
           const lensGuardrail = ` Esta lente define apenas o ÂNGULO da frase dentro do CONTEXTO REAL DE USO já identificado — não cria uma situação nova, não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal. A lente é um mecanismo interno: a frase final não deve deixar reconhecível qual lente foi usada — só devem aparecer produto/serviço, contexto real de uso e situação plausível em linguagem natural.${segment !== 'MARCA' ? ` PROIBIDO usar tom de vínculo/comunidade com o público — "nosso(s)", "nossa(s)", "juntos", "nossa comunidade", "cuidar juntos", "fazemos parte da sua vida" — esse registro pertence ao segmento MARCA; em ${segment}, descreva produto/serviço e situação na 3ª pessoa, sem incluir o público como coautor ou parceiro emocional.` : ''}`;
           const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}${lensGuardrail}`;

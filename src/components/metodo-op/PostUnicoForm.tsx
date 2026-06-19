@@ -118,11 +118,6 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   // Inicializado com o valor atual de keyInfo (não vazio) para que o efeito de
   // detecção de mudança não dispare falso-positivo ao remontar com copy já gerado.
   const copyKeyInfoRef = useRef<string>(data.keyInfo);
-  // Marca quando o usuário interagiu com o título/texto gerado (leitura com o
-  // dedo no mobile = focus/seleção, ou edição). Enquanto verdadeiro, a resposta
-  // tardia do juiz D2 (até 15s em voo) NÃO sobrescreve o que está na tela —
-  // era essa troca silenciosa, e não o swipe, que "mudava o título" no mobile.
-  const copyTouchedRef = useRef(false);
 
   useEffect(() => {
     setSuggestCount(0);
@@ -177,31 +172,33 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
         mainActivity,
       }, kit.brandVoice, kit.segment, puSlot);
       // E3 — regenera título/texto flagados por D1 antes de exibir ao usuário.
-      const result = await autoRegenerateFlaggedPostUnico(
+      let result = await autoRegenerateFlaggedPostUnico(
         { titulo: generated.titulo, texto: generated.texto },
         generated.flags,
         { companyName, mainActivity, keyInfo: data.keyInfo }
       );
-      copyTouchedRef.current = false;
+
+      // D2 — juiz semântico: roda ANTES de exibir qualquer coisa na tela.
+      // Antes rodava em background depois do setCopy já ter mostrado o
+      // resultado do E3 — quando o juiz corrigia algo, a tela trocava o
+      // título/texto sozinha alguns segundos depois (efeito de "flash",
+      // quase sempre substituindo um título bom por outro). Aguardar aqui
+      // elimina a troca silenciosa: só existe UM resultado exibido.
+      try {
+        const updated = await judgeAndRegeneratePostUnico(result, {
+          companyName,
+          mainActivity,
+          keyInfo: data.keyInfo,
+          segment: kit.segment,
+        });
+        if (updated) result = updated;
+      } catch {
+        // best-effort — se o juiz falhar, segue com o resultado do E3.
+      }
+
       setCopy(result);
       setCopyOriginal(result);
       copyKeyInfoRef.current = data.keyInfo;
-
-      // D2 — juiz semântico em lote, best-effort, fora do caminho crítico:
-      // roda depois que o resultado já está na tela; se corrigir algo, atualiza.
-      // Só aplica se o usuário ainda não tocou no título/texto — evita
-      // sobrescrever, no meio da leitura/edição, o que ele já está lendo.
-      judgeAndRegeneratePostUnico(result, {
-        companyName,
-        mainActivity,
-        keyInfo: data.keyInfo,
-        segment: kit.segment,
-      }).then((updated) => {
-        if (updated && !copyTouchedRef.current) {
-          setCopy(updated);
-          setCopyOriginal(updated);
-        }
-      });
     } catch (e) {
       setCopyError((e as Error).message);
     } finally {
@@ -541,8 +538,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
               <input
                 type="text"
                 value={copy.titulo}
-                onFocus={() => { copyTouchedRef.current = true; }}
-                onChange={e => { copyTouchedRef.current = true; setCopy(c => c ? { ...c, titulo: e.target.value } : c); }}
+                onChange={e => setCopy(c => c ? { ...c, titulo: e.target.value } : c)}
                 onBlur={e => setCopy(c => c ? { ...c, titulo: truncateWords(e.target.value, 6) } : c)}
                 style={{
                   width: '100%', fontSize: 16, fontWeight: 800, color: '#0f172a',
@@ -607,8 +603,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
               </div>
               <textarea
                 value={copy.texto}
-                onFocus={() => { copyTouchedRef.current = true; }}
-                onChange={e => { copyTouchedRef.current = true; setCopy(c => c ? { ...c, texto: e.target.value } : c); }}
+                onChange={e => setCopy(c => c ? { ...c, texto: e.target.value } : c)}
                 onBlur={e => setCopy(c => c ? { ...c, texto: truncateWords(e.target.value, 14) } : c)}
                 rows={2}
                 style={{
