@@ -71,6 +71,10 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
   const allSessionSuggestionsRef = useRef<string[]>([]);
+  // Semente fixa por sessão de sugestões — enviada ao servidor (stateless) pra
+  // garantir que as tentativas 0/1/2 caiam em lentes diferentes dentro da
+  // sessão, mas variem entre sessões novas (ver lensIndex em suggest-keyinfo.ts).
+  const sessionSeedRef = useRef<number>(Math.floor(Math.random() * 1e9));
   const [selectedProducts, setSelectedProducts] = useState<string[]>(() => products || []);
   const keyInfoCorrection = useTextCorrection();
 
@@ -87,6 +91,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
     setSuggestError(null);
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
+    sessionSeedRef.current = Math.floor(Math.random() * 1e9);
   }, [segment]);
 
   useEffect(() => {
@@ -125,6 +130,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           hint: '',
           mode: 'metodo',
           attempt,
+          sessionSeed: sessionSeedRef.current,
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
           brandVoice: data.brandVoice || '',

@@ -17,18 +17,29 @@ const OBJETIVO_TOM: Record<string, string> = {
 // Escolhe o item da lista de produtos/serviços marcados que vira a semente
 // concreta desta sugestão — rotação determinística por "attempt", evitando
 // (quando possível) repetir um item cujo assunto já apareceu nas sugestões
-// anteriores desta sessão.
-function pickConcreteItem(items: string[], attempt: number, previousSuggestions: string[]): string | null {
-  if (!items.length) return null;
+// anteriores desta sessão. Quando o pool de itens marcados é menor que o
+// número de tentativas (ex.: 1-2 itens para 3 cliques em "Sugestão"), repetir
+// o mesmo item é matematicamente inevitável — `repeated` sinaliza esse caso
+// para o chamador reforçar no prompt que o ÂNGULO precisa variar bastante
+// (ver elementoConcretoBlock), já que a lente sozinha não basta quando o
+// núcleo da frase é forçosamente o mesmo (ver SINTAXE — NÚCLEO DA FRASE).
+function pickConcreteItem(items: string[], attempt: number, previousSuggestions: string[]): { item: string | null; repeated: boolean } {
+  if (!items.length) return { item: null, repeated: false };
   const norm = (s: string) => s.toLowerCase().replace(/[áàãâä]/g, 'a').replace(/[éèêë]/g, 'e').replace(/[íìîï]/g, 'i').replace(/[óòõôö]/g, 'o').replace(/[úùûü]/g, 'u').replace(/ç/g, 'c');
-  const usedNorms = previousSuggestions.map(norm);
+  // Word-boundary em vez de substring puro: evita falso positivo de um item
+  // curto (ex.: "TEF") "casar" por coincidência dentro de outra palavra de
+  // uma sugestão anterior não relacionada.
+  const isUsed = (itemNorm: string) => previousSuggestions.some((sugg) => {
+    const s = norm(sugg);
+    return new RegExp(`\\b${itemNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(s);
+  });
   const startIdx = ((attempt % items.length) + items.length) % items.length;
   for (let i = 0; i < items.length; i++) {
     const idx = (startIdx + i) % items.length;
     const n = norm(items[idx]);
-    if (!usedNorms.some((p) => p.includes(n) || n.includes(p))) return items[idx];
+    if (!isUsed(n)) return { item: items[idx], repeated: false };
   }
-  return items[startIdx];
+  return { item: items[startIdx], repeated: previousSuggestions.length > 0 };
 }
 
 // Classifica o ELEMENTO CONCRETO desta sugestão como produto físico (VAREJO)
@@ -104,6 +115,16 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           const hint = String(body.hint || '').slice(0, 1000).trim();
           const mode = String(body.mode || 'postunico') as 'postunico' | 'metodo';
           const attempt = Number(body.attempt || 0);
+          // Semente fixada pelo CLIENTE no início da sessão de sugestões (ver
+          // sessionSeedRef em ContentForm.tsx/PostUnicoForm.tsx) — sem ela, cada
+          // clique em "Sugestão" é um request HTTP independente e um Math.random()
+          // aqui seria re-sorteado a cada chamada, perdendo a garantia de que as
+          // tentativas 0/1/2 da MESMA sessão caiam em lentes diferentes (ver uso
+          // em lensIndex abaixo). Fallback aleatório só para chamadas antigas sem o campo.
+          const sessionSeedRaw = Number(body.sessionSeed);
+          const sessionSeed = Number.isFinite(sessionSeedRaw) && body.sessionSeed !== undefined
+            ? sessionSeedRaw
+            : Math.floor(Math.random() * 1e9);
 
           const previousSugs: string[] = Array.isArray(body.previousSuggestions)
             ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
@@ -119,7 +140,7 @@ export const Route = createFileRoute('/api/suggest-keyinfo')({
           // dono do CONTEXTO REAL DE USO (ver ancoragemAtividade abaixo): com
           // elemento concreto, é o elementoConcretoBlock; sem ele, é a
           // ancoragem na atividade (fallback).
-          const concreteItem = pickConcreteItem(selectedProducts, attempt, previousSugs);
+          const { item: concreteItem, repeated: concreteItemRepeated } = pickConcreteItem(selectedProducts, attempt, previousSugs);
 
           const SEGMENTS = ['VAREJO', 'SERVIÇOS', 'MARCA'] as const;
           type Seg = typeof SEGMENTS[number];
@@ -163,7 +184,8 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
           // explícito (concreteItem definido acima, antes da ancoragem).
           const elementoConcretoBlock = concreteItem
             ? `ELEMENTO CONCRETO DESTA SUGESTÃO: "${concreteItem}"
-Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}
+Este é um produto, serviço, categoria ou especialidade real ${segment === 'MARCA' ? 'da marca' : 'da empresa'} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ''}${concreteItemRepeated ? `
+⚠ ESTE ELEMENTO JÁ FOI USADO EM UMA SUGESTÃO ANTERIOR DESTA SESSÃO (não há outro item marcado disponível): a frase final DEVE ter estrutura sintática, verbo e situação completamente diferentes da(s) anterior(es) sobre este mesmo elemento — não troque apenas 1-2 palavras (ex.: trocar só o verbo final como "resolver" → "tirar" não é variação suficiente). Mude o ÂNGULO de verdade: se a anterior falou de uma dúvida do cliente, esta pode falar de um momento de uso, um resultado observável ou um critério de escolha — sempre seguindo a LENTE sorteada abaixo, mas com vocabulário e construção visivelmente distintos.` : ''}
 
 CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
 O CONTEXTO REAL DE USO não precisa ser um cenário, local ou momento (ex.: "durante a consulta", "na sala de espera", "na reunião") — pode ser apenas o RESULTADO ou EFEITO direto que "${concreteItem}" entrega, no formato "[item] para [resultado/efeito]". Use um cenário/local só quando ele for a forma mais natural de descrever esse uso; não force um cenário quando o resultado direto for mais simples e soar mais natural.
@@ -275,13 +297,15 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
           // Varia a FORMA de encontrar o assunto entre as tentativas — nunca
           // aparece no JSON de saída nem na UI, e não carrega tensão,
           // promessa, progressão ou linguagem de campanha.
-          // O ponto de partida é sorteado a cada request (não fixo por
-          // empresa) — antes usava um seed determinístico de companyName,
-          // o que fazia toda sessão nova da mesma empresa começar sempre na
-          // mesma lente. `attempt` continua somado para garantir que, DENTRO
-          // de uma sessão, cada nova tentativa percorra uma lente diferente
-          // das já usadas (sem repetir até esgotar o conjunto).
-          const lensIndex = (attempt + Math.floor(Math.random() * OPENING_LENSES.length)) % OPENING_LENSES.length;
+          // O ponto de partida é o `sessionSeed` fixado pelo CLIENTE no início
+          // da sessão (não mais um seed determinístico de companyName, que
+          // fazia toda sessão nova da mesma empresa começar sempre na mesma
+          // lente). `attempt` é somado sobre essa base FIXA dentro da sessão —
+          // por isso as tentativas 0/1/2 caem em lentes consecutivas e
+          // distintas (sem repetir até esgotar o conjunto); usar Math.random()
+          // aqui de novo quebraria essa garantia, porque o servidor reavalia a
+          // cada request HTTP independente, perdendo a relação entre tentativas.
+          const lensIndex = (attempt + sessionSeed) % OPENING_LENSES.length;
           const lens = OPENING_LENSES[lensIndex];
           const lensGuardrail = ` Esta lente define apenas o ÂNGULO da frase dentro do CONTEXTO REAL DE USO já identificado — não cria uma situação nova, não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal. A lente é um mecanismo interno: a frase final não deve deixar reconhecível qual lente foi usada — só devem aparecer produto/serviço, contexto real de uso e situação plausível em linguagem natural.${segment !== 'MARCA' ? ` PROIBIDO usar tom de vínculo/comunidade com o público — "nosso(s)", "nossa(s)", "juntos", "nossa comunidade", "cuidar juntos", "fazemos parte da sua vida" — esse registro pertence ao segmento MARCA; em ${segment}, descreva produto/serviço e situação na 3ª pessoa, sem incluir o público como coautor ou parceiro emocional.` : ''}`;
           const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}${lensGuardrail}`;

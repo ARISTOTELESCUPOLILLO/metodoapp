@@ -88,6 +88,10 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
   const [showIdeiasPanel, setShowIdeiasPanel] = useState(false);
   const initialKeyInfoRef = useRef<string | null>(null);
   const allSessionSuggestionsRef = useRef<string[]>([]);
+  // Semente fixa por sessão de sugestões — enviada ao servidor (stateless) pra
+  // garantir que as tentativas 0/1/2 caiam em lentes diferentes dentro da
+  // sessão, mas variem entre sessões novas (ver lensIndex em suggest-keyinfo.ts).
+  const sessionSeedRef = useRef<number>(Math.floor(Math.random() * 1e9));
   const [selectedProducts, setSelectedProducts] = useState<string[]>(() => kit.products || []);
   const keyInfoCorrection = useTextCorrection();
   const copyTCorrection = useTextCorrection();
@@ -125,6 +129,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
     setSuggestError(null);
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
+    sessionSeedRef.current = Math.floor(Math.random() * 1e9);
   }, [data.objetivo, kit.companyName]);
 
   // Checklist de produtos/serviços — todos marcados por padrão; reseta
@@ -279,6 +284,7 @@ export default function PostUnicoForm({ data, kit, imageKit, visualSelection, on
           hint: '',
           mode: 'postunico',
           attempt,
+          sessionSeed: sessionSeedRef.current,
           subMode: 'sugerir',
           previousSuggestions: allSessionSuggestionsRef.current,
           selectedProducts,

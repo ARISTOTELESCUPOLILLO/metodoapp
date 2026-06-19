@@ -524,6 +524,46 @@ export function checkCrossPieceLabelRepeat(pieces: { campo: string; titulo: stri
   return flags;
 }
 
+// Flaga quando dois títulos de PEÇAS DIFERENTES da mesma sequência
+// compartilham as mesmas palavras iniciais (o núcleo concreto da
+// informação-chave, ex.: "ordem de serviço digital") e só trocam a(s)
+// última(s) palavra(s) — sintoma de abertura e fechamento "disfarçando" a
+// mesma frase (ex.: "Ordem de serviço digital ativa" / "...digital
+// resolve"). Diferente de checkCrossPieceLabelRepeat (rótulo do leitor):
+// aqui o que se compara é o PREFIXO comum de palavras do título inteiro.
+function titleWords(titulo: string): string[] {
+  return stripAccents(titulo.toLowerCase())
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+export function checkCrossPieceTitleRepeat(pieces: { campo: string; titulo: string }[]): ValidationFlag[] {
+  const flags: ValidationFlag[] = [];
+  const wordLists = pieces.map((p) => ({ campo: p.campo, words: titleWords(p.titulo) }));
+  for (let i = 0; i < wordLists.length; i++) {
+    for (let j = i + 1; j < wordLists.length; j++) {
+      const a = wordLists[i].words;
+      const b = wordLists[j].words;
+      let prefixLen = 0;
+      while (prefixLen < a.length && prefixLen < b.length && a[prefixLen] === b[prefixLen]) prefixLen++;
+      const shorter = Math.min(a.length, b.length);
+      // >=2 palavras iniciais idênticas cobrindo ao menos metade do título
+      // mais curto — limiar pensado para pegar títulos de 4-6 palavras
+      // (faixa permitida) do tipo "X Y [adjetivo] verbo1" vs "X Y [adjetivo]
+      // verbo2", sem pegar títulos que só compartilham 1 palavra solta
+      // (artigo, preposição) por coincidência.
+      if (prefixLen >= 2 && shorter > 0 && prefixLen / shorter >= 0.5) {
+        flags.push({
+          campo: `${wordLists[j].campo}.titulo`,
+          motivo: `título repete quase literalmente o início do título de ${wordLists[i].campo} (só troca a palavra final) — varie a estrutura, o sujeito ou o ângulo, não apenas o verbo de encerramento`,
+        });
+      }
+    }
+  }
+  return flags;
+}
+
 export function validateTitulo(titulo: string): string[] {
   const motivos: string[] = [];
   const words = titulo.trim().split(/\s+/).filter(Boolean).length;

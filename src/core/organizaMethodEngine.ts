@@ -1,7 +1,7 @@
 import { ContentFormData, MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from '../types';
 import { getVoiceProfile } from '../data/brandVoice';
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from './visualDirection';
-import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits, checkObserverSubject, checkCrossPieceLabelRepeat, correctPortugueseSpelling, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS, LEGENDA_HASHTAGS } from './textValidation';
+import { truncateWords, validatePieceFields, normalizeLegenda, enforceLegendaLimits, checkObserverSubject, checkCrossPieceLabelRepeat, checkCrossPieceTitleRepeat, correctPortugueseSpelling, LEGENDA_CORPO_MAX_WORDS, LEGENDA_CTA_MAX_WORDS, LEGENDA_HASHTAGS } from './textValidation';
 
 interface MomentModulator {
   label: string;
@@ -324,8 +324,9 @@ EIXO OBRIGATÓRIO DA SEQUÊNCIA — INFORMAÇÃO-CHAVE:
 - O fechamento da sequência deve consolidar a decisão em torno deste eixo.
 - Proibido peça que não se conecte de forma evidente ao eixo.
 - ANCORAGEM CONCRETA DO EIXO: a informação-chave nomeia um elemento concreto (produto, peça, serviço, canal, procedimento ou situação) — esse elemento, ou sinônimo direto, deve aparecer no título OU no texto do PRIMEIRO Estático E do Estático Final/última peça — abertura e fechamento da sequência precisam ser reconhecíveis como sendo sobre esse elemento, não sobre um tema genérico do segmento. As peças intermediárias podem tratar o eixo de forma mais abstrata.
+- ABERTURA E FECHAMENTO NÃO PODEM SOAR COMO A MESMA FRASE: ancorar o mesmo elemento concreto no título do primeiro Estático e no título do Estático Final/última peça NÃO significa repetir a mesma estrutura com só o verbo final trocado (ex.: "[elemento] ativa" / "[elemento] resolve" são a MESMA frase disfarçada — proibido). Se as duas peças ancoram o elemento no TÍTULO, os títulos precisam ter sujeito, estrutura sintática e ângulo claramente diferentes (não apenas o verbo). Alternativa preferível: uma das duas peças ancora o elemento no TEXTO (não no título), liberando o título para um ângulo totalmente distinto — observação/contexto na abertura, decisão/convite no fechamento (conforme a função comunicativa de cada peça, ver mapa de funções abaixo).
 - VOCABULÁRIO-POR-PÚBLICO NA ANCORAGEM: ao repetir o elemento concreto do eixo (ou sinônimo direto) no título/texto de abertura e fechamento, use o termo na forma como o PÚBLICO-ALVO desta peça (${isB2B ? 'decisor empresarial — gestor, diretor ou responsável pela área' : 'consumidor final — cliente do cliente'}) o reconheceria no dia a dia — não a forma como o segmento, o fornecedor ou o redator o nomeiam internamente. Sigla ou termo técnico (ex.: TEF, ERP, KPI, NF-e) É a forma CORRETA quando esse é o vocabulário natural do público-alvo desta peça — ${isB2B ? 'como neste caso, em que o público é o decisor empresarial: se o ofício/rotina dele envolve o termo, use a sigla sem medo, sem traduzir nem explicar — traduzir aqui empobreceria a precisão e soaria condescendente' : 'mas o público desta peça é o consumidor final, que normalmente NÃO usa siglas internas de fornecedor/segmento no dia a dia — só mantenha a sigla se ela for genuinamente parte do vocabulário cotidiano desse consumidor; caso contrário, prefira o termo que ele de fato usaria'}. Só traduza/explique/substitua quando a sigla pertencer a um vocabulário interno do fornecedor ou do segmento que o público-alvo desta peça especificamente NÃO usaria no dia a dia. Nunca proíba um termo técnico legítimo só por ser sigla — o critério é exclusivamente: o público-alvo DESTA peça reconhece e usa esse termo?
-- EXCEÇÃO AO ITEM 8 (PROIBIDO REPETIR A MESMA PALAVRA): o NOME do produto/serviço/objeto concreto do eixo (ex.: "poltrona", "correia", "mangueira") é EXCEÇÃO à regra de não-repetição — pode e deve se repetir, com a MESMA palavra, em todas as peças que tratarem desse elemento. "Sinônimo direto" acima significa variação morfológica do mesmo item (singular/plural: "poltrona"/"poltronas") ou termo realmente equivalente no uso comum — NUNCA outro produto da mesma categoria ("poltrona"→"cadeira", "armário"→"estante", "mangueira"→"cano" são produtos DIFERENTES, e trocar um pelo outro muda o que está sendo vendido). A regra de não-repetição (item 8) e a diversidade lexical continuam valendo para o restante do vocabulário — verbos, adjetivos, conectores — ao redor desse núcleo.
+- EXCEÇÃO AO ITEM 8 (PROIBIDO REPETIR A MESMA PALAVRA): o NOME do produto/serviço/objeto concreto do eixo — o SUBSTANTIVO-NÚCLEO apenas (ex.: "poltrona", "correia", "mangueira", "ordem de serviço") — é EXCEÇÃO à regra de não-repetição — pode e deve se repetir, com a MESMA palavra, em todas as peças que tratarem desse elemento. "Sinônimo direto" acima significa variação morfológica do mesmo item (singular/plural: "poltrona"/"poltronas") ou termo realmente equivalente no uso comum — NUNCA outro produto da mesma categoria ("poltrona"→"cadeira", "armário"→"estante", "mangueira"→"cano" são produtos DIFERENTES, e trocar um pelo outro muda o que está sendo vendido). ESTA EXCEÇÃO NÃO COBRE adjetivos ou qualificadores que acompanham o núcleo na informação-chave original (ex.: se a informação-chave diz "ordem de serviço DIGITAL", o adjetivo "digital" NÃO é parte do núcleo protegido — repeti-lo colado ao núcleo em mais de uma peça da sequência é exatamente o tipo de repetição que o item 8 proíbe, e costuma ser o que faz duas peças parecerem a mesma frase). A regra de não-repetição (item 8) e a diversidade lexical continuam valendo para o restante do vocabulário — verbos, adjetivos, conectores — ao redor desse núcleo.
 `
     : '';
 
@@ -605,6 +606,12 @@ export function normalizeMethodResult(raw: any, track?: Track, sequenceSize?: 3 
     if (observerSubject) flags.push({ campo: `${campo}.titulo`, motivo: observerSubject });
   }
   flags.push(...checkCrossPieceLabelRepeat(allTitles));
+  // checkCrossPieceTitleRepeat flaga título de abertura e fechamento que
+  // ancoram o mesmo elemento concreto (ver ANCORAGEM CONCRETA DO EIXO) mas
+  // saem como a mesma frase disfarçada (ex.: "X digital ativa" / "X digital
+  // resolve") — a EXCEÇÃO AO ITEM 8 permite repetir o substantivo-núcleo,
+  // não a frase inteira.
+  flags.push(...checkCrossPieceTitleRepeat(allTitles));
 
   // Validação de completude — detecta componentes esperados mas ausentes/incompletos.
   if (comp.carrossel > 0 && (!carousel || carousel.length === 0)) {
