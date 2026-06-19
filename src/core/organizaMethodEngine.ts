@@ -100,18 +100,24 @@ function buildCommunicativeFunctionMap(
   }
 
   if (comp.carrossel > 0) {
+    const card5Desc = comp.carrossel > 1
+      ? `Card 5 (ação)                → CONVENCIMENTO — FORMA por posição: nos carrosséis 1 a ${comp.carrossel - 1}, "síntese sem convite": resume o avanço e aponta direção, SEM citar a empresa e SEM CTA comercial explícito; SOMENTE no carrossel ${comp.carrossel} (o último), FORMA "convite consultivo": consolida e indica o próximo passo — pode citar o que a empresa entrega`
+      : `Card 5 (ação)                → CONVENCIMENTO — FORMA convite consultivo: consolida e indica o próximo passo — pode citar o que a empresa entrega`;
     lines.push(
       `Carrossel — arco interno de 5 cards:`,
       `  Card 1 (abertura)            → EDUCATIVO — FORMA observação-espelho: nomeia o problema ou aspiração que o público reconhece, sem citar a empresa`,
       `  Cards 2-3 (desenvolvimento)  → INFORMATIVO — FORMA critério/prova concreta: detalha com evidência real da atividade, um ponto de avaliação por card`,
       `  Card 4 (direção)             → PERSUASIVO — FORMA indicação de caminho: aponta a direção a seguir — sem CTA, sem nomear a empresa`,
-      `  Card 5 (ação)                → CONVENCIMENTO — FORMA convite consultivo: consolida e indica o próximo passo — pode citar o que a empresa entrega`
+      `  ${card5Desc}`
     );
   }
 
   const fechamentoTipo = isVisualOrExperimentacao ? 'Estático Final' : 'Reels';
   if (comp.fechamento > 0) {
-    lines.push(`${fechamentoTipo} → CONVENCIMENTO — FORMA convite consultivo + resolução: consolida a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`);
+    const fechamentoDesc = comp.fechamento > 1
+      ? `${fechamentoTipo} → CONVENCIMENTO — FORMA por posição: do 1º ao ${comp.fechamento - 1}º ${fechamentoTipo}, "síntese sem convite": consolida a camada da progressão concluída até ali, SEM citar a empresa e sem convite explícito; SOMENTE no ${comp.fechamento}º ${fechamentoTipo} (o último da sequência), FORMA "convite consultivo + resolução": consolida toda a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`
+      : `${fechamentoTipo} → CONVENCIMENTO — FORMA convite consultivo + resolução: consolida a progressão e indica o próximo passo — pode nomear o que a empresa oferece. Tom consultivo, sem pressão artificial.`;
+    lines.push(fechamentoDesc);
   }
 
   return lines.join('\n');
@@ -173,7 +179,7 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? 's' : ''} de produção):
   CTA OBRIGATORIAMENTE GENÉRICO — varie a cada geração, escolha entre: "Fale com a gente hoje.", "Entre em contato agora.", "Venha saber mais.", "Comece ainda hoje.", "Fale conosco agora.", "Dá pra começar hoje.", "A gente te ajuda.", "Vem com a gente.", "O primeiro passo é seu.", "Bora dar o próximo passo." — ou crie outro de mesmo tom. PROIBIDO mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
 - REGRA TTS — campo "script" (será LIDO em voz alta por sintetizador): USE palavras de 1 ou 2 sílabas sempre que possível. PROIBIDO: palavras com mais de 3 sílabas, siglas em caixa alta (APP→"app", CRM→"sistema", ROI→"retorno", KPI→"meta", IA→"inteligência"), anglicismos crus (link, lead, brief, deadline, framework), abreviações (vc, tb, p/). TRADUZA termos difíceis: "consultoria"→"apoio"; "estratégia"→"plano"; "posicionamento"→"presença". Exemplo correto (21 palavras, ~7s): "Sua marca fala. Seu time entrega. Seu cliente volta. É assim que se cresce. Fale com a gente hoje." O campo "screenText" PODE conter sigla (é lido com os olhos), mas o "script" NÃO PODE — precisa fluir natural em voz alta em português brasileiro.
 - Retornar em "reels": [{ "sequencia": 1, "hook", "screenText", "script", "imagePrompt", "legenda": "corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras + CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)" }]
-${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} reels com abordagens visuais distintas.` : ''}`;
+${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} reels com abordagens visuais E estruturais distintas (script com sujeito/estrutura diferentes, não só troca de verbo). Convite consultivo + CTA comercial explícito SÓ no reels ${comp.fechamento} (o último); os reels anteriores fecham em síntese/direção, sem nomear a empresa.` : ''}`;
 
   const estaticoFinalBlock = `
 ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fechamento narrativo):
@@ -186,7 +192,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? 's' : ''} de fe
 - A IMAGEM deve traduzir literalmente o título e o texto, com cena de calma, foco e estabilidade — não tensão, não movimento.
 - Retornar dentro do array "feed" com formato exato "Estático Final" (com acento e espaço, exatamente assim).
 - Estrutura de cada item: { "dia", "formato": "Estático Final", "titulo", "texto", "legenda", "imagem", "leituraCenica": { "intencao": "sensação de fechamento que esta peça consolida", "personagem": "quem aparece na cena, em postura de calma e direção definida", "ambiente": "ambiente estável, com poucos elementos competindo pela atenção", "expressao": "expressão serena, decidida, sem dramaticidade", "clima": "luz suave, atmosfera de resolução, hora estável do dia", "composicao": "composição centralizada ou em equilíbrio claro, com espaço negativo amplo, sem ruído gráfico" } }
-${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} Estáticos Finais com abordagens narrativas distintas, cada um fechando uma camada diferente da sequência.` : ''}`;
+${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} Estáticos Finais com abordagens narrativas E estruturais distintas (sujeito/molde de frase diferentes, não só sinônimo do mesmo molde), cada um fechando uma camada diferente da sequência. Convite consultivo + nomear a empresa SÓ no Estático Final ${comp.fechamento} (o último); os anteriores fecham em síntese, sem citar a empresa.` : ''}`;
 
   const closingBlock = isVisualOrExperimentacao ? estaticoFinalBlock : reelsBlock;
 
@@ -223,7 +229,7 @@ ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? 's' : ''}):
 
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? 's' : ''} de 5 cards cada):
 - Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
-- Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. Card 5 pode citar o que a empresa entrega e tem CTA na legenda.
+- Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. ${comp.carrossel > 1 ? `Card 5 SÓ pode citar o que a empresa entrega e ter CTA comercial na legenda no carrossel ${comp.carrossel} (o último da sequência) — nos carrosséis anteriores, Card 5 fecha em síntese/direção, sem citar a empresa.` : 'Card 5 pode citar o que a empresa entrega e tem CTA na legenda.'}
 - Cada card: titulo até 5 palavras, cada palavra com no máximo 3 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 4 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 5+ sílabas como "lubrificante" devem ser trocados por sinônimo mais curto, ex.: "óleo"), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
 - ARCO VISUAL INTERNO DO CARROSSEL — OBRIGATÓRIO: os 5 cards devem ter enquadramento progressivo de câmera, criando narrativa visual de abertura a fechamento. Card 1 (abertura): PLANO ABERTO — personagem e ambiente visíveis, câmera afastada; 'composicao' = "plano aberto". Cards 2-3 (desenvolvimento): PLANO MÉDIO — ação ou objeto em destaque, ângulo engajado; 'composicao' = "plano médio". Card 4 (direção): PLANO MÉDIO-FECHADO — detalhe do trabalho, produto ou gesto; 'composicao' = "plano médio-fechado". Card 5 (ação): CLOSE-UP ou enquadramento íntimo — expressão ou gesto de resolução, câmera mais próxima; 'composicao' = "close-up". PROIBIDO repetir o mesmo enquadramento em cards consecutivos — cada card deve ter distância de câmera diferente do anterior.
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras + CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "enquadramento e distância de câmera (plano aberto / plano médio / plano médio-fechado / close-up) + organização dos elementos" } }, ...] }]

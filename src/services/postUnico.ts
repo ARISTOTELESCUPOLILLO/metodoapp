@@ -5,7 +5,7 @@ import { generateImageAsync } from './imageGeneration';
 import { buildTypographyBlock, buildTypographyShortRule, buildScriptAccentBlock } from '../utils/typography';
 import { getAuthHeaders } from './authHeaders';
 import { buildMoodGrammarBlock, pickImageVariationBlock, buildSceneRoleRule, buildProductHierarchyBlock, PersonagemGender } from '../core/visualDirection';
-import { DEVICE_RULE, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
+import { buildDeviceRule, AMBIENTES_RULE, HUMANIZACAO_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 import { buildClothingPool } from '../core/clothingPool';
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
@@ -559,7 +559,7 @@ Hierarquia tipográfica obrigatória:
   const showConcreteAction = !refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? '') && !moodEhSimbolico;
   const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}\n`;
 
-  return `${DEVICE_RULE}
+  return `${buildDeviceRule()}
 
 ${AMBIENTES_RULE}
 

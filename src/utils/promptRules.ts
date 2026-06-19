@@ -2,7 +2,33 @@
 // buildImagePrompt (api.ts) e buildPostUnicoPrompt (postUnico.ts).
 // Garante consistência entre os dois sistemas e evita versões divergentes do mesmo bloco.
 
-export const DEVICE_RULE = `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, iPad, celular, iPhone, monitor e outros dispositivos são PERMITIDOS em qualquer posição natural — abertos, em uso, na mão, apoiados, inclinados, sobre a mesa. NÃO forçar dispositivo fechado. A TELA DEVE mostrar conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado) que sugere interface ou atividade; presença visual de conteúdo é desejável, opacidade total não. PROIBIDO desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização — a tela deve parecer apenas levemente fora de foco, quase nítida, nunca borrada a ponto de chamar atenção como erro visual. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso. PROIBIDO conteúdo identificável em tela: logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados. CARCAÇA E TAMPA — REGRA ABSOLUTA: a tampa traseira e a carcaça de qualquer dispositivo DEVEM ser completamente lisas, sem nenhuma marca, símbolo, logo, maçã, ícone, adesivo, gravação ou iluminação na superfície — PROIBIDO especificamente: logo de maçã iluminado ou gravado, qualquer símbolo de fabricante, qualquer glowing backlit logo, qualquer gravação na tampa. Use laptop genérico sem marca. ÂNGULO DE CÂMERA — LAPTOP/NOTEBOOK: a câmera NÃO deve enquadrar a tela frontalmente; posicionar câmera para mostrar a parte traseira ou lateral do dispositivo, ou manter o laptop parcialmente fora do quadro na base da composição; se a tela aparecer no quadro, deve estar em ângulo oblíquo com desfoque. MÁXIMO 1 DISPOSITIVO por cena. NEGATIVE: no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no images or graphics on device casing or back cover, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen, no laptop screen facing camera directly.`;
+// Composição por tipo de dispositivo: em vez de só proibir carcaça/logo errados
+// (proibição nunca vence o viés do dataset de treino, ex. MacBook), o ÂNGULO da
+// cena é definido por tipo para que a tampa/verso errado não possa aparecer por
+// geometria. Sorteado a cada chamada (mesmo padrão de pickImageVariationBlock em
+// visualDirection.ts) para também evitar que a peça sempre mostre notebook.
+const DEVICE_TYPE_VARIATIONS: string[] = [
+  'CELULAR/SMARTPHONE: tela voltada para cima sobre a mesa OU na mão da pessoa, mostrando a tela ao observador. A parte de trás do aparelho nunca fica voltada para a câmera.',
+  'TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa OU em mãos mostrando a tela ao observador. A tampa/verso nunca fica voltada para a câmera.',
+  'NOTEBOOK/LAPTOP: SOMENTE de perfil lateral — câmera paralela ao eixo da dobradiça, mostrando a espessura do aparelho aberto em ângulo "V", nunca de frente nem de costas. A tampa traseira nunca fica visível para a câmera.',
+  'MONITOR DE DESKTOP: pessoa posicionada de frente para o monitor — a câmera enquadra a pessoa e a tela de lado/oblíqua, nunca a parte traseira do gabinete em destaque, nenhum logo de fabricante em evidência.',
+  'TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.',
+];
+
+export function pickDeviceTypeLine(): string {
+  return DEVICE_TYPE_VARIATIONS[Math.floor(Math.random() * DEVICE_TYPE_VARIATIONS.length)];
+}
+
+export function buildDeviceRule(): string {
+  return `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, celular, monitor e outros dispositivos são PERMITIDOS quando a cena pedir, em uso natural — abertos, na mão, apoiados sobre a mesa. NÃO forçar dispositivo fechado. A TELA, quando visível, mostra conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado); presença visual de conteúdo é desejável, opacidade total não. PROIBIDO desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso; conteúdo identificável em tela (logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados).
+
+COMPOSIÇÃO POR TIPO DE DISPOSITIVO — define o ÂNGULO da cena para que a tampa/carcaça errada não possa aparecer por geometria (em vez de só proibir). SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração:
+TIPO DESTA GERAÇÃO: ${pickDeviceTypeLine()}
+DIVERSIFICAÇÃO OBRIGATÓRIA: não repita sempre notebook entre as peças de uma mesma sequência — alterne com celular, tablet, monitor de desktop ou tela/TV de fundo conforme a atividade da empresa e o que a cena pede.
+
+CARCAÇA E TAMPA — REGRA ABSOLUTA (vale mesmo com a composição correta, como reforço): tampa, verso e carcaça de qualquer dispositivo DEVEM ser completamente lisas, sem nenhuma marca, símbolo, logo, maçã, ícone, adesivo, gravação ou iluminação. Use equipamento genérico, sem marca. MÁXIMO 1 DISPOSITIVO por cena.
+NEGATIVE: no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no images or graphics on device casing or back cover, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen, no laptop screen facing camera directly.`;
+}
 
 export const AMBIENTES_RULE = `⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.`;
 

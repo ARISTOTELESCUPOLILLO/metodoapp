@@ -568,14 +568,12 @@ TIPOGRAFIA NA IMAGEM — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
 - PROIBIDO: texto de apoio com menos de 50% do tamanho do título, texto miniatura, corpo tipo "legenda", qualquer tipografia que exija zoom para ler.
 - Regra prática: ambos título e texto de apoio devem ser lidos de imediato ao ver a peça no celular em tamanho normal — se precisar aproximar o celular para ler qualquer um deles, o tamanho está errado.
 
-REGRA DE DISPOSITIVOS DIGITAIS — INEGOCIÁVEL (vale para QUALQUER mood × segmento):
-- TELA DO DISPOSITIVO: DEVE mostrar conteúdo genérico com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, jamais um borrão pesado) — texto, gráfico ou interface quase nítidos, apenas levemente fora de foco — para parecer trabalho real em andamento. PROIBIDO tela apagada, escura ou em branco. PROIBIDO TAMBÉM desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização. O conteúdo existe mas NADA é identificável: nenhuma palavra lida, nenhum dado reconhecível, nenhuma interface clara.
-- CONTEÚDO PROIBIDO EM TELA (mesmo desfocado): logo de empresa real, marca reconhecível, site identificável, rosto humano.
-- DISPOSITIVO COMO OBJETO CONTEXTUAL: pode estar aberto, em uso, na mão, na mesa, apoiado ou em qualquer posição natural do contexto. Carcaça e tampa traseira lisas (sem imagem, logo ou adesivo).
-- MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
-- POSICIONAMENTO PROIBIDO: laptop aberto com tela voltada frontalmente para o observador e personagem posicionado ATRÁS — essa "barreira de laptop" é banida em TODOS os moods e segmentos.
-- SE A CENA ENVOLVER TELEFONE: deve ser smartphone/celular moderno (touchscreen, sem fio) — PROIBIDO telefone fixo, telefone com fio, orelhão, fax ou qualquer modelo retrô.
-- NEGATIVE: no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no real brand on screen, no duplicated laptops, no extra devices, no logo or image or sticker or pattern or brand mark on device back panel or lid (plain matte casing only), no corded phone, no landline phone, no rotary phone, no retro telephone.
+REGRA DE DISPOSITIVOS DIGITAIS — DECISÃO DE CENA (vale para QUALQUER mood × segmento):
+- SE a cena envolver dispositivo digital, decida o TIPO conforme a atividade real da empresa e o que a cena pede — varie entre celular/smartphone, tablet, notebook, monitor de desktop ou tela/TV ao fundo. NÃO recorra sempre a notebook como padrão automático — diversifique o tipo entre as peças da mesma sequência.
+- MÁXIMO 1 dispositivo por cena.
+- PROIBIDO posicionar laptop aberto com a tela voltada frontalmente para o observador e o personagem ATRÁS dele — essa "barreira de laptop" é banida em TODOS os moods e segmentos.
+- SE A CENA ENVOLVER TELEFONE: deve ser smartphone/celular moderno (touchscreen, sem fio) — PROIBIDO telefone fixo, com fio, orelhão, fax ou modelo retrô.
+- NÃO descreva conteúdo de tela, logo de marca real ou texto legível no dispositivo no imagePrompt — a física de renderização da tela e da carcaça é tratada na etapa de geração da imagem, não na leitura de cena.
 
 Os campos "clima" e "composicao" da leituraCenica DEVEM derivar diretamente da Tensão Dondis e da Gramática Visual acima — não são livres.
 Os campos "intencao", "personagem", "ambiente" e "expressao" continuam vindo da progressão psicológica da Matriz; a gramática visual apenas determina COMO a cena é fotografada, não O QUE ela diz.

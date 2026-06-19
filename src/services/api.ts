@@ -4,7 +4,7 @@ import { ContentFormData, LogoPosition, MethodOpResult, MoodCode, SecondaryFont 
 import { generateImageAsync } from './imageGeneration';
 import { autoRegenerateFlaggedFields } from './autoRegenerate';
 import { buildTypographyBlock, buildTypographyShortRule, buildScriptAccentBlock } from '../utils/typography';
-import { DEVICE_RULE, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
+import { buildDeviceRule, pickDeviceTypeLine, FORBIDDEN_MOOD_WORDS, CONCEITO_FIRST_RULE } from '../utils/promptRules';
 import { supabase } from '@/integrations/supabase/client';
 import { getImpersonation } from '@/hooks/useImpersonation';
 
@@ -259,7 +259,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
     ? '\n⚠ PAPEL DO PRODUTO — COMPOSIÇÃO: o PRODUTO é o protagonista visual desta cena. A pessoa (se presente) aparece usando, segurando ou interagindo com ele em segundo plano. PROIBIDO: pessoa com mais área visual que o produto ou que roube o foco dele.\n'
     : '';
 
-  return `${DEVICE_RULE}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
+  return `${buildDeviceRule()}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ''}${referenceAnchorBlock}Crie ${isCover ? 'a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)' : 'um post profissional'} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? '\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed.' : ''}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
@@ -433,10 +433,13 @@ export async function generatePostImage(params: {
       }`
     : '';
 
-  // Regra de dispositivos digitais para Reels — alinhada com DEVICE_RULE de promptRules.ts.
+  // Regra de dispositivos digitais para Reels — alinhada com buildDeviceRule() de promptRules.ts.
   const DEVICE_RULE_REELS = `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
 PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
-DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela DEVE mostrar conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado) que sugere interface ou atividade; presença visual de conteúdo é desejável, opacidade total não. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha, desfoque forte, borrão pesado ou qualquer efeito que pareça defeito de renderização — a tela deve parecer apenas levemente fora de foco, quase nítida. CARCAÇA E TAMPA — REGRA ABSOLUTA: tampa traseira e carcaça de qualquer dispositivo DEVEM ser completamente lisas — PROIBIDO especificamente: logo de maçã iluminado ou gravado, qualquer símbolo de fabricante, glowing backlit logo, gravação na tampa. Use laptop genérico sem marca. ÂNGULO DE CÂMERA — LAPTOP/NOTEBOOK: câmera NÃO enquadra a tela frontalmente; mostrar parte traseira/lateral do dispositivo ou mantê-lo parcialmente fora do quadro.
+DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. A tela DEVE mostrar conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado) que sugere interface ou atividade; presença visual de conteúdo é desejável, opacidade total não. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha, desfoque forte, borrão pesado ou qualquer efeito que pareça defeito de renderização — a tela deve parecer apenas levemente fora de foco, quase nítida.
+COMPOSIÇÃO POR TIPO DE DISPOSITIVO — SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração (define o ângulo para que a tampa/carcaça errada não possa aparecer por geometria): ${pickDeviceTypeLine()}
+DIVERSIFICAÇÃO: não repita sempre notebook entre as peças da mesma sequência — alterne com celular, tablet, monitor de desktop ou tela/TV de fundo conforme a atividade.
+CARCAÇA E TAMPA — REGRA ABSOLUTA (reforço, mesmo com a composição correta): tampa traseira e carcaça de qualquer dispositivo DEVEM ser completamente lisas — PROIBIDO especificamente: logo de maçã iluminado ou gravado, qualquer símbolo de fabricante, glowing backlit logo, gravação na tampa. Use equipamento genérico sem marca.
 MÁXIMO 1 DISPOSITIVO por cena — duplicação proibida.
 NEGATIVE: no legible screen content, no recognizable logo on screen, no readable text on screen, no charts, no dashboard, no spreadsheet, no clear UI, no duplicated devices, no image or logo on device casing or back cover, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera.`;
 
