@@ -282,9 +282,12 @@ export default function PostUnicoForm({
       if (trimmed) {
         if (isTitulo) setCopyTSuggs((s) => [...s, trimmed]);
         else setCopyXSuggs((s) => [...s, trimmed]);
+        if (isTitulo) onTituloRegen?.();
+        else onTextoRegen?.();
+      } else {
+        if (isTitulo) setCopyTError("Sugestão vazia — tente de novo.");
+        else setCopyXError("Sugestão vazia — tente de novo.");
       }
-      if (isTitulo) onTituloRegen?.();
-      else onTextoRegen?.();
     } catch (e) {
       if (isTitulo) setCopyTError((e as Error).message);
       else setCopyXError((e as Error).message);

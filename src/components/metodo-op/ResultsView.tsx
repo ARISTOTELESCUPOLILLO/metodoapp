@@ -753,6 +753,7 @@ function FeedCard({
         },
         anchoraPersonagem,
         ancoragePapel,
+        forcedGender,
         userId,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -1060,6 +1061,7 @@ function FinalCard({
         },
         anchoraPersonagem,
         ancoragePapel,
+        forcedGender,
         userId,
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -1542,6 +1544,7 @@ function CarouselCardBlock({
         selecaoDireta: s,
         anchoraPersonagem,
         ancoragePapel,
+        forcedGender: forcedGenders[index],
         userId,
       });
       const item: FeedItem = {
@@ -1672,6 +1675,7 @@ function CarouselCardBlock({
             selecaoDireta: s,
             anchoraPersonagem,
             ancoragePapel,
+            forcedGender: forcedGenders[i],
             userId,
           });
           const item: FeedItem = {

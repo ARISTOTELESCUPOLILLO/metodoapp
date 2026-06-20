@@ -52,9 +52,10 @@ interface Props {
   mood?: string;
   assinatura?: string;
   /** Contador de regeneração de legenda, elevado ao app para persistir entre
-   *  trocas de aba (o componente desmonta e remontaria zerado). */
+   *  trocas de aba (o componente desmonta e remontaria zerado). Incrementado
+   *  pelo app só quando a regeneração tem sucesso (ver handleGenerateCaption
+   *  em MetodoOpApp.tsx) — uma falha não deve consumir a cota. */
   captionRegenCount?: number;
-  onCaptionRegen?: () => void;
 }
 
 export default function PostUnicoResult({
@@ -73,7 +74,6 @@ export default function PostUnicoResult({
   mood,
   assinatura,
   captionRegenCount,
-  onCaptionRegen,
 }: Props) {
   const [copied, setCopied] = useState(false);
   // Contagem persistida no app (não reseta ao trocar de aba).
@@ -147,7 +147,6 @@ export default function PostUnicoResult({
 
   function handleRegenCaption() {
     if (captionExhausted || !onRegenerateCaption) return;
-    onCaptionRegen?.();
     setEditedCaption(null);
     onRegenerateCaption();
   }
@@ -251,7 +250,7 @@ export default function PostUnicoResult({
                   Gerar outra legenda ({captionRegens}/{CAPTION_MAX})
                 </button>
               )}
-              {captionExhausted && !captionLoading && (
+              {captionExhausted && !captionLoading && !captionError && (
                 <span style={{ fontSize: 11, color: "#64748b" }}>
                   Limite atingido — edite manualmente
                 </span>

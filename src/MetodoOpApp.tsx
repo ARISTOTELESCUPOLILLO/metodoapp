@@ -774,6 +774,7 @@ export default function App() {
         { brandVoice: kit.brandVoice, previousCaption: caption?.full },
       );
       setCaption(c);
+      setPuCaptionRegen((c) => c + 1);
     } catch (e) {
       setCaptionError(String((e as Error).message || e));
     } finally {
@@ -1287,7 +1288,6 @@ export default function App() {
                 mood={postUnico.mood}
                 assinatura={kit.assinatura || ""}
                 captionRegenCount={puCaptionRegen}
-                onCaptionRegen={() => setPuCaptionRegen((c) => c + 1)}
               />
             )}
             {modo === "imageKit" && (

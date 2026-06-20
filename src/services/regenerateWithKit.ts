@@ -16,7 +16,7 @@ import { generatePostImage } from "./api";
 import { loadImageKitAsync } from "../utils/imageKitStorage";
 import { isClothingFriendly, buildClothingPool } from "../core/clothingPool";
 import type { ElementoPersonalizacao, SlotPersonalizacao } from "../core/personalizacaoMop";
-import { buildProductHierarchyBlock } from "../core/visualDirection";
+import { buildProductHierarchyBlock, type PersonagemGender } from "../core/visualDirection";
 
 export interface RegenerateInput {
   // Slot recomendado pela tabela de personalização do MOP
@@ -87,6 +87,10 @@ export interface RegenerateInput {
   // Garante consistência de identidade entre peças com refs e sem refs.
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  // Gênero atribuído pelo chamador (balanceamento entre peças + persistência
+  // entre regenerações — ver computeBlockGenders em ResultsView.tsx). Sem
+  // efeito quando há avatar de referência (a foto já define o gênero).
+  forcedGender?: PersonagemGender;
   // Quando presente, recarrega o Kit Imagem do servidor antes de montar as
   // referências — evita usar um snapshot em memória/cache que ainda tenha
   // uma foto já deletada (referência fantasma, ex.: produto removido do Kit
@@ -380,6 +384,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     formato,
     anchoraPersonagem,
     ancoragePapel,
+    forcedGender,
     userId,
   } = input;
 
@@ -452,6 +457,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       hasAvatarRef,
       hasCenarioRef,
       hasUniformeRef,
+      forcedGender,
       anchoraPersonagem,
       ancoragePapel,
     });
@@ -477,6 +483,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       hasAvatarRef,
       hasCenarioRef,
       hasUniformeRef,
+      forcedGender,
       anchoraPersonagem,
       ancoragePapel,
     });
@@ -504,6 +511,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     hasAvatarRef,
     hasCenarioRef,
     hasUniformeRef,
+    forcedGender,
     anchoraPersonagem,
     ancoragePapel,
   });

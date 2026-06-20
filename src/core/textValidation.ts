@@ -728,6 +728,21 @@ export function checkAbstractClosing(titulo: string): string | null {
   return null;
 }
 
+// Advérbios/chamadas de urgência temporal no título — clichê que o deixa
+// artificial e repetitivo (ver commit d0e3baa). Antes só bloqueado no prompt
+// de generate-pu-copy.ts e só para objetivo promocao/oportunidade; centralizado
+// aqui pra cobrir título PU (qualquer objetivo, qualquer endpoint — inclusive
+// "Gerar outro" via regenerate-block.ts) e título MOP, sem depender do prompt.
+const TITULO_URGENCY_RE =
+  /\b(hoje|agora|ja|corra|ainda\s+hoje|neste\s+momento|aproveite\s+agora|garanta\s+ja|ultima\s+chance|so\s+hoje)\b/;
+
+export function checkTituloUrgency(titulo: string): string | null {
+  const m = stripAccents(titulo.toLowerCase()).match(TITULO_URGENCY_RE);
+  if (m)
+    return `título usa chamada de urgência temporal ("${m[0]}") — clichê artificial e repetitivo; expresse valor, produto, condição ou contexto favorável sem depender de urgência`;
+  return null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Medida C (sequência MOP) — "rótulo do leitor" como sujeito do título
 // substitui a FORMA do estágio que o título deveria entregar (ver item 11 /
@@ -853,6 +868,8 @@ export function validateTitulo(titulo: string): string[] {
   if (abstractPredicate) motivos.push(abstractPredicate);
   const abstractClosing = checkAbstractClosing(titulo);
   if (abstractClosing) motivos.push(abstractClosing);
+  const urgency = checkTituloUrgency(titulo);
+  if (urgency) motivos.push(urgency);
   return motivos;
 }
 
