@@ -165,7 +165,13 @@ export function UsersTab() {
         .maybeSingle(),
     ]);
     const adminSet = new Set((roles || []).filter((r) => r.role === "admin").map((r) => r.user_id));
-    setRows((profs || []).map((p: any) => ({ ...p, is_admin: adminSet.has(p.id) })));
+    setRows(
+      (profs || []).map((p) => ({
+        ...p,
+        segmento: p.segmento as Row["segmento"],
+        is_admin: adminSet.has(p.id),
+      })),
+    );
     setPlans((pls as Plan[]) || []);
     if (s) {
       setUsdRate(Number(s.usd_brl_rate) || 5.8);
@@ -1345,8 +1351,9 @@ function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey
   );
 }
 
-const Th = ({ children }: any) => (
+const Th = ({ children, title }: { children: React.ReactNode; title?: string }) => (
   <th
+    title={title}
     style={{
       padding: "6px 8px",
       textAlign: "left",
@@ -1359,7 +1366,7 @@ const Th = ({ children }: any) => (
     {children}
   </th>
 );
-const Td = ({ children }: any) => (
+const Td = ({ children }: { children: React.ReactNode }) => (
   <td style={{ padding: "6px 8px", verticalAlign: "middle" }}>{children}</td>
 );
 const actionBtn: React.CSSProperties = {
