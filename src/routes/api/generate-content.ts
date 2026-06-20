@@ -272,6 +272,10 @@ export const Route = createFileRoute("/api/generate-content")({
               },
             },
             stream: true,
+            // Pede o chunk final com `usage` (incl. prompt_tokens_details.cached_tokens) —
+            // mede se a reorganização do prefixo estático de buildMetodoOpPrompt (Etapa 1
+            // do prompt caching) está sendo de fato reaproveitada pela OpenAI.
+            stream_options: { include_usage: true },
           });
 
           // Faz uma chamada streaming à OpenAI e devolve o conteúdo acumulado.
@@ -281,10 +285,13 @@ export const Route = createFileRoute("/api/generate-content")({
           // `budgetMs` é o orçamento de tempo desta tentativa (sub-orçamento do
           // timeout total) — cada tentativa tem seu próprio AbortController, então
           // uma 1ª tentativa lenta não consome todo o tempo da 2ª.
-          async function runAttempt(
-            budgetMs: number,
-          ): Promise<
-            | { kind: "ok"; fullContent: string; finishReason: string | null }
+          async function runAttempt(budgetMs: number): Promise<
+            | {
+                kind: "ok";
+                fullContent: string;
+                finishReason: string | null;
+                usage: { prompt_tokens?: number; cached_tokens?: number } | null;
+              }
             | { kind: "http-error"; status: number; text: string }
             | { kind: "fetch-error"; aborted: boolean; message: string }
           > {
@@ -319,6 +326,7 @@ export const Route = createFileRoute("/api/generate-content")({
               let buffer = "";
               let fullContent = "";
               let finishReason: string | null = null;
+              let usage: { prompt_tokens?: number; cached_tokens?: number } | null = null;
               while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
@@ -337,13 +345,21 @@ export const Route = createFileRoute("/api/generate-content")({
                       if (typeof d === "string") fullContent += d;
                       const fr = j?.choices?.[0]?.finish_reason;
                       if (fr) finishReason = fr;
+                      // Chunk final (stream_options.include_usage) — vem com choices:[]
+                      // e o usage real da chamada, incluindo tokens cacheados.
+                      if (j?.usage) {
+                        usage = {
+                          prompt_tokens: j.usage.prompt_tokens,
+                          cached_tokens: j.usage.prompt_tokens_details?.cached_tokens,
+                        };
+                      }
                     } catch {
                       /* ignore parse errors */
                     }
                   }
                 }
               }
-              return { kind: "ok", fullContent, finishReason };
+              return { kind: "ok", fullContent, finishReason, usage };
             } catch (e) {
               return {
                 kind: "fetch-error",
@@ -426,12 +442,14 @@ export const Route = createFileRoute("/api/generate-content")({
                     }
                   })();
                   console.info(
-                    "[generate-content] attempt %d openai_ms=%d chars=%d finish_reason=%s valid=%s",
+                    "[generate-content] attempt %d openai_ms=%d chars=%d finish_reason=%s valid=%s prompt_tokens=%s cached_tokens=%s",
                     attempt,
                     Date.now() - t0,
                     r.fullContent.length,
                     r.finishReason,
                     validJson,
+                    r.usage?.prompt_tokens ?? "?",
+                    r.usage?.cached_tokens ?? "?",
                   );
                   lastContent = r.fullContent;
                   if (r.finishReason === "stop" && validJson) {

@@ -196,6 +196,20 @@ function buildCommunicativeFunctionMap(
   return lines.join("\n");
 }
 
+// ESTRUTURA DO PROMPT — PREFIXO ESTÁTICO PARA PROMPT CACHING DA OPENAI:
+// a OpenAI cacheia (mais barato) o prefixo IDÊNTICO entre chamadas — mas só
+// enquanto ele permanecer byte-a-byte igual desde o início. Por isso os
+// únicos 3 valores realmente livres/únicos por chamada — companyName,
+// mainActivity e keyInfo — foram agrupados em UM bloco "CONTEXTO" só, o mais
+// tarde possível no prompt (logo antes de buildVisualDirectionBlock, que já
+// sorteia variações via Math.random internamente e por isso nunca seria
+// cacheável mesmo se viesse antes). Tudo o resto do prompt (regras do
+// método, formatos, limites) depende só de enums de baixa cardinalidade
+// (track/segmento/B2B-B2C/tamanho da sequência/mood) — calls com as mesmas
+// opções reaproveitam o mesmo prefixo cacheado mesmo vindo de empresas/
+// keyInfo diferentes. Nenhuma regra/instrução foi reescrita aqui — só
+// reordenada (ver `emissorLine` e `ancoraDataLine` abaixo, que são texto
+// idêntico ao que já existia, só deslocado).
 export function buildMetodoOpPrompt(data: ContentFormData): string {
   const isB2B = data.audience === "B2B";
   const segConfig = isB2B ? segmentConfigB2B : segmentConfigB2C;
@@ -405,7 +419,7 @@ EIXO OBRIGATÓRIO DA SEQUÊNCIA — INFORMAÇÃO-CHAVE:
 - O fechamento da sequência deve consolidar a decisão em torno deste eixo.
 - Proibido peça que não se conecte de forma evidente ao eixo.
 - ANCORAGEM CONCRETA DO EIXO: a informação-chave nomeia um elemento concreto (produto, peça, serviço, canal, procedimento ou situação) — esse elemento, ou sinônimo direto, deve aparecer no título OU no texto do PRIMEIRO Estático E do Estático Final/última peça — abertura e fechamento da sequência precisam ser reconhecíveis como sendo sobre esse elemento, não sobre um tema genérico do segmento. As peças intermediárias podem tratar o eixo de forma mais abstrata.
-- ABERTURA E FECHAMENTO NÃO PODEM SOAR COMO A MESMA FRASE: ancorar o mesmo elemento concreto no título do primeiro Estático e no título do Estático Final/última peça NÃO significa repetir a mesma estrutura com só o verbo final trocado (ex.: "[elemento] ativa" / "[elemento] resolve" são a MESMA frase disfarçada — proibido). Se as duas peças ancoram o elemento no TÍTULO, os títulos precisam ter sujeito, estrutura sintática e ângulo claramente diferentes (não apenas o verbo). Alternativa preferível: uma das duas peças ancora o elemento no TEXTO (não no título), liberando o título para um ângulo totalmente distinto — observação/contexto na abertura, decisão/convite no fechamento (conforme a função comunicativa de cada peça, ver mapa de funções abaixo).
+- ABERTURA E FECHAMENTO NÃO PODEM SOAR COMO A MESMA FRASE: ancorar o mesmo elemento concreto no título do primeiro Estático e no título do Estático Final/última peça NÃO significa repetir a mesma estrutura com só o verbo final trocado (ex.: "[elemento] ativa" / "[elemento] resolve" são a MESMA frase disfarçada — proibido). Se as duas peças ancoram o elemento no TÍTULO, os títulos precisam ter sujeito, estrutura sintática e ângulo claramente diferentes (não apenas o verbo). Alternativa preferível: uma das duas peças ancora o elemento no TEXTO (não no título), liberando o título para um ângulo totalmente distinto — observação/contexto na abertura, decisão/convite no fechamento (conforme a função comunicativa de cada peça, ver mapa de funções acima).
 - VOCABULÁRIO-POR-PÚBLICO NA ANCORAGEM: ao repetir o elemento concreto do eixo (ou sinônimo direto) no título/texto de abertura e fechamento, use o termo na forma como o PÚBLICO-ALVO desta peça (${isB2B ? "decisor empresarial — gestor, diretor ou responsável pela área" : "consumidor final — cliente do cliente"}) o reconheceria no dia a dia — não a forma como o segmento, o fornecedor ou o redator o nomeiam internamente. Sigla ou termo técnico (ex.: TEF, ERP, KPI, NF-e) É a forma CORRETA quando esse é o vocabulário natural do público-alvo desta peça — ${isB2B ? "como neste caso, em que o público é o decisor empresarial: se o ofício/rotina dele envolve o termo, use a sigla sem medo, sem traduzir nem explicar — traduzir aqui empobreceria a precisão e soaria condescendente" : "mas o público desta peça é o consumidor final, que normalmente NÃO usa siglas internas de fornecedor/segmento no dia a dia — só mantenha a sigla se ela for genuinamente parte do vocabulário cotidiano desse consumidor; caso contrário, prefira o termo que ele de fato usaria"}. Só traduza/explique/substitua quando a sigla pertencer a um vocabulário interno do fornecedor ou do segmento que o público-alvo desta peça especificamente NÃO usaria no dia a dia. Nunca proíba um termo técnico legítimo só por ser sigla — o critério é exclusivamente: o público-alvo DESTA peça reconhece e usa esse termo?
 - EXCEÇÃO AO ITEM 8 (PROIBIDO REPETIR A MESMA PALAVRA): o NOME do produto/serviço/objeto concreto do eixo — o SUBSTANTIVO-NÚCLEO apenas (ex.: "poltrona", "correia", "mangueira", "ordem de serviço") — é EXCEÇÃO à regra de não-repetição — pode e deve se repetir, com a MESMA palavra, em todas as peças que tratarem desse elemento. "Sinônimo direto" acima significa variação morfológica do mesmo item (singular/plural: "poltrona"/"poltronas") ou termo realmente equivalente no uso comum — NUNCA outro produto da mesma categoria ("poltrona"→"cadeira", "armário"→"estante", "mangueira"→"cano" são produtos DIFERENTES, e trocar um pelo outro muda o que está sendo vendido). ESTA EXCEÇÃO NÃO COBRE adjetivos ou qualificadores que acompanham o núcleo na informação-chave original (ex.: se a informação-chave diz "ordem de serviço DIGITAL", o adjetivo "digital" NÃO é parte do núcleo protegido — repeti-lo colado ao núcleo em mais de uma peça da sequência é exatamente o tipo de repetição que o item 8 proíbe, e costuma ser o que faz duas peças parecerem a mesma frase). A regra de não-repetição (item 8) e a diversidade lexical continuam valendo para o restante do vocabulário — verbos, adjetivos, conectores — ao redor desse núcleo.
 `
@@ -430,28 +444,30 @@ Proibido mencionar literalmente a voz no texto final.`;
     isVisualOrExperimentacao,
     progressionStages,
   );
+  // EMISSOR foi extraído deste bloco (ver `emissorLine`, concatenada lá no
+  // fim do prompt junto do resto do CONTEXTO) — texto idêntico, só a posição
+  // mudou. Motivo: companyName é livre/único por chamada; mantê-lo aqui
+  // quebrava o prefixo do prompt logo no início de "ANÁLISE INTERNA",
+  // impedindo o prompt caching da OpenAI de reaproveitar nada depois dele.
+  const emissorLine = `EMISSOR: ${data.companyName} — fala com voz própria e consistente. Não precisa ser nomeada em cada peça: a coerência de voz, os exemplos concretos da atividade e o eixo da keyInfo identificam o emissor. Nomear a empresa repetidamente torna a comunicação fraca.`;
   const mercadologicalFrameBlock = `10. FRAME DE COMUNICAÇÃO MERCADOLÓGICA:
-EMISSOR: ${data.companyName} — fala com voz própria e consistente. Não precisa ser nomeada em cada peça: a coerência de voz, os exemplos concretos da atividade e o eixo da keyInfo identificam o emissor. Nomear a empresa repetidamente torna a comunicação fraca.
 RECEPTOR: ${isB2B ? "decisor empresarial" : "consumidor final"} — situação atual: "${seg.entrada}" / bloqueio a superar: "${seg.bloqueio}".
 INTENÇÃO: conduzir o receptor da situação atual até a decisão de escolher esta empresa — usando educação, informação, inspiração, persuasão e convencimento como ferramentas progressivas e distintas.
 FUNÇÕES COMUNICATIVAS POR PEÇA:
 ${communicativeFunctionsMap}
 REGRA: cada peça cumpre a FORMA indicada acima — CTA e menção à empresa só onde a FORMA expressamente permitir.`;
 
+  // Mesma extração de `emissorLine` acima: texto idêntico ao que já existia
+  // dentro de ÂNCORA NARRATIVA, só deslocado para o bloco de CONTEXTO no
+  // final do prompt (mainActivity é texto livre por chamada).
+  const ancoraDataLine = `Segmento: ${data.segment} | Público: ${isB2B ? "B2B" : "B2C"} | Atividade: ${mainActivity || "não informada"}`;
+
   const titleSyntaxRule = `11. SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL COM FUNÇÃO: qualquer classe gramatical da língua portuguesa pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, numeral, pronome ou locução. Exemplos de abertura válidos: "O melhor…", "A solução…", "A saudade…", "Decidir…", "Cuidar…", "O que define…". O título CUMPRE A FORMA do seu estágio (ver FUNÇÕES COMUNICATIVAS POR PEÇA): entrega observação, critério, prova, posicionamento ou convite — nunca descreve o leitor de fora. PROIBIDO: (a) construção passiva sem agente (ex.: "Operações sem atrasos garantidas", "Entrega sem falhas comprovada" — sem quem age); (b) abrir o título nomeando o leitor de fora — "Quem decide…", "Gestores…", "Decisores…", "A equipe…", "Quem cuida…", "Quem usa…" + verbo descritivo. VARIE o sujeito entre pessoas, conceitos abstratos, verbos substantivados e qualificadores.`;
 
   return `Você é o motor estratégico do MÉTODO OP. Retorne SOMENTE JSON válido, sem markdown, sem comentários.
 ${trackHeader}
-CONTEXTO:
-- Empresa: ${data.companyName}
-- Segmento: ${data.segment}
-- Público-alvo: ${isB2B ? "B2B (empresas e decisores empresariais)" : "B2C (consumidor final)"}
-${activityLine}
-- Momento do negócio: ${moment.contextNote}
-${keyInfoBlock}
 ÂNCORA NARRATIVA DA SEQUÊNCIA — DEFINIR ANTES DE GERAR QUALQUER PEÇA:
 Defina UMA VEZ o fio condutor visual desta sequência. Essa âncora guia APENAS as peças em que a IA gera imagem sem referência real do cliente (avatar, cenário ou produto enviado). Quando houver referência real, ela prevalece sobre a âncora.
-Segmento: ${data.segment} | Público: ${isB2B ? "B2B" : "B2C"} | Atividade: ${mainActivity || "não informada"}
 Regras por segmento:
 - SERVIÇOS: personagem é o elemento principal — profissional em ação, papel = "protagonista"
 - MARCA: personagem representa cultura, bastidores ou identidade — papel = "protagonista"
@@ -495,6 +511,15 @@ Cada peça: titulo + texto + legenda + imagePrompt — TODOS preenchidos. Respos
 `
     : ""
 }
+CONTEXTO:
+- Empresa: ${data.companyName}
+- Segmento: ${data.segment}
+- Público-alvo: ${isB2B ? "B2B (empresas e decisores empresariais)" : "B2C (consumidor final)"}
+${activityLine}
+- Momento do negócio: ${moment.contextNote}
+${keyInfoBlock}
+${ancoraDataLine}
+${emissorLine}
 ${buildVisualDirectionBlock(data.mood, data.segment)}
 
 DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
