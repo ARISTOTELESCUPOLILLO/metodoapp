@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/confirm-voice")({
           const avatarSlot = Number(body?.avatarSlot ?? 1) === 2 ? 2 : 1;
 
           const { data: existing, error: selErr } = await supabaseAdmin
-            .from("voice_clones" as any)
+            .from("voice_clones")
             .select("*")
             .eq("user_id", userId)
             .eq("avatar_slot", avatarSlot)
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/confirm-voice")({
               { status: 404 },
             );
           }
-          const row = existing as any;
+          const row = existing;
 
           if (decisao === "descartar") {
             if (row.sample_path) {
@@ -54,7 +54,7 @@ export const Route = createFileRoute("/api/confirm-voice")({
               }
             }
             const { error: delErr } = await supabaseAdmin
-              .from("voice_clones" as any)
+              .from("voice_clones")
               .delete()
               .eq("user_id", userId)
               .eq("avatar_slot", avatarSlot);
@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/confirm-voice")({
           }
 
           const { data: updated, error: updErr } = await supabaseAdmin
-            .from("voice_clones" as any)
+            .from("voice_clones")
             .update({ status: "ready", updated_at: new Date().toISOString() })
             .eq("user_id", userId)
             .eq("avatar_slot", avatarSlot)

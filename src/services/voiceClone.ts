@@ -42,7 +42,7 @@ export async function getVoiceSampleUrl(samplePath: string): Promise<string> {
 
 export async function loadVoiceForUser(userId: string, avatarSlot = 1): Promise<VoiceClone | null> {
   const { data, error } = await supabase
-    .from("voice_clones" as any)
+    .from("voice_clones")
     .select("*")
     .eq("user_id", userId)
     .eq("avatar_slot", avatarSlot)

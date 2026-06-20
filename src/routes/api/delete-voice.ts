@@ -29,13 +29,13 @@ export const Route = createFileRoute("/api/delete-voice")({
           const avatarSlot = Number((body as any)?.avatarSlot ?? 1) === 2 ? 2 : 1;
 
           const { data: existing } = await supabaseAdmin
-            .from("voice_clones" as any)
+            .from("voice_clones")
             .select("sample_path, external_voice_id, provider")
             .eq("user_id", userId)
             .eq("avatar_slot", avatarSlot)
             .maybeSingle();
 
-          const row = existing as any;
+          const row = existing;
 
           // Apaga da ElevenLabs se for provider elevenlabs.
           if (row?.provider === "elevenlabs" && row.external_voice_id) {
@@ -62,7 +62,7 @@ export const Route = createFileRoute("/api/delete-voice")({
           }
 
           await supabaseAdmin
-            .from("voice_clones" as any)
+            .from("voice_clones")
             .delete()
             .eq("user_id", userId)
             .eq("avatar_slot", avatarSlot);

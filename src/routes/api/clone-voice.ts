@@ -178,12 +178,12 @@ export const Route = createFileRoute("/api/clone-voice")({
           try {
             // 1. Via DB (registro existente).
             const { data: prev } = await supabaseAdmin
-              .from("voice_clones" as any)
+              .from("voice_clones")
               .select("external_voice_id, provider")
               .eq("user_id", userId)
               .eq("avatar_slot", avatarSlot)
               .maybeSingle();
-            const prevRow = prev as any;
+            const prevRow = prev;
             if (prevRow?.provider === "elevenlabs" && prevRow.external_voice_id) {
               await fetch(`https://api.elevenlabs.io/v1/voices/${prevRow.external_voice_id}`, {
                 method: "DELETE",
@@ -301,7 +301,7 @@ export const Route = createFileRoute("/api/clone-voice")({
             updated_at: new Date().toISOString(),
           };
           const { data: saved, error: upsertErr } = await supabaseAdmin
-            .from("voice_clones" as any)
+            .from("voice_clones")
             .upsert(row, { onConflict: "user_id,avatar_slot" })
             .select("*")
             .single();

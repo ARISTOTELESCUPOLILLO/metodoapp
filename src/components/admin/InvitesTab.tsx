@@ -130,7 +130,7 @@ export function InvitesTab() {
       bonus_id: bonusId || null,
       source_test_profile_id: sourceTestProfileId || null,
       invited_by: user?.id || null,
-    } as any);
+    });
     setBusy(false);
     if (error) {
       setMsg(error.code === "23505" ? "Este e-mail já foi convidado." : `Erro: ${error.message}`);

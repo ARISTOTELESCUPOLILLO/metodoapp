@@ -96,7 +96,7 @@ export const Route = createFileRoute("/auth/meta/callback")({
           }
 
           // 5. Salva / atualiza no Supabase
-          const { error: dbErr } = await (supabaseAdmin as any).from("meta_connections").upsert(
+          const { error: dbErr } = await supabaseAdmin.from("meta_connections").upsert(
             {
               user_id: userId,
               ig_user_id: igUserId,

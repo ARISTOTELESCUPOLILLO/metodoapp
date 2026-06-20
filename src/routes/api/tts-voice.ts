@@ -75,13 +75,13 @@ export const Route = createFileRoute("/api/tts-voice")({
           }
           const avatarSlot = Number(body?.avatarSlot ?? 1) === 2 ? 2 : 1;
           const { data: vc } = await supabaseAdmin
-            .from("voice_clones" as any)
+            .from("voice_clones")
             .select("external_voice_id, sample_path, provider, status")
             .eq("user_id", userId)
             .eq("avatar_slot", avatarSlot)
             .maybeSingle();
 
-          const row = vc as any;
+          const row = vc;
           if (!row || row.status !== "ready") {
             return Response.json(
               { error: "Voz do avatar ainda não foi treinada." },

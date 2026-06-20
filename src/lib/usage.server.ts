@@ -217,7 +217,7 @@ export async function debitUsage(
     _renders: renders,
     _geracoes: geracoes,
     ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
-  } as any);
+  });
   if (error) {
     // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.
     rpcError = new Error(error.message || "Falha ao debitar consumo.");
@@ -240,7 +240,7 @@ export async function debitUsage(
       slot: slot ?? null,
       payload: (meta.payload ?? null) as never,
       ...(meta.impersonatedBy ? { impersonated_by: meta.impersonatedBy } : {}),
-    } as any);
+    });
   } catch (e) {
     console.warn("[usage_logs] insert failed", e);
   }

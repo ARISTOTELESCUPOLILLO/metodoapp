@@ -247,8 +247,8 @@ export function CustosTab() {
         ? planMonthlyFalaiCost(p2, settings) + planMonthlyOpenaiCost(p2, settings)
         : 0;
       const custoProjTotal = (custoProj1 + custoProj2) * rate;
-      const precoVenda1 = Number((p as any).plano1_preco_brl || 0);
-      const precoVenda2 = Number((p as any).plano2_preco_brl || 0);
+      const precoVenda1 = Number(p.plano1_preco_brl || 0);
+      const precoVenda2 = Number(p.plano2_preco_brl || 0);
       const totalVenda = precoVenda1 + precoVenda2;
       const margem = totalVenda > 0 ? ((totalVenda - custoProjTotal) / totalVenda) * 100 : null;
       return {
@@ -390,7 +390,7 @@ export function CustosTab() {
       )
     )
       return;
-    await supabase.rpc("reset_all_usage" as any);
+    await supabase.rpc("reset_all_usage");
     load();
   }
 

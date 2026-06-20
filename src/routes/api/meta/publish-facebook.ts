@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/meta/publish-facebook")({
         if (!imageDataUrl)
           return Response.json({ error: "imageDataUrl obrigatório" }, { status: 400 });
 
-        const { data: conn } = await (supabaseAdmin as any)
+        const { data: conn } = await supabaseAdmin
           .from("meta_connections")
           .select("fb_page_id, fb_page_access_token, token_expires_at")
           .eq("user_id", userId)

@@ -10,34 +10,49 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
-          falai_balance_usd: number;
+          falai_balance_usd: number | null;
+          geracao_nominal_usd: number;
           geracao_price_usd: number;
           id: boolean;
-          image_base_price_usd: number;
+          image_base_price_usd: number | null;
+          image_edit_nominal_usd: number;
+          image_edit_price_usd: number;
+          image_nominal_usd: number;
           image_price_usd: number;
-          openai_balance_usd: number;
+          openai_balance_usd: number | null;
+          render_nominal_usd: number;
           render_price_usd: number;
           updated_at: string;
           usd_brl_rate: number;
         };
         Insert: {
-          falai_balance_usd?: number;
+          falai_balance_usd?: number | null;
+          geracao_nominal_usd?: number;
           geracao_price_usd?: number;
           id?: boolean;
-          image_base_price_usd?: number;
+          image_base_price_usd?: number | null;
+          image_edit_nominal_usd?: number;
+          image_edit_price_usd?: number;
+          image_nominal_usd?: number;
           image_price_usd?: number;
-          openai_balance_usd?: number;
+          openai_balance_usd?: number | null;
+          render_nominal_usd?: number;
           render_price_usd?: number;
           updated_at?: string;
           usd_brl_rate?: number;
         };
         Update: {
-          falai_balance_usd?: number;
+          falai_balance_usd?: number | null;
+          geracao_nominal_usd?: number;
           geracao_price_usd?: number;
           id?: boolean;
-          image_base_price_usd?: number;
+          image_base_price_usd?: number | null;
+          image_edit_nominal_usd?: number;
+          image_edit_price_usd?: number;
+          image_nominal_usd?: number;
           image_price_usd?: number;
-          openai_balance_usd?: number;
+          openai_balance_usd?: number | null;
+          render_nominal_usd?: number;
           render_price_usd?: number;
           updated_at?: string;
           usd_brl_rate?: number;
@@ -113,6 +128,78 @@ export type Database = {
         };
         Relationships: [];
       };
+      content_configs: {
+        Row: {
+          audience: string | null;
+          brand_kit_id: string | null;
+          business_moment: string | null;
+          created_at: string | null;
+          id: string;
+          instagram_url: string | null;
+          key_info: string | null;
+          main_activity: string | null;
+          output_mode: string | null;
+          sequence_size: number | null;
+          stories_days: number | null;
+          stories_quantity: number | null;
+        };
+        Insert: {
+          audience?: string | null;
+          brand_kit_id?: string | null;
+          business_moment?: string | null;
+          created_at?: string | null;
+          id?: string;
+          instagram_url?: string | null;
+          key_info?: string | null;
+          main_activity?: string | null;
+          output_mode?: string | null;
+          sequence_size?: number | null;
+          stories_days?: number | null;
+          stories_quantity?: number | null;
+        };
+        Update: {
+          audience?: string | null;
+          brand_kit_id?: string | null;
+          business_moment?: string | null;
+          created_at?: string | null;
+          id?: string;
+          instagram_url?: string | null;
+          key_info?: string | null;
+          main_activity?: string | null;
+          output_mode?: string | null;
+          sequence_size?: number | null;
+          stories_days?: number | null;
+          stories_quantity?: number | null;
+        };
+        Relationships: [];
+      };
+      generations: {
+        Row: {
+          brand_kit_id: string | null;
+          created_at: string | null;
+          id: string;
+          mood: string | null;
+          result_json: Json | null;
+          sequence_size: number | null;
+        };
+        Insert: {
+          brand_kit_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          mood?: string | null;
+          result_json?: Json | null;
+          sequence_size?: number | null;
+        };
+        Update: {
+          brand_kit_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          mood?: string | null;
+          result_json?: Json | null;
+          sequence_size?: number | null;
+        };
+        Relationships: [];
+      };
       invited_emails: {
         Row: {
           accepted_at: string | null;
@@ -126,6 +213,7 @@ export type Database = {
           plano_id: string | null;
           plano1_id: string | null;
           plano2_id: string | null;
+          segment: string | null;
           source_test_profile_id: string | null;
           status: string;
         };
@@ -141,6 +229,7 @@ export type Database = {
           plano_id?: string | null;
           plano1_id?: string | null;
           plano2_id?: string | null;
+          segment?: string | null;
           source_test_profile_id?: string | null;
           status?: string;
         };
@@ -156,6 +245,7 @@ export type Database = {
           plano_id?: string | null;
           plano1_id?: string | null;
           plano2_id?: string | null;
+          segment?: string | null;
           source_test_profile_id?: string | null;
           status?: string;
         };
@@ -188,6 +278,142 @@ export type Database = {
             referencedRelation: "plans";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "invited_emails_source_test_profile_id_fkey";
+            columns: ["source_test_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      meta_connections: {
+        Row: {
+          created_at: string | null;
+          fb_page_access_token: string | null;
+          fb_page_id: string | null;
+          fb_page_name: string | null;
+          id: string;
+          ig_user_id: string | null;
+          ig_username: string | null;
+          long_lived_token: string | null;
+          scopes: string | null;
+          token_expires_at: string | null;
+          updated_at: string | null;
+          user_access_token: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          fb_page_access_token?: string | null;
+          fb_page_id?: string | null;
+          fb_page_name?: string | null;
+          id?: string;
+          ig_user_id?: string | null;
+          ig_username?: string | null;
+          long_lived_token?: string | null;
+          scopes?: string | null;
+          token_expires_at?: string | null;
+          updated_at?: string | null;
+          user_access_token: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          fb_page_access_token?: string | null;
+          fb_page_id?: string | null;
+          fb_page_name?: string | null;
+          id?: string;
+          ig_user_id?: string | null;
+          ig_username?: string | null;
+          long_lived_token?: string | null;
+          scopes?: string | null;
+          token_expires_at?: string | null;
+          updated_at?: string | null;
+          user_access_token?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      plan_purchases: {
+        Row: {
+          assigned_by: string | null;
+          closed_by: string | null;
+          created_at: string | null;
+          expira_em: string | null;
+          geracoes_limite: number;
+          geracoes_usados_final: number;
+          id: string;
+          imgs_limite: number;
+          imgs_usadas_final: number;
+          inicio: string | null;
+          motivo_fechamento: string | null;
+          plan_codigo: string | null;
+          plan_id: string | null;
+          plan_nome: string | null;
+          preco_brl: number | null;
+          renders_limite: number;
+          renders_usados_final: number;
+          slot: string;
+          user_id: string;
+        };
+        Insert: {
+          assigned_by?: string | null;
+          closed_by?: string | null;
+          created_at?: string | null;
+          expira_em?: string | null;
+          geracoes_limite?: number;
+          geracoes_usados_final?: number;
+          id?: string;
+          imgs_limite?: number;
+          imgs_usadas_final?: number;
+          inicio?: string | null;
+          motivo_fechamento?: string | null;
+          plan_codigo?: string | null;
+          plan_id?: string | null;
+          plan_nome?: string | null;
+          preco_brl?: number | null;
+          renders_limite?: number;
+          renders_usados_final?: number;
+          slot: string;
+          user_id: string;
+        };
+        Update: {
+          assigned_by?: string | null;
+          closed_by?: string | null;
+          created_at?: string | null;
+          expira_em?: string | null;
+          geracoes_limite?: number;
+          geracoes_usados_final?: number;
+          id?: string;
+          imgs_limite?: number;
+          imgs_usadas_final?: number;
+          inicio?: string | null;
+          motivo_fechamento?: string | null;
+          plan_codigo?: string | null;
+          plan_id?: string | null;
+          plan_nome?: string | null;
+          preco_brl?: number | null;
+          renders_limite?: number;
+          renders_usados_final?: number;
+          slot?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_purchases_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "plan_purchases_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
         ];
       };
       plans: {
@@ -209,7 +435,7 @@ export type Database = {
           limite_renders: number;
           limite_renders_display: number | null;
           nome: string;
-          preco_maximo_brl: number;
+          preco_maximo_brl: number | null;
           tipo: string;
           updated_at: string;
           valor_plano: number;
@@ -232,7 +458,7 @@ export type Database = {
           limite_renders?: number;
           limite_renders_display?: number | null;
           nome: string;
-          preco_maximo_brl?: number;
+          preco_maximo_brl?: number | null;
           tipo: string;
           updated_at?: string;
           valor_plano?: number;
@@ -255,97 +481,17 @@ export type Database = {
           limite_renders?: number;
           limite_renders_display?: number | null;
           nome?: string;
-          preco_maximo_brl?: number;
+          preco_maximo_brl?: number | null;
           tipo?: string;
           updated_at?: string;
           valor_plano?: number;
         };
         Relationships: [];
       };
-      plan_purchases: {
-        Row: {
-          assigned_by: string | null;
-          closed_by: string | null;
-          created_at: string;
-          expira_em: string | null;
-          geracoes_limite: number;
-          geracoes_usados_final: number;
-          id: string;
-          imgs_limite: number;
-          imgs_usadas_final: number;
-          inicio: string | null;
-          motivo_fechamento: string | null;
-          plan_codigo: string | null;
-          plan_id: string | null;
-          plan_nome: string | null;
-          preco_brl: number | null;
-          renders_limite: number;
-          renders_usados_final: number;
-          slot: string;
-          user_id: string;
-        };
-        Insert: {
-          assigned_by?: string | null;
-          closed_by?: string | null;
-          created_at?: string;
-          expira_em?: string | null;
-          geracoes_limite?: number;
-          geracoes_usados_final?: number;
-          id?: string;
-          imgs_limite?: number;
-          imgs_usadas_final?: number;
-          inicio?: string | null;
-          motivo_fechamento?: string | null;
-          plan_codigo?: string | null;
-          plan_id?: string | null;
-          plan_nome?: string | null;
-          preco_brl?: number | null;
-          renders_limite?: number;
-          renders_usados_final?: number;
-          slot: string;
-          user_id: string;
-        };
-        Update: {
-          assigned_by?: string | null;
-          closed_by?: string | null;
-          created_at?: string;
-          expira_em?: string | null;
-          geracoes_limite?: number;
-          geracoes_usados_final?: number;
-          id?: string;
-          imgs_limite?: number;
-          imgs_usadas_final?: number;
-          inicio?: string | null;
-          motivo_fechamento?: string | null;
-          plan_codigo?: string | null;
-          plan_id?: string | null;
-          plan_nome?: string | null;
-          preco_brl?: number | null;
-          renders_limite?: number;
-          renders_usados_final?: number;
-          slot?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "plan_purchases_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "plan_purchases_plan_id_fkey";
-            columns: ["plan_id"];
-            isOneToOne: false;
-            referencedRelation: "plans";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       profiles: {
         Row: {
           bonus_assigned_by: string | null;
+          bonus_contrato_fim: string | null;
           bonus_expira_em: string | null;
           bonus_geracoes_limite: number;
           bonus_geracoes_usadas: number;
@@ -354,13 +500,15 @@ export type Database = {
           bonus_imgs_usadas: number;
           bonus_inicio: string | null;
           bonus_last_charged_at: string | null;
+          bonus_meses_contrato: number;
+          bonus_preco_brl: number | null;
           bonus_renders_limite: number;
           bonus_renders_usados: number;
           client_code: string;
-          created_by: string | null;
           client_seq: number;
           client_seq_segmento: number | null;
           created_at: string;
+          created_by: string | null;
           email: string;
           extra_b_carrossel: number;
           extra_b_estatico: number;
@@ -380,6 +528,7 @@ export type Database = {
           is_test: boolean;
           nome: string | null;
           plano_id: string | null;
+          plano1_contrato_fim: string | null;
           plano1_expira_em: string | null;
           plano1_geracoes_limite: number;
           plano1_geracoes_usadas: number;
@@ -388,8 +537,11 @@ export type Database = {
           plano1_imgs_usadas: number;
           plano1_inicio: string | null;
           plano1_last_charged_at: string | null;
+          plano1_meses_contrato: number;
+          plano1_preco_brl: number | null;
           plano1_renders_limite: number;
           plano1_renders_usados: number;
+          plano2_contrato_fim: string | null;
           plano2_expira_em: string | null;
           plano2_geracoes_limite: number;
           plano2_geracoes_usadas: number;
@@ -398,6 +550,8 @@ export type Database = {
           plano2_imgs_usadas: number;
           plano2_inicio: string | null;
           plano2_last_charged_at: string | null;
+          plano2_meses_contrato: number;
+          plano2_preco_brl: number | null;
           plano2_renders_limite: number;
           plano2_renders_usados: number;
           renders_limite: number;
@@ -406,9 +560,12 @@ export type Database = {
           status: string;
           ultimo_login: string | null;
           updated_at: string;
+          voice_avatar1_enabled: boolean;
+          voice_avatar2_enabled: boolean;
         };
         Insert: {
           bonus_assigned_by?: string | null;
+          bonus_contrato_fim?: string | null;
           bonus_expira_em?: string | null;
           bonus_geracoes_limite?: number;
           bonus_geracoes_usadas?: number;
@@ -417,6 +574,8 @@ export type Database = {
           bonus_imgs_usadas?: number;
           bonus_inicio?: string | null;
           bonus_last_charged_at?: string | null;
+          bonus_meses_contrato?: number;
+          bonus_preco_brl?: number | null;
           bonus_renders_limite?: number;
           bonus_renders_usados?: number;
           client_code: string;
@@ -443,6 +602,7 @@ export type Database = {
           is_test?: boolean;
           nome?: string | null;
           plano_id?: string | null;
+          plano1_contrato_fim?: string | null;
           plano1_expira_em?: string | null;
           plano1_geracoes_limite?: number;
           plano1_geracoes_usadas?: number;
@@ -451,8 +611,11 @@ export type Database = {
           plano1_imgs_usadas?: number;
           plano1_inicio?: string | null;
           plano1_last_charged_at?: string | null;
+          plano1_meses_contrato?: number;
+          plano1_preco_brl?: number | null;
           plano1_renders_limite?: number;
           plano1_renders_usados?: number;
+          plano2_contrato_fim?: string | null;
           plano2_expira_em?: string | null;
           plano2_geracoes_limite?: number;
           plano2_geracoes_usadas?: number;
@@ -461,6 +624,8 @@ export type Database = {
           plano2_imgs_usadas?: number;
           plano2_inicio?: string | null;
           plano2_last_charged_at?: string | null;
+          plano2_meses_contrato?: number;
+          plano2_preco_brl?: number | null;
           plano2_renders_limite?: number;
           plano2_renders_usados?: number;
           renders_limite?: number;
@@ -469,9 +634,12 @@ export type Database = {
           status?: string;
           ultimo_login?: string | null;
           updated_at?: string;
+          voice_avatar1_enabled?: boolean;
+          voice_avatar2_enabled?: boolean;
         };
         Update: {
           bonus_assigned_by?: string | null;
+          bonus_contrato_fim?: string | null;
           bonus_expira_em?: string | null;
           bonus_geracoes_limite?: number;
           bonus_geracoes_usadas?: number;
@@ -480,13 +648,15 @@ export type Database = {
           bonus_imgs_usadas?: number;
           bonus_inicio?: string | null;
           bonus_last_charged_at?: string | null;
+          bonus_meses_contrato?: number;
+          bonus_preco_brl?: number | null;
           bonus_renders_limite?: number;
           bonus_renders_usados?: number;
           client_code?: string;
-          created_by?: string | null;
           client_seq?: number;
           client_seq_segmento?: number | null;
           created_at?: string;
+          created_by?: string | null;
           email?: string;
           extra_b_carrossel?: number;
           extra_b_estatico?: number;
@@ -506,6 +676,7 @@ export type Database = {
           is_test?: boolean;
           nome?: string | null;
           plano_id?: string | null;
+          plano1_contrato_fim?: string | null;
           plano1_expira_em?: string | null;
           plano1_geracoes_limite?: number;
           plano1_geracoes_usadas?: number;
@@ -514,8 +685,11 @@ export type Database = {
           plano1_imgs_usadas?: number;
           plano1_inicio?: string | null;
           plano1_last_charged_at?: string | null;
+          plano1_meses_contrato?: number;
+          plano1_preco_brl?: number | null;
           plano1_renders_limite?: number;
           plano1_renders_usados?: number;
+          plano2_contrato_fim?: string | null;
           plano2_expira_em?: string | null;
           plano2_geracoes_limite?: number;
           plano2_geracoes_usadas?: number;
@@ -524,6 +698,8 @@ export type Database = {
           plano2_imgs_usadas?: number;
           plano2_inicio?: string | null;
           plano2_last_charged_at?: string | null;
+          plano2_meses_contrato?: number;
+          plano2_preco_brl?: number | null;
           plano2_renders_limite?: number;
           plano2_renders_usados?: number;
           renders_limite?: number;
@@ -532,6 +708,8 @@ export type Database = {
           status?: string;
           ultimo_login?: string | null;
           updated_at?: string;
+          voice_avatar1_enabled?: boolean;
+          voice_avatar2_enabled?: boolean;
         };
         Relationships: [
           {
@@ -570,6 +748,7 @@ export type Database = {
           custo_usd: number;
           evento: string;
           id: string;
+          impersonated_by: string | null;
           modulo: string | null;
           payload: Json | null;
           qtd_geracoes: number;
@@ -583,6 +762,7 @@ export type Database = {
           custo_usd?: number;
           evento: string;
           id?: string;
+          impersonated_by?: string | null;
           modulo?: string | null;
           payload?: Json | null;
           qtd_geracoes?: number;
@@ -596,6 +776,7 @@ export type Database = {
           custo_usd?: number;
           evento?: string;
           id?: string;
+          impersonated_by?: string | null;
           modulo?: string | null;
           payload?: Json | null;
           qtd_geracoes?: number;
@@ -693,41 +874,41 @@ export type Database = {
         Row: {
           avatar_path: string | null;
           avatar_path_2: string | null;
-          fachada_path: string | null;
-          fato_path: string | null;
-          venda_path: string | null;
           cenario_tipos: string[];
           cenarios_paths: string[];
           created_at: string;
+          fachada_path: string | null;
+          fato_path: string | null;
           produtos_paths: string[];
           updated_at: string;
           user_id: string;
+          venda_path: string | null;
         };
         Insert: {
           avatar_path?: string | null;
           avatar_path_2?: string | null;
-          fachada_path?: string | null;
-          fato_path?: string | null;
-          venda_path?: string | null;
           cenario_tipos?: string[];
           cenarios_paths?: string[];
           created_at?: string;
+          fachada_path?: string | null;
+          fato_path?: string | null;
           produtos_paths?: string[];
           updated_at?: string;
           user_id: string;
+          venda_path?: string | null;
         };
         Update: {
           avatar_path?: string | null;
           avatar_path_2?: string | null;
-          fachada_path?: string | null;
-          fato_path?: string | null;
-          venda_path?: string | null;
           cenario_tipos?: string[];
           cenarios_paths?: string[];
           created_at?: string;
+          fachada_path?: string | null;
+          fato_path?: string | null;
           produtos_paths?: string[];
           updated_at?: string;
           user_id?: string;
+          venda_path?: string | null;
         };
         Relationships: [];
       };
@@ -784,6 +965,7 @@ export type Database = {
       };
       voice_clones: {
         Row: {
+          avatar_slot: number;
           created_at: string;
           duration_s: number;
           external_voice_id: string;
@@ -796,6 +978,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          avatar_slot?: number;
           created_at?: string;
           duration_s?: number;
           external_voice_id: string;
@@ -808,6 +991,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          avatar_slot?: number;
           created_at?: string;
           duration_s?: number;
           external_voice_id?: string;
@@ -827,9 +1011,9 @@ export type Database = {
     };
     Functions: {
       _rand_alnum: { Args: { _n: number }; Returns: string };
-      admin_storage_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       _rand_letters: { Args: { _n: number }; Returns: string };
       _seg_code: { Args: { _seg: string }; Returns: string };
+      admin_storage_stats: { Args: never; Returns: Json };
       calc_cost:
         | { Args: { _imgs: number; _renders: number }; Returns: number }
         | {
@@ -840,15 +1024,26 @@ export type Database = {
         Args: { _tipo: string; _user_id: string };
         Returns: string;
       };
-      debit_usage: {
-        Args: {
-          _geracoes?: number;
-          _imgs: number;
-          _renders: number;
-          _user_id: string;
-        };
-        Returns: string;
-      };
+      debit_usage:
+        | {
+            Args: {
+              _geracoes?: number;
+              _imgs: number;
+              _renders: number;
+              _user_id: string;
+            };
+            Returns: string;
+          }
+        | {
+            Args: {
+              _geracoes?: number;
+              _imgs: number;
+              _preferred_slot?: string;
+              _renders: number;
+              _user_id: string;
+            };
+            Returns: string;
+          };
       gen_client_code:
         | { Args: { _segmento: string }; Returns: string }
         | { Args: { _segmento: string; _seq: number }; Returns: string };
@@ -875,6 +1070,7 @@ export type Database = {
         };
         Returns: string[];
       };
+      reset_all_usage: { Args: never; Returns: undefined };
     };
     Enums: {
       app_role: "admin" | "user";

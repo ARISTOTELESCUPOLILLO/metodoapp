@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/meta/status")({
         // Tenta ler meta_connections — ignora erro graciosamente (tabela pode não existir ainda)
         let conn: Record<string, unknown> | null = null;
         try {
-          const { data, error } = await (supabaseAdmin as any)
+          const { data, error } = await supabaseAdmin
             .from("meta_connections")
             .select("ig_username, fb_page_name, ig_user_id, fb_page_id, token_expires_at")
             .eq("user_id", userId)

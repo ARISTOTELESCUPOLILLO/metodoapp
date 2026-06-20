@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/meta/disconnect")({
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: "Não autenticado" }, { status: 401 });
 
-        const { error } = await (supabaseAdmin as any)
+        const { error } = await supabaseAdmin
           .from("meta_connections")
           .delete()
           .eq("user_id", userId);

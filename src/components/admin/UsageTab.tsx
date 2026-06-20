@@ -67,7 +67,7 @@ export function UsageTab() {
       if (p.bonus_assigned_by) adminIds.add(p.bonus_assigned_by);
     });
     // Também coleta admins que geraram via impersonation (impersonated_by = admin que gerou).
-    (ls as any[]).forEach((l: any) => {
+    ls!.forEach((l) => {
       if (l.impersonated_by) adminIds.add(l.impersonated_by);
     });
     setProfiles(profileMap);
