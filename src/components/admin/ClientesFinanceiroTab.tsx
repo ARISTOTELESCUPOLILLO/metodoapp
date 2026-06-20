@@ -96,14 +96,14 @@ export function ClientesFinanceiroTab() {
     setProfiles((profs || []) as unknown as Profile[]);
     setPlans((pls || []) as Plan[]);
     const aids = new Set<string>(
-      (roles || []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id as string),
+      (roles || []).filter((r) => r.role === "admin").map((r) => r.user_id),
     );
     setAdminIds(aids);
     if (s) {
-      setUsdRate(Number((s as any).usd_brl_rate) || 5.8);
-      setImgRef(Number((s as any).image_price_usd) || 0.058);
-      setRenderPrice(Number((s as any).render_price_usd) || 1.6);
-      setGeracaoPrice(Number((s as any).geracao_price_usd) || 0.013);
+      setUsdRate(Number(s.usd_brl_rate) || 5.8);
+      setImgRef(Number(s.image_price_usd) || 0.058);
+      setRenderPrice(Number(s.render_price_usd) || 1.6);
+      setGeracaoPrice(Number(s.geracao_price_usd) || 0.013);
     }
     setLoading(false);
   }, []);

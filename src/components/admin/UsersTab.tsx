@@ -164,17 +164,15 @@ export function UsersTab() {
         .eq("id", true)
         .maybeSingle(),
     ]);
-    const adminSet = new Set(
-      (roles || []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id),
-    );
+    const adminSet = new Set((roles || []).filter((r) => r.role === "admin").map((r) => r.user_id));
     setRows((profs || []).map((p: any) => ({ ...p, is_admin: adminSet.has(p.id) })));
     setPlans((pls as Plan[]) || []);
     if (s) {
-      setUsdRate(Number((s as any).usd_brl_rate) || 5.8);
+      setUsdRate(Number(s.usd_brl_rate) || 5.8);
       setCosts({
-        imageRef: Number((s as any).image_price_usd) || 0.058,
-        video: Number((s as any).render_price_usd) || 1.6,
-        content: Number((s as any).geracao_price_usd) || 0.013,
+        imageRef: Number(s.image_price_usd) || 0.058,
+        video: Number(s.render_price_usd) || 1.6,
+        content: Number(s.geracao_price_usd) || 0.013,
       });
     }
     setLoading(false);
@@ -306,7 +304,7 @@ export function UsersTab() {
     setBusy(r.id);
     await supabase
       .from("profiles")
-      .update({ segmento: (seg || null) as any })
+      .update({ segmento: seg || null })
       .eq("id", r.id);
     await load();
     setBusy(null);
@@ -326,7 +324,7 @@ export function UsersTab() {
         bonus_imgs_usadas: 0,
         bonus_renders_usados: 0,
         bonus_geracoes_usadas: 0,
-      } as any)
+      })
       .eq("id", r.id);
     await load();
     setBusy(null);

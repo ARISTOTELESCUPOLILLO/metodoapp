@@ -2128,11 +2128,11 @@ function ReelsCard({
       const uid = sess.session?.user?.id;
       if (!uid) return;
       const { data } = await supabase
-        .from("voice_clones" as any)
+        .from("voice_clones")
         .select("status")
         .eq("user_id", uid)
         .maybeSingle();
-      if (alive && (data as any)?.status === "ready") setHasClonedVoice(true);
+      if (alive && data?.status === "ready") setHasClonedVoice(true);
     })();
     return () => {
       alive = false;

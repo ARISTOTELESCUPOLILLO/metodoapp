@@ -222,11 +222,11 @@ export const Route = createFileRoute("/api/generate-video")({
           if (videoMode === "kit-voz" && userId) {
             try {
               const { data: vc } = await supabaseAdmin
-                .from("voice_clones" as any)
+                .from("voice_clones")
                 .select("external_voice_id, sample_path, provider, status")
                 .eq("user_id", userId)
                 .maybeSingle();
-              const row = vc as any;
+              const row = vc;
               if (row?.status === "ready") {
                 if (row.provider === "elevenlabs") {
                   // ElevenLabs: external_voice_id é o voice_id da conta → chamada direta à API.

@@ -85,9 +85,7 @@ export function VisaoGeralTab() {
     setProfiles((profs || []) as unknown as Profile[]);
     setPlans((pls || []) as Plan[]);
     setAdminIds(
-      new Set<string>(
-        (roles || []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id as string),
-      ),
+      new Set<string>((roles || []).filter((r) => r.role === "admin").map((r) => r.user_id)),
     );
     if (s) setSettings(s as unknown as Settings);
     setLoading(false);

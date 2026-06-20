@@ -121,15 +121,13 @@ export function useProfile(targetUserId?: string | null) {
       supabase.from("user_roles").select("role").eq("user_id", effectiveId),
       targetUserId
         ? supabase.from("user_roles").select("role").eq("user_id", user.id)
-        : Promise.resolve({ data: null as any }),
+        : Promise.resolve({ data: null }),
     ]);
     const p = (prof as any) || null;
     setProfile(p);
-    const effectiveIsAdmin = !!roles?.some((r: any) => r.role === "admin");
+    const effectiveIsAdmin = !!roles?.some((r) => r.role === "admin");
     setIsAdmin(effectiveIsAdmin);
-    setIsSelfAdmin(
-      targetUserId ? !!selfRoles?.some((r: any) => r.role === "admin") : effectiveIsAdmin,
-    );
+    setIsSelfAdmin(targetUserId ? !!selfRoles?.some((r) => r.role === "admin") : effectiveIsAdmin);
 
     if (p) {
       const ids = [p.plano1_id, p.plano2_id, p.bonus_id].filter(Boolean) as string[];
@@ -141,7 +139,7 @@ export function useProfile(targetUserId?: string | null) {
             "id,codigo,nome,tipo,base_estatico,base_carrossel,base_estatico_final,base_reels,limite_imgs_display,limite_renders_display,limite_geracoes_display",
           )
           .in("id", ids);
-        plansMap = Object.fromEntries((pls || []).map((pl: any) => [pl.id, pl]));
+        plansMap = Object.fromEntries((pls || []).map((pl) => [pl.id, pl]));
       }
       const built: SlotInfo[] = [];
       const push = (

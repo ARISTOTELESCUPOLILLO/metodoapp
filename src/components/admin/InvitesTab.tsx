@@ -81,13 +81,13 @@ export function InvitesTab() {
     setPlans((pls as Plan[]) || []);
     setTestProfiles((tp as TestProfile[]) || []);
     const pbe: Record<string, ProfileSlots> = {};
-    ((profs as any[]) || []).forEach((p: any) => {
+    (profs || []).forEach((p) => {
       if (p.email) pbe[p.email.toLowerCase()] = p;
     });
     setProfByEmail(pbe);
     const invitedSet = new Set(((inv as Invite[]) || []).map((r: Invite) => r.email.toLowerCase()));
-    const directs = ((profs as any[]) || []).filter(
-      (p: any) =>
+    const directs = (profs || []).filter(
+      (p) =>
         p.email &&
         !invitedSet.has(p.email.toLowerCase()) &&
         (p.plano1_id || p.plano2_id || p.bonus_id),

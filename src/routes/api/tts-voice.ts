@@ -153,7 +153,7 @@ export const Route = createFileRoute("/api/tts-voice")({
           // Marca último uso (não bloqueia)
           try {
             await supabaseAdmin
-              .from("voice_clones" as any)
+              .from("voice_clones")
               .update({ last_used_at: new Date().toISOString() })
               .eq("user_id", userId);
           } catch (e) {

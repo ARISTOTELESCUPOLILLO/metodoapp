@@ -36,8 +36,8 @@ async function closeCycle(
     user_id: prof.id,
     slot,
     plan_id: currentPlanId,
-    plan_codigo: (plan as any)?.codigo ?? null,
-    plan_nome: (plan as any)?.nome ?? null,
+    plan_codigo: plan?.codigo ?? null,
+    plan_nome: plan?.nome ?? null,
     inicio: prof[`${slot}_inicio`] ?? null,
     expira_em: prof[`${slot}_expira_em`] ?? null,
     preco_brl: prof[`${slot}_preco_brl`] ?? null,
@@ -50,7 +50,7 @@ async function closeCycle(
     motivo_fechamento: motivoFechamento,
     assigned_by: prof.bonus_assigned_by ?? null,
     closed_by: closedBy,
-  } as any);
+  });
 }
 
 // Substitui UsersTab.assignSlot() — captura histórico antes de sobrescrever
@@ -100,9 +100,9 @@ export const assignPlanSlot = createServerFn({ method: "POST" })
       [`${data.slot}_id`]: data.planId,
       [`${data.slot}_inicio`]: new Date(data.inicio + "T12:00:00").toISOString(),
       [`${data.slot}_meses_contrato`]: data.mesesContrato,
-      [`${data.slot}_imgs_limite`]: (plan as any)?.limite_imagens ?? 0,
-      [`${data.slot}_renders_limite`]: (plan as any)?.limite_renders ?? 0,
-      [`${data.slot}_geracoes_limite`]: (plan as any)?.limite_geracoes ?? 0,
+      [`${data.slot}_imgs_limite`]: plan?.limite_imagens ?? 0,
+      [`${data.slot}_renders_limite`]: plan?.limite_renders ?? 0,
+      [`${data.slot}_geracoes_limite`]: plan?.limite_geracoes ?? 0,
       ...(data.resetCounters
         ? {
             [`${data.slot}_imgs_usadas`]: 0,
@@ -206,17 +206,19 @@ export const loadPlanHistorico = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Resolve nomes dos admins que fecharam ciclos (closed_by sem FK — busca separada)
-    const closedByIds = [...new Set((rows ?? []).map((r: any) => r.closed_by).filter(Boolean))];
+    const closedByIds = [
+      ...new Set((rows ?? []).map((r) => r.closed_by).filter((id): id is string => Boolean(id))),
+    ];
     let closerMap: Record<string, string> = {};
     if (closedByIds.length) {
       const { data: closers } = await supabaseAdmin
         .from("profiles")
         .select("id, nome, email")
         .in("id", closedByIds);
-      closerMap = Object.fromEntries((closers ?? []).map((c: any) => [c.id, c.nome || c.email]));
+      closerMap = Object.fromEntries((closers ?? []).map((c) => [c.id, c.nome || c.email]));
     }
 
-    const enriched = (rows ?? []).map((r: any) => ({
+    const enriched = (rows ?? []).map((r) => ({
       ...r,
       closer_nome: r.closed_by ? (closerMap[r.closed_by] ?? null) : null,
     }));

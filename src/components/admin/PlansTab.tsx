@@ -84,9 +84,9 @@ export function PlansTab() {
     if (s) {
       setUsdRate(Number(s.usd_brl_rate) || 5.8);
       setCosts({
-        imageRef: Number((s as any).image_price_usd) || 0.058,
-        video: Number((s as any).render_price_usd) || 1.6,
-        content: Number((s as any).geracao_price_usd) || 0.013,
+        imageRef: Number(s.image_price_usd) || 0.058,
+        video: Number(s.render_price_usd) || 1.6,
+        content: Number(s.geracao_price_usd) || 0.013,
       });
     }
     setLoading(false);

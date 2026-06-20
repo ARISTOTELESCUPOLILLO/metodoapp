@@ -32,13 +32,13 @@ export function SettingsTab() {
         .order("codigo"),
     ]).then(([{ data: s }, { data: p }]) => {
       if (s) {
-        setImageBasePrice(String((s as any).image_base_price_usd ?? 0.046));
+        setImageBasePrice(String(s.image_base_price_usd ?? 0.046));
         setImageRefPrice(String(s.image_price_usd ?? 0.058));
         setRenderPrice(String(s.render_price_usd ?? 1.6));
-        setGeracaoPrice(String((s as any).geracao_price_usd ?? 0.013));
+        setGeracaoPrice(String(s.geracao_price_usd ?? 0.013));
         setUsdRate(String(s.usd_brl_rate ?? 5.8));
-        setFalaiBalance(String((s as any).falai_balance_usd ?? 0));
-        setOpenaiBalance(String((s as any).openai_balance_usd ?? 0));
+        setFalaiBalance(String(s.falai_balance_usd ?? 0));
+        setOpenaiBalance(String(s.openai_balance_usd ?? 0));
       }
       setPlans((p as PlanCost[]) || []);
       setLoading(false);
@@ -59,7 +59,7 @@ export function SettingsTab() {
         usd_brl_rate: Number(usdRate),
         falai_balance_usd: Number(falaiBalance),
         openai_balance_usd: Number(openaiBalance),
-      } as any)
+      })
       .eq("id", true);
     setSaving(false);
     setMsg(error ? `Erro: ${error.message}` : "Valores salvos com sucesso.");

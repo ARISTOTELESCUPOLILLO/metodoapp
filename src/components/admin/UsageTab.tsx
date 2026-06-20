@@ -78,7 +78,7 @@ export function UsageTab() {
         .select("id,email")
         .in("id", Array.from(adminIds));
       const adminEmailMap: Record<string, string> = {};
-      (adminProfs || []).forEach((a: any) => {
+      (adminProfs || []).forEach((a) => {
         adminEmailMap[a.id] = a.email;
       });
       setAdminEmails(adminEmailMap);

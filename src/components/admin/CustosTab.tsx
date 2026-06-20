@@ -135,15 +135,15 @@ export function CustosTab() {
     if (cfg) {
       setSettings({
         usd_brl_rate: Number(cfg.usd_brl_rate) || 5.8,
-        falai_balance_usd: Number((cfg as any).falai_balance_usd) || 0,
-        openai_balance_usd: Number((cfg as any).openai_balance_usd) || 0,
-        image_base_price_usd: Number((cfg as any).image_base_price_usd) || 0.046,
-        image_price_usd: Number((cfg as any).image_price_usd) || 0.058,
-        render_price_usd: Number((cfg as any).render_price_usd) || 1.6,
-        geracao_price_usd: Number((cfg as any).geracao_price_usd) || 0.013,
+        falai_balance_usd: Number(cfg.falai_balance_usd) || 0,
+        openai_balance_usd: Number(cfg.openai_balance_usd) || 0,
+        image_base_price_usd: Number(cfg.image_base_price_usd) || 0.046,
+        image_price_usd: Number(cfg.image_price_usd) || 0.058,
+        render_price_usd: Number(cfg.render_price_usd) || 1.6,
+        geracao_price_usd: Number(cfg.geracao_price_usd) || 0.013,
       });
     }
-    const aids = new Set<string>((roles || []).map((r: any) => r.user_id as string));
+    const aids = new Set<string>((roles || []).map((r) => r.user_id));
     setAdminIds(aids);
     setLoading(false);
   }, [days]);

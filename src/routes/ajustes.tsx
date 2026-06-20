@@ -34,12 +34,12 @@ function AjustesPage() {
       .then(({ data }) => {
         if (data) {
           setImagePrice(String(data.image_price_usd));
-          setImagePriceBase(String((data as any).image_base_price_usd || ""));
+          setImagePriceBase(String(data.image_base_price_usd || ""));
           setRenderPrice(String(data.render_price_usd));
-          setGeracaoPrice(String((data as any).geracao_price_usd || ""));
+          setGeracaoPrice(String(data.geracao_price_usd || ""));
           setUsdRate(String(data.usd_brl_rate));
-          setFalaiBalance(String((data as any).falai_balance_usd || ""));
-          setOpenaiBalance(String((data as any).openai_balance_usd || ""));
+          setFalaiBalance(String(data.falai_balance_usd || ""));
+          setOpenaiBalance(String(data.openai_balance_usd || ""));
         }
         setLoading(false);
       });
@@ -59,7 +59,7 @@ function AjustesPage() {
         usd_brl_rate: Number(usdRate),
         falai_balance_usd: Number(falaiBalance),
         openai_balance_usd: Number(openaiBalance),
-      } as any)
+      })
       .eq("id", true);
     setSaving(false);
     setMsg(error ? `Erro: ${error.message}` : "Valores salvos.");

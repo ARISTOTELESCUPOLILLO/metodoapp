@@ -117,9 +117,9 @@ export async function checkBalance(
         p.plano1_imgs_usadas,
         p.plano1_renders_limite,
         p.plano1_renders_usados,
-        (p as any).plano1_geracoes_limite ?? 0,
-        (p as any).plano1_geracoes_usadas ?? 0,
-        (p as any).plano1_expira_em ?? null,
+        p.plano1_geracoes_limite ?? 0,
+        p.plano1_geracoes_usadas ?? 0,
+        p.plano1_expira_em ?? null,
       ),
       isAdmin: false,
     };
@@ -132,9 +132,9 @@ export async function checkBalance(
         p.plano2_imgs_usadas,
         p.plano2_renders_limite,
         p.plano2_renders_usados,
-        (p as any).plano2_geracoes_limite ?? 0,
-        (p as any).plano2_geracoes_usadas ?? 0,
-        (p as any).plano2_expira_em ?? null,
+        p.plano2_geracoes_limite ?? 0,
+        p.plano2_geracoes_usadas ?? 0,
+        p.plano2_expira_em ?? null,
       ),
       isAdmin: false,
     };
@@ -147,9 +147,9 @@ export async function checkBalance(
         p.bonus_imgs_usadas,
         p.bonus_renders_limite,
         p.bonus_renders_usados,
-        (p as any).bonus_geracoes_limite ?? 0,
-        (p as any).bonus_geracoes_usadas ?? 0,
-        (p as any).bonus_expira_em ?? null,
+        p.bonus_geracoes_limite ?? 0,
+        p.bonus_geracoes_usadas ?? 0,
+        p.bonus_expira_em ?? null,
       ),
       isAdmin: false,
     };
@@ -163,9 +163,9 @@ export async function checkBalance(
       p.plano1_imgs_usadas,
       p.plano1_renders_limite,
       p.plano1_renders_usados,
-      (p as any).plano1_geracoes_limite ?? 0,
-      (p as any).plano1_geracoes_usadas ?? 0,
-      (p as any).plano1_expira_em ?? null,
+      p.plano1_geracoes_limite ?? 0,
+      p.plano1_geracoes_usadas ?? 0,
+      p.plano1_expira_em ?? null,
     ) ||
     slotOk(
       p.plano2_id,
@@ -173,9 +173,9 @@ export async function checkBalance(
       p.plano2_imgs_usadas,
       p.plano2_renders_limite,
       p.plano2_renders_usados,
-      (p as any).plano2_geracoes_limite ?? 0,
-      (p as any).plano2_geracoes_usadas ?? 0,
-      (p as any).plano2_expira_em ?? null,
+      p.plano2_geracoes_limite ?? 0,
+      p.plano2_geracoes_usadas ?? 0,
+      p.plano2_expira_em ?? null,
     ) ||
     slotOk(
       p.bonus_id,
@@ -183,9 +183,9 @@ export async function checkBalance(
       p.bonus_imgs_usadas,
       p.bonus_renders_limite,
       p.bonus_renders_usados,
-      (p as any).bonus_geracoes_limite ?? 0,
-      (p as any).bonus_geracoes_usadas ?? 0,
-      (p as any).bonus_expira_em ?? null,
+      p.bonus_geracoes_limite ?? 0,
+      p.bonus_geracoes_usadas ?? 0,
+      p.bonus_expira_em ?? null,
     );
 
   return { ok, isAdmin: false };

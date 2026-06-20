@@ -54,9 +54,7 @@ export function CobrancasTab() {
     const planMap: Record<string, string> = Object.fromEntries(
       ((pls as Plan[]) || []).map((p) => [p.id, p.codigo]),
     );
-    const admins = new Set(
-      (roles || []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id),
-    );
+    const admins = new Set((roles || []).filter((r) => r.role === "admin").map((r) => r.user_id));
     const all: Item[] = [];
     for (const r of (profs as Row[]) || []) {
       if (admins.has(r.id)) continue;

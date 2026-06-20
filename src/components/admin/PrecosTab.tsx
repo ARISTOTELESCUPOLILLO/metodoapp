@@ -85,10 +85,10 @@ export function PrecosTab() {
     setPlans((p as Plan[]) || []);
     if (s)
       setSettings({
-        usd_brl_rate: Number((s as any).usd_brl_rate ?? 5.8),
-        image_price_usd: Number((s as any).image_price_usd ?? 0.058),
-        render_price_usd: Number((s as any).render_price_usd ?? 1.6),
-        geracao_price_usd: Number((s as any).geracao_price_usd ?? 0.013),
+        usd_brl_rate: Number(s.usd_brl_rate ?? 5.8),
+        image_price_usd: Number(s.image_price_usd ?? 0.058),
+        render_price_usd: Number(s.render_price_usd ?? 1.6),
+        geracao_price_usd: Number(s.geracao_price_usd ?? 0.013),
       });
     setLoading(false);
   }, []);
@@ -101,10 +101,7 @@ export function PrecosTab() {
     const val = parseFloat(editMax[plan.id] ?? "");
     if (isNaN(val)) return;
     setSaving(plan.id);
-    await supabase
-      .from("plans")
-      .update({ preco_maximo_brl: val } as any)
-      .eq("id", plan.id);
+    await supabase.from("plans").update({ preco_maximo_brl: val }).eq("id", plan.id);
     setSaving(null);
     setEditMax((m) => {
       const n = { ...m };

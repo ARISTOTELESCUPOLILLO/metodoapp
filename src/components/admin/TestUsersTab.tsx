@@ -128,7 +128,7 @@ export function TestUsersTab() {
     setBusy(r.id);
     await supabase
       .from("profiles")
-      .update({ segmento: (seg || null) as any })
+      .update({ segmento: seg || null })
       .eq("id", r.id);
     await load();
     setBusy(null);

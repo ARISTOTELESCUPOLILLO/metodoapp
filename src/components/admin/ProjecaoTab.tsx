@@ -256,17 +256,15 @@ export function ProjecaoTab() {
       supabase.from("user_roles").select("user_id,role"),
     ]);
     const cfg: Settings = {
-      usd_brl_rate: Number((s as any)?.usd_brl_rate ?? 5.8),
-      falai_balance_usd: Number((s as any)?.falai_balance_usd ?? 0),
-      openai_balance_usd: Number((s as any)?.openai_balance_usd ?? 0),
-      image_price_usd: Number((s as any)?.image_price_usd ?? 0.058),
-      render_price_usd: Number((s as any)?.render_price_usd ?? 1.6),
-      geracao_price_usd: Number((s as any)?.geracao_price_usd ?? 0.013),
+      usd_brl_rate: Number(s?.usd_brl_rate ?? 5.8),
+      falai_balance_usd: Number(s?.falai_balance_usd ?? 0),
+      openai_balance_usd: Number(s?.openai_balance_usd ?? 0),
+      image_price_usd: Number(s?.image_price_usd ?? 0.058),
+      render_price_usd: Number(s?.render_price_usd ?? 1.6),
+      geracao_price_usd: Number(s?.geracao_price_usd ?? 0.013),
     };
     setSettings(cfg);
-    const adminIds = new Set(
-      (roles || []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id as string),
-    );
+    const adminIds = new Set((roles || []).filter((r) => r.role === "admin").map((r) => r.user_id));
     const p = buildProjections((profs || []) as Profile[], (pls || []) as Plan[], adminIds, cfg);
     setProjs(p);
     setLoading(false);

@@ -118,10 +118,10 @@ export const loadImageKitFor = createServerFn({ method: "POST" })
     const [avatarUrl, avatar2Url, fachadaUrl, fatoUrl, vendaUrl, ...cenariosUrls] =
       await Promise.all([
         signPath(row.avatar_path),
-        signPath((row as any).avatar_path_2 || null),
-        signPath((row as any).fachada_path || null),
-        signPath((row as any).fato_path || null),
-        signPath((row as any).venda_path || null),
+        signPath(row.avatar_path_2 || null),
+        signPath(row.fachada_path || null),
+        signPath(row.fato_path || null),
+        signPath(row.venda_path || null),
         ...Array.from({ length: CENARIO_SLOTS }, (_, i) => signPath(cenariosArr[i] || null)),
       ]);
     const produtosUrls = await Promise.all(
@@ -214,10 +214,10 @@ export const migrateImageKitFor = createServerFn({ method: "POST" })
       };
 
       newAvatar = await copySlot(sourceKit.avatar_path);
-      newAvatar2 = await copySlot((sourceKit as any).avatar_path_2);
-      newFachada = await copySlot((sourceKit as any).fachada_path);
-      newFato = await copySlot((sourceKit as any).fato_path);
-      newVenda = await copySlot((sourceKit as any).venda_path);
+      newAvatar2 = await copySlot(sourceKit.avatar_path_2);
+      newFachada = await copySlot(sourceKit.fachada_path);
+      newFato = await copySlot(sourceKit.fato_path);
+      newVenda = await copySlot(sourceKit.venda_path);
       newCenarios = await Promise.all(
         Array.from({ length: CENARIO_SLOTS }, (_, i) => copySlot(cenariosArr[i] || null)),
       );
@@ -251,7 +251,7 @@ export const migrateImageKitFor = createServerFn({ method: "POST" })
     const brandKitFound = !!sourceBrandKit;
     let brandKitCopied = false;
     if (sourceBrandKit) {
-      const { id: _id, ...brandKitFields } = sourceBrandKit as any;
+      const { id: _id, ...brandKitFields } = sourceBrandKit;
       const payload = {
         ...brandKitFields,
         user_id: targetId,
@@ -287,7 +287,7 @@ export const migrateImageKitFor = createServerFn({ method: "POST" })
     // Marca o convite como migrado
     await supabaseAdmin
       .from("invited_emails")
-      .update({ kit_migrated_at: new Date().toISOString() } as any)
+      .update({ kit_migrated_at: new Date().toISOString() })
       .eq("id", data.inviteId);
 
     return {
@@ -366,7 +366,7 @@ export const saveImageKitFor = createServerFn({ method: "POST" })
     }
 
     // Avatar 2
-    const oldAvatar2 = (existing as any)?.avatar_path_2 || null;
+    const oldAvatar2 = existing?.avatar_path_2 || null;
     let newAvatar2: string | null = oldAvatar2;
     if (data.avatar2 === null) {
       await removePath(oldAvatar2);
@@ -378,7 +378,7 @@ export const saveImageKitFor = createServerFn({ method: "POST" })
     }
 
     // Fachada — slot próprio (antes era um dos cenario_tipos).
-    const oldFachada = (existing as any)?.fachada_path || null;
+    const oldFachada = existing?.fachada_path || null;
     let newFachada: string | null = oldFachada;
     if (data.fachada === null) {
       await removePath(oldFachada);
@@ -390,7 +390,7 @@ export const saveImageKitFor = createServerFn({ method: "POST" })
     }
 
     // Fato — fotografia de um acontecimento (visita, confraternização, feira).
-    const oldFato = (existing as any)?.fato_path || null;
+    const oldFato = existing?.fato_path || null;
     let newFato: string | null = oldFato;
     if (data.fato === null) {
       await removePath(oldFato);
@@ -402,7 +402,7 @@ export const saveImageKitFor = createServerFn({ method: "POST" })
     }
 
     // Venda — fotografia de colaborador com o produto.
-    const oldVenda = (existing as any)?.venda_path || null;
+    const oldVenda = existing?.venda_path || null;
     let newVenda: string | null = oldVenda;
     if (data.venda === null) {
       await removePath(oldVenda);
