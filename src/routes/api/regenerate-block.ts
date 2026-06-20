@@ -10,6 +10,7 @@ import {
   LEGENDA_CORPO_MAX_WORDS,
   LEGENDA_CTA_MAX_WORDS,
   LEGENDA_HASHTAGS,
+  TITULO_MAX_WORDS,
 } from "@/core/textValidation";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
@@ -34,7 +35,7 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: não repita a a
   }
 
   if (kind === "titulo") {
-    const max = 6; // máximo 6 palavras em todas as trilhas
+    const max = TITULO_MAX_WORDS; // mesma fonte de verdade de validateTitulo — evita gerar título que o D1 reprova de cara
     return {
       label: "título",
       rule: `MÁXIMO ${max} palavras, cada palavra com NO MÁXIMO 3 sílabas (ex.: "negócio" ✓, "resultado" ✗ → use "ganho"; "prioridade" ✗ → use "foco"; "comunicação" ✗ → use "mensagem"). NUNCA exceda esses limites — conte as palavras e as sílabas antes de responder. Direto, com tensão ou benefício claro. Sem emoji, sem hashtag, sem aspas. Sem ponto final — EXCETO se o título for uma pergunta (direta ou retórica): nesse caso o "?" é OBRIGATÓRIO. Ex. corretos: "Por que isso acontece?" / "O que está faltando?" — Ex. errados: "Por que isso acontece" / "O que está faltando."
@@ -144,8 +145,8 @@ Retorne JSON EXATAMENTE assim:
           // Enforcement: para texto, garante que nunca volta acima do limite
           // do método (corte mecânico aceitável em corpo de texto). Título
           // NÃO é cortado aqui — cortar geraria fragmento; validateTitulo
-          // abaixo flags fora da faixa de 4-6 palavras e o cliente (E3) tenta
-          // de novo ou aplica a limpeza determinística (E4).
+          // abaixo flags fora da faixa de TITULO_MIN_WORDS-TITULO_MAX_WORDS
+          // e o cliente (E3) tenta de novo ou aplica a limpeza determinística (E4).
           if (kind === "texto") {
             value = truncateWords(value, rule.max);
           } else if (kind === "legenda") {

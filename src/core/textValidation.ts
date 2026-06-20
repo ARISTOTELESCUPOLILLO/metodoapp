@@ -694,8 +694,8 @@ export function checkNumericClaims(text: string, keyInfo: string): string[] {
 // (organizaMethodEngine.ts) — manter sincronizado com esses limites para que
 // uma violação do próprio prompt não passe sem flag (ver título "Venda já ou
 // cresça sem parar", 6 palavras, que escapou da regeneração por esse motivo).
-const TITULO_MIN_WORDS = 4;
-const TITULO_MAX_WORDS = 5;
+export const TITULO_MIN_WORDS = 4;
+export const TITULO_MAX_WORDS = 5;
 
 // ANCORAGEM CONCRETA — ANTI-SÍMBOLO (organizaMethodEngine.ts,
 // generate-pu-copy.ts): "[abstrato] faz/traz/gera/vira/se torna/transforma

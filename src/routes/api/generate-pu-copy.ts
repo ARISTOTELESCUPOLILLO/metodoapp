@@ -170,8 +170,9 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           }
 
           // Título NÃO é truncado aqui — cortar geraria fragmento; fora da
-          // faixa de 4-6 palavras é flagado por validateTitulo (D1) abaixo e
-          // regenerado pelo cliente (E3/E4), igual ao fluxo MOP.
+          // faixa de 4-5 palavras (TITULO_MIN_WORDS/TITULO_MAX_WORDS) é flagado
+          // por validateTitulo (D1) abaixo e regenerado pelo cliente (E3/E4),
+          // igual ao fluxo MOP.
           const titulo = correctPortugueseSpelling(String(parsed.titulo || "").trim());
           let texto = correctPortugueseSpelling(truncateWords(String(parsed.texto || ""), 14));
 

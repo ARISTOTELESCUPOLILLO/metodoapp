@@ -342,8 +342,9 @@ function EditableField(props: {
   original: string;
   count: number;
   onChange: (v: string) => void;
-  onRegenStart: () => void;
-  onRegenDone: () => void;
+  // Chamado só quando a regeneração entrega uma sugestão de fato (não em
+  // falha/retorno vazio) — falha não deve consumir a cota persistida.
+  onRegenSuccess: () => void;
   ctxBuilder: () => Parameters<typeof regenerateBlockClean>[0];
   multiline?: boolean;
   maxWords?: number;
@@ -355,8 +356,7 @@ function EditableField(props: {
     original,
     count,
     onChange,
-    onRegenStart,
-    onRegenDone,
+    onRegenSuccess,
     ctxBuilder,
     multiline,
     kind,
@@ -374,16 +374,19 @@ function EditableField(props: {
     if (exhausted || busy) return;
     setBusy(true);
     setError(null);
-    onRegenStart();
     try {
       const next = await regenerateBlockClean(ctxBuilder());
       const trimmed = (next || "").trim();
-      if (trimmed) setSuggestions((arr) => [...arr, trimmed]);
+      if (trimmed) {
+        setSuggestions((arr) => [...arr, trimmed]);
+        onRegenSuccess();
+      } else {
+        setError("Sugestão vazia — tente de novo.");
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
-      onRegenDone();
     }
   }
 
@@ -823,8 +826,7 @@ function FeedCard({
             original={item.titulo}
             count={tCount}
             onChange={setTitulo}
-            onRegenStart={() => setTCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setTCount((c) => c + 1)}
             ctxBuilder={() => ctx("titulo")}
             maxWords={6}
           />
@@ -835,8 +837,7 @@ function FeedCard({
             original={item.texto}
             count={xCount}
             onChange={setTexto}
-            onRegenStart={() => setXCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setXCount((c) => c + 1)}
             ctxBuilder={() => ctx("texto")}
             multiline
             maxWords={15}
@@ -848,8 +849,7 @@ function FeedCard({
             original={item.legenda}
             count={lCount}
             onChange={setLegenda}
-            onRegenStart={() => setLCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setLCount((c) => c + 1)}
             ctxBuilder={() => ctx("legenda")}
             multiline
             maxWords={40}
@@ -1131,8 +1131,7 @@ function FinalCard({
             original={item.titulo}
             count={tCount}
             onChange={setTitulo}
-            onRegenStart={() => setTCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setTCount((c) => c + 1)}
             ctxBuilder={() => ctx("titulo")}
             maxWords={6}
           />
@@ -1143,8 +1142,7 @@ function FinalCard({
             original={item.texto}
             count={xCount}
             onChange={setTexto}
-            onRegenStart={() => setXCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setXCount((c) => c + 1)}
             ctxBuilder={() => ctx("texto")}
             multiline
             maxWords={15}
@@ -1156,8 +1154,7 @@ function FinalCard({
             original={item.legenda}
             count={lCount}
             onChange={setLegenda}
-            onRegenStart={() => setLCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setLCount((c) => c + 1)}
             ctxBuilder={() => ctx("legenda")}
             multiline
             maxWords={40}
@@ -1828,10 +1825,9 @@ function CarouselCardBlock({
                   original={card.titulo}
                   count={tCounts[index]}
                   onChange={(v) => setTitulos((prev) => prev.map((p, i) => (i === index ? v : p)))}
-                  onRegenStart={() =>
+                  onRegenSuccess={() =>
                     setTCounts((prev) => prev.map((c, i) => (i === index ? c + 1 : c)))
                   }
-                  onRegenDone={() => {}}
                   ctxBuilder={() => ctx("titulo")}
                   maxWords={6}
                 />
@@ -1842,10 +1838,9 @@ function CarouselCardBlock({
                   original={card.texto}
                   count={xCounts[index]}
                   onChange={(v) => setTextos((prev) => prev.map((p, i) => (i === index ? v : p)))}
-                  onRegenStart={() =>
+                  onRegenSuccess={() =>
                     setXCounts((prev) => prev.map((c, i) => (i === index ? c + 1 : c)))
                   }
-                  onRegenDone={() => {}}
                   ctxBuilder={() => ctx("texto")}
                   multiline
                   maxWords={12}
@@ -1861,10 +1856,9 @@ function CarouselCardBlock({
                       onChange={(v) =>
                         setLegendas((prev) => prev.map((p, i) => (i === index ? v : p)))
                       }
-                      onRegenStart={() =>
+                      onRegenSuccess={() =>
                         setLCounts((prev) => prev.map((c, i) => (i === index ? c + 1 : c)))
                       }
-                      onRegenDone={() => {}}
                       ctxBuilder={() => ctx("legenda")}
                       multiline
                       maxWords={40}
@@ -2014,6 +2008,7 @@ function ReelsCard({
   extrasCarrossel,
   onImageGenerated,
   userId,
+  forcedGender,
   anchoraPersonagem,
   ancoragePapel,
 }: {
@@ -2026,6 +2021,7 @@ function ReelsCard({
   guard: ReturnType<typeof useImageGenAlert>["guard"];
   onImageGenerated?: () => void;
   userId?: string | null;
+  forcedGender?: PersonagemGender;
   anchoraPersonagem?: string;
   ancoragePapel?: string;
 } & RefSelectorProps) {
@@ -2238,6 +2234,7 @@ function ReelsCard({
         mood,
         vertical: "reels",
         logoPosition: kit.logoPosition,
+        forcedGender,
         anchoraPersonagem,
         ancoragePapel,
       });
@@ -2298,6 +2295,7 @@ function ReelsCard({
         selecaoDireta: s,
         anchoraPersonagem,
         ancoragePapel,
+        forcedGender,
         userId,
       });
       const final = await composeReelsPng(kit, url);
@@ -2619,8 +2617,7 @@ function ReelsCard({
             original={reels.hook}
             count={hCount}
             onChange={setHook}
-            onRegenStart={() => setHCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setHCount((c) => c + 1)}
             ctxBuilder={() => ctx("titulo")}
             maxWords={6}
           />
@@ -2631,8 +2628,7 @@ function ReelsCard({
             original={reels.script}
             count={sCount}
             onChange={setScript}
-            onRegenStart={() => setSCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setSCount((c) => c + 1)}
             ctxBuilder={() => ctx("texto")}
             multiline
             maxWords={22}
@@ -2644,8 +2640,7 @@ function ReelsCard({
             original={(reels.legenda || reels.script || "").trim()}
             count={lCount}
             onChange={setLegenda}
-            onRegenStart={() => setLCount((c) => c + 1)}
-            onRegenDone={() => {}}
+            onRegenSuccess={() => setLCount((c) => c + 1)}
             ctxBuilder={() => ctx("legenda")}
             multiline
             maxWords={40}
@@ -3324,30 +3319,39 @@ export default function ResultsView({
     const feed = result?.feed || [];
     const estaticosM = feed.filter((f) => f.formato !== "Estático Final");
     const estaticosFinaisM = feed.filter((f) => f.formato === "Estático Final");
+    const reelsM = result?.reels || [];
     const carouselsM: CarouselCard[][] = [];
     if (result?.carousel?.length) {
       for (let i = 0; i < result.carousel.length; i += 5) {
         carouselsM.push(result.carousel.slice(i, i + 5));
       }
     }
-    const maxBlocksM = Math.max(estaticosM.length, carouselsM.length, estaticosFinaisM.length);
+    const maxBlocksM = Math.max(
+      estaticosM.length,
+      carouselsM.length,
+      reelsM.length,
+      estaticosFinaisM.length,
+    );
     const blocks: {
       estatico: PersonagemGender;
       carrossel: PersonagemGender[];
+      reels: PersonagemGender;
       final: PersonagemGender;
     }[] = [];
     for (let i = 0; i < maxBlocksM; i++) {
       const pieces: { titulo: string; texto: string }[] = [];
       if (estaticosM[i]) pieces.push({ titulo: estaticosM[i].titulo, texto: estaticosM[i].texto });
       (carouselsM[i] || []).forEach((c) => pieces.push({ titulo: c.titulo, texto: c.texto }));
+      if (reelsM[i]) pieces.push({ titulo: reelsM[i].hook, texto: reelsM[i].script });
       if (estaticosFinaisM[i])
         pieces.push({ titulo: estaticosFinaisM[i].titulo, texto: estaticosFinaisM[i].texto });
       const genders = computeBlockGenders(pieces, anchorGenderEffective);
       let p = 0;
       const estatico: PersonagemGender = estaticosM[i] ? genders[p++] : "homem";
       const carrossel: PersonagemGender[] = (carouselsM[i] || []).map(() => genders[p++]);
+      const reels: PersonagemGender = reelsM[i] ? genders[p++] : "homem";
       const final: PersonagemGender = estaticosFinaisM[i] ? genders[p++] : "homem";
-      blocks.push({ estatico, carrossel, final });
+      blocks.push({ estatico, carrossel, reels, final });
     }
     return blocks;
   }, [result, anchorGenderEffective]);
@@ -3698,6 +3702,7 @@ export default function ResultsView({
                   extrasCarrossel={extrasCarrossel}
                   onImageGenerated={onImageGenerated}
                   userId={userId}
+                  forcedGender={bg?.reels ?? "homem"}
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
                 />
