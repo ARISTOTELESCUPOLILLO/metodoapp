@@ -27,6 +27,7 @@ import {
   saveImageKit,
   loadImageKitAsync,
   saveImageKitAsync,
+  IMAGE_KIT_KEY,
 } from "./utils/imageKitStorage";
 import { clearSessionImages } from "./utils/sessionImageCache";
 import { clearCopyEdits } from "./utils/copyEditsStorage";
@@ -103,21 +104,45 @@ function savePostUnico(d: PostUnicoFormData) {
   }
 }
 
-// Persiste no localStorage sem deixar a falha passar em silêncio: loga sempre
-// e, se for quota cheia, avisa o usuário uma única vez por sessão (evita
-// alert() repetido a cada keystroke/effect numa página com vários campos).
-let quotaWarned = false;
+// O Kit Imagem é cacheado em localStorage só para leitura rápida — a fonte
+// autoritativa é o Supabase (loadImageKitAsync recarrega e repovoa o cache).
+// Por isso, quando a cota do navegador estoura, é seguro descartar esse
+// cache para abrir espaço: nada é perdido, só recarrega do servidor depois.
+function freeLocalStorageSpace(): boolean {
+  try {
+    let freed = false;
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(IMAGE_KIT_KEY)) {
+        localStorage.removeItem(k);
+        freed = true;
+      }
+    }
+    return freed;
+  } catch {
+    return false;
+  }
+}
+
+// Persiste no localStorage sem deixar a falha passar em silêncio pro console,
+// mas também sem incomodar o usuário com alert() nativo: se a cota estourar,
+// tenta liberar espaço descartando o cache (recuperável) do Kit Imagem e
+// regrava uma vez; se ainda assim falhar, só loga — o conteúdo continua
+// disponível em memória nesta sessão, só não sobrevive a um reload.
 function persistLocal(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
   } catch (e) {
-    console.error(`persistLocal: falha ao salvar "${key}"`, e);
-    if ((e as Error)?.name === "QuotaExceededError" && !quotaWarned) {
-      quotaWarned = true;
-      alert(
-        "Espaço local do navegador está cheio — o conteúdo gerado pode não sobreviver a um recarregamento da página. Recomendamos limpar imagens antigas do Kit Imagem.",
-      );
+    if ((e as Error)?.name === "QuotaExceededError" && freeLocalStorageSpace()) {
+      try {
+        localStorage.setItem(key, value);
+        return;
+      } catch (e2) {
+        console.error(`persistLocal: falha ao salvar "${key}" mesmo após liberar espaço`, e2);
+        return;
+      }
     }
+    console.error(`persistLocal: falha ao salvar "${key}"`, e);
   }
 }
 
@@ -874,17 +899,23 @@ export default function App() {
       setImageKitSaved(true);
       setTimeout(() => setImageKitSaved(false), 2000);
     } catch (e) {
-      // Fallback: salva pelo menos no cache local pra não perder edições.
+      // Fallback: salva pelo menos no cache local pra não perder edições, sem
+      // incomodar o usuário com alert() nativo (mesma lógica de persistLocal:
+      // libera o cache do Kit — recuperável do servidor — e tenta de novo).
       try {
         saveImageKit(imageKit, effectiveUserId);
-      } catch {
-        /* já vai mostrar o alert de erro abaixo */
+      } catch (localErr) {
+        if ((localErr as Error)?.name === "QuotaExceededError" && freeLocalStorageSpace()) {
+          try {
+            saveImageKit(imageKit, effectiveUserId);
+          } catch (localErr2) {
+            console.error("handleSaveImageKit: falha ao salvar cache local", localErr2);
+          }
+        } else {
+          console.error("handleSaveImageKit: falha ao salvar cache local", localErr);
+        }
       }
-      const msg =
-        (e as Error)?.name === "QuotaExceededError"
-          ? "Espaço local cheio — apague alguma imagem do Kit antes de salvar."
-          : `Erro ao salvar Kit Imagem no servidor: ${(e as Error).message}`;
-      alert(msg);
+      console.error("handleSaveImageKit: falha ao salvar Kit Imagem no servidor", e);
     }
   }
   const loadingMessage =
