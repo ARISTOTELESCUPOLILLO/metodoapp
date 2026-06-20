@@ -123,7 +123,13 @@ export function useProfile(targetUserId?: string | null) {
         ? supabase.from("user_roles").select("role").eq("user_id", user.id)
         : Promise.resolve({ data: null }),
     ]);
-    const p = (prof as any) || null;
+    const p: Profile | null = prof
+      ? {
+          ...prof,
+          status: prof.status as Profile["status"],
+          segmento: prof.segmento as Profile["segmento"],
+        }
+      : null;
     setProfile(p);
     const effectiveIsAdmin = !!roles?.some((r) => r.role === "admin");
     setIsAdmin(effectiveIsAdmin);

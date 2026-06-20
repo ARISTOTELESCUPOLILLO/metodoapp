@@ -24,6 +24,16 @@ interface ProfileInfo {
   bonus_assigned_by: string | null;
 }
 
+// Fallback de seleção quando created_by/bonus_assigned_by ainda não migraram.
+interface ProfRow {
+  id: string;
+  email: string;
+  nome: string | null;
+  is_test: boolean;
+  created_by?: string | null;
+  bonus_assigned_by?: string | null;
+}
+
 export function UsageTab() {
   const isMobile = useIsMobile();
   const [logs, setLogs] = useState<Log[]>([]);
@@ -49,13 +59,13 @@ export function UsageTab() {
     ]);
 
     // Fallback para projetos onde as colunas de rastreio ainda não foram migradas
-    const profs = profsResult.error
+    const profs: ProfRow[] = profsResult.error
       ? (await supabase.from("profiles").select("id,email,nome,is_test")).data || []
       : profsResult.data || [];
 
     const profileMap: Record<string, ProfileInfo> = {};
     const adminIds = new Set<string>();
-    (profs as any[]).forEach((p: any) => {
+    profs.forEach((p) => {
       profileMap[p.id] = {
         email: p.email,
         nome: p.nome,
@@ -333,7 +343,7 @@ export function UsageTab() {
   );
 }
 
-const Th = ({ children }: any) => (
+const Th = ({ children }: { children: React.ReactNode }) => (
   <th
     style={{
       padding: "8px 10px",
@@ -346,7 +356,9 @@ const Th = ({ children }: any) => (
     {children}
   </th>
 );
-const Td = ({ children }: any) => <td style={{ padding: "8px 10px" }}>{children}</td>;
+const Td = ({ children }: { children: React.ReactNode }) => (
+  <td style={{ padding: "8px 10px" }}>{children}</td>
+);
 const Card = ({ label, value }: { label: string; value: string }) => (
   <div style={{ background: "#f1f5f9", padding: 12, borderRadius: 8 }}>
     <div style={{ fontSize: 12, color: "#64748b" }}>{label}</div>

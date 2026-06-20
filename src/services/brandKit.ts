@@ -3,25 +3,28 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { BrandKit, LogoPosition, SecondaryFont } from "../types";
+import type { Tables } from "@/integrations/supabase/types";
+import { BrandKit, FontPair, LogoPosition, Segment, SecondaryFont } from "../types";
 
-function rowToKit(k: any): BrandKit {
+type BrandKitRow = Tables<"brand_kits">;
+
+function rowToKit(k: BrandKitRow): BrandKit {
   return {
     companyName: k.company_name || "",
-    segment: k.segment,
-    primaryColor: k.primary_color,
-    secondaryColor: k.secondary_color,
-    accentColor: k.accent_color,
-    fontPair: k.font_pair,
+    segment: (k.segment as Segment) || "SERVIÇOS",
+    primaryColor: k.primary_color || "#123a63",
+    secondaryColor: k.secondary_color || "",
+    accentColor: k.accent_color || undefined,
+    fontPair: (k.font_pair as FontPair) || "Montserrat",
     secondaryFont: (k.secondary_font as SecondaryFont) || undefined,
-    brandVoice: k.brand_voice,
-    logoHasName: k.logo_has_name,
+    brandVoice: k.brand_voice || "",
+    logoHasName: k.logo_has_name ?? false,
     logoDataUrl: k.logo_url || undefined,
     mainActivity: k.main_activity || "",
     logoPosition: (k.logo_position as LogoPosition) || "bottom-right",
     assinatura: k.assinatura || "",
     uniformeDataUrl: k.uniforme_url || undefined,
-    products: Array.isArray(k.products) ? k.products : [],
+    products: Array.isArray(k.products) ? (k.products as string[]) : [],
   };
 }
 
@@ -114,7 +117,7 @@ export const saveKitServer = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     };
 
-    let savedRow: any;
+    let savedRow: BrandKitRow;
     if (existing?.id) {
       const { data: d, error } = await supabaseAdmin
         .from("brand_kits")
@@ -174,7 +177,7 @@ export async function saveKitForUser(kit: BrandKit, userId: string): Promise<Bra
     updated_at: new Date().toISOString(),
   };
 
-  let savedRow: any;
+  let savedRow: BrandKitRow;
   if (existing?.id) {
     const { data, error } = await supabase
       .from("brand_kits")
