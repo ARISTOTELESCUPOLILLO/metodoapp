@@ -11,15 +11,13 @@ export async function getUserIdFromRequest(request: Request): Promise<string | n
   if (!auth) return null;
   const token = auth.replace(/^Bearer\s+/i, "").trim();
   if (!token) return null;
-  // Decode JWT locally to avoid network/SSL issues on validation.
+  // Valida o token de verdade contra o Supabase (assinatura + expiração + revogação) —
+  // decodificar o payload localmente sem checar a assinatura permitia forjar um JWT
+  // com qualquer `sub` (ex.: UUID de um admin) e ser aceito como autenticado.
   try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const padded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
-    if (!payload?.sub) return null;
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload.sub as string;
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data?.user) return null;
+    return data.user.id;
   } catch {
     return null;
   }
@@ -211,12 +209,16 @@ export async function debitUsage(
   let rpcError: Error | null = null;
 
   // Admin e usuário comum: mesmo caminho — RPC verifica limites do slot preferido.
+  // _preferred_slot é sempre enviado (null quando não informado) — omitir a chave
+  // por completo deixa 2 overloads de debit_usage (4 e 5 args) igualmente válidos
+  // pro Postgres, que aí recusa a chamada por ambiguidade ("Could not choose the
+  // best candidate function"). Ex.: confirm-voice.ts nunca passava preferredSlot.
   const { data: slotData, error } = await supabaseAdmin.rpc("debit_usage", {
     _user_id: userId,
     _imgs: imgs,
     _renders: renders,
     _geracoes: geracoes,
-    ...(meta.preferredSlot ? { _preferred_slot: meta.preferredSlot } : {}),
+    _preferred_slot: meta.preferredSlot ?? null,
   });
   if (error) {
     // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.

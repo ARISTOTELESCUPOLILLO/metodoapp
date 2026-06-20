@@ -733,13 +733,30 @@ export function checkAbstractClosing(titulo: string): string | null {
 // de generate-pu-copy.ts e só para objetivo promocao/oportunidade; centralizado
 // aqui pra cobrir título PU (qualquer objetivo, qualquer endpoint — inclusive
 // "Gerar outro" via regenerate-block.ts) e título MOP, sem depender do prompt.
-const TITULO_URGENCY_RE =
-  /\b(hoje|agora|ja|corra|ainda\s+hoje|neste\s+momento|aproveite\s+agora|garanta\s+ja|ultima\s+chance|so\s+hoje)\b/;
+const TITULO_URGENCY_PHRASE_RE =
+  /\b(corra|ainda\s+hoje|neste\s+momento|aproveite\s+agora|garanta\s+ja|ultima\s+chance|so\s+hoje)\b/;
+// "hoje"/"agora"/"já" sozinhos costumam ser advérbio gramatical comum, não
+// urgência-clichê, quando abrem o título ou seguem "quem" (ex.: "Já é hora de
+// cuidar do carro", "Quem já confia na gente") — só reprovam nas demais
+// posições, onde o padrão observado é sempre chamada de ação (ex.: "Troque já
+// a peça", "...sua ideia já").
+const TITULO_URGENCY_BARE_WORDS = new Set(["hoje", "agora", "ja"]);
 
 export function checkTituloUrgency(titulo: string): string | null {
-  const m = stripAccents(titulo.toLowerCase()).match(TITULO_URGENCY_RE);
-  if (m)
-    return `título usa chamada de urgência temporal ("${m[0]}") — clichê artificial e repetitivo; expresse valor, produto, condição ou contexto favorável sem depender de urgência`;
+  const normalized = stripAccents(titulo.toLowerCase());
+  const phraseMatch = normalized.match(TITULO_URGENCY_PHRASE_RE);
+  if (phraseMatch) {
+    return `título usa chamada de urgência temporal ("${phraseMatch[0]}") — clichê artificial e repetitivo; expresse valor, produto, condição ou contexto favorável sem depender de urgência`;
+  }
+  const words = normalized
+    .replace(/[.,!?;:]/g, "")
+    .split(/\s+/)
+    .filter(Boolean);
+  for (let i = 1; i < words.length; i++) {
+    if (TITULO_URGENCY_BARE_WORDS.has(words[i]) && words[i - 1] !== "quem") {
+      return `título usa chamada de urgência temporal ("${words[i]}") — clichê artificial e repetitivo; expresse valor, produto, condição ou contexto favorável sem depender de urgência`;
+    }
+  }
   return null;
 }
 
@@ -1068,6 +1085,10 @@ export function applyDeterministicFallback(
         .replace(/[,;:\-–—]+$/, "")
         .trim();
     }
+    // Se mesmo após 2 tentativas (E3) o modelo insistir em terminar com
+    // urgência-clichê (o padrão exato do bug original, ex.: "...sua ideia já"),
+    // remove só a palavra final em vez de devolver o título flagado como está.
+    text = text.replace(/\s+(hoje|agora|j[áa])\s*[!?.]?$/i, "").trim();
   }
 
   for (let i = 0; i < 3; i++) {
