@@ -607,7 +607,7 @@ export function normalizeMethodResult(
   if (track === "visual" || track === "experimentacao") {
     if (feed) {
       const before = feed.length;
-      feed = feed.filter((f) => f.formato !== ("Reels" as any));
+      feed = feed.filter((f) => f.formato !== "Reels");
       if (feed.length < before) {
         console.warn(
           `[Método OP] Itens com formato "Reels" foram filtrados do feed na trilha "${track}".`,
@@ -653,7 +653,7 @@ export function normalizeMethodResult(
     }));
   }
   if (carousel) {
-    carousel = carousel.map((card: any) => ({
+    carousel = carousel.map((card) => ({
       ...card,
       titulo: correctPortugueseSpelling((card.titulo || "").trim()),
       texto: correctPortugueseSpelling(truncateWords(card.texto || "", 12)),
@@ -695,7 +695,7 @@ export function normalizeMethodResult(
     });
   }
   if (carousel) {
-    carousel.forEach((card: any, i) => {
+    carousel.forEach((card, i) => {
       flags.push(
         ...validatePieceFields(
           `carousel[${i}]`,
@@ -727,7 +727,7 @@ export function normalizeMethodResult(
       if (item.titulo) allTitles.push({ campo: `feed[${i}]`, titulo: item.titulo });
     });
   if (carousel)
-    carousel.forEach((card: any, i) => {
+    carousel.forEach((card, i) => {
       if (card.titulo) allTitles.push({ campo: `carousel[${i}]`, titulo: card.titulo });
     });
   if (reels)
@@ -760,11 +760,11 @@ export function normalizeMethodResult(
     });
   }
   if (carousel && carousel.length > 0) {
-    const cardsVazios = carousel.filter((c: any) => !c.titulo || !c.texto || !c.imagePrompt);
+    const cardsVazios = carousel.filter((c) => !c.titulo || !c.texto || !c.imagePrompt);
     if (cardsVazios.length > 0) {
       console.warn("[Método OP] SEQUÊNCIA INCOMPLETA: cards de carrossel com campos vazios.", {
         cardsVazios: cardsVazios.length,
-        cards: cardsVazios.map((c: any) => c.card),
+        cards: cardsVazios.map((c) => c.card),
       });
     }
   }
@@ -806,6 +806,6 @@ export function normalizeMethodResult(
     raw,
     summary,
     ...(flags.length > 0 ? { flags } : {}),
-    ...((raw as any)?.ancora_visual ? { ancora_visual: (raw as any).ancora_visual } : {}),
+    ...(raw?.ancora_visual ? { ancora_visual: raw.ancora_visual } : {}),
   };
 }

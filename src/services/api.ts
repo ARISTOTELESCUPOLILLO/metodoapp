@@ -96,7 +96,7 @@ export async function generateMethodContent(
       throw new Error("Resposta vazia do gerador. Tente novamente.");
     }
 
-    let parsed: any;
+    let parsed: unknown;
     try {
       parsed = JSON.parse(full);
     } catch {
@@ -112,7 +112,7 @@ export async function generateMethodContent(
 
   // Caminho 2 (fallback): resposta não-stream (erro JSON ou texto de gateway).
   const raw = await res.text();
-  let payload: any = null;
+  let payload: { error?: string; result?: unknown } | null = null;
   try {
     payload = raw ? JSON.parse(raw) : null;
   } catch {
