@@ -241,6 +241,7 @@ function RegenAlert({
 
 const SESSION_KEY = "mop-skip-pre-image-alert";
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook acoplado ao componente acima, não vale arquivo próprio
 export function useImageGenAlert() {
   const [pending, setPending] = useState<null | (() => void)>(null);
   const [pendingRegen, setPendingRegen] = useState<null | { run: () => void; tipo: RegenTipo }>(
@@ -277,7 +278,9 @@ export function useImageGenAlert() {
     if (dontShowAgain) {
       try {
         sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {}
+      } catch {
+        /* "não mostrar novamente" não persiste: alerta volta a aparecer nesta sessão */
+      }
     }
     const run = pending;
     setPending(null);

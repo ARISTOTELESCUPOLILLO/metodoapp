@@ -735,7 +735,9 @@ export async function generatePostUnicoCaption(
       const { data: s } = await supabase.auth.getSession();
       const token = s.session?.access_token;
       if (token) headers.Authorization = `Bearer ${token}`;
-    } catch {}
+    } catch {
+      /* sem sessão: segue sem Authorization, o servidor trata */
+    }
   }
   const res = await fetch("/api/generate-caption", {
     method: "POST",

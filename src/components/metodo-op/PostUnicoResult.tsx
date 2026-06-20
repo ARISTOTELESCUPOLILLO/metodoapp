@@ -129,7 +129,9 @@ export default function PostUnicoResult({
       await navigator.clipboard.writeText(captionText);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-    } catch {}
+    } catch {
+      /* permissão de clipboard negada: sem feedback de cópia, sem erro bloqueante */
+    }
   }
 
   function handleDownloadTxt() {

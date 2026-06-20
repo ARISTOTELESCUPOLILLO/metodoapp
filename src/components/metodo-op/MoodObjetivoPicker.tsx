@@ -109,6 +109,7 @@ export default function MoodObjetivoPicker({
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- helper pequeno, não vale arquivo próprio
 export function objetivoLabel(o: PostUnicoObjetivo): string {
   return OBJETIVOS.find((x) => x.code === o)?.label || o;
 }

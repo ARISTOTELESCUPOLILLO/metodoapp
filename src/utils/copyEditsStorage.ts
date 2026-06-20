@@ -51,5 +51,7 @@ export function saveCopyEdit(
 export function clearCopyEdits(userId: string | null | undefined): void {
   try {
     localStorage.removeItem(storageKey(userId));
-  } catch {}
+  } catch {
+    /* limpeza best-effort */
+  }
 }

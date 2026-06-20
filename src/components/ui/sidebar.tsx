@@ -716,6 +716,7 @@ const SidebarMenuSubButton = React.forwardRef<
 });
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton";
 
+/* eslint-disable react-refresh/only-export-components -- padrão shadcn/ui: hook exportado junto dos componentes */
 export {
   Sidebar,
   SidebarContent,
@@ -742,3 +743,4 @@ export {
   SidebarTrigger,
   useSidebar,
 };
+/* eslint-enable react-refresh/only-export-components */

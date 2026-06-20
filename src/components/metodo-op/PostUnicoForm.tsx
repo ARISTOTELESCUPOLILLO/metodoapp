@@ -184,6 +184,7 @@ export default function PostUnicoForm({
     if (copy && data.keyInfo !== copyKeyInfoRef.current) {
       clearCopy({ resetCounter: false });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a keyInfo; `copy`/`clearCopy` são lidos, não devem re-disparar o efeito
   }, [data.keyInfo]);
 
   // Reseta copy quando o objetivo muda; NENHUM não suporta mood → força LIVRE.
@@ -197,6 +198,7 @@ export default function PostUnicoForm({
     if (data.objetivo === "nenhum" && data.direcao === "mood") {
       onChange({ ...data, direcao: "livre", mood: undefined });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a objetivo; demais são lidos via ref/data atual
   }, [data.objetivo]);
 
   async function fetchCopy() {
@@ -259,8 +261,13 @@ export default function PostUnicoForm({
     } else {
       if ((!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) || copyXBusy) return;
     }
-    isTitulo ? setCopyTBusy(true) : setCopyXBusy(true);
-    isTitulo ? setCopyTError(null) : setCopyXError(null);
+    if (isTitulo) {
+      setCopyTBusy(true);
+      setCopyTError(null);
+    } else {
+      setCopyXBusy(true);
+      setCopyXError(null);
+    }
     try {
       const next = await regenerateBlockClean({
         kind,
@@ -273,13 +280,17 @@ export default function PostUnicoForm({
       });
       const trimmed = next.trim();
       if (trimmed) {
-        isTitulo ? setCopyTSuggs((s) => [...s, trimmed]) : setCopyXSuggs((s) => [...s, trimmed]);
+        if (isTitulo) setCopyTSuggs((s) => [...s, trimmed]);
+        else setCopyXSuggs((s) => [...s, trimmed]);
       }
-      isTitulo ? onTituloRegen?.() : onTextoRegen?.();
+      if (isTitulo) onTituloRegen?.();
+      else onTextoRegen?.();
     } catch (e) {
-      isTitulo ? setCopyTError((e as Error).message) : setCopyXError((e as Error).message);
+      if (isTitulo) setCopyTError((e as Error).message);
+      else setCopyXError((e as Error).message);
     } finally {
-      isTitulo ? setCopyTBusy(false) : setCopyXBusy(false);
+      if (isTitulo) setCopyTBusy(false);
+      else setCopyXBusy(false);
     }
   }
 

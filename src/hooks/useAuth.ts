@@ -44,10 +44,14 @@ export async function signOut() {
       ].forEach((k) => {
         try {
           localStorage.removeItem(k);
-        } catch {}
+        } catch {
+          /* limpeza de sessão best-effort */
+        }
       });
     }
-  } catch {}
+  } catch {
+    /* sem sessão pra obter userId: nada pra limpar */
+  }
   // Permite que um login realmente novo (mesma aba) re-execute o
   // auto-select de modo por plano. Loop por prefixo cobre também flags
   // deixadas por impersonações.
@@ -55,6 +59,8 @@ export async function signOut() {
     for (const k of Object.keys(sessionStorage)) {
       if (k.startsWith("metodo-op-modo-init-v1:")) sessionStorage.removeItem(k);
     }
-  } catch {}
+  } catch {
+    /* limpeza de sessão best-effort */
+  }
   await supabase.auth.signOut();
 }

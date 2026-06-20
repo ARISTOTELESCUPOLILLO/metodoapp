@@ -155,7 +155,6 @@ export default function UsoReferenciasDia(props: Props) {
     } catch {
       /* ignore */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
   // Persist
@@ -701,6 +700,7 @@ function getSnapshot(storageKey: string): RefSelectionState {
   return fresh;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook acoplado ao componente deste arquivo
 export function useRefSelection(storageKey: string): RefSelectionState {
   return useSyncExternalStore(
     (cb) => {

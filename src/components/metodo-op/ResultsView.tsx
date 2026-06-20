@@ -188,6 +188,7 @@ function useSyncUpstream(upstream: string, current: string, setValue: (v: string
       if (current === prevRef.current) setValue(upstream);
       prevRef.current = upstream;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `current`/`setValue` são lidos via closure no momento do disparo, não devem re-executar o efeito
   }, [upstream]);
 }
 

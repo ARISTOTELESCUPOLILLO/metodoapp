@@ -93,12 +93,16 @@ export const deleteUser = createServerFn({ method: "POST" })
       if (v.provider === "elevenlabs" && v.external_voice_id && elKey) {
         try {
           await deleteElevenLabsVoice(v.external_voice_id, elKey);
-        } catch {}
+        } catch (e) {
+          console.error(`deleteUser: falha ao apagar voz ElevenLabs ${v.external_voice_id}`, e);
+        }
       }
       if (v.sample_path) {
         try {
           await supabaseAdmin.storage.from("voice-samples").remove([v.sample_path]);
-        } catch {}
+        } catch (e) {
+          console.error(`deleteUser: falha ao apagar amostra de voz ${v.sample_path}`, e);
+        }
       }
     }
     if (voices && voices.length) {

@@ -50,7 +50,7 @@ export const getStorageStats = createServerFn({ method: "GET" })
       .map((u) => u.user_id)
       .filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
 
-    let profileMap: Record<
+    const profileMap: Record<
       string,
       { nome: string | null; email: string | null; is_test: boolean }
     > = {};

@@ -15,7 +15,9 @@ export function saveKit(kit: Record<string, unknown>) {
     } else {
       localStorage.removeItem(LOGO_KEY);
     }
-  } catch {}
+  } catch (e) {
+    console.error("saveKit: falha ao persistir kit, não sobrevive a reload", e);
+  }
 }
 
 export function loadKit(fallback: Record<string, unknown>) {

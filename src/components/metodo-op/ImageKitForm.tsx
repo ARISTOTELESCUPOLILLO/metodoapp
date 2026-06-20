@@ -450,7 +450,9 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-    } catch {}
+    } catch {
+      /* download é conveniência: falha silenciosa não bloqueia o fluxo */
+    }
   }
 
   useEffect(() => {
@@ -499,7 +501,9 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
       if (recRef.current) {
         try {
           recRef.current.cancel();
-        } catch {}
+        } catch {
+          /* cleanup no unmount: gravador já pode estar parado */
+        }
       }
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
@@ -564,7 +568,9 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
     if (recRef.current) {
       try {
         recRef.current.cancel();
-      } catch {}
+      } catch {
+        /* cancelamento manual: gravador já pode estar parado */
+      }
       recRef.current = null;
     }
     setState("idle");

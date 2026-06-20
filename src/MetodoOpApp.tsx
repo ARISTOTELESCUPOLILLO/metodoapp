@@ -157,7 +157,9 @@ export default function App() {
       const m = localStorage.getItem("metodo-op-mood");
       if (m && ["OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06"].includes(m))
         return m as MoodCode;
-    } catch {}
+    } catch {
+      /* localStorage indisponível: cai no default null */
+    }
     return null;
   });
   const [result, setResult] = useState<MethodOpResult | undefined>();
@@ -347,7 +349,9 @@ export default function App() {
     if (mood) {
       try {
         localStorage.setItem("metodo-op-mood", mood);
-      } catch {}
+      } catch {
+        /* preferência de mood não é crítica: falha aqui só reseta no próximo load */
+      }
     }
   }, [mood]);
 
@@ -360,10 +364,14 @@ export default function App() {
     const key = `metodo-op-modo-init-v1:${effectiveUserId}`;
     try {
       if (sessionStorage.getItem(key) === "1") return;
-    } catch {}
+    } catch {
+      /* sessionStorage indisponível: pior caso é repetir a auto-seleção */
+    }
     try {
       sessionStorage.setItem(key, "1");
-    } catch {}
+    } catch {
+      /* idem */
+    }
     const plano1 = slots.find((s) => s.key === "plano1");
     if (!plano1) return;
     if (/^PU/i.test(plano1.plan.codigo)) {
@@ -401,10 +409,14 @@ export default function App() {
       } else {
         try {
           localStorage.removeItem("metodo-op-kit-v1");
-        } catch {}
+        } catch {
+          /* limpeza best-effort */
+        }
         try {
           localStorage.removeItem("metodo-op-logo-v1");
-        } catch {}
+        } catch {
+          /* limpeza best-effort */
+        }
         handleKitChange(defaultKit);
       }
     });
@@ -414,30 +426,42 @@ export default function App() {
     try {
       const r = localStorage.getItem(`metodo-op-result-v1:${effectiveUserId}`);
       setResult(r ? JSON.parse(r) : undefined);
-    } catch {}
+    } catch {
+      /* entrada corrompida: segue com result undefined */
+    }
     try {
       const pImg = localStorage.getItem(`metodo-op-postunico-img-v1:${effectiveUserId}`);
       setPostUnicoImg(pImg ? JSON.parse(pImg) : undefined);
-    } catch {}
+    } catch {
+      /* entrada corrompida: segue com imagem undefined */
+    }
     try {
       const pCap = localStorage.getItem(`metodo-op-postunico-caption-v1:${effectiveUserId}`);
       setCaption(pCap ? JSON.parse(pCap) : undefined);
-    } catch {}
+    } catch {
+      /* entrada corrompida: segue com legenda undefined */
+    }
     try {
       const pStarted = localStorage.getItem(`metodo-op-postunico-started-v1:${effectiveUserId}`);
       setPostUnicoStarted(pStarted === "true");
-    } catch {}
+    } catch {
+      /* entrada corrompida: assume não iniciado */
+    }
     try {
       const vSel = localStorage.getItem(
         `metodo-op-postunico-visualselection-v1:${effectiveUserId}`,
       );
       setVisualSelection(vSel ? JSON.parse(vSel) : defaultVisualSelection);
-    } catch {}
+    } catch {
+      /* entrada corrompida: cai no default */
+    }
     // Carrega o Kit Imagem deste usuário: primeiro do cache local (instantâneo)
     // e depois sincroniza com o backend (autoritativo, sobrevive a troca de aparelho).
     try {
       setImageKit(loadImageKit(effectiveUserId));
-    } catch {}
+    } catch {
+      /* cache local indisponível: aguarda a sincronização assíncrona abaixo */
+    }
     loadImageKitAsync(effectiveUserId)
       .then((remote) => setImageKit(remote))
       .catch(() => {});
@@ -452,7 +476,9 @@ export default function App() {
     if (result === undefined) {
       try {
         localStorage.removeItem(k);
-      } catch {}
+      } catch {
+        /* limpeza best-effort */
+      }
     } else {
       persistLocal(k, JSON.stringify(result));
     }
@@ -463,7 +489,9 @@ export default function App() {
     if (postUnicoImg === undefined) {
       try {
         localStorage.removeItem(k);
-      } catch {}
+      } catch {
+        /* limpeza best-effort */
+      }
     } else {
       persistLocal(k, JSON.stringify(postUnicoImg));
     }
@@ -474,7 +502,9 @@ export default function App() {
     if (caption === undefined) {
       try {
         localStorage.removeItem(k);
-      } catch {}
+      } catch {
+        /* limpeza best-effort */
+      }
     } else {
       persistLocal(k, JSON.stringify(caption));
     }
@@ -847,7 +877,9 @@ export default function App() {
       // Fallback: salva pelo menos no cache local pra não perder edições.
       try {
         saveImageKit(imageKit, effectiveUserId);
-      } catch {}
+      } catch {
+        /* já vai mostrar o alert de erro abaixo */
+      }
       const msg =
         (e as Error)?.name === "QuotaExceededError"
           ? "Espaço local cheio — apague alguma imagem do Kit antes de salvar."

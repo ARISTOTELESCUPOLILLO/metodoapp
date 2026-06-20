@@ -43,7 +43,12 @@ export const Route = createFileRoute("/api/delete-voice")({
             if (elKey) {
               try {
                 await deleteElevenLabsVoice(row.external_voice_id, elKey);
-              } catch {}
+              } catch (e) {
+                console.error(
+                  `delete-voice: falha ao apagar voz ElevenLabs ${row.external_voice_id}`,
+                  e,
+                );
+              }
             }
           }
 
@@ -51,7 +56,9 @@ export const Route = createFileRoute("/api/delete-voice")({
           if (row?.sample_path) {
             try {
               await supabaseAdmin.storage.from("voice-samples").remove([row.sample_path]);
-            } catch {}
+            } catch (e) {
+              console.error(`delete-voice: falha ao apagar amostra ${row.sample_path}`, e);
+            }
           }
 
           await supabaseAdmin

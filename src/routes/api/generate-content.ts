@@ -362,7 +362,9 @@ export const Route = createFileRoute("/api/generate-content")({
               const hb = setInterval(() => {
                 try {
                   ctrl.enqueue(encoder.encode(": ping\n\n"));
-                } catch {}
+                } catch {
+                  /* controller já fechado (cliente desconectou) */
+                }
               }, 10_000);
 
               try {
@@ -488,18 +490,24 @@ export const Route = createFileRoute("/api/generate-content")({
                   ctrl.enqueue(
                     encoder.encode(`data: ${JSON.stringify({ error: "stream interrompido" })}\n\n`),
                   );
-                } catch {}
+                } catch {
+                  /* controller já fechado: cliente não vai receber o erro, mas já desconectou */
+                }
               } finally {
                 clearInterval(hb);
                 try {
                   ctrl.close();
-                } catch {}
+                } catch {
+                  /* controller já estava fechado */
+                }
               }
             },
             cancel() {
               try {
                 activeController?.abort();
-              } catch {}
+              } catch {
+                /* abort best-effort no cancelamento do stream */
+              }
             },
           });
 

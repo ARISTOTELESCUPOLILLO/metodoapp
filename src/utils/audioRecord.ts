@@ -52,7 +52,9 @@ export async function validateAudioBlob(blob: Blob): Promise<AudioValidation> {
   } catch {
     try {
       await ctx.close();
-    } catch {}
+    } catch {
+      /* cleanup best-effort: já estamos no caminho de erro */
+    }
     return {
       ok: false,
       durationS: 0,
@@ -73,7 +75,9 @@ export async function validateAudioBlob(blob: Blob): Promise<AudioValidation> {
   const rms = Math.sqrt(sumSq / Math.max(1, n));
   try {
     await ctx.close();
-  } catch {}
+  } catch {
+    /* cleanup best-effort */
+  }
 
   if (durationS < VOICE_MIN_SECONDS) {
     return {
@@ -149,7 +153,9 @@ export async function startRecorder(mimeHint?: string): Promise<RecorderHandle> 
     cancel: () => {
       try {
         rec.stop();
-      } catch {}
+      } catch {
+        /* recorder já pode estar parado */
+      }
       for (const t of stream.getTracks()) t.stop();
     },
   };

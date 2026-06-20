@@ -49,7 +49,9 @@ export const Route = createFileRoute("/api/confirm-voice")({
             if (row.sample_path) {
               try {
                 await supabaseAdmin.storage.from("voice-samples").remove([row.sample_path]);
-              } catch {}
+              } catch (e) {
+                console.error(`confirm-voice/descartar: falha ao apagar ${row.sample_path}`, e);
+              }
             }
             const { error: delErr } = await supabaseAdmin
               .from("voice_clones" as any)

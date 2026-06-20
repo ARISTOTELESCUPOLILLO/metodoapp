@@ -31,7 +31,9 @@ export function useDarkMode(): [boolean, () => void] {
     applyDark(isDark);
     try {
       localStorage.setItem(DARK_KEY, String(isDark));
-    } catch {}
+    } catch {
+      /* preferência de tema não é crítica */
+    }
   }, [isDark]);
 
   return [isDark, () => setIsDark((v) => !v)];

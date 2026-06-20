@@ -19,9 +19,6 @@ interface MetaStatus {
   };
 }
 
-// Estado interno de diagnóstico (visível em /conta)
-let _rawStatusText = "";
-
 async function authHeader(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;

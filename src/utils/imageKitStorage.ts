@@ -75,12 +75,9 @@ export function saveImageKit(kit: ImageKit, userId?: string | null): void {
   if (typeof window === "undefined") return;
   const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
   const payload = JSON.stringify(normalize(kit));
-  try {
-    localStorage.setItem(key, payload);
-  } catch (e) {
-    // Quota: re-lança para o componente tratar (toast com instrução de remover algo).
-    throw e;
-  }
+  // Sem try/catch: quota cheia (QuotaExceededError) propaga pro componente,
+  // que trata com toast/instrução de remover algo.
+  localStorage.setItem(key, payload);
 }
 
 export function clearImageKit(userId?: string | null): void {
@@ -88,7 +85,9 @@ export function clearImageKit(userId?: string | null): void {
   try {
     const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
     localStorage.removeItem(key);
-  } catch {}
+  } catch {
+    /* limpeza best-effort */
+  }
 }
 
 export function hasAnyImage(kit: ImageKit): boolean {
@@ -159,7 +158,9 @@ export async function loadImageKitAsync(userId?: string | null): Promise<ImageKi
     // Atualiza o cache local pra próximas leituras instantâneas.
     try {
       saveImageKit(kit, userId);
-    } catch {}
+    } catch (e) {
+      console.error("loadImageKitAsync: falha ao atualizar cache local", e);
+    }
     return kit;
   } catch (e) {
     console.warn("[imageKit] loadAsync falhou, usando cache local:", e);
@@ -219,6 +220,8 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
   // Espelha no cache local
   try {
     saveImageKit(saved, userId);
-  } catch {}
+  } catch (e) {
+    console.error("saveImageKitAsync: falha ao atualizar cache local", e);
+  }
   return saved;
 }

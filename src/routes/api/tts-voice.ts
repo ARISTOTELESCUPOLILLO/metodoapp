@@ -156,7 +156,9 @@ export const Route = createFileRoute("/api/tts-voice")({
               .from("voice_clones" as any)
               .update({ last_used_at: new Date().toISOString() })
               .eq("user_id", userId);
-          } catch {}
+          } catch (e) {
+            console.error("tts-voice: falha ao atualizar last_used_at", e);
+          }
 
           return Response.json({ audioUrl });
         } catch (e) {

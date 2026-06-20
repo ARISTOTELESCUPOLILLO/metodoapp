@@ -39,4 +39,5 @@ const Toggle = React.forwardRef<
 
 Toggle.displayName = TogglePrimitive.Root.displayName;
 
+// eslint-disable-next-line react-refresh/only-export-components -- padrão shadcn/ui: variants exportadas junto do componente
 export { Toggle, toggleVariants };

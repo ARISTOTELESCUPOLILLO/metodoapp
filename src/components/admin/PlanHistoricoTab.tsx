@@ -102,6 +102,7 @@ export function PlanHistoricoTab() {
 
   useEffect(() => {
     load(0, "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só na montagem; `load` muda com `search`
   }, []);
 
   function handleSearch(e: React.FormEvent) {
