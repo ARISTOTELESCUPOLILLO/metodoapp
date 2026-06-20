@@ -166,7 +166,9 @@ export async function composeFeedPng(
     try {
       const img = await loadImage(baseImage);
       fillCanvas(ctx, img, w, h);
-    } catch {}
+    } catch (e) {
+      console.error("composeFeedPng: falha ao carregar imagem base, usando fundo sólido", e);
+    }
   }
 
   await drawLogoOnly(ctx, kit, w, h, PAD);
@@ -192,7 +194,9 @@ export async function composeFinalPng(
     try {
       const img = await loadImage(baseImage);
       fillCanvas(ctx, img, w, h);
-    } catch {}
+    } catch (e) {
+      console.error("composeFinalPng: falha ao carregar imagem base, usando fundo sólido", e);
+    }
   }
 
   await drawLogoOnly(ctx, kit, w, h, PAD);
@@ -214,7 +218,9 @@ export async function composeReelsPng(kit: BrandKit, baseImage?: string): Promis
     try {
       const img = await loadImage(baseImage);
       fillCanvas(ctx, img, w, h);
-    } catch {}
+    } catch (e) {
+      console.error("composeReelsPng: falha ao carregar imagem base, usando fundo sólido", e);
+    }
   }
 
   // Logo na posição escolhida no Kit (default: canto inferior direito) com respiro de 150px.
@@ -248,7 +254,9 @@ export async function composeReelsTitlePng(
     try {
       const img = await loadImage(baseImage);
       fillCanvas(ctx, img, w, h);
-    } catch {}
+    } catch (e) {
+      console.error("composeReelsTitlePng: falha ao carregar imagem base, usando fundo sólido", e);
+    }
   }
   // Faixa escura translúcida — desce 1 linha abaixo do centro pra acompanhar
   // o título (que também desce). Usa lineHeight aproximado pra deslocar.

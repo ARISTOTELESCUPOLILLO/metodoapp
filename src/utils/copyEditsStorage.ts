@@ -43,7 +43,9 @@ export function saveCopyEdit(
     const all = loadAll(userId);
     all[itemKey] = { ...all[itemKey], ...patch };
     localStorage.setItem(storageKey(userId), JSON.stringify(all));
-  } catch {}
+  } catch (e) {
+    console.error("saveCopyEdit: falha ao persistir edição, pode se perder ao navegar", e);
+  }
 }
 
 export function clearCopyEdits(userId: string | null | undefined): void {

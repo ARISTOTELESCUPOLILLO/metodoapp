@@ -33,7 +33,9 @@ export function loadKit(fallback: Record<string, unknown>) {
 export function saveForm(form: Record<string, unknown>) {
   try {
     localStorage.setItem(FORM_KEY, JSON.stringify(form));
-  } catch {}
+  } catch (e) {
+    console.error("saveForm: falha ao persistir formulário, não sobrevive a reload", e);
+  }
 }
 
 export function loadForm(fallback: Record<string, unknown>) {

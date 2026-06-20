@@ -98,7 +98,27 @@ function savePostUnico(d: PostUnicoFormData) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(POSTUNICO_KEY, JSON.stringify(d));
-  } catch {}
+  } catch (e) {
+    console.error("savePostUnico: falha ao persistir formulário", e);
+  }
+}
+
+// Persiste no localStorage sem deixar a falha passar em silêncio: loga sempre
+// e, se for quota cheia, avisa o usuário uma única vez por sessão (evita
+// alert() repetido a cada keystroke/effect numa página com vários campos).
+let quotaWarned = false;
+function persistLocal(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.error(`persistLocal: falha ao salvar "${key}"`, e);
+    if ((e as Error)?.name === "QuotaExceededError" && !quotaWarned) {
+      quotaWarned = true;
+      alert(
+        "Espaço local do navegador está cheio — o conteúdo gerado pode não sobreviver a um recarregamento da página. Recomendamos limpar imagens antigas do Kit Imagem.",
+      );
+    }
+  }
 }
 
 type Modo = "metodo" | "postUnico" | "imageKit";
@@ -429,42 +449,47 @@ export default function App() {
   useEffect(() => {
     if (!effectiveUserId) return;
     const k = `metodo-op-result-v1:${effectiveUserId}`;
-    try {
-      if (result === undefined) localStorage.removeItem(k);
-      else localStorage.setItem(k, JSON.stringify(result));
-    } catch {}
+    if (result === undefined) {
+      try {
+        localStorage.removeItem(k);
+      } catch {}
+    } else {
+      persistLocal(k, JSON.stringify(result));
+    }
   }, [result, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
     const k = `metodo-op-postunico-img-v1:${effectiveUserId}`;
-    try {
-      if (postUnicoImg === undefined) localStorage.removeItem(k);
-      else localStorage.setItem(k, JSON.stringify(postUnicoImg));
-    } catch {}
+    if (postUnicoImg === undefined) {
+      try {
+        localStorage.removeItem(k);
+      } catch {}
+    } else {
+      persistLocal(k, JSON.stringify(postUnicoImg));
+    }
   }, [postUnicoImg, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
     const k = `metodo-op-postunico-caption-v1:${effectiveUserId}`;
-    try {
-      if (caption === undefined) localStorage.removeItem(k);
-      else localStorage.setItem(k, JSON.stringify(caption));
-    } catch {}
+    if (caption === undefined) {
+      try {
+        localStorage.removeItem(k);
+      } catch {}
+    } else {
+      persistLocal(k, JSON.stringify(caption));
+    }
   }, [caption, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
     const k = `metodo-op-postunico-started-v1:${effectiveUserId}`;
-    try {
-      localStorage.setItem(k, postUnicoStarted ? "true" : "false");
-    } catch {}
+    persistLocal(k, postUnicoStarted ? "true" : "false");
   }, [postUnicoStarted, effectiveUserId]);
   // Seleção visual da PU (avatar/cenário/produto) — sem isso, voltava ao
   // default ao trocar de rota (ex.: /historico, que desmonta o MetodoOpApp).
   useEffect(() => {
     if (!effectiveUserId) return;
     const k = `metodo-op-postunico-visualselection-v1:${effectiveUserId}`;
-    try {
-      localStorage.setItem(k, JSON.stringify(visualSelection));
-    } catch {}
+    persistLocal(k, JSON.stringify(visualSelection));
   }, [visualSelection, effectiveUserId]);
 
   // Segmento fixado pelo admin — não-admin não pode alterar.
@@ -799,21 +824,12 @@ export default function App() {
       });
       // Persiste direto no localStorage (independe do componente seguir montado —
       // cobre o caso de geração em segundo plano após navegar para outra página).
-      try {
-        localStorage.setItem(
-          `metodo-op-postunico-img-v1:${effectiveUserId}`,
-          JSON.stringify(dataUrl),
-        );
-      } catch {}
-      try {
-        localStorage.setItem(`metodo-op-postunico-started-v1:${effectiveUserId}`, "false");
-      } catch {}
+      persistLocal(`metodo-op-postunico-img-v1:${effectiveUserId}`, JSON.stringify(dataUrl));
+      persistLocal(`metodo-op-postunico-started-v1:${effectiveUserId}`, "false");
       setPostUnicoImg(dataUrl);
       refreshProfile();
     } catch (e) {
-      try {
-        localStorage.setItem(`metodo-op-postunico-started-v1:${effectiveUserId}`, "false");
-      } catch {}
+      persistLocal(`metodo-op-postunico-started-v1:${effectiveUserId}`, "false");
       setError(String((e as Error).message || e));
     } finally {
       setLoading(false);
