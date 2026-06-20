@@ -388,16 +388,26 @@ export default function App() {
         handleKitChange(defaultKit);
       }
     });
-    // Restaura conteúdo gerado persistido para este usuário
+    // Restaura conteúdo gerado persistido para este usuário.
+    // Cada chave tem seu próprio try/catch: uma entrada corrompida não pode
+    // derrubar a restauração das demais (ver auditoria P1 2026-06-19).
     try {
       const r = localStorage.getItem(`metodo-op-result-v1:${effectiveUserId}`);
       setResult(r ? JSON.parse(r) : undefined);
+    } catch {}
+    try {
       const pImg = localStorage.getItem(`metodo-op-postunico-img-v1:${effectiveUserId}`);
       setPostUnicoImg(pImg ? JSON.parse(pImg) : undefined);
+    } catch {}
+    try {
       const pCap = localStorage.getItem(`metodo-op-postunico-caption-v1:${effectiveUserId}`);
       setCaption(pCap ? JSON.parse(pCap) : undefined);
+    } catch {}
+    try {
       const pStarted = localStorage.getItem(`metodo-op-postunico-started-v1:${effectiveUserId}`);
       setPostUnicoStarted(pStarted === "true");
+    } catch {}
+    try {
       const vSel = localStorage.getItem(
         `metodo-op-postunico-visualselection-v1:${effectiveUserId}`,
       );
