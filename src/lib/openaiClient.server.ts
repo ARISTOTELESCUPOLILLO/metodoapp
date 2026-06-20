@@ -5,8 +5,15 @@
 
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
+// Forma parcial da resposta de chat completion da OpenAI: só os campos que os
+// callers leem (result.data.choices[0].message.content). Os demais campos do
+// payload existem mas não são consumidos, então ficam fora do tipo.
+export type OpenAIChatResponse = {
+  choices?: Array<{ message?: { content?: string | null } }>;
+};
+
 export type OpenAIChatResult =
-  | { ok: true; data: any }
+  | { ok: true; data: OpenAIChatResponse }
   | { ok: false; status: number; error: string };
 
 export async function fetchOpenAIChat(

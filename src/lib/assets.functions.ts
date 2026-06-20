@@ -145,10 +145,10 @@ export const saveGeneration = createServerFn({ method: "POST" })
           .from("user_generations")
           .update({ video_path: videoPath })
           .eq("id", gen.id);
-      } catch (e: any) {
+      } catch (e: unknown) {
         // Rollback: apaga a geração para não deixar reels sem vídeo
         await deleteGenerationInternal(gen.id, targetUserId, true);
-        throw new Error(e?.message || "Falha ao arquivar vídeo");
+        throw new Error(e instanceof Error ? e.message : "Falha ao arquivar vídeo");
       }
     }
 

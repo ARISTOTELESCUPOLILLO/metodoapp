@@ -4,8 +4,12 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+// Subconjunto dos claims do JWT que este módulo realmente lê para checar admin.
+type AdminClaims = { app_metadata?: { role?: string }; user_role?: string };
 
 // Copia um arquivo dentro do bucket; fallback download+reupload se copy() falhar
 async function copyStorageFile(src: string, dest: string): Promise<boolean> {
@@ -70,9 +74,8 @@ export const loadImageKitFor = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ userId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const callerId = context.userId;
-    const isAdmin =
-      (context.claims as any)?.app_metadata?.role === "admin" ||
-      (context.claims as any)?.user_role === "admin";
+    const claims = context.claims as AdminClaims;
+    const isAdmin = claims?.app_metadata?.role === "admin" || claims?.user_role === "admin";
 
     // Quem está sendo carregado: o próprio caller por padrão.
     let targetId = data.userId || callerId;
@@ -265,7 +268,7 @@ export const migrateImageKitFor = createServerFn({ method: "POST" })
         .eq("user_id", targetId)
         .maybeSingle();
 
-      let bkErr: any = null;
+      let bkErr: PostgrestError | null = null;
       if (existingTarget?.id) {
         // UPDATE — sobrescreve o kit existente do destino
         const { error } = await supabaseAdmin

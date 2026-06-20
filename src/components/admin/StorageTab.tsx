@@ -31,8 +31,8 @@ export function StorageTab() {
       const result = await fetchStats();
       setStats(result);
       setLastRefresh(new Date());
-    } catch (e: any) {
-      setError(e?.message || "Erro ao carregar dados de storage.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro ao carregar dados de storage.");
     } finally {
       setLoading(false);
     }

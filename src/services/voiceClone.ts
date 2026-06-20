@@ -66,8 +66,8 @@ export async function deleteVoiceForUser(_userId: string, avatarSlot = 1): Promi
     body: JSON.stringify({ avatarSlot }),
   });
   if (!res.ok) {
-    const j = await res.json().catch(() => ({}));
-    throw new Error((j as any).error || "Não foi possível apagar a voz.");
+    const j = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(j.error || "Não foi possível apagar a voz.");
   }
 }
 

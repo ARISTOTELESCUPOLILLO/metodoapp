@@ -147,7 +147,7 @@ export default function App() {
       return "metodo";
     }
   });
-  const [kit, setKit] = useState<BrandKit>(() => loadKit(defaultKit as any) as unknown as BrandKit);
+  const [kit, setKit] = useState<BrandKit>(() => loadKit(defaultKit));
   const [imageKit, setImageKit] = useState<ImageKit>(() => loadImageKit(null));
   const [imageKitSaved, setImageKitSaved] = useState(false);
   const [visualSelection, setVisualSelection] =
@@ -166,7 +166,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState<ContentFormData>(() => {
-    const loaded = loadForm(defaultForm as any) as unknown as ContentFormData;
+    const loaded = loadForm(defaultForm);
     return { ...loaded, track: loaded.track || "cinematica" };
   });
   const [postUnico, setPostUnico] = useState<PostUnicoFormData>(loadPostUnico);
@@ -334,10 +334,10 @@ export default function App() {
   }
 
   useEffect(() => {
-    saveKit(kit as any);
+    saveKit(kit);
   }, [kit]);
   useEffect(() => {
-    saveForm(form as any);
+    saveForm(form);
   }, [form]);
   useEffect(() => {
     savePostUnico(postUnico);
@@ -558,8 +558,8 @@ export default function App() {
   async function handleSave() {
     setSaving(true);
     try {
-      saveKit(kit as any);
-      saveForm(form as any);
+      saveKit(kit);
+      saveForm(form);
       if (effectiveUserId) {
         let saved: BrandKit;
         if (impersonation) {

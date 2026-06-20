@@ -116,6 +116,8 @@ export function CobrancasTab() {
     const col = `${it.slot}_last_charged_at`;
     await supabase
       .from("profiles")
+      // Grupo B: chave computada [col] colapsa p/ index signature que supabase-js
+      // rejeita; resolver exigiria branches explícitos por slot (mudança estrutural).
       .update({ [col]: new Date().toISOString() } as any)
       .eq("id", it.user.id);
     await load();

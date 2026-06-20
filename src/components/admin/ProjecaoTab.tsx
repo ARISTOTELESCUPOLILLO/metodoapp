@@ -911,7 +911,7 @@ function SectionTitle({
   );
 }
 
-const Th = ({ children, style }: any) => (
+const Th = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <th
     style={{
       padding: "8px 10px",
@@ -926,7 +926,7 @@ const Th = ({ children, style }: any) => (
     {children}
   </th>
 );
-const Td = ({ children, style }: any) => (
+const Td = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <td style={{ padding: "8px 10px", verticalAlign: "middle", ...style }}>{children}</td>
 );
 function ProjCell({ label, value, color }: { label: string; value: string; color?: string }) {

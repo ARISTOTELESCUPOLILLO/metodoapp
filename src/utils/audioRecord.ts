@@ -42,7 +42,9 @@ export async function validateAudioBlob(blob: Blob): Promise<AudioValidation> {
     };
   }
   const arrBuf = await blob.arrayBuffer();
-  const AC: typeof AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+  const AC: typeof AudioContext =
+    window.AudioContext ||
+    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AC)
     return { ok: false, durationS: 0, rms: 0, reason: "Navegador sem suporte a Web Audio API." };
   const ctx = new AC();
@@ -127,7 +129,11 @@ export async function startRecorder(mimeHint?: string): Promise<RecorderHandle> 
   ].filter(Boolean) as string[];
   let chosen = "";
   for (const m of candidates) {
-    if ((window as any).MediaRecorder && (MediaRecorder as any).isTypeSupported?.(m)) {
+    if (
+      typeof MediaRecorder !== "undefined" &&
+      typeof MediaRecorder.isTypeSupported === "function" &&
+      MediaRecorder.isTypeSupported(m)
+    ) {
       chosen = m;
       break;
     }

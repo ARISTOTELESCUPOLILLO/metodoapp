@@ -498,7 +498,15 @@ export function PrecosTab() {
   );
 }
 
-const Th = ({ children, title, style }: any) => (
+const Th = ({
+  children,
+  title,
+  style,
+}: {
+  children: React.ReactNode;
+  title?: string;
+  style?: React.CSSProperties;
+}) => (
   <th
     title={title}
     style={{
@@ -514,7 +522,7 @@ const Th = ({ children, title, style }: any) => (
     {children}
   </th>
 );
-const Td = ({ children, style }: any) => (
+const Td = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <td style={{ padding: "8px 10px", verticalAlign: "middle", ...style }}>{children}</td>
 );
 function PCell({ label, value, color }: { label: string; value: string; color?: string }) {

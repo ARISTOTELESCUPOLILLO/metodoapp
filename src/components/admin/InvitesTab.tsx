@@ -161,7 +161,7 @@ export function InvitesTab() {
       const result = await migrateKitFn({
         data: { inviteId: r.id, sourceProfileId: r.source_test_profile_id },
       });
-      const { copied } = result as any;
+      const { copied } = result;
       const imgPart = copied.imageKitFound
         ? `${copied.avatar ? "1 avatar" : "sem avatar"}, ${copied.cenarios} cenário(s), ${copied.produtos} produto(s)`
         : "sem Kit Imagem no teste";
@@ -172,8 +172,8 @@ export function InvitesTab() {
           : ", kit de marca não encontrado no perfil de teste (salve o kit no teste antes de migrar)";
       setMsg(`Kit migrado: ${imgPart}${kitMarca}.`);
       load();
-    } catch (e: any) {
-      setMsg(`Erro na migração: ${e.message}`);
+    } catch (e: unknown) {
+      setMsg(`Erro na migração: ${e instanceof Error ? e.message : String(e)}`);
     }
     setMigrating(null);
   }
@@ -729,7 +729,7 @@ const btn: React.CSSProperties = {
   fontSize: 12,
   cursor: "pointer",
 };
-const Th = ({ children }: any) => (
+const Th = ({ children }: { children: React.ReactNode }) => (
   <th
     style={{
       padding: "8px 10px",
@@ -742,7 +742,7 @@ const Th = ({ children }: any) => (
     {children}
   </th>
 );
-const Td = ({ children, style }: any) => (
+const Td = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <td style={{ padding: "10px", verticalAlign: "middle", ...style }}>{children}</td>
 );
 

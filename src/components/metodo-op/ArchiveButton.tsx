@@ -59,14 +59,11 @@ export function ArchiveButton({
     try {
       setState("busy");
       setMsg("");
-      const resolvedSlot =
-        slot ||
-        ((typeof window !== "undefined" && (window as any).__opSlot) as
-          | "plano1"
-          | "plano2"
-          | "bonus"
-          | undefined) ||
-        "plano1";
+      const opSlot =
+        typeof window !== "undefined"
+          ? (window as Window & { __opSlot?: "plano1" | "plano2" | "bonus" }).__opSlot
+          : undefined;
+      const resolvedSlot = slot || opSlot || "plano1";
 
       const images = await Promise.all(
         imageDataUrls
@@ -93,7 +90,7 @@ export function ArchiveButton({
         setMsg("✓ Atualizado");
       } else {
         // 1º clique: cria novo registro
-        const res: any = await saveFn({
+        const res = await saveFn({
           data: {
             tipo,
             slot: resolvedSlot,
@@ -116,9 +113,9 @@ export function ArchiveButton({
         setState("idle");
         setMsg("");
       }, 5000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setState("error");
-      setMsg(e?.message || "Falha ao arquivar");
+      setMsg(e instanceof Error ? e.message : "Falha ao arquivar");
       setTimeout(() => {
         setState("idle");
         setMsg("");

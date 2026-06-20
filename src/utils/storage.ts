@@ -2,7 +2,7 @@ const KIT_KEY = "metodo-op-kit-v1";
 const FORM_KEY = "metodo-op-form-v1";
 const LOGO_KEY = "metodo-op-logo-v1";
 
-export function saveKit(kit: Record<string, unknown>) {
+export function saveKit(kit: { logoDataUrl?: string } & object) {
   try {
     const { logoDataUrl, ...kitWithoutLogo } = kit;
     localStorage.setItem(KIT_KEY, JSON.stringify(kitWithoutLogo));
@@ -20,10 +20,10 @@ export function saveKit(kit: Record<string, unknown>) {
   }
 }
 
-export function loadKit(fallback: Record<string, unknown>) {
+export function loadKit<T extends { logoDataUrl?: string }>(fallback: T): T {
   try {
     const raw = localStorage.getItem(KIT_KEY);
-    const kit = raw ? { ...fallback, ...JSON.parse(raw) } : { ...fallback };
+    const kit: T = raw ? { ...fallback, ...JSON.parse(raw) } : { ...fallback };
     const logo = localStorage.getItem(LOGO_KEY);
     if (logo) kit.logoDataUrl = logo;
     return kit;
@@ -32,7 +32,7 @@ export function loadKit(fallback: Record<string, unknown>) {
   }
 }
 
-export function saveForm(form: Record<string, unknown>) {
+export function saveForm(form: object) {
   try {
     localStorage.setItem(FORM_KEY, JSON.stringify(form));
   } catch (e) {
@@ -40,7 +40,7 @@ export function saveForm(form: Record<string, unknown>) {
   }
 }
 
-export function loadForm(fallback: Record<string, unknown>) {
+export function loadForm<T extends object>(fallback: T): T {
   try {
     const raw = localStorage.getItem(FORM_KEY);
     return raw ? { ...fallback, ...JSON.parse(raw) } : { ...fallback };

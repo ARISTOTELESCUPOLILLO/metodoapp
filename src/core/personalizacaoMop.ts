@@ -94,7 +94,7 @@ export const ZERO_COTA: CotaPorTipo = { estatico: 0, carrossel: 0, estatico_fina
 // Soma, por tipo de peça, a base de cada plano ativo (P1, P2, B) com os
 // extras atribuídos àquele plano. Extras de um plano vazio são ignorados.
 export function computeCota(entries: PlanoComExtras[]): CotaPorTipo {
-  const n = (v: any) => Number(v || 0);
+  const n = (v: number | null | undefined) => Number(v || 0);
   return entries.reduce<CotaPorTipo>(
     (acc, e) => {
       if (!e.plan) return acc;

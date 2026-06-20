@@ -709,7 +709,7 @@ function FeedCard({
         mood,
         vertical: "post",
         logoPosition: kit.logoPosition,
-        leituraCenica: (item as any).leituraCenica,
+        leituraCenica: item.leituraCenica,
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
@@ -741,7 +741,7 @@ function FeedCard({
         titulo,
         texto,
         imagePrompt: item.imagem,
-        leituraCenica: (item as any).leituraCenica,
+        leituraCenica: item.leituraCenica,
         formato: "post",
         selecaoDireta: {
           usarAvatar: sel.avatarNum != null,
@@ -803,7 +803,7 @@ function FeedCard({
             titulo={titulo}
             texto={texto}
             imagePrompt={item.imagem}
-            leituraCenica={(item as any).leituraCenica}
+            leituraCenica={item.leituraCenica}
             storageKey={storageKey}
             userId={userId}
             onGerou={async (url) => {
@@ -1017,7 +1017,7 @@ function FinalCard({
         mood,
         vertical: "estatico_final",
         logoPosition: kit.logoPosition,
-        leituraCenica: (item as any).leituraCenica,
+        leituraCenica: item.leituraCenica,
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
@@ -1048,7 +1048,7 @@ function FinalCard({
         titulo,
         texto,
         imagePrompt: item.imagem,
-        leituraCenica: (item as any).leituraCenica,
+        leituraCenica: item.leituraCenica,
         formato: "post",
         selecaoDireta: {
           usarAvatar: sel.avatarNum != null,
@@ -1110,7 +1110,7 @@ function FinalCard({
             titulo={titulo}
             texto={texto}
             imagePrompt={item.imagem}
-            leituraCenica={(item as any).leituraCenica}
+            leituraCenica={item.leituraCenica}
             storageKey={storageKey}
             userId={userId}
             onGerou={async (url) => {
@@ -1407,7 +1407,7 @@ function CarouselCardBlock({
         mood,
         vertical: "post",
         logoPosition: kit.logoPosition,
-        leituraCenica: (card as any).leituraCenica,
+        leituraCenica: card.leituraCenica,
         forcedGender: forcedGenders[index],
         anchoraPersonagem,
         ancoragePapel,
@@ -1452,8 +1452,8 @@ function CarouselCardBlock({
   } | null {
     const card = cards[index];
     // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
-    const avatarNumDe = (j: any): 1 | 2 | null =>
-      typeof j.avatarNum === "number" ? j.avatarNum : j.usarAvatar ? 1 : null;
+    const avatarNumDe = (j: { avatarNum?: unknown; usarAvatar?: unknown }): 1 | 2 | null =>
+      typeof j.avatarNum === "number" ? (j.avatarNum as 1 | 2) : j.usarAvatar ? 1 : null;
     // 1) Bloco consolidado
     try {
       const raw = localStorage.getItem(blockStorageKey);
@@ -1537,7 +1537,7 @@ function CarouselCardBlock({
         titulo: titulos[index],
         texto: textos[index],
         imagePrompt: card.imagePrompt,
-        leituraCenica: (card as any).leituraCenica,
+        leituraCenica: card.leituraCenica,
         formato: "post",
         selecaoDireta: s,
         anchoraPersonagem,
@@ -1592,7 +1592,7 @@ function CarouselCardBlock({
             mood,
             vertical: "post",
             logoPosition: kit.logoPosition,
-            leituraCenica: (card as any).leituraCenica,
+            leituraCenica: card.leituraCenica,
             forcedGender: forcedGenders[i],
             anchoraPersonagem,
             ancoragePapel,
@@ -1667,7 +1667,7 @@ function CarouselCardBlock({
             titulo: titulos[i],
             texto: textos[i],
             imagePrompt: card.imagePrompt,
-            leituraCenica: (card as any).leituraCenica,
+            leituraCenica: card.leituraCenica,
             formato: "post",
             selecaoDireta: s,
             anchoraPersonagem,
@@ -2192,7 +2192,7 @@ function ReelsCard({
         const baseTipo = isCine
           ? `s3c_${String(dayNumber).padStart(2, "0")}`
           : `rel${String(dayNumber).padStart(2, "0")}`;
-        if (preview && typeof (navigator as any).canShare === "function") {
+        if (preview && typeof navigator.canShare === "function") {
           try {
             const blob = await (await fetch(preview)).blob();
             const file = new File(
@@ -2200,7 +2200,7 @@ function ReelsCard({
               mopName({ company: kit.companyName, tipo: `${baseTipo}_cp`, ext: "jpg" }),
               { type: blob.type || "image/jpeg" },
             );
-            if ((navigator as any).canShare({ files: [file] })) {
+            if (navigator.canShare({ files: [file] })) {
               await navigator.share({ text: legenda, files: [file] } as ShareData);
               return;
             }
@@ -2289,7 +2289,7 @@ function ReelsCard({
         mood,
         keyInfo: `${reels.imagePrompt || ""}`.slice(0, 500),
         imagePrompt: reels.imagePrompt,
-        leituraCenica: (reels as any).leituraCenica,
+        leituraCenica: reels.leituraCenica,
         formato: "reels",
         selecaoDireta: s,
         anchoraPersonagem,
@@ -3251,6 +3251,9 @@ export default function ResultsView({
     refreshProfile();
   }, [refreshProfile]);
 
+  // `track` não consta em MethodOpResult e o motor não o popula hoje (o valor é
+  // inferido por trackResolved abaixo); leitura defensiva p/ compat — mantido
+  // como any pois tipar exigiria afirmar que o campo nunca existe.
   const trackRaw = (result as any)?.track as "cinematica" | "visual" | "experimentacao" | undefined;
 
   const allFeedAll = result?.feed || [];
@@ -3280,7 +3283,7 @@ export default function ResultsView({
   // ancora_visual gerada pela IA junto com a sequência. Mostra sempre que existir —
   // a supressão por avatar acontece POR CARD em regenerateWithKit (hasAvatarRef),
   // não aqui: ter avatar no kit ≠ avatar sendo usado nesta geração específica.
-  const ancoragem: AnchoraVisual | undefined = (result as any)?.ancora_visual;
+  const ancoragem: AnchoraVisual | undefined = result?.ancora_visual;
   const anchorAgeEffective = anchorAgeOverride ?? ancoragem?.faixa_etaria ?? "";
   // No modo 'livre' o gerador de imagem não recebe constraint de tipo —
   // gênero é balanceado livremente por peça (M/F alternados).
@@ -3347,7 +3350,12 @@ export default function ResultsView({
 
   if (!result) return null;
 
-  const keyInfo = String((result as any).keyInfo || (result.raw as any)?.keyInfo || "");
+  // keyInfo não consta em MethodOpResult nem no shape conhecido de `raw`
+  // (unknown vindo da IA); leitura defensiva c/ fallback — mantido como any
+  // pois tipar exigiria afirmar campos que o motor não garante.
+  const keyInfo = String(
+    (result as any).keyInfo || (result.raw as { keyInfo?: unknown })?.keyInfo || "",
+  );
 
   async function handlePdf() {
     setSavingPdf(true);
@@ -3677,7 +3685,7 @@ export default function ResultsView({
                   kit={kit}
                   mood={mood}
                   dayNumber={item.day}
-                  track={(result as any).track}
+                  track={trackRaw}
                   keyInfo={keyInfo}
                   guard={guard}
                   segmento={kit.segment}

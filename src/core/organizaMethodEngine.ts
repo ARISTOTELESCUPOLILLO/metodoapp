@@ -547,27 +547,59 @@ function shouldDiscardReels(track: Track | undefined, hasReels: boolean): boolea
   return track === "visual" || track === "experimentacao";
 }
 
+// Forma bruta do JSON devolvido pela IA (resposta da OpenAI), antes da
+// normalização. Só os campos de topo que o parser realmente lê estão aqui;
+// as formas internas não são garantidas pelo prompt, então ficam como
+// FeedItem[]/unknown[] e são validadas/transformadas defensivamente abaixo.
+// Não é um contrato — é a documentação do que este normalizador consome.
+type RawCarouselGroup = { cards?: unknown[]; legenda?: string };
+type RawEstaticoFinalItem = {
+  dia?: number;
+  titulo?: string;
+  texto?: string;
+  legenda?: string;
+  imagem?: string;
+  imagePrompt?: string;
+  leituraCenica?: import("../types").LeituraCenica;
+};
+interface RawMethodResult {
+  carousel?: unknown[];
+  reels?: unknown;
+  feed?: FeedItem[];
+  estaticoFinal?: RawEstaticoFinalItem[];
+  stories?: unknown;
+  ancora_visual?: import("../types").AnchoraVisual;
+}
+
 export function normalizeMethodResult(
-  raw: any,
+  rawInput: unknown,
   track?: Track,
   sequenceSize?: 3 | 6 | 9,
   keyInfo?: string,
 ): MethodOpResult {
+  // O JSON da IA chega como `unknown`. Esta função é a fronteira que o
+  // interpreta defensivamente (guards de Array/truthiness abaixo); o cast
+  // único para RawMethodResult documenta os campos de topo consumidos.
+  const raw = (rawInput ?? {}) as RawMethodResult;
   const isExperimentacao = track === "experimentacao";
   const effectiveSize: 3 | 6 | 9 = isExperimentacao ? 3 : ((sequenceSize || 6) as 3 | 6 | 9);
   const comp = SEQUENCE_COMPOSITION[effectiveSize];
   let carousel: import("../types").CarouselCard[] | undefined;
   if (Array.isArray(raw?.carousel)) {
-    if (raw.carousel[0]?.cards) {
-      carousel = raw.carousel.flatMap((seq: any) => {
-        const cards = (seq.cards || []).map((c: any, i: number) => ({ ...c, card: i + 1 }));
+    const groups = raw.carousel as RawCarouselGroup[];
+    if (groups[0]?.cards) {
+      carousel = groups.flatMap((seq) => {
+        const cards = ((seq.cards || []) as import("../types").CarouselCard[]).map((c, i) => ({
+          ...c,
+          card: i + 1,
+        }));
         if (cards.length > 0 && seq.legenda) {
           cards[cards.length - 1].legenda = seq.legenda;
         }
         return cards;
       });
     } else {
-      carousel = raw.carousel.slice(0, 5);
+      carousel = raw.carousel.slice(0, 5) as import("../types").CarouselCard[];
     }
   }
 
@@ -590,7 +622,7 @@ export function normalizeMethodResult(
 
   let feed: FeedItem[] | undefined = Array.isArray(raw?.feed) ? raw.feed : undefined;
   if (Array.isArray(raw?.estaticoFinal) && raw.estaticoFinal.length > 0) {
-    const extras: FeedItem[] = raw.estaticoFinal.map((item: any, idx: number) => ({
+    const extras: FeedItem[] = raw.estaticoFinal.map((item, idx: number) => ({
       dia: item.dia ?? (feed?.length || 0) + idx + 1,
       formato: "Estático Final" as const,
       titulo: item.titulo || "",

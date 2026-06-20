@@ -20,9 +20,25 @@ export const emptyImageKit: ImageKit = {
   venda: undefined,
 };
 
-function normalize(kit: any): ImageKit {
+// Shape bruto vindo do localStorage (JSON.parse). Inclui o campo legado
+// `cenario: string` (shape antigo, migrado para `cenarios` abaixo). Tudo
+// opcional/unknown porque é dado persistido externamente, sem garantia.
+type StoredImageKit = {
+  avatar?: unknown;
+  avatar2?: unknown;
+  fachada?: unknown;
+  cenarios?: unknown;
+  cenario?: unknown;
+  produtos?: unknown;
+  fato?: unknown;
+  venda?: unknown;
+};
+
+function normalize(kit: StoredImageKit | null | undefined): ImageKit {
   // Produtos
-  const produtos = Array.isArray(kit?.produtos) ? kit.produtos.slice(0, PRODUTO_SLOTS) : [];
+  const produtos: (string | null)[] = Array.isArray(kit?.produtos)
+    ? kit.produtos.slice(0, PRODUTO_SLOTS)
+    : [];
   while (produtos.length < PRODUTO_SLOTS) produtos.push(null);
 
   // Cenários — migração do shape antigo `cenario: string` → `cenarios: [string, null]`.
@@ -36,14 +52,16 @@ function normalize(kit: any): ImageKit {
   }
   while (cenarios.length < CENARIO_SLOTS) cenarios.push(null);
 
+  const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+
   return {
-    avatar: kit?.avatar || undefined,
-    avatar2: kit?.avatar2 || undefined,
-    fachada: kit?.fachada || undefined,
+    avatar: str(kit?.avatar),
+    avatar2: str(kit?.avatar2),
+    fachada: str(kit?.fachada),
     cenarios: cenarios.map((c) => (typeof c === "string" && c ? c : null)),
-    produtos: produtos.map((p: any) => (typeof p === "string" && p ? p : null)),
-    fato: kit?.fato || undefined,
-    venda: kit?.venda || undefined,
+    produtos: produtos.map((p) => (typeof p === "string" && p ? p : null)),
+    fato: str(kit?.fato),
+    venda: str(kit?.venda),
   };
 }
 
@@ -210,8 +228,8 @@ export async function saveImageKitAsync(kit: ImageKit, userId?: string | null): 
       avatar: avatarPayload,
       avatar2: avatar2Payload,
       fachada: fachadaPayload,
-      cenarios: cenariosPayload as any,
-      produtos: produtosPayload as any,
+      cenarios: cenariosPayload,
+      produtos: produtosPayload,
       fato: fatoPayload,
       venda: vendaPayload,
     },

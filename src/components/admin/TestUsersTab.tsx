@@ -112,8 +112,8 @@ export function TestUsersTab() {
       setBonusId("");
       setMsg("Teste criado.");
       load();
-    } catch (err: any) {
-      setMsg(`Erro: ${err?.message || "falha ao criar teste"}`);
+    } catch (err: unknown) {
+      setMsg(`Erro: ${err instanceof Error ? err.message : "falha ao criar teste"}`);
     } finally {
       setBusy(null);
     }
@@ -139,6 +139,8 @@ export function TestUsersTab() {
     const col = slot === "bonus" ? "bonus_id" : `${slot}_id`;
     await supabase
       .from("profiles")
+      // Grupo B: chave computada [col] colapsa p/ index signature que supabase-js
+      // rejeita; resolver exigiria branches explícitos por slot (mudança estrutural).
       .update({ [col]: planId || null } as any)
       .eq("id", r.id);
     await load();
@@ -175,8 +177,8 @@ export function TestUsersTab() {
     try {
       await deleteTestUserFn({ data: { id: r.id } });
       load();
-    } catch (err: any) {
-      alert(`Erro: ${err?.message || "falha ao excluir"}`);
+    } catch (err: unknown) {
+      alert(`Erro: ${err instanceof Error ? err.message : "falha ao excluir"}`);
     } finally {
       setBusy(null);
     }
@@ -703,7 +705,7 @@ const btn: React.CSSProperties = {
   fontSize: 12,
   cursor: "pointer",
 };
-const Th = ({ children }: any) => (
+const Th = ({ children }: { children: React.ReactNode }) => (
   <th
     style={{
       padding: "8px 10px",
@@ -716,7 +718,7 @@ const Th = ({ children }: any) => (
     {children}
   </th>
 );
-const Td = ({ children, style }: any) => (
+const Td = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <td style={{ padding: "8px 10px", verticalAlign: "middle", ...style }}>{children}</td>
 );
 const MRow = ({ k, children }: { k: string; children: React.ReactNode }) => (

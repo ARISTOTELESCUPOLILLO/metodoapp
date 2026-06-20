@@ -469,7 +469,10 @@ export function PlansTab() {
   );
 }
 
-const Th = ({ children }: any) => (
+// title/style são aceitos nas chamadas mas a renderização permanece igual à
+// versão anterior (que tipava as props como `any` e descartava esses campos) —
+// preserva o comportamento, só remove o `any`.
+const Th = ({ children }: { children: React.ReactNode; title?: string }) => (
   <th
     style={{
       padding: "8px 10px",
@@ -482,7 +485,9 @@ const Th = ({ children }: any) => (
     {children}
   </th>
 );
-const Td = ({ children }: any) => <td style={{ padding: "8px 10px" }}>{children}</td>;
+const Td = ({ children }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+  <td style={{ padding: "8px 10px" }}>{children}</td>
+);
 const btn: React.CSSProperties = {
   background: "transparent",
   border: "1px solid #cbd5e1",

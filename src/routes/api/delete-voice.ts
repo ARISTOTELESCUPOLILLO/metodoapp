@@ -25,8 +25,8 @@ export const Route = createFileRoute("/api/delete-voice")({
           const userId = await getUserIdFromRequest(request);
           if (!userId) return Response.json({ error: "Não autenticado." }, { status: 401 });
 
-          const body = await request.json().catch(() => ({}));
-          const avatarSlot = Number((body as any)?.avatarSlot ?? 1) === 2 ? 2 : 1;
+          const body = (await request.json().catch(() => ({}))) as { avatarSlot?: unknown };
+          const avatarSlot = Number(body?.avatarSlot ?? 1) === 2 ? 2 : 1;
 
           const { data: existing } = await supabaseAdmin
             .from("voice_clones")

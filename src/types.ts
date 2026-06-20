@@ -67,6 +67,17 @@ export interface ContentFormData {
   mood: MoodCode;
 }
 
+// Leitura cênica produzida pela IA por peça — orienta a geração de imagem
+// (intenção, personagem, ambiente etc.). Opcional: nem toda peça a recebe.
+export interface LeituraCenica {
+  intencao?: string;
+  personagem?: string;
+  ambiente?: string;
+  expressao?: string;
+  clima?: string;
+  composicao?: string;
+}
+
 export interface FeedItem {
   dia: number;
   formato: "Estático" | "Carrossel" | "Reels" | "Estático Final";
@@ -74,6 +85,7 @@ export interface FeedItem {
   texto: string;
   legenda: string;
   imagem: string;
+  leituraCenica?: LeituraCenica;
 }
 
 export interface StoryItem {
@@ -94,6 +106,7 @@ export interface CarouselCard {
   texto: string;
   imagePrompt: string;
   legenda?: string;
+  leituraCenica?: LeituraCenica;
 }
 
 export interface ReelsGuide {
@@ -102,6 +115,7 @@ export interface ReelsGuide {
   imagePrompt: string;
   screenText: string;
   legenda?: string;
+  leituraCenica?: LeituraCenica;
 }
 
 // Contagem de itens gerados — ponte mínima para integração futura com o ERP
