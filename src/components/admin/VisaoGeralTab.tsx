@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
 
 interface Profile {
   id: string;
@@ -16,6 +17,7 @@ interface Profile {
 }
 interface Plan {
   id: string;
+  codigo: string;
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
@@ -71,7 +73,7 @@ export function VisaoGeralTab() {
         ),
       supabase
         .from("plans")
-        .select("id,limite_imagens,limite_renders,limite_geracoes")
+        .select("id,codigo,limite_imagens,limite_renders,limite_geracoes")
         .eq("ativo", true),
       supabase.from("user_roles").select("user_id,role"),
       supabase
@@ -126,7 +128,8 @@ export function VisaoGeralTab() {
       if (!plan) continue;
       totalSold += s.preco ?? 0;
       falaiCost += plan.limite_imagens * imgP + plan.limite_renders * renP;
-      openaiCost += plan.limite_geracoes * gerP;
+      const seqSize = mopSequenceSize(plan.codigo);
+      openaiCost += seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * gerP;
     }
   }
 

@@ -23,6 +23,14 @@ export const COST_NOMINAL_USD = {
   content_mop_s9: 0.064,
 } as const;
 
+// Planos de Sequência (S3/S6/S9, Visual ou Cinemática) têm limite_geracoes=0
+// mas geram 1 ciclo MOP por semana (S3/S6) ou quinzena (S9) — extrai o
+// tamanho da sequência do código do plano (ex.: "S6V" → 6).
+export function mopSequenceSize(codigo: string): number | null {
+  const m = codigo.match(/^S(3|6|9)/);
+  return m ? Number(m[1]) : null;
+}
+
 // Custo do ciclo de geração MOP (evento gerar_conteudo_mop) por tamanho de sequência.
 export function mopContentCost(sequenceSize: number): number {
   if (sequenceSize <= 3) return COST_USD.content_mop_s3;

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
 
 interface Plan {
   id: string;
@@ -159,10 +160,10 @@ export function ClientesFinanceiroTab() {
             : endDate && endDate < now
               ? "concluido"
               : "ativo";
+        const seqSize = mopSequenceSize(plan.codigo);
+        const openaiCost = seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * geracaoPrice;
         const costUsd =
-          plan.limite_imagens * imgRef +
-          plan.limite_renders * renderPrice +
-          plan.limite_geracoes * geracaoPrice;
+          plan.limite_imagens * imgRef + plan.limite_renders * renderPrice + openaiCost;
         const costBrl = costUsd * usdRate;
         const soldBrl = s.preco || 0;
         return {

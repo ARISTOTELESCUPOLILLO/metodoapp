@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { mopMonthlyCost } from "@/lib/costs";
+import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
 
 interface Log {
   user_id: string | null;
@@ -46,14 +46,6 @@ interface AppSettings {
   image_price_usd: number;
   render_price_usd: number;
   geracao_price_usd: number;
-}
-
-// Planos de Sequência (S3/S6/S9, Visual ou Cinemática) têm limite_geracoes=0
-// mas geram 1 ciclo MOP por semana (S3/S6) ou quinzena (S9) — extrai o
-// tamanho da sequência do código do plano (ex.: "S6V" → 6).
-function mopSequenceSize(codigo: string): number | null {
-  const m = codigo.match(/^S(3|6|9)/);
-  return m ? Number(m[1]) : null;
 }
 
 // Custo OpenAI mensal projetado de um plano: geração avulsa (Post Único,
@@ -282,9 +274,14 @@ export function CustosTab() {
   // ── Previsão de consumo por plano ativo ──
   const previsao = activePlans
     .map((p) => {
-      const users1 = profiles.filter((u) => u.plano1_id === p.id);
-      const users2 = profiles.filter((u) => u.plano2_id === p.id);
-      const totalClientes = new Set([...users1.map((u) => u.id), ...users2.map((u) => u.id)]).size;
+      const users1 = realProfiles.filter((u) => u.plano1_id === p.id);
+      const users2 = realProfiles.filter((u) => u.plano2_id === p.id);
+      const users3 = realProfiles.filter((u) => u.bonus_id === p.id);
+      const totalClientes = new Set([
+        ...users1.map((u) => u.id),
+        ...users2.map((u) => u.id),
+        ...users3.map((u) => u.id),
+      ]).size;
       const imgs = totalClientes * p.limite_imagens;
       const renders = totalClientes * p.limite_renders;
       const geracoes = totalClientes * p.limite_geracoes;
@@ -317,7 +314,9 @@ export function CustosTab() {
   // ── Por plano (custo real + projeção + preços) ──
   const planRows = activePlans
     .map((p) => {
-      const users = profiles.filter((u) => u.plano1_id === p.id || u.plano2_id === p.id);
+      const users = realProfiles.filter(
+        (u) => u.plano1_id === p.id || u.plano2_id === p.id || u.bonus_id === p.id,
+      );
       const userIds = new Set(users.map((u) => u.id));
       const planLogs = logs.filter((l) => l.user_id && userIds.has(l.user_id));
       const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
@@ -329,6 +328,7 @@ export function CustosTab() {
         .flatMap((u) => [
           u.plano1_id === p.id ? Number(u.plano1_preco_brl || 0) : 0,
           u.plano2_id === p.id ? Number(u.plano2_preco_brl || 0) : 0,
+          u.bonus_id === p.id ? Number(u.bonus_preco_brl || 0) : 0,
         ])
         .filter((v) => v > 0);
       const precoMed =
