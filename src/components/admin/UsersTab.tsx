@@ -1452,7 +1452,10 @@ function PlanPriceField({
   const custoOpenai = seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * costs.content;
   const costUsd =
     plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + custoOpenai;
-  const minBrl = costUsd * usdRate * 3;
+  // Arredonda pra cima — o mínimo exibido nunca pode ficar abaixo do piso
+  // real de custo (senão um preço que bate com o número mostrado ainda
+  // aparece como "abaixo do mínimo").
+  const minBrl = Math.ceil(costUsd * usdRate * 3);
   const maxBrl = plan.preco_maximo_brl || 0;
   const applied = parseFloat(inp2);
   const belowMin = !isNaN(applied) && applied > 0 && applied < minBrl;
@@ -1474,7 +1477,7 @@ function PlanPriceField({
           onKeyDown={(e) => {
             if (e.key === "Enter") commit();
           }}
-          placeholder={minBrl.toFixed(0)}
+          placeholder={String(minBrl)}
           style={{
             width: 60,
             padding: "2px 4px",
@@ -1488,7 +1491,7 @@ function PlanPriceField({
         />
         {belowMin && (
           <span
-            title={`Abaixo do mínimo (R$ ${minBrl.toFixed(2)})`}
+            title={`Abaixo do mínimo (R$ ${minBrl})`}
             style={{ color: "#dc2626", fontSize: 12, fontWeight: 800 }}
           >
             ⚠
@@ -1496,7 +1499,7 @@ function PlanPriceField({
         )}
       </div>
       <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.3, marginTop: 1 }}>
-        mín R$ {minBrl.toFixed(0)}
+        mín R$ {minBrl}
         {maxBrl > 0 ? ` · máx R$ ${maxBrl.toFixed(0)}` : ""}
       </div>
     </div>
@@ -1532,7 +1535,7 @@ function FaturamentoCell({
     const custoOpenai = seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * costs.content;
     const cost =
       plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + custoOpenai;
-    const min = cost * usdRate * 3;
+    const min = Math.ceil(cost * usdRate * 3);
     const preco = s.preco || 0;
     totalMensal += preco;
     if (preco > 0 && preco < min) hasWarning = true;
