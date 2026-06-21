@@ -238,7 +238,7 @@ export async function debitUsage(
       qtd_imagens: imgs,
       qtd_renders: renders,
       qtd_geracoes: geracoes,
-      custo_usd: meta.custoUsd ?? 0,
+      custo_usd: meta.custoUsd ?? null,
       slot: slot ?? null,
       payload: (meta.payload ?? null) as never,
       ...(meta.impersonatedBy ? { impersonated_by: meta.impersonatedBy } : {}),

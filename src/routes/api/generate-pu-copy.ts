@@ -5,8 +5,7 @@ import {
   correctPortugueseSpelling,
 } from "@/core/textValidation";
 import { getVoiceProfile } from "@/data/brandVoice";
-import { resolveEffectiveUser, checkBalance, debitUsage } from "@/lib/usage.server";
-import { COST_USD } from "@/lib/costs";
+import { resolveEffectiveUser, checkBalance } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -48,9 +47,6 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
           const keyInfo = String(body.keyInfo || "").slice(0, 1000);
           const brandVoice = String(body.brandVoice || "").slice(0, 80);
           const segment = String(body.segment || "").slice(0, 30);
-          const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)
-            ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
-            : undefined;
 
           if (!keyInfo.trim()) {
             return Response.json({ error: "keyInfo obrigatório" }, { status: 400 });
@@ -69,7 +65,6 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
             return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
           const userId = effective.userId;
-          const impersonatedBy = effective.impersonatedBy;
           const bal = await checkBalance(userId, 0, 0, 1);
           if (!bal.ok) {
             return Response.json({ error: "Limite de gerações atingido." }, { status: 402 });
@@ -157,17 +152,9 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
             return Response.json({ error: "JSON inválido" }, { status: 502 });
           }
 
-          if (userId) {
-            await debitUsage(userId, 0, 0, {
-              evento: "gerar_copia_pu",
-              modulo: "pu",
-              payload: { objetivo },
-              geracoes: 1,
-              custoUsd: COST_USD.content_pu,
-              impersonatedBy,
-              preferredSlot,
-            });
-          }
+          // Não debita aqui — o rascunho de copy pode ser regenerado livremente.
+          // A cobrança de 1 geração + custo ocorre só no clique final "Gerar Post
+          // Único" (generate-caption.ts), evitando cobrar 2x pelo mesmo post.
 
           // Título NÃO é truncado aqui — cortar geraria fragmento; fora da
           // faixa de 4-5 palavras (TITULO_MIN_WORDS/TITULO_MAX_WORDS) é flagado

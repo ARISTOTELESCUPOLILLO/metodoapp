@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkBalance, debitUsage, resolveEffectiveUser } from "@/lib/usage.server";
+import { COST_USD } from "@/lib/costs";
 import { getVoiceProfile } from "@/data/brandVoice";
 import {
   stripTrailingCtaSentence,
@@ -366,7 +367,7 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
                 evento: "gerar_post_unico",
                 modulo: "pu",
                 geracoes: 1,
-                custoUsd: isAdmin ? 0 : undefined,
+                custoUsd: isAdmin ? 0 : COST_USD.content_pu,
                 preferredSlot,
                 impersonatedBy,
               });

@@ -759,7 +759,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
-          custo_usd?: number;
+          custo_usd?: number | null;
           evento: string;
           id?: string;
           impersonated_by?: string | null;
@@ -773,7 +773,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
-          custo_usd?: number;
+          custo_usd?: number | null;
           evento?: string;
           id?: string;
           impersonated_by?: string | null;
