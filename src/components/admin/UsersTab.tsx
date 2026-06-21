@@ -142,8 +142,8 @@ export function UsersTab() {
     navigate({ to: "/historico" });
   }
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     const [{ data: profs }, { data: pls }, { data: roles }, { data: s }] = await Promise.all([
       supabase
         .from("profiles")
@@ -195,7 +195,7 @@ export function UsersTab() {
       .update({ nome: nome.trim() || null })
       .eq("id", userId);
     setEditNome(null);
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
 
@@ -205,7 +205,7 @@ export function UsersTab() {
       .from("profiles")
       .update({ [col]: val } as any)
       .eq("id", userId);
-    await load();
+    await load({ silent: true });
   }
 
   function openAssignModal(r: Row, slot: SlotKey, options: Plan[], forceReset = false) {
@@ -241,7 +241,7 @@ export function UsersTab() {
     } catch (e) {
       alert(`Erro ao remover slot: ${(e as Error).message}`);
     }
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
 
@@ -272,7 +272,7 @@ export function UsersTab() {
       alert(`Erro: ${(e as Error).message}`);
     }
     setAssignModal(null);
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
 
@@ -295,7 +295,7 @@ export function UsersTab() {
       .from("profiles")
       .update({ status: blocking ? "bloqueado" : "ativo" })
       .eq("id", r.id);
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
   async function toggleAdmin(r: Row) {
@@ -303,7 +303,7 @@ export function UsersTab() {
     if (r.is_admin)
       await supabase.from("user_roles").delete().eq("user_id", r.id).eq("role", "admin");
     else await supabase.from("user_roles").insert({ user_id: r.id, role: "admin" });
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
   async function changeSegmento(r: Row, seg: string) {
@@ -312,7 +312,7 @@ export function UsersTab() {
       .from("profiles")
       .update({ segmento: seg || null })
       .eq("id", r.id);
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
   async function resetCounters(r: Row) {
@@ -332,7 +332,7 @@ export function UsersTab() {
         bonus_geracoes_usadas: 0,
       })
       .eq("id", r.id);
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
   async function handleDeleteUser(r: Row) {
@@ -356,7 +356,7 @@ export function UsersTab() {
     setBusy(r.id);
     try {
       await deleteUserFn({ data: { id: r.id } });
-      await load();
+      await load({ silent: true });
     } catch (e) {
       alert(`Erro ao excluir: ${(e as Error).message}`);
     }
@@ -378,7 +378,7 @@ export function UsersTab() {
       .from("profiles")
       .update({ [col]: next } as any)
       .eq("id", r.id);
-    await load();
+    await load({ silent: true });
     setBusy(null);
   }
 
