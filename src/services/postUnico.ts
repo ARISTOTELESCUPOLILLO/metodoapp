@@ -5,6 +5,7 @@ import {
   PostUnicoDirecao,
   PostUnicoFormData,
   PostUnicoObjetivo,
+  Segment,
   ValidationFlag,
 } from "../types";
 import { composeFeedPng } from "../utils/canvasComposer";
@@ -428,14 +429,40 @@ As cores são definidas pela intenção emocional da peça, não pelas cores ins
 COR DO LETTERING: escolha livremente a cor que garanta a melhor leitura visual sobre o fundo desta paleta — branco, preto, tom claro ou escuro conforme o contraste necessário. Legibilidade e destaque visual são prioritários.`;
 }
 
-function segmentRules(segment?: string): string {
+function segmentRules(segment?: string, hasCenarioRef?: boolean): string {
   if (segment === "VAREJO") {
     return "CONTEXTO — SEGMENTO VAREJO: negócio de comercialização de produtos ao consumidor. Quando presentes, produtos comunicam desejo de compra e benefícios (apresentar de forma atraente, não como catálogo técnico); cenário cria atmosfera de experiência de compra ou lifestyle; avatar contextualiza atendimento ou uso do produto. O tom visual e textual é convidativo e orientado ao consumo.";
   }
   if (segment === "MARCA") {
-    return "CONTEXTO — SEGMENTO MARCA: construção de identidade e posicionamento. Cenário e avatar transmitem percepção, estilo de vida e valores da marca; a composição reforça aspiração e propósito; produtos, se presentes, são ícones da identidade. O tom visual e textual é aspiracional e alinhado ao posicionamento da marca.";
+    // "Cenário" só entra na frase quando há foto de cenário de fato enviada —
+    // caso contrário o texto empurrava o modelo a inventar um ambiente/estilo
+    // de vida mesmo sem referência, mesmo com a trava de fundo neutro ativa.
+    const cenarioClause = hasCenarioRef
+      ? "Cenário e avatar transmitem percepção, estilo de vida e valores da marca"
+      : "Avatar transmite percepção e valores da marca";
+    return `CONTEXTO — SEGMENTO MARCA: construção de identidade e posicionamento. ${cenarioClause}; a composição reforça aspiração e propósito; produtos, se presentes, são ícones da identidade. O tom visual e textual é aspiracional e alinhado ao posicionamento da marca.`;
   }
   return "CONTEXTO — SEGMENTO SERVIÇOS: prestação de serviços especializados. Avatar (quando presente) transmite autoridade, competência e confiança do profissional ou da equipe; cenário reforça o contexto profissional; a composição comunica expertise, credibilidade e entrega de valor. O tom visual e textual é confiante e orientado ao resultado.";
+}
+
+// Papel do personagem por segmento + objetivo — só relevante quando há avatar
+// de referência ativo: nesse caso showConcreteAction fica false (a foto já
+// ancora a composição), o que deixava nenhuma instrução sobre o que o avatar
+// está fazendo ali (ver buildPostUnicoPrompt). Mapa pontual, começa só pelo
+// caso reportado (MARCA + institucional); outras combinações seguem sem
+// bloco específico até serem necessárias.
+const AVATAR_ROLE_BY_SEGMENT_OBJETIVO: Partial<Record<string, string>> = {
+  "MARCA:institucional":
+    "PAPEL DO PERSONAGEM: o avatar é a personificação dos valores e do posicionamento da marca — postura confiante e serena, presença que comunica autoridade e propósito institucional, não está executando uma tarefa operacional do dia a dia. Quando há produto na cena, o personagem o apresenta como ícone da identidade da marca, não como demonstração de uso funcional.",
+};
+
+function avatarRoleBlock(
+  segment?: string,
+  objetivo?: PostUnicoObjetivo,
+  hasAvatar?: boolean,
+): string {
+  if (!hasAvatar || !segment || !objetivo) return "";
+  return AVATAR_ROLE_BY_SEGMENT_OBJETIVO[`${segment}:${objetivo}`] ?? "";
 }
 
 function referencesBlock(
@@ -461,7 +488,7 @@ function referencesBlock(
     `ESTRUTURA VISUAL DA PEÇA — usar como REFERÊNCIA VISUAL (não copiar literalmente, não fazer colagem):`,
   );
   parts.push(`Elementos enviados: ${elementos.join(", ")}.`);
-  parts.push(segmentRules(segment));
+  parts.push(segmentRules(segment, !!refs.cenario));
 
   if (refs.avatar) {
     const clothingHint = refs.uniforme
@@ -542,26 +569,26 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         produtosCount: refs.produtos.length,
         hasCenario: !!refs.cenario,
         hasAvatar: !!refs.avatar,
+        segment: segment as Segment | undefined,
       }),
     );
   }
-  // Quando apenas avatar enviado (sem cenário, fachada, fato, venda ou
-  // produto): suprimir construção de ambiente pelo modelo — sem isso, a
-  // edição de imagem tende a reaproveitar/estender o fundo da própria foto
-  // do avatar como cenário.
-  if (
-    refs.avatar &&
-    !refs.cenario &&
-    !refs.fachada &&
-    !refs.fato &&
-    !refs.venda &&
-    !(refs.produtos && refs.produtos.length)
-  ) {
+  // Quando há avatar mas NENHUMA referência de ambiente real (cenário,
+  // fachada, fato ou venda): suprimir construção de ambiente pelo modelo —
+  // sem isso, a edição de imagem tende a reaproveitar/estender o fundo da
+  // própria foto do avatar como cenário, ou (em MARCA) inventar um ambiente
+  // de "estilo de vida" para ilustrar o segmento. Antes essa trava também
+  // desligava quando havia produto selecionado, deixando o caso avatar+produto
+  // sem cenário sem nenhuma instrução de fundo.
+  const hasAmbienteRef = !!(refs.cenario || refs.fachada || refs.fato || refs.venda);
+  if (refs.avatar && !hasAmbienteRef) {
+    const temProduto = !!(refs.produtos && refs.produtos.length);
     parts.push(
-      "FUNDO NEUTRO OBRIGATÓRIO: apenas avatar de referência enviado — sem imagem de cenário. " +
-        "Usar FUNDO LIMPO, SUAVE e DESFOCADO: bokeh suave, gradiente neutro, textura vaga ou superfície indefinida. " +
-        "NÃO construir ambiente físico específico, sala, escritório ou local identificável como fundo — mesmo que outras partes deste prompt descrevam um local. " +
-        "NEGATIVE: detailed background, specific room interior, identifiable location behind person, sharp background, busy background, office furniture behind subject.",
+      `FUNDO NEUTRO OBRIGATÓRIO: nenhuma imagem de cenário foi enviada como referência. ` +
+        `Usar FUNDO LIMPO, SUAVE e DESFOCADO: bokeh suave, gradiente neutro, textura vaga ou superfície indefinida atrás do avatar${temProduto ? " e do produto" : ""}. ` +
+        `NÃO construir ambiente físico específico, sala, escritório, local identificável ou cenário de "estilo de vida" como fundo — mesmo que outras partes deste prompt mencionem contexto, atividade ou segmento.` +
+        `${temProduto ? " O produto continua nítido e em destaque conforme a regra de protagonismo acima — apenas o ambiente ao redor fica neutro." : ""} ` +
+        `NEGATIVE: detailed background, specific room interior, identifiable location behind person, lifestyle environment, sharp background, busy background, office furniture behind subject.`,
     );
   }
   parts.push(
@@ -667,7 +694,13 @@ Hierarquia tipográfica obrigatória:
   const moodEhSimbolico = data.direcao === "mood" && MOODS_SIMBOLICOS.has(data.mood ?? "");
   const showConcreteAction =
     !refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? "") && !moodEhSimbolico;
-  const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}\n`;
+  // Quando a ação concreta é omitida (Kit Imagem ativo), preenche o vácuo com
+  // um papel específico de segmento+objetivo, se houver um mapeado — ver
+  // avatarRoleBlock acima.
+  const roleBlock = !showConcreteAction
+    ? avatarRoleBlock(kit.segment, data.objetivo, !!references?.avatar)
+    : "";
+  const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}${roleBlock ? `\n${roleBlock}` : ""}\n`;
 
   return `${buildDeviceRule()}
 
