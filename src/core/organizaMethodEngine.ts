@@ -468,13 +468,14 @@ REGRA: cada peça cumpre a FORMA indicada acima — CTA e menção à empresa s�
 ${trackHeader}
 ÂNCORA NARRATIVA DA SEQUÊNCIA — DEFINIR ANTES DE GERAR QUALQUER PEÇA:
 Defina UMA VEZ o fio condutor visual desta sequência. Essa âncora guia APENAS as peças em que a IA gera imagem sem referência real do cliente (avatar, cenário ou produto enviado). Quando houver referência real, ela prevalece sobre a âncora.
+PRINCÍPIO DE COMUNICAÇÃO — RECEPTOR, NÃO EMISSOR: em SERVIÇOS e MARCA, o personagem-padrão da âncora é o PÚBLICO-ALVO (o receptor da comunicação) — nunca a empresa/profissional/dono (o emissor). Mostrar o emissor é uma quebra de padrão deliberada que o usuário faz ao enviar um avatar de referência real para uma peça específica; a âncora nunca deve inventar esse emissor como personagem-padrão.
 Regras por segmento:
-- SERVIÇOS: personagem é o elemento principal — profissional em ação, papel = "protagonista"
-- MARCA: personagem representa cultura, bastidores ou identidade — papel = "protagonista"
+- SERVIÇOS: personagem é o público-alvo vivendo o contexto ou o benefício do serviço, papel = "publico_alvo"
+- MARCA: personagem é o público-alvo se conectando com a identidade ou a solução da marca, papel = "publico_alvo"
 - VAREJO: PRODUTO é o protagonista — personagem aparece apenas como contexto de uso (quem usa o item), papel = "contexto_de_uso"; a âncora NÃO transforma a pessoa em centro da cena quando o foco deve ser o produto
-Critérios de gênero: B2B industrial/técnico/construção/logística → M preferencialmente; B2B serviços/saúde/educação/gestão → quem usa mais o serviço; B2C beleza/estética/moda/bem-estar → F preferencialmente; B2C geral → comprador típico do produto; MARCA → quem representa a empresa. Se atividade ou keyInfo mencionar "mulheres" ou "homens" como público → seguir à risca.
-A âncora NÃO força humano em todo card — apenas garante que quando uma pessoa aparecer, seja sempre o mesmo tipo de personagem, mantendo coerência visual da sequência.
-Retornar em "ancora_visual": { "genero": "M" ou "F", "papel": "protagonista" ou "contexto_de_uso", "faixa_etaria": "ex: 35–45 anos", "marcadores_profissionais": "ex: camisa polo azul, postura técnica, ferramentas na cintura", "ambiente_base": "ex: oficina organizada com equipamentos ao fundo" }
+Critérios de gênero: B2B industrial/técnico/construção/logística → M preferencialmente; B2B serviços/saúde/educação/gestão → quem usa mais o serviço; B2C beleza/estética/moda/bem-estar → F preferencialmente; B2C geral → comprador típico do produto; MARCA → o público-alvo típico da marca. Se atividade ou keyInfo mencionar "mulheres" ou "homens" como público → seguir à risca.
+A âncora NÃO força humano em todo card — apenas garante que quando uma pessoa aparecer, seja sempre o mesmo tipo de personagem (o público-alvo, exceto em VAREJO), mantendo coerência visual da sequência.
+Retornar em "ancora_visual": { "genero": "M" ou "F", "papel": "publico_alvo" ou "contexto_de_uso", "faixa_etaria": "ex: 35–45 anos", "marcadores_profissionais": "ex: roupa casual do dia a dia, postura natural e atenta", "ambiente_base": "ex: ambiente cotidiano coerente com onde o público vive ou usa a solução" }
 
 ANÁLISE INTERNA — NÃO EXIBIR NO TEXTO FINAL:
 1. Ponto de entrada do público: ${seg.entrada}

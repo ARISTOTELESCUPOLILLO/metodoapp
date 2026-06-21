@@ -130,9 +130,13 @@ export interface GenerationSummary {
 
 export interface AnchoraVisual {
   genero: "M" | "F";
-  // 'protagonista' = personagem domina a cena (SERVIÇOS, MARCA)
-  // 'contexto_de_uso' = personagem complementa; produto/serviço é o foco (VAREJO)
-  papel: "protagonista" | "contexto_de_uso";
+  // 'publico_alvo' = personagem é o receptor da comunicação, vivendo o
+  //   contexto/benefício (SERVIÇOS, MARCA) — o emissor (dono/profissional)
+  //   só aparece via avatar de referência real, nunca como personagem-padrão
+  // 'contexto_de_uso' = personagem complementa; produto é o foco (VAREJO)
+  // 'protagonista' = legado, não emitido mais pelo motor (mantido por
+  //   compatibilidade com sequências antigas já salvas)
+  papel: "protagonista" | "contexto_de_uso" | "publico_alvo";
   faixa_etaria: string;
   marcadores_profissionais: string;
   ambiente_base: string;

@@ -135,7 +135,7 @@ const ANCORA_VISUAL_SCHEMA = {
       type: "object",
       properties: {
         genero: { type: "string", enum: ["M", "F"] },
-        papel: { type: "string", enum: ["protagonista", "contexto_de_uso"] },
+        papel: { type: "string", enum: ["publico_alvo", "contexto_de_uso"] },
         faixa_etaria: { type: "string" },
         marcadores_profissionais: { type: "string" },
         ambiente_base: { type: "string" },
