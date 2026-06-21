@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
 
 interface PlanCost {
   codigo: string;
@@ -243,10 +244,12 @@ export function SettingsTab() {
               </thead>
               <tbody>
                 {plans.map((p) => {
+                  const seqSize = mopSequenceSize(p.codigo);
+                  const custoOpenai = seqSize
+                    ? mopMonthlyCost(seqSize)
+                    : p.limite_geracoes * geracao;
                   const custoUsd =
-                    p.limite_imagens * imgRef +
-                    p.limite_renders * render +
-                    p.limite_geracoes * geracao;
+                    p.limite_imagens * imgRef + p.limite_renders * render + custoOpenai;
                   const custoBrl = custoUsd * rate;
                   const precoMin = custoBrl * 3;
                   return (

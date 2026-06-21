@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
 
 interface Settings {
   usd_brl_rate: number;
@@ -165,11 +166,15 @@ function buildProjections(
       const remImgs = Math.max(0, slot.il - slot.iu);
       const remRenders = Math.max(0, slot.rl - slot.ru);
       const remGeracoes = Math.max(0, slot.gl - slot.gu);
-      if (remImgs === 0 && remRenders === 0 && remGeracoes === 0) continue;
+      // Planos de Sequência (S3/S6/S9) guardam limite_geracoes=0 (convenção
+      // "ilimitado por ciclo") — remGeracoes fica sempre 0 pra eles, então o
+      // custo OpenAI real (ciclos MOP) usa mopMonthlyCost em vez do contador.
+      const seqSize = mopSequenceSize(plan.codigo);
+      const openaiCost = seqSize ? mopMonthlyCost(seqSize) : remGeracoes * s.geracao_price_usd;
+      if (remImgs === 0 && remRenders === 0 && openaiCost === 0) continue;
       const endDate = calcEndDate(slot.inicio, plan.tipo);
       const daysLeft = endDate ? Math.ceil((endDate.getTime() - now.getTime()) / 86400000) : null;
       const falCost = remImgs * s.image_price_usd + remRenders * s.render_price_usd;
-      const openaiCost = remGeracoes * s.geracao_price_usd;
       const revenueBrl = isTest || isAdmin ? 0 : slot.preco;
       out.push({
         userName: prof.nome || prof.email,

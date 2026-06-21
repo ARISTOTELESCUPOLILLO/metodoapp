@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
 
 interface Plan {
   id: string;
@@ -47,10 +48,12 @@ function capacidade(codigo: string, imgs: number, renders: number, geracoes: num
 }
 
 function calcCusto(plan: Plan, s: Settings) {
+  const seqSize = mopSequenceSize(plan.codigo);
+  const custoOpenai = seqSize
+    ? mopMonthlyCost(seqSize)
+    : plan.limite_geracoes * s.geracao_price_usd;
   return (
-    plan.limite_imagens * s.image_price_usd +
-    plan.limite_renders * s.render_price_usd +
-    plan.limite_geracoes * s.geracao_price_usd
+    plan.limite_imagens * s.image_price_usd + plan.limite_renders * s.render_price_usd + custoOpenai
   );
 }
 
