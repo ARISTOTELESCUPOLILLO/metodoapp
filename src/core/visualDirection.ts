@@ -560,15 +560,55 @@ const AVATAR_VS_PRODUTO_PLURAL =
   "Se algum produto é algo que se usa sentado ou apoiado (cadeira, poltrona, mesa), prefira a pessoa AO LADO ou ATRÁS dele, apresentando-o — ou um ângulo de câmera em que os produtos apareçam inteiros e reconhecíveis mesmo em uso. " +
   "Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE os produtos.";
 
+// SERVIÇOS inverte a hierarquia: o produto referenciado (ex.: item usado no
+// ofício, material de apoio) NÃO é o que se vende — quem vende é o serviço,
+// representado pelo personagem. O produto vira apoio de cena, adaptado ao
+// ambiente, sem disputar protagonismo.
+const PRODUTO_APOIO_SERVICOS_SINGULAR =
+  "PAPEL DO PRODUTO NESTA CENA (SERVIÇOS) — o PRODUTO referenciado é elemento de APOIO, adaptado e integrado ao cenário — NUNCA o protagonista visual. " +
+  "Mantenha fidelidade ao produto real (mesma cor, forma, rótulo, acabamento), mas em plano secundário: menor, mais ao fundo ou parcialmente em uso/apoiado de forma natural no ambiente — sem ocupar o centro do quadro. " +
+  "PROIBIDO ampliar o produto, aproximar a câmera dele ou tratá-lo como herói da composição. O PERSONAGEM é quem ocupa esse papel.";
+
+const PRODUTO_APOIO_SERVICOS_PLURAL =
+  "PAPEL DOS PRODUTOS NESTA CENA (SERVIÇOS) — os PRODUTOS referenciados são elementos de APOIO, adaptados e integrados ao cenário — NUNCA os protagonistas visuais. " +
+  "Mantenha fidelidade a cada produto real (mesma cor, forma, rótulo, acabamento), mas em plano secundário: menores, mais ao fundo ou parcialmente em uso/apoiados de forma natural no ambiente — sem ocupar o centro do quadro. " +
+  "PROIBIDO ampliar os produtos, aproximar a câmera deles ou tratá-los como heróis da composição. O PERSONAGEM é quem ocupa esse papel.";
+
+const PERSONAGEM_VS_PRODUTO_SERVICOS_SINGULAR =
+  "PERSONAGEM vs PRODUTO (SERVIÇOS) — o PERSONAGEM é o PROTAGONISTA absoluto da composição; o produto é coadjuvante adaptado à cena. " +
+  "A postura, a expressão e a ação do personagem são o centro visual da imagem. O produto aparece de forma natural e secundária (sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-lo. " +
+  "Na dúvida entre valorizar a pessoa ou o produto, valorize SEMPRE a pessoa.";
+
+const PERSONAGEM_VS_PRODUTO_SERVICOS_PLURAL =
+  "PERSONAGEM vs PRODUTOS (SERVIÇOS) — o PERSONAGEM é o PROTAGONISTA absoluto da composição; os produtos são coadjuvantes adaptados à cena. " +
+  "A postura, a expressão e a ação do personagem são o centro visual da imagem. Os produtos aparecem de forma natural e secundária (sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-los. " +
+  "Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE a pessoa.";
+
 export function buildProductHierarchyBlock(opts: {
   produtosCount: number;
   hasCenario: boolean;
   hasAvatar: boolean;
+  segment?: Segment;
 }): string {
-  const { produtosCount, hasCenario, hasAvatar } = opts;
+  const { produtosCount, hasCenario, hasAvatar, segment } = opts;
   if (produtosCount <= 0) return "";
   const multi = produtosCount > 1;
 
+  // SERVIÇOS: produto em segundo plano, adaptado ao cenário — quem protagoniza
+  // é o personagem (o que se vende é o serviço, não o item de apoio).
+  if (segment === "SERVIÇOS") {
+    const lines: string[] = [
+      multi ? PRODUTO_APOIO_SERVICOS_PLURAL : PRODUTO_APOIO_SERVICOS_SINGULAR,
+    ];
+    if (hasAvatar) {
+      lines.push(
+        multi ? PERSONAGEM_VS_PRODUTO_SERVICOS_PLURAL : PERSONAGEM_VS_PRODUTO_SERVICOS_SINGULAR,
+      );
+    }
+    return lines.join("\n");
+  }
+
+  // VAREJO/MARCA: produto é o herói da composição (regra original).
   const lines: string[] = [multi ? PRODUTO_PROTAGONISMO_PLURAL : PRODUTO_PROTAGONISMO_SINGULAR];
   if (hasCenario) lines.push(multi ? CENARIO_VS_PRODUTO_PLURAL : CENARIO_VS_PRODUTO_SINGULAR);
   if (hasAvatar) lines.push(multi ? AVATAR_VS_PRODUTO_PLURAL : AVATAR_VS_PRODUTO_SINGULAR);

@@ -342,6 +342,7 @@ function buildAnchorPrefix(
           produtosCount: n,
           hasCenario: !!refs.cenario,
           hasAvatar: !!refs.avatar,
+          segment,
         }),
       );
     }

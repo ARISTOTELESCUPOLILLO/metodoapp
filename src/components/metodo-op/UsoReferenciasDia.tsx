@@ -171,6 +171,18 @@ export default function UsoReferenciasDia(props: Props) {
     }
   }, [enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme, storageKey]);
 
+  // Remove fantasmas: produtos marcados que não existem mais no Kit (foto
+  // deletada/reordenada desde a última seleção) — sem isso o badge de ordem
+  // fica deslocado (ex.: "4"/"5" em vez de "1"/"2") e a distribuição no
+  // carrossel aponta pra um índice que não existe mais, deixando o card sem
+  // produto na geração final.
+  useEffect(() => {
+    setProdutosNums((prev) => {
+      const filtered = prev.filter((n) => produtosDisp.includes(n));
+      return filtered.length === prev.length ? prev : filtered;
+    });
+  }, [produtosDisp]);
+
   function toggleProduto(n: number) {
     setProdutosNums((prev) => {
       if (prev.includes(n)) return prev.filter((x) => x !== n);

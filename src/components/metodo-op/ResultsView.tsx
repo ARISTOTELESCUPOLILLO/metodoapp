@@ -1459,8 +1459,13 @@ function CarouselCardBlock({
       if (raw) {
         const j = JSON.parse(raw);
         if (j.enabled) {
+          // Filtra fantasmas (números de uma seleção anterior cuja foto não
+          // existe mais no Kit) — sem isso o índice aponta pra produto nulo e
+          // o card sai sem produto na geração.
           const produtos: number[] = Array.isArray(j.produtosNums)
-            ? j.produtosNums.filter((n: unknown) => typeof n === "number")
+            ? j.produtosNums.filter(
+                (n: unknown) => typeof n === "number" && !!imageKit?.produtos[n - 1],
+              )
             : [];
           const avatarNum = avatarNumDe(j);
           // VAREJO: distribui as fotos selecionadas pelos cards (1ª/última =
