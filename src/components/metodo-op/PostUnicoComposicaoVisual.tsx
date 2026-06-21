@@ -112,6 +112,12 @@ export default function PostUnicoComposicaoVisual({
         Você pode combinar: <b>1 avatar + fachada + 1 cenário + até {MAX_PRODUTOS_PU} produtos</b>.
         {produtosNoLimite && <> Limite de produtos atingido — desmarque um para escolher outro.</>}
       </p>
+      {(hasFato || hasVenda) && (
+        <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
+          A foto de <b>{hasFato ? "Fato" : "Venda"}</b> é usada quase sem alteração, só com
+          marca/título/texto sobrepostos — diferente das outras imagens, que a IA recria.
+        </p>
+      )}
 
       <div
         style={{
