@@ -689,13 +689,14 @@ export function checkNumericClaims(text: string, keyInfo: string): string[] {
 
 // Faixa de palavras do título (mesma usada no prompt e em
 // applyDeterministicFallback): abaixo de 4, o título vira fragmento solto
-// ("Fila cresce"); acima de 5, viola o "NO MÁXIMO 5 palavras" que o prompt já
+// ("Fila cresce"); acima de 6, viola o "NO MÁXIMO 6 palavras" que o prompt já
 // exige para Estático, Estático Final, Card e hook do Reels
 // (organizaMethodEngine.ts) — manter sincronizado com esses limites para que
-// uma violação do próprio prompt não passe sem flag (ver título "Venda já ou
-// cresça sem parar", 6 palavras, que escapou da regeneração por esse motivo).
+// uma violação do próprio prompt não passe sem flag. Subido de 5→6 em
+// 2026-06-21: o teto de 5 palavras + 3 sílabas forçava a IA a espremer a
+// ideia até quebrar a gramática (ex.: "Rotina de ajustes prévios conta").
 export const TITULO_MIN_WORDS = 4;
-export const TITULO_MAX_WORDS = 5;
+export const TITULO_MAX_WORDS = 6;
 
 // ANCORAGEM CONCRETA — ANTI-SÍMBOLO (organizaMethodEngine.ts,
 // generate-pu-copy.ts): "[abstrato] faz/traz/gera/vira/se torna/transforma
