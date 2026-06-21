@@ -337,8 +337,8 @@ export default function UsoReferenciasDia(props: Props) {
           {formato === "carrossel" && policy.produtos > 0 && (
             <p style={{ margin: "0 0 8px", fontSize: 11, opacity: 0.85 }}>
               {segmento === "VAREJO"
-                ? "As fotos marcadas são distribuídas pelos cards automaticamente: a 1ª e a última aparecem inteiras, as do meio em detalhe. Se marcar menos fotos que cards, elas se repetem."
-                : "As fotos marcadas são distribuídas 1 por card, na ordem marcada. Se marcar menos fotos que cards, elas se repetem."}
+                ? "Até 5 fotos: cada card recebe uma foto inteira, pela numeração. Com menos de 5, a 1ª e a última ficam inteiras nas pontas; as do meio aparecem em detalhe, repetindo se faltar foto."
+                : "1 foto por card, na ordem marcada — repete se faltar foto."}
             </p>
           )}
 
