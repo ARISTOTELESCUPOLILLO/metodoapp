@@ -16,8 +16,6 @@ interface Plan {
   id: string;
   codigo: string;
   nome: string;
-  valor_plano: number;
-  custo_total_usd: number;
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
@@ -88,7 +86,7 @@ export function CustosTab() {
       supabase
         .from("plans")
         .select(
-          "id,codigo,nome,valor_plano,custo_total_usd,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl,ativo",
+          "id,codigo,nome,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl,ativo",
         ),
       supabase
         .from("profiles")

@@ -7,8 +7,6 @@ interface Plan {
   codigo: string;
   nome: string;
   tipo: string;
-  valor_plano: number;
-  custo_total_usd: number;
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
@@ -33,8 +31,6 @@ const empty: Omit<Plan, "id"> = {
   codigo: "",
   nome: "",
   tipo: "mensal",
-  valor_plano: 0,
-  custo_total_usd: 0,
   limite_imagens: 0,
   limite_renders: 0,
   limite_geracoes: 0,
@@ -103,8 +99,6 @@ export function PlansTab() {
       codigo: editing.codigo,
       nome: editing.nome,
       tipo: editing.tipo,
-      valor_plano: Number(editing.valor_plano),
-      custo_total_usd: Number(editing.custo_total_usd || 0),
       limite_imagens: Number(editing.limite_imagens),
       limite_renders: Number(editing.limite_renders),
       limite_geracoes: Number(editing.limite_geracoes),
@@ -200,7 +194,6 @@ export function PlansTab() {
                 </span>
               </div>
               <Row k="Tipo" v={p.tipo} />
-              <Row k="Valor" v={`R$ ${Number(p.valor_plano).toFixed(2)}`} />
               <Row k="Imagens" v={String(p.limite_imagens)} />
               <Row k="Renders" v={String(p.limite_renders)} />
               <Row k="Gerações" v={String(p.limite_geracoes)} />
@@ -304,12 +297,6 @@ export function PlansTab() {
                   <option value="vitalicio">vitalicio</option>
                 </select>
               </label>
-              <Inp
-                label="Valor R$"
-                type="number"
-                value={String(editing.valor_plano)}
-                onChange={(v) => setEditing({ ...editing, valor_plano: Number(v) })}
-              />
               <Inp
                 label="Limite imagens (real / estendido)"
                 type="number"
