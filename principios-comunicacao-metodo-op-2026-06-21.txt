@@ -249,11 +249,17 @@ decisão visual deve respeitar, nesta ordem: primeiro a identidade da marca, dep
 objetivo da peça, depois a etapa da progressão psicológica de MARCA (RECONHECIMENTO ->
 IDENTIFICAÇÃO -> SENTIR -> CONFIANÇA INICIAL -> ABERTURA PARA AGIR).
 
-Status de implementação: esta decisão AINDA NÃO ESTÁ no código. Hoje
-(buildProductHierarchyBlock, em visualDirection.ts) MARCA continua agrupada com VAREJO
-na regra "produto é sempre o herói" — o que contradiz esta decisão sempre que uma peça
-de MARCA tiver produto E personagem ao mesmo tempo. É um ajuste de código pendente,
-não apenas de documento.
+REGRA COMPOSITIVA CONCRETA (decidida em 21/06/2026, complementando o parágrafo
+acima): quando produto E personagem aparecem juntos numa peça de MARCA, eles dividem
+o protagonismo MEIO A MEIO — peso visual equivalente, nenhum dos dois dominando o
+quadro nem virando coadjuvante do outro. Não é "produto sempre herói" (VAREJO) nem
+"produto sempre apoio" (SERVIÇOS): é equilíbrio entre os dois, porque ambos
+representam a identidade da marca.
+
+Status de implementação: IMPLEMENTADO em 21/06/2026 (buildProductHierarchyBlock, em
+visualDirection.ts) — MARCA agora tem ramo próprio, com peso 50/50 entre produto e
+personagem, separado de VAREJO (produto sempre herói) e de SERVIÇOS (produto sempre
+apoio). Falta apenas validar com geração real.
 
 2.3 Abrangência da mudança de personagem-padrão (princípio 1.1): só carrossel, ou toda
 a sequência MOP e a PU também?

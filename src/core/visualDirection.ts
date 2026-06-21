@@ -591,6 +591,32 @@ const PERSONAGEM_VS_PRODUTO_SERVICOS_PLURAL =
   "A postura, a expressão e a ação do personagem são o centro visual da imagem. Os produtos aparecem de forma natural e secundária (sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-los. " +
   "Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE a pessoa.";
 
+// MARCA: nem o produto domina (VAREJO) nem o personagem domina (SERVIÇOS) — os
+// dois representam a identidade da marca em peso visual equivalente. Decisão
+// de Aristóteles em 21/06/2026 (documento de princípios, Parte 2.2): o
+// protagonista de MARCA é a identidade da marca, não um elemento fixo —
+// quando produto e personagem aparecem juntos, dividem o protagonismo "meio a
+// meio" em vez de um virar coadjuvante do outro.
+const PRODUTO_EQUILIBRIO_MARCA_SINGULAR =
+  "PAPEL DO PRODUTO NESTA CENA (MARCA) — EQUILÍBRIO, NÃO HIERARQUIA: o PRODUTO referenciado representa a identidade/solução da marca com o MESMO peso visual do personagem — nem o produto domina a cena (como em VAREJO) nem fica reduzido a apoio de fundo (como em SERVIÇOS). " +
+  "Mantenha fidelidade ao produto real (mesma cor, forma, rótulo, acabamento) e dê a ele destaque claro e nítido — comparável ao destaque do personagem, nunca menor. " +
+  "PROIBIDO o produto ficar pequeno, cortado, ao fundo ou encoberto pelo personagem; PROIBIDO também o produto ocupar a cena de forma que o personagem vire mero coadjuvante.";
+
+const PRODUTO_EQUILIBRIO_MARCA_PLURAL =
+  "PAPEL DOS PRODUTOS NESTA CENA (MARCA) — EQUILÍBRIO, NÃO HIERARQUIA: os PRODUTOS referenciados representam a identidade/solução da marca com o MESMO peso visual do personagem — nem os produtos dominam a cena (como em VAREJO) nem ficam reduzidos a apoio de fundo (como em SERVIÇOS). " +
+  "Mantenha fidelidade a cada produto real (mesma cor, forma, rótulo, acabamento) e dê a eles destaque claro e nítido — comparável ao destaque do personagem, nunca menor. " +
+  "PROIBIDO os produtos ficarem pequenos, cortados, ao fundo ou encobertos pelo personagem; PROIBIDO também os produtos ocuparem a cena de forma que o personagem vire mero coadjuvante.";
+
+const PERSONAGEM_VS_PRODUTO_EQUILIBRIO_MARCA_SINGULAR =
+  "PERSONAGEM vs PRODUTO (MARCA) — PESO VISUAL IGUAL, MEIO A MEIO: personagem e produto compartilham o protagonismo desta cena. " +
+  "Componha de forma que os dois sejam percebidos ao mesmo tempo e com destaque equivalente — ex.: produto nas mãos ou bem próximo ao personagem, ambos em foco nítido, nenhum dos dois cortado ou em segundo plano. " +
+  "PROIBIDO o personagem dominar o quadro reduzindo o produto a detalhe secundário; PROIBIDO o produto dominar o quadro reduzindo o personagem a figurante. Na dúvida, mantenha os dois em igual destaque — não escolha um lado.";
+
+const PERSONAGEM_VS_PRODUTO_EQUILIBRIO_MARCA_PLURAL =
+  "PERSONAGEM vs PRODUTOS (MARCA) — PESO VISUAL IGUAL, MEIO A MEIO: personagem e produtos compartilham o protagonismo desta cena. " +
+  "Componha de forma que todos sejam percebidos ao mesmo tempo e com destaque equivalente — ex.: produtos nas mãos ou bem próximos ao personagem, todos em foco nítido, nenhum cortado ou em segundo plano. " +
+  "PROIBIDO o personagem dominar o quadro reduzindo os produtos a detalhe secundário; PROIBIDO os produtos dominarem o quadro reduzindo o personagem a figurante. Na dúvida, mantenha todos em igual destaque — não escolha um lado.";
+
 export function buildProductHierarchyBlock(opts: {
   produtosCount: number;
   hasCenario: boolean;
@@ -615,7 +641,23 @@ export function buildProductHierarchyBlock(opts: {
     return lines.join("\n");
   }
 
-  // VAREJO/MARCA: produto é o herói da composição (regra original).
+  // MARCA: nem produto nem personagem dominam — peso visual equivalente entre
+  // os dois, o protagonista é a identidade da marca, representada por ambos.
+  if (segment === "MARCA") {
+    const lines: string[] = [
+      multi ? PRODUTO_EQUILIBRIO_MARCA_PLURAL : PRODUTO_EQUILIBRIO_MARCA_SINGULAR,
+    ];
+    if (hasAvatar) {
+      lines.push(
+        multi
+          ? PERSONAGEM_VS_PRODUTO_EQUILIBRIO_MARCA_PLURAL
+          : PERSONAGEM_VS_PRODUTO_EQUILIBRIO_MARCA_SINGULAR,
+      );
+    }
+    return lines.join("\n");
+  }
+
+  // VAREJO: produto é o herói da composição (regra original).
   const lines: string[] = [multi ? PRODUTO_PROTAGONISMO_PLURAL : PRODUTO_PROTAGONISMO_SINGULAR];
   if (hasCenario) lines.push(multi ? CENARIO_VS_PRODUTO_PLURAL : CENARIO_VS_PRODUTO_SINGULAR);
   if (hasAvatar) lines.push(multi ? AVATAR_VS_PRODUTO_PLURAL : AVATAR_VS_PRODUTO_SINGULAR);
