@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
-
-interface PlanCost {
-  codigo: string;
-  nome: string;
-  limite_imagens: number;
-  limite_renders: number;
-  limite_geracoes: number;
-}
 
 export function SettingsTab() {
   const [loading, setLoading] = useState(true);
@@ -21,29 +12,25 @@ export function SettingsTab() {
   const [usdRate, setUsdRate] = useState("");
   const [falaiBalance, setFalaiBalance] = useState("");
   const [openaiBalance, setOpenaiBalance] = useState("");
-  const [plans, setPlans] = useState<PlanCost[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      supabase.from("app_settings").select("*").eq("id", true).maybeSingle(),
-      supabase
-        .from("plans")
-        .select("codigo,nome,limite_imagens,limite_renders,limite_geracoes")
-        .eq("ativo", true)
-        .order("codigo"),
-    ]).then(([{ data: s }, { data: p }]) => {
-      if (s) {
-        setImageBasePrice(String(s.image_base_price_usd ?? 0.046));
-        setImageRefPrice(String(s.image_price_usd ?? 0.058));
-        setRenderPrice(String(s.render_price_usd ?? 1.6));
-        setGeracaoPrice(String(s.geracao_price_usd ?? 0.013));
-        setUsdRate(String(s.usd_brl_rate ?? 5.8));
-        setFalaiBalance(String(s.falai_balance_usd ?? 0));
-        setOpenaiBalance(String(s.openai_balance_usd ?? 0));
-      }
-      setPlans((p as PlanCost[]) || []);
-      setLoading(false);
-    });
+    supabase
+      .from("app_settings")
+      .select("*")
+      .eq("id", true)
+      .maybeSingle()
+      .then(({ data: s }) => {
+        if (s) {
+          setImageBasePrice(String(s.image_base_price_usd ?? 0.046));
+          setImageRefPrice(String(s.image_price_usd ?? 0.058));
+          setRenderPrice(String(s.render_price_usd ?? 1.6));
+          setGeracaoPrice(String(s.geracao_price_usd ?? 0.013));
+          setUsdRate(String(s.usd_brl_rate ?? 5.8));
+          setFalaiBalance(String(s.falai_balance_usd ?? 0));
+          setOpenaiBalance(String(s.openai_balance_usd ?? 0));
+        }
+        setLoading(false);
+      });
   }, []);
 
   async function save(e: React.FormEvent) {
@@ -203,83 +190,6 @@ export function SettingsTab() {
           {saving ? "Salvando…" : "Salvar ajustes"}
         </button>
       </form>
-
-      {plans.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
-            Tabela de custos por plano
-          </h3>
-          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
-            Custo calculado em tempo real com base nos valores acima. Usa o custo de{" "}
-            <strong>imagem com referência</strong> para todas as imagens (custo maior).
-          </p>
-          <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead style={{ background: "#f8fafc" }}>
-                <tr>
-                  {[
-                    "Código",
-                    "Nome",
-                    "Imgs",
-                    "Renders",
-                    "Conteúdos",
-                    "Custo USD",
-                    "Custo R$",
-                    "Preço mín. R$ (×3)",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: "8px 10px",
-                        textAlign: "left",
-                        fontSize: 12,
-                        color: "#475569",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map((p) => {
-                  const seqSize = mopSequenceSize(p.codigo);
-                  const custoOpenai = seqSize
-                    ? mopMonthlyCost(seqSize)
-                    : p.limite_geracoes * geracao;
-                  const custoUsd =
-                    p.limite_imagens * imgRef + p.limite_renders * render + custoOpenai;
-                  const custoBrl = custoUsd * rate;
-                  const precoMin = custoBrl * 3;
-                  return (
-                    <tr key={p.codigo} style={{ borderTop: "1px solid #e2e8f0" }}>
-                      <td style={{ padding: "8px 10px", fontWeight: 700 }}>{p.codigo}</td>
-                      <td style={{ padding: "8px 10px" }}>{p.nome}</td>
-                      <td style={{ padding: "8px 10px" }}>{p.limite_imagens}</td>
-                      <td style={{ padding: "8px 10px" }}>{p.limite_renders}</td>
-                      <td style={{ padding: "8px 10px" }}>{p.limite_geracoes}</td>
-                      <td style={{ padding: "8px 10px", color: "#b45309", fontWeight: 600 }}>
-                        US$ {custoUsd.toFixed(3)}
-                      </td>
-                      <td style={{ padding: "8px 10px", color: "#0369a1", fontWeight: 600 }}>
-                        R$ {custoBrl.toFixed(2)}
-                      </td>
-                      <td style={{ padding: "8px 10px", color: "#15803d", fontWeight: 600 }}>
-                        R$ {precoMin.toFixed(2)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>
-            Fórmula: imgs × custo_ref + renders × custo_render + conteúdos × custo_texto. Preço mín.
-            = custo R$ × 3.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

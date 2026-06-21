@@ -4,7 +4,7 @@ import { AuthGate } from "@/components/app/AuthGate";
 import { TopBar } from "@/components/app/TopBar";
 import { ClientesTab } from "@/components/admin/ClientesTab";
 import { InvitesTab } from "@/components/admin/InvitesTab";
-import { PlanosCompletoTab } from "@/components/admin/PlanosCompletoTab";
+import { PlansTab } from "@/components/admin/PlansTab";
 import { UsageTab } from "@/components/admin/UsageTab";
 import { FinanceiroTab } from "@/components/admin/FinanceiroTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
@@ -95,7 +95,7 @@ function AdminPage() {
 
       {tab === "clientes" && <ClientesTab />}
       {tab === "convites" && <InvitesTab />}
-      {tab === "planos" && <PlanosCompletoTab />}
+      {tab === "planos" && <PlansTab />}
       {tab === "consumo" && <UsageTab />}
       {tab === "financeiro" && <FinanceiroTab />}
       {tab === "configuracoes" && <SettingsTab />}

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
+import { planMonthlyCost } from "@/lib/costs";
 
 interface Plan {
   id: string;
@@ -160,10 +160,11 @@ export function ClientesFinanceiroTab() {
             : endDate && endDate < now
               ? "concluido"
               : "ativo";
-        const seqSize = mopSequenceSize(plan.codigo);
-        const openaiCost = seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * geracaoPrice;
-        const costUsd =
-          plan.limite_imagens * imgRef + plan.limite_renders * renderPrice + openaiCost;
+        const costUsd = planMonthlyCost(plan, {
+          image_price_usd: imgRef,
+          render_price_usd: renderPrice,
+          geracao_price_usd: geracaoPrice,
+        });
         const costBrl = costUsd * usdRate;
         const soldBrl = s.preco || 0;
         return {
@@ -197,34 +198,14 @@ export function ClientesFinanceiroTab() {
       (a.nome || a.email).localeCompare(b.nome || b.email, "pt-BR", { sensitivity: "base" }),
     );
 
-  const grandSold = clients.reduce((s, c) => s + c.totalSold, 0);
-  const grandCost = clients.reduce((s, c) => s + c.totalCost, 0);
-  const grandProfit = grandSold - grandCost;
-  const grandMargin = grandSold > 0 ? ((grandProfit / grandSold) * 100).toFixed(0) + "%" : "—";
-
   if (loading) return <p style={{ color: "#64748b" }}>Carregando clientes…</p>;
 
   return (
     <div>
-      {/* Totais gerais */}
+      {/* Totais gerais (Total vendido/Custo/Lucro/Margem) já estão no Painel —
+          aqui só a contagem, que serve de cabeçalho da lista filtrável abaixo. */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <MiniCard label="Clientes" value={String(clients.length)} />
-        <MiniCard label="Total vendido" value={`R$ ${grandSold.toFixed(2)}`} color="#15803d" />
-        <MiniCard
-          label="Custo total (proj.)"
-          value={`R$ ${grandCost.toFixed(2)}`}
-          color="#b45309"
-        />
-        <MiniCard
-          label="Lucro estimado"
-          value={`R$ ${grandProfit.toFixed(2)}`}
-          color={grandProfit >= 0 ? "#15803d" : "#dc2626"}
-        />
-        <MiniCard
-          label="Margem"
-          value={grandMargin}
-          color={grandProfit >= 0 ? "#15803d" : "#dc2626"}
-        />
       </div>
 
       {/* Busca */}

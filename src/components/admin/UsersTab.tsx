@@ -8,7 +8,7 @@ import { assignPlanSlot, removePlanSlot } from "@/lib/planHistory.functions";
 import { deleteUser } from "@/lib/users.functions";
 
 import { computeCycle, cycleLabel, cycleColor } from "@/lib/cycle";
-import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
+import { planMonthlyCost } from "@/lib/costs";
 
 interface Row {
   id: string;
@@ -1448,10 +1448,11 @@ function PlanPriceField({
   }, [value]);
   const plan = plans.find((p) => p.id === planId);
   if (!plan) return null;
-  const seqSize = mopSequenceSize(plan.codigo);
-  const custoOpenai = seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * costs.content;
-  const costUsd =
-    plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + custoOpenai;
+  const costUsd = planMonthlyCost(plan, {
+    image_price_usd: costs.imageRef,
+    render_price_usd: costs.video,
+    geracao_price_usd: costs.content,
+  });
   // Arredonda pra cima — o mínimo exibido nunca pode ficar abaixo do piso
   // real de custo (senão um preço que bate com o número mostrado ainda
   // aparece como "abaixo do mínimo").
@@ -1531,10 +1532,11 @@ function FaturamentoCell({
     if (!s.planId) continue;
     const plan = plans.find((p) => p.id === s.planId);
     if (!plan) continue;
-    const seqSize = mopSequenceSize(plan.codigo);
-    const custoOpenai = seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * costs.content;
-    const cost =
-      plan.limite_imagens * costs.imageRef + plan.limite_renders * costs.video + custoOpenai;
+    const cost = planMonthlyCost(plan, {
+      image_price_usd: costs.imageRef,
+      render_price_usd: costs.video,
+      geracao_price_usd: costs.content,
+    });
     const min = Math.ceil(cost * usdRate * 3);
     const preco = s.preco || 0;
     totalMensal += preco;

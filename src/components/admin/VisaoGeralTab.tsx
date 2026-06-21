@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
+import { planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
 
 interface Profile {
   id: string;
@@ -105,9 +105,11 @@ export function VisaoGeralTab() {
   const activeClients = clients.filter((p) => p.status === "ativo").length;
 
   const planMap = new Map((plans || []).map((p) => [p.id, p]));
-  const imgP = settings?.image_price_usd ?? 0.058;
-  const renP = settings?.render_price_usd ?? 1.6;
-  const gerP = settings?.geracao_price_usd ?? 0.013;
+  const prices = {
+    image_price_usd: settings?.image_price_usd ?? 0.058,
+    render_price_usd: settings?.render_price_usd ?? 1.6,
+    geracao_price_usd: settings?.geracao_price_usd ?? 0.013,
+  };
   const rate = settings?.usd_brl_rate ?? 5.8;
   const falB = settings?.falai_balance_usd ?? 0;
   const oaiB = settings?.openai_balance_usd ?? 0;
@@ -127,9 +129,8 @@ export function VisaoGeralTab() {
       const plan = planMap.get(s.planId);
       if (!plan) continue;
       totalSold += s.preco ?? 0;
-      falaiCost += plan.limite_imagens * imgP + plan.limite_renders * renP;
-      const seqSize = mopSequenceSize(plan.codigo);
-      openaiCost += seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * gerP;
+      falaiCost += planMonthlyFalaiCost(plan, prices);
+      openaiCost += planMonthlyOpenaiCost(plan, prices);
     }
   }
 

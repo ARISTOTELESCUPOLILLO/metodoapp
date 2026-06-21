@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
+import { planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
 
 interface Log {
   user_id: string | null;
@@ -48,18 +48,6 @@ interface AppSettings {
   geracao_price_usd: number;
 }
 
-// Custo OpenAI mensal projetado de um plano: geração avulsa (Post Único,
-// limite_geracoes × preço) + ciclos MOP (planos de Sequência).
-function planMonthlyOpenaiCost(p: Plan, settings: AppSettings): number {
-  const seqSize = mopSequenceSize(p.codigo);
-  const custoMop = seqSize ? mopMonthlyCost(seqSize) : 0;
-  return p.limite_geracoes * settings.geracao_price_usd + custoMop;
-}
-
-function planMonthlyFalaiCost(p: Plan, settings: AppSettings): number {
-  return p.limite_imagens * settings.image_price_usd + p.limite_renders * settings.render_price_usd;
-}
-
 export function CustosTab() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [allTimeLogs, setAllTimeLogs] = useState<
@@ -79,7 +67,8 @@ export function CustosTab() {
   });
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
-  // precoMax vem da tabela de preços (PlansTab) — leitura apenas
+  const [editMax, setEditMax] = useState<Record<string, string>>({});
+  const [savingMax, setSavingMax] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -196,128 +185,27 @@ export function CustosTab() {
     emailMap[p.id] = p.email;
   });
 
-  const planMap: Record<string, Plan> = {};
-  plans.forEach((p) => {
-    planMap[p.id] = p;
-  });
-
   const activePlans = plans.filter((p) => p.ativo);
 
   const realProfiles = profiles.filter((p) => !p.is_test && !adminIds.has(p.id));
 
-  // ── Consumo por cliente ──
-  const clientMap: Record<
-    string,
-    { email: string; imgs: number; renders: number; geracoes: number; custoUsd: number }
-  > = {};
-  logs.forEach((l) => {
-    if (!l.user_id || adminIds.has(l.user_id)) return;
-    const prof = profiles.find((p) => p.id === l.user_id);
-    if (prof?.is_test) return;
-    if (!clientMap[l.user_id])
-      clientMap[l.user_id] = {
-        email: emailMap[l.user_id] || l.user_id.slice(0, 8),
-        imgs: 0,
-        renders: 0,
-        geracoes: 0,
-        custoUsd: 0,
-      };
-    clientMap[l.user_id].imgs += l.qtd_imagens || 0;
-    clientMap[l.user_id].renders += l.qtd_renders || 0;
-    clientMap[l.user_id].geracoes += l.qtd_geracoes || 0;
-    clientMap[l.user_id].custoUsd += Number(l.custo_usd || 0);
-  });
-
-  // ── Financeiro por cliente (valor vendido real por cliente) ──
-  const clienteFinanceiro = realProfiles
-    .map((p) => {
-      const p1 = p.plano1_id ? planMap[p.plano1_id] : null;
-      const p2 = p.plano2_id ? planMap[p.plano2_id] : null;
-      const p3 = p.bonus_id ? planMap[p.bonus_id] : null;
-      const custoProj1 = p1
-        ? planMonthlyFalaiCost(p1, settings) + planMonthlyOpenaiCost(p1, settings)
-        : 0;
-      const custoProj2 = p2
-        ? planMonthlyFalaiCost(p2, settings) + planMonthlyOpenaiCost(p2, settings)
-        : 0;
-      const custoProj3 = p3
-        ? planMonthlyFalaiCost(p3, settings) + planMonthlyOpenaiCost(p3, settings)
-        : 0;
-      const custoProjTotal = (custoProj1 + custoProj2 + custoProj3) * rate;
-      const precoVenda1 = Number(p.plano1_preco_brl || 0);
-      const precoVenda2 = Number(p.plano2_preco_brl || 0);
-      const precoVenda3 = Number(p.bonus_preco_brl || 0);
-      const totalVenda = precoVenda1 + precoVenda2 + precoVenda3;
-      const margem = totalVenda > 0 ? ((totalVenda - custoProjTotal) / totalVenda) * 100 : null;
-      return {
-        id: p.id,
-        email: p.email,
-        nome: p.nome,
-        p1,
-        p2,
-        p3,
-        precoVenda1,
-        precoVenda2,
-        precoVenda3,
-        totalVenda,
-        custoProjTotal,
-        margem,
-      };
-    })
-    .filter((r) => r.p1 || r.p2 || r.p3);
-
-  const totalVendaGeral = clienteFinanceiro.reduce((s, r) => s + r.totalVenda, 0);
-  const totalCustoProjGeral = clienteFinanceiro.reduce((s, r) => s + r.custoProjTotal, 0);
-  const margemGeral =
-    totalVendaGeral > 0 ? ((totalVendaGeral - totalCustoProjGeral) / totalVendaGeral) * 100 : null;
-
-  // ── Previsão de consumo por plano ativo ──
-  const previsao = activePlans
-    .map((p) => {
-      const users1 = realProfiles.filter((u) => u.plano1_id === p.id);
-      const users2 = realProfiles.filter((u) => u.plano2_id === p.id);
-      const users3 = realProfiles.filter((u) => u.bonus_id === p.id);
-      const totalClientes = new Set([
-        ...users1.map((u) => u.id),
-        ...users2.map((u) => u.id),
-        ...users3.map((u) => u.id),
-      ]).size;
-      const imgs = totalClientes * p.limite_imagens;
-      const renders = totalClientes * p.limite_renders;
-      const geracoes = totalClientes * p.limite_geracoes;
-      const custoFalaiPrev = imgs * settings.image_price_usd + renders * settings.render_price_usd;
-      const custoOpenaiPrev = totalClientes * planMonthlyOpenaiCost(p, settings);
-      const totalUsdPrev = custoFalaiPrev + custoOpenaiPrev;
-      return {
-        planId: p.id,
-        codigo: p.codigo,
-        nome: p.nome,
-        totalClientes,
-        imgs,
-        renders,
-        geracoes,
-        custoFalaiPrev,
-        custoOpenaiPrev,
-        totalUsdPrev,
-      };
-    })
-    .filter((r) => r.totalClientes > 0);
-
-  const prevTotalFalai = previsao.reduce((s, r) => s + r.custoFalaiPrev, 0);
-  const prevTotalOpenai = previsao.reduce((s, r) => s + r.custoOpenaiPrev, 0);
-  const prevTotal = prevTotalFalai + prevTotalOpenai;
-  const mesesFalai =
-    prevTotalFalai > 0 ? (settings.falai_balance_usd / prevTotalFalai).toFixed(1) : "∞";
-  const mesesOpenai =
-    prevTotalOpenai > 0 ? (settings.openai_balance_usd / prevTotalOpenai).toFixed(1) : "∞";
-
-  // ── Por plano (custo real + projeção + preços) ──
+  // ── Por plano: clientes, consumo projetado, custo real do período e preços ──
+  // (fusão de "Previsão de consumo" + "Planos ativos" — eram duas tabelas
+  // quase idênticas, uma com volume/custo projetado, outra com custo real e
+  // preços; juntas evitam mostrar a mesma contagem de clientes duas vezes.)
   const planRows = activePlans
     .map((p) => {
       const users = realProfiles.filter(
         (u) => u.plano1_id === p.id || u.plano2_id === p.id || u.bonus_id === p.id,
       );
       const userIds = new Set(users.map((u) => u.id));
+      const totalClientes = users.length;
+      const imgs = totalClientes * p.limite_imagens;
+      const renders = totalClientes * p.limite_renders;
+      const geracoes = totalClientes * p.limite_geracoes;
+      const custoFalaiPrev = imgs * settings.image_price_usd + renders * settings.render_price_usd;
+      const custoOpenaiPrev = totalClientes * planMonthlyOpenaiCost(p, settings);
+
       const planLogs = logs.filter((l) => l.user_id && userIds.has(l.user_id));
       const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
       const projecao = planMonthlyFalaiCost(p, settings) + planMonthlyOpenaiCost(p, settings);
@@ -340,7 +228,12 @@ export function CustosTab() {
         planId: p.id,
         codigo: p.codigo,
         nome: p.nome,
-        usuarios: users.length,
+        totalClientes,
+        imgs,
+        renders,
+        geracoes,
+        custoFalaiPrev,
+        custoOpenaiPrev,
         custoRealUsd: custoReal,
         projecaoUsd: projecao,
         precoMin,
@@ -350,7 +243,14 @@ export function CustosTab() {
         margemMax,
       };
     })
-    .filter((r) => r.usuarios > 0 || r.custoRealUsd > 0);
+    .filter((r) => r.totalClientes > 0 || r.custoRealUsd > 0);
+
+  const prevTotalFalai = planRows.reduce((s, r) => s + r.custoFalaiPrev, 0);
+  const prevTotalOpenai = planRows.reduce((s, r) => s + r.custoOpenaiPrev, 0);
+  const mesesFalai =
+    prevTotalFalai > 0 ? (settings.falai_balance_usd / prevTotalFalai).toFixed(1) : "∞";
+  const mesesOpenai =
+    prevTotalOpenai > 0 ? (settings.openai_balance_usd / prevTotalOpenai).toFixed(1) : "∞";
 
   // ── Consumo de testes ──
   const testProfiles = profiles.filter((p) => p.is_test);
@@ -400,6 +300,20 @@ export function CustosTab() {
       return;
     await supabase.rpc("reset_all_usage");
     load();
+  }
+
+  async function saveMax(planId: string) {
+    const val = parseFloat(editMax[planId] ?? "");
+    if (isNaN(val)) return;
+    setSavingMax(planId);
+    await supabase.from("plans").update({ preco_maximo_brl: val }).eq("id", planId);
+    setSavingMax(null);
+    setEditMax((m) => {
+      const n = { ...m };
+      delete n[planId];
+      return n;
+    });
+    await load();
   }
 
   const margemColor = (m: number | null) =>
@@ -559,62 +473,6 @@ export function CustosTab() {
           </Section>
 
           {/* ── Previsão de consumo por plano ativo ── */}
-          <Section title="Previsão de consumo — planos ativos (1 ciclo)">
-            <div style={tblWrap}>
-              <table style={tbl}>
-                <thead style={{ background: "#f8fafc" }}>
-                  <tr>
-                    <Th>Plano</Th>
-                    <Th>Clientes</Th>
-                    <Th>Imgs</Th>
-                    <Th>Vídeos</Th>
-                    <Th>Conteúdos</Th>
-                    <Th>fal.ai USD</Th>
-                    <Th>fal.ai R$</Th>
-                    <Th>OpenAI USD</Th>
-                    <Th>OpenAI R$</Th>
-                    <Th>Total R$</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {previsao.map((r) => (
-                    <tr key={r.planId} style={tRow}>
-                      <Td>
-                        <b>{r.codigo}</b>{" "}
-                        <span style={{ color: "#94a3b8", fontSize: 11 }}>{r.nome}</span>
-                      </Td>
-                      <Td>{r.totalClientes}</Td>
-                      <Td>{r.imgs}</Td>
-                      <Td>{r.renders}</Td>
-                      <Td>{r.geracoes}</Td>
-                      <Td>{usdFmt(r.custoFalaiPrev)}</Td>
-                      <Td>{brl(r.custoFalaiPrev)}</Td>
-                      <Td>{usdFmt(r.custoOpenaiPrev)}</Td>
-                      <Td>{brl(r.custoOpenaiPrev)}</Td>
-                      <Td style={{ fontWeight: 700 }}>{brl(r.totalUsdPrev)}</Td>
-                    </tr>
-                  ))}
-                  <tr style={{ background: "#f1f5f9", fontWeight: 700 }}>
-                    <Td>TOTAL</Td>
-                    <Td>—</Td>
-                    <Td>—</Td>
-                    <Td>—</Td>
-                    <Td>—</Td>
-                    <Td>{usdFmt(prevTotalFalai)}</Td>
-                    <Td>{brl(prevTotalFalai)}</Td>
-                    <Td>{usdFmt(prevTotalOpenai)}</Td>
-                    <Td>{brl(prevTotalOpenai)}</Td>
-                    <Td>{brl(prevTotal)}</Td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p style={{ fontSize: 11, color: "#64748b", marginTop: 6 }}>
-              Saldo cobre aprox. <b>{mesesFalai} ciclos</b> fal.ai · <b>{mesesOpenai} ciclos</b>{" "}
-              OpenAI (assumindo 100% de uso por ciclo).
-            </p>
-          </Section>
-
           {/* ── Breakdown por tipo ── */}
           <Section title="Breakdown por tipo de operação">
             <div style={tblWrap}>
@@ -682,13 +540,18 @@ export function CustosTab() {
           </Section>
 
           {/* ── Por plano (preço mínimo/máximo) ── */}
-          <Section title="Planos ativos — custo e preços">
+          <Section title="Planos ativos — consumo, custo e preços">
             <div style={tblWrap}>
               <table style={tbl}>
                 <thead style={{ background: "#f8fafc" }}>
                   <tr>
                     <Th>Plano</Th>
                     <Th>Clientes</Th>
+                    <Th>Imgs</Th>
+                    <Th>Vídeos</Th>
+                    <Th>Conteúdos</Th>
+                    <Th>fal.ai R$</Th>
+                    <Th>OpenAI R$</Th>
                     <Th>Custo real R$</Th>
                     <Th>Custo proj. R$</Th>
                     <Th>
@@ -698,10 +561,7 @@ export function CustosTab() {
                       Preço méd. real{" "}
                       <span style={{ fontWeight: 400, fontSize: 10 }}>(média cobrada)</span>
                     </Th>
-                    <Th>
-                      Preço máx. R${" "}
-                      <span style={{ fontWeight: 400, fontSize: 10 }}>(tabela de preços)</span>
-                    </Th>
+                    <Th>Preço máx. R$</Th>
                     <Th>Marg. mín.</Th>
                     <Th>Marg. máx.</Th>
                   </tr>
@@ -713,7 +573,12 @@ export function CustosTab() {
                         <b>{r.codigo}</b>{" "}
                         <span style={{ color: "#94a3b8", fontSize: 11 }}>{r.nome}</span>
                       </Td>
-                      <Td>{r.usuarios}</Td>
+                      <Td>{r.totalClientes}</Td>
+                      <Td>{r.imgs}</Td>
+                      <Td>{r.renders}</Td>
+                      <Td>{r.geracoes}</Td>
+                      <Td>{brl(r.custoFalaiPrev)}</Td>
+                      <Td>{brl(r.custoOpenaiPrev)}</Td>
                       <Td>{brl(r.custoRealUsd)}</Td>
                       <Td style={{ color: "#64748b" }}>{brl(r.projecaoUsd)}</Td>
                       <Td style={{ color: "#15803d", fontWeight: 600 }}>
@@ -726,13 +591,29 @@ export function CustosTab() {
                           <span style={{ color: "#94a3b8" }}>—</span>
                         )}
                       </Td>
-                      <Td
-                        style={{
-                          color: r.precoMax ? "#0f172a" : "#94a3b8",
-                          fontWeight: r.precoMax ? 600 : 400,
-                        }}
-                      >
-                        {r.precoMax ? `R$ ${r.precoMax.toFixed(2)}` : "—"}
+                      <Td>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={editMax[r.planId] ?? (r.precoMax ? String(r.precoMax) : "")}
+                          onChange={(e) =>
+                            setEditMax((m) => ({ ...m, [r.planId]: e.target.value }))
+                          }
+                          onBlur={() => editMax[r.planId] !== undefined && saveMax(r.planId)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveMax(r.planId);
+                          }}
+                          disabled={savingMax === r.planId}
+                          style={{
+                            width: 70,
+                            padding: "2px 4px",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            border: "1px solid #cbd5e1",
+                            borderRadius: 4,
+                          }}
+                        />
                       </Td>
                       <Td>
                         <span style={{ color: margemColor(r.margemMin), fontWeight: 700 }}>
@@ -746,121 +627,31 @@ export function CustosTab() {
                       </Td>
                     </tr>
                   ))}
+                  <tr style={{ background: "#f1f5f9", fontWeight: 700 }}>
+                    <Td>TOTAL</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>{brl(prevTotalFalai)}</Td>
+                    <Td>{brl(prevTotalOpenai)}</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                    <Td>—</Td>
+                  </tr>
                 </tbody>
               </table>
             </div>
             <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>
               Preço mín. = custo projetado R$ × 3 (automático). Preço méd. = média dos preços
-              cobrados nos perfis dos clientes (automático). Preço máx. = definido na aba Planos
-              (tabela de preços). Margem calculada sobre projeção de 100% de uso.
+              cobrados nos perfis dos clientes (automático). Preço máx. é editável aqui — clique e
+              digite. Margem calculada sobre projeção de 100% de uso. Saldo cobre aprox.{" "}
+              <b>{mesesFalai} ciclos</b> fal.ai · <b>{mesesOpenai} ciclos</b> OpenAI.
             </p>
-          </Section>
-
-          {/* ── Financeiro por cliente ── */}
-          <Section title="Financeiro por cliente">
-            {clienteFinanceiro.length === 0 ? (
-              <p style={{ color: "#94a3b8", fontSize: 13 }}>Sem clientes ativos.</p>
-            ) : (
-              <div style={tblWrap}>
-                <table style={tbl}>
-                  <thead style={{ background: "#f8fafc" }}>
-                    <tr>
-                      <Th>Cliente</Th>
-                      <Th>Plano 1</Th>
-                      <Th>Vendido P1</Th>
-                      <Th>Plano 2</Th>
-                      <Th>Vendido P2</Th>
-                      <Th>Bônus</Th>
-                      <Th>Vendido Bônus</Th>
-                      <Th>Total vendido</Th>
-                      <Th>Custo proj. R$</Th>
-                      <Th>Margem</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clienteFinanceiro.map((r) => (
-                      <tr key={r.id} style={tRow}>
-                        <Td>
-                          <div style={{ fontWeight: 600, fontSize: 12 }}>{r.nome || r.email}</div>
-                          <div style={{ color: "#94a3b8", fontSize: 10 }}>{r.email}</div>
-                        </Td>
-                        <Td>
-                          {r.p1 ? (
-                            <b>{r.p1.codigo}</b>
-                          ) : (
-                            <span style={{ color: "#94a3b8" }}>—</span>
-                          )}
-                        </Td>
-                        <Td>
-                          {r.precoVenda1 ? (
-                            `R$ ${r.precoVenda1.toFixed(2)}`
-                          ) : (
-                            <span style={{ color: "#94a3b8" }}>—</span>
-                          )}
-                        </Td>
-                        <Td>
-                          {r.p2 ? (
-                            <b>{r.p2.codigo}</b>
-                          ) : (
-                            <span style={{ color: "#94a3b8" }}>—</span>
-                          )}
-                        </Td>
-                        <Td>
-                          {r.precoVenda2 ? (
-                            `R$ ${r.precoVenda2.toFixed(2)}`
-                          ) : (
-                            <span style={{ color: "#94a3b8" }}>—</span>
-                          )}
-                        </Td>
-                        <Td>
-                          {r.p3 ? (
-                            <b>{r.p3.codigo}</b>
-                          ) : (
-                            <span style={{ color: "#94a3b8" }}>—</span>
-                          )}
-                        </Td>
-                        <Td>
-                          {r.precoVenda3 ? (
-                            `R$ ${r.precoVenda3.toFixed(2)}`
-                          ) : (
-                            <span style={{ color: "#94a3b8" }}>—</span>
-                          )}
-                        </Td>
-                        <Td style={{ fontWeight: 700 }}>
-                          {r.totalVenda ? (
-                            `R$ ${r.totalVenda.toFixed(2)}`
-                          ) : (
-                            <span style={{ color: "#94a3b8" }}>—</span>
-                          )}
-                        </Td>
-                        <Td style={{ color: "#64748b" }}>R$ {r.custoProjTotal.toFixed(2)}</Td>
-                        <Td>
-                          <span style={{ fontWeight: 700, color: margemColor(r.margem) }}>
-                            {r.margem !== null ? `${r.margem.toFixed(0)}%` : "—"}
-                          </span>
-                        </Td>
-                      </tr>
-                    ))}
-                    <tr style={{ background: "#f1f5f9", fontWeight: 700 }}>
-                      <Td>TOTAL GERAL</Td>
-                      <Td>—</Td>
-                      <Td>—</Td>
-                      <Td>—</Td>
-                      <Td>—</Td>
-                      <Td>—</Td>
-                      <Td>—</Td>
-                      <Td>R$ {totalVendaGeral.toFixed(2)}</Td>
-                      <Td>R$ {totalCustoProjGeral.toFixed(2)}</Td>
-                      <Td>
-                        <span style={{ color: margemColor(margemGeral) }}>
-                          {margemGeral !== null ? `${margemGeral.toFixed(0)}%` : "—"}
-                        </span>
-                      </Td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
           </Section>
 
           {/* ── Consumo de testes ── */}
@@ -926,35 +717,6 @@ export function CustosTab() {
               </div>
             </Section>
           )}
-
-          {/* ── Preços unitários ── */}
-          <Section title="Preços unitários configurados">
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {[
-                { label: "Imagem base", value: settings.image_base_price_usd },
-                { label: "Imagem c/ refs", value: settings.image_price_usd },
-                { label: "Vídeo + render", value: settings.render_price_usd },
-                { label: "Conteúdo texto", value: settings.geracao_price_usd },
-              ].map(({ label, value }) => (
-                <div
-                  key={label}
-                  style={{
-                    background: "#f1f5f9",
-                    borderRadius: 8,
-                    padding: "8px 14px",
-                    fontSize: 12,
-                  }}
-                >
-                  <div style={{ color: "#64748b", marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontWeight: 700, color: "#0f172a" }}>${value.toFixed(4)} / un</div>
-                  <div style={{ color: "#94a3b8" }}>{brl(value)} / un</div>
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
-              Altere em <strong>Ajustes de custo</strong> — os valores refletem aqui em tempo real.
-            </p>
-          </Section>
         </>
       )}
     </div>

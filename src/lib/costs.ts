@@ -47,3 +47,39 @@ export const MOP_CICLOS_POR_MES: Record<number, number> = { 3: 4, 6: 4, 9: 2 };
 export function mopMonthlyCost(sequenceSize: number): number {
   return mopContentCost(sequenceSize) * (MOP_CICLOS_POR_MES[sequenceSize] ?? 4);
 }
+
+export interface PlanForCost {
+  codigo: string;
+  limite_imagens: number;
+  limite_renders: number;
+  limite_geracoes: number;
+}
+
+export interface UnitPrices {
+  image_price_usd: number;
+  render_price_usd: number;
+  geracao_price_usd: number;
+}
+
+// Custo mensal projetado de um plano com fal.ai (imagens + renders) — usa
+// 100% dos limites contratados.
+export function planMonthlyFalaiCost(plan: PlanForCost, prices: UnitPrices): number {
+  return (
+    plan.limite_imagens * prices.image_price_usd + plan.limite_renders * prices.render_price_usd
+  );
+}
+
+// Custo mensal projetado de um plano com OpenAI — geração avulsa (Post
+// Único, limite_geracoes × preço) ou ciclos MOP (planos de Sequência,
+// que guardam limite_geracoes=0 por convenção de "ilimitado por ciclo").
+export function planMonthlyOpenaiCost(plan: PlanForCost, prices: UnitPrices): number {
+  const seqSize = mopSequenceSize(plan.codigo);
+  return seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * prices.geracao_price_usd;
+}
+
+// Custo mensal total projetado de um plano (fal.ai + OpenAI). Fonte única —
+// usada por todas as telas admin que mostram custo/preço mínimo por plano,
+// pra evitar reimplementações divergentes da mesma fórmula.
+export function planMonthlyCost(plan: PlanForCost, prices: UnitPrices): number {
+  return planMonthlyFalaiCost(plan, prices) + planMonthlyOpenaiCost(plan, prices);
+}
