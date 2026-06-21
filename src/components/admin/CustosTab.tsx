@@ -32,6 +32,7 @@ interface Profile {
   is_test: boolean;
   plano1_id: string | null;
   plano2_id: string | null;
+  bonus_id: string | null;
   plano1_preco_brl: number | null;
   plano2_preco_brl: number | null;
   bonus_preco_brl: number | null;
@@ -111,7 +112,7 @@ export function CustosTab() {
       supabase
         .from("profiles")
         .select(
-          "id,email,nome,is_test,plano1_id,plano2_id,plano1_preco_brl,plano2_preco_brl,bonus_preco_brl",
+          "id,email,nome,is_test,plano1_id,plano2_id,bonus_id,plano1_preco_brl,plano2_preco_brl,bonus_preco_brl",
         ),
       supabase
         .from("app_settings")
@@ -240,16 +241,21 @@ export function CustosTab() {
     .map((p) => {
       const p1 = p.plano1_id ? planMap[p.plano1_id] : null;
       const p2 = p.plano2_id ? planMap[p.plano2_id] : null;
+      const p3 = p.bonus_id ? planMap[p.bonus_id] : null;
       const custoProj1 = p1
         ? planMonthlyFalaiCost(p1, settings) + planMonthlyOpenaiCost(p1, settings)
         : 0;
       const custoProj2 = p2
         ? planMonthlyFalaiCost(p2, settings) + planMonthlyOpenaiCost(p2, settings)
         : 0;
-      const custoProjTotal = (custoProj1 + custoProj2) * rate;
+      const custoProj3 = p3
+        ? planMonthlyFalaiCost(p3, settings) + planMonthlyOpenaiCost(p3, settings)
+        : 0;
+      const custoProjTotal = (custoProj1 + custoProj2 + custoProj3) * rate;
       const precoVenda1 = Number(p.plano1_preco_brl || 0);
       const precoVenda2 = Number(p.plano2_preco_brl || 0);
-      const totalVenda = precoVenda1 + precoVenda2;
+      const precoVenda3 = Number(p.bonus_preco_brl || 0);
+      const totalVenda = precoVenda1 + precoVenda2 + precoVenda3;
       const margem = totalVenda > 0 ? ((totalVenda - custoProjTotal) / totalVenda) * 100 : null;
       return {
         id: p.id,
@@ -257,14 +263,16 @@ export function CustosTab() {
         nome: p.nome,
         p1,
         p2,
+        p3,
         precoVenda1,
         precoVenda2,
+        precoVenda3,
         totalVenda,
         custoProjTotal,
         margem,
       };
     })
-    .filter((r) => r.p1 || r.p2);
+    .filter((r) => r.p1 || r.p2 || r.p3);
 
   const totalVendaGeral = clienteFinanceiro.reduce((s, r) => s + r.totalVenda, 0);
   const totalCustoProjGeral = clienteFinanceiro.reduce((s, r) => s + r.custoProjTotal, 0);
@@ -762,6 +770,8 @@ export function CustosTab() {
                       <Th>Vendido P1</Th>
                       <Th>Plano 2</Th>
                       <Th>Vendido P2</Th>
+                      <Th>Bônus</Th>
+                      <Th>Vendido Bônus</Th>
                       <Th>Total vendido</Th>
                       <Th>Custo proj. R$</Th>
                       <Th>Margem</Th>
@@ -802,6 +812,20 @@ export function CustosTab() {
                             <span style={{ color: "#94a3b8" }}>—</span>
                           )}
                         </Td>
+                        <Td>
+                          {r.p3 ? (
+                            <b>{r.p3.codigo}</b>
+                          ) : (
+                            <span style={{ color: "#94a3b8" }}>—</span>
+                          )}
+                        </Td>
+                        <Td>
+                          {r.precoVenda3 ? (
+                            `R$ ${r.precoVenda3.toFixed(2)}`
+                          ) : (
+                            <span style={{ color: "#94a3b8" }}>—</span>
+                          )}
+                        </Td>
                         <Td style={{ fontWeight: 700 }}>
                           {r.totalVenda ? (
                             `R$ ${r.totalVenda.toFixed(2)}`
@@ -819,6 +843,8 @@ export function CustosTab() {
                     ))}
                     <tr style={{ background: "#f1f5f9", fontWeight: 700 }}>
                       <Td>TOTAL GERAL</Td>
+                      <Td>—</Td>
+                      <Td>—</Td>
                       <Td>—</Td>
                       <Td>—</Td>
                       <Td>—</Td>
