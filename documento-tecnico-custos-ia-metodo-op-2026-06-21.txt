@@ -1,0 +1,57 @@
+MÉTODO OP — DOCUMENTO TÉCNICO: CUSTOS DE IA
+Criado em 21/06/2026. Separado do documento de princípios de comunicação por decisão
+de Aristóteles (este é técnico/financeiro, não de comunicação).
+
+============================================================
+CUSTO REAL DE IA POR GERAÇÃO: HOJE É ESTIMADO, NÃO MEDIDO
+============================================================
+
+Cada peça gerada gasta dinheiro em duas frentes externas: o texto (modelos da OpenAI,
+hoje a família gpt-4.1 e gpt-4.1-mini) e a imagem (gpt-image). O app já tem uma tela de
+custos (CustosTab) e uma tabela de preços por plano (costs.ts), mas esses valores são
+ESTIMATIVAS calculadas a partir de quantas chamadas "deveriam" acontecer por formato —
+não o custo REAL que a OpenAI cobrou por aquela geração específica.
+
+Isso funciona bem para projeção de plano, mas tem dois pontos cegos:
+
+1. Quando uma peça precisa de várias regenerações (um título reprovado pelo validador,
+   uma imagem que o juiz rejeitou e refez), o custo real daquela peça sobe e a
+   estimativa não enxerga. Uma peça "difícil" pode custar 2-3x a média sem aparecer em
+   lugar nenhum.
+2. Não existe um teto de gasto por usuário/dia que dispare alerta. Hoje a defesa é a
+   cota de gerações por plano; mas cota conta PEÇAS, não DINHEIRO — e peça cara e peça
+   barata contam igual.
+
+Recomendação prática (não urgente): registrar, junto de cada geração já salva, o
+número real de chamadas de texto e de imagem que ela consumiu (incluindo as
+regenerações). Não precisa de ferramenta nova — é um campo a mais no registro que já
+existe. Com isso a tela de custos passa de "projeção" para "realidade", e fica
+possível ver qual segmento/formato é o mais caro de fato.
+
+============================================================
+ORÇAMENTO DE RETRIES (NÃO-DETERMINISMO TEM CUSTO)
+============================================================
+
+O motor já tem camadas que reprovam e refazem (o validador de texto, o juiz semântico
+D2, a regeneração de bloco). Cada retry é mais uma chamada paga e mais alguns segundos
+de espera para o usuário. Vale tornar explícito (e registrado, quando decidido) o
+limite: "uma peça pode ser refeita no máximo N vezes; passou disso, entrega a melhor
+tentativa com um aviso, em vez de ficar tentando indefinidamente". Isso protege ao
+mesmo tempo o custo, o tempo de resposta e a experiência. Hoje esses limites existem
+espalhados no código, mas não são uma decisão consciente registrada em um lugar único.
+
+============================================================
+VERSÃO DO MODELO DE IMAGEM COMO "CONTRATO VISUAL"
+============================================================
+
+A "voz visual" do app — o jeito como pessoas, cenários e produtos saem — depende
+diretamente de qual versão do modelo de imagem está em uso (hoje gpt-image). Quando o
+fornecedor lança uma versão nova, ela pode interpretar as MESMAS instruções de forma
+diferente (outro enquadramento, outro tom de pele padrão, outro nível de obediência à
+regra de "produto é herói"). Trocar a versão do modelo não é uma atualização neutra de
+bastidor: é capaz de mudar a cara das peças sem que uma linha dos princípios de
+comunicação tenha mudado.
+
+Recomendação: quando a versão do modelo de imagem mudar, isso deve ser anotado com
+data (aqui ou no documento de princípios), e uma geração de cada segmento deve ser
+revista para confirmar que os princípios continuam valendo na prática.

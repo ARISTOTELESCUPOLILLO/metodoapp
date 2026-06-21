@@ -1,0 +1,27 @@
+MÉTODO OP — DOCUMENTO DE SEGURANÇA
+Criado em 21/06/2026. Separado do documento de princípios de comunicação por decisão
+de Aristóteles (este é sobre permissões/acesso, não de comunicação).
+
+============================================================
+VALIDAR NO SERVIDOR, NUNCA NA TELA
+============================================================
+
+Princípios de comunicação decidem O QUE é gerado; mas QUEM pode gerar, QUANTO pode
+gerar e por QUAL plano é uma fronteira de segurança separada — e foi exatamente aí que
+já apareceram bugs reais no histórico do projeto (cota de regeneração furada,
+verificação de identidade frágil, débito de uso ambíguo).
+
+Princípio a fixar: toda regra de limite/cobrança tem que ser conferida no SERVIDOR, na
+hora de gerar, e nunca confiar no que a tela diz. A tela é conveniência para o
+usuário; a verdade do que ele pode fazer mora no servidor. Misturar essas duas coisas
+(deixar a tela "decidir" se pode gerar) é a origem clássica desse tipo de furo.
+
+Itens a revisar periodicamente sob esta lente:
+- Cota de gerações por plano (estática, carrossel, reels, regeneração).
+- Bypass de admin (hoje existe, intencional, para limites de regeneração de
+  sugestão/copy — mas precisa ficar claro em cada lugar que é bypass deliberado, não
+  esquecimento).
+- Verificação de identidade/sessão antes de qualquer ação que debite uso ou acesse
+  dados de outro usuário.
+- Exclusão de usuário (ver também documento-governanca-dados — cruza com retenção de
+  arquivos).

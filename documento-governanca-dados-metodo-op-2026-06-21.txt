@@ -1,0 +1,28 @@
+MÉTODO OP — DOCUMENTO DE GOVERNANÇA DE DADOS
+Criado em 21/06/2026. Separado do documento de princípios de comunicação por decisão
+de Aristóteles (este é sobre dados/privacidade, não de comunicação).
+
+============================================================
+IMAGENS GERADAS E DADOS DO CLIENTE: VALIDADE E PRIVACIDADE
+============================================================
+
+As imagens de referência (avatar, uniforme, fotos de produto) que o usuário sobe e as
+peças geradas ficam guardadas no armazenamento (Supabase Storage) e são entregues por
+links temporários que expiram (hoje na casa de 1 hora).
+
+VALIDADE DO LINK
+------------------------------------------------------------
+Se uma tela mostrar uma imagem usando um link já vencido, ela aparece quebrada. Já
+houve correção nessa linha; o princípio a manter é "todo lugar que mostra uma imagem
+salva deve assumir que o link pode ter expirado e saber renovar", não confiar que o
+link dura para sempre.
+
+PRIVACIDADE
+------------------------------------------------------------
+Avatar e uniforme são, na prática, a imagem de pessoas reais (o cliente ou a equipe
+dele). Vale ter claro — e, se um dia houver termos de uso, escrito — por quanto tempo
+esses arquivos ficam guardados e o que acontece com eles quando uma conta é excluída.
+
+Ponto aberto: hoje existe a função de excluir usuário (admin, UsersTab); falta
+confirmar se ela também apaga as imagens daquele usuário no armazenamento, ou se elas
+ficam órfãs lá (arquivo guardado sem nenhum usuário associado).

@@ -1,0 +1,342 @@
+MÉTODO OP — DOCUMENTO MESTRE DE PRINCÍPIOS DE COMUNICAÇÃO
+Criado em 21/06/2026. Revisado por Aristóteles em 21/06/2026 (revisão estratégica
+completa — princípios fundamentais, segmentos e hierarquia de MARCA). Mantido por
+Aristóteles (decisões) + Claude Code (consulta e atualização).
+
+============================================================
+COMO USAR ESTE DOCUMENTO
+============================================================
+
+Este documento existe porque descobrimos, na prática, que o mesmo princípio de
+comunicação ("o personagem padrão das imagens é o público-alvo, não a empresa") tinha
+sido decidido de forma independente em pelo menos 3 lugares diferentes do código —
+cada um com sua própria redação, sem nenhuma fonte única. Isso é o padrão de erro que
+você notou: não é falta de capacidade técnica, é falta de um lugar onde as decisões de
+comunicação ficam registradas ANTES de entrarem no código.
+
+A regra de trabalho é:
+
+1. Toda vez que você decidir um princípio de comunicação (mesmo que pareça pequeno),
+   ele entra PRIMEIRO neste documento, com data e contexto.
+2. Antes de tocar nos arquivos centrais do motor (organizaMethodEngine.ts,
+   visualDirection.ts, postUnico.ts), o Claude Code consulta este documento.
+3. Quando dois princípios parecem conflitar, ou quando uma situação nova não está
+   coberta por nenhum princípio existente, isso vai para a PARTE 2 (pontos de conflito
+   abertos) — e eu te pergunto antes de inventar uma resposta.
+4. Este arquivo é seu. Pode editar, riscar, reescrever, em português normal — não
+   precisa de sintaxe especial. Eu releio o arquivo inteiro quando você pedir.
+5. Itens técnicos puros (custo de IA, privacidade/retenção de dados, segurança de
+   permissões) vivem em documentos separados — ver "DOCUMENTOS RELACIONADOS" no final.
+   Este arquivo é só sobre COMUNICAÇÃO: o que o Método OP gera e por quê.
+
+============================================================
+PRINCÍPIOS FUNDAMENTAIS DO MÉTODO OP
+============================================================
+
+Estes 5 princípios vêm antes de qualquer regra de segmento ou de formato — toda
+decisão futura de texto, imagem, experiência e automação deve respeitar todos eles.
+Quando um princípio operacional (Parte 1) parecer entrar em conflito com um destes,
+estes têm prioridade.
+
+PRINCÍPIO DA SIMPLICIDADE
+------------------------------------------------------------
+O empresário comum deve entender o conteúdo sem esforço. Se precisar explicar a
+frase, ela está errada. O Método OP existe para simplificar o marketing, não para
+torná-lo mais complexo.
+
+PRINCÍPIO DA CONVERSA REAL
+------------------------------------------------------------
+O conteúdo deve parecer uma conversa do dia a dia. Não escrever como professor. Não
+escrever como publicitário. Não escrever como poeta. Escrever como gente.
+
+PRINCÍPIO DA REALIDADE
+------------------------------------------------------------
+O conteúdo nasce da realidade do negócio. Não nasce de frases prontas. Não nasce de
+criatividade aleatória. Não nasce de metáforas difíceis.
+
+PRINCÍPIO DA CRIATIVIDADE ÚTIL
+------------------------------------------------------------
+Criatividade não é complicação. Criatividade é mostrar algo conhecido de forma
+interessante.
+
+PRINCÍPIO DA IA
+------------------------------------------------------------
+A IA ajuda a criar. A IA não substitui o conhecimento do empresário. Ela organiza,
+sugere e acelera.
+
+============================================================
+PARTE 1 — PRINCÍPIOS DE COMUNICAÇÃO DECIDIDOS
+============================================================
+
+1.1 PERSONAGEM PADRÃO: O RECEPTOR, NÃO O EMISSOR
+------------------------------------------------------------
+[Confirmado por Aristóteles em 21/06/2026 — concordância integral.]
+
+Personagem padrão = público-alvo. Em toda peça gerada SEM referência real de
+avatar/uniforme, o personagem que aparece na imagem é o PÚBLICO-ALVO (o receptor da
+comunicação) — nunca a empresa, o dono ou o profissional (o emissor).
+
+Por quê: é um princípio de comunicação publicitária — o anúncio mostra quem vai
+receber a mensagem se identificando com ela, não a empresa falando de si mesma.
+
+A exceção: o emissor só aparece quando existe decisão deliberada do usuário através
+de avatar, uniforme ou referência equivalente. É uma escolha consciente dele, não algo
+que o motor deve inventar como padrão.
+
+Onde isso está implementado no código: a âncora narrativa do MOP
+(organizaMethodEngine.ts) e a função compartilhada de papel de cena
+(visualDirection.ts, buildSceneRoleRule) — usada tanto pelo MOP quanto pela PU.
+
+1.2 O QUE CADA SEGMENTO SIGNIFICA (SERVIÇOS / VAREJO / MARCA)
+------------------------------------------------------------
+[Reescrito por Aristóteles em 21/06/2026.]
+
+SERVIÇOS
+O personagem é o público-alvo vivendo uma situação, necessidade, problema, desejo ou
+benefício relacionado ao serviço. O serviço existe para ajudar essa pessoa. O foco
+principal é a transformação percebida pelo público. A comunicação deve mostrar
+situações reais e reconhecíveis do dia a dia.
+
+VAREJO
+O produto é o protagonista visual. A pessoa aparece para contextualizar uso,
+benefício, necessidade ou situação de compra. O cenário existe para apoiar a
+compreensão do produto. O foco principal é o produto e sua utilidade prática.
+
+MARCA
+A marca é uma identidade construída por elementos concretos e abstratos.
+
+Elementos concretos: logomarca, cores, fachada, uniforme, ambiente, produtos, símbolos
+visuais.
+
+Elementos abstratos: cultura, posicionamento, valores, personalidade, tom de voz,
+reputação, propósito.
+
+A marca não existe apenas para se apresentar. Ela existe para criar conexão com
+pessoas. Por isso, mesmo em conteúdos de MARCA, o público-alvo continua sendo parte
+central da comunicação.
+
+O Método OP considera que a marca funciona como um reflexo. As pessoas devem
+conseguir: reconhecer, identificar-se, sentir, desenvolver confiança inicial, criar
+abertura para agir.
+
+A comunicação de marca não deve falar apenas da empresa. Ela deve permitir que o
+público se enxergue na proposta, nos valores, na cultura, na identidade ou na solução
+representada pela marca.
+
+Quando houver personagens em peças de MARCA, eles representam preferencialmente o
+público-alvo se conectando com a identidade da marca, salvo quando existir uso
+deliberado de avatar, uniforme ou outra referência que represente o emissor.
+
+SEQUÊNCIA PSICOLÓGICA DE MARCA:
+RECONHECIMENTO -> IDENTIFICAÇÃO -> SENTIR -> CONFIANÇA INICIAL -> ABERTURA PARA AGIR
+
+Ponto de atenção ainda existente: esse princípio (a definição de cada segmento) está
+escrito por extenso em mais de um lugar do código (organizaMethodEngine.ts,
+postUnico.ts, suggest-keyinfo.ts). Ainda não existe um módulo único de onde todos
+esses lugares leem a mesma definição — ver Parte 3.1.
+
+1.3 HIERARQUIA PRODUTO x CENÁRIO x AVATAR
+------------------------------------------------------------
+[Reescrito por Aristóteles em 21/06/2026 — princípio conceitual, não regra de
+enquadramento rígida.]
+
+PRINCÍPIO DO PROTAGONISTA
+
+Em VAREJO: produto é protagonista; pessoas explicam o uso; cenário dá contexto; nada
+compete com o produto. O produto deve ser o primeiro elemento percebido pelo usuário.
+Evitar transformar esta decisão em regras rígidas de enquadramento — a decisão é
+conceitual (o "quê" e o "porquê"), não uma medida fixa de composição.
+
+Em SERVIÇOS: quando há produto de referência, ele é elemento de apoio, integrado ao
+cenário e adaptado ao ambiente — nunca o protagonista visual. O personagem
+(público-alvo) é quem ocupa esse papel.
+
+Em MARCA: ver Parte 2.2 — MARCA tem lógica própria, decidida em 21/06/2026, e NÃO
+segue nem o modelo de VAREJO (produto sempre herói) nem o modelo de SERVIÇOS (produto
+sempre apoio).
+
+1.4 [movido para REGRAS DE PRODUÇÃO, ver abaixo]
+------------------------------------------------------------
+
+1.5 OUTRAS REGRAS OPERACIONAIS DECIDIDAS
+------------------------------------------------------------
+[Confirmado por Aristóteles em 21/06/2026 — concordância integral.]
+
+- Equilíbrio de gênero: o personagem não deve repetir sempre o mesmo gênero entre as
+  peças de uma sequência do MOP, salvo quando o título/texto cita explicitamente
+  "mulher(es)" ou quando há avatar de referência (que define o gênero pela própria
+  foto).
+- Dispositivos digitais (notebook, celular etc.) na cena: nunca ocupam o papel de
+  protagonista visual — são elemento de apoio. Diversificar o tipo de dispositivo
+  entre peças da mesma sequência. Câmera nunca posicionada atrás do dispositivo
+  (esconderia o rosto do personagem).
+- Ausência de marcas em dispositivos: carcaça/tampa sempre lisa, sem marca/logo real.
+- Legenda unificada em MOP e PU (ver número atual em REGRAS DE PRODUÇÃO).
+- Referências visuais (avatar/cenário/produto) enviadas pelo usuário têm prioridade
+  máxima sobre qualquer elemento, ambiente, figurino ou personagem descrito no resto
+  do prompt, em caso de conflito.
+- Título da PU em modo promoção/oportunidade: sem palavras de urgência ("hoje",
+  "agora", "já", "última chance").
+- Todo texto gerado segue normas do português brasileiro por padrão (concordância,
+  ortografia, acentuação) — sem precisar pedir.
+
+============================================================
+REGRAS DE PRODUÇÃO (operacionais, não são princípios de comunicação)
+============================================================
+[Reclassificado por Aristóteles em 21/06/2026 — eram tratadas como "princípio", mas
+são parâmetro técnico de formato, não decisão de comunicação. Os números podem mudar
+sem que isso seja uma mudança de princípio.]
+
+- Título: no máximo 6 palavras (MOP e PU). Cada palavra com no máximo 3 sílabas, com
+  uma exceção: o substantivo concreto central da informação-chave (produto, peça,
+  serviço, objeto ou procedimento) pode chegar a 4 sílabas quando for essencial para a
+  clareza (ex.: "equipamento", "manutenção", "orçamento"); termos de 5+ sílabas
+  ("lubrificante") devem ser trocados por sinônimo mais curto ("óleo").
+- Texto de apoio do estático: até 15 palavras. Cards do carrossel: até 12 palavras.
+- Legenda: corpo até 30 palavras (LEGENDA_CORPO_MAX_WORDS), CTA até 5 palavras
+  (LEGENDA_CTA_MAX_WORDS), 3 hashtags em minúsculo (LEGENDA_HASHTAGS). (Nota: sessões
+  anteriores anotaram "35 palavras" de corpo; o número real em produção, confirmado no
+  código em 21/06/2026, é 30.)
+
+Ponto de atenção técnico (não é decisão de comunicação, é risco de manutenção): o
+número do título precisa estar sincronizado em dois lugares do código — o texto do
+prompt que pede para a IA escrever (organizaMethodEngine.ts) e o validador que
+reprova o que vier fora do limite (textValidation.ts, TITULO_MAX_WORDS). Esse número
+já "andou" entre 5 e 6 mais de uma vez no histórico do projeto porque os dois lugares
+nem sempre foram editados juntos. Estado confirmado em 21/06/2026: os dois dizem 6 —
+sincronizados por ora.
+
+============================================================
+PARTE 2 — PONTOS DE CONFLITO (decisões de Aristóteles)
+============================================================
+
+2.1 MARCA PESSOAL (o dono É a marca) vs. MARCA institucional
+------------------------------------------------------------
+[Decisão pendente, com tendência declarada por Aristóteles em 21/06/2026.]
+
+Existem casos de "marca pessoal" — um artista, terapeuta, coach, influenciador — onde
+a pessoa física É o produto/a marca. Tendência atual de Aristóteles: marca pessoal
+utiliza avatar. Não criar uma lógica paralela no motor neste momento — objetivo é
+manter simplicidade operacional. Ou seja: por ora, o caso de marca pessoal se resolve
+com o usuário marcando o próprio avatar como referência (a exceção deliberada do
+princípio 1.1), e não com um sinalizador novo de "isto é marca pessoal" no Kit de
+Marca. Sem mudança de código necessária para este ponto.
+
+2.2 MARCA COM PRODUTO — hierarquia de protagonismo
+------------------------------------------------------------
+[DECISÃO TOMADA por Aristóteles em 21/06/2026.]
+
+MARCA não é uma extensão de SERVIÇOS e não é uma extensão de VAREJO. MARCA tem lógica
+própria (ver definição completa em 1.2).
+
+Quando existir produto em uma peça de MARCA, ele deve ser tratado como um dos
+possíveis elementos de representação da identidade da marca — não automaticamente
+como "o herói" (lógica de VAREJO) nem automaticamente como "apoio de cena" (lógica de
+SERVIÇOS).
+
+A presença de um produto não transforma automaticamente a comunicação em VAREJO. Da
+mesma forma, a presença de pessoas não transforma automaticamente a comunicação em
+SERVIÇOS. O sistema não deve assumir previamente que o protagonista de uma peça de
+MARCA é o produto ou a pessoa — o protagonista é a IDENTIDADE DA MARCA.
+
+Dependendo do contexto, essa identidade pode ser representada por: um produto, uma
+pessoa, uma fachada, um uniforme, um ambiente, uma situação, um ritual, ou uma
+combinação desses elementos.
+
+Quando houver dúvida entre aplicar uma lógica de SERVIÇOS ou uma lógica de VAREJO em
+conteúdos de MARCA, a prioridade é preservar a lógica própria do segmento MARCA. A
+decisão visual deve respeitar, nesta ordem: primeiro a identidade da marca, depois o
+objetivo da peça, depois a etapa da progressão psicológica de MARCA (RECONHECIMENTO ->
+IDENTIFICAÇÃO -> SENTIR -> CONFIANÇA INICIAL -> ABERTURA PARA AGIR).
+
+Status de implementação: esta decisão AINDA NÃO ESTÁ no código. Hoje
+(buildProductHierarchyBlock, em visualDirection.ts) MARCA continua agrupada com VAREJO
+na regra "produto é sempre o herói" — o que contradiz esta decisão sempre que uma peça
+de MARCA tiver produto E personagem ao mesmo tempo. É um ajuste de código pendente,
+não apenas de documento.
+
+2.3 Abrangência da mudança de personagem-padrão (princípio 1.1): só carrossel, ou toda
+a sequência MOP e a PU também?
+------------------------------------------------------------
+[Decisão já tomada e implementada — pendente apenas de validação prática.]
+
+Confirmado que vale para o MOP como um todo (estático, carrossel, reels, estático
+final) e também para a PU. Já implementado no código. Falta apenas confirmar com uma
+geração real de cada formato que o personagem realmente sai como público-alvo em
+todos.
+
+============================================================
+PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO
+============================================================
+[Itens 3.1 a 3.5 confirmados por Aristóteles em 21/06/2026 — concordância integral.]
+
+3.1 Fonte única no CÓDIGO, não só no documento
+------------------------------------------------------------
+Este documento resolve a fonte única de DECISÃO. Mas o código ainda vai precisar de
+um módulo técnico (ex.: um arquivo "principiosComunicacao.ts") de onde
+organizaMethodEngine.ts, visualDirection.ts e postUnico.ts importam o MESMO texto, em
+vez de cada um escrever sua própria versão em prosa. Sem isso, o documento orienta a
+decisão, mas a implementação ainda pode divergir na hora de escrever o código.
+
+3.2 Protocolo de resolução de conflito
+------------------------------------------------------------
+Quando eu encontrar uma situação não coberta pelos princípios (ou uma contradição
+entre dois princípios), ela vai para a Parte 2 deste documento ANTES de eu escrever
+qualquer código — não decido sozinho "no calor do momento".
+
+3.3 Testes de regressão do TEXTO do prompt (não da imagem gerada)
+------------------------------------------------------------
+A imagem final é não-determinística (a IA de imagem pode ignorar uma instrução). Mas
+o TEXTO do prompt que sai do código é determinístico — é possível escrever um teste
+automático que monta o prompt para um caso de exemplo e verifica que o texto contém a
+instrução certa e não contém a contraditória. Pega divergências antes de gerar uma
+imagem ruim. Não existe nada disso hoje no projeto.
+
+3.4 O juiz semântico (D2) deve validar aderência aos princípios do Método OP, não só
+qualidade textual genérica
+------------------------------------------------------------
+Hoje existe uma camada que reavalia título/texto/legenda depois de gerados (D2,
+judge-content.ts) com critérios genéricos (sem sentido, genérico demais, não combina
+com o segmento). Ela não sabe nada sobre os princípios específicos decididos aqui.
+Conforme este documento crescer, vale incluir um resumo dos princípios mais críticos
+nos critérios desse juiz — assim ele rejeita não só "texto mal escrito", mas "texto
+que contradiz uma decisão já registrada".
+
+3.5 Tamanho do ResultsView.tsx (3.777 linhas)
+------------------------------------------------------------
+Foi este arquivo que tornou fácil esquecer 1 dos ~20 pontos que precisavam receber a
+correção de gênero em 21/06/2026. Não é urgente, mas é uma dívida técnica real.
+Próximo passo realista: extrair os 4 blocos de geração de imagem (estático / estático
+final / carrossel / reels) para um único ponto de decisão de gênero/personagem, em vez
+de 4 cópias manuais.
+
+============================================================
+DOCUMENTOS RELACIONADOS (itens técnicos movidos para fora deste arquivo)
+============================================================
+[Reorganizado por Aristóteles em 21/06/2026 — este documento trata só de comunicação;
+os itens abaixo são técnicos/operacionais e vivem em arquivos próprios, na mesma
+pasta.]
+
+- documento-tecnico-custos-ia-metodo-op-2026-06-21.txt — custo real de IA, medição
+  financeira por geração, consumo de tokens.
+- documento-governanca-dados-metodo-op-2026-06-21.txt — privacidade, retenção de
+  arquivos, exclusão de dados.
+- documento-seguranca-metodo-op-2026-06-21.txt — permissões, limites de acesso,
+  validações de servidor.
+
+============================================================
+COMO MANTER ESTE DOCUMENTO VIVO
+============================================================
+
+- Quando você decidir um princípio novo durante uma conversa comigo, eu pergunto se
+  quer que eu registre aqui antes de implementar.
+- Quando eu encontrar uma contradição entre o código e este documento, aviso antes de
+  corrigir.
+- Você pode pedir "me mostra os princípios sobre X" a qualquer momento, e eu releio
+  este arquivo para responder.
+- Revisão sugerida: sempre que uma sessão de ajustes terminar, eu pergunto se algo do
+  que decidimos deveria entrar aqui.
+- AÇÃO PENDENTE MAIS IMPORTANTE: este arquivo (e os 3 documentos relacionados) precisam
+  ser commitados no git junto com o código — sem isso, eles só existem nesta máquina e
+  somem se ela sumir. A memória do Claude Code entre sessões NÃO viaja com o projeto;
+  só o que está versionado no repositório viaja.
