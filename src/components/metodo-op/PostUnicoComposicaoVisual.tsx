@@ -10,6 +10,7 @@ import {
   produtosDisponiveis,
   cenariosDisponiveis,
   cenarioLabel,
+  CENARIO_SLOTS,
 } from "../../utils/imageKitStorage";
 import { ordemGruposPorSegmento, PU_MAX_PRODUTOS } from "../../core/referenciasPolicy";
 
@@ -109,8 +110,12 @@ export default function PostUnicoComposicaoVisual({
         <strong> Se não marcar nenhuma, a peça é criada só a partir do texto.</strong>
       </p>
       <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
-        Você pode combinar: <b>1 avatar + fachada + 1 cenário + até {MAX_PRODUTOS_PU} produtos</b>.
-        {produtosNoLimite && <> Limite de produtos atingido — desmarque um para escolher outro.</>}
+        Você pode combinar:{" "}
+        <b>
+          1 avatar + fachada + 1 cenário (dentre até {CENARIO_SLOTS} cadastrados) + até{" "}
+          {MAX_PRODUTOS_PU} produtos
+        </b>
+        .{produtosNoLimite && <> Limite de produtos atingido — desmarque um para escolher outro.</>}
       </p>
       {(hasFato || hasVenda) && (
         <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>

@@ -590,8 +590,7 @@ export default function BrandKitForm({
           </div>
           <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>
             Liste o que {kit.segment === "MARCA" ? "a marca" : "a empresa"} vende, faz ou oferece. A
-            IA usa esses itens para sugerir assuntos de post. Ex.: "Cadeiras ergonômicas para
-            escritório", "Manutenção de ar-condicionado", "Ração para cães e gatos".
+            IA usa pra sugerir assuntos de post.
           </p>
           {products.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

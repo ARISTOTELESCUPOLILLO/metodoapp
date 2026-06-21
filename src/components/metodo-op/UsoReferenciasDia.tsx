@@ -334,6 +334,13 @@ export default function UsoReferenciasDia(props: Props) {
             Você pode escolher: <b>{descrevePolicy(policy)}</b>.
             {produtosNoLimite && " Limite de produtos atingido — desmarque um para escolher outro."}
           </p>
+          {formato === "carrossel" && policy.produtos > 0 && (
+            <p style={{ margin: "0 0 8px", fontSize: 11, opacity: 0.85 }}>
+              {segmento === "VAREJO"
+                ? "As fotos marcadas são distribuídas pelos cards automaticamente: a 1ª e a última aparecem inteiras, as do meio em detalhe. Se marcar menos fotos que cards, elas se repetem."
+                : "As fotos marcadas são distribuídas 1 por card, na ordem marcada. Se marcar menos fotos que cards, elas se repetem."}
+            </p>
+          )}
 
           <div
             style={{
@@ -483,9 +490,9 @@ export default function UsoReferenciasDia(props: Props) {
                     background: podeGerar ? "#0891b2" : "#94a3b8",
                     color: "#fff",
                     border: "none",
-                    borderRadius: 8,
-                    padding: "6px 12px",
-                    fontSize: 12,
+                    borderRadius: 12,
+                    padding: "11px 18px",
+                    fontSize: 14,
                     fontWeight: 700,
                     cursor: podeGerar ? "pointer" : "not-allowed",
                     opacity: busy ? 0.6 : 1,
