@@ -810,6 +810,9 @@ function FeedCard({
             leituraCenica={item.leituraCenica}
             storageKey={storageKey}
             userId={userId}
+            forcedGender={forcedGender}
+            anchoraPersonagem={anchoraPersonagem}
+            ancoragePapel={ancoragePapel}
             onGerou={async (url) => {
               try {
                 const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -1115,6 +1118,9 @@ function FinalCard({
             leituraCenica={item.leituraCenica}
             storageKey={storageKey}
             userId={userId}
+            forcedGender={forcedGender}
+            anchoraPersonagem={anchoraPersonagem}
+            ancoragePapel={ancoragePapel}
             onGerou={async (url) => {
               try {
                 const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
@@ -2595,6 +2601,9 @@ function ReelsCard({
             formatoOverride="reels"
             storageKey={`uso-ref:reels:${dayNumber}`}
             userId={userId}
+            forcedGender={forcedGender}
+            anchoraPersonagem={anchoraPersonagem}
+            ancoragePapel={ancoragePapel}
             onGerou={async (url) => {
               // Reels: a imagem vem limpa do motor (cenário/avatar já
               // aplicados). Aqui só sobrepõe a logo via canvas.

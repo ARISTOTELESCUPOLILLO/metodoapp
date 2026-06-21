@@ -20,6 +20,7 @@ import {
   policyPorFormato,
   type RefPolicy,
 } from "../../core/referenciasPolicy";
+import type { PersonagemGender } from "../../core/visualDirection";
 
 interface Props {
   segmento: BrandKit["segment"];
@@ -70,6 +71,13 @@ interface Props {
   // Repassado pro regenerateWithKit pra recarregar o Kit Imagem do servidor
   // antes de gerar — evita referência fantasma de foto já deletada.
   userId?: string | null;
+  // Gênero já decidido pro bloco desta peça (ver computeBlockGenders em
+  // ResultsView.tsx) — sem isso, o botão interno "Gerar com referências"
+  // deixava o motor sortear gênero do zero, podendo contradizer o
+  // personagem que o GPT já escreveu em leituraCenica.personagem.
+  forcedGender?: PersonagemGender;
+  anchoraPersonagem?: string;
+  ancoragePapel?: string;
 }
 
 export default function UsoReferenciasDia(props: Props) {
@@ -93,6 +101,9 @@ export default function UsoReferenciasDia(props: Props) {
     compact,
     footerAction,
     userId,
+    forcedGender,
+    anchoraPersonagem,
+    ancoragePapel,
   } = props;
 
   // Policy efetiva (com extras de carrossel quando se aplica)
@@ -228,6 +239,9 @@ export default function UsoReferenciasDia(props: Props) {
         texto,
         imagePrompt,
         leituraCenica,
+        forcedGender,
+        anchoraPersonagem,
+        ancoragePapel,
         formato: formatoOverride,
         selecaoDireta: {
           usarAvatar: avatarNum != null,

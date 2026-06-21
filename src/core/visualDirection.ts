@@ -793,10 +793,19 @@ export function pickImageVariationBlock(
   const genderBlock = hasAvatarRef
     ? ""
     : (() => {
-        const gender =
-          forcedGender ??
-          detectForcedGenderFromCopy(titulo, texto) ??
-          pickRandom(PERSONAGEM_GENDER_VARIATIONS);
+        const decidido = forcedGender ?? detectForcedGenderFromCopy(titulo, texto);
+        // Quando leituraCenica.composicao já existe, o personagem (gênero
+        // incluso, ex.: "Personagem: homem artista...") já foi decidido e
+        // escrito pela etapa de conteúdo. Sem forcedGender/copy explícito
+        // chegando aqui (chamador não passou o gênero já decidido), sortear
+        // aleatoriamente contradiz o que o GPT já escreveu — visto no caso
+        // real em que o personagem escrito era "homem" e o sorteio aqui caiu
+        // em "mulher", e essa instrução teria PRECEDÊNCIA sobre a cena.
+        // Sem decisão prévia, é mais seguro omitir o bloco do que arriscar
+        // contradição — só sorteia quando a peça ainda não tem composição
+        // decidida (a variação está construindo a cena do zero).
+        const gender = decidido ?? (composicao ? null : pickRandom(PERSONAGEM_GENDER_VARIATIONS));
+        if (!gender) return "";
         const oposto = gender === "mulher" ? "homem" : "mulher";
         const anchoraDesc = anchoraPersonagem ? `, ${anchoraPersonagem}` : "";
         // Instrução elevada a regra de precedência máxima — colocada em
