@@ -497,14 +497,21 @@ export function buildSceneRoleRule(opts?: { includeConcreteAction?: boolean }): 
   if (!includeConcreteAction) return metaphorGuard;
 
   return (
-    "PAPEL DA EMPRESA NESTA PEÇA — DERIVAR ANTES DE MONTAR A CENA:\n" +
-    "1. O que a empresa CONCRETAMENTE FAZ ou ENTREGA nesta mensagem " +
+    "PERSONAGEM-PADRÃO DA CENA — O PÚBLICO-ALVO, NÃO A EMPRESA: sem avatar/uniforme de " +
+    "referência real, o personagem desta cena é o PÚBLICO-ALVO (o receptor da comunicação) " +
+    "vivendo o contexto, o benefício ou o resultado da oferta — NUNCA a empresa, o dono ou " +
+    "o profissional fazendo seu ofício (o emissor). Mostrar o emissor é uma escolha " +
+    "deliberada do usuário ao marcar avatar/uniforme de referência; sem isso, não o " +
+    "invente como protagonista da cena.\n" +
+    "DERIVAR ANTES DE MONTAR A CENA:\n" +
+    "1. O que a empresa CONCRETAMENTE ENTREGA nesta mensagem " +
     "(com base na atividade real, no título, no texto e na informação-chave)?\n" +
-    "2. Qual PAPEL cumpre nesta promessa — está orientando, vendendo, resolvendo, " +
-    "atendendo, executando, diagnosticando, organizando, apoiando, facilitando ou " +
-    "entregando algo específico?\n" +
-    "3. Traduza esse papel em uma AÇÃO CONCRETA do ofício real: essa ação é o assunto " +
-    "da cena. O mood define luz, clima, paleta, composição, câmera e energia — nunca o assunto.\n" +
+    "2. O que o PÚBLICO-ALVO VIVE, RECEBE ou SENTE ao se beneficiar dessa entrega — está " +
+    "sendo orientado, comprando, tendo um problema resolvido, sendo atendido, recebendo um " +
+    "diagnóstico, organizando algo com apoio, sendo facilitado ou recebendo algo específico?\n" +
+    "3. Traduza essa experiência em uma AÇÃO CONCRETA do público-alvo: essa ação é o " +
+    "assunto da cena. O mood define luz, clima, paleta, composição, câmera e energia — " +
+    "nunca o assunto.\n" +
     metaphorGuard
   );
 }
