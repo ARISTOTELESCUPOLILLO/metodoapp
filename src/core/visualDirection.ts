@@ -797,12 +797,20 @@ export function pickImageVariationBlock(
           forcedGender ??
           detectForcedGenderFromCopy(titulo, texto) ??
           pickRandom(PERSONAGEM_GENDER_VARIATIONS);
+        const oposto = gender === "mulher" ? "homem" : "mulher";
         const anchoraDesc = anchoraPersonagem ? `, ${anchoraPersonagem}` : "";
-        return `Gênero e tipo: ${gender}${anchoraDesc} — manter consistente na sequência, sobrepõe descrição da CENA, preservando ação e contexto. `;
+        // Instrução elevada a regra de precedência máxima — colocada em
+        // primeiro lugar no bloco de variação, com proibição explícita do
+        // gênero oposto. Versão anterior ("Gênero e tipo: mulher — manter
+        // consistente...") era um aviso fraco em meio a câmera/estrutura, e o
+        // modelo de imagem tendia a ignorá-lo e gerar o gênero padrão.
+        return `PERSONAGEM — GÊNERO OBRIGATÓRIO (PRECEDÊNCIA MÁXIMA, sobrepõe qualquer outra descrição de cena, pose ou contexto): a pessoa retratada DEVE ser ${gender}${anchoraDesc}. PROIBIDO gerar ${oposto} ou personagem de gênero ambíguo/indefinido. `;
       })();
 
   // Quando leituraCenica.composicao existe, a composição já está em cenaDetalhada —
   // re-sortear aqui contradiz o que GPT-4.1 escreveu. Câmera e gênero ainda se aplicam.
   const estruturaBlock = composicao ? "" : `Estrutura: ${variation} `;
-  return `\n⚠ VARIAÇÃO: ${cameraStr}${genderBlock}${estruturaBlock}${TEMA_DERIVATION_RULE}`;
+  // Gênero vem primeiro no bloco — é a restrição mais importante e não pode
+  // ficar enterrada depois da câmera/estrutura (ver comentário acima).
+  return `\n⚠ VARIAÇÃO: ${genderBlock}${cameraStr}${estruturaBlock}${TEMA_DERIVATION_RULE}`;
 }

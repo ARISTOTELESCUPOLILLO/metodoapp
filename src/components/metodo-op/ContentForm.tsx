@@ -347,7 +347,7 @@ export default function ContentForm({
             >
               {suggesting
                 ? "Gerando…"
-                : `✨ Sugestão${suggestCount > 0 ? ` (${suggestCount}/${SUGGEST_MAX})` : ""}`}
+                : `✨ Sugestão${suggestCount > 0 ? ` (${suggestCount}/${isAdmin ? "∞" : SUGGEST_MAX})` : ""}`}
             </button>
             <button
               type="button"
@@ -596,7 +596,7 @@ export default function ContentForm({
                         opacity: hasKeyInfo ? 0.4 : 1,
                       }}
                     >
-                      Gerar outra ({suggestCount}/{SUGGEST_MAX})
+                      Gerar outra ({suggestCount}/{isAdmin ? "∞" : SUGGEST_MAX})
                     </button>
                   </div>
                 )}

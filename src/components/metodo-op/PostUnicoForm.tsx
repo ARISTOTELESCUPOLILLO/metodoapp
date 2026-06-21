@@ -525,7 +525,7 @@ export default function PostUnicoForm({
             >
               {suggesting
                 ? "Gerando…"
-                : `✨ Sugestão${suggestCount > 0 ? ` (${suggestCount}/${SUGGEST_MAX})` : ""}`}
+                : `✨ Sugestão${suggestCount > 0 ? ` (${suggestCount}/${isAdmin ? "∞" : SUGGEST_MAX})` : ""}`}
             </button>
             <button
               type="button"
@@ -774,7 +774,7 @@ export default function PostUnicoForm({
                         opacity: hasKeyInfo ? 0.4 : 1,
                       }}
                     >
-                      Gerar outra ({suggestCount}/{SUGGEST_MAX})
+                      Gerar outra ({suggestCount}/{isAdmin ? "∞" : SUGGEST_MAX})
                     </button>
                   </div>
                 )}
@@ -944,7 +944,9 @@ export default function PostUnicoForm({
                       : undefined
                   }
                 >
-                  {copyTBusy ? "…" : `✨ Gerar outro (${copyTRegenCount}/${COPY_REGEN_MAX})`}
+                  {copyTBusy
+                    ? "…"
+                    : `✨ Gerar outro (${copyTRegenCount}/${isAdmin ? "∞" : COPY_REGEN_MAX})`}
                 </button>
                 <button
                   type="button"
@@ -1116,7 +1118,9 @@ export default function PostUnicoForm({
                       : undefined
                   }
                 >
-                  {copyXBusy ? "…" : `✨ Gerar outro (${copyXRegenCount}/${COPY_REGEN_MAX})`}
+                  {copyXBusy
+                    ? "…"
+                    : `✨ Gerar outro (${copyXRegenCount}/${isAdmin ? "∞" : COPY_REGEN_MAX})`}
                 </button>
                 <button
                   type="button"
