@@ -104,8 +104,9 @@ function HistoricoPage() {
             </button>
           </div>
           <p style={{ margin: "6px 0 0", color: "#64748b", fontSize: 14 }}>
-            Limite por formato: 6 boxes por plano (estático, carrossel, estático final, reels). O
-            mais antigo é substituído automaticamente. Arquivos expiram em 30 dias.
+            Seu histórico guarda até 48 imagens e 6 vídeos (reels) no total. Passando disso, a
+            geração mais antiga é apagada automaticamente para abrir espaço. Arquivos somem depois
+            de 30 dias, mesmo sem passar do limite.
           </p>
           {impersonation && (
             <div

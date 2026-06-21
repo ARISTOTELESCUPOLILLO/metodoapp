@@ -1567,8 +1567,7 @@ function CarouselCardBlock({
   async function runGenerateAll() {
     const ok = window.confirm(
       `Gerar todos os ${cards.length} cards sem imagens de referência?\n\n` +
-        `⚠️ Antes de confirmar: revise e ajuste os títulos e textos de cada card — ` +
-        `eles serão usados exatamente como estão na geração.\n\n` +
+        `⚠️ Revise os títulos e textos de cada card antes — eles serão usados como estão.\n\n` +
         `Você ainda poderá regerar cards individualmente depois.`,
     );
     if (!ok) return;
@@ -1634,7 +1633,7 @@ function CarouselCardBlock({
     if (!blockSel.hasAny) return;
     const ok = window.confirm(
       `Gerar todos os ${cards.length} cards com as referências selecionadas?\n\n` +
-        `⚠️ Antes de confirmar: revise os títulos e textos — eles serão usados exatamente como estão na geração.\n\n` +
+        `⚠️ Revise os títulos e textos antes — eles serão usados como estão.\n\n` +
         `Você ainda poderá regerar cards individualmente depois.`,
     );
     if (!ok) return;
@@ -1800,9 +1799,6 @@ function CarouselCardBlock({
                 ? `Gerando ${(allProgress?.done ?? 0) + 1}/${allProgress?.total ?? cards.length}…`
                 : `✨ Gerar todos os ${cards.length} cards (sem refs)`}
             </button>
-            <span style={{ fontSize: 11, color: "#64748b" }}>
-              Revise títulos e textos antes de confirmar.
-            </span>
           </div>
           {cards.map((card, index) => {
             const ctx = (kind: RegenKind) => ({
@@ -2902,8 +2898,8 @@ function ReelsCard({
                         fontWeight: 600,
                       }}
                     >
-                      ⚠ Vídeo gerado sem voz clonada (falha na sincronização — áudio do Veo no
-                      lugar)
+                      ⚠ Vídeo gerado sem sua voz clonada (a sincronização falhou — ficou com a voz
+                      automática)
                     </div>
                   )}
                   {videoMode === "sinalizacao" && (
@@ -3208,7 +3204,7 @@ function StoriesBlock({ seq }: { seq: StoriesSequence }) {
             </div>
           ))}
           <div className="cardActions">
-            <small style={{ color: "#64748b" }}>Stories V1 — apenas conteúdo textual.</small>
+            <small style={{ color: "#64748b" }}>Stories: apenas texto.</small>
           </div>
         </div>
       )}
@@ -3482,7 +3478,7 @@ export default function ResultsView({
             }}
           >
             <span>
-              Personagem da sequência:&nbsp;
+              Pessoa nas imagens:&nbsp;
               {anchorMode === "ancora" ? (
                 <strong style={{ color: "#0f172a" }}>
                   {anchorControl.genderEffective === "mulher" ? "F" : "M"} ·{" "}
@@ -3521,6 +3517,11 @@ export default function ResultsView({
               >
                 {anchorMode === "ancora" ? "Mudar p/ Livre" : "Mudar p/ Âncora"}
               </button>
+              <span style={{ fontSize: 11, color: "#94a3b8" }}>
+                {anchorMode === "ancora"
+                  ? "Âncora: mesma pessoa em todas as peças."
+                  : "Livre: a IA varia a pessoa em cada peça."}
+              </span>
               {anchorMode === "ancora" && (
                 <>
                   <button
@@ -3591,9 +3592,8 @@ export default function ResultsView({
               }}
             >
               <span style={{ flex: 1 }}>
-                ⚠️ A geração veio sem o carrossel desta sequência. Isso geralmente acontece quando a
-                IA trunca a resposta. Clique em <b>"Tentar novamente"</b> para receber a sequência
-                completa.
+                ⚠️ Esta sequência veio sem o carrossel. Clique em <b>"Tentar novamente"</b> para
+                receber a sequência completa.
               </span>
               {onRetry && (
                 <button

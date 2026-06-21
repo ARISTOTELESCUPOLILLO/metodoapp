@@ -262,9 +262,8 @@ export default function UsoReferenciasDia(props: Props) {
           color: "#713f12",
         }}
       >
-        📦 Esta peça aceita <strong>imagens de referência</strong> ({descrevePolicy(policy)}).
-        Adicione {itemsFaltando.join(", ")} ao <strong>Kit Imagem</strong> para poder gerar com
-        referências.
+        📦 Esta peça aceita imagens do Kit ({descrevePolicy(policy)}). Adicione{" "}
+        {itemsFaltando.join(", ")} ao <strong>Kit Imagem</strong> para usá-las.
       </div>
     );
   }

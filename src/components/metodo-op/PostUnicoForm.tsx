@@ -56,7 +56,7 @@ interface Props {
 }
 
 const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
-  { code: "nenhum", label: "Nenhum", desc: "Sem objetivo" },
+  { code: "nenhum", label: "Nenhum", desc: "Deixe a IA decidir o tom" },
   { code: "institucional", label: "Institucional", desc: "Posicionamento, propósito, marca" },
   { code: "aviso", label: "Aviso", desc: "Comunicado institucional" },
   { code: "homenagem", label: "Homenagem", desc: "Pessoa, data, conquista" },
@@ -407,7 +407,6 @@ export default function PostUnicoForm({
     <section className="panel">
       <div className="sectionHeader">
         <div>
-          <span className="eyebrow">Trilha rápida · Independente</span>
           <h2>Post Único</h2>
         </div>
       </div>
@@ -424,7 +423,7 @@ export default function PostUnicoForm({
             fontWeight: 600,
           }}
         >
-          Você não tem plano de Post Único (PU2/PU4/PU8) — fale com o admin para liberar.
+          Seu plano não inclui Post Único — fale com o admin para liberar.
         </div>
       )}
 
@@ -803,10 +802,10 @@ export default function PostUnicoForm({
         </strong>
         <p style={{ margin: "4px 0 10px", fontSize: 12, color: isNenhum ? "#94a3b8" : "#64748b" }}>
           {isNenhum
-            ? "Desabilitado no objetivo Nenhum — a IA cria o texto livremente a partir da informação-chave e do Kit de Marca."
+            ? "No objetivo Nenhum a IA escreve o texto sozinha."
             : data.direcao === "livre"
-              ? "No modo Livre este passo é opcional. Se gerar, o título e o texto viram tipografia obrigatória na peça. Se pular, a IA decide se haverá texto, qual e onde."
-              : "A IA cria o título e o texto que aparecerão tipografados na peça, a partir da informação-chave. Confirme antes de gerar a imagem."}
+              ? "Opcional no modo Livre. Se você gerar, esse título e texto vão aparecer escritos na imagem. Se pular, a IA decide o texto."
+              : "A IA cria o título e o texto que vão aparecer escritos na peça. Confirme antes de gerar a imagem."}
         </p>
 
         {!copy && !copyLoading && (
@@ -892,7 +891,7 @@ export default function PostUnicoForm({
                     color: wordCount(copy.titulo) >= 6 ? "#f59e0b" : "#94a3b8",
                   }}
                 >
-                  {wordCount(copy.titulo)}/6 palavras · máx 3 sílabas/palavra
+                  {wordCount(copy.titulo)}/6 palavras
                 </span>
               </div>
               <input
@@ -1247,7 +1246,7 @@ export default function PostUnicoForm({
               checked={data.direcao === "livre"}
               onChange={() => setDirecao("livre")}
             />
-            Livre — IA decide tudo
+            Livre — a IA decide o estilo
           </label>
           <label
             className="radioLabel"
@@ -1262,7 +1261,7 @@ export default function PostUnicoForm({
               }}
               disabled={isNenhum}
             />
-            Com Mood
+            Com estilo visual
           </label>
         </div>
 
@@ -1270,7 +1269,7 @@ export default function PostUnicoForm({
           <>
             {!data.mood && (
               <p style={{ margin: "8px 0 0", fontSize: 12, color: "#b91c1c", fontWeight: 600 }}>
-                Escolha um mood abaixo para liberar a geração.
+                Escolha um estilo visual abaixo para liberar a geração.
               </p>
             )}
             <div className="sequenceGrid" style={{ marginTop: 12 }}>
@@ -1351,9 +1350,9 @@ export default function PostUnicoForm({
           {loading
             ? "Gerando peça..."
             : isNenhum
-              ? "Gerar peça (criação livre)"
+              ? "Gerar peça (texto livre)"
               : livreSemCopy
-                ? "Gerar peça (IA livre)"
+                ? "Gerar peça (texto livre)"
                 : copy
                   ? "Gerar peça"
                   : "Gere o título e o texto primeiro"}

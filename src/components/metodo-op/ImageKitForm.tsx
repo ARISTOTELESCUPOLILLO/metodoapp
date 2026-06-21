@@ -158,8 +158,7 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
         <strong>Fachada</strong>
         <p style={{ margin: "4px 0 10px", fontSize: 12, color: "#64748b" }}>
           A frente do seu estabelecimento. Usada em peças que precisam mostrar o local físico da
-          empresa — recebe tratamento próprio (limpeza de fios/postes, melhoria de céu) e é
-          diferente dos cenários internos abaixo.
+          empresa — diferente dos cenários internos abaixo.
         </p>
         <SlotCard
           dataUrl={kit.fachada}
@@ -751,10 +750,7 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
           }}
         >
           <span style={{ flexShrink: 0 }}>🔒</span>
-          <span>
-            Gravação de voz não habilitada para este kit. Solicite ao administrador para ativar esta
-            função nas trilhas cinemáticas.
-          </span>
+          <span>Gravação de voz não habilitada. Peça ao admin para ativar.</span>
         </div>
         <button
           type="button"
@@ -942,7 +938,7 @@ function VoiceBlock({ avatarSlot = 1 }: { avatarSlot?: 1 | 2 }) {
                 onClick={handleApprove}
                 disabled={state === "confirming"}
               >
-                {state === "confirming" ? "Confirmando…" : "✅ Aprovar (consome 1 render)"}
+                {state === "confirming" ? "Confirmando…" : "✅ Aprovar (usa 1 vídeo do plano)"}
               </button>
               <button
                 type="button"

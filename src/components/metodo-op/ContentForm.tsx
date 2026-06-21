@@ -52,18 +52,17 @@ const TRACK_OPTIONS: TrackOption[] = [
   {
     code: "cinematica",
     label: "Cinemática",
-    description: "Sequência com movimento e expansão emocional. Fechamento em reel.",
+    description: "Termina com um vídeo (reels).",
   },
   {
     code: "visual",
     label: "Visual",
-    description: "Sequência em imagem fixa. Fechamento em estático final, com resolução visual.",
+    description: "Tudo em imagem. Termina com um post de fechamento.",
   },
   {
     code: "experimentacao",
     label: "Experimentação",
-    description:
-      "Sequência reduzida de validação. 3 peças (1 estático + 1 carrossel + 1 estático final).",
+    description: "Versão curta para testar: 3 peças.",
   },
 ];
 
@@ -242,7 +241,7 @@ export default function ContentForm({
     <section className="panel">
       <div className="sectionHeader">
         <div>
-          <span className="eyebrow">Motor criativo</span>
+          <span className="eyebrow">Criar conteúdo</span>
           <h2>Geração de conteúdo</h2>
         </div>
       </div>
@@ -329,7 +328,7 @@ export default function ContentForm({
                   ? "Limpe o campo para usar Sugestão"
                   : suggestExhausted
                     ? "Limite atingido"
-                    : "Sorteia categoria e sugere uma Informação-chave"
+                    : "Sugere um assunto pronto para você editar"
               }
               style={{
                 background: "none",
@@ -479,8 +478,8 @@ export default function ContentForm({
                   : suggestError
                     ? "Erro"
                     : suggestions.length > 1
-                      ? "Sugestões OP"
-                      : "Sugestão OP"}
+                      ? "Sugestões"
+                      : "Sugestão"}
               </span>
               {!suggesting && (
                 <button
@@ -647,7 +646,7 @@ export default function ContentForm({
                       disabled={isDisabled}
                       title={
                         !allowedBySize && !isExperimentacao
-                          ? `Você não tem plano para ${size} peças em ${currentTrack} — fale com o admin`
+                          ? `Você não tem plano para ${size} peças em ${TRACK_OPTIONS.find((t) => t.code === currentTrack)?.label ?? currentTrack} — fale com o admin`
                           : undefined
                       }
                     >
@@ -755,8 +754,8 @@ export default function ContentForm({
             lineHeight: 1.5,
           }}
         >
-          <strong style={{ color: "#0f172a" }}>Stories são apenas texto.</strong> Não há geração de
-          imagem nem escolha de mood — só roteiro pronto pra digitar/gravar.
+          <strong style={{ color: "#0f172a" }}>Stories são apenas texto.</strong> Sai só como
+          roteiro, pronto pra digitar ou gravar — não geramos imagem aqui.
         </div>
       ) : (
         <>
@@ -774,8 +773,8 @@ export default function ContentForm({
                 lineHeight: 1.45,
               }}
             >
-              Os stories desta trilha são <strong>apenas texto</strong>. O mood escolhido vale para
-              as peças do feed.
+              Os stories desta trilha são <strong>apenas texto</strong>. O estilo visual escolhido
+              vale para as peças do feed.
             </div>
           )}
         </>
@@ -836,13 +835,13 @@ export default function ContentForm({
                         : semPlanoTrilha
                           ? "Combinação fora dos seus planos — escolha outra trilha/tamanho"
                           : semMood
-                            ? "Escolha uma forma visual (mood) acima antes de gerar"
+                            ? "Escolha uma forma visual acima antes de gerar"
                             : undefined
                 }
                 style={{ flex: 1 }}
               >
                 {loading
-                  ? "Gerando com o método..."
+                  ? "Gerando..."
                   : isExperimentacao
                     ? "Gerar Experimentação"
                     : "Gerar conteúdo"}

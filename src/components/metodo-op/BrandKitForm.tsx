@@ -135,7 +135,6 @@ export default function BrandKitForm({
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span className="eyebrow">Base editável</span>
           <h2 style={{ margin: 0 }}>Kit de Marca</h2>
           {!isOpen && (
             <div
@@ -423,8 +422,8 @@ export default function BrandKitForm({
               }}
             />
             <small style={{ color: "#64748b", fontWeight: 500, display: "block", marginTop: 4 }}>
-              Foto plano médio da camisa/uniforme, sem rosto — usamos só cor, modelo e posição da
-              logo. Habilita a opção "Gerar com uniforme" nas peças.
+              Foto da camisa/uniforme, sem rosto — usamos só a cor, o modelo e a posição da logo.
+              Habilita a opção "Gerar com uniforme" nas peças.
             </small>
             {kit.uniformeDataUrl && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
@@ -532,8 +531,7 @@ export default function BrandKitForm({
             <span style={{ fontSize: 11, fontWeight: 400, color: "#94a3b8" }}>(opcional)</span>
           </strong>
           <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 8px" }}>
-            Se marcada, destaca 1 palavra-chave do título com fonte manuscrita na cor de destaque.
-            Se nenhuma estiver marcada, o título usa só a tipografia primária acima.
+            Destaca 1 palavra do título numa fonte manuscrita, na cor de destaque.
           </p>
           <div className="fontGrid">
             {SECONDARY_FONTS.map((f) => (
@@ -591,10 +589,9 @@ export default function BrandKitForm({
             </span>
           </div>
           <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>
-            Liste o que {kit.segment === "MARCA" ? "a marca" : "a empresa"} realmente vende, faz ou
-            oferece — cada item é matéria-prima para a Sugestão (Informação-chave). Ex.: "Cadeiras
-            ergonômicas para escritório", "Manutenção de ar-condicionado", "Ração para cães e
-            gatos".
+            Liste o que {kit.segment === "MARCA" ? "a marca" : "a empresa"} vende, faz ou oferece. A
+            IA usa esses itens para sugerir assuntos de post. Ex.: "Cadeiras ergonômicas para
+            escritório", "Manutenção de ar-condicionado", "Ração para cães e gatos".
           </p>
           {products.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

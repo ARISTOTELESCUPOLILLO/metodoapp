@@ -105,13 +105,8 @@ export default function PostUnicoComposicaoVisual({
     <div className="formatBox">
       <strong>Composição visual da peça</strong>
       <p style={{ margin: "4px 0 6px", fontSize: 12, color: "#64748b" }}>
-        Marque abaixo quais imagens do seu <strong>Kit Imagem</strong> devem aparecer/orientar esta
-        peça.
-        <strong>
-          {" "}
-          Se você não marcar nenhuma, a peça é gerada apenas a partir do texto, sem usar referências
-          visuais do seu kit.
-        </strong>
+        Marque quais imagens do seu <strong>Kit Imagem</strong> devem aparecer nesta peça.
+        <strong> Se não marcar nenhuma, a peça é criada só a partir do texto.</strong>
       </p>
       <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
         Você pode combinar: <b>1 avatar + fachada + 1 cenário + até {MAX_PRODUTOS_PU} produtos</b>.
@@ -395,10 +390,9 @@ export default function PostUnicoComposicaoVisual({
             fontSize: 11,
           }}
         >
-          ⚠️ No mood <strong>Silêncio</strong>, a composição prioriza espaço vazio e um único
-          elemento isolado — o cenário enviado pode não aparecer reconhecível no resultado. Se
-          quiser preservar este ambiente, considere usar Avatar/Produto como referência ou escolher
-          outro mood.
+          ⚠️ No estilo <strong>Silêncio</strong> a imagem usa muito espaço vazio — o cenário enviado
+          pode não aparecer reconhecível no resultado. Para preservá-lo, use Avatar/Produto como
+          referência ou escolha outro estilo.
         </div>
       )}
 
@@ -414,9 +408,8 @@ export default function PostUnicoComposicaoVisual({
             color: "#78350f",
           }}
         >
-          ⏱️ Geração com Kit Imagem usa o modelo de edição. Costuma levar de{" "}
-          <strong>30 a 60 segundos</strong>
-          {refsAtivas >= 3 ? " (com várias referências pode passar de 1 minuto)" : ""}.
+          ⏱️ Gerar com imagens do Kit costuma levar de <strong>30 a 60 segundos</strong>
+          {refsAtivas >= 3 ? " (com várias, pode passar de 1 minuto)" : ""}.
         </div>
       )}
     </div>
