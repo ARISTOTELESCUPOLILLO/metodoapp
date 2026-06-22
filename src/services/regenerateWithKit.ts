@@ -398,6 +398,17 @@ function buildAnchorPrefix(
         "NEGATIVE: detailed background, specific room interior, identifiable location behind person, sharp background, busy background, office furniture behind subject.",
     );
   }
+  // Reforço final da contagem de produtos — repetida como a ÚLTIMA linha
+  // deste bloco (que já tem prioridade máxima no prompt) porque modelos de
+  // imagem tendem a dar mais peso à instrução mais recente quando há
+  // conflito ou esquecimento ao longo de um prompt longo. Visto em produção:
+  // com cenário + 2 produtos, o modelo às vezes renderiza só 1 produto.
+  if (refs.produtos?.length && refs.produtos.length >= 2) {
+    const n = refs.produtos.length;
+    lines.push(
+      `⚠ ÚLTIMA VERIFICAÇÃO ANTES DE GERAR: conte os produtos na composição — devem ser EXATAMENTE ${n}, nunca ${n - 1} nem menos. NEGATIVE: missing product, only ${n - 1} product visible, single product shown when ${n} were required, product omitted, incomplete product count.`,
+    );
+  }
   if (!lines.length) return "";
   return `${lines.join("\n")}\n\n`;
 }

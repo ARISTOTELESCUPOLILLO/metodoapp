@@ -612,6 +612,12 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         segment: segment as Segment | undefined,
       }),
     );
+    if (refs.produtos.length >= 2) {
+      const n = refs.produtos.length;
+      parts.push(
+        `REGRA DE CONTAGEM — INEGOCIÁVEL: a imagem final DEVE conter EXATAMENTE ${n} produtos visíveis e identificáveis, todos enviados como referência. PROIBIDO omitir, esconder atrás de objetos, cortar fora do quadro ou substituir qualquer um deles. Se o plano aberto não acomodar os ${n}, APROXIME o enquadramento em vez de mostrar um cenário amplo com apenas parte dos produtos.`,
+      );
+    }
   }
   // Quando há avatar mas NENHUMA referência de ambiente real (cenário,
   // fachada, fato ou venda): suprimir construção de ambiente pelo modelo —
@@ -634,6 +640,14 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
   parts.push(
     `INTEGRAÇÃO: combinar os elementos de forma natural, elegante e coerente — adapte iluminação, profundidade e atmosfera ao mood. Resultado deve parecer campanha visual profissional, não colagem.`,
   );
+  // Reforço final repetido como ÚLTIMA linha do bloco de referências — modelos
+  // de imagem tendem a dar mais peso à instrução mais recente em prompts longos.
+  if (refs.produtos && refs.produtos.length >= 2) {
+    const n = refs.produtos.length;
+    parts.push(
+      `⚠ ÚLTIMA VERIFICAÇÃO ANTES DE GERAR: conte os produtos na composição — devem ser EXATAMENTE ${n}, nunca ${n - 1} nem menos. NEGATIVE: missing product, only ${n - 1} product visible, single product shown when ${n} were required, product omitted, incomplete product count.`,
+    );
+  }
   return parts.join("\n\n");
 }
 
@@ -683,12 +697,21 @@ export function buildPostUnicoPrompt(params: {
     : "";
 
   const hasCopy = copy && (copy.titulo || copy.texto);
+  // Tamanho do título escalona pela contagem de palavras — um piso fixo de
+  // "35-45%" pra qualquer título (3 palavras ou 6) fazia títulos mais longos
+  // (2-3 linhas) ficarem gigantes e dominarem a peça, brigando com produto/
+  // personagem. Mesmo critério já usado no branch sem copy fixo (abaixo).
+  const tituloWordCount = hasCopy ? copy.titulo.trim().split(/\s+/).filter(Boolean).length : 0;
+  const tituloSizeClause =
+    tituloWordCount >= 5
+      ? "ocupando entre 28% e 38% da altura útil do canvas — quebre em 2-3 linhas para manter o corpo grande e legível sem dominar o quadro"
+      : "ocupando entre 35% e 45% da altura útil do canvas, em 1-2 linhas";
   const copyBlock = hasCopy
     ? `TÍTULO E TEXTO OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
 TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
-Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto; o título deve ocupar ao menos 35-45% da altura útil do canvas). Texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — claramente legível a distância normal de celular, nunca tamanho de legenda ou rodapé. POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).
+Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — claramente legível a distância normal de celular, nunca tamanho de legenda ou rodapé. POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).
 ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da paleta desta peça) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
 ⚠ TÍTULO FIXO — ANTI-TRADUÇÃO LITERAL: o título acima é texto tipográfico a renderizar. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras abstratas do título. Proibições diretas: "novo"/"novidade" ≠ caderno limpo, página em branco, objeto novo genérico; "ação"/"agir" ≠ seta, figura em movimento, objeto cinético; "rumo"/"caminho"/"direção" ≠ corredor, estrada, passagem, bússola, mapa, GPS, placa de sinalização; "hoje"/"agora" ≠ relógio, ampulheta, pôr do sol; "escolha"/"decisão" ≠ encruzilhada, bifurcação; "novo" ≠ porta se abrindo. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`
     : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):

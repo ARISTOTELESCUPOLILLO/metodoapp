@@ -532,8 +532,7 @@ export default function UsoReferenciasDia(props: Props) {
                 checked={produtoTelaInformativa}
                 onChange={(e) => setProdutoTelaInformativa(e.target.checked)}
               />
-              Este produto é uma tela (ex.: tablet/celular mostrando um app/print) — preservar o
-              conteúdo exibido nela
+              Produto é uma tela (preservar o conteúdo exibido)
             </label>
           )}
 

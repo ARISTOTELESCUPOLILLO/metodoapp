@@ -214,14 +214,13 @@ export default function PostUnicoComposicaoVisual({
       </div>
 
       {selection.useProdutos && selection.produtosSelecionados.length > 0 && (
-        <label className="checkRow" style={{ marginTop: 8 }}>
+        <label className="checkRow" style={{ marginTop: 8, fontSize: 12, fontWeight: 600 }}>
           <input
             type="checkbox"
             checked={!!selection.produtoTelaInformativa}
             onChange={(e) => onChange({ ...selection, produtoTelaInformativa: e.target.checked })}
           />
-          Este produto é uma tela (ex.: tablet/celular mostrando um app/print) — preservar o
-          conteúdo exibido nela
+          Produto é uma tela (preservar o conteúdo exibido)
         </label>
       )}
 

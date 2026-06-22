@@ -354,6 +354,15 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
         : "\n⚠ PAPEL DO PRODUTO — COMPOSIÇÃO: o PRODUTO é o protagonista visual desta cena. A pessoa (se presente) aparece usando, segurando ou interagindo com ele em segundo plano. PROIBIDO: pessoa com mais área visual que o produto ou que roube o foco dele.\n"
       : "";
 
+  // Título com 5+ palavras (2-3 linhas) precisa de um teto de altura menor —
+  // um piso fixo de "35-45%" pra qualquer contagem de palavra fazia títulos
+  // longos dominarem a peça, brigando com produto/personagem.
+  const tituloWordCount = titulo.trim().split(/\s+/).filter(Boolean).length;
+  const tituloSizeClause =
+    tituloWordCount >= 5
+      ? "corpo GRANDE — entre 28% e 38% da altura do canvas, em 2-3 linhas — manchete editorial, sem dominar o quadro inteiro"
+      : "corpo GRANDE — entre 35% e 45% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro";
+
   return `${buildDeviceRule(mainActivity, hasProdutoTelaRef)}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ""}${referenceAnchorBlock}Crie ${isCover ? "a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)" : "um post profissional"} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? "\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed." : ""}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
@@ -363,7 +372,7 @@ ${cenaDetalhada}
 ${papelBlock}${variationBlock}
 
 CONTEÚDO TEXTUAL:
-- Título principal em CAIXA ALTA (bold, corpo GRANDE — entre 35% e 45% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro): "${tituloUpper}"
+- Título principal em CAIXA ALTA (bold, ${tituloSizeClause}): "${tituloUpper}"
 - Texto de apoio — SUBTÍTULO DE REVISTA (corpo entre 55% e 70% do título, legível sem zoom no celular, caixa normal, peso regular — nunca tamanho de legenda): "${texto}"
 - ${marcaInstruction}
 

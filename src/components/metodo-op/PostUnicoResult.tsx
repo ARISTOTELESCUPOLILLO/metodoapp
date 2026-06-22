@@ -87,12 +87,15 @@ export default function PostUnicoResult({
   const CAPTION_MAX = 2;
   const captionExhausted = captionRegens >= CAPTION_MAX;
 
-  // Reseta histórico de legenda a cada nova imagem gerada. O contador de
-  // regeneração é zerado no app (setPuCaptionRegen) junto com a nova geração.
+  // Reseta o histórico de regeneração de legenda a cada nova imagem gerada
+  // (o contador é zerado no app, setPuCaptionRegen, junto com a nova
+  // geração). NÃO zera `editedCaption` aqui — regenerar a IMAGEM não deve
+  // descartar uma edição manual da legenda (ex.: assinatura inserida pelo
+  // botão "Inserir Assinatura"); isso só é zerado quando a legenda em si
+  // muda (ver efeito abaixo, que reage a `caption`).
   useEffect(() => {
     setCaptionHistory([]);
     setSelectedIdx(0);
-    setEditedCaption(null);
   }, [imageDataUrl]);
 
   // Mantém histórico de até 2 legendas (inicial + 1 regerada).
