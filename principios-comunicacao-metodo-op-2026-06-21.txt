@@ -87,6 +87,15 @@ Onde isso está implementado no código: a âncora narrativa do MOP
 (organizaMethodEngine.ts) e a função compartilhada de papel de cena
 (visualDirection.ts, buildSceneRoleRule) — usada tanto pelo MOP quanto pela PU.
 
+EXCEÇÃO DE FORMATO — REELS (decidida por Aristóteles em 21/06/2026): no Reels, o
+EMISSOR é o protagonista — é um formato cinemático, de "porta-voz" falando direto pra
+câmera, e isso é intencional, não bug. Esta exceção vale só para o Reels; estático,
+estático final e carrossel continuam com o personagem-padrão = público-alvo. Achado
+numa auditoria de coerência (21/06/2026) que apontou o texto do Reels
+(organizaMethodEngine.ts, "porta-voz olhando para a câmera") como possível
+contradição com 1.1 — confirmado que NÃO é contradição, é exceção de formato. Não
+mexer nisso achando que é bug.
+
 1.2 O QUE CADA SEGMENTO SIGNIFICA (SERVIÇOS / VAREJO / MARCA)
 ------------------------------------------------------------
 [Reescrito por Aristóteles em 21/06/2026.]
@@ -266,10 +275,33 @@ a sequência MOP e a PU também?
 ------------------------------------------------------------
 [Decisão já tomada e implementada — pendente apenas de validação prática.]
 
-Confirmado que vale para o MOP como um todo (estático, carrossel, reels, estático
-final) e também para a PU. Já implementado no código. Falta apenas confirmar com uma
-geração real de cada formato que o personagem realmente sai como público-alvo em
-todos.
+Confirmado que vale para o MOP (estático, carrossel, estático final) e também para a
+PU. EXCETO o Reels, que tem exceção própria — ver "EXCEÇÃO DE FORMATO — REELS" em 1.1
+(emissor é o protagonista nesse formato, decisão deliberada, não é o mesmo princípio
+do resto da sequência). Já implementado no código. Falta apenas confirmar com uma
+geração real de cada formato que o personagem realmente sai como público-alvo nos
+formatos onde isso vale.
+
+2.4 Auditoria de coerência (21/06/2026) — itens corrigidos
+------------------------------------------------------------
+Depois de fechar a revisão acima, foi feita uma auditoria de coerência conferindo se o
+código realmente implementa todos os princípios decididos, em todos os lugares onde
+deveriam valer. Achados e correções já aplicadas no mesmo dia:
+
+- PU pedia título com no máximo 5 palavras (generate-pu-copy.ts), divergindo do
+  princípio de 6 palavras (igual ao MOP). Corrigido — agora pede 6, alinhado com
+  TITULO_MAX_WORDS e com REGRAS DE PRODUÇÃO acima.
+- A lente de MARCA usada na Sugestão (suggest-keyinfo.ts, SEGMENT_LENS) tinha sido
+  escrita antes da redefinição de MARCA de hoje, e focava em atributos da própria
+  empresa (bastidor, diferenciação, história) sem o ângulo do público se reconhecendo
+  na marca. Reescrita para refletir 1.2 — o público se identificando/desenvolvendo
+  confiança através da identidade da marca, não um atributo isolado da empresa.
+- O papel do avatar em MARCA+institucional (postUnico.ts,
+  AVATAR_ROLE_BY_SEGMENT_OBJETIVO) descrevia o avatar só como emissor institucional e
+  dizia que ele "apresenta o produto como ícone" — uma hierarquia que tensionava com o
+  equilíbrio 50/50 decidido em 2.2. Ajustado: avatar continua sendo a exceção
+  deliberada (emissor), mas quando há produto na mesma cena, os dois dividem o
+  protagonismo em peso igual, em vez de o avatar "apresentar" o produto.
 
 ============================================================
 PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO

@@ -452,8 +452,14 @@ function segmentRules(segment?: string, hasCenarioRef?: boolean): string {
 // caso reportado (MARCA + institucional); outras combinações seguem sem
 // bloco específico até serem necessárias.
 const AVATAR_ROLE_BY_SEGMENT_OBJETIVO: Partial<Record<string, string>> = {
+  // Avatar = exceção deliberada ao personagem-padrão (público-alvo, ver
+  // documento de princípios 1.1): o usuário marcou avatar de propósito, então
+  // aqui é o emissor (quem representa a marca) que aparece. Quando há produto
+  // na cena, os dois (avatar e produto) dividem o protagonismo em peso igual
+  // — mesmo princípio 50/50 de buildProductHierarchyBlock (MARCA) — em vez de
+  // o avatar "apresentar" o produto como um acessório da composição.
   "MARCA:institucional":
-    "PAPEL DO PERSONAGEM: o avatar é a personificação dos valores e do posicionamento da marca — postura confiante e serena, presença que comunica autoridade e propósito institucional, não está executando uma tarefa operacional do dia a dia. Quando há produto na cena, o personagem o apresenta como ícone da identidade da marca, não como demonstração de uso funcional.",
+    "PAPEL DO PERSONAGEM: o avatar representa, por escolha deliberada do usuário, o emissor da marca — postura confiante e serena, presença que comunica autoridade e propósito institucional, não está executando uma tarefa operacional do dia a dia. Quando há produto na cena, ele e o avatar dividem o protagonismo em PESO VISUAL IGUAL — nenhum dos dois reduzido a acessório ou plano de fundo do outro; os dois juntos representam a identidade da marca.",
 };
 
 function avatarRoleBlock(

@@ -270,7 +270,7 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
             SERVIÇOS:
               "o que muda na rotina do cliente antes ou depois do serviço — uma dúvida, decisão, dificuldade ou alívio que ele mesmo vive — não o processo ou método de quem presta o serviço",
             MARCA:
-              "reconhecimento, identificação, percepção, vínculo, bastidor, diferenciação, valor percebido, história, relação com o público",
+              "o momento em que o público se reconhece, se identifica ou desenvolve confiança ao se conectar com a identidade da marca — os valores, a cultura ou o propósito vividos por ele através dela — não um atributo isolado da própria empresa (bastidor, história institucional, conquista interna) sem ligação com quem está vendo",
           };
 
           // Ancoragem na atividade — a ATIVIDADE é a fonte PRINCIPAL do

@@ -102,12 +102,12 @@ ${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` :
 
 Retorne JSON com EXATAMENTE este formato:
 {
-  "titulo": "título curto, no MÁXIMO 5 palavras, cada palavra com no máximo 3 sílabas (exceto o substantivo concreto central da informação-chave, se houver — limitado a 4 sílabas, nunca mais), impactante, em português brasileiro",
+  "titulo": "título curto, no MÁXIMO 6 palavras, cada palavra com no máximo 3 sílabas (exceto o substantivo concreto central da informação-chave, se houver — limitado a 4 sílabas, nunca mais), impactante, em português brasileiro",
   "texto": "texto de apoio curto, no MÁXIMO 14 palavras (CONTE antes de retornar), complementa o título sem repetir, em português brasileiro"
 }
 
 Regras:
-- "titulo" no máximo 5 palavras, cada palavra com no máximo 3 sílabas (ex.: "negócio" 3 sílabas ✓, "resultado" 4 sílabas ✗ — use "ganho", "retorno"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 4 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 5+ sílabas (ex.: "lubrificante") devem ser trocados por sinônimo mais curto (ex.: "óleo"). EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓
+- "titulo" no máximo 6 palavras, cada palavra com no máximo 3 sílabas (ex.: "negócio" 3 sílabas ✓, "resultado" 4 sílabas ✗ — use "ganho", "retorno"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 4 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 5+ sílabas (ex.: "lubrificante") devem ser trocados por sinônimo mais curto (ex.: "óleo"). EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓
 - "texto" no máximo 14 palavras (CONTE antes de retornar — 15ª palavra em diante é cortada), frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji
 - Português brasileiro, sem inglês, sem markdown
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
@@ -157,7 +157,7 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           // Único" (generate-caption.ts), evitando cobrar 2x pelo mesmo post.
 
           // Título NÃO é truncado aqui — cortar geraria fragmento; fora da
-          // faixa de 4-5 palavras (TITULO_MIN_WORDS/TITULO_MAX_WORDS) é flagado
+          // faixa de 4-6 palavras (TITULO_MIN_WORDS/TITULO_MAX_WORDS) é flagado
           // por validateTitulo (D1) abaixo e regenerado pelo cliente (E3/E4),
           // igual ao fluxo MOP.
           const titulo = correctPortugueseSpelling(String(parsed.titulo || "").trim());
