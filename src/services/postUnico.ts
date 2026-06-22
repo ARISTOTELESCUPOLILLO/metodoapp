@@ -530,16 +530,30 @@ function referencesBlock(
     );
   }
   if (refs.cenario) {
+    const temProduto = !!(refs.produtos && refs.produtos.length);
+    // Só avisa pra desfocar/excluir mercadoria do CENÁRIO quando NÃO há produto
+    // de referência selecionado — esse aviso existe pra evitar que um item
+    // qualquer visível na foto do cenário seja confundido com "o produto".
+    // Quando HÁ produto de referência real, esse mesmo texto ("desfoque,
+    // exclua...") competia com o bloco PRODUTOS SELECIONADOS + a regra de
+    // hierarquia (que já define o papel do produto por segmento), e o modelo
+    // às vezes "cumpria" o aviso do cenário excluindo o produto inteiro da
+    // cena — visto no caso real em que o produto referenciado simplesmente
+    // não apareceu na peça.
     const produtoGuard =
-      segment !== "VAREJO"
+      segment !== "VAREJO" && !temProduto
         ? " Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço."
         : "";
-    const temProduto = !!(refs.produtos && refs.produtos.length);
     const ambienteClause = temProduto
       ? "preserve a arquitetura, paredes, piso, iluminação geral e identidade visual do ambiente — móveis e objetos do cenário aparecem apenas como FUNDO de apoio, atrás e ao redor do produto referenciado, nunca à frente dele nem maiores ou mais nítidos que ele"
       : "preserve a sala, móveis, equipamentos, paredes e ponto de vista";
+    // "Dar protagonismo ao produto" só faz sentido em VAREJO — em SERVIÇOS
+    // (produto-apoio) e MARCA (equilíbrio 50/50) isso contradiria a regra de
+    // hierarquia já definida no bloco PRODUTOS SELECIONADOS abaixo.
     const anguloClause = temProduto
-      ? "Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local."
+      ? segment === "VAREJO"
+        ? "Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local."
+        : "Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para integrar o produto à cena com naturalidade — mas o ambiente deve continuar reconhecível como o mesmo local."
       : "NÃO mude o ângulo.";
     parts.push(
       `CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`,

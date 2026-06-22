@@ -299,16 +299,24 @@ function buildAnchorPrefix(
       : variaEnquadramento
         ? "preserve sala, móveis, equipamentos e paredes"
         : "preserve sala, móveis, equipamentos, paredes e ponto de vista da câmera";
+    // "Dar protagonismo ao produto" só faz sentido em VAREJO — em SERVIÇOS
+    // (produto-apoio) e MARCA (equilíbrio 50/50) isso contradiria a regra de
+    // hierarquia já definida pelo bloco PRODUTO(S) mais abaixo.
     const framingClause = framingPick
       ? `Pode variar o ÂNGULO e a DISTÂNCIA DA CÂMERA — mas continue sendo claramente reconhecível como o MESMO AMBIENTE, com a mesma arquitetura, móveis/objetos e identidade visual. ENQUADRAMENTO DESTE CARD: ${framingPick}.`
       : temProduto
-        ? "NÃO invente outro local, NÃO troque os objetos. Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local."
+        ? segment === "VAREJO"
+          ? "NÃO invente outro local, NÃO troque os objetos. Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local."
+          : "NÃO invente outro local, NÃO troque os objetos. Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para integrar o produto à cena com naturalidade — mas o ambiente deve continuar reconhecível como o mesmo local."
         : "NÃO invente outro local, NÃO troque os objetos, NÃO mude o ângulo.";
     // SERVIÇOS/MARCA: produtos de terceiros visíveis no cenário real (ex.: embalagens
-    // de marca em obra) não devem "vazar" pra peça — a política de referências
-    // dessas combinações não inclui produtos (ver referenciasPolicy.ts).
+    // de marca em obra) não devem "vazar" pra peça. Só dispara quando NÃO há
+    // produto de referência selecionado — com produto real selecionado, esse
+    // mesmo texto ("desfoque, exclua...") competia com o bloco PRODUTO(S) e a
+    // regra de hierarquia, e o modelo às vezes "cumpria" o aviso do cenário
+    // excluindo o produto referenciado inteiro da cena (visto em geração real).
     const produtoGuard =
-      segment !== "VAREJO"
+      segment !== "VAREJO" && !temProduto
         ? " Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação."
         : "";
     lines.push(
