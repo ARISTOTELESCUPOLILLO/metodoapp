@@ -538,7 +538,7 @@ function referencesBlock(
       ? " NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem já definido pelo avatar."
       : ` NÃO copie a pessoa do uniforme — ela é só referência de roupa.`;
     parts.push(
-      `UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si.${personagemClause}`,
+      `UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte, mesma gola, mangas e caimento do tecido. NÃO desenhe, NÃO reproduza e NÃO imite qualquer logomarca, símbolo, escrita ou estampa de marca sobre o tecido: a área onde apareceria a logo deve ficar LISA e neutra (tecido limpo, na própria cor da peça), sem nenhum letreiro ou marca legível — a logomarca oficial é aplicada depois, fora da IA. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas o corte e a cor da peça de roupa em si.${personagemClause}`,
     );
   }
   // Personagem sem avatar — representa o público-alvo por padrão (figurino
@@ -571,7 +571,7 @@ function referencesBlock(
   }
   if (refs.fachada) {
     parts.push(
-      `FACHADA OBRIGATÓRIA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, letreiros, identidade visual do local e ângulo da câmera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo na peça. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, os letreiros e a identidade visual permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final.`,
+      `FACHADA OBRIGATÓRIA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, a volumetria, a vitrine, os materiais e as cores do local, o ângulo da câmera e a atmosfera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo pela arquitetura e pelas cores. NÃO desenhe, NÃO reproduza e NÃO tente recriar o letreiro, a placa ou a logomarca do estabelecimento como texto/símbolo legível: onde houver letreiro ou marca, mantenha apenas a forma/o suporte (a placa, a testeira, a faixa) de modo genérico, neutro ou desfocado, SEM escrita de marca nítida — a logomarca oficial é aplicada depois, fora da IA. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura e as cores do local permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final pela sua arquitetura e cores.`,
     );
   }
   if (refs.cenario) {
@@ -959,11 +959,10 @@ export async function generatePostUnico(params: {
     legenda: "",
     imagem: "",
   };
-  // Uniforme já carrega a logomarca real impressa no tecido (instrução do
-  // prompt) — a marca-d'água do canvas no canto duplicaria a logo na peça.
-  const skipLogo = !!references?.uniforme;
+  // A IA nunca desenha a logomarca (nem no uniforme, nem na fachada) — o canvas
+  // do app é a ÚNICA fonte da logo, sempre, independentemente das referências.
   try {
-    return await composeFeedPng(kit, placeholderItem, dataUrl, { skipLogo });
+    return await composeFeedPng(kit, placeholderItem, dataUrl);
   } catch {
     return dataUrl;
   }
