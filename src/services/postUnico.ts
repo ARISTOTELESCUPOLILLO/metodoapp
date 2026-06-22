@@ -500,6 +500,7 @@ function referencesBlock(
   objetivo?: PostUnicoObjetivo,
   forcedGender?: PersonagemGender,
   isPersonalBrand?: boolean,
+  mainActivity?: string,
 ): string {
   if (!refs) return "";
   const parts: string[] = [];
@@ -552,8 +553,20 @@ function referencesBlock(
     const papelClause = refs.uniforme
       ? "EMISSOR — representa a empresa"
       : "PÚBLICO-ALVO — representa quem recebe a comunicação, NÃO a empresa";
+    // Sem isso, a única instrução de PAPEL/AÇÃO do personagem (buildSceneRoleRule)
+    // fica suprimida quando há qualquer referência de Kit Imagem ativa (ver
+    // showConcreteAction mais abaixo) — o personagem sem avatar ficava com
+    // identidade declarada mas nenhuma orientação de postura, e a cláusula do
+    // CENÁRIO ("preserve a sala, móveis, equipamentos") empurra sozinha para a
+    // leitura de "pessoa pertence a este ambiente de trabalho" = emissor. Achado
+    // real: peça de Pronto Vet (cenário de clínica, sem avatar) saiu com a
+    // personagem em postura de atendente. Esta frase ancora o papel correto sem
+    // reativar a máquina de "monte a cena" do buildSceneRoleRule.
+    const acaoClause = !refs.uniforme
+      ? ` AÇÃO/POSTURA: este personagem é CLIENTE/RECEPTOR — aparece recebendo, vivendo ou se beneficiando de algo relacionado a "${mainActivity || "a atividade da empresa"}", NUNCA executando o ofício nem em postura de atendente/equipe (atrás de balcão ou mesa, de uniforme operando, conduzindo o atendimento). É quem chega ou é atendido, não quem atende.`
+      : "";
     parts.push(
-      `PERSONAGEM OBRIGATÓRIO (sem avatar — ${papelClause}): esta peça DEVE ter um personagem humano claramente visível${idadeClause}, gênero: ${generoClause}, ${roupaClause}. Aparência publicitária e realista, sem caricatura. Invente o personagem livremente (rosto, etnia, expressão)${refs.uniforme ? " — apenas a roupa é fixa (a do uniforme)" : ""}.`,
+      `PERSONAGEM OBRIGATÓRIO (sem avatar — ${papelClause}): esta peça DEVE ter um personagem humano claramente visível${idadeClause}, gênero: ${generoClause}, ${roupaClause}. Aparência publicitária e realista, sem caricatura. Invente o personagem livremente (rosto, etnia, expressão)${refs.uniforme ? " — apenas a roupa é fixa (a do uniforme)" : ""}.${acaoClause}`,
     );
   }
   if (refs.fachada) {
@@ -755,6 +768,7 @@ Hierarquia tipográfica obrigatória:
     data.objetivo,
     forcedGender,
     kit.isPersonalBrand,
+    data.mainActivity || kit.mainActivity,
   );
   const referenceAnchorBlock = refsBlock
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
@@ -783,7 +797,11 @@ Hierarquia tipográfica obrigatória:
     : "";
   const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}${roleBlock ? `\n${roleBlock}` : ""}\n`;
 
-  return `${buildDeviceRule(data.mainActivity || kit.mainActivity, references?.produtoTelaInformativa)}
+  return `${buildDeviceRule(
+    data.mainActivity || kit.mainActivity,
+    references?.produtoTelaInformativa,
+    !!references?.produtos?.length,
+  )}
 
 ${AMBIENTES_RULE}
 

@@ -110,6 +110,19 @@ function buildNoDeviceRule(): string {
 NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`;
 }
 
+// Quando há produto físico de referência selecionado (Kit Imagem) e ele NÃO é
+// ele mesmo uma tela (produtoTelaInformativa), esse produto já é o elemento
+// concreto e o foco da peça — sortear um dispositivo digital pelo pool abaixo
+// não tem relação narrativa com ele e só dilui o foco. Achado real: peça sobre
+// ração (Pronto Vet) recebeu um notebook sem nenhum motivo na cena. A regra de
+// atividade (isNonDigitalActivity) não cobre este caso porque a atividade da
+// empresa pode ser digital (ex. clínica com recepção) mesmo quando O PRODUTO
+// desta peça específica é físico — a decisão é por peça, não por empresa.
+function buildNoDeviceProdutoFisicoRule(): string {
+  return `⚠ DISPOSITIVOS DIGITAIS — PROIBIDOS NESTA CENA: o produto físico referenciado já é o elemento concreto e o foco desta peça. PROIBIDO incluir notebook, laptop, tablet, celular, monitor, computador ou qualquer dispositivo digital na composição, mesmo como elemento de apoio — eles não têm relação com o produto e disputariam atenção sem motivo narrativo.
+NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`;
+}
+
 // Quando o produto referenciado (Kit Imagem) É ele mesmo um dispositivo cujo
 // conteúdo de tela é a identidade do produto (ex.: tablet mostrando o próprio
 // app/print do negócio), a regra padrão de "desfoque/oculte conteúdo de tela"
@@ -125,8 +138,13 @@ function screenContentClause(preserveScreenContent: boolean): string {
   return `A TELA, quando visível, mostra conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado); presença visual de conteúdo é desejável, opacidade total não. PROIBIDO desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso; conteúdo identificável em tela (logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados).`;
 }
 
-export function buildDeviceRule(mainActivity?: string, preserveScreenContent?: boolean): string {
+export function buildDeviceRule(
+  mainActivity?: string,
+  preserveScreenContent?: boolean,
+  hasProdutoFisicoRef?: boolean,
+): string {
   if (isNonDigitalActivity(mainActivity)) return buildNoDeviceRule();
+  if (hasProdutoFisicoRef && !preserveScreenContent) return buildNoDeviceProdutoFisicoRule();
   const screenNegative = preserveScreenContent
     ? "no blurred screen, no blank screen, no dark screen, no empty screen, no different content on screen than the reference image"
     : "no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen";
