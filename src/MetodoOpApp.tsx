@@ -605,7 +605,9 @@ export default function App() {
               mainActivity: kit.mainActivity,
               logoPosition: kit.logoPosition || "bottom-right",
               assinatura: kit.assinatura,
+              uniformeDataUrl: kit.uniformeDataUrl,
               products: kit.products ?? [],
+              isPersonalBrand: kit.isPersonalBrand ?? false,
             },
           });
         } else {
