@@ -151,6 +151,7 @@ export async function composeFeedPng(
   kit: BrandKit,
   _item: FeedItem,
   baseImage?: string,
+  opts?: { skipLogo?: boolean },
 ): Promise<string> {
   const w = FEED_W;
   const h = FEED_H;
@@ -171,7 +172,7 @@ export async function composeFeedPng(
     }
   }
 
-  await drawLogoOnly(ctx, kit, w, h, PAD);
+  if (!opts?.skipLogo) await drawLogoOnly(ctx, kit, w, h, PAD);
   return canvas.toDataURL("image/png");
 }
 

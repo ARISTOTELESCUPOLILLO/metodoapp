@@ -959,8 +959,11 @@ export async function generatePostUnico(params: {
     legenda: "",
     imagem: "",
   };
+  // Uniforme já carrega a logomarca real impressa no tecido (instrução do
+  // prompt) — a marca-d'água do canvas no canto duplicaria a logo na peça.
+  const skipLogo = !!references?.uniforme;
   try {
-    return await composeFeedPng(kit, placeholderItem, dataUrl);
+    return await composeFeedPng(kit, placeholderItem, dataUrl, { skipLogo });
   } catch {
     return dataUrl;
   }
