@@ -618,13 +618,40 @@ const PERSONAGEM_VS_PRODUTO_EQUILIBRIO_MARCA_PLURAL =
   "Componha de forma que todos sejam percebidos ao mesmo tempo e com destaque equivalente — ex.: produtos nas mãos ou bem próximos ao personagem, todos em foco nítido, nenhum cortado ou em segundo plano. " +
   "PROIBIDO o personagem dominar o quadro reduzindo os produtos a detalhe secundário; PROIBIDO os produtos dominarem o quadro reduzindo o personagem a figurante. Na dúvida, mantenha todos em igual destaque — não escolha um lado.";
 
+// MARCA PESSOAL: o dono/profissional É a marca (artista, terapeuta, coach,
+// influenciador) — ver documento de princípios, Parte 2.1. Aqui a hierarquia
+// equilíbrio 50/50 não se aplica: o produto (quando existir, ex.: um livro,
+// um curso, um material assinado) é representação secundária da pessoa, não
+// um elemento de peso igual — o mesmo padrão de protagonismo de SERVIÇOS,
+// mas com redação própria de MARCA pessoal.
+const PRODUTO_APOIO_MARCA_PESSOAL_SINGULAR =
+  "PAPEL DO PRODUTO NESTA CENA (MARCA PESSOAL) — o PRODUTO referenciado é elemento de APOIO, adaptado e integrado à cena — NUNCA o protagonista visual. Quem representa a marca aqui é a PESSOA. " +
+  "Mantenha fidelidade ao produto real (mesma cor, forma, rótulo, acabamento), mas em plano secundário: menor, mais ao fundo ou parcialmente em uso/apoiado de forma natural — sem ocupar o centro do quadro. " +
+  "PROIBIDO ampliar o produto, aproximar a câmera dele ou tratá-lo como herói da composição. O PERSONAGEM é quem ocupa esse papel.";
+
+const PRODUTO_APOIO_MARCA_PESSOAL_PLURAL =
+  "PAPEL DOS PRODUTOS NESTA CENA (MARCA PESSOAL) — os PRODUTOS referenciados são elementos de APOIO, adaptados e integrados à cena — NUNCA os protagonistas visuais. Quem representa a marca aqui é a PESSOA. " +
+  "Mantenha fidelidade a cada produto real (mesma cor, forma, rótulo, acabamento), mas em plano secundário: menores, mais ao fundo ou parcialmente em uso/apoiados de forma natural — sem ocupar o centro do quadro. " +
+  "PROIBIDO ampliar os produtos, aproximar a câmera deles ou tratá-los como heróis da composição. O PERSONAGEM é quem ocupa esse papel.";
+
+const PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_SINGULAR =
+  "PERSONAGEM vs PRODUTO (MARCA PESSOAL) — o PERSONAGEM é o PROTAGONISTA absoluto da composição: nesta marca, a pessoa É a marca, não um elemento que disputa espaço com o produto. " +
+  "A postura, a expressão e a ação do personagem são o centro visual da imagem. O produto aparece de forma natural e secundária (nas mãos, sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-lo. " +
+  "Na dúvida entre valorizar a pessoa ou o produto, valorize SEMPRE a pessoa.";
+
+const PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_PLURAL =
+  "PERSONAGEM vs PRODUTOS (MARCA PESSOAL) — o PERSONAGEM é o PROTAGONISTA absoluto da composição: nesta marca, a pessoa É a marca, não um elemento que disputa espaço com os produtos. " +
+  "A postura, a expressão e a ação do personagem são o centro visual da imagem. Os produtos aparecem de forma natural e secundária (nas mãos, sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-los. " +
+  "Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE a pessoa.";
+
 export function buildProductHierarchyBlock(opts: {
   produtosCount: number;
   hasCenario: boolean;
   hasAvatar: boolean;
   segment?: Segment;
+  isPersonalBrand?: boolean;
 }): string {
-  const { produtosCount, hasCenario, hasAvatar, segment } = opts;
+  const { produtosCount, hasCenario, hasAvatar, segment, isPersonalBrand } = opts;
   if (produtosCount <= 0) return "";
   const multi = produtosCount > 1;
 
@@ -642,8 +669,25 @@ export function buildProductHierarchyBlock(opts: {
     return lines.join("\n");
   }
 
-  // MARCA: nem produto nem personagem dominam — peso visual equivalente entre
-  // os dois, o protagonista é a identidade da marca, representada por ambos.
+  // MARCA PESSOAL: o dono/profissional É a marca — personagem sempre
+  // protagonista, produto em apoio (não entra no equilíbrio 50/50 abaixo).
+  if (segment === "MARCA" && isPersonalBrand) {
+    const lines: string[] = [
+      multi ? PRODUTO_APOIO_MARCA_PESSOAL_PLURAL : PRODUTO_APOIO_MARCA_PESSOAL_SINGULAR,
+    ];
+    if (hasAvatar) {
+      lines.push(
+        multi
+          ? PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_PLURAL
+          : PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_SINGULAR,
+      );
+    }
+    return lines.join("\n");
+  }
+
+  // MARCA (institucional): nem produto nem personagem dominam — peso visual
+  // equivalente entre os dois, o protagonista é a identidade da marca,
+  // representada por ambos.
   if (segment === "MARCA") {
     const lines: string[] = [
       multi ? PRODUTO_EQUILIBRIO_MARCA_PLURAL : PRODUTO_EQUILIBRIO_MARCA_SINGULAR,

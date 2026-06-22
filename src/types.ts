@@ -44,6 +44,11 @@ export interface BrandKit {
   // Produtos, serviços, categorias ou especialidades reais — matéria-prima
   // concreta para a Sugestão (Informação-chave). Mínimo 3, máximo 10.
   products?: string[];
+  // Marca pessoal (segmento MARCA): o dono/profissional É a marca (artista,
+  // terapeuta, coach, influenciador) — ver documento de princípios, Parte 2.1.
+  // Muda a hierarquia produto×personagem (personagem domina, não 50/50) e a
+  // lente da Sugestão. Sem efeito fora do segmento MARCA.
+  isPersonalBrand?: boolean;
 }
 
 export interface ContentFormData {

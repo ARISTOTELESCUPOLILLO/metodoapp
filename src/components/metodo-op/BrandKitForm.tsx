@@ -562,6 +562,17 @@ export default function BrandKitForm({
           </select>
         </label>
 
+        {kit.segment === "MARCA" && (
+          <label className="checkRow">
+            <input
+              type="checkbox"
+              checked={!!kit.isPersonalBrand}
+              onChange={(e) => update("isPersonalBrand", e.target.checked)}
+            />
+            Esta marca é pessoal (o dono/profissional é a própria marca)
+          </label>
+        )}
+
         <label>
           Atividade principal
           <input

@@ -389,6 +389,22 @@ export default function UsoReferenciasDia(props: Props) {
                 : "1 foto por card, na ordem marcada — repete se faltar foto."}
             </p>
           )}
+          {kit.isPersonalBrand && !imageKit.avatar && !imageKit.avatar2 && (
+            <p
+              style={{
+                margin: "0 0 8px",
+                fontSize: 11,
+                color: "#713f12",
+                background: "#fefce8",
+                border: "1px solid #fde047",
+                borderRadius: 8,
+                padding: "6px 10px",
+              }}
+            >
+              ⚠ Esta marca é pessoal — funciona melhor com seu <b>avatar</b> marcado como
+              referência, já que você é a própria marca.
+            </p>
+          )}
 
           <div
             style={{

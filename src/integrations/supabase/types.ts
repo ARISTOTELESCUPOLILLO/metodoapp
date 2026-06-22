@@ -69,6 +69,7 @@ export type Database = {
           font_pair: string | null;
           id: string;
           instagram_url: string | null;
+          is_personal_brand: boolean;
           logo_has_name: boolean | null;
           logo_position: string;
           logo_url: string | null;
@@ -91,6 +92,7 @@ export type Database = {
           font_pair?: string | null;
           id?: string;
           instagram_url?: string | null;
+          is_personal_brand?: boolean;
           logo_has_name?: boolean | null;
           logo_position?: string;
           logo_url?: string | null;
@@ -113,6 +115,7 @@ export type Database = {
           font_pair?: string | null;
           id?: string;
           instagram_url?: string | null;
+          is_personal_brand?: boolean;
           logo_has_name?: boolean | null;
           logo_position?: string;
           logo_url?: string | null;

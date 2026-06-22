@@ -337,6 +337,7 @@ export default function PostUnicoForm({
           mainActivity: data.mainActivity || kit.mainActivity,
           objetivo: data.objetivo,
           segment: kit.segment,
+          isPersonalBrand: kit.isPersonalBrand,
           brandVoice: kit.brandVoice || "",
           hint: "",
           mode: "postunico",

@@ -1193,6 +1193,7 @@ export default function App() {
                 onClear={handleClearMethodGeneration}
                 loading={loading}
                 segment={kit.segment}
+                isPersonalBrand={kit.isPersonalBrand}
                 mood={mood}
                 onMoodChange={setMood}
                 rendersRestantes={rendersRestantes}

@@ -262,6 +262,7 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
           const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment)
             ? (body.segment as Seg)
             : "SERVIÇOS";
+          const isPersonalBrand = segment === "MARCA" && body.isPersonalBrand === true;
 
           // Eixos de leitura por segmento — direcionam a sugestão sem virar
           // biblioteca fixa de respostas.
@@ -273,6 +274,12 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
             MARCA:
               "o momento em que o público se reconhece, se identifica ou desenvolve confiança ao se conectar com a identidade da marca — os valores, a cultura ou o propósito vividos por ele através dela — não um atributo isolado da própria empresa (bastidor, história institucional, conquista interna) sem ligação com quem está vendo",
           };
+          // Marca pessoal (documento de princípios, Parte 2.1): o dono/profissional
+          // É a marca — o eixo de leitura passa a ser a trajetória, o jeito de
+          // trabalhar ou a experiência da PESSOA, não valores/cultura de uma
+          // empresa abstrata por trás dela.
+          const MARCA_LENS_PESSOAL =
+            "o momento em que o público se reconhece, se identifica ou desenvolve confiança ao acompanhar a trajetória, o jeito de trabalhar ou a experiência real do profissional por trás da marca — não um atributo isolado de uma empresa abstrata (bastidor institucional, história corporativa) sem ligação direta com a pessoa";
 
           // Ancoragem na atividade — a ATIVIDADE é a fonte PRINCIPAL do
           // assunto da sugestão; o nome da empresa serve só para
@@ -336,7 +343,11 @@ DIREÇÃO DE ENTREGA: se a frase envolver entrega, envio ou deslocamento de "${c
           const itemType = concreteItem ? classifyItemType(concreteItem) : null;
           const segmentForLens: Seg =
             itemType && itemType !== segment && segment !== "MARCA" ? itemType : segment;
-          const segmentLensBlock = `LENTE DO SEGMENTO (${segmentForLens}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${SEGMENT_LENS[segmentForLens]}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.
+          const lensTextForSegment =
+            segmentForLens === "MARCA" && isPersonalBrand
+              ? MARCA_LENS_PESSOAL
+              : SEGMENT_LENS[segmentForLens];
+          const segmentLensBlock = `LENTE DO SEGMENTO (${segmentForLens}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${lensTextForSegment}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.
 TESTE DE IDENTIFICAÇÃO DO CLIENTE: a frase final precisa ser algo que o CLIENTE (quem vê o post) diria, perguntaria, sentiria ou viveria. Se a frase descrever um atributo, processo ou metodologia do ponto de vista da empresa/fornecedor — e não uma situação, ganho ou rotina do cliente —, reescreva pelo que o cliente ganha ou pela situação que ele reconhece.
 PROIBIDO (ou variações próximas): "indicada por"/"indicado por", "ajustado conforme", "alinhada com análise", "humanizado"/"humanizada", "pronta(s)/pronto(s) para", "em tempo real", "bem vedada(s)" — são marcas de fala de catálogo ou de metodologia interna do fornecedor, não algo que o cliente diria.`;
 

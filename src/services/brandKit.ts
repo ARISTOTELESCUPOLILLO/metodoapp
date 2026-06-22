@@ -25,6 +25,7 @@ function rowToKit(k: BrandKitRow): BrandKit {
     assinatura: k.assinatura || "",
     uniformeDataUrl: k.uniforme_url || undefined,
     products: Array.isArray(k.products) ? (k.products as string[]) : [],
+    isPersonalBrand: k.is_personal_brand ?? false,
   };
 }
 
@@ -71,6 +72,7 @@ const KitSchema = z.object({
   assinatura: z.string().max(100).optional(),
   uniformeDataUrl: z.string().max(5_000_000).optional(),
   products: z.array(z.string().trim().min(1).max(80)).max(10).default([]),
+  isPersonalBrand: z.boolean().default(false),
 });
 
 // Server function: salva Kit de Marca de qualquer usuário (admin bypass RLS).
@@ -114,6 +116,7 @@ export const saveKitServer = createServerFn({ method: "POST" })
       assinatura: data.assinatura ?? null,
       uniforme_url: data.uniformeDataUrl ?? null,
       products: data.products,
+      is_personal_brand: data.isPersonalBrand,
       updated_at: new Date().toISOString(),
     };
 
@@ -174,6 +177,7 @@ export async function saveKitForUser(kit: BrandKit, userId: string): Promise<Bra
     assinatura: kit.assinatura ?? null,
     uniforme_url: kit.uniformeDataUrl ?? null,
     products: kit.products ?? [],
+    is_personal_brand: kit.isPersonalBrand ?? false,
     updated_at: new Date().toISOString(),
   };
 

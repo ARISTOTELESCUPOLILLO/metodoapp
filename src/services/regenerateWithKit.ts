@@ -252,6 +252,7 @@ function buildAnchorPrefix(
   cardCarrossel?: number,
   segment?: Segment,
   produtoDetalhe?: boolean,
+  isPersonalBrand?: boolean,
 ): string {
   // Ordem dos prefixos espelha a ordem em que as imagens são enviadas
   // (avatar → uniforme → fachada → cenário → produtos), pra que a numeração
@@ -377,6 +378,7 @@ function buildAnchorPrefix(
           hasCenario: !!refs.cenario,
           hasAvatar: !!refs.avatar,
           segment,
+          isPersonalBrand,
         }),
       );
     }
@@ -468,6 +470,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     slot.formato === "carrossel" ? slot.cardCarrossel : undefined,
     kit.segment,
     selecaoDireta?.produtoDetalhe,
+    kit.isPersonalBrand,
   );
 
   const inferred: "post" | "reels" = slot.formato === "reels" ? "reels" : "post";

@@ -15,6 +15,7 @@ interface Props {
   onClear: () => void;
   loading: boolean;
   segment: Segment;
+  isPersonalBrand?: boolean;
   mood: MoodCode | null;
   onMoodChange: (mood: MoodCode) => void;
   rendersRestantes?: number;
@@ -73,6 +74,7 @@ export default function ContentForm({
   onClear,
   loading,
   segment,
+  isPersonalBrand,
   mood,
   onMoodChange,
   rendersRestantes,
@@ -148,6 +150,7 @@ export default function ContentForm({
           mainActivity: data.mainActivity || "",
           objetivo: "promocao",
           segment,
+          isPersonalBrand,
           audience: data.audience,
           hint: "",
           mode: "metodo",

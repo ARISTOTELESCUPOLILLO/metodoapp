@@ -468,15 +468,29 @@ const AVATAR_ROLE_BY_SEGMENT_OBJETIVO: Partial<Record<string, string>> = {
   // o avatar "apresentar" o produto como um acessório da composição.
   "MARCA:institucional":
     "PAPEL DO PERSONAGEM: o avatar representa, por escolha deliberada do usuário, o emissor da marca — postura confiante e serena, presença que comunica autoridade e propósito institucional, não está executando uma tarefa operacional do dia a dia. Quando há produto na cena, ele e o avatar dividem o protagonismo em PESO VISUAL IGUAL — nenhum dos dois reduzido a acessório ou plano de fundo do outro; os dois juntos representam a identidade da marca.",
+  // Marca pessoal (documento de princípios, Parte 2.1): o dono/profissional É
+  // a marca — não há equilíbrio 50/50 com o produto, o avatar é sempre quem
+  // protagoniza, o produto (quando existir) fica em apoio.
+  "MARCA:institucional:pessoal":
+    "PAPEL DO PERSONAGEM: o avatar representa, por escolha deliberada do usuário, o emissor da marca — e nesta marca, que é pessoal, o profissional/dono É a própria marca. Postura confiante e serena, presença que comunica autoridade e propósito institucional. Quando há produto na cena, o avatar é o PROTAGONISTA absoluto e o produto fica em plano de apoio, secundário — sem disputar peso visual com a pessoa.",
 };
 
 function avatarRoleBlock(
   segment?: string,
   objetivo?: PostUnicoObjetivo,
   hasAvatar?: boolean,
+  isPersonalBrand?: boolean,
 ): string {
   if (!hasAvatar || !segment || !objetivo) return "";
-  return AVATAR_ROLE_BY_SEGMENT_OBJETIVO[`${segment}:${objetivo}`] ?? "";
+  const key =
+    segment === "MARCA" && isPersonalBrand
+      ? `${segment}:${objetivo}:pessoal`
+      : `${segment}:${objetivo}`;
+  return (
+    AVATAR_ROLE_BY_SEGMENT_OBJETIVO[key] ??
+    AVATAR_ROLE_BY_SEGMENT_OBJETIVO[`${segment}:${objetivo}`] ??
+    ""
+  );
 }
 
 function referencesBlock(
@@ -485,6 +499,7 @@ function referencesBlock(
   kitColors?: { primary: string; accent: string },
   objetivo?: PostUnicoObjetivo,
   forcedGender?: PersonagemGender,
+  isPersonalBrand?: boolean,
 ): string {
   if (!refs) return "";
   const parts: string[] = [];
@@ -565,8 +580,9 @@ function referencesBlock(
       ? "preserve a arquitetura, paredes, piso, iluminação geral e identidade visual do ambiente — móveis e objetos do cenário aparecem apenas como FUNDO de apoio, atrás e ao redor do produto referenciado, nunca à frente dele nem maiores ou mais nítidos que ele"
       : "preserve a sala, móveis, equipamentos, paredes e ponto de vista";
     // "Dar protagonismo ao produto" só faz sentido em VAREJO — em SERVIÇOS
-    // (produto-apoio) e MARCA (equilíbrio 50/50) isso contradiria a regra de
-    // hierarquia já definida no bloco PRODUTOS SELECIONADOS abaixo.
+    // (produto-apoio) e MARCA (equilíbrio 50/50, ou personagem-dominante se
+    // marca pessoal) isso contradiria a regra de hierarquia já definida no
+    // bloco PRODUTOS SELECIONADOS abaixo.
     const anguloClause = temProduto
       ? segment === "VAREJO"
         ? "Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local."
@@ -610,6 +626,7 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         hasCenario: !!refs.cenario,
         hasAvatar: !!refs.avatar,
         segment: segment as Segment | undefined,
+        isPersonalBrand,
       }),
     );
     if (refs.produtos.length >= 2) {
@@ -737,6 +754,7 @@ Hierarquia tipográfica obrigatória:
     { primary, accent },
     data.objetivo,
     forcedGender,
+    kit.isPersonalBrand,
   );
   const referenceAnchorBlock = refsBlock
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
@@ -761,7 +779,7 @@ Hierarquia tipográfica obrigatória:
   // um papel específico de segmento+objetivo, se houver um mapeado — ver
   // avatarRoleBlock acima.
   const roleBlock = !showConcreteAction
-    ? avatarRoleBlock(kit.segment, data.objetivo, !!references?.avatar)
+    ? avatarRoleBlock(kit.segment, data.objetivo, !!references?.avatar, kit.isPersonalBrand)
     : "";
   const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}${roleBlock ? `\n${roleBlock}` : ""}\n`;
 

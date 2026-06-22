@@ -123,6 +123,22 @@ export default function PostUnicoComposicaoVisual({
           marca/título/texto sobrepostos — diferente das outras imagens, que a IA recria.
         </p>
       )}
+      {kit.isPersonalBrand && !hasAvatar && (
+        <p
+          style={{
+            margin: "0 0 12px",
+            fontSize: 12,
+            color: "#713f12",
+            background: "#fefce8",
+            border: "1px solid #fde047",
+            borderRadius: 10,
+            padding: "8px 12px",
+          }}
+        >
+          ⚠ Esta marca é pessoal — funciona melhor com seu <b>avatar</b> marcado como referência, já
+          que você é a própria marca.
+        </p>
+      )}
 
       <div
         style={{
