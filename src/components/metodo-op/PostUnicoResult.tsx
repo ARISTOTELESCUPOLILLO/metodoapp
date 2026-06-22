@@ -285,7 +285,7 @@ export default function PostUnicoResult({
                 fontSize: 13,
               }}
             >
-              Legenda indisponível.{" "}
+              <span title={captionError}>Legenda indisponível.</span>{" "}
               {onRegenerateCaption && !captionExhausted && (
                 <button
                   type="button"
