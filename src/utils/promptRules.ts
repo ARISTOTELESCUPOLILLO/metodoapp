@@ -41,8 +41,96 @@ export function pickDeviceTypeLine(): string {
   return DEVICE_TYPE_POOL[Math.floor(Math.random() * DEVICE_TYPE_POOL.length)];
 }
 
-export function buildDeviceRule(): string {
-  return `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, celular, monitor e outros dispositivos são PERMITIDOS quando a cena pedir, em uso natural — abertos, na mão, apoiados sobre a mesa. NÃO forçar dispositivo fechado. A TELA, quando visível, mostra conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado); presença visual de conteúdo é desejável, opacidade total não. PROIBIDO desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso; conteúdo identificável em tela (logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados).
+// Atividades cujo ofício real é manual/físico/artístico — o trabalho não passa
+// por tela. Lista por palavra-chave (mesmo padrão de classificação usado em
+// SEGMENT_LENS/classifyItemType) em vez de depender da IA interpretar "se a
+// cena envolver dispositivo": sem essa trava, o sorteio de dispositivo do pool
+// entra sempre, e a IA tende a materializar o tipo sugerido mesmo quando não
+// faz sentido pro ofício (ex.: artista/poetisa com notebook).
+// Sem acentos — comparados contra mainActivity já normalizado (NFD + strip).
+const NON_DIGITAL_ACTIVITY_KEYWORDS = [
+  "artist",
+  "poet",
+  "pint", // pintor, pintura
+  "escult", // escultor, escultura
+  "artesa", // artesã, artesão, artesanato
+  "artesan",
+  "ceramic",
+  "ceramist",
+  "music", // músico, música
+  "instrumentist",
+  "costur", // costureira, costura
+  "alfaiat",
+  "bordad",
+  "tecel", // tecelagem
+  "marcenari",
+  "marceneir",
+  "carpintari",
+  "carpinteir",
+  "ferreir",
+  "joalheri",
+  "ourivesari",
+  "florist", // florista, arranjos
+  "jardinagem",
+  "jardineir",
+  "culinari",
+  "confeitari",
+  "padeir",
+  "pasteleir",
+  "cabeleireir",
+  "barbeari",
+  "tatuad",
+  "fotograf", // fotógrafo, fotografia
+  "dancarin", // bailarino, dançarino
+  "danca", // dança
+  "atriz",
+  "teatr",
+  "ilustrad",
+  "ilustrac",
+  "desenhist",
+  "grafit",
+  "yoga",
+  "pilates",
+  "massoterapeuta",
+  "fisioterapeut",
+  "personal trainer",
+  "agricultur",
+  "pecuari",
+  "pesc",
+];
+
+export function isNonDigitalActivity(mainActivity?: string): boolean {
+  if (!mainActivity) return false;
+  const normalized = mainActivity.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return NON_DIGITAL_ACTIVITY_KEYWORDS.some((kw) => normalized.includes(kw));
+}
+
+function buildNoDeviceRule(): string {
+  return `⚠ DISPOSITIVOS DIGITAIS — PROIBIDOS NESTA CENA: o ofício real da empresa/profissional é manual, físico ou artístico e NÃO passa por tela. PROIBIDO incluir notebook, laptop, tablet, celular, monitor, computador ou qualquer dispositivo digital na composição, mesmo como elemento de apoio. A cena mostra o trabalho real com as mãos, ferramentas, materiais ou instrumentos do próprio ofício.
+NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`;
+}
+
+// Quando o produto referenciado (Kit Imagem) É ele mesmo um dispositivo cujo
+// conteúdo de tela é a identidade do produto (ex.: tablet mostrando o próprio
+// app/print do negócio), a regra padrão de "desfoque/oculte conteúdo de tela"
+// abaixo entraria em conflito direto com "preservar fidelidade ao produto" —
+// resultado real observado: a tela saía vazia/borrada, perdendo o conteúdo
+// que era o ponto inteiro da referência. Este bloco substitui a cláusula de
+// tela quando preserveScreenContent=true, mantendo as demais regras de
+// dispositivo (ponto de vista, carcaça, protagonismo) intactas.
+function screenContentClause(preserveScreenContent: boolean): string {
+  if (preserveScreenContent) {
+    return `A TELA do dispositivo referenciado como produto exibe o CONTEÚDO REAL da imagem de referência — esse conteúdo É a identidade do produto sendo mostrado. PROIBIDO desfocar, apagar, escurecer ou substituir esse conteúdo por outra interface: reproduza-o com NITIDEZ e LEGIBILIDADE total, exatamente como aparece na referência.`;
+  }
+  return `A TELA, quando visível, mostra conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado); presença visual de conteúdo é desejável, opacidade total não. PROIBIDO desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso; conteúdo identificável em tela (logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados).`;
+}
+
+export function buildDeviceRule(mainActivity?: string, preserveScreenContent?: boolean): string {
+  if (isNonDigitalActivity(mainActivity)) return buildNoDeviceRule();
+  const screenNegative = preserveScreenContent
+    ? "no blurred screen, no blank screen, no dark screen, no empty screen, no different content on screen than the reference image"
+    : "no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen";
+  return `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, celular, monitor e outros dispositivos são PERMITIDOS quando a cena pedir, em uso natural — abertos, na mão, apoiados sobre a mesa. NÃO forçar dispositivo fechado. ${screenContentClause(!!preserveScreenContent)}
 
 REGRA DE PONTO DE VISTA — ABSOLUTA (vale para qualquer dispositivo com tela: notebook, monitor, tablet, celular): o único "observador" da tela na cena é o PERSONAGEM, que está posicionado na frente do display. A câmera — ou seja, quem vê a peça publicitária — fica SEMPRE do mesmo lado do personagem, o lado da tela, nunca do lado oposto/atrás do equipamento. Enquadrar a cena por trás do dispositivo é PROIBIDO: esconderia o rosto do personagem e mostraria apenas a carcaça traseira, um ângulo não-natural para uma peça publicitária (nenhum fotógrafo se posicionaria atrás do monitor/notebook, perdendo o rosto de quem está sendo fotografado). As regras de composição por tipo abaixo aplicam esse princípio a cada formato de dispositivo.
 
@@ -52,7 +140,7 @@ DIVERSIFICAÇÃO OBRIGATÓRIA: não repita sempre notebook entre as peças de um
 PROTAGONISMO: o dispositivo digital é elemento de APOIO à cena, nunca o protagonista visual — o foco principal é a pessoa e a ação dela. Mantenha o dispositivo proporcionalmente pequeno no quadro, nunca em primeiro plano ocupando a maior área da composição. EXCEÇÃO: quando o próprio dispositivo for o produto sendo vendido (ex.: loja de eletrônicos/celulares/informática) — nesse caso ele pode ocupar o centro da composição como protagonista.
 
 CARCAÇA E TAMPA — REGRA ABSOLUTA (vale mesmo com a composição correta, como reforço): tampa, verso e carcaça de qualquer dispositivo DEVEM ser completamente lisas, sem nenhuma marca, símbolo, logo, maçã, ícone, adesivo, gravação ou iluminação. Use equipamento genérico, sem marca. MÁXIMO 1 DISPOSITIVO por cena.
-NEGATIVE: no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no images or graphics on device casing or back cover, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no device rear casing facing camera, camera on the screen side only, never positioned behind the device.`;
+NEGATIVE: ${screenNegative}, no images or graphics on device casing or back cover, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no device rear casing facing camera, camera on the screen side only, never positioned behind the device.`;
 }
 
 export const AMBIENTES_RULE = `⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.`;

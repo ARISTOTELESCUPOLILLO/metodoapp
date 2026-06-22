@@ -847,6 +847,7 @@ export default function App() {
             : undefined,
           useUniforme: visualSelection.useUniforme,
           personagemSemAvatar,
+          produtoTelaInformativa: visualSelection.produtoTelaInformativa,
         },
         kit.uniformeDataUrl,
       );
@@ -860,6 +861,7 @@ export default function App() {
         references.cenario ||
         references.produtos?.length ||
         references.uniforme ||
+        references.personagemSemAvatarAtivo ||
         references.fato ||
         references.venda
       );

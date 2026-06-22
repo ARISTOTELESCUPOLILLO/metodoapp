@@ -142,6 +142,7 @@ export default function UsoReferenciasDia(props: Props) {
   const [cenarioNum, setCenarioNum] = useState<number | null>(null);
   const [produtosNums, setProdutosNums] = useState<number[]>([]);
   const [useUniforme, setUseUniforme] = useState(false);
+  const [produtoTelaInformativa, setProdutoTelaInformativa] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,6 +163,9 @@ export default function UsoReferenciasDia(props: Props) {
         if (typeof s.cenarioNum === "number" || s.cenarioNum === null) setCenarioNum(s.cenarioNum);
         if (Array.isArray(s.produtosNums)) setProdutosNums(s.produtosNums);
         if (typeof s.useUniforme === "boolean") setUseUniforme(s.useUniforme);
+        if (typeof s.produtoTelaInformativa === "boolean") {
+          setProdutoTelaInformativa(s.produtoTelaInformativa);
+        }
       }
     } catch {
       /* ignore */
@@ -174,13 +178,30 @@ export default function UsoReferenciasDia(props: Props) {
       if (typeof window === "undefined") return;
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme }),
+        JSON.stringify({
+          enabled,
+          avatarNum,
+          usarFachada,
+          cenarioNum,
+          produtosNums,
+          useUniforme,
+          produtoTelaInformativa,
+        }),
       );
       window.dispatchEvent(new CustomEvent("uso-ref:changed", { detail: { key: storageKey } }));
     } catch {
       /* ignore */
     }
-  }, [enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme, storageKey]);
+  }, [
+    enabled,
+    avatarNum,
+    usarFachada,
+    cenarioNum,
+    produtosNums,
+    useUniforme,
+    produtoTelaInformativa,
+    storageKey,
+  ]);
 
   // Remove fantasmas: produtos marcados que não existem mais no Kit (foto
   // deletada/reordenada desde a última seleção) — sem isso o badge de ordem
@@ -250,6 +271,7 @@ export default function UsoReferenciasDia(props: Props) {
           cenarioNum: cenarioNum,
           produtosNums: produtosNumsParaUso,
           useUniforme: avatarNum != null && useUniforme,
+          produtoTelaInformativa: produtosNumsParaUso.length > 0 && produtoTelaInformativa,
         },
         userId,
       });
@@ -484,6 +506,37 @@ export default function UsoReferenciasDia(props: Props) {
             </label>
           )}
 
+          {policy.produtos > 0 && produtosNums.length > 0 && (
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 8,
+                cursor: "pointer",
+                fontSize: 11,
+                fontWeight: 600,
+              }}
+            >
+              <input
+                type="checkbox"
+                style={{
+                  width: 16,
+                  height: 16,
+                  minWidth: 16,
+                  margin: 0,
+                  padding: 0,
+                  flexShrink: 0,
+                  cursor: "pointer",
+                }}
+                checked={produtoTelaInformativa}
+                onChange={(e) => setProdutoTelaInformativa(e.target.checked)}
+              />
+              Este produto é uma tela (ex.: tablet/celular mostrando um app/print) — preservar o
+              conteúdo exibido nela
+            </label>
+          )}
+
           {algumFaltando && (
             <div
               style={{
@@ -669,6 +722,9 @@ export interface RefSelectionState {
   cenarioNum: number | null;
   produtosNums: number[];
   useUniforme: boolean;
+  // O(s) produto(s) selecionados são, eles mesmos, uma tela/dispositivo cujo
+  // conteúdo exibido é a identidade do produto — ver promptRules.buildDeviceRule.
+  produtoTelaInformativa: boolean;
   hasAny: boolean;
 }
 
@@ -679,6 +735,7 @@ const EMPTY_SEL: RefSelectionState = {
   cenarioNum: null,
   produtosNums: [],
   useUniforme: false,
+  produtoTelaInformativa: false,
   hasAny: false,
 };
 
@@ -702,10 +759,20 @@ function readSel(storageKey: string): RefSelectionState {
       ? s.produtosNums.filter((n: unknown) => typeof n === "number")
       : [];
     const useUniforme = avatarNum != null && !!s.useUniforme;
+    const produtoTelaInformativa = produtosNums.length > 0 && !!s.produtoTelaInformativa;
     const hasAny =
       enabled &&
       (avatarNum != null || usarFachada || cenarioNum != null || produtosNums.length > 0);
-    return { enabled, avatarNum, usarFachada, cenarioNum, produtosNums, useUniforme, hasAny };
+    return {
+      enabled,
+      avatarNum,
+      usarFachada,
+      cenarioNum,
+      produtosNums,
+      useUniforme,
+      produtoTelaInformativa,
+      hasAny,
+    };
   } catch {
     return EMPTY_SEL;
   }
@@ -724,7 +791,8 @@ function getSnapshot(storageKey: string): RefSelectionState {
     cached.cenarioNum === fresh.cenarioNum &&
     cached.produtosNums.length === fresh.produtosNums.length &&
     cached.produtosNums.every((n, i) => n === fresh.produtosNums[i]) &&
-    cached.useUniforme === fresh.useUniforme
+    cached.useUniforme === fresh.useUniforme &&
+    cached.produtoTelaInformativa === fresh.produtoTelaInformativa
   ) {
     return cached;
   }

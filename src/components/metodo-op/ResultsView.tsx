@@ -293,7 +293,9 @@ interface RefSelectorProps {
   extrasCarrossel: number;
 }
 
-// Botão "Gerar outra com refs" — só aparece se há seleção marcada E o kit tem imagens do tipo certo.
+// Botão "Gerar com refs" — só aparece se há seleção marcada E o kit tem imagens do tipo certo.
+// Visível desde a primeira geração (não depende de já existir preview), pra
+// que a referência do Kit entre também na 1ª imagem, não só na regeração.
 function RefsRegenButton({
   storageKey,
   fallbackKey,
@@ -303,6 +305,7 @@ function RefsRegenButton({
   formato,
   segmento,
   modelo,
+  hasPreview,
 }: {
   storageKey: string;
   fallbackKey?: string;
@@ -312,6 +315,7 @@ function RefsRegenButton({
   formato?: "estatico" | "carrossel" | "estatico_final" | "reels";
   segmento: BrandKit["segment"];
   modelo: ModeloOP | null;
+  hasPreview?: boolean;
 }) {
   const sel = useRefSelection(storageKey);
   const selFb = useRefSelection(fallbackKey || storageKey);
@@ -324,9 +328,9 @@ function RefsRegenButton({
       type="button"
       onClick={onRun}
       disabled={busy}
-      title="Gerar outra usando as referências marcadas acima"
+      title="Gerar usando as referências marcadas acima"
     >
-      {busy ? "Gerando..." : "↻ Gerar outra com refs"}
+      {busy ? "Gerando..." : hasPreview ? "↻ Gerar outra com refs" : "⬇ Gerar com refs"}
     </button>
   );
 }
@@ -705,6 +709,7 @@ function FeedCard({
         titulo,
         texto,
         companyName: kit.companyName,
+        mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || "#f4b000",
         fontFamily: kit.fontPair || "Montserrat",
@@ -753,6 +758,7 @@ function FeedCard({
           cenarioNum: sel.cenarioNum,
           produtosNums: sel.produtosNums,
           useUniforme: sel.useUniforme,
+          produtoTelaInformativa: sel.produtoTelaInformativa,
         },
         anchoraPersonagem,
         ancoragePapel,
@@ -770,7 +776,7 @@ function FeedCard({
   }
 
   function handleGenerateWithRefs() {
-    guard({ hasPreview: true, tipo: "Estático", run: runGenerateWithRefs });
+    guard({ hasPreview: !!preview, tipo: "Estático", run: runGenerateWithRefs });
   }
 
   const ctx = (kind: RegenKind) => ({
@@ -903,19 +909,17 @@ function FeedCard({
             >
               {busy ? "Gerando..." : preview ? "↻ Gerar outra (sem refs)" : "⬇ Gerar post"}
             </button>
-            {preview &&
-              sel.hasAny &&
-              kitHasRefsForFormat(imageKit, "estatico", segmento, modelo) && (
-                <button
-                  className="generateBtn"
-                  type="button"
-                  onClick={handleGenerateWithRefs}
-                  disabled={busy || busyRefs}
-                  title="Gerar outra usando as referências marcadas acima"
-                >
-                  {busyRefs ? "Gerando..." : "↻ Gerar outra com refs"}
-                </button>
-              )}
+            {sel.hasAny && kitHasRefsForFormat(imageKit, "estatico", segmento, modelo) && (
+              <button
+                className="generateBtn"
+                type="button"
+                onClick={handleGenerateWithRefs}
+                disabled={busy || busyRefs}
+                title="Gerar usando as referências marcadas acima"
+              >
+                {busyRefs ? "Gerando..." : preview ? "↻ Gerar outra com refs" : "⬇ Gerar com refs"}
+              </button>
+            )}
             {preview && (
               <button
                 className="downloadBtn"
@@ -1014,6 +1018,7 @@ function FinalCard({
         titulo,
         texto,
         companyName: kit.companyName,
+        mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || "#f4b000",
         fontFamily: kit.fontPair || "Montserrat",
@@ -1061,6 +1066,7 @@ function FinalCard({
           cenarioNum: sel.cenarioNum,
           produtosNums: sel.produtosNums,
           useUniforme: sel.useUniforme,
+          produtoTelaInformativa: sel.produtoTelaInformativa,
         },
         anchoraPersonagem,
         ancoragePapel,
@@ -1078,7 +1084,7 @@ function FinalCard({
   }
 
   function handleGenerateWithRefs() {
-    guard({ hasPreview: true, tipo: "Estático Final", run: runGenerateWithRefs });
+    guard({ hasPreview: !!preview, tipo: "Estático Final", run: runGenerateWithRefs });
   }
 
   const ctx = (kind: RegenKind) => ({
@@ -1211,19 +1217,17 @@ function FinalCard({
             >
               {busy ? "Gerando..." : preview ? "↻ Gerar outra (sem refs)" : "⬇ Gerar fechamento"}
             </button>
-            {preview &&
-              sel.hasAny &&
-              kitHasRefsForFormat(imageKit, "estatico_final", segmento, modelo) && (
-                <button
-                  className="generateBtn"
-                  type="button"
-                  onClick={handleGenerateWithRefs}
-                  disabled={busy || busyRefs}
-                  title="Gerar outra usando as referências marcadas acima"
-                >
-                  {busyRefs ? "Gerando..." : "↻ Gerar outra com refs"}
-                </button>
-              )}
+            {sel.hasAny && kitHasRefsForFormat(imageKit, "estatico_final", segmento, modelo) && (
+              <button
+                className="generateBtn"
+                type="button"
+                onClick={handleGenerateWithRefs}
+                disabled={busy || busyRefs}
+                title="Gerar usando as referências marcadas acima"
+              >
+                {busyRefs ? "Gerando..." : preview ? "↻ Gerar outra com refs" : "⬇ Gerar com refs"}
+              </button>
+            )}
             {preview && (
               <button
                 className="downloadBtn"
@@ -1405,6 +1409,7 @@ function CarouselCardBlock({
         titulo: titulos[index],
         texto: textos[index],
         companyName: kit.companyName,
+        mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || "#f4b000",
         fontFamily: kit.fontPair || "Montserrat",
@@ -1441,7 +1446,11 @@ function CarouselCardBlock({
   }
 
   function handleGenerateWithRefs(index: number) {
-    guard({ hasPreview: true, tipo: "Carrossel", run: () => runGenerateWithRefs(index) });
+    guard({
+      hasPreview: !!previews[index],
+      tipo: "Carrossel",
+      run: () => runGenerateWithRefs(index),
+    });
   }
 
   // Lê seleção efetiva para um card: prefere storage do bloco (consolidado)
@@ -1454,6 +1463,7 @@ function CarouselCardBlock({
     produtosNums: number[];
     produtoDetalhe?: boolean;
     useUniforme?: boolean;
+    produtoTelaInformativa?: boolean;
   } | null {
     const card = cards[index];
     // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
@@ -1486,6 +1496,7 @@ function CarouselCardBlock({
               produtosNums: d ? [d.num] : [],
               produtoDetalhe: d ? !d.isFull : false,
               useUniforme: avatarNum != null && !!j.useUniforme,
+              produtoTelaInformativa: produtos.length > 0 && !!j.produtoTelaInformativa,
             };
           }
           // Outros segmentos: 1 produto por card, revezando entre os
@@ -1499,6 +1510,7 @@ function CarouselCardBlock({
             cenarioNum: typeof j.cenarioNum === "number" ? j.cenarioNum : null,
             produtosNums: pick != null ? [pick] : [],
             useUniforme: avatarNum != null && !!j.useUniforme,
+            produtoTelaInformativa: pick != null && !!j.produtoTelaInformativa,
           };
         }
       }
@@ -1519,6 +1531,7 @@ function CarouselCardBlock({
         cenarioNum: typeof j.cenarioNum === "number" ? j.cenarioNum : null,
         produtosNums: Array.isArray(j.produtosNums) ? j.produtosNums : [],
         useUniforme: avatarNum != null && !!j.useUniforme,
+        produtoTelaInformativa: !!j.produtoTelaInformativa,
       };
     } catch {
       return null;
@@ -1595,6 +1608,7 @@ function CarouselCardBlock({
             titulo: titulos[i],
             texto: textos[i],
             companyName: kit.companyName,
+            mainActivity: kit.mainActivity,
             primaryColor: kit.primaryColor,
             accentColor: kit.accentColor || "#f4b000",
             fontFamily: kit.fontPair || "Montserrat",
@@ -1936,18 +1950,17 @@ function CarouselCardBlock({
                         ? "↻ Gerar outra (sem refs)"
                         : "⬇ Gerar card"}
                   </button>
-                  {previews[index] && (
-                    <RefsRegenButton
-                      storageKey={`uso-ref:carrossel:${dayNumber}:c${card.card}`}
-                      fallbackKey={blockStorageKey}
-                      busy={(busyIndex === index && busyMode === "refs") || busyAll}
-                      onRun={() => handleGenerateWithRefs(index)}
-                      imageKit={imageKit}
-                      formato="carrossel"
-                      segmento={segmento}
-                      modelo={modelo}
-                    />
-                  )}
+                  <RefsRegenButton
+                    storageKey={`uso-ref:carrossel:${dayNumber}:c${card.card}`}
+                    fallbackKey={blockStorageKey}
+                    busy={(busyIndex === index && busyMode === "refs") || busyAll}
+                    onRun={() => handleGenerateWithRefs(index)}
+                    imageKit={imageKit}
+                    formato="carrossel"
+                    segmento={segmento}
+                    modelo={modelo}
+                    hasPreview={!!previews[index]}
+                  />
                   {previews[index] && (
                     <button
                       className="downloadBtn"
@@ -2234,6 +2247,7 @@ function ReelsCard({
         titulo: "",
         texto: "",
         companyName: kit.companyName,
+        mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || "#f4b000",
         fontFamily: kit.fontPair || "Montserrat",
@@ -2320,7 +2334,7 @@ function ReelsCard({
   }
 
   function handleGenerateWithRefs() {
-    guard({ hasPreview: true, tipo: "Reels", run: runGenerateWithRefs });
+    guard({ hasPreview: !!preview, tipo: "Reels", run: runGenerateWithRefs });
   }
 
   async function submitVideoRequest(): Promise<{
@@ -2406,6 +2420,7 @@ function ReelsCard({
             titulo: titleText,
             texto: "",
             companyName: kit.companyName,
+            mainActivity: kit.mainActivity,
             primaryColor: kit.primaryColor,
             accentColor: kit.accentColor || "#f4b000",
             fontFamily: kit.fontPair || "Montserrat",
@@ -2543,6 +2558,7 @@ function ReelsCard({
         titulo: titleText,
         texto: "",
         companyName: kit.companyName,
+        mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
         accentColor: kit.accentColor || "#f4b000",
         fontFamily: kit.fontPair || "Montserrat",
@@ -2720,17 +2736,16 @@ function ReelsCard({
                   ? "↻ Gerar novamente (sem refs)"
                   : "⬇ Gerar imagem pura"}
             </button>
-            {preview && (
-              <RefsRegenButton
-                storageKey={`uso-ref:reels:${dayNumber}`}
-                busy={busyRefs || busyVideo}
-                onRun={handleGenerateWithRefs}
-                imageKit={imageKit}
-                formato="reels"
-                segmento={segmento}
-                modelo={modelo}
-              />
-            )}
+            <RefsRegenButton
+              storageKey={`uso-ref:reels:${dayNumber}`}
+              busy={busyRefs || busyVideo}
+              onRun={handleGenerateWithRefs}
+              imageKit={imageKit}
+              formato="reels"
+              segmento={segmento}
+              modelo={modelo}
+              hasPreview={!!preview}
+            />
             {preview &&
               (() => {
                 const isCine = track === "cinematica";

@@ -305,16 +305,24 @@ export interface PostUnicoReferences {
   // Foto do uniforme da empresa (kit.uniformeDataUrl) — veste o personagem
   // da peça com esta peça de roupa em vez do figurino livre sorteado.
   uniforme?: string;
-  // Faixa etária do personagem sem avatar (ex.: "30–40 anos"), usada só
-  // quando uniforme está presente sem avatar — ver PERSONAGEM OBRIGATÓRIO
-  // em referencesBlock.
+  // Faixa etária do personagem sem avatar (ex.: "30–40 anos") — ver
+  // PERSONAGEM OBRIGATÓRIO em referencesBlock.
   personagemIdade?: string;
+  // Personagem sem avatar ativo — representa o público-alvo por padrão
+  // (figurino livre); veste uniforme apenas quando refs.uniforme também
+  // está presente (usuário escolheu que esse personagem é o emissor).
+  personagemSemAvatarAtivo?: boolean;
   // Foto de um acontecimento (Kit Imagem, slot próprio) — objetivo "Fatos",
   // aplicação direta sem reinvenção pela IA.
   fato?: string;
   // Foto de colaborador com o produto (Kit Imagem, slot próprio) — objetivo
   // "Venda", mesmo tratamento de preservação do "Fato".
   venda?: string;
+  // O(s) produto(s) referenciados são, eles mesmos, uma tela/dispositivo cujo
+  // conteúdo exibido é a identidade do produto — suspende a regra global de
+  // desfoque de tela (buildDeviceRule) para esta geração. Ver
+  // PostUnicoVisualSelection.produtoTelaInformativa.
+  produtoTelaInformativa?: boolean;
 }
 
 // isClothingFriendly/buildClothingPool agora moram em core/clothingPool.ts —
@@ -516,13 +524,22 @@ function referencesBlock(
     parts.push(
       `UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si.${personagemClause}`,
     );
-    if (!refs.avatar) {
-      const idadeClause = refs.personagemIdade ? `, aparentando ${refs.personagemIdade}` : "";
-      const generoClause = forcedGender ? forcedGender : "homem ou mulher";
-      parts.push(
-        `PERSONAGEM OBRIGATÓRIO (sem avatar): esta peça DEVE ter um personagem humano claramente visível${idadeClause}, gênero: ${generoClause}, vestindo o uniforme descrito acima. Aparência publicitária e realista, sem caricatura. Invente o personagem livremente (rosto, etnia, expressão) — apenas a roupa é fixa (a do uniforme).`,
-      );
-    }
+  }
+  // Personagem sem avatar — representa o público-alvo por padrão (figurino
+  // livre); só veste o uniforme acima quando o usuário marcou explicitamente
+  // que esse personagem é o emissor (comUniforme + refs.uniforme presente).
+  if (!refs.avatar && refs.personagemSemAvatarAtivo) {
+    const idadeClause = refs.personagemIdade ? `, aparentando ${refs.personagemIdade}` : "";
+    const generoClause = forcedGender ? forcedGender : "homem ou mulher";
+    const roupaClause = refs.uniforme
+      ? "vestindo o uniforme descrito acima"
+      : "com roupa coerente com a cena e o contexto da empresa (figurino livre, sem uniforme)";
+    const papelClause = refs.uniforme
+      ? "EMISSOR — representa a empresa"
+      : "PÚBLICO-ALVO — representa quem recebe a comunicação, NÃO a empresa";
+    parts.push(
+      `PERSONAGEM OBRIGATÓRIO (sem avatar — ${papelClause}): esta peça DEVE ter um personagem humano claramente visível${idadeClause}, gênero: ${generoClause}, ${roupaClause}. Aparência publicitária e realista, sem caricatura. Invente o personagem livremente (rosto, etnia, expressão)${refs.uniforme ? " — apenas a roupa é fixa (a do uniforme)" : ""}.`,
+    );
   }
   if (refs.fachada) {
     parts.push(
@@ -581,8 +598,11 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
   }
   if (refs.produtos && refs.produtos.length) {
     const lista = refs.produtos.map((p) => `Produto ${p.num}`).join(", ");
+    const telaClause = refs.produtoTelaInformativa
+      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — reproduza esse conteúdo de tela com NITIDEZ e LEGIBILIDADE total, sem desfoque, sem apagar, sem substituir por outra interface."
+      : "";
     parts.push(
-      `PRODUTOS SELECIONADOS (${lista}): elementos principais da composição. Preservar embalagem, formato, cores principais e características físicas. Apresentar de forma integrada à cena, evitando aparência de catálogo técnico ou montagem artificial.`,
+      `PRODUTOS SELECIONADOS (${lista}): elementos principais da composição. Preservar embalagem, formato, cores principais e características físicas. Apresentar de forma integrada à cena, evitando aparência de catálogo técnico ou montagem artificial.${telaClause}`,
     );
     parts.push(
       buildProductHierarchyBlock({
@@ -722,7 +742,7 @@ Hierarquia tipográfica obrigatória:
     : "";
   const papelBlock = `\n${buildSceneRoleRule({ includeConcreteAction: showConcreteAction })}${roleBlock ? `\n${roleBlock}` : ""}\n`;
 
-  return `${buildDeviceRule()}
+  return `${buildDeviceRule(data.mainActivity || kit.mainActivity, references?.produtoTelaInformativa)}
 
 ${AMBIENTES_RULE}
 

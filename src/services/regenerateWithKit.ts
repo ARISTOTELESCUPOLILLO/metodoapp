@@ -73,11 +73,19 @@ export interface RegenerateInput {
     // Veste o avatar com a foto de uniforme do Kit de Marca (kit.uniformeDataUrl)
     // em vez do figurino livre sorteado. Só tem efeito com usarAvatar=true.
     useUniforme?: boolean;
-    // Personagem sem avatar + uniforme: cria um personagem do zero (sem foto
-    // de avatar) vestido com o uniforme do Kit, na idade indicada. Só tem
-    // efeito quando usarAvatar=false. Antes só existia no motor da PU
-    // (MetodoOpApp.tsx) — agora compartilhado via buildReferences.
-    personagemSemAvatar?: { ativo: boolean; idade?: string };
+    // Personagem sem avatar: cria um personagem do zero (sem foto de avatar)
+    // na idade indicada — representa o público-alvo, sem exigir uniforme. Só
+    // tem efeito quando usarAvatar=false. comUniforme veste esse personagem
+    // com o uniforme do Kit quando o usuário escolhe que ele seja o EMISSOR
+    // em vez do público-alvo (precisa de kit.uniformeDataUrl cadastrado para
+    // ter efeito). Antes só existia no motor da PU (MetodoOpApp.tsx) — agora
+    // compartilhado via buildReferences.
+    personagemSemAvatar?: { ativo: boolean; idade?: string; comUniforme?: boolean };
+    // O(s) produto(s) referenciados são, eles mesmos, uma tela/dispositivo cujo
+    // conteúdo exibido é a identidade do produto (ex.: tablet mostrando o
+    // próprio app/print do negócio). Suspende a regra global de desfoque de
+    // tela (buildDeviceRule) só para esta geração.
+    produtoTelaInformativa?: boolean;
   };
   // Atividade da empresa (ancoragem semântica) — reservado para futuro uso.
   mainActivity?: string;
@@ -114,7 +122,8 @@ export function buildReferences(
     cenarioNum?: number | null;
     produtosNums?: number[];
     useUniforme?: boolean;
-    personagemSemAvatar?: { ativo: boolean; idade?: string };
+    personagemSemAvatar?: { ativo: boolean; idade?: string; comUniforme?: boolean };
+    produtoTelaInformativa?: boolean;
   },
   uniformeDataUrl?: string,
 ): PostUnicoReferences {
@@ -163,16 +172,25 @@ export function buildReferences(
         return url ? { num: n, dataUrl: url } : null;
       })
       .filter((p): p is { num: number; dataUrl: string } => p !== null);
-    if (lista.length) refs.produtos = lista;
+    if (lista.length) {
+      refs.produtos = lista;
+      if (selecaoDireta?.produtoTelaInformativa) refs.produtoTelaInformativa = true;
+    }
   }
   // Uniforme: veste o avatar (quando presente) OU cria um personagem do zero
-  // sem avatar vestido com o uniforme — mesma capacidade que antes só
-  // existia na PU.
+  // sem avatar — mesma capacidade que antes só existia na PU. A idade do
+  // personagem sem avatar vale sempre que ativo, com ou sem uniforme — ele
+  // representa o público-alvo por padrão; o uniforme só entra quando o
+  // usuário escolhe explicitamente que esse personagem é o EMISSOR
+  // (comUniforme=true) e há uma foto de uniforme cadastrada.
   if (selecaoDireta?.useUniforme && refs.avatar && uniformeDataUrl) {
     refs.uniforme = uniformeDataUrl;
-  } else if (!refs.avatar && selecaoDireta?.personagemSemAvatar?.ativo && uniformeDataUrl) {
-    refs.uniforme = uniformeDataUrl;
+  } else if (!refs.avatar && selecaoDireta?.personagemSemAvatar?.ativo) {
+    refs.personagemSemAvatarAtivo = true;
     refs.personagemIdade = selecaoDireta.personagemSemAvatar.idade;
+    if (selecaoDireta.personagemSemAvatar.comUniforme && uniformeDataUrl) {
+      refs.uniforme = uniformeDataUrl;
+    }
   }
   return refs;
 }
@@ -328,17 +346,25 @@ function buildAnchorPrefix(
   }
   if (refs.produtos?.length) {
     const n = refs.produtos.length;
+    // Produto é ele mesmo uma tela/dispositivo cujo conteúdo exibido é a
+    // identidade do produto (ex.: tablet mostrando o app/print do negócio) —
+    // a regra global de desfoque de tela (buildDeviceRule) é suspensa para
+    // esta geração (ver mainActivity/preserveScreenContent em generatePostImage),
+    // então aqui reforçamos que o conteúdo da tela deve ficar nítido.
+    const telaClause = refs.produtoTelaInformativa
+      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — reproduza esse conteúdo de tela com NITIDEZ e LEGIBILIDADE total, sem desfoque, sem apagar, sem substituir por outra interface."
+      : "";
     if (n === 1 && produtoDetalhe) {
       const detalhePick =
         cardCarrossel != null
           ? PRODUTO_DETALHE_POOL[(cardCarrossel - 1) % PRODUTO_DETALHE_POOL.length]
           : PRODUTO_DETALHE_POOL[0];
       lines.push(
-        `IMAGEM #${idx} = PRODUTO DE REFERÊNCIA — DETALHE/RECORTE OBRIGATÓRIO (não o produto inteiro): ${detalhePick}. Mantenha fidelidade ao produto real: mesma cor, material, rótulo e acabamento da referência — apenas o ENQUADRAMENTO é parcial/aproximado. Não invente outro produto, não troque a marca, não altere o design.`,
+        `IMAGEM #${idx} = PRODUTO DE REFERÊNCIA — DETALHE/RECORTE OBRIGATÓRIO (não o produto inteiro): ${detalhePick}. Mantenha fidelidade ao produto real: mesma cor, material, rótulo e acabamento da referência — apenas o ENQUADRAMENTO é parcial/aproximado. Não invente outro produto, não troque a marca, não altere o design.${telaClause}`,
       );
     } else {
       lines.push(
-        `IMAGEM${n > 1 ? "NS" : ""} #${idx}${n > 1 ? `..#${idx + n - 1}` : ""} = PRODUTO${n > 1 ? "S" : ""} OBRIGATÓRIO${n > 1 ? "S" : ""}. Use EXATAMENTE este produto, com mesmo formato, mesma cor, mesmo rótulo e mesma embalagem. Não invente outra versão, não troque a marca, não altere o design.`,
+        `IMAGEM${n > 1 ? "NS" : ""} #${idx}${n > 1 ? `..#${idx + n - 1}` : ""} = PRODUTO${n > 1 ? "S" : ""} OBRIGATÓRIO${n > 1 ? "S" : ""}. Use EXATAMENTE este produto, com mesmo formato, mesma cor, mesmo rótulo e mesma embalagem. Não invente outra versão, não troque a marca, não altere o design.${telaClause}`,
       );
     }
     // Em modo detalhe/recorte, a hierarquia padrão de produto não se aplica:
@@ -455,6 +481,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       titulo: "",
       texto: "",
       companyName: kit.companyName,
+      mainActivity: kit.mainActivity,
       primaryColor: kit.primaryColor,
       accentColor: kit.accentColor || "#f4b000",
       fontFamily: kit.fontPair || "Montserrat",
@@ -466,6 +493,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       hasAvatarRef,
       hasCenarioRef,
       hasUniformeRef,
+      hasProdutoTelaRef: references.produtoTelaInformativa,
       forcedGender,
       anchoraPersonagem,
       ancoragePapel,
@@ -480,6 +508,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       titulo: titulo || "",
       texto: texto || "",
       companyName: kit.companyName,
+      mainActivity: kit.mainActivity,
       primaryColor: kit.primaryColor,
       accentColor: kit.accentColor || "#f4b000",
       fontFamily: kit.fontPair || "Montserrat",
@@ -492,6 +521,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       hasAvatarRef,
       hasCenarioRef,
       hasUniformeRef,
+      hasProdutoTelaRef: references.produtoTelaInformativa,
       forcedGender,
       anchoraPersonagem,
       ancoragePapel,
@@ -508,6 +538,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     titulo: titulo || "",
     texto: texto || "",
     companyName: kit.companyName,
+    mainActivity: kit.mainActivity,
     primaryColor: kit.primaryColor,
     accentColor: kit.accentColor || "#f4b000",
     fontFamily: kit.fontPair || "Montserrat",
@@ -520,6 +551,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     hasAvatarRef,
     hasCenarioRef,
     hasUniformeRef,
+    hasProdutoTelaRef: references.produtoTelaInformativa,
     forcedGender,
     anchoraPersonagem,
     ancoragePapel,

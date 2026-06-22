@@ -232,15 +232,27 @@ export interface PostUnicoVisualSelection {
   // do figurino livre sorteado pelo motor. Só tem efeito com useAvatar=true
   // e com kit.uniformeDataUrl cadastrado.
   useUniforme: boolean;
-  // Personagem criado do zero (sem foto de avatar), vestido com o uniforme
-  // do Kit de Marca. Só tem efeito com useAvatar=false e kit.uniformeDataUrl
-  // cadastrado. Escolha vale por geração — pode ficar fixada como última
-  // escolha (persistida junto com o resto de visualSelection).
-  personagemSemAvatar?: { ativo: boolean; genero: "mulher" | "homem"; idade: string };
+  // Personagem criado do zero (sem foto de avatar) — representa o
+  // público-alvo (não precisa de uniforme cadastrado pra existir; disponível
+  // em qualquer segmento). comUniforme veste esse personagem com o uniforme
+  // do Kit de Marca quando o usuário escolhe que ele seja o EMISSOR em vez do
+  // público-alvo; só tem efeito quando kit.uniformeDataUrl está cadastrado.
+  personagemSemAvatar?: {
+    ativo: boolean;
+    genero: "mulher" | "homem";
+    idade: string;
+    comUniforme?: boolean;
+  };
   // Usa a foto de Fato do Kit Imagem (objetivo "Fatos") — aplicação direta
   // sem reinvenção pela IA, só overlay de marca/título/texto.
   useFato?: boolean;
   // Usa a foto de Venda do Kit Imagem (objetivo "Venda") — mesmo
   // tratamento de preservação do "Fato".
   useVenda?: boolean;
+  // O(s) produto(s) selecionados são, eles mesmos, uma tela/dispositivo cujo
+  // CONTEÚDO exibido é a identidade do produto (ex.: tablet mostrando o
+  // próprio app/print do negócio). Quando true, suspende a regra global de
+  // "desfoque de tela" só para esta geração e instrui a IA a preservar o
+  // conteúdo da tela com nitidez, em vez de borrá-lo.
+  produtoTelaInformativa?: boolean;
 }

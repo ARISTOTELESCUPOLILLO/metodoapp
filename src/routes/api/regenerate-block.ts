@@ -38,7 +38,7 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: não repita a a
     const max = TITULO_MAX_WORDS; // mesma fonte de verdade de validateTitulo — evita gerar título que o D1 reprova de cara
     return {
       label: "título",
-      rule: `MÁXIMO ${max} palavras, cada palavra com NO MÁXIMO 3 sílabas (ex.: "negócio" ✓, "resultado" ✗ → use "ganho"; "prioridade" ✗ → use "foco"; "comunicação" ✗ → use "mensagem"). NUNCA exceda esses limites — conte as palavras e as sílabas antes de responder. Direto, com tensão ou benefício claro. Sem emoji, sem hashtag, sem aspas. Sem ponto final — EXCETO se o título for uma pergunta (direta ou retórica): nesse caso o "?" é OBRIGATÓRIO. Ex. corretos: "Por que isso acontece?" / "O que está faltando?" — Ex. errados: "Por que isso acontece" / "O que está faltando."
+      rule: `MÁXIMO ${max} palavras, cada palavra com NO MÁXIMO 4 sílabas (ex.: "resultado" ✓, "comunicação" ✗ → use "mensagem"). NUNCA exceda esses limites — conte as palavras e as sílabas antes de responder. Direto, com tensão ou benefício claro. Sem emoji, sem hashtag, sem aspas. Sem ponto final — EXCETO se o título for uma pergunta (direta ou retórica): nesse caso o "?" é OBRIGATÓRIO. Ex. corretos: "Por que isso acontece?" / "O que está faltando?" — Ex. errados: "Por que isso acontece" / "O que está faltando."
 A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: troque o sujeito OU a estrutura da frase, não só o verbo ou um adjetivo isolado. Reescrever trocando apenas 1 palavra mantendo sujeito, conjunção e complemento idênticos é REPROVADO.`,
       max,
     };

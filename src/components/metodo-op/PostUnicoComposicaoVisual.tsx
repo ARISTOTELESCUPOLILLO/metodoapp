@@ -63,7 +63,7 @@ export default function PostUnicoComposicaoVisual({
     (selection.useFachada && hasFachada ? 1 : 0) +
     (selection.useCenario && hasCenario && effectiveCenario ? 1 : 0) +
     (selection.useProdutos && hasProdutos ? selection.produtosSelecionados.length : 0) +
-    (!selection.useAvatar && selection.personagemSemAvatar?.ativo && kit.uniformeDataUrl ? 1 : 0) +
+    (!selection.useAvatar && selection.personagemSemAvatar?.ativo ? 1 : 0) +
     (selection.useFato && hasFato ? 1 : 0) +
     (selection.useVenda && hasVenda ? 1 : 0);
 
@@ -213,6 +213,18 @@ export default function PostUnicoComposicaoVisual({
         )}
       </div>
 
+      {selection.useProdutos && selection.produtosSelecionados.length > 0 && (
+        <label className="checkRow" style={{ marginTop: 8 }}>
+          <input
+            type="checkbox"
+            checked={!!selection.produtoTelaInformativa}
+            onChange={(e) => onChange({ ...selection, produtoTelaInformativa: e.target.checked })}
+          />
+          Este produto é uma tela (ex.: tablet/celular mostrando um app/print) — preservar o
+          conteúdo exibido nela
+        </label>
+      )}
+
       {!!kit.uniformeDataUrl && selection.useAvatar && (
         <label className="checkRow" style={{ marginTop: 8 }}>
           <input
@@ -224,7 +236,7 @@ export default function PostUnicoComposicaoVisual({
         </label>
       )}
 
-      {!!kit.uniformeDataUrl && !selection.useAvatar && (
+      {!selection.useAvatar && (
         <div
           style={{
             marginTop: 8,
@@ -245,11 +257,12 @@ export default function PostUnicoComposicaoVisual({
                     ativo: e.target.checked,
                     genero: selection.personagemSemAvatar?.genero ?? "homem",
                     idade: selection.personagemSemAvatar?.idade ?? AGE_OPTIONS[2],
+                    comUniforme: selection.personagemSemAvatar?.comUniforme ?? false,
                   },
                 })
               }
             />
-            <span>Gerar personagem com uniforme (sem avatar)</span>
+            <span>Gerar personagem (sem avatar) — público-alvo</span>
             {selection.personagemSemAvatar?.ativo && (
               <span
                 style={{
@@ -264,10 +277,17 @@ export default function PostUnicoComposicaoVisual({
                 }}
               >
                 {selection.personagemSemAvatar.genero === "mulher" ? "F" : "M"} ·{" "}
-                {selection.personagemSemAvatar.idade.replace(" anos", "").replace(" ano", "")}
+                {selection.personagemSemAvatar.idade.replace(" anos", "").replace(" ano", "")} ·{" "}
+                {selection.personagemSemAvatar.comUniforme && kit.uniformeDataUrl
+                  ? "Emissor"
+                  : "Público-alvo"}
               </span>
             )}
           </label>
+          <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>
+            Por padrão esse personagem representa o <b>público-alvo</b> (figurino livre) — não
+            precisa de uniforme cadastrado para aparecer.
+          </p>
           {selection.personagemSemAvatar?.ativo && (
             <div
               style={{
@@ -332,6 +352,25 @@ export default function PostUnicoComposicaoVisual({
                 ))}
               </select>
             </div>
+          )}
+          {selection.personagemSemAvatar?.ativo && !!kit.uniformeDataUrl && (
+            <label className="checkRow" style={{ marginTop: 8, fontSize: 12, color: "#0f172a" }}>
+              <input
+                type="checkbox"
+                checked={!!selection.personagemSemAvatar.comUniforme}
+                onChange={(e) =>
+                  onChange({
+                    ...selection,
+                    personagemSemAvatar: {
+                      ...selection.personagemSemAvatar!,
+                      comUniforme: e.target.checked,
+                    },
+                  })
+                }
+              />
+              Vestir com uniforme da empresa (esse personagem passa a ser o emissor, não o
+              público-alvo)
+            </label>
           )}
         </div>
       )}
