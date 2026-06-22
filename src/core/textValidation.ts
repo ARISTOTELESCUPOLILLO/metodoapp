@@ -1048,6 +1048,38 @@ export function checkSupplierLanguage(sugestao: string): string[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — abertura repetida entre cliques da MESMA sessão
+// (auditoria 2026-06-22): mesmo quando o "elemento concreto" sorteado é
+// outro item da lista, se 2+ produtos/serviços cadastrados pelo usuário
+// compartilham um prefixo de nome longo (ex.: "Consultoria presencial e
+// online — ..."), a IA tende a preservar esse prefixo literal como núcleo
+// da frase (ver elementoConcretoBlock em suggest-keyinfo.ts) — gerando
+// sugestões que soam repetidas na abertura mesmo sendo "assuntos diferentes"
+// pro restante das regras (que só comparam o assunto, não a estrutura
+// inicial da frase). Compara as N primeiras palavras normalizadas.
+const REPEATED_OPENING_WORD_COUNT = 3;
+
+export function checkRepeatedOpening(sugestao: string, previousSuggestions: string[]): string[] {
+  if (!previousSuggestions.length) return [];
+  const opening = (s: string) =>
+    normalizeForCompare(s)
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, REPEATED_OPENING_WORD_COUNT)
+      .join(" ");
+  const novaAbertura = opening(sugestao);
+  if (!novaAbertura) return [];
+  for (const anterior of previousSuggestions) {
+    if (opening(anterior) === novaAbertura) {
+      return [
+        `a frase começa igual a uma sugestão anterior desta sessão ("${novaAbertura}..."): comece com uma estrutura e palavras de abertura visivelmente diferentes, mesmo que o produto/serviço de origem seja parecido`,
+      ];
+    }
+  }
+  return [];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // E4 — limpeza determinística (fallback final, sem chamada de API)
 // ─────────────────────────────────────────────────────────────────────────
 

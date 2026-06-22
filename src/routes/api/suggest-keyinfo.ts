@@ -7,6 +7,7 @@ import {
   validateSugestao,
   checkInventedPromotion,
   checkSupplierLanguage,
+  checkRepeatedOpening,
 } from "@/core/textValidation";
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -410,7 +411,7 @@ Evite linguagem de grande consultoria e termos frios como "decisores", "receita 
 NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo — produto/serviço/categoria/atividade no núcleo, nunca um papel pessoal ("gestores", "equipes", "donos") nem um conceito abstrato de gestão. Exemplos de FORMATO de referência (não copie o vocabulário, mostram apenas a estrutura): "mesa de reunião para equipes maiores", "módulo financeiro para contas a pagar", "correia industrial para manutenção preventiva". NUNCA use "clientes", "consumidores" ou "compradores" como núcleo principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
 
           const previousBlock = previousSugs.length
-            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos — gere algo completamente diferente, sobre outro produto, serviço ou situação):\n${previousSugs.map((s) => `- "${s}"`).join("\n")}`
+            ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos — gere algo completamente diferente, sobre outro produto, serviço ou situação):\n${previousSugs.map((s) => `- "${s}"`).join("\n")}\n⚠ ABERTURA TAMBÉM PRECISA SER DIFERENTE: mesmo se o produto/serviço de origem desta sugestão tiver nome parecido com algum item acima (ex.: dois serviços cadastrados começando com as mesmas palavras), a FRASE FINAL não pode começar com as mesmas palavras de nenhuma sugestão acima — não preserve o nome literal do item como abertura fixa; extraia o conceito e construa uma frase nova, com estrutura e primeiras palavras visivelmente diferentes.`
             : "";
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
@@ -583,6 +584,7 @@ Retorne JSON EXATAMENTE assim:
               }),
             );
             if (mode === "postunico") motivos = motivos.concat(checkSupplierLanguage(sugestao));
+            motivos = motivos.concat(checkRepeatedOpening(sugestao, previousSugs));
             if (motivos.length === 0) break;
           }
 
