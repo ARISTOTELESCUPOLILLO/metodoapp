@@ -413,6 +413,29 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// Sentenças de dispositivo de CLAREZA e FRAGMENTO, extraídas para permitir
+// substituição quando este prompt já tem a regra global de "PROIBIDO qualquer
+// dispositivo" ativa (produto físico referenciado, ou ofício não-digital —
+// ver buildDeviceRule/buildNoDeviceProdutoFisicoRule em promptRules.ts). Sem
+// essa reconciliação, o mesmo prompt continha "PROIBIDO incluir... qualquer
+// dispositivo digital" (regra global) E "notebook/laptop/tablet SÃO
+// BEM-VINDOS... DEVE coexistir com pelo menos 1 dispositivo digital" (CLAREZA)
+// ao mesmo tempo — achado real (Loja Rocha, PU, CLAREZA + terno referenciado).
+const CLAREZA_DEVICE_WELCOME_SENTENCE =
+  "DISPOSITIVOS EM CLAREZA — REGRA DO SÉCULO DIGITAL: notebook, laptop e tablet SÃO BEM-VINDOS e representam trabalho real. PROIBIDO APENAS: mostrar imagem, conteúdo, interface ou qualquer elemento visual NA TELA FRONTAL, NA TAMPA ou NA CARCAÇA do dispositivo — tela deve estar neutra/escura ou com brilho difuso sem conteúdo legível; tampa e carcaça lisas. O dispositivo pode estar em qualquer ângulo (aberto sobre a mesa em plongée, lateral, em mãos, de lado) — a restrição é o CONTEÚDO visível, não a posição nem o ângulo. NEGATIVE: image on laptop screen, visible screen content, image on laptop lid or casing. ";
+
+const CLAREZA_DEVICE_COEXIST_SENTENCE =
+  "MATERIAL DE TRABALHO EM CLAREZA — REGRA DO SÉCULO DIGITAL: estamos no século da internet — papel ou documento físico NUNCA pode ser o ÚNICO elemento de trabalho visível na cena. Quando houver material físico (folhas, documentos, cartões organizados), DEVE coexistir com pelo menos 1 dispositivo digital presente na cena (notebook aberto lateralmente sobre a mesa, tablet em stand, celular ao lado). Cor abstrata, ícone ou imagem decorativa no lugar de objetos reais são igualmente inadequados — a cena deve ter objetos reconhecíveis do ofício real, não elementos gráficos flutuantes. ";
+
+const CLAREZA_DEVICE_CLAUSE_SUPPRESSED =
+  'DISPOSITIVOS EM CLAREZA — EXCEÇÃO NESTA PEÇA: há um produto físico referenciado (ou o ofício real não passa por tela) que já é o elemento concreto e o foco da composição — ver regra de dispositivos digitais no início deste prompt. Por isso NENHUM dispositivo digital aparece nesta cena, mesmo que CLAREZA normalmente os receba bem. Se houver material físico de apoio (papel, documento), ele NÃO precisa coexistir com dispositivo digital neste caso — a regra do "século digital" cede à regra de protagonismo do produto. ';
+
+const FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE =
+  "OBJETO CONDICIONAL NESTE MOOD: notebook ou laptop FECHADO, de lado, de costas ou com tela apagada/escura PODE aparecer como UM dos blocos — mas SOMENTE se o ofício real do negócio (definido pela leituraCenica e pelo kit de marca) genuinamente envolve trabalho de escritório, computador ou tela no dia a dia (ex.: consultoria, agência, administrativo, design, programação, atendimento remoto). Em segmentos cujo ofício real é manual, físico, presencial ou de produção (ex.: salão de beleza, gastronomia, oficina, obra, estética, comércio de balcão, saúde, bem-estar), o notebook NÃO PERTENCE ao universo real da cena e NÃO deve ser incluído — nesses casos, o bloco deve trazer um objeto do ofício real, não um item de escritório genérico. Quando aparecer, seguir sempre a regra geral de dispositivos digitais (sem tela visível, sem conteúdo, máximo 1 por cena). ";
+
+const FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED =
+  "OBJETO CONDICIONAL NESTE MOOD — SUSPENSO NESTA PEÇA: há um produto físico referenciado (ou o ofício real não passa por tela) que já é o elemento concreto e o foco da composição — ver regra de dispositivos digitais no início deste prompt. Por isso NENHUM bloco desta peça inclui notebook, laptop ou qualquer dispositivo digital, mesmo que FRAGMENTO normalmente permita um bloco condicional de escritório. ";
+
 // Regras inegociáveis específicas por mood — corrigem desvios observados em
 // geração real e expandem aplicação para múltiplos segmentos. Fonte canônica
 // única da gramática de cada mood: tanto o motor MOP (buildVisualDirectionBlock)
@@ -463,6 +486,24 @@ const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     "Se aparecer pessoa: fragmento parcial APENAS (mão, sombra, nuca, silhueta pequena) — NUNCA rosto inteiro posado, NUNCA corpo completo. " +
     "SILÊNCIO se aplica a qualquer segmento. A leituraCenica determina O QUE aparece na cena; a direção visual determina COMO é fotografado.",
 };
+
+// Quando noDeviceThisScene é true, a regra global já proibiu qualquer
+// dispositivo digital nesta peça — substitui as sentenças de CLAREZA/FRAGMENTO
+// que dão boas-vindas ou permitem dispositivo condicionalmente, evitando que
+// a gramática do mood contradiga a regra global no mesmo prompt.
+function resolveMoodRuleText(mood: MoodCode, noDeviceThisScene: boolean): string | undefined {
+  const base = MOOD_RULES[mood];
+  if (!base || !noDeviceThisScene) return base;
+  if (mood === "OP-01") {
+    return base
+      .replace(CLAREZA_DEVICE_WELCOME_SENTENCE, CLAREZA_DEVICE_CLAUSE_SUPPRESSED)
+      .replace(CLAREZA_DEVICE_COEXIST_SENTENCE, "");
+  }
+  if (mood === "OP-04") {
+    return base.replace(FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE, FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED);
+  }
+  return base;
+}
 
 // Bloco canônico "papel da empresa na mensagem" — fonte única para MOP e PU.
 // Garante que a decisão de cena parta do ofício real, não da leitura literal de
@@ -740,11 +781,13 @@ export function buildProductHierarchyBlock(opts: {
 // luz/paleta/composição/câmera/detalhe + regra inegociável) para uso fora do
 // motor MOP — hoje consumido pelo PU em direcaoBlock. Fonte única junto com
 // VISUAL_DIRECTIONS e MOOD_RULES: evita duas descrições do mesmo mood divergindo.
-export function buildMoodGrammarBlock(mood: MoodCode): string {
+export function buildMoodGrammarBlock(
+  mood: MoodCode,
+  opts?: { noDeviceThisScene?: boolean },
+): string {
   const v = getVisualDirection(mood);
-  const ruleBlock = MOOD_RULES[mood]
-    ? `\n\nREGRA INEGOCIÁVEL DO MOOD ${v.nome}:\n${MOOD_RULES[mood]}`
-    : "";
+  const ruleText = resolveMoodRuleText(mood, !!opts?.noDeviceThisScene);
+  const ruleBlock = ruleText ? `\n\nREGRA INEGOCIÁVEL DO MOOD ${v.nome}:\n${ruleText}` : "";
   return `TENSÃO VISUAL CANÔNICA (técnicas Dondis, vocabulário inegociável): ${v.tensaoDondis}.\n\nGRAMÁTICA VISUAL DO MOOD ${v.nome}:\n- Luz: ${v.luz}\n- Paleta: ${v.paleta}\n- Composição: ${v.composicao}\n- Atitude da câmera: ${v.camera}\n- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${ruleBlock}`;
 }
 

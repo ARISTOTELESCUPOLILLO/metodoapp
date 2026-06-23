@@ -27,6 +27,7 @@ import {
 } from "../core/visualDirection";
 import {
   buildDeviceRule,
+  isNonDigitalActivity,
   AMBIENTES_RULE,
   HUMANIZACAO_RULE,
   FORBIDDEN_MOOD_WORDS,
@@ -176,9 +177,10 @@ function direcaoBlock(
   mood?: MoodCode,
   objetivo?: PostUnicoObjetivo,
   hasProdutos?: boolean,
+  noDeviceThisScene?: boolean,
 ): string {
   if (direcao === "mood" && mood) {
-    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood)}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
+    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood, { noDeviceThisScene })}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
   }
   const obj = objetivo ?? "nenhum";
 
@@ -697,11 +699,19 @@ export function buildPostUnicoPrompt(params: {
   const isNenhum = data.objetivo === "nenhum";
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
+  // Mesma condição usada por buildDeviceRule (abaixo) para banir TODO
+  // dispositivo digital desta peça — repetida aqui pra que a gramática do
+  // mood (CLAREZA/FRAGMENTO) saiba que não pode pedir/permitir dispositivo
+  // quando essa proibição global já está ativa (ver resolveMoodRuleText).
+  const noDeviceThisScene =
+    isNonDigitalActivity(data.mainActivity || kit.mainActivity) ||
+    (!!references?.produtos?.length && !references?.produtoTelaInformativa);
   const direcao = direcaoBlock(
     data.direcao,
     data.mood,
     data.objetivo,
     !!references?.produtos?.length,
+    noDeviceThisScene,
   );
   const variationBlock =
     data.direcao === "mood"
