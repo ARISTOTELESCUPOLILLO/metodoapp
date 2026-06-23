@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { checkBalance, debitUsage, resolveEffectiveUser } from "@/lib/usage.server";
+import {
+  checkBalance,
+  debitUsage,
+  resolveEffectiveUser,
+  balanceFailMessage,
+} from "@/lib/usage.server";
 import { COST_USD } from "@/lib/costs";
 import { getVoiceProfile } from "@/data/brandVoice";
 import {
@@ -204,13 +209,14 @@ export const Route = createFileRoute("/api/generate-caption")({
           let isAdmin = false;
 
           // Débita geração apenas no clique inicial "Gerar Post Único".
+          // preferredSlot é passado aqui (mesmo slot usado no debitUsage abaixo)
+          // para o saldo verificado ser o mesmo slot efetivamente debitado —
+          // sem isso, esta checagem caía no fallback "qualquer slot serve" e
+          // podia liberar a geração mesmo quando o slot preferido não tinha saldo.
           if (debit) {
-            const bal = await checkBalance(userId, 0, 0, 1);
+            const bal = await checkBalance(userId, 0, 0, 1, preferredSlot);
             if (!bal.ok) {
-              return Response.json(
-                { error: "Limite de gerações do plano atingido — fale com o admin." },
-                { status: 402 },
-              );
+              return Response.json({ error: balanceFailMessage(bal.reason) }, { status: 402 });
             }
             isAdmin = bal.isAdmin;
           }

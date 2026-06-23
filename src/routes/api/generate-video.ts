@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { resolveEffectiveUser, checkBalance, debitUsage } from "@/lib/usage.server";
+import {
+  resolveEffectiveUser,
+  checkBalance,
+  debitUsage,
+  balanceFailMessage,
+} from "@/lib/usage.server";
 import { COST_USD } from "@/lib/costs";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -202,12 +207,9 @@ export const Route = createFileRoute("/api/generate-video")({
           const impersonatedBy = effective?.impersonatedBy;
           if (userId) {
             try {
-              const { ok } = await checkBalance(userId, 0, 1);
+              const { ok, reason } = await checkBalance(userId, 0, 1);
               if (!ok) {
-                return Response.json(
-                  { error: "Limite de renders atingido em todos os seus planos." },
-                  { status: 402 },
-                );
+                return Response.json({ error: balanceFailMessage(reason) }, { status: 402 });
               }
             } catch (e) {
               console.warn("[balance pre-check video]", (e as Error).message);

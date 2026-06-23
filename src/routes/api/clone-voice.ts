@@ -4,7 +4,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getUserIdFromRequest, checkBalance } from "@/lib/usage.server";
+import { getUserIdFromRequest, checkBalance, balanceFailMessage } from "@/lib/usage.server";
 import { probeAudio } from "@/lib/audioProbe.server";
 
 const ELEVENLABS_API = "https://api.elevenlabs.io/v1";
@@ -166,10 +166,10 @@ export const Route = createFileRoute("/api/clone-voice")({
 
           // Saldo: 1 render (treino = 1 cinemático) — checado agora pra avisar cedo.
           // Débito real só na aprovação (confirm-voice).
-          const { ok } = await checkBalance(userId, 0, 1);
+          const { ok, reason } = await checkBalance(userId, 0, 1);
           if (!ok) {
             return Response.json(
-              { code: "no_balance", message: "Saldo insuficiente para treinar a voz agora." },
+              { code: "no_balance", message: balanceFailMessage(reason) },
               { status: 402 },
             );
           }

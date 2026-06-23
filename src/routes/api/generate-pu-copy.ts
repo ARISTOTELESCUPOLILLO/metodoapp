@@ -5,7 +5,7 @@ import {
   correctPortugueseSpelling,
 } from "@/core/textValidation";
 import { getVoiceProfile } from "@/data/brandVoice";
-import { resolveEffectiveUser, checkBalance } from "@/lib/usage.server";
+import { resolveEffectiveUser, checkBalance, balanceFailMessage } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 const OBJETIVO_TOM: Record<string, string> = {
@@ -67,7 +67,7 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
           const userId = effective.userId;
           const bal = await checkBalance(userId, 0, 0, 1);
           if (!bal.ok) {
-            return Response.json({ error: "Limite de gerações atingido." }, { status: 402 });
+            return Response.json({ error: balanceFailMessage(bal.reason) }, { status: 402 });
           }
 
           const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;

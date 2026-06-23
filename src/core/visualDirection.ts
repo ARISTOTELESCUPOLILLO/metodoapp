@@ -644,14 +644,36 @@ const PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_PLURAL =
   "A postura, a expressão e a ação do personagem são o centro visual da imagem. Os produtos aparecem de forma natural e secundária (nas mãos, sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-los. " +
   "Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE a pessoa.";
 
+// Marca textual presente nas variações de personagem que retiram o rosto do
+// centro da composição (CLAREZA "DETALHE CONTEXTUAL", IMPACTO "SUJEITO SEM
+// PERSONAGEM DOMINANTE" — ver CLAREZA_CHARACTER_VARIATIONS/IMPACTO_CHARACTER_VARIATIONS
+// acima). Usada para reconciliar a REGRA DE PROTAGONISMO DO PRODUTO com a
+// ausência de rosto dominante: sem essa reconciliação, as duas instruções
+// competem no mesmo prompt e o modelo de imagem tende a resolver o conflito
+// inventando um retrato de rosto em primeiro plano com luz dramática — visto
+// em geração real (Loja Rocha, PU, CLAREZA, DETALHE CONTEXTUAL + produto VAREJO).
+const FACE_NOT_DOMINANT_MARKERS = [
+  "rosto não é dominante",
+  "presença humana secundária ou parcial",
+];
+
+export function variationHasFaceNotDominant(variationBlock: string): boolean {
+  return FACE_NOT_DOMINANT_MARKERS.some((marker) => variationBlock.includes(marker));
+}
+
 export function buildProductHierarchyBlock(opts: {
   produtosCount: number;
   hasCenario: boolean;
   hasAvatar: boolean;
   segment?: Segment;
   isPersonalBrand?: boolean;
+  /** true quando a variação de personagem sorteada nesta geração já determina
+   * que o rosto não é dominante (ver variationHasFaceNotDominant) — evita que
+   * a regra de protagonismo do produto, lida isoladamente, empurre o modelo
+   * de imagem para um retrato de rosto em primeiro plano. */
+  faceNotDominant?: boolean;
 }): string {
-  const { produtosCount, hasCenario, hasAvatar, segment, isPersonalBrand } = opts;
+  const { produtosCount, hasCenario, hasAvatar, segment, isPersonalBrand, faceNotDominant } = opts;
   if (produtosCount <= 0) return "";
   const multi = produtosCount > 1;
 
@@ -704,6 +726,11 @@ export function buildProductHierarchyBlock(opts: {
 
   // VAREJO: produto é o herói da composição (regra original).
   const lines: string[] = [multi ? PRODUTO_PROTAGONISMO_PLURAL : PRODUTO_PROTAGONISMO_SINGULAR];
+  if (faceNotDominant) {
+    lines.push(
+      "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, silhueta — ou nenhuma pessoa visível). Isso NÃO reduz a regra de protagonismo do produto acima: o produto continua sendo o centro visual nítido, grande e em primeiro plano, ocupando o papel que seria do rosto. PROIBIDO compensar a ausência de rosto dominante com um retrato de rosto em primeiro plano, luz dramática teatral ou composição de moda — a cena permanece fiel à gramática de luz, paleta e composição do mood descrita acima, com o produto (não o rosto) como protagonista.",
+    );
+  }
   if (hasCenario) lines.push(multi ? CENARIO_VS_PRODUTO_PLURAL : CENARIO_VS_PRODUTO_SINGULAR);
   if (hasAvatar) lines.push(multi ? AVATAR_VS_PRODUTO_PLURAL : AVATAR_VS_PRODUTO_SINGULAR);
   return lines.join("\n");

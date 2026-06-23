@@ -1,5 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { checkBalance, checkRateLimit, debitUsage, resolveEffectiveUser } from "@/lib/usage.server";
+import {
+  checkBalance,
+  checkRateLimit,
+  debitUsage,
+  resolveEffectiveUser,
+  balanceFailMessage,
+} from "@/lib/usage.server";
 import { mopContentCost } from "@/lib/costs";
 
 const LEITURA_CENICA_SCHEMA = {
@@ -213,10 +219,7 @@ export const Route = createFileRoute("/api/generate-content")({
             preferredSlot as "plano1" | "plano2" | "bonus" | undefined,
           );
           if (!balance.ok) {
-            const slot = preferredSlot as string | undefined;
-            const msg =
-              slot === "bonus" ? "Bônus encerrado." : "Plano esgotado — renove para continuar.";
-            return Response.json({ error: msg }, { status: 402 });
+            return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
           }
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;

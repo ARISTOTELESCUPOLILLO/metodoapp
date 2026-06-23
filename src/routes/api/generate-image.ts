@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { resolveEffectiveUser, checkBalance, debitUsage } from "@/lib/usage.server";
+import {
+  resolveEffectiveUser,
+  checkBalance,
+  debitUsage,
+  balanceFailMessage,
+} from "@/lib/usage.server";
 import { COST_USD } from "@/lib/costs";
 
 // Provedor: FAL (queue API).
@@ -170,7 +175,7 @@ export const Route = createFileRoute("/api/generate-image")({
           }
 
           // Pré-checagem de saldo — verifica apenas o slot preferido (sem fallback entre planos).
-          const { ok: balOk } = await checkBalance(
+          const { ok: balOk, reason: balReason } = await checkBalance(
             effective.userId,
             1,
             0,
@@ -178,11 +183,7 @@ export const Route = createFileRoute("/api/generate-image")({
             startSlot as "plano1" | "plano2" | "bonus" | undefined,
           );
           if (!balOk) {
-            const msg =
-              startSlot === "bonus"
-                ? "Bônus encerrado."
-                : "Plano esgotado — renove para continuar.";
-            return Response.json({ error: msg }, { status: 402 });
+            return Response.json({ error: balanceFailMessage(balReason) }, { status: 402 });
           }
 
           const refsRaw: string[] = Array.isArray(referenceImages)

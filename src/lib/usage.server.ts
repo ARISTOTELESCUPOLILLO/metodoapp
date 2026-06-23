@@ -70,13 +70,23 @@ export async function checkRateLimit(
   return { ok: usedLastHour < RATE_LIMIT_PER_HOUR, usedLastHour };
 }
 
+// Motivo de uma falha de saldo — permite que a UI/API diferencie "usuário sem
+// plano atribuído" (configuração faltando, comum em usuário de teste recém-
+// criado) de "plano esgotado" ou "plano expirado", em vez de uma mensagem
+// genérica única que faz qualquer uma das três parecer bug do sistema.
+export type BalanceFailReason =
+  | "profile_not_found"
+  | "no_plan_assigned"
+  | "plan_expired"
+  | "limit_exceeded";
+
 export async function checkBalance(
   userId: string,
   imgs: number,
   renders: number,
   geracoes = 0,
   preferredSlot?: "plano1" | "plano2" | "bonus",
-): Promise<{ ok: boolean; isAdmin: boolean }> {
+): Promise<{ ok: boolean; isAdmin: boolean; reason?: BalanceFailReason }> {
   const { data: p, error } = await supabaseAdmin
     .from("profiles")
     .select(
@@ -84,7 +94,7 @@ export async function checkBalance(
     )
     .eq("id", userId)
     .maybeSingle();
-  if (error || !p) return { ok: false, isAdmin: false };
+  if (error || !p) return { ok: false, isAdmin: false, reason: "profile_not_found" };
 
   const fits = (lim: number, used: number, need: number) => lim === 0 || lim - used >= need;
   const notExpired = (expiraEm: string | null) =>
@@ -104,52 +114,62 @@ export async function checkBalance(
     fits(iLim, iUsed, imgs) &&
     fits(rLim, rUsed, renders) &&
     fits(gLim, gUsed, geracoes);
+  // Classifica por que um slot específico não serve — usado só quando o slot
+  // falhou em slotOk, para reportar a causa real em vez de "esgotado" genérico.
+  const classifySlot = (id: string | null, expiraEm: string | null): BalanceFailReason =>
+    !id ? "no_plan_assigned" : !notExpired(expiraEm) ? "plan_expired" : "limit_exceeded";
 
   // Cada plano é independente: checar apenas o slot preferido.
   // Sem fallback para outros slots — se esgotou, esgotou.
   if (preferredSlot === "plano1") {
+    const ok = slotOk(
+      p.plano1_id,
+      p.plano1_imgs_limite,
+      p.plano1_imgs_usadas,
+      p.plano1_renders_limite,
+      p.plano1_renders_usados,
+      p.plano1_geracoes_limite ?? 0,
+      p.plano1_geracoes_usadas ?? 0,
+      p.plano1_expira_em ?? null,
+    );
     return {
-      ok: slotOk(
-        p.plano1_id,
-        p.plano1_imgs_limite,
-        p.plano1_imgs_usadas,
-        p.plano1_renders_limite,
-        p.plano1_renders_usados,
-        p.plano1_geracoes_limite ?? 0,
-        p.plano1_geracoes_usadas ?? 0,
-        p.plano1_expira_em ?? null,
-      ),
+      ok,
       isAdmin: false,
+      reason: ok ? undefined : classifySlot(p.plano1_id, p.plano1_expira_em ?? null),
     };
   }
   if (preferredSlot === "plano2") {
+    const ok = slotOk(
+      p.plano2_id,
+      p.plano2_imgs_limite,
+      p.plano2_imgs_usadas,
+      p.plano2_renders_limite,
+      p.plano2_renders_usados,
+      p.plano2_geracoes_limite ?? 0,
+      p.plano2_geracoes_usadas ?? 0,
+      p.plano2_expira_em ?? null,
+    );
     return {
-      ok: slotOk(
-        p.plano2_id,
-        p.plano2_imgs_limite,
-        p.plano2_imgs_usadas,
-        p.plano2_renders_limite,
-        p.plano2_renders_usados,
-        p.plano2_geracoes_limite ?? 0,
-        p.plano2_geracoes_usadas ?? 0,
-        p.plano2_expira_em ?? null,
-      ),
+      ok,
       isAdmin: false,
+      reason: ok ? undefined : classifySlot(p.plano2_id, p.plano2_expira_em ?? null),
     };
   }
   if (preferredSlot === "bonus") {
+    const ok = slotOk(
+      p.bonus_id,
+      p.bonus_imgs_limite,
+      p.bonus_imgs_usadas,
+      p.bonus_renders_limite,
+      p.bonus_renders_usados,
+      p.bonus_geracoes_limite ?? 0,
+      p.bonus_geracoes_usadas ?? 0,
+      p.bonus_expira_em ?? null,
+    );
     return {
-      ok: slotOk(
-        p.bonus_id,
-        p.bonus_imgs_limite,
-        p.bonus_imgs_usadas,
-        p.bonus_renders_limite,
-        p.bonus_renders_usados,
-        p.bonus_geracoes_limite ?? 0,
-        p.bonus_geracoes_usadas ?? 0,
-        p.bonus_expira_em ?? null,
-      ),
+      ok,
       isAdmin: false,
+      reason: ok ? undefined : classifySlot(p.bonus_id, p.bonus_expira_em ?? null),
     };
   }
 
@@ -186,7 +206,37 @@ export async function checkBalance(
       p.bonus_expira_em ?? null,
     );
 
-  return { ok, isAdmin: false };
+  let reason: BalanceFailReason | undefined;
+  if (!ok) {
+    const slotIds = [p.plano1_id, p.plano2_id, p.bonus_id];
+    if (slotIds.every((id) => !id)) {
+      reason = "no_plan_assigned";
+    } else {
+      const expiraEms = [p.plano1_expira_em, p.plano2_expira_em, p.bonus_expira_em];
+      const anyActive = slotIds.some((id, i) => !!id && notExpired(expiraEms[i] ?? null));
+      reason = anyActive ? "limit_exceeded" : "plan_expired";
+    }
+  }
+
+  return { ok, isAdmin: false, reason };
+}
+
+// Mensagem amigável por motivo de falha de saldo — usada pelas rotas generate-*
+// em vez da mensagem genérica única ("Limite atingido"), que fazia "usuário de
+// teste sem plano atribuído" parecer bug do sistema em vez de configuração
+// faltando (admin esquece de atribuir plano em TestUsersTab antes de testar).
+export function balanceFailMessage(reason?: BalanceFailReason): string {
+  switch (reason) {
+    case "no_plan_assigned":
+      return "Este usuário não tem nenhum plano atribuído — atribua um plano (Plano 1, Plano 2 ou Bônus) antes de gerar.";
+    case "plan_expired":
+      return "O plano deste usuário expirou — atribua um novo plano ou renove a validade.";
+    case "profile_not_found":
+      return "Perfil do usuário não encontrado — verifique se o usuário existe.";
+    case "limit_exceeded":
+    default:
+      return "Limite de gerações do plano atingido — fale com o admin.";
+  }
 }
 
 export async function debitUsage(

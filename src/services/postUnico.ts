@@ -22,6 +22,7 @@ import {
   pickImageVariationBlock,
   buildSceneRoleRule,
   buildProductHierarchyBlock,
+  variationHasFaceNotDominant,
   PersonagemGender,
 } from "../core/visualDirection";
 import {
@@ -501,6 +502,7 @@ function referencesBlock(
   forcedGender?: PersonagemGender,
   isPersonalBrand?: boolean,
   mainActivity?: string,
+  faceNotDominant?: boolean,
 ): string {
   if (!refs) return "";
   const parts: string[] = [];
@@ -640,6 +642,7 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         hasAvatar: !!refs.avatar,
         segment: segment as Segment | undefined,
         isPersonalBrand,
+        faceNotDominant,
       }),
     );
     if (refs.produtos.length >= 2) {
@@ -716,6 +719,12 @@ export function buildPostUnicoPrompt(params: {
   const regenVariationBlock = variationHint
     ? `\n\n♻ NOVA VERSÃO: gere uma execução visual CLARAMENTE DIFERENTE da anterior — mude enquadramento, ângulo de câmera, composição, paleta de fundo e cena, mantendo o MESMO título e o MESMO texto de apoio. Não repita a imagem anterior.`
     : "";
+  // Detecta se a variação sorteada (CLAREZA "DETALHE CONTEXTUAL", IMPACTO
+  // "SUJEITO SEM PERSONAGEM DOMINANTE") já retira o rosto do centro da cena —
+  // sem isso, a regra de protagonismo do produto (abaixo) competia com essa
+  // variação e o modelo de imagem resolvia o conflito gerando um retrato de
+  // rosto em primeiro plano (ver variationHasFaceNotDominant).
+  const faceNotDominant = variationHasFaceNotDominant(variationBlock);
   const primary = kit.primaryColor || "#123a63";
   const accent = kit.accentColor || kit.secondaryColor || "#f4b000";
   const zona = logoZoneDescription(kit.logoPosition);
@@ -769,6 +778,7 @@ Hierarquia tipográfica obrigatória:
     forcedGender,
     kit.isPersonalBrand,
     data.mainActivity || kit.mainActivity,
+    faceNotDominant,
   );
   const referenceAnchorBlock = refsBlock
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
