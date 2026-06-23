@@ -271,7 +271,6 @@ export default function ContentForm({
             <option value="lançamento">Lançamento</option>
             <option value="consolidação">Consolidação</option>
             <option value="reativação">Reativação</option>
-            <option value="sazonalidade">Sazonalidade</option>
           </select>
           <span
             style={{
@@ -287,8 +286,6 @@ export default function ContentForm({
             {data.businessMoment === "consolidação" &&
               "Público já compra de você — fortalecer preferência"}
             {data.businessMoment === "reativação" && "Público que conhecia mas parou de engajar"}
-            {data.businessMoment === "sazonalidade" &&
-              "Aproveitar um período, data ou contexto específico"}
           </span>
         </label>
       </div>

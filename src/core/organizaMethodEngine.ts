@@ -20,77 +20,85 @@ import {
   LEGENDA_CORPO_MAX_WORDS,
   LEGENDA_CTA_MAX_WORDS,
   LEGENDA_HASHTAGS,
+  TECNICISMO_RULE,
 } from "./textValidation";
 
 interface MomentModulator {
   label: string;
   entryModifier: string;
-  securityAngle: string;
-  storyEntryModifier: string;
   contextNote: string;
 }
 
+// Cada entryModifier já incorpora a nuance de SEGURANÇA usada quando
+// isB2BOperational (era um campo `securityAngle` separado — fundido aqui
+// porque só era lido nesse único branch).
 const momentModulators: Record<string, MomentModulator> = {
   lançamento: {
     label: "Lançamento",
     entryModifier:
-      "modulada por DESCOBERTA e NOVIDADE — o 1º conteúdo apresenta o que ainda não é percebido pelo público, despertando curiosidade legítima sobre algo novo.",
-    securityAngle:
-      "ancorada na previsibilidade e clareza da adoção do que está sendo introduzido (reduzir incerteza diante do novo)",
-    storyEntryModifier:
-      "modulada por descoberta e novidade — abrir o dia revelando algo que o público ainda não percebeu sobre o tema.",
+      "modulada por DESCOBERTA e NOVIDADE — o 1º conteúdo apresenta o que ainda não é percebido pelo público, despertando curiosidade legítima sobre algo novo; em contexto B2B operacional, ancorar essa descoberta na previsibilidade e clareza da adoção do que está sendo introduzido, reduzindo a incerteza diante do novo.",
     contextNote: "Lançamento (empresa nova ou novo produto/serviço — ativação via descoberta)",
   },
   consolidação: {
     label: "Consolidação",
     entryModifier:
-      "ativação padrão da entrada do segmento, sem modulação adicional — reforçar autoridade e prova sobre o que já é percebido.",
-    securityAngle: "ancorada em estabilidade comprovada e previsibilidade operacional consolidada",
-    storyEntryModifier: "ativação padrão da entrada do segmento, aplicada ao contexto do negócio.",
+      "ativação padrão da entrada do segmento, sem modulação adicional — reforçar autoridade e prova sobre o que já é percebido; em contexto B2B operacional, ancorar essa autoridade na estabilidade comprovada e na previsibilidade operacional já consolidada.",
     contextNote: "Consolidação (operação estável buscando crescer — ativação padrão do segmento)",
   },
   reativação: {
     label: "Reativação",
     entryModifier:
-      "modulada por RECONEXÃO e RELEVÂNCIA RENOVADA — reabre uma conversa que ficou em aberto, recuperando a atenção de quem já conhece mas se afastou.",
-    securityAngle:
-      "ancorada em reduzir o risco percebido de retomar (mostrar que o caminho de volta é seguro e previsível)",
-    storyEntryModifier:
-      "modulada por reconexão — abrir o dia reativando uma percepção que pode ter esfriado no público.",
+      "modulada por RECONEXÃO e RELEVÂNCIA RENOVADA — reabre uma conversa que ficou em aberto, recuperando a atenção de quem já conhece mas se afastou; em contexto B2B operacional, ancorar essa reconexão em reduzir o risco percebido de retomar, mostrando que o caminho de volta é seguro e previsível.",
     contextNote: "Reativação (cliente parado, retomada após pausa — ativação via reconexão)",
-  },
-  sazonalidade: {
-    label: "Sazonalidade",
-    entryModifier:
-      "modulada pelo CONTEXTO TEMPORAL VIGENTE — ancora a entrada no momento atual (data, temporada, ciclo), conectando a oferta ao agora.",
-    securityAngle: "ancorada na previsibilidade de aproveitar o momento certo, sem improviso",
-    storyEntryModifier:
-      "modulada pelo contexto temporal — abrir o dia ancorando o tema no momento sazonal vigente.",
-    contextNote:
-      "Sazonalidade (data comemorativa ou alta/baixa temporada — ativação ancorada no agora)",
   },
 };
 
-const segmentConfigB2C = {
-  SERVIÇOS: { entrada: "clareza e organização mental", bloqueio: "confusão e desconfiança" },
-  VAREJO: { entrada: "identificação e movimento", bloqueio: "indecisão e inércia" },
-  MARCA: { entrada: "reconhecimento e vínculo", bloqueio: "desconexão e falta de familiaridade" },
+// Matriz única segmento×audiência: entrada/bloqueio psicológicos + progressão
+// estratégica da sequência. Antes espalhada em segmentConfigB2C/B2B (entrada/
+// bloqueio) + um ternário separado de progressionText — consolidada aqui
+// porque as três coisas variam exatamente pelo mesmo par (audience, segment).
+const AUDIENCE_SEGMENT_CONFIG = {
+  B2C: {
+    SERVIÇOS: {
+      entrada: "clareza e organização mental",
+      bloqueio: "confusão e desconfiança",
+      progressionText: "ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR",
+    },
+    VAREJO: {
+      entrada: "identificação e movimento",
+      bloqueio: "indecisão e inércia",
+      progressionText: "IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR",
+    },
+    MARCA: {
+      entrada: "reconhecimento e vínculo",
+      bloqueio: "desconexão e falta de familiaridade",
+      progressionText: "RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR",
+    },
+  },
+  B2B: {
+    SERVIÇOS: {
+      entrada: "eficiência e previsibilidade operacional",
+      bloqueio: "risco de mudança e falta de referências",
+      progressionText: "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR",
+    },
+    VAREJO: {
+      entrada: "margem e giro de estoque",
+      bloqueio: "custo de troca e incerteza de demanda",
+      progressionText: "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR",
+    },
+    MARCA: {
+      entrada: "posicionamento e diferenciação no mercado",
+      bloqueio: "comoditização e falta de percepção de valor",
+      progressionText: "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR",
+    },
+  },
 } as const;
 
-const segmentConfigB2B = {
-  SERVIÇOS: {
-    entrada: "eficiência e previsibilidade operacional",
-    bloqueio: "risco de mudança e falta de referências",
-  },
-  VAREJO: {
-    entrada: "margem e giro de estoque",
-    bloqueio: "custo de troca e incerteza de demanda",
-  },
-  MARCA: {
-    entrada: "posicionamento e diferenciação no mercado",
-    bloqueio: "comoditização e falta de percepção de valor",
-  },
-} as const;
+// Cláusula de exceção de sílabas no título, repetida em todos os formatos
+// (Reels, Estático Final, Estático, Card de carrossel) — centralizada aqui
+// para evitar 4 cópias do mesmo parágrafo dessincronizando entre si.
+const SILABA_EXCECAO_RULE =
+  'cada palavra com no máximo 4 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 5 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 6+ sílabas devem ser trocados por sinônimo mais curto)';
 
 const SEQUENCE_COMPOSITION = {
   3: { estatico: 1, carrossel: 1, fechamento: 1 },
@@ -98,15 +106,12 @@ const SEQUENCE_COMPOSITION = {
   9: { estatico: 3, carrossel: 3, fechamento: 3 },
 };
 
-function buildPostProgression(
-  qty: number,
-  entrada: string,
-  isB2BOperational: boolean,
-  moment: MomentModulator,
-): string {
+function buildPostProgression(qty: number, entrada: string, isB2BOperational: boolean): string {
+  // A modulação do momento ("entryModifier") já é declarada uma única vez em
+  // ANÁLISE INTERNA → "4. Modulação do momento" — não repetir aqui.
   const ativacao = isB2BOperational
-    ? `Ativação da ENTRADA (${entrada}) via gatilho de SEGURANÇA ${moment.securityAngle}: enfatizar estabilidade, proteção, previsibilidade operacional, redução de incerteza e controle de processo. Modulação do momento "${moment.label}": ${moment.entryModifier}`
-    : `Ativação da ENTRADA: ${entrada}, aplicada ao contexto real do negócio. Modulação do momento "${moment.label}": ${moment.entryModifier}`;
+    ? `Ativação da ENTRADA (${entrada}) via gatilho de SEGURANÇA: enfatizar estabilidade, proteção, previsibilidade operacional, redução de incerteza e controle de processo.`
+    : `Ativação da ENTRADA: ${entrada}, aplicada ao contexto real do negócio.`;
 
   const segurancaNote = isB2BOperational
     ? " → Como o início já ativou Segurança, esta etapa deve aprofundar com provas concretas. NÃO repetir estabilidade/proteção."
@@ -212,8 +217,7 @@ function buildCommunicativeFunctionMap(
 // idêntico ao que já existia, só deslocado).
 export function buildMetodoOpPrompt(data: ContentFormData): string {
   const isB2B = data.audience === "B2B";
-  const segConfig = isB2B ? segmentConfigB2B : segmentConfigB2C;
-  const seg = segConfig[data.segment];
+  const seg = AUDIENCE_SEGMENT_CONFIG[isB2B ? "B2B" : "B2C"][data.segment];
   const moment = momentModulators[data.businessMoment] || momentModulators["consolidação"];
   const isB2BOperational = isB2B && (data.segment === "SERVIÇOS" || data.segment === "VAREJO");
   const wantsStories = data.outputMode === "stories" || data.outputMode === "feed+stories";
@@ -228,13 +232,7 @@ export function buildMetodoOpPrompt(data: ContentFormData): string {
   const size: 3 | 6 | 9 = isExperimentacao ? 3 : requestedSize;
   const comp = SEQUENCE_COMPOSITION[size];
 
-  const progressionText = isB2B
-    ? "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR"
-    : data.segment === "VAREJO"
-      ? "IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR"
-      : data.segment === "MARCA"
-        ? "RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR"
-        : "ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR";
+  const progressionText = seg.progressionText;
 
   const audienceDirection = isB2B
     ? "Conteúdo SEMPRE para o decisor empresarial (gestor, diretor ou responsável pela área), NUNCA para o consumidor final."
@@ -260,7 +258,7 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? "s" : ""} de produção):
 - Cada Reels: até 15 segundos, imagem PURA (sem texto, sem logo), sempre com UMA ÚNICA PESSOA adulta como porta-voz.
 - O imagePrompt do Reels DEVE descrever uma FOTO ÚNICA, sem colagem, sem sequência de quadros, sem reunião e sem várias pessoas.
 - Se a ideia envolver clientes, equipe, reunião ou atendimento, traduza visualmente para uma pessoa sozinha olhando para a câmera.
-- Campo "hook": título editorial do reels, NO MÁXIMO 6 palavras, cada palavra com no máximo 4 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 5 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 6+ sílabas devem ser trocados por sinônimo mais curto). Sem ponto final — EXCETO se for pergunta (direta ou retórica): nesse caso "?" é obrigatório (ex.: "Por que isso acontece?", "O que está faltando?").
+- Campo "hook": título editorial do reels, NO MÁXIMO 6 palavras, ${SILABA_EXCECAO_RULE}. Sem ponto final — EXCETO se for pergunta (direta ou retórica): nesse caso "?" é obrigatório (ex.: "Por que isso acontece?", "O que está faltando?").
 - Texto de tela em "screenText", frase curta até 7 palavras.
 - Roteiro falado (campo "script"): ESTRUTURA em 2 partes — (1) mensagem principal de 14 a 16 palavras curtas + ponto final + (2) CTA genérico de 5 a 6 palavras. TOTAL: 19 a 22 palavras → ~7 segundos em voz.
   CTA OBRIGATORIAMENTE GENÉRICO — varie a cada geração, escolha entre: "Fale com a gente hoje.", "Entre em contato agora.", "Venha saber mais.", "Comece ainda hoje.", "Fale conosco agora.", "Dá pra começar hoje.", "A gente te ajuda.", "Vem com a gente.", "O primeiro passo é seu.", "Bora dar o próximo passo." — ou crie outro de mesmo tom. PROIBIDO mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
@@ -273,7 +271,7 @@ ESTÁTICO FINAL (${comp.fechamento} peça${comp.fechamento > 1 ? "s" : ""} de fe
 - O Estático Final NÃO é um estático comum nem um reel congelado.
 - É um formato HÍBRIDO de fechamento visual com função psicológica própria: consolidação, resolução visual, fechamento emocional, organização da decisão.
 - Função na sequência: encerrar o ciclo narrativo aberto pelo estático e desenvolvido pelo carrossel.
-- Cada Estático Final: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 4 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 5 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 6+ sílabas devem ser trocados por sinônimo mais curto), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras e CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada Estático Final: título com NO MÁXIMO 6 palavras, ${SILABA_EXCECAO_RULE}, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras e CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - O TÍTULO do Estático Final deve carregar resolução, não provocação. Frase de conclusão, não de abertura. O elemento concreto da Informação-chave PODE e DEVE ser reconhecível aqui — reaparecer como prova da decisão tomada é a própria função do fechamento (a sequência é acompanhada dia a dia como uma história; o Estático Final fecha o ciclo que o Estático inicial abriu). O que NÃO pode se repetir é o BENEFÍCIO/GANHO: se o título reescreve a Informação-chave trocando só 2-3 palavras por sinônimos do mesmo benefício (ex.: Informação-chave fala em "manter produção ativa" → título final repetir "produção ativa" é fraco), troque por um GANHO DE NEGÓCIO que só a resolução revela — uma consequência real e específica da atividade desta empresa (ex.: "marca em evidência", "portfólio fortalecido", "autoridade construída", "capacidade ampliada", "presença consolidada") — NUNCA um estado emocional genérico e intercambiável entre segmentos ("confiança", "tranquilidade", "paz de espírito", "rotina resolvida", "decisão certa"/"decisão feita"); o ganho precisa ser específico a ESTE negócio (deriva da atividade/segmento informados no CONTEXTO), não um clichê de fechamento que serviria pra qualquer marca.
 - PROIBIDO estruturar o título como ESCOLHA/ALTERNATIVA dupla ("[ação] já ou [ação] sem parar", "[verbo] agora ou [verbo] depois") — essa forma é CTA/oferta, soa como provocação de abertura, não como conclusão de um ciclo já resolvido. Ex. ruim: "Venda já ou cresça sem parar" (lê como slogan de oferta, não como fechamento). O título deve afirmar UM resultado já consolidado, não apresentar duas opções.
 - O TEXTO deve consolidar a direção da sequência em uma afirmação clara e estável.
@@ -306,20 +304,20 @@ A SEQUÊNCIA COMPLETA segue a progressão: ${progressionText}
 Os formatos são distribuídos pelo método — NÃO pelo usuário.
 
 ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? "s" : ""}):
-- Cada estático: título com NO MÁXIMO 6 palavras, cada palavra com no máximo 4 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 5 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 6+ sílabas devem ser trocados por sinônimo mais curto), sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras e CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula (ver REGRA DE LEGENDA).
+- Cada estático: título com NO MÁXIMO 6 palavras, ${SILABA_EXCECAO_RULE}, sem ponto final (EXCETO se for pergunta: nesse caso "?" é OBRIGATÓRIO — ex.: "Por que é assim?" ✓, "O que está faltando?" ✓, nunca "Por que é assim." ✗); texto com NO MÁXIMO 15 palavras terminando com PONTO FINAL (16ª palavra em diante é cortada); legenda com corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras e CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula (ver REGRA DE LEGENDA).
 - Variar títulos entre afirmação, pergunta, contraste e observação cotidiana.
 - DIVERSIDADE LEXICAL OBRIGATÓRIA: os títulos dos estáticos de uma mesma sequência NÃO podem começar com a mesma palavra — garantir abertura distinta entre Estático 1, Estático 2 e Estático Final. ALÉM DISSO, nenhuma palavra de conteúdo (substantivo, verbo ou adjetivo — ignore artigos/preposições) pode se repetir, mesma raiz incluída, entre os títulos do Estático, do Carrossel e do Estático Final/Reels desta sequência — ex.: se um título usa "guardado", os outros NÃO podem usar "guardado", "guardados" nem "guarda" em nenhuma posição. Cada título precisa de vocabulário próprio, mesmo tratando do mesmo tema.
 - SUJEITO DO TÍTULO: aplica-se a regra de liberdade gramatical do item 11 (ver ANÁLISE INTERNA acima) — qualquer classe gramatical pode ser sujeito quando substantivada; proibida construção passiva sem agente.
 - ANCORAGEM CONCRETA — ANTI-SÍMBOLO: o título deve poder virar uma FOTO de pessoa(s) real(is) em ação observável (decidir, alinhar, atender, revisar, entregar, fechar, apresentar). Teste antes de retornar: "dá para fotografar isso sem recorrer a objeto-metáfora ou cenário espacial genérico?" Se a única imagem possível for engrenagem, peão de madeira, seta, xadrez, escada, degraus, horizonte vazio ou aperto de mãos → título conceitual demais; reescreva com verbo de ação + agente humano. Exemplo: prefira "Time decide junto e fecha" a "Equipe forte traz bom ganho". Metáforas de jornada ("longe", "avançar", "crescer", "subir") e adjetivos de qualidade ("rápido", "forte", "claro", "sólido") SÃO PERMITIDOS nos títulos — a imagePrompt e leituraCenica os traduzirão pelo contexto real do negócio, não por cenário físico nem propriedade literal.
 - TEXTO DE APOIO — PADRÕES PROIBIDOS: "vendas aumentadas", "resultados mais consistentes", "crescimento constante e", "para seu negócio", "para a sua empresa", "para a sua marca". Proibido o padrão "[abstrato] gera [resultado]", "[abstrato] faz [resultado]", "[abstrato] traz [resultado]" ou "[abstrato] é [abstrato]" como estrutura dominante — preferir construções diretas: sujeito + verbo de ação + complemento específico.
-- Progressão dos estáticos: ${buildPostProgression(comp.estatico, seg.entrada, isB2BOperational, moment)}
+- Progressão dos estáticos: ${buildPostProgression(comp.estatico, seg.entrada, isB2BOperational)}
 - ARCO VISUAL DA SEQUÊNCIA — OBRIGATÓRIO: as leituraCenicas devem criar progressão de câmera ao longo da sequência completa. Estático 1 (abertura): plano ABERTO — personagem integrado ao ambiente, espaço e contexto visíveis, câmera mais afastada; registrar "plano aberto" no campo 'composicao'. Estático Final/Reels (fechamento): plano MÉDIO-FECHADO ou CLOSE — personagem em destaque, composição mais centralizada, menos elementos de ambiente; registrar "plano médio-fechado" ou "close-up" no campo 'composicao'. Nunca dois estáticos consecutivos com o mesmo enquadramento.
 - Retornar em "feed": [{ "dia", "formato":"Estático", "titulo", "texto", "legenda", "imagem", "leituraCenica": { "intencao": "o que este post ativa emocionalmente", "personagem": "quem aparece na cena e o que faz", "ambiente": "onde a cena acontece com detalhes físicos", "expressao": "expressão facial e corporal do personagem", "clima": "luz, hora do dia, atmosfera", "composicao": "enquadramento e distância de câmera (plano aberto / plano médio / plano médio-fechado / close-up) + como os elementos se organizam no quadro" } }]
 
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? "s" : ""} de 5 cards cada):
 - Cada carrossel tem exatamente 5 cards com função comunicativa distinta: abertura (EDUCATIVO) → desenvolvimento (INFORMATIVO) → aprofundamento (INFORMATIVO) → direção (PERSUASIVO) → ação (CONVENCIMENTO).
 - Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. ${comp.carrossel > 1 ? `Card 5 SÓ pode citar o que a empresa entrega e ter CTA comercial na legenda no carrossel ${comp.carrossel} (o último da sequência) — nos carrosséis anteriores, Card 5 fecha em síntese/direção, sem citar a empresa.` : "Card 5 pode citar o que a empresa entrega e tem CTA na legenda."}
-- Cada card: titulo até 6 palavras, cada palavra com no máximo 4 sílabas (EXCETO o substantivo concreto central da informação-chave — produto, peça, serviço, objeto ou procedimento — que pode ter NO MÁXIMO 5 sílabas, nunca mais, quando essencial para clareza, ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia" — termos com 6+ sílabas devem ser trocados por sinônimo mais curto), sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
+- Cada card: titulo até 6 palavras, ${SILABA_EXCECAO_RULE}, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
 - FORMA DO TÍTULO nos Cards 2-3 (desenvolvimento) — EVIDÊNCIA CONCRETA, NÃO METÁFORA: este é o estágio de evidência da sequência (Dia 2). O TÍTULO dos cards 2 e 3 deve trazer EVIDÊNCIA CONCRETA — um fato, número, situação real ou comparação observável — e NÃO metáfora nem adjetivo de qualidade solto ("redondo", "certo", "sólido", "ideal", "perfeito"). Isto é DIFERENTE da ANCORAGEM CONCRETA — ANTI-SÍMBOLO acima (que trata da tradução VISUAL): aqui é sobre o CONTEÚDO do título em si — evidência vs. metáfora. Ex.: prefira "Folga errada gasta o rolamento" a "Motor redondo pede cuidado certo". OPÇÃO (não obrigação): pode usar formato de lista numerada quando fizer sentido (ex.: "N sinais de que...", "N motivos para..."), mas NÃO é obrigatório nem deve se repetir como fórmula fixa entre gerações — é UMA opção entre várias formas de evidência concreta (dado real, comparação, situação observável, etc.).
 - ARCO VISUAL INTERNO DO CARROSSEL — OBRIGATÓRIO: os 5 cards devem ter enquadramento progressivo de câmera, criando narrativa visual de abertura a fechamento. Card 1 (abertura): PLANO ABERTO — personagem e ambiente visíveis, câmera afastada; 'composicao' = "plano aberto". Cards 2-3 (desenvolvimento): PLANO MÉDIO — ação ou objeto em destaque, ângulo engajado; 'composicao' = "plano médio". Card 4 (direção): PLANO MÉDIO-FECHADO — detalhe do trabalho, produto ou gesto; 'composicao' = "plano médio-fechado". Card 5 (ação): CLOSE-UP ou enquadramento íntimo — expressão ou gesto de resolução, câmera mais próxima; 'composicao' = "close-up". PROIBIDO repetir o mesmo enquadramento em cards consecutivos — cada card deve ter distância de câmera diferente do anterior.
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras + CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "enquadramento e distância de câmera (plano aberto / plano médio / plano médio-fechado / close-up) + organização dos elementos" } }, ...] }]
@@ -540,7 +538,7 @@ INEDITISMO CONTROLADO:
 - Não repetir estruturas de abertura.
 - Alternar pergunta, afirmação, contraste, exemplo cotidiano e micro narrativa.
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
-- Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento, mantendo clareza, naturalidade e impacto. Ex.: "expertise" → "experiência", "briefing" → "orientação", "saúde laboral" → "saúde do trabalho", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho", "branding" → "identidade de marca", "networking" → "contatos", "feedback" → "retorno", "ROI" → "retorno do investimento".
+${TECNICISMO_RULE}
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
 
 FORMATO DE SAÍDA:

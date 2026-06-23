@@ -13,6 +13,7 @@ import {
   normalizeForCompare,
   LEGENDA_CORPO_MAX_WORDS,
   LEGENDA_CTA_MAX_WORDS,
+  TECNICISMO_RULE,
 } from "@/core/textValidation";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
@@ -265,7 +266,7 @@ Regras:
 - Português brasileiro, sem inglês, sem markdown.
 - "hashtags" relevantes ao segmento e à informação-chave.
 - PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
-- Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento — ex.: "expertise" → "experiência", "briefing" → "orientação", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho".
+${TECNICISMO_RULE}
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ""}
 ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}`;

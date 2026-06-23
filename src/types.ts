@@ -1,6 +1,6 @@
 export type Segment = "SERVIÇOS" | "VAREJO" | "MARCA";
 export type Audience = "B2C" | "B2B";
-export type BusinessMoment = "lançamento" | "consolidação" | "reativação" | "sazonalidade";
+export type BusinessMoment = "lançamento" | "consolidação" | "reativação";
 export type OutputMode = "feed" | "stories" | "feed+stories";
 export type OutputFormat = "feed" | "carrossel" | "reels" | "stories" | "estatico_final";
 export type MoodCode = "OP-01" | "OP-02" | "OP-03" | "OP-04" | "OP-05" | "OP-06";

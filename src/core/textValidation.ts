@@ -307,6 +307,12 @@ export const LEGENDA_CORPO_MAX_WORDS = 30;
 export const LEGENDA_CTA_MAX_WORDS = 5;
 export const LEGENDA_HASHTAGS = 3;
 
+// Regra de substituição de tecnicismos/estrangeirismos/jargão, antes
+// duplicada (com pequenas variações) em organizaMethodEngine.ts,
+// generate-pu-copy.ts, generate-caption.ts e regenerate-block.ts.
+export const TECNICISMO_RULE =
+  '- Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento, mantendo clareza, naturalidade e impacto. Ex.: "expertise" → "experiência", "briefing" → "orientação", "saúde laboral" → "saúde do trabalho", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho", "branding" → "identidade de marca", "networking" → "contatos", "feedback" → "retorno", "ROI" → "retorno do investimento".';
+
 export function checkLegendaStructure(legenda: string): string | null {
   const trimmed = legenda.trim();
   if (!trimmed) return null;
