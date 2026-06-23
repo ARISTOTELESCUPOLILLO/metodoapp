@@ -702,6 +702,25 @@ export function variationHasFaceNotDominant(variationBlock: string): boolean {
   return FACE_NOT_DOMINANT_MARKERS.some((marker) => variationBlock.includes(marker));
 }
 
+// SILÊNCIO exige objeto/fragmento humano ocupando NO MÁXIMO 30% da composição
+// (ver MOOD_RULES["OP-06"], "ESPAÇO NEGATIVO OBRIGATÓRIO") — numericamente quase
+// oposto à regra de protagonismo do produto, que exige NO MÍNIMO 30-40% e
+// "herói absoluto, primeiro elemento identificado". Sem reconciliação, as duas
+// instruções competem no mesmo prompt sempre que SILÊNCIO é combinado com
+// produto referenciado (achado de auditoria, não confirmado em produção ainda).
+const PRODUTO_RECONCILIACAO_SILENCIO_HERO =
+  "RECONCILIAÇÃO COM O MOOD SILÊNCIO: o mood SILÊNCIO exige que o objeto ocupe NO MÁXIMO 30% da composição, com vasto espaço negativo ao redor — isso SUBSTITUI, PARA ESTA PEÇA, a exigência de tamanho mínimo (30-40%) da regra acima. O produto continua sendo o ÚNICO elemento da composição além do fundo — nada mais compete com ele visualmente —, mas o protagonismo se expressa pela centralidade, nitidez e isolamento dentro do vasto espaço vazio, NÃO pelo tamanho grande. Mantenha as demais regras (foco nítido, fidelidade ao produto real, sem competir com outros elementos) — só a escala muda.";
+
+const PRODUTO_RECONCILIACAO_SILENCIO_EQUILIBRIO =
+  "RECONCILIAÇÃO COM O MOOD SILÊNCIO: o mood SILÊNCIO exige vasto espaço negativo e objeto/fragmento humano ocupando NO MÁXIMO 30% da composição — isso SUBSTITUI, PARA ESTA PEÇA, a proibição de o produto ficar pequeno da regra acima. O equilíbrio de peso visual entre produto e personagem permanece (nenhum dos dois domina o outro), mas ambos pequenos e isolados dentro do espaço vazio — não grandes ou centrais.";
+
+// FRAGMENTO exige 3 a 5 blocos visuais distintos com "múltiplos focos pequenos
+// coexistindo" (ver MOOD_RULES["OP-04"]) — estruturalmente oposto à regra de
+// protagonismo do produto, que exige UM herói único e dominante. Mesma classe
+// de conflito do SILÊNCIO acima, achado na mesma auditoria.
+const PRODUTO_RECONCILIACAO_FRAGMENTO_HERO =
+  "RECONCILIAÇÃO COM O MOOD FRAGMENTO: o mood FRAGMENTO exige uma composição de 3 a 5 blocos visuais distintos, sem um único elemento dominando o quadro inteiro — isso SUBSTITUI, PARA ESTA PEÇA, a exigência de o produto ocupar 30-40% do quadro inteiro da regra acima. O produto referenciado deve aparecer com destaque e nitidez em PELO MENOS UM dos blocos (preferencialmente o bloco mais central ou de maior área) — os demais blocos trazem outros ângulos, detalhes ou contexto do mesmo produto ou do universo do negócio, nunca um segundo produto ou objeto-conceito concorrente.";
+
 export function buildProductHierarchyBlock(opts: {
   produtosCount: number;
   hasCenario: boolean;
@@ -713,8 +732,13 @@ export function buildProductHierarchyBlock(opts: {
    * a regra de protagonismo do produto, lida isoladamente, empurre o modelo
    * de imagem para um retrato de rosto em primeiro plano. */
   faceNotDominant?: boolean;
+  /** Mood desta geração — usado só para reconciliar SILÊNCIO/FRAGMENTO, cuja
+   * composição (objeto pequeno/vasto espaço; múltiplos blocos sem hero único)
+   * contradiz a regra de protagonismo do produto se lida isoladamente. */
+  mood?: MoodCode;
 }): string {
-  const { produtosCount, hasCenario, hasAvatar, segment, isPersonalBrand, faceNotDominant } = opts;
+  const { produtosCount, hasCenario, hasAvatar, segment, isPersonalBrand, faceNotDominant, mood } =
+    opts;
   if (produtosCount <= 0) return "";
   const multi = produtosCount > 1;
 
@@ -765,6 +789,7 @@ export function buildProductHierarchyBlock(opts: {
     const lines: string[] = [
       multi ? PRODUTO_EQUILIBRIO_MARCA_PLURAL : PRODUTO_EQUILIBRIO_MARCA_SINGULAR,
     ];
+    if (mood === "OP-06") lines.push(PRODUTO_RECONCILIACAO_SILENCIO_EQUILIBRIO);
     if (hasAvatar) {
       lines.push(
         multi
@@ -782,6 +807,8 @@ export function buildProductHierarchyBlock(opts: {
 
   // VAREJO: produto é o herói da composição (regra original).
   const lines: string[] = [multi ? PRODUTO_PROTAGONISMO_PLURAL : PRODUTO_PROTAGONISMO_SINGULAR];
+  if (mood === "OP-06") lines.push(PRODUTO_RECONCILIACAO_SILENCIO_HERO);
+  if (mood === "OP-04") lines.push(PRODUTO_RECONCILIACAO_FRAGMENTO_HERO);
   if (faceNotDominant) {
     lines.push(
       "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, silhueta — ou nenhuma pessoa visível). Isso NÃO reduz a regra de protagonismo do produto acima: o produto continua sendo o centro visual nítido, grande e em primeiro plano, ocupando o papel que seria do rosto. PROIBIDO compensar a ausência de rosto dominante com um retrato de rosto em primeiro plano, luz dramática teatral ou composição de moda — a cena permanece fiel à gramática de luz, paleta e composição do mood descrita acima, com o produto (não o rosto) como protagonista.",

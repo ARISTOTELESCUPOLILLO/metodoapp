@@ -505,6 +505,7 @@ function referencesBlock(
   isPersonalBrand?: boolean,
   mainActivity?: string,
   faceNotDominant?: boolean,
+  mood?: MoodCode,
 ): string {
   if (!refs) return "";
   const parts: string[] = [];
@@ -645,6 +646,7 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         segment: segment as Segment | undefined,
         isPersonalBrand,
         faceNotDominant,
+        mood,
       }),
     );
     if (refs.produtos.length >= 2) {
@@ -789,6 +791,7 @@ Hierarquia tipográfica obrigatória:
     kit.isPersonalBrand,
     data.mainActivity || kit.mainActivity,
     faceNotDominant,
+    data.mood,
   );
   const referenceAnchorBlock = refsBlock
     ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`

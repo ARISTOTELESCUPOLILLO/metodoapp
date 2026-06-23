@@ -379,6 +379,7 @@ function buildAnchorPrefix(
           hasAvatar: !!refs.avatar,
           segment,
           isPersonalBrand,
+          mood,
         }),
       );
     }
