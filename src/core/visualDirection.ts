@@ -728,6 +728,11 @@ export function buildProductHierarchyBlock(opts: {
       lines.push(
         multi ? PERSONAGEM_VS_PRODUTO_SERVICOS_PLURAL : PERSONAGEM_VS_PRODUTO_SERVICOS_SINGULAR,
       );
+      if (faceNotDominant) {
+        lines.push(
+          "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, gesto, silhueta). Isso NÃO reduz o protagonismo do personagem definido acima: ele continua sendo o centro visual da composição através do GESTO, da AÇÃO ou da PRESENÇA PARCIAL, nunca do rosto. PROIBIDO recorrer a um retrato de rosto em primeiro plano só para satisfazer o protagonismo do personagem — expresse-o por mão, gesto ou ação, mantendo o produto em apoio conforme a regra acima.",
+        );
+      }
     }
     return lines.join("\n");
   }
@@ -744,6 +749,11 @@ export function buildProductHierarchyBlock(opts: {
           ? PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_PLURAL
           : PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_SINGULAR,
       );
+      if (faceNotDominant) {
+        lines.push(
+          "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, gesto, silhueta). Isso NÃO reduz o protagonismo absoluto do personagem definido acima (nesta marca, a pessoa É a marca): o protagonismo se expressa pelo GESTO, pela AÇÃO ou pela PRESENÇA PARCIAL — não pelo rosto. PROIBIDO recorrer a um retrato de rosto em primeiro plano só para satisfazer 'a pessoa é a marca' — expresse a marca por mão, gesto ou ação, mantendo o produto em apoio conforme a regra acima.",
+        );
+      }
     }
     return lines.join("\n");
   }
@@ -761,6 +771,11 @@ export function buildProductHierarchyBlock(opts: {
           ? PERSONAGEM_VS_PRODUTO_EQUILIBRIO_MARCA_PLURAL
           : PERSONAGEM_VS_PRODUTO_EQUILIBRIO_MARCA_SINGULAR,
       );
+      if (faceNotDominant) {
+        lines.push(
+          "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, gesto, silhueta). Isso NÃO reduz o peso visual igual definido acima: o EQUILÍBRIO 50/50 passa a ser entre o produto e a PRESENÇA PARCIAL do personagem (mão segurando ou próxima ao produto, gesto, silhueta) — ambos igualmente nítidos e perceptíveis ao mesmo tempo, sem que nenhum rosto em primeiro plano seja necessário para cumprir o equilíbrio. PROIBIDO recorrer a um retrato de rosto em primeiro plano só para satisfazer o peso visual igual.",
+        );
+      }
     }
     return lines.join("\n");
   }
