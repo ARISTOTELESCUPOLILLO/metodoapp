@@ -341,16 +341,21 @@ DIREÇÃO DE ENTREGA: se a frase envolver entrega, envio ou deslocamento de "${c
           // SERVIÇOS. MARCA não entra nessa troca: seu eixo (reconhecimento,
           // vínculo, percepção) não é substituído por um eixo de
           // compra/atendimento.
-          const itemType = concreteItem ? classifyItemType(concreteItem) : null;
-          const segmentForLens: Seg =
-            itemType && itemType !== segment && segment !== "MARCA" ? itemType : segment;
-          const lensTextForSegment =
-            segmentForLens === "MARCA" && isPersonalBrand
-              ? MARCA_LENS_PESSOAL
-              : SEGMENT_LENS[segmentForLens];
-          const segmentLensBlock = `LENTE DO SEGMENTO (${segmentForLens}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${lensTextForSegment}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.
+          // segmentLensBlock só é usado no postUnicoPrompt — no MOP (mode
+          // "metodo") esse cálculo nunca é lido, então é pulado por completo.
+          const segmentLensBlock = (() => {
+            if (mode !== "postunico") return "";
+            const itemType = concreteItem ? classifyItemType(concreteItem) : null;
+            const segmentForLens: Seg =
+              itemType && itemType !== segment && segment !== "MARCA" ? itemType : segment;
+            const lensTextForSegment =
+              segmentForLens === "MARCA" && isPersonalBrand
+                ? MARCA_LENS_PESSOAL
+                : SEGMENT_LENS[segmentForLens];
+            return `LENTE DO SEGMENTO (${segmentForLens}): estes eixos indicam o TIPO de situação — o ÂNGULO, não o vocabulário — ${lensTextForSegment}. Evite usar essas palavras literalmente na frase; expresse o eixo escolhido com elementos concretos da atividade da empresa.
 TESTE DE IDENTIFICAÇÃO DO CLIENTE: a frase final precisa ser algo que o CLIENTE (quem vê o post) diria, perguntaria, sentiria ou viveria. Se a frase descrever um atributo, processo ou metodologia do ponto de vista da empresa/fornecedor — e não uma situação, ganho ou rotina do cliente —, reescreva pelo que o cliente ganha ou pela situação que ele reconhece.
 PROIBIDO (ou variações próximas): "indicada por"/"indicado por", "ajustado conforme", "alinhada com análise", "humanizado"/"humanizada", "pronta(s)/pronto(s) para", "em tempo real", "bem vedada(s)" — são marcas de fala de catálogo ou de metodologia interna do fornecedor, não algo que o cliente diria.`;
+          })();
 
           const AUDIENCES = ["B2C", "B2B"] as const;
           type Aud = (typeof AUDIENCES)[number];
