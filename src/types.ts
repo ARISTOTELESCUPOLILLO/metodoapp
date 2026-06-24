@@ -179,6 +179,7 @@ export type PostUnicoDirecao = "livre" | "mood";
 export interface PostUnicoFormData {
   companyName: string;
   mainActivity: string;
+  audience: Audience;
   keyInfo: string;
   objetivo: PostUnicoObjetivo;
   direcao: PostUnicoDirecao;

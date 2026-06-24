@@ -335,6 +335,7 @@ export default function PostUnicoForm({
         body: JSON.stringify({
           companyName: data.companyName || kit.companyName,
           mainActivity: data.mainActivity || kit.mainActivity,
+          audience: data.audience,
           objetivo: data.objetivo,
           segment: kit.segment,
           isPersonalBrand: kit.isPersonalBrand,
@@ -450,6 +451,17 @@ export default function PostUnicoForm({
           />
         </label>
       </div>
+
+      <label>
+        Público-alvo
+        <select
+          value={data.audience}
+          onChange={(e) => update("audience", e.target.value as PostUnicoFormData["audience"])}
+        >
+          <option value="B2C">B2C — consumidor final</option>
+          <option value="B2B">B2B — empresas/decisores</option>
+        </select>
+      </label>
 
       <div className="formatBox">
         <strong>Objetivo da peça</strong>

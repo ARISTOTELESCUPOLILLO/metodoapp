@@ -933,11 +933,11 @@ const SUGESTAO_GENERIC_PATTERNS: RegExp[] = [
 ];
 
 // Validação leve da sugestão/keyInfo gerada pelo botão "Sugestão": comprimento
-// (ideal 5-10, máx. 12), terminação pendurada e frases-clichê genéricas. Não
-// inclui checagem de ancoragem com mainActivity de propósito — uma sugestão
-// concreta pode não repetir nenhuma palavra literal da atividade, e isso não
-// deve reprová-la (decisão de produto).
-export function validateSugestao(sugestao: string, maxWords = 12): string[] {
+// (ideal 4-7, chamado sempre com maxWords=7), terminação pendurada e
+// frases-clichê genéricas. Não inclui checagem de ancoragem com mainActivity
+// de propósito — uma sugestão concreta pode não repetir nenhuma palavra
+// literal da atividade, e isso não deve reprová-la (decisão de produto).
+export function validateSugestao(sugestao: string, maxWords = 7): string[] {
   const trimmed = sugestao.trim();
   const motivos: string[] = [];
   if (!trimmed) return ["sugestão vazia"];
@@ -1081,6 +1081,31 @@ export function checkRepeatedOpening(sugestao: string, previousSuggestions: stri
         `a frase começa igual a uma sugestão anterior desta sessão ("${novaAbertura}..."): comece com uma estrutura e palavras de abertura visivelmente diferentes, mesmo que o produto/serviço de origem seja parecido`,
       ];
     }
+  }
+  return [];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — vazamento do NOME da lente interna de geração.
+// A "lente de abertura" (OPENING_LENSES em suggest-keyinfo.ts) é um mecanismo
+// INTERNO: só orienta o ângulo da frase, nunca deve aparecer na saída. O
+// prompt instrui isso (lensBlock), mas sem checagem determinística era só
+// confiança na LLM. Aqui confirmamos que o nome literal da lente escolhida
+// (ex.: "Dúvida comum", "Processo") não aparece na frase final — comparação
+// case/acento-insensível, com boundary de palavra para evitar falso positivo
+// em substring solta (ex.: "Processo" dentro de "processamento").
+// ─────────────────────────────────────────────────────────────────────────
+
+export function checkLensNameLeak(sugestao: string, lensNome: string): string[] {
+  const nome = lensNome.trim();
+  if (!nome) return [];
+  const normalizedSugestao = normalizeForCompare(sugestao);
+  const escaped = normalizeForCompare(nome).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(^|[^\\p{L}])${escaped}([^\\p{L}]|$)`, "iu");
+  if (re.test(normalizedSugestao)) {
+    return [
+      `sugestão expõe o nome da lente interna ("${lensNome}") na frase final — a lente deve ser invisível, descreva a situação sem citar o nome do mecanismo interno`,
+    ];
   }
   return [];
 }

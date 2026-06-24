@@ -80,6 +80,7 @@ const defaultForm: ContentFormData = {
 const defaultPostUnico: PostUnicoFormData = {
   companyName: "",
   mainActivity: "",
+  audience: "B2C",
   keyInfo: "",
   objetivo: "nenhum",
   direcao: "livre",
@@ -419,7 +420,9 @@ export default function App() {
       // audience (B2C/B2B) é preferência fixa do usuário, não do kit/empresa —
       // não reseta ao entrar/sair de "atuando como" outro usuário.
       setForm((prev) => ({ ...defaultForm, audience: prev.audience }));
-      setPostUnico({ ...defaultPostUnico });
+      // audience (B2C/B2B) é preferência fixa do usuário, não do kit/empresa —
+      // não reseta ao entrar/sair de "atuando como" outro usuário.
+      setPostUnico((prev) => ({ ...defaultPostUnico, audience: prev.audience }));
       setKit(defaultKit);
       setVisualSelection(defaultVisualSelection);
     }
@@ -669,6 +672,7 @@ export default function App() {
       ...defaultPostUnico,
       companyName: kit.companyName || "",
       mainActivity: kit.mainActivity || "",
+      audience: postUnico.audience,
       keyInfo: postUnico.keyInfo,
     });
     setPostUnicoImg(undefined);
