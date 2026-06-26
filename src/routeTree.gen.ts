@@ -673,18 +673,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRegenerateBlockRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/judge-content': {
-      id: '/api/judge-content'
-      path: '/api/judge-content'
-      fullPath: '/api/judge-content'
-      preLoaderRoute: typeof ApiJudgeContentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/judge-logo': {
       id: '/api/judge-logo'
       path: '/api/judge-logo'
       fullPath: '/api/judge-logo'
       preLoaderRoute: typeof ApiJudgeLogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/judge-content': {
+      id: '/api/judge-content'
+      path: '/api/judge-content'
+      fullPath: '/api/judge-content'
+      preLoaderRoute: typeof ApiJudgeContentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/generate-video': {

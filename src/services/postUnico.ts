@@ -543,7 +543,7 @@ function referencesBlock(
       ? " NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem já definido pelo avatar."
       : ` NÃO copie a pessoa do uniforme — ela é só referência de roupa.`;
     parts.push(
-      `UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte, mesma gola, mangas e caimento do tecido. NÃO desenhe, NÃO reproduza e NÃO imite qualquer logomarca, símbolo, escrita ou estampa de marca sobre o tecido: a área onde apareceria a logo deve ficar LISA e neutra (tecido limpo, na própria cor da peça), sem nenhum letreiro ou marca legível — a logomarca oficial é aplicada depois, fora da IA. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas o corte e a cor da peça de roupa em si.${personagemClause}`,
+      `UNIFORME OBRIGATÓRIO: uma das imagens de referência enviadas é o uniforme da empresa — vista o personagem da peça EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si.${personagemClause}`,
     );
   }
   // Personagem sem avatar — representa o público-alvo por padrão (figurino
