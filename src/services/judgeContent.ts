@@ -12,6 +12,7 @@ import {
   PostUnicoCopyFields,
 } from "./autoRegenerate";
 import { supabase } from "@/integrations/supabase/client";
+import { prepareReferenceImage } from "@/utils/prepareReference";
 
 interface JudgeContext {
   companyName?: string;
@@ -121,6 +122,48 @@ export async function judgeAndRegenerateContent(
 
   const flagged: MethodOpResult = { ...result, flags };
   return await autoRegenerateFlaggedFields(flagged, ctx);
+}
+
+// --- Juiz visual de logomarca no uniforme (best-effort, fail open) ---
+
+const LOGO_JUDGE_TIMEOUT_MS = 15_000;
+
+// Compara a logomarca que aparece no vestuário do personagem na imagem gerada
+// com a logomarca oficial do kit de marca. Se houver divergência real (cor
+// errada, símbolo diferente), retorna { fiel: false, divergencia: "descrição" }
+// para que o chamador possa regenerar com a logo como referência adicional.
+// Retorna null em caso de falha — o chamador usa a imagem original.
+export async function judgeLogoUniforme(
+  geradaDataUrl: string,
+  logoDataUrl: string,
+): Promise<{ fiel: boolean; divergencia?: string } | null> {
+  try {
+    const [geradaSmall, logoSmall] = await Promise.all([
+      prepareReferenceImage(geradaDataUrl),
+      prepareReferenceImage(logoDataUrl),
+    ]);
+    if (!geradaSmall || !logoSmall) return null;
+
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    const res = await fetch("/api/judge-logo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ geradaDataUrl: geradaSmall, logoDataUrl: logoSmall }),
+      signal: AbortSignal.timeout(LOGO_JUDGE_TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return {
+      fiel: json.fiel !== false,
+      divergencia: typeof json.divergencia === "string" ? json.divergencia : undefined,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // Variante para o Post Único — mesmo juiz D2, aplicado à peça única

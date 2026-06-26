@@ -13,6 +13,7 @@ import type { BrandKit, ImageKit, MoodCode, Segment } from "../types";
 import type { PostUnicoReferences } from "./postUnico";
 import { orderedReferenceImages } from "./postUnico";
 import { generatePostImage } from "./api";
+import { judgeLogoUniforme } from "./judgeContent";
 import { loadImageKitAsync } from "../utils/imageKitStorage";
 import { isClothingFriendly, buildClothingPool } from "../core/clothingPool";
 import type { ElementoPersonalizacao, SlotPersonalizacao } from "../core/personalizacaoMop";
@@ -282,7 +283,7 @@ function buildAnchorPrefix(
   }
   if (refs.uniforme) {
     lines.push(
-      `IMAGEM #${idx} = UNIFORME OBRIGATÓRIO. Vista o personagem da cena EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte, mesma gola, mangas e caimento do tecido. NÃO desenhe, NÃO reproduza e NÃO imite qualquer logomarca, símbolo, escrita ou estampa de marca sobre o tecido: a área onde apareceria a logo deve ficar LISA e neutra (tecido limpo, na própria cor da peça), sem nenhum letreiro ou marca legível — a logomarca oficial é aplicada depois, fora da IA. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas o corte e a cor da peça de roupa em si. NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem da cena.`,
+      `IMAGEM #${idx} = UNIFORME OBRIGATÓRIO. Vista o personagem da cena EXATAMENTE com esta peça de roupa: mesma cor, mesmo modelo/corte e mesma posição da logomarca aplicada ao tecido. IGNORE COMPLETAMENTE quem aparece nesta foto de referência — rosto, corpo, idade, pose e identidade dessa pessoa NÃO importam, apenas a peça de roupa em si. NÃO copie a pessoa do uniforme; aplique somente a roupa ao personagem da cena.`,
     );
     idx++;
   }
@@ -416,6 +417,51 @@ function buildAnchorPrefix(
   return `${lines.join("\n")}\n\n`;
 }
 
+// Monta instrução de correção de logomarca para o retry — referência adicional
+// passada APÓS as refs originais, numerada de acordo com a posição no array.
+function buildLogoCorrection(imgIdx: number, divergencia?: string | null): string {
+  const problema = divergencia
+    ? `Problema detectado: ${divergencia}.`
+    : "Divergência de cor ou elementos detectada na logomarca.";
+  return (
+    `IMAGEM #${imgIdx} = LOGOMARCA OFICIAL DA EMPRESA (referência de correção de marca).\n` +
+    `${problema}\n` +
+    `CORRIJA a logomarca no vestuário do personagem para corresponder EXATAMENTE a esta imagem de referência: mesmas cores, mesmo símbolo, mesmos elementos visuais.\n` +
+    `MANTENHA TODO O RESTO DA CENA INALTERADO: composição, personagem, rosto, ambiente, pose, iluminação — apenas a logomarca no vestuário deve ser corrigida.`
+  );
+}
+
+// Gera a imagem e, quando há uniforme + logo no kit, aciona o juiz visual.
+// Se a logomarca no uniforme divergir da referência, regenera uma única vez
+// adicionando a logo como referência extra com instrução corretiva.
+// Best-effort: qualquer falha no juiz ou no retry usa a imagem original.
+async function generateWithLogoJudge(
+  params: Parameters<typeof generatePostImage>[0],
+  kitLogoDataUrl: string | undefined,
+): Promise<string> {
+  const imageUrl = await generatePostImage(params);
+  if (!kitLogoDataUrl || !params.hasUniformeRef) return imageUrl;
+
+  const verdict = await judgeLogoUniforme(imageUrl, kitLogoDataUrl);
+  if (!verdict || verdict.fiel) return imageUrl;
+
+  const logoIdx = (params.referenceImages?.length ?? 0) + 1;
+  const correctionBlock = buildLogoCorrection(logoIdx, verdict.divergencia);
+  const retryParams: Parameters<typeof generatePostImage>[0] = {
+    ...params,
+    referenceImages: [...(params.referenceImages ?? []), kitLogoDataUrl],
+    referenceAnchor: params.referenceAnchor
+      ? `${params.referenceAnchor}\n${correctionBlock}`
+      : correctionBlock,
+  };
+
+  try {
+    return await generatePostImage(retryParams);
+  } catch {
+    return imageUrl; // fallback para a imagem original se o retry falhar
+  }
+}
+
 export async function regenerateWithKit(input: RegenerateInput): Promise<string> {
   const {
     slot,
@@ -490,34 +536,71 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
   const referenceAnchor = anchorPrefix.trim() ? anchorPrefix.trim() : undefined;
 
   if (isReels) {
-    return generatePostImage({
-      imagePrompt: baseScene,
-      referenceAnchor,
-      titulo: "",
-      texto: "",
-      companyName: kit.companyName,
-      mainActivity: kit.mainActivity,
-      primaryColor: kit.primaryColor,
-      accentColor: kit.accentColor || "#f4b000",
-      fontFamily: kit.fontPair || "Montserrat",
-      secondaryFont: kit.secondaryFont,
-      mood,
-      vertical: "reels",
-      // Sem logoDataUrl: a logo é aplicada por canvas (composeReelsPng).
-      referenceImages: referenceImages.length ? referenceImages : undefined,
-      hasAvatarRef,
-      hasCenarioRef,
-      hasUniformeRef,
-      hasProdutoTelaRef: references.produtoTelaInformativa,
-      forcedGender,
-      anchoraPersonagem,
-      ancoragePapel,
-    });
+    return generateWithLogoJudge(
+      {
+        imagePrompt: baseScene,
+        referenceAnchor,
+        titulo: "",
+        texto: "",
+        companyName: kit.companyName,
+        mainActivity: kit.mainActivity,
+        primaryColor: kit.primaryColor,
+        accentColor: kit.accentColor || "#f4b000",
+        fontFamily: kit.fontPair || "Montserrat",
+        secondaryFont: kit.secondaryFont,
+        mood,
+        vertical: "reels",
+        // Sem logoDataUrl: a logo é aplicada por canvas (composeReelsPng).
+        referenceImages: referenceImages.length ? referenceImages : undefined,
+        hasAvatarRef,
+        hasCenarioRef,
+        hasUniformeRef,
+        hasProdutoTelaRef: references.produtoTelaInformativa,
+        forcedGender,
+        anchoraPersonagem,
+        ancoragePapel,
+      },
+      hasUniformeRef ? kit.logoDataUrl : undefined,
+    );
   }
 
   // Estático Final: imagem-base limpa, logo aplicada por canvas (composeFinalPng).
   if (isFinal) {
-    return generatePostImage({
+    return generateWithLogoJudge(
+      {
+        imagePrompt: baseScene,
+        referenceAnchor,
+        titulo: titulo || "",
+        texto: texto || "",
+        companyName: kit.companyName,
+        mainActivity: kit.mainActivity,
+        primaryColor: kit.primaryColor,
+        accentColor: kit.accentColor || "#f4b000",
+        fontFamily: kit.fontPair || "Montserrat",
+        secondaryFont: kit.secondaryFont,
+        mood,
+        vertical: "estatico_final",
+        logoPosition: kit.logoPosition,
+        leituraCenica,
+        referenceImages: referenceImages.length ? referenceImages : undefined,
+        hasAvatarRef,
+        hasCenarioRef,
+        hasUniformeRef,
+        hasProdutoTelaRef: references.produtoTelaInformativa,
+        forcedGender,
+        anchoraPersonagem,
+        ancoragePapel,
+      },
+      hasUniformeRef ? kit.logoDataUrl : undefined,
+    );
+  }
+
+  // Estático / Carrossel: paridade com o fluxo normal — o motor queima
+  // título e texto no mesmo estilo do mood, usando as referências do Kit
+  // Imagem (cenário/avatar/produto) como ancoragem visual. O caller aplica
+  // apenas a logo via composeFeedPng.
+  return generateWithLogoJudge(
+    {
       imagePrompt: baseScene,
       referenceAnchor,
       titulo: titulo || "",
@@ -529,7 +612,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       fontFamily: kit.fontPair || "Montserrat",
       secondaryFont: kit.secondaryFont,
       mood,
-      vertical: "estatico_final",
+      vertical: "post",
       logoPosition: kit.logoPosition,
       leituraCenica,
       referenceImages: referenceImages.length ? referenceImages : undefined,
@@ -540,35 +623,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       forcedGender,
       anchoraPersonagem,
       ancoragePapel,
-    });
-  }
-
-  // Estático / Carrossel: paridade com o fluxo normal — o motor queima
-  // título e texto no mesmo estilo do mood, usando as referências do Kit
-  // Imagem (cenário/avatar/produto) como ancoragem visual. O caller aplica
-  // apenas a logo via composeFeedPng.
-  return generatePostImage({
-    imagePrompt: baseScene,
-    referenceAnchor,
-    titulo: titulo || "",
-    texto: texto || "",
-    companyName: kit.companyName,
-    mainActivity: kit.mainActivity,
-    primaryColor: kit.primaryColor,
-    accentColor: kit.accentColor || "#f4b000",
-    fontFamily: kit.fontPair || "Montserrat",
-    secondaryFont: kit.secondaryFont,
-    mood,
-    vertical: "post",
-    logoPosition: kit.logoPosition,
-    leituraCenica,
-    referenceImages: referenceImages.length ? referenceImages : undefined,
-    hasAvatarRef,
-    hasCenarioRef,
-    hasUniformeRef,
-    hasProdutoTelaRef: references.produtoTelaInformativa,
-    forcedGender,
-    anchoraPersonagem,
-    ancoragePapel,
-  });
+    },
+    hasUniformeRef ? kit.logoDataUrl : undefined,
+  );
 }
