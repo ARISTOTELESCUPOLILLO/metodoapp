@@ -6,6 +6,7 @@ import {
   Track,
   ValidationFlag,
 } from "../types";
+import { FAIXA_ETARIA_REGISTRO } from "./audienceAge";
 import { getVoiceProfile } from "../data/brandVoice";
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from "./visualDirection";
 import {
@@ -237,6 +238,8 @@ export function buildMetodoOpPrompt(data: ContentFormData): string {
   const audienceDirection = isB2B
     ? "Conteúdo SEMPRE para o decisor empresarial (gestor, diretor ou responsável pela área), NUNCA para o consumidor final."
     : "Conteúdo SEMPRE para o consumidor final (cliente do cliente), NUNCA para o empresário.";
+
+  const faixaDirection = data.faixaEtaria ? FAIXA_ETARIA_REGISTRO[data.faixaEtaria] : "";
 
   const vendaRule = isB2B
     ? `- Venda só pode aparecer no último conteúdo da sequência.\n- O último conteúdo DEVE conter convite claro para reunião, diagnóstico ou proposta personalizada.\n- Proibido CTA agressivo, pressão ou urgência artificial.`
@@ -489,7 +492,7 @@ ${mercadologicalFrameBlock}
 ${titleSyntaxRule}
 
 DIREÇÃO DE LINGUAGEM:
-- ${audienceDirection}
+- ${audienceDirection}${faixaDirection ? `\n- ${faixaDirection}` : ""}
 ${voiceBlock}
 
 REGRA DE VENDA:

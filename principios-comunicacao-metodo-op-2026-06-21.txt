@@ -196,10 +196,10 @@ REGRAS DE PRODUÇÃO (operacionais, não são princípios de comunicação)
 são parâmetro técnico de formato, não decisão de comunicação. Os números podem mudar
 sem que isso seja uma mudança de princípio.]
 
-- Título: no máximo 6 palavras (MOP e PU). Cada palavra com no máximo 3 sílabas, com
+- Título: no máximo 6 palavras (MOP e PU). Cada palavra com no máximo 4 sílabas, com
   uma exceção: o substantivo concreto central da informação-chave (produto, peça,
-  serviço, objeto ou procedimento) pode chegar a 4 sílabas quando for essencial para a
-  clareza (ex.: "equipamento", "manutenção", "orçamento"); termos de 5+ sílabas
+  serviço, objeto ou procedimento) pode chegar a 5 sílabas quando for essencial para a
+  clareza (ex.: "equipamento", "manutenção", "orçamento"); termos de 6+ sílabas
   ("lubrificante") devem ser trocados por sinônimo mais curto ("óleo").
 - Texto de apoio do estático: até 15 palavras. Cards do carrossel: até 12 palavras.
 - Legenda: corpo até 30 palavras (LEGENDA_CORPO_MAX_WORDS), CTA até 5 palavras

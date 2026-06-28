@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ContentFormData, MoodCode, Segment, Track } from "../../types";
+import { ContentFormData, FaixaEtaria, MoodCode, Segment, Track } from "../../types";
 import TemplateChooser from "./TemplateChooser";
 import type { PlanAccess } from "@/lib/planAccess";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -287,6 +287,36 @@ export default function ContentForm({
               "Público já compra de você — fortalecer preferência"}
             {data.businessMoment === "reativação" && "Público que conhecia mas parou de engajar"}
           </span>
+        </label>
+      </div>
+
+      <div className="grid2">
+        <label>
+          Faixa etária do público
+          <select
+            value={data.faixaEtaria ?? ""}
+            onChange={(e) =>
+              update("faixaEtaria", (e.target.value || null) as FaixaEtaria | null)
+            }
+          >
+            <option value="">Sem direcionamento</option>
+            <option value="18-34">18 a 34 anos</option>
+            <option value="35-49">35 a 49 anos</option>
+            <option value="50-65">50 a 65 anos</option>
+          </select>
+        </label>
+        <label>
+          Gênero na imagem
+          <select
+            value={data.generoPref ?? ""}
+            onChange={(e) =>
+              update("generoPref", (e.target.value || null) as "M" | "F" | null)
+            }
+          >
+            <option value="">Automático</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
         </label>
       </div>
 

@@ -4,6 +4,7 @@ export type BusinessMoment = "lançamento" | "consolidação" | "reativação";
 export type OutputMode = "feed" | "stories" | "feed+stories";
 export type OutputFormat = "feed" | "carrossel" | "reels" | "stories" | "estatico_final";
 export type MoodCode = "OP-01" | "OP-02" | "OP-03" | "OP-04" | "OP-05" | "OP-06";
+export type FaixaEtaria = "18-34" | "35-49" | "50-65";
 export type FontPair =
   | "Inter"
   | "Montserrat"
@@ -70,6 +71,12 @@ export interface ContentFormData {
   mainActivity?: string;
   // Mood OP — OBRIGATÓRIO. Governa a Direção Visual Dominante da sequência.
   mood: MoodCode;
+  // Faixa etária do público-alvo — direciona registro/vocabulário do título e
+  // texto. null = sem direcionamento (comportamento anterior preservado).
+  faixaEtaria?: FaixaEtaria | null;
+  // Gênero preferido para a âncora visual (pré-preenchimento do painel de
+  // imagem). null = automático (sorteio/balanceamento existente).
+  generoPref?: "M" | "F" | null;
 }
 
 // Leitura cênica produzida pela IA por peça — orienta a geração de imagem
@@ -184,6 +191,10 @@ export interface PostUnicoFormData {
   objetivo: PostUnicoObjetivo;
   direcao: PostUnicoDirecao;
   mood?: MoodCode;
+  // Faixa etária do público-alvo — direciona registro/vocabulário do copy.
+  faixaEtaria?: FaixaEtaria | null;
+  // Gênero preferido para o personagemSemAvatar (pré-preenchimento).
+  generoPref?: "M" | "F" | null;
 }
 
 export interface TemplateMood {

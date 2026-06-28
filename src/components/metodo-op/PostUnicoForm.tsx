@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 
 import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from "lucide-react";
 import {
   BrandKit,
+  FaixaEtaria,
   ImageKit,
   MoodCode,
   PostUnicoDirecao,
@@ -462,6 +463,36 @@ export default function PostUnicoForm({
           <option value="B2B">B2B — empresas/decisores</option>
         </select>
       </label>
+
+      <div className="grid2">
+        <label>
+          Faixa etária do público
+          <select
+            value={data.faixaEtaria ?? ""}
+            onChange={(e) =>
+              update("faixaEtaria", (e.target.value || null) as FaixaEtaria | null)
+            }
+          >
+            <option value="">Sem direcionamento</option>
+            <option value="18-34">18 a 34 anos</option>
+            <option value="35-49">35 a 49 anos</option>
+            <option value="50-65">50 a 65 anos</option>
+          </select>
+        </label>
+        <label>
+          Gênero na imagem
+          <select
+            value={data.generoPref ?? ""}
+            onChange={(e) =>
+              update("generoPref", (e.target.value || null) as "M" | "F" | null)
+            }
+          >
+            <option value="">Automático</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </label>
+      </div>
 
       <div className="formatBox">
         <strong>Objetivo da peça</strong>
@@ -1326,6 +1357,8 @@ export default function PostUnicoForm({
         onChange={onVisualSelectionChange}
         mood={data.direcao === "mood" ? data.mood : undefined}
         objetivo={data.objetivo}
+        faixaEtaria={data.faixaEtaria}
+        generoPref={data.generoPref}
       />
 
       {!hasLogo && (

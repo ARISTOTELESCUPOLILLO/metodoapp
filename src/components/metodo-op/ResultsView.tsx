@@ -57,6 +57,7 @@ import {
   AnchoraVisual,
   BrandKit,
   CarouselCard,
+  FaixaEtaria,
   FeedItem,
   ImageKit,
   MethodOpResult,
@@ -64,6 +65,7 @@ import {
   ReelsGuide,
   StoriesSequence,
 } from "../../types";
+import { AGE_OPTIONS, mapFaixaToAnchorAge } from "../../core/audienceAge";
 import {
   downloadDataUrl,
   downloadBlob,
@@ -119,6 +121,9 @@ interface Props {
   sequenceSize?: 3 | 6 | 9;
   onImageGenerated?: () => void;
   userId?: string | null;
+  // Faixa etária e gênero escolhidos no form — pré-preenchem a âncora visual.
+  faixaEtariaForm?: FaixaEtaria | null;
+  generoPrefForm?: "M" | "F" | null;
 }
 
 // Verifica se o kit tem alguma imagem ENTRE AS PERMITIDAS pela política
@@ -192,14 +197,6 @@ function useSyncUpstream(upstream: string, current: string, setValue: (v: string
   }, [upstream]);
 }
 
-const AGE_OPTIONS = [
-  "18–28 anos",
-  "25–35 anos",
-  "30–40 anos",
-  "35–45 anos",
-  "40–55 anos",
-  "50–65 anos",
-];
 
 interface AnchorControl {
   ancoragem: AnchoraVisual;
@@ -3260,6 +3257,8 @@ export default function ResultsView({
   sequenceSize,
   onImageGenerated,
   userId,
+  faixaEtariaForm,
+  generoPrefForm,
 }: Props) {
   const [savingPdf, setSavingPdf] = useState(false);
   const [anchorGenderFlipped, setAnchorGenderFlipped] = useState(false);
@@ -3274,6 +3273,18 @@ export default function ResultsView({
   useEffect(() => {
     refreshProfile();
   }, [refreshProfile]);
+
+  // A cada nova geração, pré-preenche a âncora visual com a faixa etária e
+  // o gênero escolhidos no form. O usuário pode ajustar depois no painel.
+  useEffect(() => {
+    if (!result) return;
+    const mappedAge = mapFaixaToAnchorAge(faixaEtariaForm);
+    setAnchorAgeOverride(mappedAge);
+    if (generoPrefForm && result.ancora_visual) {
+      const iaGenero = result.ancora_visual.genero; // "M" | "F"
+      setAnchorGenderFlipped(iaGenero !== generoPrefForm);
+    }
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // `track` não consta em MethodOpResult e o motor não o popula hoje (o valor é
   // inferido por trackResolved abaixo); leitura defensiva p/ compat — mantido

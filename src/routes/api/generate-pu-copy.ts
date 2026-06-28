@@ -8,6 +8,8 @@ import {
 import { getVoiceProfile } from "@/data/brandVoice";
 import { resolveEffectiveUser, checkBalance, balanceFailMessage } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
+import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
+import type { FaixaEtaria } from "@/types";
 
 const OBJETIVO_TOM: Record<string, string> = {
   promocao: "comercial, desejo, chamada para ação clara",
@@ -48,6 +50,12 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
           const keyInfo = String(body.keyInfo || "").slice(0, 1000);
           const brandVoice = String(body.brandVoice || "").slice(0, 80);
           const segment = String(body.segment || "").slice(0, 30);
+          const audience: "B2C" | "B2B" = body.audience === "B2B" ? "B2B" : "B2C";
+          const faixaEtariaRaw = body.faixaEtaria;
+          const faixaEtaria: FaixaEtaria | null =
+            faixaEtariaRaw === "18-34" || faixaEtariaRaw === "35-49" || faixaEtariaRaw === "50-65"
+              ? faixaEtariaRaw
+              : null;
 
           if (!keyInfo.trim()) {
             return Response.json({ error: "keyInfo obrigatório" }, { status: 400 });
@@ -94,11 +102,18 @@ Proibido mencionar literalmente o nome da voz no texto final.
             ? `SEGMENTO: ${segmentLabel[segment] || segment} — adapte vocabulário, estilo e apelo do texto ao perfil deste tipo de negócio.\n`
             : "";
 
+          const audienceBlock =
+            audience === "B2B"
+              ? "PÚBLICO-ALVO: EMPRESARIAL (B2B). Fale com o dono, sócio ou responsável pelo negócio. Foco em resultado de trabalho concreto (prazo, equipe, custo, atendimento, volume). PROIBIDO: \"gestores\", \"decisores\", \"receita previsível\", \"riscos operacionais\", \"maximizar\", linguagem de grande consultoria. O título ancora no produto/serviço, nunca no papel do comprador.\n"
+              : "PÚBLICO-ALVO: CONSUMIDOR FINAL (B2C). Fale com a pessoa que usa o produto/serviço na própria vida. PROIBIDO usar \"gestor\", \"empresa\", \"equipe\" como interlocutor.\n";
+
+          const faixaBlock = faixaEtaria ? `${FAIXA_ETARIA_REGISTRO[faixaEtaria]}\n` : "";
+
           const userPrompt = `Você cria o título e o texto de apoio que aparecerão TIPOGRAFADOS dentro de uma peça publicitária para Instagram.
 
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
-${segmentBlock}${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
+${segmentBlock}${audienceBlock}${faixaBlock}${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
 ${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` : ""}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:

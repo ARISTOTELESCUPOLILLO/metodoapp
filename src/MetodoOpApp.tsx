@@ -1278,6 +1278,8 @@ export default function App() {
                 sequenceSize={form.sequenceSize}
                 onImageGenerated={refreshProfile}
                 userId={effectiveUserId}
+                faixaEtariaForm={form.faixaEtaria}
+                generoPrefForm={form.generoPref}
               />
             </div>
             {modo === "postUnico" && (

@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import {
   BrandKit,
+  FaixaEtaria,
   ImageKit,
   MoodCode,
   PostUnicoObjetivo,
@@ -13,18 +14,9 @@ import {
   CENARIO_SLOTS,
 } from "../../utils/imageKitStorage";
 import { ordemGruposPorSegmento, PU_MAX_PRODUTOS } from "../../core/referenciasPolicy";
+import { AGE_OPTIONS, mapFaixaToAnchorAge } from "../../core/audienceAge";
 
 const MAX_PRODUTOS_PU = PU_MAX_PRODUTOS;
-
-// Mesma faixa etária usada no box "Personagem da sequência" do MOP (ResultsView.tsx).
-const AGE_OPTIONS = [
-  "18–28 anos",
-  "25–35 anos",
-  "30–40 anos",
-  "35–45 anos",
-  "40–55 anos",
-  "50–65 anos",
-];
 
 interface Props {
   imageKit: ImageKit;
@@ -32,9 +24,9 @@ interface Props {
   selection: PostUnicoVisualSelection;
   onChange: (next: PostUnicoVisualSelection) => void;
   mood?: MoodCode;
-  // Gate de visibilidade dos tiles de Fato/Venda — só fazem sentido com o
-  // objetivo de peça correspondente selecionado.
   objetivo?: PostUnicoObjetivo;
+  faixaEtaria?: FaixaEtaria | null;
+  generoPref?: "M" | "F" | null;
 }
 
 export default function PostUnicoComposicaoVisual({
@@ -44,6 +36,8 @@ export default function PostUnicoComposicaoVisual({
   onChange,
   mood,
   objetivo,
+  faixaEtaria,
+  generoPref,
 }: Props) {
   const hasAvatar1 = !!imageKit.avatar;
   const hasAvatar2 = !!imageKit.avatar2;
@@ -265,17 +259,24 @@ export default function PostUnicoComposicaoVisual({
             <input
               type="checkbox"
               checked={!!selection.personagemSemAvatar?.ativo}
-              onChange={(e) =>
+              onChange={(e) => {
+                const ativando = e.target.checked;
+                const generoPreenchido = ativando && generoPref
+                  ? (generoPref === "F" ? "mulher" : "homem")
+                  : (selection.personagemSemAvatar?.genero ?? "homem");
+                const idadePreenchida = ativando && faixaEtaria
+                  ? (mapFaixaToAnchorAge(faixaEtaria) ?? selection.personagemSemAvatar?.idade ?? AGE_OPTIONS[2])
+                  : (selection.personagemSemAvatar?.idade ?? AGE_OPTIONS[2]);
                 onChange({
                   ...selection,
                   personagemSemAvatar: {
-                    ativo: e.target.checked,
-                    genero: selection.personagemSemAvatar?.genero ?? "homem",
-                    idade: selection.personagemSemAvatar?.idade ?? AGE_OPTIONS[2],
+                    ativo: ativando,
+                    genero: generoPreenchido,
+                    idade: idadePreenchida,
                     comUniforme: selection.personagemSemAvatar?.comUniforme ?? false,
                   },
-                })
-              }
+                });
+              }}
             />
             <span>Gerar personagem (sem avatar) — público-alvo</span>
             {selection.personagemSemAvatar?.ativo && (

@@ -278,6 +278,8 @@ export async function generatePostUnicoCopy(
       companyName: data.companyName,
       mainActivity: data.mainActivity,
       objetivo: data.objetivo,
+      audience: data.audience,
+      faixaEtaria: data.faixaEtaria ?? null,
       keyInfo: data.keyInfo,
       brandVoice: brandVoice || "",
       segment: segment || "",
