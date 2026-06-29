@@ -34,6 +34,7 @@ function pickConcreteItem(
   items: string[],
   attempt: number,
   previousSuggestions: string[],
+  sessionSeed: number = 0,
 ): { item: string | null; repeated: boolean } {
   if (!items.length) return { item: null, repeated: false };
   const norm = (s: string) =>
@@ -53,7 +54,9 @@ function pickConcreteItem(
       const s = norm(sugg);
       return new RegExp(`\\b${itemNorm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(s);
     });
-  const startIdx = ((attempt % items.length) + items.length) % items.length;
+  // sessionSeed garante ponto de entrada diferente a cada sessão (evita que
+  // toda sessão nova comece sempre pelo produto 0 da lista cadastrada).
+  const startIdx = (((attempt + sessionSeed) % items.length) + items.length) % items.length;
   for (let i = 0; i < items.length; i++) {
     const idx = (startIdx + i) % items.length;
     const n = norm(items[idx]);
@@ -256,6 +259,7 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
             selectedProducts,
             attempt,
             previousSugs,
+            sessionSeed,
           );
 
           const SEGMENTS = ["VAREJO", "SERVIÇOS", "MARCA"] as const;
