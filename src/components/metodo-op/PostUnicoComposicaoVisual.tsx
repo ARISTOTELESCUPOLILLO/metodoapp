@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import {
   BrandKit,
   FaixaEtaria,
@@ -39,6 +39,34 @@ export default function PostUnicoComposicaoVisual({
   faixaEtaria,
   generoPref,
 }: Props) {
+  // Mantém genero/idade dos controles em sincronia com as props do form,
+  // para que mudanças em generoPref/faixaEtaria depois do checkbox já marcado
+  // sejam sempre refletidas na geração.
+  useEffect(() => {
+    if (!selection.personagemSemAvatar?.ativo) return;
+    const newGenero =
+      generoPref === "F" ? "mulher"
+      : generoPref === "M" ? "homem"
+      : selection.personagemSemAvatar.genero;
+    const newIdade = faixaEtaria
+      ? (mapFaixaToAnchorAge(faixaEtaria) ?? selection.personagemSemAvatar.idade)
+      : selection.personagemSemAvatar.idade;
+    if (
+      newGenero !== selection.personagemSemAvatar.genero ||
+      newIdade !== selection.personagemSemAvatar.idade
+    ) {
+      onChange({
+        ...selection,
+        personagemSemAvatar: {
+          ...selection.personagemSemAvatar,
+          genero: newGenero,
+          idade: newIdade,
+        },
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generoPref, faixaEtaria]);
+
   const hasAvatar1 = !!imageKit.avatar;
   const hasAvatar2 = !!imageKit.avatar2;
   const hasAvatar = hasAvatar1 || hasAvatar2;

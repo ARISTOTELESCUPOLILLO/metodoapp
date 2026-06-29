@@ -19,6 +19,7 @@ import {
 } from "./services/postUnico";
 import { buildReferences } from "./services/regenerateWithKit";
 import { detectForcedGenderFromCopy, PersonagemGender } from "./core/visualDirection";
+import { mapFaixaToAnchorAge } from "./core/audienceAge";
 import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from "./services/brandKit";
 import { useServerFn } from "@tanstack/react-start";
 import { saveKit, loadKit, saveForm, loadForm, clearAll } from "./utils/storage";
@@ -835,8 +836,24 @@ export default function App() {
       // Constrói as referências visuais a partir do Kit Imagem + seleção,
       // usando a mesma função compartilhada com o MOP (buildReferences) —
       // antes a PU montava esse objeto à mão, com lógica duplicada/divergente.
-      const personagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
+      const rawPersonagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
         ? visualSelection.personagemSemAvatar
+        : undefined;
+      // Garante que valores frescos do form (generoPref/faixaEtaria) prevalecem
+      // sobre seed antigo — seed é feito só no toggle do checkbox, mas o form
+      // pode mudar depois sem que o checkbox seja desmarcado.
+      const personagemSemAvatar = rawPersonagemSemAvatar
+        ? {
+            ...rawPersonagemSemAvatar,
+            ...(form.generoPref && {
+              genero: form.generoPref === "F" ? "mulher" : "homem",
+            }),
+            ...(form.faixaEtaria && {
+              idade:
+                mapFaixaToAnchorAge(form.faixaEtaria) ??
+                rawPersonagemSemAvatar.idade,
+            }),
+          }
         : undefined;
       const references = buildReferences(
         "avatar",
