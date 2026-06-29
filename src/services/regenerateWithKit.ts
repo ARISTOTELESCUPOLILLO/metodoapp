@@ -289,11 +289,20 @@ function buildAnchorPrefix(
   }
   if (refs.fachada) {
     const reiluminaFachada = MOODS_CLAROS.has(mood);
-    const fachadaClause = `preserve a arquitetura, a volumetria, a vitrine, os materiais e as cores do local — a fachada deve ser reconhecível na imagem final pela arquitetura e pelas cores, com personagem ou produto posicionado à frente ou com a fachada claramente visível ao fundo. NÃO desenhe, NÃO reproduza e NÃO tente recriar o letreiro, a placa ou a logomarca do estabelecimento como texto/símbolo legível: onde houver letreiro ou marca, mantenha apenas a forma/o suporte (a placa, a testeira, a faixa) de modo genérico, neutro ou desfocado, SEM escrita de marca nítida — a logomarca oficial é aplicada depois, fora da IA. Se houver fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada, é PERMITIDO retocar/remover esses elementos da composição final — desde que a arquitetura e as cores do local continuem plenamente reconhecíveis. Se o céu aparecer na cena, é PERMITIDO substituí-lo por um céu mais bonito e coerente com o mood e o horário do dia (ex.: azul limpo, entardecer dourado, nublado suave) — sem look artificial ou composição com aparência de colagem`;
+    // Com produto referenciado, a fachada vira FUNDO DE APOIO — igual ao tratamento
+    // que o cenário recebe em temProduto: a arquitetura fica ao fundo/reconhecível,
+    // e a câmera pode se reposicionar para dar protagonismo ao produto.
+    const fachadaAmbienteClause = temProduto
+      ? "preserve a arquitetura, a volumetria, a vitrine, os materiais e as cores do local — a fachada aparece como FUNDO DE APOIO ao fundo da cena, reconhecível pela arquitetura e pelas cores, nunca maior ou mais nítida que o produto referenciado"
+      : "preserve a arquitetura, a volumetria, a vitrine, os materiais e as cores do local — a fachada deve ser reconhecível na imagem final pela arquitetura e pelas cores, com personagem ou produto posicionado à frente ou com a fachada claramente visível ao fundo";
+    const fachadaFramingClause = temProduto
+      ? "Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas a fachada deve continuar reconhecível ao fundo como contexto de marca."
+      : "NÃO invente outro local, NÃO troque os elementos, NÃO mude o ângulo.";
+    const fachadaClause = `${fachadaAmbienteClause}. NÃO desenhe, NÃO reproduza e NÃO tente recriar o letreiro, a placa ou a logomarca do estabelecimento como texto/símbolo legível: onde houver letreiro ou marca, mantenha apenas a forma/o suporte (a placa, a testeira, a faixa) de modo genérico, neutro ou desfocado, SEM escrita de marca nítida — a logomarca oficial é aplicada depois, fora da IA. Se houver fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada, é PERMITIDO retocar/remover esses elementos da composição final — desde que a arquitetura e as cores do local continuem plenamente reconhecíveis. Se o céu aparecer na cena, é PERMITIDO substituí-lo por um céu mais bonito e coerente com o mood e o horário do dia (ex.: azul limpo, entardecer dourado, nublado suave) — sem look artificial ou composição com aparência de colagem`;
     lines.push(
       reiluminaFachada
-        ? `IMAGEM #${idx} = FACHADA OBRIGATÓRIA. Use EXATAMENTE este local: ${fachadaClause}. NÃO invente outro local, NÃO troque os elementos, NÃO mude o ângulo. A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os elementos do local, mas adapte a luz para casar com o mood claro.`
-        : `IMAGEM #${idx} = FACHADA OBRIGATÓRIA. Use EXATAMENTE este local: ${fachadaClause}. NÃO invente outro local, NÃO troque os elementos, NÃO mude o ângulo. Apenas adicione/adapte o personagem e a ação descritos abaixo neste local real.`,
+        ? `IMAGEM #${idx} = FACHADA OBRIGATÓRIA. Use EXATAMENTE este local: ${fachadaClause}. ${fachadaFramingClause} A ILUMINAÇÃO DEVE SER REINTERPRETADA conforme o ESTILO VISUAL do mood descrito abaixo: clarear o ambiente, equilibrar luz natural, suavizar sombras profundas — preserve a arquitetura e os elementos do local, mas adapte a luz para casar com o mood claro.`
+        : `IMAGEM #${idx} = FACHADA OBRIGATÓRIA. Use EXATAMENTE este local: ${fachadaClause}. ${fachadaFramingClause} Apenas adicione/adapte o personagem e a ação descritos abaixo neste local real.`,
     );
     idx++;
   }
