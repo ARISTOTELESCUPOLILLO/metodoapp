@@ -207,6 +207,7 @@ function buildImagePrompt(params: {
   // — suspende a regra global de desfoque de tela de buildDeviceRule só para
   // esta geração. Ver PostUnicoVisualSelection.produtoTelaInformativa.
   hasProdutoTelaRef?: boolean;
+  segment?: import("../types").Segment;
 }): string {
   const {
     titulo,
@@ -232,6 +233,7 @@ function buildImagePrompt(params: {
     ancoragePapel,
     mainActivity,
     hasProdutoTelaRef,
+    segment,
   } = params;
   const isCover = format === "reels_cover";
   const canvasSize = isCover ? "1080x1920" : "1080x1350";
@@ -336,6 +338,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
     anchoraPersonagem,
     leituraCenica?.composicao,
     hasCenarioRef,
+    segment,
   );
 
   // Regra compositiva de produto-protagonista — só para segmento VAREJO quando
@@ -504,6 +507,7 @@ export async function generatePostImage(params: {
   // Ver nota em buildImagePrompt — produto referenciado é ele mesmo um
   // dispositivo cujo conteúdo de tela é a identidade do produto.
   hasProdutoTelaRef?: boolean;
+  segment?: import("../types").Segment;
 }): Promise<string> {
   const {
     imagePrompt,
@@ -528,6 +532,7 @@ export async function generatePostImage(params: {
     hasUniformeRef,
     mainActivity,
     hasProdutoTelaRef,
+    segment,
   } = params;
 
   const isReels = vertical === "reels";
@@ -626,6 +631,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         ancoragePapel,
         mainActivity,
         hasProdutoTelaRef,
+        segment,
       });
 
   return generateImageAsync({

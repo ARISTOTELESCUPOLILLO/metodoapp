@@ -873,7 +873,19 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
   } else if (characterVariationMap[mood]) {
-    const variation = pickRandom(characterVariationMap[mood]!);
+    // Para INSTANTE (OP-03), variações 0/3/4 carregam léxico de PDV/loja/prateleira
+    // que vaza para títulos e cenas mesmo com guardas textuais. Para MARCA e SERVIÇOS
+    // (sem ponto de venda físico), restringir ao subconjunto neutro: 2 (transição),
+    // 5 (pausa sentada), 6 (direção em pé/agência). VAREJO mantém o pool completo.
+    const pool =
+      mood === "OP-03" && segment && segment !== "VAREJO"
+        ? [
+            INSTANTE_CHARACTER_VARIATIONS[2],
+            INSTANTE_CHARACTER_VARIATIONS[5],
+            INSTANTE_CHARACTER_VARIATIONS[6],
+          ]
+        : characterVariationMap[mood]!;
+    const variation = pickRandom(pool);
     const camera = mood === "OP-01" ? pickRandom(CLAREZA_CAMERA_VARIATIONS) : null;
     const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ""}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESCOPO EXCLUSIVO: aplica-se APENAS ao campo "personagem" da leituraCenica e à composição visual da imagem — NÃO deve alterar título, texto, legenda, hook nem qualquer campo textual da peça. Nos campos de texto, quando o usuário não especificou gênero, usar sempre termos neutros ("gestores", "profissionais", "decisores", "equipes", "pessoas") — nunca escolher gênero nos textos por conta própria. No campo "personagem": adapte para ${gender}, preservando a mesma ação, postura, papel e contexto — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
@@ -938,6 +950,7 @@ export function pickImageVariationBlock(
   anchoraPersonagem?: string,
   composicao?: string,
   hasCenarioRef?: boolean,
+  segment?: Segment,
 ): string {
   if (!mood) return "";
 
@@ -980,7 +993,15 @@ export function pickImageVariationBlock(
   const variations = characterMap[mood];
   if (!variations) return "";
 
-  const variation = pickRandom(variations);
+  const pool =
+    mood === "OP-03" && segment && segment !== "VAREJO"
+      ? [
+          INSTANTE_CHARACTER_VARIATIONS[2],
+          INSTANTE_CHARACTER_VARIATIONS[5],
+          INSTANTE_CHARACTER_VARIATIONS[6],
+        ]
+      : variations;
+  const variation = pickRandom(pool);
   const cameraStr = (() => {
     if (mood === "OP-01") return `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. `;
     if (mood === "OP-02") return `Câmera: ${pickRandom(IMPACTO_CAMERA_VARIATIONS)}. `;

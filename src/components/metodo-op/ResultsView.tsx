@@ -718,6 +718,7 @@ function FeedCard({
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
+        segment: segmento,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -1027,6 +1028,7 @@ function FinalCard({
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
+        segment: segmento,
       });
       const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);

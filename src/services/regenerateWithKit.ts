@@ -559,6 +559,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
+        segment: kit.segment,
       },
       hasUniformeRef ? kit.logoDataUrl : undefined,
     );
@@ -590,6 +591,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
+        segment: kit.segment,
       },
       hasUniformeRef ? kit.logoDataUrl : undefined,
     );
@@ -623,6 +625,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       forcedGender,
       anchoraPersonagem,
       ancoragePapel,
+      segment: kit.segment,
     },
     hasUniformeRef ? kit.logoDataUrl : undefined,
   );
