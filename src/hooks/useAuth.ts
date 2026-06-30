@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { stopImpersonation } from "./useImpersonation";
+import { clearSessionImages } from "../utils/sessionImageCache";
 
 export interface AuthState {
   session: Session | null;
@@ -41,6 +42,7 @@ export async function signOut() {
         `metodo-op-postunico-img-v1:${userId}`,
         `metodo-op-postunico-caption-v1:${userId}`,
         `metodo-op-postunico-started-v1:${userId}`,
+        `metodo-op-postunico-visualselection-v1:${userId}`,
       ].forEach((k) => {
         try {
           localStorage.removeItem(k);
@@ -48,6 +50,8 @@ export async function signOut() {
           /* limpeza de sessão best-effort */
         }
       });
+      // Limpa imagens do MOP do localStorage (memória e localStorage via clearSessionImages)
+      clearSessionImages(userId);
     }
   } catch {
     /* sem sessão pra obter userId: nada pra limpar */

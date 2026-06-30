@@ -688,6 +688,7 @@ export default function App() {
     setPuCaptionRegen(0);
     setPuCopy(null);
     setPuCopyOriginal(null);
+    setVisualSelection(defaultVisualSelection);
   }
 
   async function handleClearMethodResult() {
