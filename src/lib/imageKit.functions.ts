@@ -8,8 +8,8 @@ import type { PostgrestError } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-// Subconjunto dos claims do JWT que este módulo realmente lê para checar admin.
-type AdminClaims = { app_metadata?: { role?: string }; user_role?: string };
+// has_role RPC retorna boolean — sem tipo gerado disponível aqui.
+type HasRoleResult = boolean | null;
 
 // Copia um arquivo dentro do bucket; fallback download+reupload se copy() falhar
 async function copyStorageFile(src: string, dest: string): Promise<boolean> {
@@ -74,23 +74,20 @@ export const loadImageKitFor = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ userId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const callerId = context.userId;
-    const claims = context.claims as AdminClaims;
-    const isAdmin = claims?.app_metadata?.role === "admin" || claims?.user_role === "admin";
 
     // Quem está sendo carregado: o próprio caller por padrão.
     let targetId = data.userId || callerId;
 
     // Só admin pode pedir o Kit de outro usuário.
+    // Usa o mesmo rpc("has_role") que loadKitServer para consistência —
+    // a verificação por user_roles + JWT claims tinha fallback silencioso
+    // que carregava o kit do admin em vez do usuário alvo.
     if (targetId !== callerId) {
-      // Confere via tabela user_roles (admin client bypassa RLS).
-      const { data: roles } = await supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", callerId)
-        .eq("role", "admin");
-      if (!roles || roles.length === 0) {
-        if (!isAdmin) targetId = callerId; // fallback silencioso
-      }
+      const { data: isAdmin } = await supabaseAdmin.rpc(
+        "has_role" as never,
+        { _user_id: callerId, _role: "admin" } as never,
+      ) as { data: HasRoleResult };
+      if (!isAdmin) targetId = callerId;
     }
 
     const { data: row, error } = await supabaseAdmin
@@ -336,12 +333,11 @@ export const saveImageKitFor = createServerFn({ method: "POST" })
     let targetId = data.userId || callerId;
 
     if (targetId !== callerId) {
-      const { data: roles } = await supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", callerId)
-        .eq("role", "admin");
-      if (!roles || roles.length === 0) targetId = callerId;
+      const { data: isAdmin } = await supabaseAdmin.rpc(
+        "has_role" as never,
+        { _user_id: callerId, _role: "admin" } as never,
+      ) as { data: HasRoleResult };
+      if (!isAdmin) targetId = callerId;
     }
 
     // Carrega o que já existe pra saber o que apagar.
