@@ -1,32 +1,32 @@
-const KIT_KEY = "metodo-op-kit-v1";
-const FORM_KEY = "metodo-op-form-v1";
-const LOGO_KEY = "metodo-op-logo-v1";
-// Rastreia qual userId produziu o form global — detecta troca de usuário no mount.
-const FORM_OWNER_KEY = "metodo-op-form-owner-v1";
+import { lsGet, lsSet, lsRemove } from "../lib/storage/store";
+import { KIT_KEY, LOGO_KEY, FORM_KEY } from "../lib/storage/keys";
 
-export function saveKit(kit: { logoDataUrl?: string } & object) {
+export function saveKit(kit: { logoDataUrl?: string } & object, userId?: string | null) {
   try {
     const { logoDataUrl, ...kitWithoutLogo } = kit;
-    localStorage.setItem(KIT_KEY, JSON.stringify(kitWithoutLogo));
+    lsSet(KIT_KEY, JSON.stringify(kitWithoutLogo), userId);
     if (logoDataUrl) {
       try {
-        localStorage.setItem(LOGO_KEY, logoDataUrl as string);
+        lsSet(LOGO_KEY, logoDataUrl as string, userId);
       } catch {
         /* logo muito grande, ignora */
       }
     } else {
-      localStorage.removeItem(LOGO_KEY);
+      lsRemove(LOGO_KEY, userId);
     }
   } catch (e) {
     console.error("saveKit: falha ao persistir kit, não sobrevive a reload", e);
   }
 }
 
-export function loadKit<T extends { logoDataUrl?: string }>(fallback: T): T {
+export function loadKit<T extends { logoDataUrl?: string }>(
+  fallback: T,
+  userId?: string | null,
+): T {
   try {
-    const raw = localStorage.getItem(KIT_KEY);
+    const raw = lsGet(KIT_KEY, userId);
     const kit: T = raw ? { ...fallback, ...JSON.parse(raw) } : { ...fallback };
-    const logo = localStorage.getItem(LOGO_KEY);
+    const logo = lsGet(LOGO_KEY, userId);
     if (logo) kit.logoDataUrl = logo;
     return kit;
   } catch {
@@ -34,39 +34,26 @@ export function loadKit<T extends { logoDataUrl?: string }>(fallback: T): T {
   }
 }
 
-export function saveForm(form: object) {
+export function saveForm(form: object, userId?: string | null) {
   try {
-    localStorage.setItem(FORM_KEY, JSON.stringify(form));
+    lsSet(FORM_KEY, JSON.stringify(form), userId);
   } catch (e) {
     console.error("saveForm: falha ao persistir formulário, não sobrevive a reload", e);
   }
 }
 
-export function loadForm<T extends object>(fallback: T): T {
+export function loadForm<T extends object>(fallback: T, userId?: string | null): T {
   try {
-    const raw = localStorage.getItem(FORM_KEY);
+    const raw = lsGet(FORM_KEY, userId);
     return raw ? { ...fallback, ...JSON.parse(raw) } : { ...fallback };
   } catch {
     return fallback;
   }
 }
 
-export function saveFormOwner(userId: string) {
-  try {
-    localStorage.setItem(FORM_OWNER_KEY, userId);
-  } catch {
-    /* best-effort */
-  }
-}
-
-export function loadFormOwner(): string | null {
-  try {
-    return localStorage.getItem(FORM_OWNER_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function clearAll() {
-  [KIT_KEY, FORM_KEY, LOGO_KEY, FORM_OWNER_KEY].forEach((k) => localStorage.removeItem(k));
+/** Remove todos os dados locais escopados do userId (kit, logo, form). */
+export function clearStorage(userId?: string | null) {
+  lsRemove(KIT_KEY, userId);
+  lsRemove(LOGO_KEY, userId);
+  lsRemove(FORM_KEY, userId);
 }

@@ -3,6 +3,20 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { stopImpersonation } from "./useImpersonation";
 import { clearSessionImages } from "../utils/sessionImageCache";
+import { lsRemove, ssClearPrefix } from "../lib/storage/store";
+import {
+  RESULT_KEY,
+  PU_IMG_KEY,
+  PU_CAPTION_KEY,
+  PU_STARTED_KEY,
+  PU_VISUAL_KEY,
+  COPY_EDITS_KEY,
+  KIT_KEY,
+  LOGO_KEY,
+  FORM_KEY,
+  POSTUNICO_FORM_KEY,
+  MODO_INIT_KEY,
+} from "../lib/storage/keys";
 
 export interface AuthState {
   session: Session | null;
@@ -37,34 +51,29 @@ export async function signOut() {
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
     if (userId) {
-      [
-        `metodo-op-result-v1:${userId}`,
-        `metodo-op-postunico-img-v1:${userId}`,
-        `metodo-op-postunico-caption-v1:${userId}`,
-        `metodo-op-postunico-started-v1:${userId}`,
-        `metodo-op-postunico-visualselection-v1:${userId}`,
-      ].forEach((k) => {
-        try {
-          localStorage.removeItem(k);
-        } catch {
-          /* limpeza de sessão best-effort */
-        }
-      });
-      // Limpa imagens do MOP do localStorage (memória e localStorage via clearSessionImages)
+      // Remove dados escopados por userId
+      for (const base of [
+        RESULT_KEY,
+        PU_IMG_KEY,
+        PU_CAPTION_KEY,
+        PU_STARTED_KEY,
+        PU_VISUAL_KEY,
+        COPY_EDITS_KEY,
+        KIT_KEY,
+        LOGO_KEY,
+        FORM_KEY,
+        POSTUNICO_FORM_KEY,
+      ]) {
+        lsRemove(base, userId);
+      }
+      // Limpa imagens do MOP (memória + localStorage, via prefixo)
       clearSessionImages(userId);
     }
   } catch {
     /* sem sessão pra obter userId: nada pra limpar */
   }
   // Permite que um login realmente novo (mesma aba) re-execute o
-  // auto-select de modo por plano. Loop por prefixo cobre também flags
-  // deixadas por impersonações.
-  try {
-    for (const k of Object.keys(sessionStorage)) {
-      if (k.startsWith("metodo-op-modo-init-v1:")) sessionStorage.removeItem(k);
-    }
-  } catch {
-    /* limpeza de sessão best-effort */
-  }
+  // auto-select de modo por plano. Limpa também flags de impersonações.
+  ssClearPrefix(`${MODO_INIT_KEY}:`);
   await supabase.auth.signOut();
 }

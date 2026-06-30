@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { lsGetRaw } from "../../lib/storage/store";
 
 function insertSignature(caption: string, signature: string): string {
   const trimmed = caption.trim();
@@ -1470,7 +1471,7 @@ function CarouselCardBlock({
       typeof j.avatarNum === "number" ? (j.avatarNum as 1 | 2) : j.usarAvatar ? 1 : null;
     // 1) Bloco consolidado
     try {
-      const raw = localStorage.getItem(blockStorageKey);
+      const raw = lsGetRaw(blockStorageKey);
       if (raw) {
         const j = JSON.parse(raw);
         if (j.enabled) {
@@ -1518,7 +1519,7 @@ function CarouselCardBlock({
     }
     // 2) Storage individual por card (legacy)
     try {
-      const raw = localStorage.getItem(`uso-ref:carrossel:${dayNumber}:c${card.card}`);
+      const raw = lsGetRaw(`uso-ref:carrossel:${dayNumber}:c${card.card}`);
       if (!raw) return null;
       const j = JSON.parse(raw);
       if (!j.enabled) return null;
@@ -2285,7 +2286,7 @@ function ReelsCard({
       useUniforme?: boolean;
     };
     try {
-      const raw = localStorage.getItem(storageKey);
+      const raw = lsGetRaw(storageKey);
       const j = raw ? JSON.parse(raw) : {};
       // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
       const avatarNum: 1 | 2 | null =

@@ -3,6 +3,10 @@
 // Sem isso, sair da página (ex.: /historico, /conta — rotas que desmontam o
 // MetodoOpApp) e voltar perdia tanto o texto editado quanto o contador,
 // fazendo o limite "2/2" reaparecer zerado mesmo já tendo sido usado.
+
+import { lsGet, lsSet, lsRemove } from "../lib/storage/store";
+import { COPY_EDITS_KEY } from "../lib/storage/keys";
+
 export interface CopyEditEntry {
   titulo?: string;
   texto?: string;
@@ -14,13 +18,9 @@ export interface CopyEditEntry {
 
 type CopyEditsMap = Record<string, CopyEditEntry>;
 
-function storageKey(userId: string | null | undefined): string {
-  return `metodo-op-copyedits-v1:${userId || "anon"}`;
-}
-
 function loadAll(userId: string | null | undefined): CopyEditsMap {
   try {
-    const raw = localStorage.getItem(storageKey(userId));
+    const raw = lsGet(COPY_EDITS_KEY, userId || null);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
@@ -42,16 +42,12 @@ export function saveCopyEdit(
   try {
     const all = loadAll(userId);
     all[itemKey] = { ...all[itemKey], ...patch };
-    localStorage.setItem(storageKey(userId), JSON.stringify(all));
+    lsSet(COPY_EDITS_KEY, JSON.stringify(all), userId || null);
   } catch (e) {
     console.error("saveCopyEdit: falha ao persistir edição, pode se perder ao navegar", e);
   }
 }
 
 export function clearCopyEdits(userId: string | null | undefined): void {
-  try {
-    localStorage.removeItem(storageKey(userId));
-  } catch {
-    /* limpeza best-effort */
-  }
+  lsRemove(COPY_EDITS_KEY, userId || null);
 }

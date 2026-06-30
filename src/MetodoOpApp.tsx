@@ -22,14 +22,35 @@ import { detectForcedGenderFromCopy, PersonagemGender } from "./core/visualDirec
 import { mapFaixaToAnchorAge } from "./core/audienceAge";
 import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from "./services/brandKit";
 import { useServerFn } from "@tanstack/react-start";
-import { saveKit, loadKit, saveForm, loadForm, clearAll, saveFormOwner, loadFormOwner } from "./utils/storage";
+import { saveKit, loadKit, saveForm, loadForm, clearStorage } from "./utils/storage";
 import {
   loadImageKit,
   saveImageKit,
   loadImageKitAsync,
   saveImageKitAsync,
-  IMAGE_KIT_KEY,
 } from "./utils/imageKitStorage";
+import {
+  lsGet,
+  lsSet,
+  lsRemove,
+  lsGetRaw,
+  lsSetRaw,
+  lsSetQuotaSafe,
+  ssGet,
+  ssSet,
+  ssClearPrefix,
+} from "./lib/storage/store";
+import {
+  MODO_KEY,
+  MOOD_KEY,
+  RESULT_KEY,
+  PU_IMG_KEY,
+  PU_CAPTION_KEY,
+  PU_STARTED_KEY,
+  PU_VISUAL_KEY,
+  POSTUNICO_FORM_KEY,
+  MODO_INIT_KEY,
+} from "./lib/storage/keys";
 import { clearSessionImages } from "./utils/sessionImageCache";
 import { clearCopyEdits } from "./utils/copyEditsStorage";
 import {
@@ -87,65 +108,17 @@ const defaultPostUnico: PostUnicoFormData = {
   direcao: "livre",
 };
 
-const POSTUNICO_KEY = "metodo-op-postunico-v2";
-function loadPostUnico(): PostUnicoFormData {
+function loadPostUnico(userId?: string | null): PostUnicoFormData {
   if (typeof window === "undefined") return { ...defaultPostUnico };
   try {
-    const raw = localStorage.getItem(POSTUNICO_KEY);
+    const raw = lsGet(POSTUNICO_FORM_KEY, userId);
     return raw ? { ...defaultPostUnico, ...JSON.parse(raw) } : { ...defaultPostUnico };
   } catch {
     return { ...defaultPostUnico };
   }
 }
-function savePostUnico(d: PostUnicoFormData) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(POSTUNICO_KEY, JSON.stringify(d));
-  } catch (e) {
-    console.error("savePostUnico: falha ao persistir formulário", e);
-  }
-}
-
-// O Kit Imagem é cacheado em localStorage só para leitura rápida — a fonte
-// autoritativa é o Supabase (loadImageKitAsync recarrega e repovoa o cache).
-// Por isso, quando a cota do navegador estoura, é seguro descartar esse
-// cache para abrir espaço: nada é perdido, só recarrega do servidor depois.
-function freeLocalStorageSpace(): boolean {
-  try {
-    let freed = false;
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith(IMAGE_KIT_KEY)) {
-        localStorage.removeItem(k);
-        freed = true;
-      }
-    }
-    return freed;
-  } catch {
-    return false;
-  }
-}
-
-// Persiste no localStorage sem deixar a falha passar em silêncio pro console,
-// mas também sem incomodar o usuário com alert() nativo: se a cota estourar,
-// tenta liberar espaço descartando o cache (recuperável) do Kit Imagem e
-// regrava uma vez; se ainda assim falhar, só loga — o conteúdo continua
-// disponível em memória nesta sessão, só não sobrevive a um reload.
-function persistLocal(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch (e) {
-    if ((e as Error)?.name === "QuotaExceededError" && freeLocalStorageSpace()) {
-      try {
-        localStorage.setItem(key, value);
-        return;
-      } catch (e2) {
-        console.error(`persistLocal: falha ao salvar "${key}" mesmo após liberar espaço`, e2);
-        return;
-      }
-    }
-    console.error(`persistLocal: falha ao salvar "${key}"`, e);
-  }
+function savePostUnico(d: PostUnicoFormData, userId?: string | null) {
+  lsSetQuotaSafe(POSTUNICO_FORM_KEY, JSON.stringify(d), userId);
 }
 
 type Modo = "metodo" | "postUnico" | "imageKit";
@@ -166,37 +139,29 @@ const defaultVisualSelection: PostUnicoVisualSelection = {
 export default function App() {
   const [modo, setModo] = useState<Modo>(() => {
     if (typeof window === "undefined") return "metodo";
-    try {
-      const v = localStorage.getItem("metodo-op-modo");
-      if (v === "postUnico" || v === "imageKit" || v === "metodo") return v;
-      return "metodo";
-    } catch {
-      return "metodo";
-    }
+    const v = lsGetRaw(MODO_KEY);
+    if (v === "postUnico" || v === "imageKit" || v === "metodo") return v as Modo;
+    return "metodo";
   });
-  const [kit, setKit] = useState<BrandKit>(() => loadKit(defaultKit));
+  const [kit, setKit] = useState<BrandKit>(() => defaultKit);
   const [imageKit, setImageKit] = useState<ImageKit>(() => loadImageKit(null));
   const [imageKitSaved, setImageKitSaved] = useState(false);
   const [visualSelection, setVisualSelection] =
     useState<PostUnicoVisualSelection>(defaultVisualSelection);
   const [mood, setMood] = useState<MoodCode | null>(() => {
-    try {
-      const m = localStorage.getItem("metodo-op-mood");
-      if (m && ["OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06"].includes(m))
-        return m as MoodCode;
-    } catch {
-      /* localStorage indisponível: cai no default null */
-    }
+    const m = lsGetRaw(MOOD_KEY);
+    if (m && ["OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06"].includes(m))
+      return m as MoodCode;
     return null;
   });
   const [result, setResult] = useState<MethodOpResult | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState<ContentFormData>(() => {
-    const loaded = loadForm(defaultForm);
-    return { ...loaded, track: loaded.track || "cinematica" };
-  });
-  const [postUnico, setPostUnico] = useState<PostUnicoFormData>(loadPostUnico);
+  const [form, setForm] = useState<ContentFormData>(() => ({
+    ...defaultForm,
+    track: defaultForm.track || "cinematica",
+  }));
+  const [postUnico, setPostUnico] = useState<PostUnicoFormData>(() => ({ ...defaultPostUnico }));
   const [postUnicoImg, setPostUnicoImg] = useState<string | undefined>();
   // Gênero do personagem desta peça — atribuído na primeira geração e
   // persistido entre regenerações ("gerar de novo" não troca o gênero por
@@ -361,27 +326,19 @@ export default function App() {
   }
 
   useEffect(() => {
-    saveKit(kit);
-  }, [kit]);
+    if (effectiveUserId) saveKit(kit, effectiveUserId);
+  }, [kit, effectiveUserId]);
   useEffect(() => {
-    saveForm(form);
-    if (effectiveUserId) saveFormOwner(effectiveUserId);
+    if (effectiveUserId) saveForm(form, effectiveUserId);
   }, [form, effectiveUserId]);
   useEffect(() => {
-    savePostUnico(postUnico);
-    if (effectiveUserId) saveFormOwner(effectiveUserId);
+    if (effectiveUserId) savePostUnico(postUnico, effectiveUserId);
   }, [postUnico, effectiveUserId]);
   useEffect(() => {
-    localStorage.setItem("metodo-op-modo", modo);
+    lsSetRaw(MODO_KEY, modo);
   }, [modo]);
   useEffect(() => {
-    if (mood) {
-      try {
-        localStorage.setItem("metodo-op-mood", mood);
-      } catch {
-        /* preferência de mood não é crítica: falha aqui só reseta no próximo load */
-      }
-    }
+    if (mood) lsSetRaw(MOOD_KEY, mood);
   }, [mood]);
 
   // Auto-seleciona o modo de acordo com o plano1 ao logar — UMA vez por login
@@ -390,17 +347,9 @@ export default function App() {
   // signOut(), permitindo nova auto-seleção em um login realmente novo.
   useEffect(() => {
     if (!effectiveUserId || !slots.length) return;
-    const key = `metodo-op-modo-init-v1:${effectiveUserId}`;
-    try {
-      if (sessionStorage.getItem(key) === "1") return;
-    } catch {
-      /* sessionStorage indisponível: pior caso é repetir a auto-seleção */
-    }
-    try {
-      sessionStorage.setItem(key, "1");
-    } catch {
-      /* idem */
-    }
+    const key = `${MODO_INIT_KEY}:${effectiveUserId}`;
+    if (ssGet(key) === "1") return;
+    ssSet(key, "1");
     const plano1 = slots.find((s) => s.key === "plano1");
     if (!plano1) return;
     if (/^PU/i.test(plano1.plan.codigo)) {
@@ -414,26 +363,22 @@ export default function App() {
   // e restaura o conteúdo gerado persistido em localStorage daquele usuário.
   useEffect(() => {
     if (!effectiveUserId) return;
-    // Limpa form/postUnico/kit APENAS quando o usuário trocou de verdade.
-    // Caso 1 (userChanged): component permaneceu montado, usuário mudou de A→B.
-    // Caso 2 (formOwnerMismatch): component remontou (volta de /historico, impersonação),
-    //   mas o form global salvo pertence a outro usuário — ex.: admin usou MOP como admin,
-    //   depois entrou em "Atuar como" usuário B → prevUser é null mas o form é do admin.
     const prevUser = prevUserRef.current;
-    const userChanged = prevUser !== null && prevUser !== effectiveUserId;
-    const savedOwner = loadFormOwner();
-    const formOwnerMismatch = !!savedOwner && savedOwner !== effectiveUserId;
     prevUserRef.current = effectiveUserId;
-    if (userChanged || (prevUser === null && formOwnerMismatch)) {
-      // audience (B2C/B2B) é preferência fixa do usuário, não do kit/empresa —
-      // não reseta ao entrar/sair de "atuando como" outro usuário.
-      setForm((prev) => ({ ...defaultForm, audience: prev.audience }));
-      // audience (B2C/B2B) é preferência fixa do usuário, não do kit/empresa —
-      // não reseta ao entrar/sair de "atuando como" outro usuário.
-      setPostUnico((prev) => ({ ...defaultPostUnico, audience: prev.audience }));
+
+    // Carrega formulários escopados por userId — sem heurística de "form-owner":
+    // a chave já é única por usuário, então o form correto é sempre carregado.
+    const savedForm = loadForm(defaultForm, effectiveUserId);
+    setForm({ ...savedForm, track: savedForm.track || "cinematica" });
+    setPostUnico(loadPostUnico(effectiveUserId));
+
+    // Quando o usuário muda de A→B (component montado continua), reseta kit e
+    // seleção visual para não vazar dados de A enquanto B carrega do servidor.
+    if (prevUser !== null && prevUser !== effectiveUserId) {
       setKit(defaultKit);
       setVisualSelection(defaultVisualSelection);
     }
+
     // Admin impersonando: usa server function que bypassa RLS do Supabase
     const loadFn = impersonation
       ? () => loadKitServerFn({ data: { userId: effectiveUserId } })
@@ -443,16 +388,8 @@ export default function App() {
       if (loaded) {
         handleKitChange(loaded);
       } else {
-        try {
-          localStorage.removeItem("metodo-op-kit-v1");
-        } catch {
-          /* limpeza best-effort */
-        }
-        try {
-          localStorage.removeItem("metodo-op-logo-v1");
-        } catch {
-          /* limpeza best-effort */
-        }
+        lsRemove("metodo-op-kit-v1", effectiveUserId);
+        lsRemove("metodo-op-logo-v1", effectiveUserId);
         handleKitChange(defaultKit);
       }
     });
@@ -460,33 +397,31 @@ export default function App() {
     // Cada chave tem seu próprio try/catch: uma entrada corrompida não pode
     // derrubar a restauração das demais (ver auditoria P1 2026-06-19).
     try {
-      const r = localStorage.getItem(`metodo-op-result-v1:${effectiveUserId}`);
+      const r = lsGet(RESULT_KEY, effectiveUserId);
       setResult(r ? JSON.parse(r) : undefined);
     } catch {
       /* entrada corrompida: segue com result undefined */
     }
     try {
-      const pImg = localStorage.getItem(`metodo-op-postunico-img-v1:${effectiveUserId}`);
+      const pImg = lsGet(PU_IMG_KEY, effectiveUserId);
       setPostUnicoImg(pImg ? JSON.parse(pImg) : undefined);
     } catch {
       /* entrada corrompida: segue com imagem undefined */
     }
     try {
-      const pCap = localStorage.getItem(`metodo-op-postunico-caption-v1:${effectiveUserId}`);
+      const pCap = lsGet(PU_CAPTION_KEY, effectiveUserId);
       setCaption(pCap ? JSON.parse(pCap) : undefined);
     } catch {
       /* entrada corrompida: segue com legenda undefined */
     }
     try {
-      const pStarted = localStorage.getItem(`metodo-op-postunico-started-v1:${effectiveUserId}`);
+      const pStarted = lsGet(PU_STARTED_KEY, effectiveUserId);
       setPostUnicoStarted(pStarted === "true");
     } catch {
       /* entrada corrompida: assume não iniciado */
     }
     try {
-      const vSel = localStorage.getItem(
-        `metodo-op-postunico-visualselection-v1:${effectiveUserId}`,
-      );
+      const vSel = lsGet(PU_VISUAL_KEY, effectiveUserId);
       setVisualSelection(vSel ? JSON.parse(vSel) : defaultVisualSelection);
     } catch {
       /* entrada corrompida: cai no default */
@@ -508,54 +443,37 @@ export default function App() {
   // Só limpa quando o cliente clica em "Limpar" (que seta o state pra undefined).
   useEffect(() => {
     if (!effectiveUserId) return;
-    const k = `metodo-op-result-v1:${effectiveUserId}`;
     if (result === undefined) {
-      try {
-        localStorage.removeItem(k);
-      } catch {
-        /* limpeza best-effort */
-      }
+      lsRemove(RESULT_KEY, effectiveUserId);
     } else {
-      persistLocal(k, JSON.stringify(result));
+      lsSetQuotaSafe(RESULT_KEY, JSON.stringify(result), effectiveUserId);
     }
   }, [result, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
-    const k = `metodo-op-postunico-img-v1:${effectiveUserId}`;
     if (postUnicoImg === undefined) {
-      try {
-        localStorage.removeItem(k);
-      } catch {
-        /* limpeza best-effort */
-      }
+      lsRemove(PU_IMG_KEY, effectiveUserId);
     } else {
-      persistLocal(k, JSON.stringify(postUnicoImg));
+      lsSetQuotaSafe(PU_IMG_KEY, JSON.stringify(postUnicoImg), effectiveUserId);
     }
   }, [postUnicoImg, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
-    const k = `metodo-op-postunico-caption-v1:${effectiveUserId}`;
     if (caption === undefined) {
-      try {
-        localStorage.removeItem(k);
-      } catch {
-        /* limpeza best-effort */
-      }
+      lsRemove(PU_CAPTION_KEY, effectiveUserId);
     } else {
-      persistLocal(k, JSON.stringify(caption));
+      lsSetQuotaSafe(PU_CAPTION_KEY, JSON.stringify(caption), effectiveUserId);
     }
   }, [caption, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
-    const k = `metodo-op-postunico-started-v1:${effectiveUserId}`;
-    persistLocal(k, postUnicoStarted ? "true" : "false");
+    lsSetQuotaSafe(PU_STARTED_KEY, postUnicoStarted ? "true" : "false", effectiveUserId);
   }, [postUnicoStarted, effectiveUserId]);
   // Seleção visual da PU (avatar/cenário/produto) — sem isso, voltava ao
   // default ao trocar de rota (ex.: /historico, que desmonta o MetodoOpApp).
   useEffect(() => {
     if (!effectiveUserId) return;
-    const k = `metodo-op-postunico-visualselection-v1:${effectiveUserId}`;
-    persistLocal(k, JSON.stringify(visualSelection));
+    lsSetQuotaSafe(PU_VISUAL_KEY, JSON.stringify(visualSelection), effectiveUserId);
   }, [visualSelection, effectiveUserId]);
 
   // Segmento fixado pelo admin — não-admin não pode alterar.
@@ -594,8 +512,10 @@ export default function App() {
   async function handleSave() {
     setSaving(true);
     try {
-      saveKit(kit);
-      saveForm(form);
+      if (effectiveUserId) {
+        saveKit(kit, effectiveUserId);
+        saveForm(form, effectiveUserId);
+      }
       if (effectiveUserId) {
         let saved: BrandKit;
         if (impersonation) {
@@ -643,7 +563,8 @@ export default function App() {
       ))
     )
       return;
-    clearAll();
+    clearStorage(effectiveUserId);
+    lsRemove(POSTUNICO_FORM_KEY, effectiveUserId);
     setKit(defaultKit);
     setForm(defaultForm);
     setPostUnico(defaultPostUnico);
@@ -921,12 +842,12 @@ export default function App() {
       });
       // Persiste direto no localStorage (independe do componente seguir montado —
       // cobre o caso de geração em segundo plano após navegar para outra página).
-      persistLocal(`metodo-op-postunico-img-v1:${effectiveUserId}`, JSON.stringify(dataUrl));
-      persistLocal(`metodo-op-postunico-started-v1:${effectiveUserId}`, "false");
+      lsSetQuotaSafe(PU_IMG_KEY, JSON.stringify(dataUrl), effectiveUserId);
+      lsSetQuotaSafe(PU_STARTED_KEY, "false", effectiveUserId);
       setPostUnicoImg(dataUrl);
       refreshProfile();
     } catch (e) {
-      persistLocal(`metodo-op-postunico-started-v1:${effectiveUserId}`, "false");
+      lsSetQuotaSafe(PU_STARTED_KEY, "false", effectiveUserId);
       setError(String((e as Error).message || e));
     } finally {
       setLoading(false);
@@ -941,21 +862,11 @@ export default function App() {
       setImageKitSaved(true);
       setTimeout(() => setImageKitSaved(false), 2000);
     } catch (e) {
-      // Fallback: salva pelo menos no cache local pra não perder edições, sem
-      // incomodar o usuário com alert() nativo (mesma lógica de persistLocal:
-      // libera o cache do Kit — recuperável do servidor — e tenta de novo).
+      // Fallback: salva pelo menos no cache local pra não perder edições.
       try {
         saveImageKit(imageKit, effectiveUserId);
       } catch (localErr) {
-        if ((localErr as Error)?.name === "QuotaExceededError" && freeLocalStorageSpace()) {
-          try {
-            saveImageKit(imageKit, effectiveUserId);
-          } catch (localErr2) {
-            console.error("handleSaveImageKit: falha ao salvar cache local", localErr2);
-          }
-        } else {
-          console.error("handleSaveImageKit: falha ao salvar cache local", localErr);
-        }
+        console.error("handleSaveImageKit: falha ao salvar cache local", localErr);
       }
       console.error("handleSaveImageKit: falha ao salvar Kit Imagem no servidor", e);
     }

@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { lsGetRaw, lsSetRaw, lsRemoveRaw } from "@/lib/storage/store";
+import { COOKIE_CONSENT_KEY } from "@/lib/storage/keys";
 import {
   MessageCircle,
   Mail,
@@ -52,32 +54,17 @@ function LandingPage() {
 
   // Mostra o banner apenas se ainda não houver decisão salva.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("mop.cookie-consent");
-      if (!saved) setBannerVisible(true);
-    } catch {
-      setBannerVisible(true);
-    }
+    const saved = lsGetRaw(COOKIE_CONSENT_KEY);
+    if (!saved) setBannerVisible(true);
   }, []);
 
   const decideCookies = (status: "all" | "necessary") => {
-    try {
-      localStorage.setItem(
-        "mop.cookie-consent",
-        JSON.stringify({ status, ts: new Date().toISOString() }),
-      );
-    } catch {
-      /* ignore */
-    }
+    lsSetRaw(COOKIE_CONSENT_KEY, JSON.stringify({ status, ts: new Date().toISOString() }));
     setBannerVisible(false);
   };
 
   const reopenBanner = () => {
-    try {
-      localStorage.removeItem("mop.cookie-consent");
-    } catch {
-      /* ignore */
-    }
+    lsRemoveRaw(COOKIE_CONSENT_KEY);
     setLegalOpen(null);
     setBannerVisible(true);
   };

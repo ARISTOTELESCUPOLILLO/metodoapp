@@ -1,4 +1,6 @@
 import { ImageKit } from "../types";
+import { lsGetRaw, lsSetRawOrThrow, lsRemoveRaw } from "../lib/storage/store";
+import { IMAGE_KIT_KEY as _IMAGE_KIT_KEY } from "../lib/storage/keys";
 
 // Persistência local do Kit Imagem.
 // Estratégia: localStorage (rápido, simples, sem dependência de backend).
@@ -6,7 +8,9 @@ import { ImageKit } from "../types";
 // o consumidor pode mostrar uma mensagem ou (futuramente) fazer fallback
 // para upload em cloud storage.
 
-export const IMAGE_KIT_KEY = "metodo-op-image-kit-v1";
+// Re-exporta a constante para compatibilidade com importadores existentes
+// (MetodoOpApp usa IMAGE_KIT_KEY para limpar o cache na estratégia de quota).
+export const IMAGE_KIT_KEY = _IMAGE_KIT_KEY;
 export const PRODUTO_SLOTS = 8;
 export const CENARIO_SLOTS = 2;
 
@@ -77,11 +81,14 @@ function freshEmpty(): ImageKit {
   };
 }
 
+function kitKey(userId?: string | null): string {
+  return userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
+}
+
 export function loadImageKit(userId?: string | null): ImageKit {
   if (typeof window === "undefined") return freshEmpty();
   try {
-    const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
-    const raw = localStorage.getItem(key);
+    const raw = lsGetRaw(kitKey(userId));
     if (!raw) return freshEmpty();
     return normalize(JSON.parse(raw));
   } catch {
@@ -91,21 +98,15 @@ export function loadImageKit(userId?: string | null): ImageKit {
 
 export function saveImageKit(kit: ImageKit, userId?: string | null): void {
   if (typeof window === "undefined") return;
-  const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
   const payload = JSON.stringify(normalize(kit));
-  // Sem try/catch: quota cheia (QuotaExceededError) propaga pro componente,
+  // lsSetRawOrThrow: propaga QuotaExceededError para o componente,
   // que trata com toast/instrução de remover algo.
-  localStorage.setItem(key, payload);
+  lsSetRawOrThrow(kitKey(userId), payload);
 }
 
 export function clearImageKit(userId?: string | null): void {
   if (typeof window === "undefined") return;
-  try {
-    const key = userId ? `${IMAGE_KIT_KEY}:${userId}` : IMAGE_KIT_KEY;
-    localStorage.removeItem(key);
-  } catch {
-    /* limpeza best-effort */
-  }
+  lsRemoveRaw(kitKey(userId));
 }
 
 export function hasAnyImage(kit: ImageKit): boolean {

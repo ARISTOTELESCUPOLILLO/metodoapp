@@ -34,7 +34,7 @@ describe("buildReferences via elemento", () => {
   it("elemento 'avatar': inclui avatar, exclui cenario/produto", () => {
     const refs = buildReferences("avatar", fullKit);
     expect(refs.avatar).toBe("https://img/avatar1.jpg");
-    expect(refs.cenarios).toBeUndefined();
+    expect((refs as Record<string, unknown>)["cenarios"]).toBeUndefined();
     expect(refs.produtos).toBeUndefined();
   });
 

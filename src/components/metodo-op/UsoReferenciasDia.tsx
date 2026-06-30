@@ -9,6 +9,7 @@
 // combinação que o plano não cobre (SERVIÇO/MARCA + produtos no carrossel).
 
 import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { lsGetRaw, lsSetRaw } from "../../lib/storage/store";
 import type { BrandKit, ImageKit, MoodCode } from "../../types";
 import { regenerateWithKit } from "../../services/regenerateWithKit";
 import { cenarioLabel } from "../../utils/imageKitStorage";
@@ -149,7 +150,7 @@ export default function UsoReferenciasDia(props: Props) {
   // Hydrate do localStorage
   useEffect(() => {
     try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
+      const raw = lsGetRaw(storageKey);
       if (raw) {
         const s = JSON.parse(raw);
         if (typeof s.enabled === "boolean") setEnabled(s.enabled);
@@ -174,23 +175,20 @@ export default function UsoReferenciasDia(props: Props) {
 
   // Persist
   useEffect(() => {
-    try {
-      if (typeof window === "undefined") return;
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          enabled,
-          avatarNum,
-          usarFachada,
-          cenarioNum,
-          produtosNums,
-          useUniforme,
-          produtoTelaInformativa,
-        }),
-      );
+    lsSetRaw(
+      storageKey,
+      JSON.stringify({
+        enabled,
+        avatarNum,
+        usarFachada,
+        cenarioNum,
+        produtosNums,
+        useUniforme,
+        produtoTelaInformativa,
+      }),
+    );
+    if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("uso-ref:changed", { detail: { key: storageKey } }));
-    } catch {
-      /* ignore */
     }
   }, [
     enabled,
@@ -757,7 +755,7 @@ const EMPTY_SEL: RefSelectionState = {
 function readSel(storageKey: string): RefSelectionState {
   try {
     if (typeof window === "undefined") return EMPTY_SEL;
-    const raw = localStorage.getItem(storageKey);
+    const raw = lsGetRaw(storageKey);
     if (!raw) return EMPTY_SEL;
     const s = JSON.parse(raw);
     const enabled = !!s.enabled;

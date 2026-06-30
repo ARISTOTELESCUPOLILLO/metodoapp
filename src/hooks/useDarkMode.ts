@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-
-const DARK_KEY = "metodo-op-dark-mode";
+import { lsGetRaw, lsSetRaw } from "../lib/storage/store";
+import { DARK_MODE_KEY } from "../lib/storage/keys";
 
 function readPreference(): boolean {
   try {
-    const v = localStorage.getItem(DARK_KEY);
+    const v = lsGetRaw(DARK_MODE_KEY);
     if (v !== null) return v === "true";
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
   } catch {
@@ -29,11 +29,7 @@ export function useDarkMode(): [boolean, () => void] {
 
   useEffect(() => {
     applyDark(isDark);
-    try {
-      localStorage.setItem(DARK_KEY, String(isDark));
-    } catch {
-      /* preferência de tema não é crítica */
-    }
+    lsSetRaw(DARK_MODE_KEY, String(isDark));
   }, [isDark]);
 
   return [isDark, () => setIsDark((v) => !v)];

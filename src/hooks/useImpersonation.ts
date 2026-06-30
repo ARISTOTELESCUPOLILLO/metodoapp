@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-
-const KEY = "impersonation-v1";
+import { lsGetRaw, lsSetRaw, lsRemoveRaw } from "../lib/storage/store";
+import { IMPERSONATION_KEY } from "../lib/storage/keys";
 
 export interface Impersonation {
   userId: string;
@@ -12,7 +12,7 @@ export interface Impersonation {
 function read(): Impersonation | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = lsGetRaw(IMPERSONATION_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -20,12 +20,12 @@ function read(): Impersonation | null {
 }
 
 export function startImpersonation(imp: Impersonation) {
-  localStorage.setItem(KEY, JSON.stringify(imp));
+  lsSetRaw(IMPERSONATION_KEY, JSON.stringify(imp));
   window.dispatchEvent(new Event("impersonation-changed"));
 }
 
 export function stopImpersonation() {
-  localStorage.removeItem(KEY);
+  lsRemoveRaw(IMPERSONATION_KEY);
   window.dispatchEvent(new Event("impersonation-changed"));
 }
 
