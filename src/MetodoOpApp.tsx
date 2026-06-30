@@ -22,7 +22,7 @@ import { detectForcedGenderFromCopy, PersonagemGender } from "./core/visualDirec
 import { mapFaixaToAnchorAge } from "./core/audienceAge";
 import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from "./services/brandKit";
 import { useServerFn } from "@tanstack/react-start";
-import { saveKit, loadKit, saveForm, loadForm, clearAll } from "./utils/storage";
+import { saveKit, loadKit, saveForm, loadForm, clearAll, saveFormOwner, loadFormOwner } from "./utils/storage";
 import {
   loadImageKit,
   saveImageKit,
@@ -365,10 +365,12 @@ export default function App() {
   }, [kit]);
   useEffect(() => {
     saveForm(form);
-  }, [form]);
+    if (effectiveUserId) saveFormOwner(effectiveUserId);
+  }, [form, effectiveUserId]);
   useEffect(() => {
     savePostUnico(postUnico);
-  }, [postUnico]);
+    if (effectiveUserId) saveFormOwner(effectiveUserId);
+  }, [postUnico, effectiveUserId]);
   useEffect(() => {
     localStorage.setItem("metodo-op-modo", modo);
   }, [modo]);
@@ -412,12 +414,17 @@ export default function App() {
   // e restaura o conteúdo gerado persistido em localStorage daquele usuário.
   useEffect(() => {
     if (!effectiveUserId) return;
-    // Limpa form/postUnico/kit APENAS quando o usuário trocou de verdade (impersonação A→B).
-    // Na remontagem com o mesmo usuário (volta do admin/histórico/conta), prevUserRef é null
-    // ou igual ao atual — não apaga o estado que o useState initializer já restaurou.
-    const userChanged = prevUserRef.current !== null && prevUserRef.current !== effectiveUserId;
+    // Limpa form/postUnico/kit APENAS quando o usuário trocou de verdade.
+    // Caso 1 (userChanged): component permaneceu montado, usuário mudou de A→B.
+    // Caso 2 (formOwnerMismatch): component remontou (volta de /historico, impersonação),
+    //   mas o form global salvo pertence a outro usuário — ex.: admin usou MOP como admin,
+    //   depois entrou em "Atuar como" usuário B → prevUser é null mas o form é do admin.
+    const prevUser = prevUserRef.current;
+    const userChanged = prevUser !== null && prevUser !== effectiveUserId;
+    const savedOwner = loadFormOwner();
+    const formOwnerMismatch = !!savedOwner && savedOwner !== effectiveUserId;
     prevUserRef.current = effectiveUserId;
-    if (userChanged) {
+    if (userChanged || (prevUser === null && formOwnerMismatch)) {
       // audience (B2C/B2B) é preferência fixa do usuário, não do kit/empresa —
       // não reseta ao entrar/sair de "atuando como" outro usuário.
       setForm((prev) => ({ ...defaultForm, audience: prev.audience }));
