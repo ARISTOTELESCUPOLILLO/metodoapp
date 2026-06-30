@@ -1,5 +1,6 @@
 import { BRAND_ACCENT } from "../../../data/brandColors";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getImpersonation } from "@/hooks/useImpersonation";
 import { lsGetRaw } from "../../../lib/storage/store";
@@ -7,7 +8,11 @@ import { BrandKit, MoodCode, ReelsGuide } from "../../../types";
 import { PersonagemGender } from "../../../core/visualDirection";
 import { type RegenKind } from "../../../services/regenerateBlock";
 import { generatePostImage } from "../../../services/api";
-import { composeReelsPng, composeReelsTitlePng, downloadDataUrl } from "../../../utils/canvasComposer";
+import {
+  composeReelsPng,
+  composeReelsTitlePng,
+  downloadDataUrl,
+} from "../../../utils/canvasComposer";
 import { mopName } from "../../../utils/file";
 import { emptyImageKit } from "../../../utils/imageKitStorage";
 import { getSessionImage, setSessionImage } from "../../../utils/sessionImageCache";
@@ -213,7 +218,7 @@ export function ReelsCard({
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      alert("Não foi possível copiar. Selecione e copie manualmente.");
+      toast.error("Não foi possível copiar. Selecione e copie manualmente.");
     }
   }
 
@@ -246,7 +251,7 @@ export function ReelsCard({
       updateCoverPng(null);
       onImageGenerated?.();
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      toast.error(`Erro: ${(e as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -307,7 +312,7 @@ export function ReelsCard({
       updateCoverPng(null);
       onImageGenerated?.();
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      toast.error(`Erro: ${(e as Error).message}`);
     } finally {
       setBusyRefs(false);
     }
@@ -944,7 +949,7 @@ export function ReelsCard({
                         a.remove();
                         setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
                       } catch (e) {
-                        alert(`Não foi possível baixar o vídeo: ${(e as Error).message}`);
+                        toast.error(`Não foi possível baixar o vídeo: ${(e as Error).message}`);
                       }
                     }}
                   >

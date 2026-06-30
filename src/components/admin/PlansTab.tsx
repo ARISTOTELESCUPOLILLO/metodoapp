@@ -1,6 +1,8 @@
 ﻿import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useConfirm } from "@/hooks/useConfirm";
 
 interface Plan {
   id: string;
@@ -58,6 +60,7 @@ function calcCusto(
 
 export function PlansTab() {
   const isMobile = useIsMobile();
+  const { confirm, dialog } = useConfirm();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usdRate, setUsdRate] = useState(5.8);
   const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.6, content: 0.013 });
@@ -132,10 +135,10 @@ export function PlansTab() {
       .select("id", { count: "exact", head: true })
       .eq("plano_id", p.id);
     if (count && count > 0) {
-      alert(`Não é possível excluir: ${count} usuário(s) usando este plano.`);
+      toast.error(`Não é possível excluir: ${count} usuário(s) usando este plano.`);
       return;
     }
-    if (!confirm(`Excluir plano "${p.nome}"?`)) return;
+    if (!(await confirm(`Excluir plano "${p.nome}"?`))) return;
     await supabase.from("plans").delete().eq("id", p.id);
     await load();
   }
@@ -144,6 +147,7 @@ export function PlansTab() {
 
   return (
     <div>
+      {dialog}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700 }}>Planos</h2>
         <button
@@ -382,7 +386,14 @@ export function PlansTab() {
                   borderRadius: 8,
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 6 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--brand-primary)",
+                    marginBottom: 6,
+                  }}
+                >
                   ★ Personalizados base por tipo
                 </div>
                 <div style={{ fontSize: 11, color: "#64748b", marginBottom: 10 }}>

@@ -1,6 +1,8 @@
 ﻿import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useServerFn } from "@tanstack/react-start";
 import { migrateImageKitFor } from "@/lib/imageKit.functions";
 
@@ -45,6 +47,7 @@ interface DirectProfile {
 
 export function InvitesTab() {
   const isMobile = useIsMobile();
+  const { confirm, dialog } = useConfirm();
   const [rows, setRows] = useState<Invite[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [testProfiles, setTestProfiles] = useState<TestProfile[]>([]);
@@ -150,9 +153,9 @@ export function InvitesTab() {
   async function migrateKit(r: Invite) {
     if (!r.source_test_profile_id) return;
     if (
-      !confirm(
+      !(await confirm(
         `Copiar o Kit Imagem do perfil de teste para ${r.nome || r.email}?\n\nOs arquivos do kit serão copiados para a conta do cliente.`,
-      )
+      ))
     )
       return;
     setMigrating(r.id);
@@ -179,16 +182,18 @@ export function InvitesTab() {
   }
 
   async function setStatus(r: Invite, status: string) {
-    if (!confirm(`${status === "revogado" ? "Revogar" : "Reativar"} convite de ${r.email}?`))
+    if (
+      !(await confirm(`${status === "revogado" ? "Revogar" : "Reativar"} convite de ${r.email}?`))
+    )
       return;
     await supabase.from("invited_emails").update({ status }).eq("id", r.id);
     load();
   }
   async function remove(r: Invite) {
     if (
-      !confirm(
+      !(await confirm(
         `Excluir convite de ${r.email}?\n(Se já se cadastrou, exclua-o também na aba Usuários.)`,
-      )
+      ))
     )
       return;
     await supabase.from("invited_emails").delete().eq("id", r.id);
@@ -197,7 +202,7 @@ export function InvitesTab() {
   function copyLink(r: Invite) {
     const url = `${window.location.origin}/signup`;
     navigator.clipboard.writeText(url).then(
-      () => alert(`Link copiado!\n\nEnvie para ${r.email}:\n${url}`),
+      () => toast.success(`Link copiado! Envie para ${r.email}.`),
       () => prompt("Copie o link:", url),
     );
   }
@@ -289,6 +294,7 @@ export function InvitesTab() {
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      {dialog}
       <section style={card}>
         <h3 style={cardTitle}>＋ Pré-cadastro de Cliente</h3>
         <form

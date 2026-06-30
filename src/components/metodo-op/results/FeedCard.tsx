@@ -1,5 +1,6 @@
 import { BRAND_ACCENT } from "../../../data/brandColors";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { BrandKit, FeedItem, MoodCode } from "../../../types";
 import { PersonagemGender } from "../../../core/visualDirection";
 import { type RegenKind } from "../../../services/regenerateBlock";
@@ -16,7 +17,12 @@ import UsoReferenciasDia, { useRefSelection } from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
 import { RefSelectorProps, RefsRegenButton } from "./RefsRegenButton";
-import { insertSignature, kitHasRefsForFormat, useSyncUpstream, shareLegendaWhatsApp } from "./utils";
+import {
+  insertSignature,
+  kitHasRefsForFormat,
+  useSyncUpstream,
+  shareLegendaWhatsApp,
+} from "./utils";
 
 export function FeedCard({
   item,
@@ -104,7 +110,7 @@ export function FeedCard({
       updatePreview(final);
       onImageGenerated?.();
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      toast.error(`Erro: ${(e as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -147,7 +153,7 @@ export function FeedCard({
       updatePreview(final);
       onImageGenerated?.();
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      toast.error(`Erro: ${(e as Error).message}`);
     } finally {
       setBusyRefs(false);
     }

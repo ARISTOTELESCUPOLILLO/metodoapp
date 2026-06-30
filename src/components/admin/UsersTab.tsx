@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { startImpersonation } from "@/hooks/useImpersonation";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useConfirm } from "@/hooks/useConfirm";
 import { assignPlanSlot, removePlanSlot } from "@/lib/planHistory.functions";
 import { deleteUser } from "@/lib/users.functions";
 
@@ -130,9 +132,12 @@ export function UsersTab() {
   const [usdRate, setUsdRate] = useState(5.8);
 
   const navigate = useNavigate();
+  const { confirm, dialog } = useConfirm();
 
-  function actAs(r: Row) {
-    if (!confirm(`Atuar como ${r.nome || r.email}? Você poderá editar o Kit de Marca dele.`))
+  async function actAs(r: Row) {
+    if (
+      !(await confirm(`Atuar como ${r.nome || r.email}? Você poderá editar o Kit de Marca dele.`))
+    )
       return;
     startImpersonation({ userId: r.id, nome: r.nome || r.email, email: r.email });
     navigate({ to: "/app" });
@@ -234,13 +239,13 @@ export function UsersTab() {
 
   async function removeSlot(userId: string, slot: SlotKey) {
     const label = slot === "plano1" ? "Plano 1" : slot === "plano2" ? "Plano 2" : "Bônus";
-    if (!confirm(`Remover ${label}? Isso vai zerar os contadores deste slot.`)) return;
+    if (!(await confirm(`Remover ${label}? Isso vai zerar os contadores deste slot.`))) return;
     setBusy(userId);
     const extraPrefix = slot === "plano1" ? "p1" : slot === "plano2" ? "p2" : "b";
     try {
       await removePlanSlotFn({ data: { userId, slot, extraPrefix } });
     } catch (e) {
-      alert(`Erro ao remover slot: ${(e as Error).message}`);
+      toast.error(`Erro ao remover slot: ${(e as Error).message}`);
     }
     await load({ silent: true });
     setBusy(null);
@@ -270,7 +275,7 @@ export function UsersTab() {
         },
       });
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      toast.error(`Erro: ${(e as Error).message}`);
     }
     setAssignModal(null);
     await load({ silent: true });
@@ -280,16 +285,16 @@ export function UsersTab() {
   async function toggleStatus(r: Row) {
     const blocking = r.status === "ativo";
     if (blocking) {
-      if (!confirm(`Bloquear ${r.email}? O usuário não poderá mais usar o app.`)) return;
+      if (!(await confirm(`Bloquear ${r.email}? O usuário não poderá mais usar o app.`))) return;
       const typed = prompt(
         `Confirmação dupla — digite BLOQUEAR para confirmar o bloqueio de ${r.email}:`,
       );
       if (typed !== "BLOQUEAR") {
-        alert("Confirmação inválida. Bloqueio cancelado.");
+        toast.error("Confirmação inválida. Bloqueio cancelado.");
         return;
       }
     } else {
-      if (!confirm(`Desbloquear ${r.email}?`)) return;
+      if (!(await confirm(`Desbloquear ${r.email}?`))) return;
     }
     setBusy(r.id);
     await supabase
@@ -317,7 +322,7 @@ export function UsersTab() {
     setBusy(null);
   }
   async function resetCounters(r: Row) {
-    if (!confirm(`Zerar contadores de ${r.email} (todos os slots)?`)) return;
+    if (!(await confirm(`Zerar contadores de ${r.email} (todos os slots)?`))) return;
     setBusy(r.id);
     await supabase
       .from("profiles")
@@ -338,20 +343,20 @@ export function UsersTab() {
   }
   async function handleDeleteUser(r: Row) {
     if (r.is_admin) {
-      alert("Não é possível excluir um administrador. Remova o papel de admin antes.");
+      toast.error("Não é possível excluir um administrador. Remova o papel de admin antes.");
       return;
     }
     if (
-      !confirm(
+      !(await confirm(
         `Excluir PERMANENTEMENTE ${r.email}?\n\nIsso remove gerações, kit de marca, voz clonada e a conta do usuário. Esta ação NÃO PODE ser desfeita.`,
-      )
+      ))
     )
       return;
     const typed = prompt(
       `Confirmação dupla — digite EXCLUIR para confirmar a exclusão de ${r.email}:`,
     );
     if (typed !== "EXCLUIR") {
-      alert("Confirmação inválida. Exclusão cancelada.");
+      toast.error("Confirmação inválida. Exclusão cancelada.");
       return;
     }
     setBusy(r.id);
@@ -359,7 +364,7 @@ export function UsersTab() {
       await deleteUserFn({ data: { id: r.id } });
       await load({ silent: true });
     } catch (e) {
-      alert(`Erro ao excluir: ${(e as Error).message}`);
+      toast.error(`Erro ao excluir: ${(e as Error).message}`);
     }
     setBusy(null);
   }
@@ -384,13 +389,14 @@ export function UsersTab() {
   }
 
   async function resetPassword(r: Row) {
-    if (!confirm(`Enviar e-mail de redefinição de senha para ${r.email}?`)) return;
+    if (!(await confirm(`Enviar e-mail de redefinição de senha para ${r.email}?`))) return;
     setBusy(r.id);
     const { error } = await supabase.auth.resetPasswordForEmail(r.email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setBusy(null);
-    alert(error ? `Erro: ${error.message}` : `E-mail de redefinição enviado para ${r.email}.`);
+    if (error) toast.error(`Erro: ${error.message}`);
+    else toast.success(`E-mail de redefinição enviado para ${r.email}.`);
   }
 
   const bonusPlans = plans.filter((p) => p.elegivel_bonus);
@@ -405,6 +411,7 @@ export function UsersTab() {
 
   return (
     <div>
+      {dialog}
       <div
         style={{
           display: "flex",
@@ -1273,7 +1280,9 @@ function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey
   if (!slots.length) {
     if (row.is_admin)
       return (
-        <span style={{ color: "var(--brand-accent)", fontWeight: 600, fontSize: 12 }}>Ilimitado (admin)</span>
+        <span style={{ color: "var(--brand-accent)", fontWeight: 600, fontSize: 12 }}>
+          Ilimitado (admin)
+        </span>
       );
     return <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>;
   }

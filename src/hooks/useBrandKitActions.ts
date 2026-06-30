@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 import { defaultVoice } from "../data/brandVoice";
 import { saveKit, saveForm, clearStorage } from "../utils/storage";
 import { loadKitForUser, saveKitForUser } from "../services/brandKit";
@@ -125,7 +126,7 @@ export function useBrandKitActions({
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
-      alert(`Erro ao salvar Kit: ${(e as Error).message}`);
+      toast.error(`Erro ao salvar Kit: ${(e as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -156,10 +157,10 @@ export function useBrandKitActions({
       if (loaded) {
         handleKitChange(loaded);
       } else {
-        alert('Você ainda não tem um Kit salvo. Preencha e clique em "Salvar Kit".');
+        toast.error('Você ainda não tem um Kit salvo. Preencha e clique em "Salvar Kit".');
       }
     } catch (e) {
-      alert(`Erro ao carregar Kit: ${(e as Error).message}`);
+      toast.error(`Erro ao carregar Kit: ${(e as Error).message}`);
     } finally {
       setLoadingKit(false);
     }

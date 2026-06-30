@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useConfirm } from "@/hooks/useConfirm";
 
 interface MetaStatus {
   connected: boolean;
@@ -33,6 +34,7 @@ export function MetaConnect() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const { confirm, dialog } = useConfirm();
 
   useEffect(() => {
     // Captura feedback do callback OAuth na URL
@@ -90,7 +92,8 @@ export function MetaConnect() {
   }
 
   async function handleDisconnect() {
-    if (!confirm("Desconectar sua conta Meta? Você precisará reconectar para publicar.")) return;
+    if (!(await confirm("Desconectar sua conta Meta? Você precisará reconectar para publicar.")))
+      return;
     setDisconnecting(true);
     setError(null);
     try {
@@ -130,6 +133,7 @@ export function MetaConnect() {
         gap: 12,
       }}
     >
+      {dialog}
       <header style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {/* Ícone Meta */}
         <div

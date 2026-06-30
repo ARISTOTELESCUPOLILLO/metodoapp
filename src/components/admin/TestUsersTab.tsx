@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { startImpersonation } from "@/hooks/useImpersonation";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useConfirm } from "@/hooks/useConfirm";
 import { createTestUser, deleteTestUser } from "@/lib/testUsers.functions";
 
 type Segmento = "SERVIÇOS" | "VAREJO" | "MARCA";
@@ -48,6 +50,7 @@ interface Plan {
 export function TestUsersTab() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { confirm, dialog } = useConfirm();
   const createTestUserFn = useServerFn(createTestUser);
   const deleteTestUserFn = useServerFn(deleteTestUser);
   const [rows, setRows] = useState<Row[]>([]);
@@ -134,7 +137,7 @@ export function TestUsersTab() {
     setBusy(null);
   }
   async function changeSlot(r: Row, slot: SlotKey, planId: string) {
-    if (!confirm(`Alterar slot vai zerar o consumo. Continuar?`)) return;
+    if (!(await confirm(`Alterar slot vai zerar o consumo. Continuar?`))) return;
     setBusy(r.id);
     const col = slot === "bonus" ? "bonus_id" : `${slot}_id`;
     await supabase
@@ -147,7 +150,7 @@ export function TestUsersTab() {
     setBusy(null);
   }
   async function resetCounters(r: Row) {
-    if (!confirm(`Zerar consumo de ${r.nome}?`)) return;
+    if (!(await confirm(`Zerar consumo de ${r.nome}?`))) return;
     setBusy(r.id);
     await supabase
       .from("profiles")
@@ -167,10 +170,11 @@ export function TestUsersTab() {
     setBusy(null);
   }
   async function remove(r: Row) {
-    if (!confirm(`Excluir teste "${r.nome}"? Apaga perfil, Kit de Marca e sequências.`)) return;
+    if (!(await confirm(`Excluir teste "${r.nome}"? Apaga perfil, Kit de Marca e sequências.`)))
+      return;
     const typed = prompt(`Digite EXCLUIR para confirmar:`);
     if (typed !== "EXCLUIR") {
-      alert("Cancelado.");
+      toast.info("Cancelado.");
       return;
     }
     setBusy(r.id);
@@ -178,7 +182,7 @@ export function TestUsersTab() {
       await deleteTestUserFn({ data: { id: r.id } });
       load();
     } catch (err: unknown) {
-      alert(`Erro: ${err instanceof Error ? err.message : "falha ao excluir"}`);
+      toast.error(`Erro: ${err instanceof Error ? err.message : "falha ao excluir"}`);
     } finally {
       setBusy(null);
     }
@@ -189,6 +193,7 @@ export function TestUsersTab() {
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      {dialog}
       <section style={card}>
         <h3 style={cardTitle}>＋ Criar usuário de teste</h3>
         <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 14px" }}>
