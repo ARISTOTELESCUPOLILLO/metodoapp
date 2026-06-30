@@ -2,20 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { assertAdmin, isAdmin } from "@/repository/authz";
 
 const BUCKET = "user-assets";
 const ELEVENLABS_API = "https://api.elevenlabs.io/v1";
-
-async function assertAdmin(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error) throw new Error(`Falha ao verificar permissão: ${error.message}`);
-  if (!data) throw new Error("Apenas administradores podem executar esta ação.");
-}
 
 async function deleteElevenLabsVoice(voiceId: string, elKey: string): Promise<void> {
   const res = await fetch(`${ELEVENLABS_API}/voices/${voiceId}`, {
@@ -43,13 +33,7 @@ export const deleteUser = createServerFn({ method: "POST" })
       throw new Error("Você não pode excluir a própria conta.");
     }
 
-    const { data: targetRole } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (targetRole) {
+    if (await isAdmin(data.id)) {
       throw new Error("Não é possível excluir um administrador. Remova o papel de admin antes.");
     }
 

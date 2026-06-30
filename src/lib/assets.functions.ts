@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { isAdmin } from "@/repository/authz";
 
 const BUCKET = "user-assets";
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -33,14 +34,7 @@ async function resolveTargetUserId(
   asUserId: string | undefined,
 ): Promise<string> {
   if (!asUserId || asUserId === callerId) return callerId;
-  const { data: isAdmin } = await supabaseAdmin.rpc(
-    "has_role" as never,
-    {
-      _user_id: callerId,
-      _role: "admin",
-    } as never,
-  );
-  if (!isAdmin) throw new Error("Forbidden: somente admin pode atuar como outro usuário");
+  if (!(await isAdmin(callerId))) throw new Error("Forbidden: somente admin pode atuar como outro usuário");
   return asUserId;
 }
 
@@ -52,13 +46,13 @@ export const saveGeneration = createServerFn({ method: "POST" })
 
     // 1. Eviction (3 por user/slot/tipo/formato)
     const { data: toEvict, error: evictErr } = await supabaseAdmin.rpc(
-      "list_generations_to_evict" as never,
+      "list_generations_to_evict",
       {
         _user_id: targetUserId,
         _slot: data.slot,
         _tipo: data.tipo,
         _formato: data.formato,
-      } as never,
+      },
     );
     if (evictErr) throw new Error("Falha ao verificar limite: " + evictErr.message);
 

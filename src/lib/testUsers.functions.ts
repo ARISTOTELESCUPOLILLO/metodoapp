@@ -2,19 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { assertAdmin } from "@/repository/authz";
 
 const SegmentoEnum = z.enum(["SERVIÇOS", "VAREJO", "MARCA"]);
-
-async function assertAdmin(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error) throw new Error(`Falha ao verificar permissão: ${error.message}`);
-  if (!data) throw new Error("Apenas administradores podem executar esta ação.");
-}
 
 export const createTestUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

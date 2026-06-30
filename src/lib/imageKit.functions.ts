@@ -9,7 +9,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // has_role RPC retorna boolean — sem tipo gerado disponível aqui.
-type HasRoleResult = boolean | null;
 
 // Copia um arquivo dentro do bucket; fallback download+reupload se copy() falhar
 async function copyStorageFile(src: string, dest: string): Promise<boolean> {
@@ -79,15 +78,9 @@ export const loadImageKitFor = createServerFn({ method: "POST" })
     let targetId = data.userId || callerId;
 
     // Só admin pode pedir o Kit de outro usuário.
-    // Usa o mesmo rpc("has_role") que loadKitServer para consistência —
-    // a verificação por user_roles + JWT claims tinha fallback silencioso
-    // que carregava o kit do admin em vez do usuário alvo.
     if (targetId !== callerId) {
-      const { data: isAdmin } = await supabaseAdmin.rpc(
-        "has_role" as never,
-        { _user_id: callerId, _role: "admin" } as never,
-      ) as { data: HasRoleResult };
-      if (!isAdmin) targetId = callerId;
+      const { isAdmin } = await import("@/repository/authz");
+      if (!(await isAdmin(callerId))) targetId = callerId;
     }
 
     const { data: row, error } = await supabaseAdmin
@@ -156,12 +149,8 @@ export const migrateImageKitFor = createServerFn({ method: "POST" })
     const callerId = context.userId;
 
     // Só admin pode executar
-    const { data: roles } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", callerId)
-      .eq("role", "admin");
-    if (!roles || roles.length === 0) throw new Error("Acesso negado.");
+    const { assertAdmin } = await import("@/repository/authz");
+    await assertAdmin(callerId);
 
     // Encontra o e-mail do convite
     const { data: invite } = await supabaseAdmin
@@ -333,11 +322,8 @@ export const saveImageKitFor = createServerFn({ method: "POST" })
     let targetId = data.userId || callerId;
 
     if (targetId !== callerId) {
-      const { data: isAdmin } = await supabaseAdmin.rpc(
-        "has_role" as never,
-        { _user_id: callerId, _role: "admin" } as never,
-      ) as { data: HasRoleResult };
-      if (!isAdmin) targetId = callerId;
+      const { isAdmin } = await import("@/repository/authz");
+      if (!(await isAdmin(callerId))) targetId = callerId;
     }
 
     // Carrega o que já existe pra saber o que apagar.

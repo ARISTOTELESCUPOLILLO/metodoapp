@@ -3,6 +3,7 @@
 // e registra um log em usage_logs para o painel admin.
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { isAdmin as checkIsAdmin } from "@/repository/authz";
 
 export type DebitKind = "image" | "render" | "geracao";
 
@@ -34,11 +35,7 @@ export async function resolveEffectiveUser(
 
   const rawImpersonate = request.headers.get("x-impersonate-user-id");
   if (rawImpersonate) {
-    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
-      _user_id: callerUserId,
-      _role: "admin",
-    });
-    if (isAdmin === true) {
+    if (await checkIsAdmin(callerUserId)) {
       return { userId: rawImpersonate, impersonatedBy: callerUserId };
     }
   }
@@ -51,11 +48,7 @@ const RATE_LIMIT_PER_HOUR = 15;
 export async function checkRateLimit(
   userId: string,
 ): Promise<{ ok: boolean; usedLastHour: number }> {
-  const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
-  if (isAdmin === true) return { ok: true, usedLastHour: 0 };
+  if (await checkIsAdmin(userId)) return { ok: true, usedLastHour: 0 };
 
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { count, error } = await supabaseAdmin

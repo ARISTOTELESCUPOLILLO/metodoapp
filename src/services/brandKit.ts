@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Tables } from "@/integrations/supabase/types";
 import { BrandKit, FontPair, LogoPosition, Segment, SecondaryFont } from "../types";
+import { isAdmin } from "@/repository/authz";
 
 type BrandKitRow = Tables<"brand_kits">;
 
@@ -38,14 +39,7 @@ export const loadKitServer = createServerFn({ method: "POST" })
     let targetId = data.userId;
     // Se não é o próprio caller, verifica se é admin
     if (targetId !== callerId) {
-      const { data: isAdmin } = await supabaseAdmin.rpc(
-        "has_role" as never,
-        {
-          _user_id: callerId,
-          _role: "admin",
-        } as never,
-      );
-      if (!isAdmin) targetId = callerId;
+      if (!(await isAdmin(callerId))) targetId = callerId;
     }
     const { data: row } = await supabaseAdmin
       .from("brand_kits")
@@ -83,14 +77,7 @@ export const saveKitServer = createServerFn({ method: "POST" })
     const callerId = context.userId;
     let targetId = data.userId;
     if (targetId !== callerId) {
-      const { data: isAdmin } = await supabaseAdmin.rpc(
-        "has_role" as never,
-        {
-          _user_id: callerId,
-          _role: "admin",
-        } as never,
-      );
-      if (!isAdmin) targetId = callerId;
+      if (!(await isAdmin(callerId))) targetId = callerId;
     }
 
     const { data: existing } = await supabaseAdmin
