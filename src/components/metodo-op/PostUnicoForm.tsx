@@ -10,10 +10,8 @@ import {
   PostUnicoObjetivo,
   PostUnicoVisualSelection,
 } from "../../types";
-import { generatePostUnicoCopy, type PostUnicoCopy } from "../../services/postUnico";
-import { regenerateBlockClean } from "../../services/regenerateBlock";
-import { autoRegenerateFlaggedPostUnico } from "../../services/autoRegenerate";
-import { judgeAndRegeneratePostUnico } from "../../services/judgeContent";
+import type { PostUnicoCopy } from "../../services/postUnico";
+import { usePostUnicoCopy } from "../../hooks/usePostUnicoCopy";
 import { getAuthHeaders } from "../../services/authHeaders";
 import PostUnicoComposicaoVisual from "./PostUnicoComposicaoVisual";
 import ProductsChecklist from "./ProductsChecklist";
@@ -139,25 +137,38 @@ export default function PostUnicoForm({
   const initialKeyInfo = initialKeyInfoRef.current;
   const canRevertInitial = initialKeyInfo !== null && data.keyInfo !== initialKeyInfo;
 
-  // Etapa intermediária: título + texto gerados antes da imagem.
-  // `copy`/`copyOriginal` são controlados pelo app (props) para sobreviverem à
-  // troca de aba; `setCopy`/`setCopyOriginal` são os setters recebidos via props.
-  const [copyLoading, setCopyLoading] = useState(false);
-  const [copyError, setCopyError] = useState<string | null>(null);
-  // Contagens persistidas no app (não resetam ao trocar de aba). Os incrementos
-  // sobem por onTituloRegen/onTextoRegen; aqui só lemos o valor para render/limite.
+  const COPY_REGEN_MAX = 2;
   const copyTRegenCount = tituloRegenCount ?? 0;
   const copyXRegenCount = textoRegenCount ?? 0;
-  const [copyTBusy, setCopyTBusy] = useState(false);
-  const [copyXBusy, setCopyXBusy] = useState(false);
-  const [copyTError, setCopyTError] = useState<string | null>(null);
-  const [copyXError, setCopyXError] = useState<string | null>(null);
-  const [copyTSuggs, setCopyTSuggs] = useState<string[]>([]);
-  const [copyXSuggs, setCopyXSuggs] = useState<string[]>([]);
-  const COPY_REGEN_MAX = 2;
-  // Inicializado com o valor atual de keyInfo (não vazio) para que o efeito de
-  // detecção de mudança não dispare falso-positivo ao remontar com copy já gerado.
-  const copyKeyInfoRef = useRef<string>(data.keyInfo);
+  const {
+    copyLoading,
+    copyError,
+    copyTBusy,
+    copyXBusy,
+    copyTError,
+    copyXError,
+    copyTSuggs,
+    setCopyTSuggs,
+    copyXSuggs,
+    setCopyXSuggs,
+    copyKeyInfoRef,
+    fetchCopy,
+    regenField,
+    clearCopy,
+  } = usePostUnicoCopy({
+    data,
+    kit,
+    puSlot,
+    isAdmin,
+    tituloRegenCount,
+    textoRegenCount,
+    onTituloRegen,
+    onTextoRegen,
+    onResetCopyRegen,
+    copy,
+    setCopy,
+    setCopyOriginal,
+  });
 
   useEffect(() => {
     setSuggestCount(0);
@@ -201,115 +212,6 @@ export default function PostUnicoForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a objetivo; demais são lidos via ref/data atual
   }, [data.objetivo]);
-
-  async function fetchCopy() {
-    if (copyLoading) return;
-    setCopyLoading(true);
-    setCopyError(null);
-    try {
-      const companyName = data.companyName || kit.companyName;
-      const mainActivity = data.mainActivity || kit.mainActivity || "";
-      const generated = await generatePostUnicoCopy(
-        {
-          ...data,
-          companyName,
-          mainActivity,
-        },
-        kit.brandVoice,
-        kit.segment,
-        puSlot,
-      );
-      // E3 — regenera título/texto flagados por D1 antes de exibir ao usuário.
-      let result = await autoRegenerateFlaggedPostUnico(
-        { titulo: generated.titulo, texto: generated.texto },
-        generated.flags,
-        { companyName, mainActivity, keyInfo: data.keyInfo },
-      );
-
-      // D2 — juiz semântico: roda ANTES de exibir qualquer coisa na tela.
-      // Antes rodava em background depois do setCopy já ter mostrado o
-      // resultado do E3 — quando o juiz corrigia algo, a tela trocava o
-      // título/texto sozinha alguns segundos depois (efeito de "flash",
-      // quase sempre substituindo um título bom por outro). Aguardar aqui
-      // elimina a troca silenciosa: só existe UM resultado exibido.
-      try {
-        const updated = await judgeAndRegeneratePostUnico(result, {
-          companyName,
-          mainActivity,
-          keyInfo: data.keyInfo,
-          segment: kit.segment,
-        });
-        if (updated) result = updated;
-      } catch {
-        // best-effort — se o juiz falhar, segue com o resultado do E3.
-      }
-
-      setCopy(result);
-      setCopyOriginal(result);
-      copyKeyInfoRef.current = data.keyInfo;
-    } catch (e) {
-      setCopyError((e as Error).message);
-    } finally {
-      setCopyLoading(false);
-    }
-  }
-
-  async function regenField(kind: "titulo" | "texto") {
-    if (!copy) return;
-    const isTitulo = kind === "titulo";
-    if (isTitulo) {
-      if ((!isAdmin && copyTRegenCount >= COPY_REGEN_MAX) || copyTBusy) return;
-    } else {
-      if ((!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) || copyXBusy) return;
-    }
-    if (isTitulo) {
-      setCopyTBusy(true);
-      setCopyTError(null);
-    } else {
-      setCopyXBusy(true);
-      setCopyXError(null);
-    }
-    try {
-      const next = await regenerateBlockClean({
-        kind,
-        companyName: data.companyName || kit.companyName,
-        mainActivity: data.mainActivity || kit.mainActivity || "",
-        keyInfo: data.keyInfo,
-        formato: "PostUnico",
-        tituloAtual: copy.titulo,
-        textoAtual: copy.texto,
-      });
-      const trimmed = next.trim();
-      if (trimmed) {
-        if (isTitulo) setCopyTSuggs((s) => [...s, trimmed]);
-        else setCopyXSuggs((s) => [...s, trimmed]);
-        if (isTitulo) onTituloRegen?.();
-        else onTextoRegen?.();
-      } else {
-        if (isTitulo) setCopyTError("Sugestão vazia — tente de novo.");
-        else setCopyXError("Sugestão vazia — tente de novo.");
-      }
-    } catch (e) {
-      if (isTitulo) setCopyTError((e as Error).message);
-      else setCopyXError((e as Error).message);
-    } finally {
-      if (isTitulo) setCopyTBusy(false);
-      else setCopyXBusy(false);
-    }
-  }
-
-  // resetCounter=false: efeitos automáticos (mudança de keyInfo/objetivo) limpam
-  // o copy mas preservam o contador — só o usuário (Limpar e gerar novo) zera.
-  function clearCopy({ resetCounter = true }: { resetCounter?: boolean } = {}) {
-    setCopy(null);
-    setCopyOriginal(null);
-    setCopyError(null);
-    if (resetCounter) onResetCopyRegen?.();
-    setCopyTError(null);
-    setCopyXError(null);
-    setCopyTSuggs([]);
-    setCopyXSuggs([]);
-  }
 
   const update = <K extends keyof PostUnicoFormData>(key: K, value: PostUnicoFormData[K]) =>
     onChange({ ...data, [key]: value });

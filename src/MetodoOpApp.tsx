@@ -2,43 +2,23 @@ import { useState, useEffect, useRef } from "react";
 import BrandKitForm from "./components/metodo-op/BrandKitForm";
 import ConfirmDialog from "./components/metodo-op/ConfirmDialog";
 import ContentForm from "./components/metodo-op/ContentForm";
-
 import ResultsView from "./components/metodo-op/ResultsView";
 import PostUnicoForm from "./components/metodo-op/PostUnicoForm";
 import PostUnicoResult from "./components/metodo-op/PostUnicoResult";
 import GenerationProgress from "./components/metodo-op/GenerationProgress";
 import ImageKitForm from "./components/metodo-op/ImageKitForm";
-import { defaultVoice } from "./data/brandVoice";
-import { generateMethodContent } from "./services/api";
-import { judgeAndRegenerateContent } from "./services/judgeContent";
-import {
-  generatePostUnico,
-  generatePostUnicoCaption,
-  type PostUnicoCaption,
-  type PostUnicoCopy,
-} from "./services/postUnico";
-import { buildReferences } from "./services/regenerateWithKit";
-import { detectForcedGenderFromCopy, PersonagemGender } from "./core/visualDirection";
-import { mapFaixaToAnchorAge } from "./core/audienceAge";
-import { loadKitForUser, saveKitForUser, loadKitServer, saveKitServer } from "./services/brandKit";
+import { usePostUnicoGeneration } from "./hooks/usePostUnicoGeneration";
 import { useServerFn } from "@tanstack/react-start";
-import { saveKit, loadKit, saveForm, loadForm, clearStorage } from "./utils/storage";
-import {
-  loadImageKit,
-  saveImageKit,
-  loadImageKitAsync,
-  saveImageKitAsync,
-} from "./utils/imageKitStorage";
+import { defaultKit, defaultForm, defaultPostUnico, defaultVisualSelection, savePostUnico, type Modo } from "./data/appDefaults";
+import { loadImageKit } from "./utils/imageKitStorage";
 import {
   lsGet,
-  lsSet,
   lsRemove,
   lsGetRaw,
   lsSetRaw,
   lsSetQuotaSafe,
   ssGet,
   ssSet,
-  ssClearPrefix,
 } from "./lib/storage/store";
 import {
   MODO_KEY,
@@ -48,11 +28,9 @@ import {
   PU_CAPTION_KEY,
   PU_STARTED_KEY,
   PU_VISUAL_KEY,
-  POSTUNICO_FORM_KEY,
   MODO_INIT_KEY,
 } from "./lib/storage/keys";
-import { clearSessionImages } from "./utils/sessionImageCache";
-import { clearCopyEdits } from "./utils/copyEditsStorage";
+import { loadKitServer, saveKitServer } from "./services/brandKit";
 import {
   BrandKit,
   ContentFormData,
@@ -66,75 +44,14 @@ import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
 import { useImpersonation, stopImpersonation } from "./hooks/useImpersonation";
 import { buildPlanAccess } from "./lib/planAccess";
-import { PlanCard } from "./components/metodo-op/PlanCard";
-import { setCurrentDebitSlot } from "./services/imageGeneration";
+import { usePlanSlots } from "./hooks/usePlanSlots";
+import { useBrandKitActions } from "./hooks/useBrandKitActions";
+import { useMopHandlers } from "./hooks/useMopHandlers";
+import { useUserDataRestore } from "./hooks/useUserDataRestore";
+import { PlanSlotsBar } from "./components/metodo-op/PlanSlotsBar";
+import { ModeSwitcher } from "./components/metodo-op/ModeSwitcher";
+import { ExhaustedBanner } from "./components/metodo-op/ExhaustedBanner";
 import "./metodo-op.css";
-
-const defaultKit: BrandKit = {
-  companyName: "",
-  segment: "SERVIÇOS",
-  logoHasName: true,
-  primaryColor: "#123a63",
-  secondaryColor: "#0f172a",
-  accentColor: "#f4b000",
-  fontPair: "Montserrat",
-  brandVoice: defaultVoice("SERVIÇOS"),
-  mainActivity: "",
-  logoPosition: "bottom-right",
-};
-
-const defaultForm: ContentFormData = {
-  companyName: "",
-  segment: "SERVIÇOS",
-  audience: "B2C",
-  businessMoment: "consolidação",
-  keyInfo: "",
-  brandVoice: defaultVoice("SERVIÇOS"),
-  outputMode: "feed",
-  sequenceSize: 3,
-  storiesDays: 3,
-  storiesQuantity: 3,
-  outputFormats: ["feed", "carrossel", "reels"],
-  track: "visual",
-  mood: "OP-01",
-};
-
-const defaultPostUnico: PostUnicoFormData = {
-  companyName: "",
-  mainActivity: "",
-  audience: "B2C",
-  keyInfo: "",
-  objetivo: "nenhum",
-  direcao: "livre",
-};
-
-function loadPostUnico(userId?: string | null): PostUnicoFormData {
-  if (typeof window === "undefined") return { ...defaultPostUnico };
-  try {
-    const raw = lsGet(POSTUNICO_FORM_KEY, userId);
-    return raw ? { ...defaultPostUnico, ...JSON.parse(raw) } : { ...defaultPostUnico };
-  } catch {
-    return { ...defaultPostUnico };
-  }
-}
-function savePostUnico(d: PostUnicoFormData, userId?: string | null) {
-  lsSetQuotaSafe(POSTUNICO_FORM_KEY, JSON.stringify(d), userId);
-}
-
-type Modo = "metodo" | "postUnico" | "imageKit";
-
-const defaultVisualSelection: PostUnicoVisualSelection = {
-  useAvatar: false,
-  avatarSelecionado: 1,
-  useFachada: false,
-  useCenario: false,
-  useProdutos: false,
-  produtosSelecionados: [],
-  cenarioSelecionado: null,
-  useUniforme: false,
-  useFato: false,
-  useVenda: false,
-};
 
 export default function App() {
   const [modo, setModo] = useState<Modo>(() => {
@@ -145,7 +62,6 @@ export default function App() {
   });
   const [kit, setKit] = useState<BrandKit>(() => defaultKit);
   const [imageKit, setImageKit] = useState<ImageKit>(() => loadImageKit(null));
-  const [imageKitSaved, setImageKitSaved] = useState(false);
   const [visualSelection, setVisualSelection] =
     useState<PostUnicoVisualSelection>(defaultVisualSelection);
   const [mood, setMood] = useState<MoodCode | null>(() => {
@@ -162,38 +78,12 @@ export default function App() {
     track: defaultForm.track || "cinematica",
   }));
   const [postUnico, setPostUnico] = useState<PostUnicoFormData>(() => ({ ...defaultPostUnico }));
-  const [postUnicoImg, setPostUnicoImg] = useState<string | undefined>();
-  // Gênero do personagem desta peça — atribuído na primeira geração e
-  // persistido entre regenerações ("gerar de novo" não troca o gênero por
-  // acaso). Resetado em handleClearPostUnico (peça nova).
-  const postUnicoGenderRef = useRef<PersonagemGender | undefined>(undefined);
-  // Último título/texto confirmado do Post Único — reutilizado ao "Gerar outra
-  // imagem" (regeneração sem copy), para a peça não sair genérica/repetida.
-  const lastPuCopyRef = useRef<{ titulo: string; texto: string } | undefined>(undefined);
-  // Contadores de regeneração do Post Único elevados ao nível do app — antes
-  // viviam como useState dentro de PostUnicoForm/PostUnicoResult, que
-  // desmontam ao trocar de aba (modo), zerando a contagem ("0/2") ao voltar.
-  // Aqui persistem enquanto a peça não é limpa.
-  const [puTituloRegen, setPuTituloRegen] = useState(0);
-  const [puTextoRegen, setPuTextoRegen] = useState(0);
-  const [puCaptionRegen, setPuCaptionRegen] = useState(0);
-  // Título/texto gerados do Post Único, elevados ao app — antes viviam como
-  // useState dentro de PostUnicoForm, que desmonta ao trocar de aba (modo),
-  // perdendo o copy ao voltar. Aqui persistem enquanto a peça não é limpa.
-  const [puCopy, setPuCopy] = useState<PostUnicoCopy | null>(null);
-  const [puCopyOriginal, setPuCopyOriginal] = useState<PostUnicoCopy | null>(null);
-  // Mantém lastPuCopyRef sincronizado com o copy atual, para que "Gerar outra
-  // imagem" (regeneração sem copy do botão) reutilize o último título/texto.
-  useEffect(() => {
-    if (puCopy) lastPuCopyRef.current = { titulo: puCopy.titulo, texto: puCopy.texto };
-  }, [puCopy]);
-  const [postUnicoStarted, setPostUnicoStarted] = useState(false);
-  const [caption, setCaption] = useState<PostUnicoCaption | undefined>();
-  const [captionLoading, setCaptionLoading] = useState(false);
-  const [captionError, setCaptionError] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [loadingKit, setLoadingKit] = useState(false);
+  const [confirmState, setConfirmState] = useState<{
+    title: string;
+    message?: string;
+    resolve: (v: boolean) => void;
+  } | null>(null);
+
   const { user } = useAuth();
   const impersonation = useImpersonation();
   const {
@@ -206,11 +96,7 @@ export default function App() {
   } = useProfile(impersonation?.userId || null);
   const loadKitServerFn = useServerFn(loadKitServer);
   const saveKitServerFn = useServerFn(saveKitServer);
-  // Quando impersonando: usa só o status do usuário alvo (não o do admin logado).
-  // Assim o admin vê as mesmas restrições de plano que o cliente vê.
   const effectiveAdmin = impersonation ? isAdmin : isSelfAdmin || isAdmin;
-  // Acesso ao conteúdo é sempre baseado nos slots reais — sem bypass de admin.
-  // O admin vê sua própria trilha/tamanho, assim como qualquer usuário.
   const planAccess = buildPlanAccess(slots, false);
   const rendersTotal = slots.reduce((s, sl) => s + (sl.rendersLimite || 0), 0);
   const rendersUsadosSum = slots.reduce((s, sl) => s + (sl.rendersUsados || 0), 0);
@@ -223,128 +109,128 @@ export default function App() {
   const geracoesRestantes = Math.max(0, geracoesTotal - geracoesUsadasSum);
   const semPlano = slots.length === 0 && !effectiveAdmin;
   const effectiveUserId = impersonation?.userId || user?.id || null;
-  // Slot com plano PU explícito — undefined quando não há plano PU (sem fallback para slots[0]).
-  const puSlot = slots.find((s) => /^PU\d+/i.test(s.plan.codigo))?.key;
-  // Limites específicos do slot PU (para bloqueio por imagens no Post Único)
-  const puSlotInfoObj = slots.find((s) => /^PU\d+$/i.test(s.plan.codigo));
-  const puImgsTotal = puSlotInfoObj
-    ? puSlotInfoObj.imgsLimiteDisplay || puSlotInfoObj.imgsLimite || 0
-    : 0;
-  const puImgsReal = puSlotInfoObj?.imgsLimite ?? 0;
-  const puImgsUsadas = puSlotInfoObj?.imgsUsadas ?? 0;
-  const puImgsRestantes = Math.max(0, puImgsReal - puImgsUsadas);
-  const puExhausted = planAccess.hasPostUnico && puImgsReal > 0 && puImgsUsadas >= puImgsReal;
-
-  // Limites do slot Bônus — declarado antes de mopSlotInfoObj pois é referenciado nele
-  const bonusSlotInfoObj = slots.find((s) => s.key === "bonus");
-  const bonusImgsTotal = bonusSlotInfoObj
-    ? bonusSlotInfoObj.imgsLimiteDisplay || bonusSlotInfoObj.imgsLimite || 0
-    : 0;
-  const bonusImgsReal = bonusSlotInfoObj?.imgsLimite ?? 0;
-  const bonusImgsUsadas = bonusSlotInfoObj?.imgsUsadas ?? 0;
-  const bonusExhausted =
-    !!bonusSlotInfoObj && bonusImgsReal > 0 && bonusImgsUsadas >= bonusImgsReal;
-
-  // Limites do slot Método OP (bloqueia quando não há imagens suficientes para nenhuma sequência)
-  const hasMopPlan =
-    planAccess.tracks.cinematica || planAccess.tracks.visual || planAccess.tracks.experimentacao;
-  // Prefere plano MOP fora do bonus; se não há, usa bonus se seu plano não é PU-type (ex: EX01).
-  const mopSlotInfoObj =
-    slots.find((s) => s.key !== "bonus" && !/^PU\d+$/i.test(s.plan.codigo)) ??
-    (bonusSlotInfoObj && !/^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo)
-      ? bonusSlotInfoObj
-      : undefined);
-  // Chave do slot MOP — usada para roteamento de débito correto (MOP → mopSlot, PU → puSlot)
-  const mopSlot = mopSlotInfoObj?.key;
-  const mopImgsTotal = mopSlotInfoObj
-    ? mopSlotInfoObj.imgsLimiteDisplay || mopSlotInfoObj.imgsLimite || 0
-    : 0;
-  const mopImgsReal = mopSlotInfoObj?.imgsLimite ?? 0;
-  const mopImgsUsadas = mopSlotInfoObj?.imgsUsadas ?? 0;
-  const mopImgsRestantes = Math.max(0, mopImgsReal - mopImgsUsadas);
-  // Threshold = tamanho mínimo de sequência disponível para este usuário
-  const allMopSizes = [
-    ...planAccess.sizesByTrack.cinematica,
-    ...planAccess.sizesByTrack.visual,
-    ...(planAccess.tracks.experimentacao ? [3] : []),
-  ];
-  const mopMinSize = allMopSizes.length > 0 ? Math.min(...allMopSizes) : 3;
-  const mopExhausted = hasMopPlan && mopImgsReal > 0 && mopImgsRestantes < mopMinSize;
-
-  // Slot ativamente selecionado pelo usuário — controla qual slot é debitado.
-  // Padrão: MOP slot (quando disponível), caso contrário PU slot, caso contrário plano1.
-  // Isso evita que usuários com MOP + PU debitassem tudo no slot PU.
-  const defaultSlot = mopSlot ?? puSlot ?? slots[0]?.key ?? "plano1";
-  const [selectedSlot, setSelectedSlot] = useState<"plano1" | "plano2" | "bonus">("plano1");
-  const [exhaustedHint, setExhaustedHint] = useState<"mop" | "pu" | "bonus" | null>(null);
-  const slotInitRef = useRef<string | null>(null);
-  // Rastreia o usuário anterior para distinguir troca de usuário (impersonação A→B)
-  // de remontagem com o mesmo usuário (volta do admin/histórico/conta).
   const prevUserRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (effectiveUserId && effectiveUserId !== slotInitRef.current && defaultSlot) {
-      slotInitRef.current = effectiveUserId;
-      setSelectedSlot(defaultSlot as "plano1" | "plano2" | "bonus");
-    }
-  }, [effectiveUserId, defaultSlot]);
-  // Auto-switch slot quando o modo muda: postUnico → PU slot; metodo → MOP slot.
-  // Garante que gerações MOP e PU sempre debitam do plano correto sem ação manual.
-  // Considera bonus: se bonus tem plano PU-type (PU2), usa bonus para postUnico.
-  // Reage também à chegada assíncrona de puSlot/mopSlot (slots carregam depois
-  // do remount), não só a mudanças de `modo`.
-  const bonusIsPuType = !!(bonusSlotInfoObj && /^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo));
-  useEffect(() => {
-    if (modo === "postUnico") {
-      if (puSlot) setSelectedSlot(puSlot as "plano1" | "plano2" | "bonus");
-      else if (bonusIsPuType) setSelectedSlot("bonus");
-    } else if (modo === "metodo" && mopSlot) {
-      setSelectedSlot(mopSlot as "plano1" | "plano2" | "bonus");
-    }
-  }, [modo, puSlot, mopSlot, bonusIsPuType]);
-  // Propaga o slot selecionado para o serviço de geração de imagens.
-  useEffect(() => {
-    setCurrentDebitSlot(selectedSlot);
-  }, [selectedSlot]);
 
-  const greetingName = impersonation?.nome || profile?.nome || user?.email || "";
-  const ultimoLoginFmt = profile?.ultimo_login
-    ? new Date(profile.ultimo_login).toLocaleString("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short",
-      })
-    : "primeiro acesso";
-  const [confirmState, setConfirmState] = useState<{
-    title: string;
-    message?: string;
-    resolve: (v: boolean) => void;
-  } | null>(null);
+  const {
+    puImgsTotal,
+    puImgsRestantes,
+    puExhausted,
+    mopExhausted,
+    bonusSlotInfoObj,
+    bonusExhausted,
+    bonusIsPuType,
+    selectedSlot,
+    setSelectedSlot,
+    exhaustedHint,
+    setExhaustedHint,
+  } = usePlanSlots(slots, planAccess, modo, effectiveUserId);
+
+  const {
+    postUnicoImg,
+    setPostUnicoImg,
+    postUnicoStarted,
+    setPostUnicoStarted,
+    caption,
+    setCaption,
+    captionLoading,
+    captionError,
+    puTituloRegen,
+    setPuTituloRegen,
+    puTextoRegen,
+    setPuTextoRegen,
+    puCaptionRegen,
+    puCopy,
+    setPuCopy,
+    puCopyOriginal,
+    setPuCopyOriginal,
+    handleGeneratePostUnico,
+    handleGenerateCaption,
+    clearPostUnicoState,
+  } = usePostUnicoGeneration({
+    postUnico,
+    kit,
+    imageKit,
+    setImageKit,
+    visualSelection,
+    selectedSlot,
+    effectiveUserId,
+    refreshProfile,
+    setLoading,
+    setError,
+  });
 
   function askConfirm(title: string, message?: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      setConfirmState({ title, message, resolve });
-    });
+    return new Promise((resolve) => setConfirmState({ title, message, resolve }));
   }
 
-  useEffect(() => {
-    if (effectiveUserId) saveKit(kit, effectiveUserId);
-  }, [kit, effectiveUserId]);
-  useEffect(() => {
-    if (effectiveUserId) saveForm(form, effectiveUserId);
-  }, [form, effectiveUserId]);
+  const {
+    saving,
+    saved,
+    loadingKit,
+    lockedSegment,
+    handleKitChange,
+    handleSave,
+    handleClear,
+    handleLoadKit,
+  } = useBrandKitActions({
+    kit,
+    setKit,
+    form,
+    setForm,
+    setPostUnico,
+    effectiveUserId,
+    impersonation: impersonation ?? null,
+    loadKitServerFn,
+    saveKitServerFn,
+    askConfirm,
+    profile: profile ?? null,
+    defaultKit,
+    defaultForm,
+    defaultPostUnico,
+  });
+
+  const { imageKitSaved, handleGenerate, handleClearMethodResult, handleClearMethodGeneration, handleSaveImageKit } =
+    useMopHandlers({
+      form,
+      kit,
+      mood,
+      imageKit,
+      setImageKit,
+      effectiveUserId,
+      selectedSlot,
+      setResult,
+      setLoading,
+      setError,
+      refreshProfile,
+      askConfirm,
+    });
+
+  useUserDataRestore({
+    effectiveUserId,
+    prevUserRef,
+    impersonation: impersonation ?? null,
+    loadKitServerFn,
+    handleKitChange,
+    setForm,
+    setPostUnico,
+    setKit,
+    setVisualSelection,
+    setPostUnicoImg,
+    setCaption,
+    setPostUnicoStarted,
+    setImageKit,
+    setResult,
+    setPuCopy,
+    setPuCopyOriginal,
+  });
+
   useEffect(() => {
     if (effectiveUserId) savePostUnico(postUnico, effectiveUserId);
   }, [postUnico, effectiveUserId]);
-  useEffect(() => {
-    lsSetRaw(MODO_KEY, modo);
-  }, [modo]);
-  useEffect(() => {
-    if (mood) lsSetRaw(MOOD_KEY, mood);
-  }, [mood]);
+  useEffect(() => { lsSetRaw(MODO_KEY, modo); }, [modo]);
+  useEffect(() => { if (mood) lsSetRaw(MOOD_KEY, mood); }, [mood]);
 
-  // Auto-seleciona o modo de acordo com o plano1 ao logar — UMA vez por login
-  // real nesta aba. sessionStorage (em vez de useRef) sobrevive à remontagem
-  // do componente (volta de /historico, /conta etc.) e a F5; é limpa no
-  // signOut(), permitindo nova auto-seleção em um login realmente novo.
+  // Auto-seleciona modo pelo plano1 ao logar — uma vez por login nesta aba.
   useEffect(() => {
     if (!effectiveUserId || !slots.length) return;
     const key = `${MODO_INIT_KEY}:${effectiveUserId}`;
@@ -352,242 +238,34 @@ export default function App() {
     ssSet(key, "1");
     const plano1 = slots.find((s) => s.key === "plano1");
     if (!plano1) return;
-    if (/^PU/i.test(plano1.plan.codigo)) {
-      setModo("postUnico");
-    } else {
-      setModo("metodo");
-    }
+    if (/^PU/i.test(plano1.plan.codigo)) setModo("postUnico");
+    else setModo("metodo");
   }, [effectiveUserId, slots]);
 
-  // Quando o usuário (ou impersonação) muda, carrega o kit dele do banco
-  // e restaura o conteúdo gerado persistido em localStorage daquele usuário.
+  // Persistência do conteúdo gerado por usuário
   useEffect(() => {
     if (!effectiveUserId) return;
-    const prevUser = prevUserRef.current;
-    prevUserRef.current = effectiveUserId;
-
-    // Carrega formulários escopados por userId — sem heurística de "form-owner":
-    // a chave já é única por usuário, então o form correto é sempre carregado.
-    const savedForm = loadForm(defaultForm, effectiveUserId);
-    setForm({ ...savedForm, track: savedForm.track || "cinematica" });
-    setPostUnico(loadPostUnico(effectiveUserId));
-
-    // Quando o usuário muda de A→B (component montado continua), reseta kit e
-    // seleção visual para não vazar dados de A enquanto B carrega do servidor.
-    if (prevUser !== null && prevUser !== effectiveUserId) {
-      setKit(defaultKit);
-      setVisualSelection(defaultVisualSelection);
-    }
-
-    // Admin impersonando: usa server function que bypassa RLS do Supabase
-    const loadFn = impersonation
-      ? () => loadKitServerFn({ data: { userId: effectiveUserId } })
-      : () => loadKitForUser(effectiveUserId);
-
-    loadFn().then((loaded) => {
-      if (loaded) {
-        handleKitChange(loaded);
-      } else {
-        lsRemove("metodo-op-kit-v1", effectiveUserId);
-        lsRemove("metodo-op-logo-v1", effectiveUserId);
-        handleKitChange(defaultKit);
-      }
-    });
-    // Restaura conteúdo gerado persistido para este usuário.
-    // Cada chave tem seu próprio try/catch: uma entrada corrompida não pode
-    // derrubar a restauração das demais (ver auditoria P1 2026-06-19).
-    try {
-      const r = lsGet(RESULT_KEY, effectiveUserId);
-      setResult(r ? JSON.parse(r) : undefined);
-    } catch {
-      /* entrada corrompida: segue com result undefined */
-    }
-    try {
-      const pImg = lsGet(PU_IMG_KEY, effectiveUserId);
-      setPostUnicoImg(pImg ? JSON.parse(pImg) : undefined);
-    } catch {
-      /* entrada corrompida: segue com imagem undefined */
-    }
-    try {
-      const pCap = lsGet(PU_CAPTION_KEY, effectiveUserId);
-      setCaption(pCap ? JSON.parse(pCap) : undefined);
-    } catch {
-      /* entrada corrompida: segue com legenda undefined */
-    }
-    try {
-      const pStarted = lsGet(PU_STARTED_KEY, effectiveUserId);
-      setPostUnicoStarted(pStarted === "true");
-    } catch {
-      /* entrada corrompida: assume não iniciado */
-    }
-    try {
-      const vSel = lsGet(PU_VISUAL_KEY, effectiveUserId);
-      setVisualSelection(vSel ? JSON.parse(vSel) : defaultVisualSelection);
-    } catch {
-      /* entrada corrompida: cai no default */
-    }
-    // Carrega o Kit Imagem deste usuário: primeiro do cache local (instantâneo)
-    // e depois sincroniza com o backend (autoritativo, sobrevive a troca de aparelho).
-    try {
-      setImageKit(loadImageKit(effectiveUserId));
-    } catch {
-      /* cache local indisponível: aguarda a sincronização assíncrona abaixo */
-    }
-    loadImageKitAsync(effectiveUserId)
-      .then((remote) => setImageKit(remote))
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveUserId]);
-
-  // Persistência por usuário do conteúdo gerado (sobrevive a back/reload).
-  // Só limpa quando o cliente clica em "Limpar" (que seta o state pra undefined).
-  useEffect(() => {
-    if (!effectiveUserId) return;
-    if (result === undefined) {
-      lsRemove(RESULT_KEY, effectiveUserId);
-    } else {
-      lsSetQuotaSafe(RESULT_KEY, JSON.stringify(result), effectiveUserId);
-    }
+    if (result === undefined) lsRemove(RESULT_KEY, effectiveUserId);
+    else lsSetQuotaSafe(RESULT_KEY, JSON.stringify(result), effectiveUserId);
   }, [result, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
-    if (postUnicoImg === undefined) {
-      lsRemove(PU_IMG_KEY, effectiveUserId);
-    } else {
-      lsSetQuotaSafe(PU_IMG_KEY, JSON.stringify(postUnicoImg), effectiveUserId);
-    }
+    if (postUnicoImg === undefined) lsRemove(PU_IMG_KEY, effectiveUserId);
+    else lsSetQuotaSafe(PU_IMG_KEY, JSON.stringify(postUnicoImg), effectiveUserId);
   }, [postUnicoImg, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
-    if (caption === undefined) {
-      lsRemove(PU_CAPTION_KEY, effectiveUserId);
-    } else {
-      lsSetQuotaSafe(PU_CAPTION_KEY, JSON.stringify(caption), effectiveUserId);
-    }
+    if (caption === undefined) lsRemove(PU_CAPTION_KEY, effectiveUserId);
+    else lsSetQuotaSafe(PU_CAPTION_KEY, JSON.stringify(caption), effectiveUserId);
   }, [caption, effectiveUserId]);
   useEffect(() => {
     if (!effectiveUserId) return;
     lsSetQuotaSafe(PU_STARTED_KEY, postUnicoStarted ? "true" : "false", effectiveUserId);
   }, [postUnicoStarted, effectiveUserId]);
-  // Seleção visual da PU (avatar/cenário/produto) — sem isso, voltava ao
-  // default ao trocar de rota (ex.: /historico, que desmonta o MetodoOpApp).
   useEffect(() => {
     if (!effectiveUserId) return;
     lsSetQuotaSafe(PU_VISUAL_KEY, JSON.stringify(visualSelection), effectiveUserId);
   }, [visualSelection, effectiveUserId]);
-
-  // Segmento fixado pelo admin — não-admin não pode alterar.
-  const lockedSegment = profile?.segmento
-    ? (profile.segmento as typeof defaultKit.segment)
-    : undefined;
-
-  // Quando o profile chega (ou muda), sincroniza o segment do kit com o do perfil.
-  useEffect(() => {
-    if (!lockedSegment) return;
-    if (kit.segment === lockedSegment) return;
-    const voice = defaultVoice(lockedSegment);
-    setKit((prev) => ({ ...prev, segment: lockedSegment, brandVoice: voice }));
-    setForm((prev) => ({ ...prev, segment: lockedSegment, brandVoice: voice }));
-  }, [lockedSegment]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Espelha sempre os dados do Kit de Marca no Post Único (campos travados)
-  useEffect(() => {
-    setPostUnico((prev) => ({
-      ...prev,
-      companyName: kit.companyName || "",
-      mainActivity: kit.mainActivity || "",
-    }));
-  }, [kit.companyName, kit.mainActivity]);
-
-  function handleKitChange(next: BrandKit) {
-    setKit(next);
-    setForm((prev) => ({
-      ...prev,
-      companyName: next.companyName,
-      segment: next.segment,
-      brandVoice: next.brandVoice,
-    }));
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    try {
-      if (effectiveUserId) {
-        saveKit(kit, effectiveUserId);
-        saveForm(form, effectiveUserId);
-      }
-      if (effectiveUserId) {
-        let saved: BrandKit;
-        if (impersonation) {
-          // Admin atuando como outro usuário: usa server function que bypassa RLS
-          saved = await saveKitServerFn({
-            data: {
-              userId: effectiveUserId,
-              companyName: kit.companyName,
-              segment: kit.segment,
-              primaryColor: kit.primaryColor,
-              secondaryColor: kit.secondaryColor,
-              accentColor: kit.accentColor,
-              fontPair: kit.fontPair,
-              secondaryFont: kit.secondaryFont,
-              brandVoice: kit.brandVoice,
-              logoHasName: kit.logoHasName ?? false,
-              logoDataUrl: kit.logoDataUrl,
-              mainActivity: kit.mainActivity,
-              logoPosition: kit.logoPosition || "bottom-right",
-              assinatura: kit.assinatura,
-              uniformeDataUrl: kit.uniformeDataUrl,
-              products: kit.products ?? [],
-              isPersonalBrand: kit.isPersonalBrand ?? false,
-            },
-          });
-        } else {
-          saved = await saveKitForUser(kit, effectiveUserId);
-        }
-        handleKitChange(saved);
-      }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
-      alert(`Erro ao salvar Kit: ${(e as Error).message}`);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleClear() {
-    if (
-      !(await askConfirm(
-        "Limpar Kit de Marca",
-        "Isso vai apagar o Kit de Marca e todos os dados locais. Deseja continuar?",
-      ))
-    )
-      return;
-    clearStorage(effectiveUserId);
-    lsRemove(POSTUNICO_FORM_KEY, effectiveUserId);
-    setKit(defaultKit);
-    setForm(defaultForm);
-    setPostUnico(defaultPostUnico);
-  }
-
-  async function handleLoadKit() {
-    if (!effectiveUserId) return;
-    setLoadingKit(true);
-    try {
-      const loaded = impersonation
-        ? await loadKitServerFn({ data: { userId: effectiveUserId } })
-        : await loadKitForUser(effectiveUserId);
-      if (loaded) {
-        handleKitChange(loaded);
-      } else {
-        alert('Você ainda não tem um Kit salvo. Preencha e clique em "Salvar Kit".');
-      }
-    } catch (e) {
-      alert(`Erro ao carregar Kit: ${(e as Error).message}`);
-    } finally {
-      setLoadingKit(false);
-    }
-  }
 
   async function handleClearPostUnico() {
     if (
@@ -604,275 +282,18 @@ export default function App() {
       audience: postUnico.audience,
       keyInfo: postUnico.keyInfo,
     });
-    setPostUnicoImg(undefined);
-    setPostUnicoStarted(false);
-    setCaption(undefined);
-    setCaptionError("");
+    clearPostUnicoState();
     setError("");
-    postUnicoGenderRef.current = undefined;
-    lastPuCopyRef.current = undefined;
-    setPuTituloRegen(0);
-    setPuTextoRegen(0);
-    setPuCaptionRegen(0);
-    setPuCopy(null);
-    setPuCopyOriginal(null);
     setVisualSelection(defaultVisualSelection);
   }
 
-  async function handleClearMethodResult() {
-    if (
-      !(await askConfirm(
-        "Limpar conteúdo gerado",
-        "Isso vai apagar o resultado atual (feed, carrossel, reels, stories). Deseja continuar?",
-      ))
-    )
-      return;
-    setResult(undefined);
-    setError("");
-    clearSessionImages(effectiveUserId);
-    clearCopyEdits(effectiveUserId);
-  }
-
-  async function handleClearMethodGeneration() {
-    if (
-      !(await askConfirm(
-        "Limpar geração de conteúdo",
-        "Isso vai apagar a informação-chave e o resultado gerado pra você começar de novo. Deseja continuar?",
-      ))
-    )
-      return;
-    setForm((prev) => ({ ...prev, keyInfo: "" }));
-    setResult(undefined);
-    setError("");
-    clearSessionImages(effectiveUserId);
-    clearCopyEdits(effectiveUserId);
-  }
-
-  async function handleGenerate() {
-    if (!mood && form.outputMode !== "stories") {
-      setError("Escolha uma forma visual (mood) antes de gerar.");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    setResult(undefined);
-    clearSessionImages(effectiveUserId);
-    clearCopyEdits(effectiveUserId);
-    try {
-      let generated = await generateMethodContent(
-        {
-          ...form,
-          companyName: kit.companyName,
-          segment: kit.segment,
-          brandVoice: kit.brandVoice,
-          mainActivity: kit.mainActivity || "",
-          mood: mood ?? "OP-01",
-        },
-        selectedSlot,
-      );
-
-      // D2 — juiz semântico: roda ANTES de exibir o resultado na tela (mesma
-      // correção aplicada à PU). Antes rodava em background depois do
-      // resultado já estar visível — quando corrigia algo, as peças trocavam
-      // de título/texto sozinhas alguns segundos depois (flash). Aguardar
-      // aqui elimina a troca silenciosa: só existe UM resultado exibido.
-      try {
-        const updated = await judgeAndRegenerateContent(generated, {
-          companyName: kit.companyName,
-          mainActivity: kit.mainActivity || "",
-          keyInfo: form.keyInfo,
-          segment: kit.segment,
-        });
-        if (updated) generated = updated;
-      } catch {
-        // best-effort — se o juiz falhar, segue com o resultado original.
-      }
-
-      setResult(generated);
-      refreshProfile();
-    } catch (e) {
-      setError(String((e as Error).message || e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleGenerateCaption() {
-    setCaptionLoading(true);
-    setCaptionError("");
-    try {
-      const c = await generatePostUnicoCaption(
-        {
-          ...postUnico,
-          companyName: postUnico.companyName || kit.companyName,
-          mainActivity: postUnico.mainActivity || kit.mainActivity || "",
-        },
-        { brandVoice: kit.brandVoice, previousCaption: caption?.full },
-      );
-      setCaption(c);
-      setPuCaptionRegen((c) => c + 1);
-    } catch (e) {
-      setCaptionError(String((e as Error).message || e));
-    } finally {
-      setCaptionLoading(false);
-    }
-  }
-
-  async function handleGeneratePostUnico(
-    copy?: { titulo: string; texto: string },
-    opts?: { regenerate?: boolean },
-  ) {
-    // "Gerar outra imagem" não recebe copy do botão; reusa o último título/texto
-    // confirmado para a imagem não sair genérica nem repetir o anterior (5.1).
-    const isRegenerate = !!opts?.regenerate;
-    const effectiveCopy = copy ?? (isRegenerate ? lastPuCopyRef.current : undefined);
-    if (copy) lastPuCopyRef.current = copy;
-    copy = effectiveCopy;
-    setLoading(true);
-    setError("");
-    setPostUnicoImg(undefined);
-    setPostUnicoStarted(true);
-    setCaption(undefined);
-    setCaptionError("");
-    // Nova imagem → orçamento de regeneração de legenda zera (mantém o
-    // comportamento antigo do efeito [imageDataUrl] de PostUnicoResult).
-    setPuCaptionRegen(0);
-    const data = {
-      ...postUnico,
-      companyName: postUnico.companyName || kit.companyName,
-      mainActivity: postUnico.mainActivity || kit.mainActivity || "",
-    };
-    // Legenda em paralelo com a imagem — não bloqueia a peça.
-    // Aqui debita 1 geração no plano (clique inicial do Post Único).
-    setCaptionLoading(true);
-    generatePostUnicoCaption(data, {
-      debit: true,
-      brandVoice: kit.brandVoice,
-      preferredSlot: selectedSlot,
-    })
-      .then((c) => {
-        setCaption(c);
-        refreshProfile();
+  const greetingName = impersonation?.nome || profile?.nome || user?.email || "";
+  const ultimoLoginFmt = profile?.ultimo_login
+    ? new Date(profile.ultimo_login).toLocaleString("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short",
       })
-      .catch((e) => setCaptionError(String((e as Error).message || e)))
-      .finally(() => setCaptionLoading(false));
-    try {
-      // Recarrega o Kit Imagem do servidor (autoritativo) antes de montar as
-      // referências — evita usar um snapshot em memória/cache que ainda
-      // tenha uma foto já deletada (referência fantasma).
-      const freshImageKit = await loadImageKitAsync(effectiveUserId).catch(() => imageKit);
-      setImageKit(freshImageKit);
-      // Constrói as referências visuais a partir do Kit Imagem + seleção,
-      // usando a mesma função compartilhada com o MOP (buildReferences) —
-      // antes a PU montava esse objeto à mão, com lógica duplicada/divergente.
-      const rawPersonagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
-        ? visualSelection.personagemSemAvatar
-        : undefined;
-      // Garante que valores frescos do form PU (generoPref/faixaEtaria) prevalecem
-      // sobre seed antigo — seed é feito só no toggle do checkbox, mas o form
-      // pode mudar depois sem que o checkbox seja desmarcado.
-      // Usa data (PostUnicoFormData/PU) e não form (ContentFormData/MOP).
-      const personagemSemAvatar = rawPersonagemSemAvatar
-        ? {
-            ...rawPersonagemSemAvatar,
-            ...(data.generoPref && {
-              genero: (data.generoPref === "F" ? "mulher" : "homem") as "mulher" | "homem",
-            }),
-            ...(data.faixaEtaria && {
-              idade:
-                mapFaixaToAnchorAge(data.faixaEtaria) ??
-                rawPersonagemSemAvatar.idade,
-            }),
-          }
-        : undefined;
-      const references = buildReferences(
-        "avatar",
-        freshImageKit,
-        undefined,
-        undefined,
-        {
-          usarAvatar: visualSelection.useAvatar,
-          avatarNum: visualSelection.avatarSelecionado ?? 1,
-          usarFachada: visualSelection.useFachada,
-          cenarioNum: visualSelection.useCenario ? (visualSelection.cenarioSelecionado ?? 1) : null,
-          produtosNums: visualSelection.useProdutos
-            ? visualSelection.produtosSelecionados
-            : undefined,
-          useUniforme: visualSelection.useUniforme,
-          personagemSemAvatar,
-          produtoTelaInformativa: visualSelection.produtoTelaInformativa,
-        },
-        kit.uniformeDataUrl,
-      );
-      // Fato e Venda são conceitos exclusivos da PU (objetivo de peça) — não
-      // fazem parte do buildReferences compartilhado com o MOP, que nunca os usa.
-      if (visualSelection.useFato && freshImageKit.fato) references.fato = freshImageKit.fato;
-      if (visualSelection.useVenda && freshImageKit.venda) references.venda = freshImageKit.venda;
-      const hasRefs = !!(
-        references.avatar ||
-        references.fachada ||
-        references.cenario ||
-        references.produtos?.length ||
-        references.uniforme ||
-        references.personagemSemAvatarAtivo ||
-        references.fato ||
-        references.venda
-      );
-      // data.generoPref ("F"/"M") é preferência explícita do usuário na PU — deve
-      // prevalecer sobre o sorteio/cópia que o ref persiste entre gerações.
-      // Usa data (PostUnicoFormData/PU) e não form (ContentFormData/MOP).
-      const formGender: PersonagemGender | null =
-        data.generoPref === "F" ? "mulher" : data.generoPref === "M" ? "homem" : null;
-      if (postUnicoGenderRef.current === undefined) {
-        postUnicoGenderRef.current =
-          detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ??
-          (Math.random() < 0.5 ? "mulher" : "homem");
-      }
-      // Prioridade: personagem-sem-avatar (checkbox) > preferência do form > ref persistido
-      const effectiveForcedGender: PersonagemGender | undefined =
-        (personagemSemAvatar?.genero as PersonagemGender | undefined) ?? formGender ?? postUnicoGenderRef.current;
-      const dataUrl = await generatePostUnico({
-        data,
-        kit,
-        copy,
-        references: hasRefs ? references : undefined,
-        preferredSlot: selectedSlot,
-        forcedGender: effectiveForcedGender,
-        variationHint: isRegenerate,
-      });
-      // Persiste direto no localStorage (independe do componente seguir montado —
-      // cobre o caso de geração em segundo plano após navegar para outra página).
-      lsSetQuotaSafe(PU_IMG_KEY, JSON.stringify(dataUrl), effectiveUserId);
-      lsSetQuotaSafe(PU_STARTED_KEY, "false", effectiveUserId);
-      setPostUnicoImg(dataUrl);
-      refreshProfile();
-    } catch (e) {
-      lsSetQuotaSafe(PU_STARTED_KEY, "false", effectiveUserId);
-      setError(String((e as Error).message || e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSaveImageKit() {
-    try {
-      // Sobe pro backend (autoritativo) e espelha no cache local.
-      const saved = await saveImageKitAsync(imageKit, effectiveUserId);
-      setImageKit(saved);
-      setImageKitSaved(true);
-      setTimeout(() => setImageKitSaved(false), 2000);
-    } catch (e) {
-      // Fallback: salva pelo menos no cache local pra não perder edições.
-      try {
-        saveImageKit(imageKit, effectiveUserId);
-      } catch (localErr) {
-        console.error("handleSaveImageKit: falha ao salvar cache local", localErr);
-      }
-      console.error("handleSaveImageKit: falha ao salvar Kit Imagem no servidor", e);
-    }
-  }
-  const loadingMessage =
-    modo === "postUnico" ? "Gerando peça única..." : "Gerando conteúdo com o método...";
+    : "primeiro acesso";
 
   return (
     <>
@@ -886,233 +307,31 @@ export default function App() {
             <span style={{ color: "#f4b000" }}>OP</span>
           </h1>
           {greetingName && (
-            <div
-              style={{
-                color: "rgba(255,255,255,.78)",
-                fontSize: 13,
-                marginTop: 4,
-                fontWeight: 500,
-              }}
-            >
+            <div style={{ color: "rgba(255,255,255,.78)", fontSize: 13, marginTop: 4, fontWeight: 500 }}>
               Olá, <strong style={{ color: "#fff" }}>{greetingName}</strong> · Último acesso:{" "}
               {ultimoLoginFmt}
             </div>
           )}
-
-          {/* ── Cards de plano ── */}
-          <div style={{ marginTop: 10 }}>
-            {!profileLoading &&
-              (slots.length > 0 ? (
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                  {effectiveAdmin && (
-                    <span
-                      style={{
-                        background: "#f4b000",
-                        color: "#0f213f",
-                        padding: "3px 12px",
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 700,
-                      }}
-                    >
-                      Admin
-                    </span>
-                  )}
-                  {slots.map((s) => (
-                    <PlanCard key={s.key} slot={s} isAdmin={effectiveAdmin} />
-                  ))}
-                </div>
-              ) : effectiveAdmin ? (
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span
-                    style={{
-                      background: "#f4b000",
-                      color: "#0f213f",
-                      padding: "3px 12px",
-                      borderRadius: 999,
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Admin
-                  </span>
-                  <span
-                    style={{
-                      background: "#1e293b",
-                      color: "#94a3b8",
-                      padding: "3px 12px",
-                      borderRadius: 999,
-                      fontSize: 12,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Sem plano
-                  </span>
-                </div>
-              ) : (
-                <span
-                  style={{
-                    background: "#fee2e2",
-                    color: "#b91c1c",
-                    padding: "3px 12px",
-                    borderRadius: 999,
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  Sem plano ativo — fale com o admin
-                </span>
-              ))}
-          </div>
-
-          <div className="modoSwitch" role="tablist" aria-label="Modo de geração">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={modo === "metodo"}
-              className={`modoBtn${modo === "metodo" ? " active" : ""}`}
-              onClick={() =>
-                mopExhausted
-                  ? setExhaustedHint((h) => (h === "mop" ? null : "mop"))
-                  : setModo("metodo")
-              }
-              onMouseEnter={() => {
-                if (mopExhausted) setExhaustedHint("mop");
-              }}
-              onMouseLeave={() => setExhaustedHint(null)}
-              style={mopExhausted ? { opacity: 0.45, cursor: "default" } : undefined}
-            >
-              Método OP{mopExhausted ? " 🔒" : ""}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={modo === "postUnico"}
-              className={`modoBtn${modo === "postUnico" ? " active" : ""}`}
-              onClick={() =>
-                puExhausted
-                  ? setExhaustedHint((h) => (h === "pu" ? null : "pu"))
-                  : setModo("postUnico")
-              }
-              onMouseEnter={() => {
-                if (puExhausted) setExhaustedHint("pu");
-              }}
-              onMouseLeave={() => setExhaustedHint(null)}
-              style={puExhausted ? { opacity: 0.45, cursor: "default" } : undefined}
-            >
-              Post Único{puExhausted ? " 🔒" : ""}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={modo === "imageKit"}
-              className={`modoBtn${modo === "imageKit" ? " active" : ""}`}
-              onClick={() => setModo("imageKit")}
-            >
-              Kit Imagem
-            </button>
-          </div>
-          {slots.some((s) => s.key === "bonus") && (
-            <button
-              type="button"
-              onClick={() => {
-                if (bonusExhausted) {
-                  setExhaustedHint((h) => (h === "bonus" ? null : "bonus"));
-                  return;
-                }
-                setSelectedSlot("bonus");
-                // Muda o modo conforme o tipo do plano no bonus
-                if (bonusSlotInfoObj && /^PU\d+$/i.test(bonusSlotInfoObj.plan.codigo))
-                  setModo("postUnico");
-                else if (bonusSlotInfoObj) setModo("metodo");
-              }}
-              onMouseEnter={() => {
-                if (bonusExhausted) setExhaustedHint("bonus");
-              }}
-              onMouseLeave={() => setExhaustedHint(null)}
-              style={{
-                width: "100%",
-                marginTop: 6,
-                background: selectedSlot === "bonus" ? "#f4b000" : "transparent",
-                color: selectedSlot === "bonus" ? "#0f213f" : "#f4b000",
-                border: "2px solid #f4b000",
-                borderRadius: 12,
-                padding: "7px 16px",
-                fontWeight: 800,
-                fontSize: 13,
-                cursor: bonusExhausted ? "default" : "pointer",
-                letterSpacing: 0.2,
-                transition: "background .15s, color .15s",
-                opacity: bonusExhausted ? 0.45 : 1,
-              }}
-            >
-              ★ Bônus{selectedSlot === "bonus" ? " ativo" : ""}
-              {bonusExhausted ? " 🔒" : ""}
-            </button>
-          )}
-
-          {exhaustedHint && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
-              {exhaustedHint === "mop" && (
-                <div
-                  style={{
-                    background: "rgba(239,68,68,.15)",
-                    border: "1px solid rgba(239,68,68,.30)",
-                    borderRadius: 8,
-                    padding: "6px 14px",
-                    color: "#fca5a5",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textAlign: "center",
-                  }}
-                >
-                  Método OP esgotado — Renove com o administrador
-                </div>
-              )}
-              {exhaustedHint === "pu" && (
-                <div
-                  style={{
-                    background: "rgba(239,68,68,.15)",
-                    border: "1px solid rgba(239,68,68,.30)",
-                    borderRadius: 8,
-                    padding: "6px 14px",
-                    color: "#fca5a5",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textAlign: "center",
-                  }}
-                >
-                  Post Único esgotado — Renove com o administrador
-                </div>
-              )}
-              {exhaustedHint === "bonus" && (
-                <div
-                  style={{
-                    background: "rgba(239,68,68,.15)",
-                    border: "1px solid rgba(239,68,68,.30)",
-                    borderRadius: 8,
-                    padding: "6px 14px",
-                    color: "#fca5a5",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textAlign: "center",
-                  }}
-                >
-                  Bônus Esgotado
-                </div>
-              )}
-            </div>
-          )}
-
+          <PlanSlotsBar profileLoading={profileLoading} slots={slots} effectiveAdmin={effectiveAdmin} />
+          <ModeSwitcher
+            modo={modo}
+            setModo={setModo}
+            mopExhausted={mopExhausted}
+            puExhausted={puExhausted}
+            bonusExhausted={bonusExhausted}
+            bonusIsPuType={bonusIsPuType}
+            bonusSlotInfoObj={bonusSlotInfoObj}
+            selectedSlot={selectedSlot}
+            setSelectedSlot={setSelectedSlot}
+            setExhaustedHint={setExhaustedHint}
+          />
+          <ExhaustedBanner exhaustedHint={exhaustedHint} />
           {impersonation && (
             <div className="heroActions">
               <button
                 className="clientBtn"
                 type="button"
-                onClick={() => {
-                  stopImpersonation();
-                  window.location.reload();
-                }}
+                onClick={() => { stopImpersonation(); window.location.reload(); }}
                 style={{ background: "#fde68a", color: "#78350f", borderColor: "#f59e0b" }}
                 title="Sair do modo Atuar como"
               >
@@ -1181,10 +400,7 @@ export default function App() {
                 textoRegenCount={puTextoRegen}
                 onTituloRegen={() => setPuTituloRegen((c) => c + 1)}
                 onTextoRegen={() => setPuTextoRegen((c) => c + 1)}
-                onResetCopyRegen={() => {
-                  setPuTituloRegen(0);
-                  setPuTextoRegen(0);
-                }}
+                onResetCopyRegen={() => { setPuTituloRegen(0); setPuTextoRegen(0); }}
                 copy={puCopy}
                 copyOriginal={puCopyOriginal}
                 onCopyChange={setPuCopy}
@@ -1207,10 +423,9 @@ export default function App() {
             ) : loading && modo === "metodo" ? (
               <div className="loadingBox">
                 <div className="spinner" />
-                <p>{loadingMessage}</p>
+                <p>Gerando conteúdo com o método...</p>
               </div>
             ) : null}
-            {/* ResultsView fica sempre montado para não perder imagens geradas ao trocar de aba */}
             <div style={{ display: modo === "metodo" ? undefined : "none" }}>
               <ResultsView
                 result={result}
