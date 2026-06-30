@@ -7,6 +7,7 @@ import {
   ValidationFlag,
 } from "../types";
 import { FAIXA_ETARIA_REGISTRO } from "./audienceAge";
+import { AUDIENCE_SEGMENT_CONFIG } from "../domain/audienceSegment.config";
 import { getVoiceProfile } from "../data/brandVoice";
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from "./visualDirection";
 import {
@@ -53,47 +54,6 @@ const momentModulators: Record<string, MomentModulator> = {
     contextNote: "Reativação (cliente parado, retomada após pausa — ativação via reconexão)",
   },
 };
-
-// Matriz única segmento×audiência: entrada/bloqueio psicológicos + progressão
-// estratégica da sequência. Antes espalhada em segmentConfigB2C/B2B (entrada/
-// bloqueio) + um ternário separado de progressionText — consolidada aqui
-// porque as três coisas variam exatamente pelo mesmo par (audience, segment).
-const AUDIENCE_SEGMENT_CONFIG = {
-  B2C: {
-    SERVIÇOS: {
-      entrada: "clareza e organização mental",
-      bloqueio: "confusão e desconfiança",
-      progressionText: "ENTENDIMENTO → SEGURANÇA → CONFIANÇA → AUTORIDADE → AGIR",
-    },
-    VAREJO: {
-      entrada: "identificação e movimento",
-      bloqueio: "indecisão e inércia",
-      progressionText: "IDENTIFICAÇÃO → DESEJO → SEGURANÇA → CONFIANÇA → AGIR",
-    },
-    MARCA: {
-      entrada: "reconhecimento e vínculo",
-      bloqueio: "desconexão e falta de familiaridade",
-      progressionText: "RECONHECIMENTO → IDENTIFICAÇÃO → SEGURANÇA → CONFIANÇA → AGIR",
-    },
-  },
-  B2B: {
-    SERVIÇOS: {
-      entrada: "eficiência e previsibilidade operacional",
-      bloqueio: "risco de mudança e falta de referências",
-      progressionText: "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR",
-    },
-    VAREJO: {
-      entrada: "margem e giro de estoque",
-      bloqueio: "custo de troca e incerteza de demanda",
-      progressionText: "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR",
-    },
-    MARCA: {
-      entrada: "posicionamento e diferenciação no mercado",
-      bloqueio: "comoditização e falta de percepção de valor",
-      progressionText: "ENTENDIMENTO → CONFIANÇA → SEGURANÇA → AUTORIDADE → AGIR",
-    },
-  },
-} as const;
 
 // Cláusula de exceção de sílabas no título, repetida em todos os formatos
 // (Reels, Estático Final, Estático, Card de carrossel) — centralizada aqui

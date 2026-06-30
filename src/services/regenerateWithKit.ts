@@ -10,6 +10,7 @@
 // apenas adicionando as imagens do Kit como referenceImages.
 
 import type { BrandKit, ImageKit, MoodCode, Segment } from "../types";
+import type { SelecaoDireta } from "../domain/visualSelection";
 import type { PostUnicoReferences } from "./postUnico";
 import { orderedReferenceImages } from "./postUnico";
 import { generatePostImage } from "./api";
@@ -55,40 +56,10 @@ export interface RegenerateInput {
   // Se ausente, usa o primeiro cenário disponível.
   cenarioSelecionado?: number | null;
   // Override direto da seleção: quando presente, ignora slot.elemento e usa
-  // estas três flags para montar as referências (avatar / cenário / produtos).
+  // as flags de SelecaoDireta para montar as referências (avatar/cenário/produtos).
   // Permite combinações que o `elemento` legado não modela (ex.: VAREJO
   // estático com avatar + cenário + produtos juntos).
-  selecaoDireta?: {
-    usarAvatar: boolean;
-    // Qual avatar do Kit usar quando usarAvatar=true. Default: 1 (avatar
-    // principal). Apenas 1 avatar é enviado por geração.
-    avatarNum?: 1 | 2 | null;
-    // Usa a foto de fachada do Kit Imagem (slot próprio, fora do pool de
-    // cenários) como referência obrigatória.
-    usarFachada?: boolean;
-    cenarioNum?: number | null;
-    produtosNums?: number[];
-    // Distribuição de fotos de produto no carrossel (VAREJO): quando true,
-    // o produto referenciado deve aparecer em DETALHE/RECORTE (não o produto
-    // inteiro) neste card — ver distributeProduto em ResultsView.tsx.
-    produtoDetalhe?: boolean;
-    // Veste o avatar com a foto de uniforme do Kit de Marca (kit.uniformeDataUrl)
-    // em vez do figurino livre sorteado. Só tem efeito com usarAvatar=true.
-    useUniforme?: boolean;
-    // Personagem sem avatar: cria um personagem do zero (sem foto de avatar)
-    // na idade indicada — representa o público-alvo, sem exigir uniforme. Só
-    // tem efeito quando usarAvatar=false. comUniforme veste esse personagem
-    // com o uniforme do Kit quando o usuário escolhe que ele seja o EMISSOR
-    // em vez do público-alvo (precisa de kit.uniformeDataUrl cadastrado para
-    // ter efeito). Antes só existia no motor da PU (MetodoOpApp.tsx) — agora
-    // compartilhado via buildReferences.
-    personagemSemAvatar?: { ativo: boolean; idade?: string; comUniforme?: boolean };
-    // O(s) produto(s) referenciados são, eles mesmos, uma tela/dispositivo cujo
-    // conteúdo exibido é a identidade do produto (ex.: tablet mostrando o
-    // próprio app/print do negócio). Suspende a regra global de desfoque de
-    // tela (buildDeviceRule) só para esta geração.
-    produtoTelaInformativa?: boolean;
-  };
+  selecaoDireta?: SelecaoDireta;
   // Atividade da empresa (ancoragem semântica) — reservado para futuro uso.
   mainActivity?: string;
   // Override explícito do formato-alvo. Quando ausente, infere do slot.
@@ -117,16 +88,7 @@ export function buildReferences(
   imageKit: ImageKit,
   produtosSelecionados?: number[],
   cenarioSelecionado?: number | null,
-  selecaoDireta?: {
-    usarAvatar: boolean;
-    avatarNum?: 1 | 2 | null;
-    usarFachada?: boolean;
-    cenarioNum?: number | null;
-    produtosNums?: number[];
-    useUniforme?: boolean;
-    personagemSemAvatar?: { ativo: boolean; idade?: string; comUniforme?: boolean };
-    produtoTelaInformativa?: boolean;
-  },
+  selecaoDireta?: SelecaoDireta,
   uniformeDataUrl?: string,
 ): PostUnicoReferences {
   const refs: PostUnicoReferences = {};

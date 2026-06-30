@@ -776,7 +776,7 @@ export default function App() {
         ? {
             ...rawPersonagemSemAvatar,
             ...(data.generoPref && {
-              genero: data.generoPref === "F" ? "mulher" : "homem",
+              genero: (data.generoPref === "F" ? "mulher" : "homem") as "mulher" | "homem",
             }),
             ...(data.faixaEtaria && {
               idade:

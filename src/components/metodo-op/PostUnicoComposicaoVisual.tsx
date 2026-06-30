@@ -321,7 +321,7 @@ export default function PostUnicoComposicaoVisual({
                 }}
               >
                 {selection.personagemSemAvatar.genero === "mulher" ? "F" : "M"} ·{" "}
-                {selection.personagemSemAvatar.idade.replace(" anos", "").replace(" ano", "")} ·{" "}
+                {(selection.personagemSemAvatar.idade ?? "").replace(" anos", "").replace(" ano", "")} ·{" "}
                 {selection.personagemSemAvatar.comUniforme && kit.uniformeDataUrl
                   ? "Emissor"
                   : "Público-alvo"}

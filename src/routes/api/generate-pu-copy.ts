@@ -10,16 +10,7 @@ import { resolveEffectiveUser, checkBalance, balanceFailMessage } from "@/lib/us
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
 import type { FaixaEtaria } from "@/types";
-
-const OBJETIVO_TOM: Record<string, string> = {
-  promocao: "comercial, desejo, chamada para ação clara",
-  homenagem: "afetivo, respeitoso, contemplativo",
-  aviso: "institucional, claro, objetivo",
-  oportunidade: "urgência elegante, momento decisivo",
-  institucional: "institucional de marca, posicionamento, propósito, sóbrio e confiante",
-  fatos: "documental, registro fiel, objetivo",
-  nenhum: "neutro, livre — foco no contexto real da empresa",
-};
+import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 
 const OBJETIVO_INTENCAO: Record<string, string> = {
   institucional:
@@ -79,7 +70,7 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
             return Response.json({ error: balanceFailMessage(bal.reason) }, { status: 402 });
           }
 
-          const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
+          const tom = OBJETIVO_TOM[objetivo as keyof typeof OBJETIVO_TOM] ?? OBJETIVO_TOM.promocao;
           const voiceProfile = getVoiceProfile(brandVoice);
           const voiceBlock = voiceProfile
             ? `DIREÇÃO DE VOZ — "${voiceProfile.label}":

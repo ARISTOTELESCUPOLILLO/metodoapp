@@ -16,32 +16,11 @@ import {
   TECNICISMO_RULE,
 } from "@/core/textValidation";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
-
-const OBJETIVO_TOM: Record<string, string> = {
-  promocao: "comercial, desejo, chamada para ação clara",
-  homenagem: "afetivo, respeitoso, contemplativo",
-  aviso: "institucional, claro, objetivo",
-  oportunidade: "urgência elegante, momento decisivo",
-  institucional: "institucional de marca, posicionamento, propósito, sóbrio e confiante",
-};
-
-// E4 — fallback determinístico (sem chamada extra de API) quando o modelo,
-// mesmo após 1 nova tentativa, não preenche "cta" e/ou "hashtags".
-const OBJETIVO_CTA_FALLBACK: Record<string, string> = {
-  promocao: "Aproveite agora.",
-  homenagem: "Celebre com a gente.",
-  aviso: "Saiba mais.",
-  oportunidade: "Garanta a sua vaga.",
-  institucional: "Conheça nosso trabalho.",
-};
-
-const OBJETIVO_HASHTAG_FALLBACK: Record<string, string[]> = {
-  promocao: ["promocao", "oferta", "novidade"],
-  homenagem: ["gratidao", "historia", "conquista"],
-  aviso: ["aviso", "informacao", "novidade"],
-  oportunidade: ["oportunidade", "novidade", "momento"],
-  institucional: ["marca", "qualidade", "confianca"],
-};
+import {
+  OBJETIVO_TOM,
+  OBJETIVO_CTA_FALLBACK,
+  OBJETIVO_HASHTAG_FALLBACK,
+} from "@/domain/objetivo.config";
 
 const HASHTAG_FALLBACK_STOPWORDS = new Set([
   "de",
@@ -230,7 +209,7 @@ export const Route = createFileRoute("/api/generate-caption")({
             );
           }
 
-          const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
+          const tom = OBJETIVO_TOM[objetivo as keyof typeof OBJETIVO_TOM] ?? OBJETIVO_TOM.promocao;
           const voiceProfile = getVoiceProfile(brandVoice);
           const voiceBlock = voiceProfile
             ? `DIREÇÃO DE VOZ — "${voiceProfile.label}":
@@ -351,7 +330,7 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
 
           let ctaValue = sanitizeForbiddenTerms(rawCta);
           if (!ctaValue)
-            ctaValue = OBJETIVO_CTA_FALLBACK[objetivo] || OBJETIVO_CTA_FALLBACK.promocao;
+            ctaValue = OBJETIVO_CTA_FALLBACK[objetivo as keyof typeof OBJETIVO_CTA_FALLBACK] ?? OBJETIVO_CTA_FALLBACK.promocao;
           ctaValue = truncateWords(ctaValue, LEGENDA_CTA_MAX_WORDS);
           if (!/[.!?]$/.test(ctaValue)) ctaValue += ".";
 
@@ -364,7 +343,7 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
               sanitizeTag,
             ).filter((t) => !hashtagsArr.includes(t) && !FORBIDDEN_HASHTAG_STEMS.has(t));
             const fallback =
-              OBJETIVO_HASHTAG_FALLBACK[objetivo] || OBJETIVO_HASHTAG_FALLBACK.promocao;
+              OBJETIVO_HASHTAG_FALLBACK[objetivo as keyof typeof OBJETIVO_HASHTAG_FALLBACK] ?? OBJETIVO_HASHTAG_FALLBACK.promocao;
             hashtagsArr = [...new Set([...hashtagsArr, ...derived, ...fallback])].slice(0, 3);
           }
 

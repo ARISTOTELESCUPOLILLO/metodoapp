@@ -10,16 +10,7 @@ import {
   checkRepeatedOpening,
   checkLensNameLeak,
 } from "@/core/textValidation";
-
-const OBJETIVO_TOM: Record<string, string> = {
-  promocao: "comercial, desejo, chamada para ação clara",
-  homenagem: "afetivo, respeitoso, contemplativo",
-  aviso: "institucional, claro, objetivo",
-  oportunidade: "urgência elegante, momento decisivo",
-  institucional: "institucional de marca, posicionamento, propósito, sóbrio e confiante",
-  fatos: "documental, registro fiel, objetivo",
-  nenhum: "neutro, livre — foco no fato concreto da empresa",
-};
+import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 
 // Escolhe o item da lista de produtos/serviços marcados que vira a semente
 // concreta desta sugestão — rotação determinística por "attempt", evitando
@@ -444,7 +435,7 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
             );
           }
 
-          const tom = OBJETIVO_TOM[objetivo] || OBJETIVO_TOM.promocao;
+          const tom = OBJETIVO_TOM[objetivo as keyof typeof OBJETIVO_TOM] ?? OBJETIVO_TOM.promocao;
 
           // ── Lente de abertura (Sugestão MOP e PU) ─────────────────────────
           // Varia a FORMA de encontrar o assunto entre as tentativas — nunca

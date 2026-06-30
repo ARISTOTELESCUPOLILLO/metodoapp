@@ -172,6 +172,10 @@ export interface ValidationFlag {
   motivo: string;
 }
 
+import type { PersonagemSemAvatar as _PersonagemSemAvatar } from "./domain/visualSelection";
+export type { PersonagemSemAvatar, SelecaoDireta } from "./domain/visualSelection";
+type PersonagemSemAvatar = _PersonagemSemAvatar;
+
 export type PostUnicoObjetivo =
   | "promocao"
   | "homenagem"
@@ -254,12 +258,7 @@ export interface PostUnicoVisualSelection {
   // em qualquer segmento). comUniforme veste esse personagem com o uniforme
   // do Kit de Marca quando o usuário escolhe que ele seja o EMISSOR em vez do
   // público-alvo; só tem efeito quando kit.uniformeDataUrl está cadastrado.
-  personagemSemAvatar?: {
-    ativo: boolean;
-    genero: "mulher" | "homem";
-    idade: string;
-    comUniforme?: boolean;
-  };
+  personagemSemAvatar?: PersonagemSemAvatar;
   // Usa a foto de Fato do Kit Imagem (objetivo "Fatos") — aplicação direta
   // sem reinvenção pela IA, só overlay de marca/título/texto.
   useFato?: boolean;
