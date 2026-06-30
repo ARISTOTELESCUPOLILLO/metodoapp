@@ -21,7 +21,7 @@ import {
   type CotaPorTipo,
   type ModeloOP,
 } from "../../core/personalizacaoMop";
-import { useProfile } from "../../hooks/useProfile";
+import { useAppProfile } from "../../contexts/ProfileContext";
 import { useImageGenAlert } from "./PreImageAlert";
 import { computeBlockGenders } from "./results/utils";
 import { type AnchorControl } from "./results/AnchorIndicator";
@@ -73,7 +73,7 @@ export default function ResultsView({
   const [anchorBannerOpen, setAnchorBannerOpen] = useState(false);
   const [anchorMode, setAnchorMode] = useState<"ancora" | "livre">("ancora");
   const { guard, dialog } = useImageGenAlert();
-  const { cotaPersonalizados, isAdmin, refresh: refreshProfile } = useProfile();
+  const { cotaPersonalizados, isAdmin, refreshProfile } = useAppProfile();
 
   // Força um refresh ao montar — evita defasagem entre o que o admin acabou
   // de configurar (extras) e o que o app vê em cache.

@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { ContentFormData, FaixaEtaria, MoodCode, Segment, Track } from "../../types";
 import TemplateChooser from "./TemplateChooser";
-import type { PlanAccess } from "@/lib/planAccess";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { getAuthHeaders } from "../../services/authHeaders";
 import { IDEIAS_ASSUNTOS } from "@/data/ideiasAssuntos";
 import ProductsChecklist from "./ProductsChecklist";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
+import { useBrandKit } from "../../contexts/BrandKitContext";
+import { useAppProfile } from "../../contexts/ProfileContext";
+import { useMood } from "../../contexts/MoodContext";
 
 interface Props {
   data: ContentFormData;
@@ -14,20 +16,6 @@ interface Props {
   onGenerate: () => void;
   onClear: () => void;
   loading: boolean;
-  segment: Segment;
-  isPersonalBrand?: boolean;
-  mood: MoodCode | null;
-  onMoodChange: (mood: MoodCode) => void;
-  rendersRestantes?: number;
-  rendersTotal?: number;
-  imgsRestantes?: number;
-  imgsTotal?: number;
-  geracoesRestantes?: number;
-  geracoesTotal?: number;
-  semPlano?: boolean;
-  isAdmin?: boolean;
-  planAccess?: PlanAccess;
-  products?: string[];
 }
 
 const SEQUENCE_SIZES = [3, 6, 9] as const;
@@ -67,27 +55,13 @@ const TRACK_OPTIONS: TrackOption[] = [
   },
 ];
 
-export default function ContentForm({
-  data,
-  onChange,
-  onGenerate,
-  onClear,
-  loading,
-  segment,
-  isPersonalBrand,
-  mood,
-  onMoodChange,
-  rendersRestantes,
-  rendersTotal,
-  imgsRestantes,
-  imgsTotal,
-  geracoesRestantes,
-  geracoesTotal,
-  semPlano,
-  isAdmin,
-  planAccess,
-  products,
-}: Props) {
+export default function ContentForm({ data, onChange, onGenerate, onClear, loading }: Props) {
+  const { kit } = useBrandKit();
+  const { rendersRestantes, rendersTotal, imgsRestantes, imgsTotal, geracoesRestantes, geracoesTotal, semPlano, effectiveAdmin: isAdmin, planAccess } = useAppProfile();
+  const { mood, setMood: onMoodChange } = useMood();
+  const segment = kit.segment;
+  const isPersonalBrand = kit.isPersonalBrand;
+  const products = kit.products || [];
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);

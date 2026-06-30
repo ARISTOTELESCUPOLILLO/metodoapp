@@ -1,14 +1,11 @@
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Lightbulb, Zap, Camera, Layers, Shuffle, VolumeX, type LucideIcon } from "lucide-react";
 import {
-  BrandKit,
   FaixaEtaria,
-  ImageKit,
   MoodCode,
   PostUnicoDirecao,
   PostUnicoFormData,
   PostUnicoObjetivo,
-  PostUnicoVisualSelection,
 } from "../../types";
 import type { PostUnicoCopy } from "../../services/postUnico";
 import { usePostUnicoCopy } from "../../hooks/usePostUnicoCopy";
@@ -19,39 +16,18 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { IDEIAS_ASSUNTOS } from "@/data/ideiasAssuntos";
 import { truncateWords } from "@/core/textValidation";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
+import { useBrandKit } from "../../contexts/BrandKitContext";
+import { useImageKit } from "../../contexts/ImageKitContext";
+import { useAppProfile } from "../../contexts/ProfileContext";
+import { usePlanSlotsCtx } from "../../contexts/PlanSlotsContext";
+import { usePostUnicoState } from "../../contexts/PostUnicoStateContext";
 
 interface Props {
   data: PostUnicoFormData;
-  kit: BrandKit;
-  imageKit: ImageKit;
-  visualSelection: PostUnicoVisualSelection;
-  onVisualSelectionChange: (next: PostUnicoVisualSelection) => void;
   onChange: (data: PostUnicoFormData) => void;
   onGenerate: (copy?: PostUnicoCopy) => void;
   onClear?: () => void;
   loading: boolean;
-  geracoesRestantes?: number;
-  geracoesTotal?: number;
-  imgsRestantes?: number;
-  imgsTotal?: number;
-  semPlano?: boolean;
-  isAdmin?: boolean;
-  hasPostPlano?: boolean;
-  puSlot?: string;
-  /** Contadores de regeneração de título/texto, elevados ao app para
-   *  persistirem entre trocas de aba (o componente desmonta e remontaria zerado). */
-  tituloRegenCount?: number;
-  textoRegenCount?: number;
-  onTituloRegen?: () => void;
-  onTextoRegen?: () => void;
-  /** Zera os contadores de regeneração de título/texto (ao limpar/gerar novo copy). */
-  onResetCopyRegen?: () => void;
-  /** Título/texto gerados, elevados ao app para persistirem entre trocas de aba
-   *  (o componente desmonta e remontaria com copy=null). Estado controlado. */
-  copy: PostUnicoCopy | null;
-  copyOriginal: PostUnicoCopy | null;
-  onCopyChange: Dispatch<SetStateAction<PostUnicoCopy | null>>;
-  onCopyOriginalChange: Dispatch<SetStateAction<PostUnicoCopy | null>>;
 }
 
 const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
@@ -87,34 +63,24 @@ function wordCount(s: string): number {
   return s.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function PostUnicoForm({
-  data,
-  kit,
-  imageKit,
-  visualSelection,
-  onVisualSelectionChange,
-  onChange,
-  onGenerate,
-  onClear,
-  loading,
-  geracoesRestantes,
-  geracoesTotal,
-  imgsRestantes,
-  imgsTotal,
-  semPlano,
-  isAdmin,
-  hasPostPlano,
-  puSlot,
-  tituloRegenCount,
-  textoRegenCount,
-  onTituloRegen,
-  onTextoRegen,
-  onResetCopyRegen,
-  copy,
-  copyOriginal,
-  onCopyChange: setCopy,
-  onCopyOriginalChange: setCopyOriginal,
-}: Props) {
+export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loading }: Props) {
+  const { kit } = useBrandKit();
+  const { imageKit } = useImageKit();
+  const { geracoesRestantes, geracoesTotal, semPlano, effectiveAdmin: isAdmin } = useAppProfile();
+  const { puImgsRestantes: imgsRestantes, puImgsTotal: imgsTotal, selectedSlot: puSlot, hasPostPlano } = usePlanSlotsCtx();
+  const {
+    visualSelection,
+    setVisualSelection: onVisualSelectionChange,
+    puCopy: copy,
+    setPuCopy: setCopy,
+    puCopyOriginal: copyOriginal,
+    setPuCopyOriginal: setCopyOriginal,
+    puTituloRegen: tituloRegenCount,
+    puTextoRegen: textoRegenCount,
+    onTituloRegen,
+    onTextoRegen,
+    onResetCopyRegen,
+  } = usePostUnicoState();
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);

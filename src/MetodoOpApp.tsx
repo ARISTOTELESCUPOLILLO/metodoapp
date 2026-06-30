@@ -51,6 +51,12 @@ import { useUserDataRestore } from "./hooks/useUserDataRestore";
 import { PlanSlotsBar } from "./components/metodo-op/PlanSlotsBar";
 import { ModeSwitcher } from "./components/metodo-op/ModeSwitcher";
 import { ExhaustedBanner } from "./components/metodo-op/ExhaustedBanner";
+import { BrandKitProvider } from "./contexts/BrandKitContext";
+import { ImageKitProvider } from "./contexts/ImageKitContext";
+import { ProfileProvider } from "./contexts/ProfileContext";
+import { MoodProvider } from "./contexts/MoodContext";
+import { PlanSlotsProvider } from "./contexts/PlanSlotsContext";
+import { PostUnicoStateProvider } from "./contexts/PostUnicoStateContext";
 import "./metodo-op.css";
 
 export default function App() {
@@ -91,6 +97,7 @@ export default function App() {
     slots,
     isAdmin,
     isSelfAdmin,
+    cotaPersonalizados,
     loading: profileLoading,
     refresh: refreshProfile,
   } = useProfile(impersonation?.userId || null);
@@ -267,6 +274,58 @@ export default function App() {
     lsSetQuotaSafe(PU_VISUAL_KEY, JSON.stringify(visualSelection), effectiveUserId);
   }, [visualSelection, effectiveUserId]);
 
+  // ── Valores de contexto ────────────────────────────────────────────────────
+  const profileCtxValue = {
+    profile: profile ?? null,
+    slots,
+    planAccess,
+    profileLoading,
+    refreshProfile,
+    rendersTotal,
+    rendersRestantes,
+    imgsTotal,
+    imgsRestantes,
+    geracoesTotal,
+    geracoesRestantes,
+    semPlano,
+    isAdmin,
+    isSelfAdmin,
+    effectiveAdmin,
+    cotaPersonalizados,
+  };
+  const brandKitCtxValue = { kit, lockedSegment, handleKitChange };
+  const imageKitCtxValue = { imageKit, setImageKit };
+  const moodCtxValue = { mood, setMood };
+  const planSlotsCtxValue = {
+    selectedSlot,
+    setSelectedSlot,
+    puImgsTotal,
+    puImgsRestantes,
+    puExhausted,
+    mopExhausted,
+    exhaustedHint,
+    setExhaustedHint,
+    bonusSlotInfoObj,
+    bonusExhausted,
+    bonusIsPuType,
+    hasPostPlano: profileLoading ? undefined : planAccess.hasPostUnico,
+  };
+  const postUnicoStateCtxValue = {
+    visualSelection,
+    setVisualSelection,
+    puCopy,
+    setPuCopy,
+    puCopyOriginal,
+    setPuCopyOriginal,
+    puTituloRegen,
+    setPuTituloRegen,
+    puTextoRegen,
+    setPuTextoRegen,
+    onTituloRegen: () => setPuTituloRegen((c) => c + 1),
+    onTextoRegen: () => setPuTextoRegen((c) => c + 1),
+    onResetCopyRegen: () => { setPuTituloRegen(0); setPuTextoRegen(0); },
+  };
+
   async function handleClearPostUnico() {
     if (
       !(await askConfirm(
@@ -296,7 +355,12 @@ export default function App() {
     : "primeiro acesso";
 
   return (
-    <>
+    <ProfileProvider value={profileCtxValue}>
+    <BrandKitProvider value={brandKitCtxValue}>
+    <ImageKitProvider value={imageKitCtxValue}>
+    <MoodProvider value={moodCtxValue}>
+    <PlanSlotsProvider value={planSlotsCtxValue}>
+    <PostUnicoStateProvider value={postUnicoStateCtxValue}>
       <main className="appShell">
         <header className="hero">
           <span className="eyebrow mb-0 mt-[10px]">
@@ -361,50 +425,15 @@ export default function App() {
                 onGenerate={handleGenerate}
                 onClear={handleClearMethodGeneration}
                 loading={loading}
-                segment={kit.segment}
-                isPersonalBrand={kit.isPersonalBrand}
-                mood={mood}
-                onMoodChange={setMood}
-                rendersRestantes={rendersRestantes}
-                rendersTotal={rendersTotal}
-                imgsRestantes={imgsRestantes}
-                imgsTotal={imgsTotal}
-                geracoesRestantes={geracoesRestantes}
-                geracoesTotal={geracoesTotal}
-                semPlano={semPlano}
-                isAdmin={effectiveAdmin}
-                planAccess={planAccess}
-                products={kit.products || []}
               />
             )}
             {modo === "postUnico" && (
               <PostUnicoForm
                 data={postUnico}
-                kit={kit}
-                imageKit={imageKit}
-                visualSelection={visualSelection}
-                onVisualSelectionChange={setVisualSelection}
                 onChange={setPostUnico}
                 onGenerate={handleGeneratePostUnico}
                 onClear={handleClearPostUnico}
                 loading={loading}
-                geracoesRestantes={geracoesRestantes}
-                geracoesTotal={geracoesTotal}
-                imgsRestantes={puImgsRestantes}
-                imgsTotal={puImgsTotal}
-                semPlano={semPlano}
-                isAdmin={effectiveAdmin}
-                hasPostPlano={profileLoading ? undefined : planAccess.hasPostUnico}
-                puSlot={selectedSlot}
-                tituloRegenCount={puTituloRegen}
-                textoRegenCount={puTextoRegen}
-                onTituloRegen={() => setPuTituloRegen((c) => c + 1)}
-                onTextoRegen={() => setPuTextoRegen((c) => c + 1)}
-                onResetCopyRegen={() => { setPuTituloRegen(0); setPuTextoRegen(0); }}
-                copy={puCopy}
-                copyOriginal={puCopyOriginal}
-                onCopyChange={setPuCopy}
-                onCopyOriginalChange={setPuCopyOriginal}
               />
             )}
             {modo === "imageKit" && (
@@ -495,6 +524,11 @@ export default function App() {
           r?.(false);
         }}
       />
-    </>
+    </PostUnicoStateProvider>
+    </PlanSlotsProvider>
+    </MoodProvider>
+    </ImageKitProvider>
+    </BrandKitProvider>
+    </ProfileProvider>
   );
 }
