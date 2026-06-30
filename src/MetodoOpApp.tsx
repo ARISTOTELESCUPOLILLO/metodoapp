@@ -840,18 +840,19 @@ export default function App() {
       const rawPersonagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
         ? visualSelection.personagemSemAvatar
         : undefined;
-      // Garante que valores frescos do form (generoPref/faixaEtaria) prevalecem
+      // Garante que valores frescos do form PU (generoPref/faixaEtaria) prevalecem
       // sobre seed antigo — seed é feito só no toggle do checkbox, mas o form
       // pode mudar depois sem que o checkbox seja desmarcado.
+      // Usa data (PostUnicoFormData/PU) e não form (ContentFormData/MOP).
       const personagemSemAvatar = rawPersonagemSemAvatar
         ? {
             ...rawPersonagemSemAvatar,
-            ...(form.generoPref && {
-              genero: form.generoPref === "F" ? "mulher" : "homem",
+            ...(data.generoPref && {
+              genero: data.generoPref === "F" ? "mulher" : "homem",
             }),
-            ...(form.faixaEtaria && {
+            ...(data.faixaEtaria && {
               idade:
-                mapFaixaToAnchorAge(form.faixaEtaria) ??
+                mapFaixaToAnchorAge(data.faixaEtaria) ??
                 rawPersonagemSemAvatar.idade,
             }),
           }
@@ -889,10 +890,11 @@ export default function App() {
         references.fato ||
         references.venda
       );
-      // form.generoPref ("F"/"M") é preferência explícita do usuário — deve
+      // data.generoPref ("F"/"M") é preferência explícita do usuário na PU — deve
       // prevalecer sobre o sorteio/cópia que o ref persiste entre gerações.
+      // Usa data (PostUnicoFormData/PU) e não form (ContentFormData/MOP).
       const formGender: PersonagemGender | null =
-        form.generoPref === "F" ? "mulher" : form.generoPref === "M" ? "homem" : null;
+        data.generoPref === "F" ? "mulher" : data.generoPref === "M" ? "homem" : null;
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current =
           detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ??
