@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { upsertMetaConnection } from "@/lib/meta.server";
 
 function verifyMetaState(state: string, secret: string): string | null {
   try {
@@ -96,25 +96,18 @@ export const Route = createFileRoute("/auth/meta/callback")({
           }
 
           // 5. Salva / atualiza no Supabase
-          const { error: dbErr } = await supabaseAdmin.from("meta_connections").upsert(
-            {
-              user_id: userId,
-              ig_user_id: igUserId,
-              ig_username: igUsername,
-              fb_page_id: fbPageId,
-              fb_page_name: fbPageName,
-              fb_page_access_token: fbPageToken,
-              user_access_token: longToken,
-              long_lived_token: longToken,
-              token_expires_at: expiresAt,
-              scopes:
-                "pages_show_list,pages_manage_posts,instagram_basic,instagram_content_publish",
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "user_id" },
-          );
-
-          if (dbErr) {
+          try {
+            await upsertMetaConnection({
+              userId,
+              igUserId,
+              igUsername,
+              fbPageId,
+              fbPageName,
+              fbPageToken,
+              longToken,
+              expiresAt,
+            });
+          } catch (dbErr) {
             console.error("[Meta callback] DB error:", dbErr);
             return redirect("/conta?meta_error=db");
           }

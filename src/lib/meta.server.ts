@@ -48,6 +48,39 @@ export async function uploadImageToMetaBucket(userId: string, dataUrl: string): 
   return `${supabaseUrl}/storage/v1/object/public/${META_BUCKET}/${path}`;
 }
 
+export interface MetaConnectionUpsert {
+  userId: string;
+  igUserId: string | null;
+  igUsername: string | null;
+  fbPageId: string | null;
+  fbPageName: string | null;
+  fbPageToken: string | null;
+  longToken: string;
+  expiresAt: string | null;
+}
+
+// Salva/atualiza a conexão Meta (Instagram/Facebook) do usuário após o OAuth
+// callback — consumido por routes/auth/meta/callback.tsx.
+export async function upsertMetaConnection(conn: MetaConnectionUpsert): Promise<void> {
+  const { error } = await supabaseAdmin.from("meta_connections").upsert(
+    {
+      user_id: conn.userId,
+      ig_user_id: conn.igUserId,
+      ig_username: conn.igUsername,
+      fb_page_id: conn.fbPageId,
+      fb_page_name: conn.fbPageName,
+      fb_page_access_token: conn.fbPageToken,
+      user_access_token: conn.longToken,
+      long_lived_token: conn.longToken,
+      token_expires_at: conn.expiresAt,
+      scopes: "pages_show_list,pages_manage_posts,instagram_basic,instagram_content_publish",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) throw new Error(error.message);
+}
+
 export async function pollContainerStatus(containerId: string, token: string): Promise<void> {
   for (let i = 0; i < 12; i++) {
     await new Promise((r) => setTimeout(r, 2000));
