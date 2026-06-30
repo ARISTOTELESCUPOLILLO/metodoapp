@@ -1,17 +1,14 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import {
   AnchoraVisual,
   BrandKit,
-  CarouselCard,
   FaixaEtaria,
-  FeedItem,
   ImageKit,
   MethodOpResult,
   MoodCode,
-  ReelsGuide,
 } from "../../types";
-import { AGE_OPTIONS, mapFaixaToAnchorAge } from "../../core/audienceAge";
+import { mapFaixaToAnchorAge } from "../../core/audienceAge";
 import { PersonagemGender } from "../../core/visualDirection";
 import { generateSequencePdf } from "../../utils/generatePdf";
 import { mopName } from "../../utils/file";
@@ -23,8 +20,10 @@ import {
 } from "../../core/personalizacaoMop";
 import { useAppProfile } from "../../contexts/ProfileContext";
 import { useImageGenAlert } from "./PreImageAlert";
-import { computeBlockGenders } from "./results/utils";
 import { type AnchorControl } from "./results/AnchorIndicator";
+import { AnchorBanner } from "./results/AnchorBanner";
+import { useBlockGenders } from "./results/useBlockGenders";
+import { buildDaySequence } from "./results/sequence";
 import { FeedCard } from "./results/FeedCard";
 import { FinalCard } from "./results/FinalCard";
 import { CarouselCardBlock } from "./results/CarouselCardBlock";
@@ -154,50 +153,9 @@ export default function ResultsView({
       }
     : undefined;
 
-  // Gênero do personagem por bloco (estático + carrossel + fechamento) — ver
-  // computeBlockGenders. Memoizado em `result`: persiste entre re-renders e
-  // entre "gerar de novo" de cada peça, e só recalcula quando um novo plano é
-  // gerado (result muda de referência).
-  const blockGenders = useMemo(() => {
-    const feed = result?.feed || [];
-    const estaticosM = feed.filter((f) => f.formato !== "Estático Final");
-    const estaticosFinaisM = feed.filter((f) => f.formato === "Estático Final");
-    const reelsM = result?.reels || [];
-    const carouselsM: CarouselCard[][] = [];
-    if (result?.carousel?.length) {
-      for (let i = 0; i < result.carousel.length; i += 5) {
-        carouselsM.push(result.carousel.slice(i, i + 5));
-      }
-    }
-    const maxBlocksM = Math.max(
-      estaticosM.length,
-      carouselsM.length,
-      reelsM.length,
-      estaticosFinaisM.length,
-    );
-    const blocks: {
-      estatico: PersonagemGender;
-      carrossel: PersonagemGender[];
-      reels: PersonagemGender;
-      final: PersonagemGender;
-    }[] = [];
-    for (let i = 0; i < maxBlocksM; i++) {
-      const pieces: { titulo: string; texto: string }[] = [];
-      if (estaticosM[i]) pieces.push({ titulo: estaticosM[i].titulo, texto: estaticosM[i].texto });
-      (carouselsM[i] || []).forEach((c) => pieces.push({ titulo: c.titulo, texto: c.texto }));
-      if (reelsM[i]) pieces.push({ titulo: reelsM[i].hook, texto: reelsM[i].script });
-      if (estaticosFinaisM[i])
-        pieces.push({ titulo: estaticosFinaisM[i].titulo, texto: estaticosFinaisM[i].texto });
-      const genders = computeBlockGenders(pieces, anchorGenderEffective);
-      let p = 0;
-      const estatico: PersonagemGender = estaticosM[i] ? genders[p++] : "homem";
-      const carrossel: PersonagemGender[] = (carouselsM[i] || []).map(() => genders[p++]);
-      const reels: PersonagemGender = reelsM[i] ? genders[p++] : "homem";
-      const final: PersonagemGender = estaticosFinaisM[i] ? genders[p++] : "homem";
-      blocks.push({ estatico, carrossel, reels, final });
-    }
-    return blocks;
-  }, [result, anchorGenderEffective]);
+  // Gênero do personagem por bloco (estático + carrossel + fechamento + reels)
+  // — ver useBlockGenders.
+  const blockGenders = useBlockGenders(result, anchorGenderEffective);
 
   if (!result) return null;
 
@@ -228,41 +186,7 @@ export default function ResultsView({
     }
   }
 
-  type DayItem =
-    | { type: "feed"; day: number; block: number; item: FeedItem }
-    | { type: "final"; day: number; block: number; item: FeedItem }
-    | { type: "carousel"; day: number; block: number; cards: CarouselCard[] }
-    | { type: "reels"; day: number; block: number; reels: ReelsGuide };
-
-  const allFeed = result.feed || [];
-  const estaticos = allFeed.filter((f) => f.formato !== "Estático Final");
-  const estaticosFinais = allFeed.filter((f) => f.formato === "Estático Final");
-
-  const sequence: DayItem[] = [];
-  let day = 1;
-  const reelsList: ReelsGuide[] = result.reels || [];
-  const carousels: CarouselCard[][] = [];
-
-  if (result.carousel?.length) {
-    for (let i = 0; i < result.carousel.length; i += 5) {
-      carousels.push(result.carousel.slice(i, i + 5));
-    }
-  }
-
-  const maxBlocks = Math.max(
-    estaticos.length,
-    carousels.length,
-    reelsList.length,
-    estaticosFinais.length,
-  );
-  for (let i = 0; i < maxBlocks; i++) {
-    if (estaticos[i]) sequence.push({ type: "feed", day: day++, block: i, item: estaticos[i] });
-    if (carousels[i])
-      sequence.push({ type: "carousel", day: day++, block: i, cards: carousels[i] });
-    if (reelsList[i]) sequence.push({ type: "reels", day: day++, block: i, reels: reelsList[i] });
-    if (estaticosFinais[i])
-      sequence.push({ type: "final", day: day++, block: i, item: estaticosFinais[i] });
-  }
+  const { sequence, estaticos, carousels } = buildDaySequence(result);
 
   return (
     <section className="panel resultPanel">
@@ -300,123 +224,13 @@ export default function ResultsView({
       </div>
 
       {anchorControl && (
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: 10,
-            marginBottom: 12,
-            overflow: "hidden",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setAnchorBannerOpen((o) => !o)}
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "8px 14px",
-              background: "#f8fafc",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 12,
-              color: "#475569",
-            }}
-          >
-            <span>
-              Pessoa nas imagens:&nbsp;
-              {anchorMode === "ancora" ? (
-                <strong style={{ color: "#0f172a" }}>
-                  {anchorControl.genderEffective === "mulher" ? "F" : "M"} ·{" "}
-                  {anchorControl.ageEffective.replace(" anos", "").replace(" ano", "")}
-                </strong>
-              ) : (
-                <strong style={{ color: "#64748b" }}>Livre</strong>
-              )}
-            </span>
-            <span style={{ fontSize: 10, color: "#94a3b8" }}>{anchorBannerOpen ? "▲" : "▼"}</span>
-          </button>
-          {anchorBannerOpen && (
-            <div
-              style={{
-                padding: "8px 14px",
-                borderTop: "1px solid #e2e8f0",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setAnchorMode((m) => (m === "ancora" ? "livre" : "ancora"))}
-                style={{
-                  fontSize: 12,
-                  padding: "4px 12px",
-                  border: "1px solid #e2e8f0",
-                  background: anchorMode === "livre" ? "#f1f5f9" : "#0f172a",
-                  color: anchorMode === "livre" ? "#475569" : "#fff",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                {anchorMode === "ancora" ? "Mudar p/ Livre" : "Mudar p/ Âncora"}
-              </button>
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>
-                {anchorMode === "ancora"
-                  ? "Âncora: mesma pessoa em todas as peças."
-                  : "Livre: a IA varia a pessoa em cada peça."}
-              </span>
-              {anchorMode === "ancora" && (
-                <>
-                  <button
-                    type="button"
-                    onClick={anchorControl.onFlipGender}
-                    style={{
-                      fontSize: 12,
-                      padding: "4px 12px",
-                      border: "1px solid #bfdbfe",
-                      background: "#eff6ff",
-                      color: "#1d4ed8",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Trocar p/{" "}
-                    {anchorControl.genderEffective === "mulher" ? "Masculino" : "Feminino"}
-                  </button>
-                  <select
-                    value={anchorControl.ageEffective}
-                    onChange={(e) => anchorControl.onChangeAge(e.target.value)}
-                    style={{
-                      fontSize: 12,
-                      padding: "4px 8px",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: 6,
-                      background: "#fff",
-                      color: "#475569",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {!AGE_OPTIONS.includes(anchorControl.ageEffective) && (
-                      <option value={anchorControl.ageEffective}>
-                        {anchorControl.ageEffective}
-                      </option>
-                    )}
-                    {AGE_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        <AnchorBanner
+          control={anchorControl}
+          mode={anchorMode}
+          onToggleMode={() => setAnchorMode((m) => (m === "ancora" ? "livre" : "ancora"))}
+          open={anchorBannerOpen}
+          onToggleOpen={() => setAnchorBannerOpen((o) => !o)}
+        />
       )}
 
       {sequence.length > 0 && (
