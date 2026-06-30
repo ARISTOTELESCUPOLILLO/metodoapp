@@ -954,6 +954,23 @@ export function pickImageVariationBlock(
 ): string {
   if (!mood) return "";
 
+  // Calculado aqui (antes dos early-returns de OP-05/06) para que todos os
+  // moods recebam a restrição de gênero. Antes, OP-05/06 retornavam sem nenhum
+  // genderBlock, deixando o modelo livre para cair no viés masculino mesmo
+  // quando o usuário havia marcado "Feminino" no form.
+  const genderBlock = hasAvatarRef
+    ? ""
+    : (() => {
+        const decidido = forcedGender ?? detectForcedGenderFromCopy(titulo, texto);
+        // Sem decisão explícita, só sorteia quando não há composicao — evita
+        // contradizer o personagem que o GPT já escreveu na etapa de conteúdo.
+        const gender = decidido ?? (composicao ? null : pickRandom(PERSONAGEM_GENDER_VARIATIONS));
+        if (!gender) return "";
+        const oposto = gender === "mulher" ? "homem" : "mulher";
+        const anchoraDesc = anchoraPersonagem ? `, ${anchoraPersonagem}` : "";
+        return `PERSONAGEM — GÊNERO OBRIGATÓRIO (PRECEDÊNCIA MÁXIMA, sobrepõe qualquer outra descrição de cena, pose ou contexto): a pessoa retratada DEVE ser ${gender}${anchoraDesc}. PROIBIDO gerar ${oposto} ou personagem de gênero ambíguo/indefinido. `;
+      })();
+
   const TEMA_DERIVATION_RULE =
     'Gesto/ação do personagem deriva do que o título e texto comunicam (ex: "comunicação" → revisar material, direcionar produção ou apresentar plano a alguém; "atendimento" → atender; "transparência" → mostrar/revisar). Metáforas/modificadores do título ("rumo", "avançar", "longe", "crescimento", "rápido", "forte", "claro") = intenção ou qualidade do ofício — nunca deslocamento físico nem propriedade literal.';
 
@@ -973,7 +990,7 @@ export function pickImageVariationBlock(
     const rupturaRaw = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
     const ruptura = hasCenarioRef ? rupturaRaw.replace(/\s*AMBIENTE:.*$/, "") : rupturaRaw;
     const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO: Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} O elemento da ruptura deriva do tema — nunca clichê genérico (ver regra CONCEITO-FIRST). Uma ruptura por cena.`;
+    return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} O elemento da ruptura deriva do tema — nunca clichê genérico (ver regra CONCEITO-FIRST). Uma ruptura por cena.`;
   }
 
   if (mood === "OP-06") {
@@ -981,7 +998,7 @@ export function pickImageVariationBlock(
     // foram decididos pela etapa de conteúdo quando composicao existe.
     if (composicao) return "";
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO: Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
+    return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
   }
 
   const characterMap: Partial<Record<MoodCode, string[]>> = {
@@ -1008,40 +1025,6 @@ export function pickImageVariationBlock(
     if (mood === "OP-03") return "Câmera: 35mm levemente alta, distância natural, grão sutil. ";
     return "";
   })();
-
-  // Quando há AVATAR de referência, o gênero do personagem já é determinado pela
-  // própria foto — sortear e injetar "PRECEDÊNCIA MÁXIMA" sobre outro gênero aqui
-  // entra em conflito direto com a instrução de preservar identidade do avatar
-  // (referenceAnchor: "NÃO mude o gênero"), e a IA acaba descartando o avatar e
-  // gerando uma pessoa genérica do gênero sorteado. Sem avatar, prioridade é:
-  // gênero atribuído/persistido pelo chamador (forcedGender) > copy explícito
-  // ("mulher(es)") > sorteio — ele existe pra evitar viés sempre-masculino no
-  // personagem fictício quando nada mais decide.
-  const genderBlock = hasAvatarRef
-    ? ""
-    : (() => {
-        const decidido = forcedGender ?? detectForcedGenderFromCopy(titulo, texto);
-        // Quando leituraCenica.composicao já existe, o personagem (gênero
-        // incluso, ex.: "Personagem: homem artista...") já foi decidido e
-        // escrito pela etapa de conteúdo. Sem forcedGender/copy explícito
-        // chegando aqui (chamador não passou o gênero já decidido), sortear
-        // aleatoriamente contradiz o que o GPT já escreveu — visto no caso
-        // real em que o personagem escrito era "homem" e o sorteio aqui caiu
-        // em "mulher", e essa instrução teria PRECEDÊNCIA sobre a cena.
-        // Sem decisão prévia, é mais seguro omitir o bloco do que arriscar
-        // contradição — só sorteia quando a peça ainda não tem composição
-        // decidida (a variação está construindo a cena do zero).
-        const gender = decidido ?? (composicao ? null : pickRandom(PERSONAGEM_GENDER_VARIATIONS));
-        if (!gender) return "";
-        const oposto = gender === "mulher" ? "homem" : "mulher";
-        const anchoraDesc = anchoraPersonagem ? `, ${anchoraPersonagem}` : "";
-        // Instrução elevada a regra de precedência máxima — colocada em
-        // primeiro lugar no bloco de variação, com proibição explícita do
-        // gênero oposto. Versão anterior ("Gênero e tipo: mulher — manter
-        // consistente...") era um aviso fraco em meio a câmera/estrutura, e o
-        // modelo de imagem tendia a ignorá-lo e gerar o gênero padrão.
-        return `PERSONAGEM — GÊNERO OBRIGATÓRIO (PRECEDÊNCIA MÁXIMA, sobrepõe qualquer outra descrição de cena, pose ou contexto): a pessoa retratada DEVE ser ${gender}${anchoraDesc}. PROIBIDO gerar ${oposto} ou personagem de gênero ambíguo/indefinido. `;
-      })();
 
   // Quando leituraCenica.composicao existe, a composição já está em cenaDetalhada —
   // re-sortear aqui contradiz o que GPT-4.1 escreveu. Câmera e gênero ainda se aplicam.

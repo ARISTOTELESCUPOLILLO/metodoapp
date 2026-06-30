@@ -609,8 +609,17 @@ function referencesBlock(
         ? "Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para dar protagonismo ao produto referenciado — mas o ambiente deve continuar reconhecível como o mesmo local."
         : "Pode reposicionar ÂNGULO e DISTÂNCIA da câmera para integrar o produto à cena com naturalidade — mas o ambiente deve continuar reconhecível como o mesmo local."
       : "NÃO mude o ângulo.";
+    // Sem avatar nem checkbox de personagem, a restrição de gênero DEVE entrar
+    // aqui — dentro do bloco que vai para referenceAnchorBlock com PRECEDÊNCIA
+    // MÁXIMA. Fora dele (livreGenderBlock/genderBlock), a própria âncora diz
+    // "PRECEDÊNCIA sobre qualquer personagem descrito no restante deste prompt",
+    // o que subordina o gênero e deixa o modelo livre para cair no viés masculino.
+    const cenarioGenderClause =
+      !refs.avatar && !refs.personagemSemAvatarAtivo && forcedGender
+        ? ` O personagem inserido na cena DEVE ser ${forcedGender} — PROIBIDO gerar ${forcedGender === "mulher" ? "homem" : "mulher"} ou gênero ambíguo.`
+        : "";
     parts.push(
-      `CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`,
+      `CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${cenarioGenderClause}${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`,
     );
   }
   if (refs.fato) {
