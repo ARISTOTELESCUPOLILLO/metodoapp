@@ -11,8 +11,9 @@
 
 import type { BrandKit, ImageKit, MoodCode, Segment } from "../types";
 import type { SelecaoDireta } from "../domain/visualSelection";
-import type { PostUnicoReferences } from "./postUnico";
-import { orderedReferenceImages } from "./postUnico";
+import type { PostUnicoReferences } from "../shared/visual/references";
+import { orderedReferenceImages } from "../shared/visual/references";
+import { buildUltimaVerificacaoBlock } from "../shared/visual/referenceBlocks";
 import { generatePostImage } from "./api";
 import { judgeLogoUniforme } from "./judgeContent";
 import { loadImageKitAsync } from "../utils/imageKitStorage";
@@ -380,10 +381,7 @@ function buildAnchorPrefix(
   // conflito ou esquecimento ao longo de um prompt longo. Visto em produção:
   // com cenário + 2 produtos, o modelo às vezes renderiza só 1 produto.
   if (refs.produtos?.length && refs.produtos.length >= 2) {
-    const n = refs.produtos.length;
-    lines.push(
-      `⚠ ÚLTIMA VERIFICAÇÃO ANTES DE GERAR: conte os produtos na composição — devem ser EXATAMENTE ${n}, nunca ${n - 1} nem menos. NEGATIVE: missing product, only ${n - 1} product visible, single product shown when ${n} were required, product omitted, incomplete product count.`,
-    );
+    lines.push(buildUltimaVerificacaoBlock(refs.produtos.length));
   }
   if (!lines.length) return "";
   return `${lines.join("\n")}\n\n`;

@@ -17,6 +17,7 @@ import {
 } from "../utils/promptRules";
 import { supabase } from "@/integrations/supabase/client";
 import { getImpersonation } from "@/hooks/useImpersonation";
+import { buildReferenceAnchorWrapper } from "../shared/visual/referenceBlocks";
 
 async function authHeader(): Promise<Record<string, string>> {
   try {
@@ -295,9 +296,7 @@ function buildImagePrompt(params: {
   // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
   // posicionada junto das demais regras inegociáveis, ANTES da leitura de cena,
   // para não competir e perder para a descrição narrativa do card.
-  const referenceAnchorBlock = referenceAnchor
-    ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito na leitura de cena a seguir, em caso de conflito.\n${referenceAnchor}\n\n`
-    : "";
+  const referenceAnchorBlock = buildReferenceAnchorWrapper(referenceAnchor ?? "");
 
   const finalModifier = isFinal ? `\n${ESTATICO_FINAL_MODIFIER}\n` : "";
 
@@ -587,9 +586,7 @@ NEGATIVE: no legible screen content, no recognizable logo on screen, no readable
 
   // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
   // precisa vir ANTES da descrição da cena para não perder força para ela.
-  const referenceAnchorBlock = referenceAnchor
-    ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito na cena a seguir, em caso de conflito.\n${referenceAnchor}\n\n`
-    : "";
+  const referenceAnchorBlock = buildReferenceAnchorWrapper(referenceAnchor ?? "");
 
   const prompt = isReels
     ? `REGRAS INVIOLÁVEIS PARA A IMAGEM DO REELS (PRIMEIRO FRAME DO VÍDEO):
