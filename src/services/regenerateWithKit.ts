@@ -18,6 +18,7 @@ import { loadImageKitAsync } from "../utils/imageKitStorage";
 import { isClothingFriendly, buildClothingPool } from "../core/clothingPool";
 import type { ElementoPersonalizacao, SlotPersonalizacao } from "../core/personalizacaoMop";
 import { buildProductHierarchyBlock, type PersonagemGender } from "../core/visualDirection";
+import { policyPorFormato } from "../core/referenciasPolicy";
 
 export interface RegenerateInput {
   // Slot recomendado pela tabela de personalização do MOP
@@ -504,12 +505,23 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     }
   }
 
+  // Re-valida a seleção de produtos contra a policy do segmento/formato.
+  // A seleção é persistida no localStorage sem escopo de segmento — se o
+  // segmento mudou (ex.: VAREJO → MARCA) a seleção antiga pode conter produtos
+  // que a policy atual proíbe. A UI já bloqueia a seleção, mas não revalida
+  // na geração, então este é o ponto central de defesa.
+  const policy = policyPorFormato(kit.segment, slot.formato, null);
+  const sanitizedSelecao =
+    selecaoDireta && policy.produtos === 0
+      ? { ...selecaoDireta, produtosNums: [], produtoTelaInformativa: false }
+      : selecaoDireta;
+
   const references = buildReferences(
     slot.elemento,
     effectiveImageKit,
     produtosSelecionados,
     cenarioSelecionado,
-    selecaoDireta,
+    sanitizedSelecao,
     kit.uniformeDataUrl,
   );
   const referenceImages = orderedReferenceImages(references);
