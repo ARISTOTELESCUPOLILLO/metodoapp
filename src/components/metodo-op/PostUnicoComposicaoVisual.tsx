@@ -258,7 +258,7 @@ export default function PostUnicoComposicaoVisual({
             checked={!!selection.produtoTelaInformativa}
             onChange={(e) => onChange({ ...selection, produtoTelaInformativa: e.target.checked })}
           />
-          Produto é uma tela (preservar o conteúdo exibido)
+          Meu produto é digital (app, sistema ou painel) — mostrar a tela com nitidez
         </label>
       )}
 
