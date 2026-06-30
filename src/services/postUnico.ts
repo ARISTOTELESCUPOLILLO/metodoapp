@@ -34,6 +34,7 @@ import {
   CONCEITO_FIRST_RULE,
 } from "../utils/promptRules";
 import { buildClothingPool } from "../core/clothingPool";
+import { mapFaixaToAnchorAge } from "../core/audienceAge";
 
 const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: "Promoção comercial — gerar desejo e ação",
@@ -717,6 +718,13 @@ export function buildPostUnicoPrompt(params: {
     !!references?.produtos?.length,
     noDeviceThisScene,
   );
+  // Quando não há personagem de referência (sem avatar e sem checkbox "personagem
+  // sem avatar"), a faixaEtaria do form chega ao prompt de imagem como âncora de
+  // idade no bloco de variação (Mood) ou como instrução explícita (Direção Livre).
+  const semPersonagemRef = !references?.avatar && !references?.personagemSemAvatarAtivo;
+  const faixaLabelImagem = semPersonagemRef
+    ? mapFaixaToAnchorAge(data.faixaEtaria)
+    : undefined;
   const variationBlock =
     data.direcao === "mood"
       ? pickImageVariationBlock(
@@ -725,7 +733,22 @@ export function buildPostUnicoPrompt(params: {
           copy?.titulo,
           copy?.texto,
           forcedGender,
+          faixaLabelImagem,
         )
+      : "";
+  // Em Direção Livre, variationBlock é "". Se há preferência de gênero/idade e
+  // nenhuma referência com personagem (avatar ou checkbox) já declara isso no
+  // referencesBlock, injeta a restrição para o modelo não decidir livremente.
+  const livreGenderBlock =
+    data.direcao !== "mood" && semPersonagemRef && (forcedGender || faixaLabelImagem)
+      ? (() => {
+          const idadeClause = faixaLabelImagem ? `, aparentando ${faixaLabelImagem}` : "";
+          if (!forcedGender) {
+            return `\n⚠ PERSONAGEM — FAIXA ETÁRIA OBRIGATÓRIA: a pessoa retratada DEVE aparentar ${faixaLabelImagem}. `;
+          }
+          const oposto = forcedGender === "mulher" ? "homem" : "mulher";
+          return `\n⚠ PERSONAGEM — GÊNERO OBRIGATÓRIO (PRECEDÊNCIA MÁXIMA, sobrepõe qualquer outra descrição de cena, pose ou contexto): a pessoa retratada DEVE ser ${forcedGender}${idadeClause}. PROIBIDO gerar ${oposto} ou personagem de gênero ambíguo/indefinido. `;
+        })()
       : "";
   // "Gerar outra imagem": mantém o MESMO título/texto, mas exige uma execução
   // visual claramente diferente da anterior (enquadramento, ângulo, composição,
@@ -853,7 +876,7 @@ ${
 ${copyBlock}
 ${CONCEITO_FIRST_RULE}
 ${papelBlock}
-${direcao}${variationBlock}${regenVariationBlock}
+${direcao}${variationBlock}${livreGenderBlock}${regenVariationBlock}
 
 ${buildColorBlock(primary, accent, data.direcao === "mood", data.objetivo)}
 

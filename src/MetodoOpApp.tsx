@@ -888,12 +888,18 @@ export default function App() {
         references.fato ||
         references.venda
       );
+      // form.generoPref ("F"/"M") é preferência explícita do usuário — deve
+      // prevalecer sobre o sorteio/cópia que o ref persiste entre gerações.
+      const formGender: PersonagemGender | null =
+        form.generoPref === "F" ? "mulher" : form.generoPref === "M" ? "homem" : null;
       if (postUnicoGenderRef.current === undefined) {
         postUnicoGenderRef.current =
           detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ??
           (Math.random() < 0.5 ? "mulher" : "homem");
       }
-      const effectiveForcedGender = personagemSemAvatar?.genero ?? postUnicoGenderRef.current;
+      // Prioridade: personagem-sem-avatar (checkbox) > preferência do form > ref persistido
+      const effectiveForcedGender: PersonagemGender | undefined =
+        (personagemSemAvatar?.genero as PersonagemGender | undefined) ?? formGender ?? postUnicoGenderRef.current;
       const dataUrl = await generatePostUnico({
         data,
         kit,
