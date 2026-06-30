@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthGate } from "@/components/app/AuthGate";
@@ -166,7 +166,7 @@ function AjustesPage() {
           type="submit"
           disabled={saving}
           style={{
-            background: "#0f213f",
+            background: "var(--brand-primary)",
             color: "#fff",
             border: "none",
             padding: "10px 16px",

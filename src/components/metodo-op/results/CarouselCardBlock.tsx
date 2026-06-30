@@ -16,6 +16,8 @@ import UsoReferenciasDia, { useRefSelection } from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
 import { RefSelectorProps, RefsRegenButton } from "./RefsRegenButton";
+import ConfirmDialog from "../ConfirmDialog";
+import { BRAND_ACCENT } from "../../../data/brandColors";
 import {
   insertSignature,
   kitHasRefsForFormat,
@@ -97,6 +99,8 @@ export function CarouselCardBlock({
   const [busyAllMode, setBusyAllMode] = useState<"refs" | "noref" | null>(null);
   const busyAll = busyAllMode !== null;
   const [allProgress, setAllProgress] = useState<{ done: number; total: number } | null>(null);
+  const [confirmKind, setConfirmKind] = useState<"noref" | "refs" | null>(null);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const blockStorageKey = `uso-ref:carrossel:${dayNumber}:bloco`;
   const blockSel = useRefSelection(blockStorageKey);
@@ -173,7 +177,7 @@ export function CarouselCardBlock({
         companyName: kit.companyName,
         mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
-        accentColor: kit.accentColor || "#f4b000",
+        accentColor: kit.accentColor || BRAND_ACCENT,
         fontFamily: kit.fontPair || "Montserrat",
         secondaryFont: kit.secondaryFont,
         mood,
@@ -196,7 +200,7 @@ export function CarouselCardBlock({
       updatePreview(index, final);
       onImageGenerated?.();
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      setErrMsg(`Erro ao gerar card: ${(e as Error).message}`);
     } finally {
       setBusyIndex(null);
       setBusyMode(null);
@@ -342,7 +346,7 @@ export function CarouselCardBlock({
       updatePreview(index, final);
       onImageGenerated?.();
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      setErrMsg(`Erro ao gerar card: ${(e as Error).message}`);
     } finally {
       setBusyIndex(null);
       setBusyMode(null);
@@ -351,12 +355,7 @@ export function CarouselCardBlock({
 
   // Gera os N cards em sequência SEM imagens de referência.
   async function runGenerateAll() {
-    const ok = window.confirm(
-      `Gerar todos os ${cards.length} cards sem imagens de referência?\n\n` +
-        `⚠️ Revise os títulos e textos de cada card antes — eles serão usados como estão.\n\n` +
-        `Você ainda poderá regerar cards individualmente depois.`,
-    );
-    if (!ok) return;
+    setConfirmKind(null);
     setBusyAllMode("noref");
     const total = cards.length;
     const failures: number[] = [];
@@ -372,7 +371,7 @@ export function CarouselCardBlock({
             companyName: kit.companyName,
             mainActivity: kit.mainActivity,
             primaryColor: kit.primaryColor,
-            accentColor: kit.accentColor || "#f4b000",
+            accentColor: kit.accentColor || BRAND_ACCENT,
             fontFamily: kit.fontPair || "Montserrat",
             secondaryFont: kit.secondaryFont,
             mood,
@@ -403,7 +402,7 @@ export function CarouselCardBlock({
       });
       if (failures.length) {
         failures.sort((a, b) => a - b);
-        alert(
+        setErrMsg(
           `${failures.length} de ${total} card(s) falharam (cards ${failures.join(", ")}). Use "⬇ Gerar card" no card para tentar de novo.`,
         );
       } else {
@@ -418,12 +417,7 @@ export function CarouselCardBlock({
   // Gera os N cards em sequência usando refs consolidadas do bloco.
   async function runGenerateAllWithRefs() {
     if (!blockSel.hasAny) return;
-    const ok = window.confirm(
-      `Gerar todos os ${cards.length} cards com as referências selecionadas?\n\n` +
-        `⚠️ Revise os títulos e textos antes — eles serão usados como estão.\n\n` +
-        `Você ainda poderá regerar cards individualmente depois.`,
-    );
-    if (!ok) return;
+    setConfirmKind(null);
     setBusyAllMode("refs");
     const total = cards.length;
     const failures: number[] = [];
@@ -489,7 +483,7 @@ export function CarouselCardBlock({
           partes.push(
             `${skipped.length} sem seleção de referência válida (cards ${skipped.join(", ")})`,
           );
-        alert(
+        setErrMsg(
           `Geração com referências: ${partes.join("; ")}. Use o botão "↻ Gerar outra com refs" no card para tentar de novo.`,
         );
       } else {
@@ -502,6 +496,28 @@ export function CarouselCardBlock({
   }
 
   return (
+    <>
+    <ConfirmDialog
+      open={confirmKind !== null}
+      title={confirmKind === "refs" ? `Gerar ${cards.length} cards com referências?` : `Gerar ${cards.length} cards sem referências?`}
+      message={
+        confirmKind === "refs"
+          ? `⚠️ Revise os títulos e textos antes — eles serão usados como estão.\n\nVocê ainda poderá regerar cards individualmente depois.`
+          : `⚠️ Revise os títulos e textos de cada card antes — eles serão usados como estão.\n\nVocê ainda poderá regerar cards individualmente depois.`
+      }
+      confirmLabel="Gerar"
+      onConfirm={() => { confirmKind === "refs" ? runGenerateAllWithRefs() : runGenerateAll(); }}
+      onCancel={() => setConfirmKind(null)}
+    />
+    {errMsg && (
+      <div
+        role="alert"
+        style={{ background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca", borderRadius: 12, padding: "10px 14px", fontSize: 13, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}
+      >
+        <span>{errMsg}</span>
+        <button type="button" onClick={() => setErrMsg(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#991b1b", flexShrink: 0 }}>✕</button>
+      </div>
+    )}
     <article className="contentCard">
       <button className="cardHeader" type="button" onClick={() => setOpen((o) => !o)}>
         <div className="cardHeaderLeft">
@@ -548,7 +564,7 @@ export function CarouselCardBlock({
                   <button
                     type="button"
                     className="generateBtn"
-                    onClick={runGenerateAllWithRefs}
+                    onClick={() => setConfirmKind("refs")}
                     disabled={busyAll || busyIndex !== null}
                     title="Gera os cards em sequência: card 1 com produto 1, card 2 com produto 2, e assim por diante"
                   >
@@ -578,7 +594,7 @@ export function CarouselCardBlock({
             <button
               type="button"
               className="generateBtn"
-              onClick={runGenerateAll}
+              onClick={() => setConfirmKind("noref")}
               disabled={busyAll || busyIndex !== null}
               title="Gera todos os cards em sequência sem imagem de referência. Revise os títulos e textos antes."
             >
@@ -767,5 +783,6 @@ export function CarouselCardBlock({
         </div>
       )}
     </article>
+    </>
   );
 }

@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "@/data/brandColors";
 // Regen de peça do Método OP aplicando o Kit Imagem como referência visual.
 // Chamado pelo ResultsView (via UsoReferenciasDia) — devolve a imagem-base
 // (sem composição final de logo). O caller compõe logo + lettering exatamente
@@ -493,7 +494,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     mood,
     {
       primary: kit.primaryColor || "#123a63",
-      accent: kit.accentColor || "#f4b000",
+      accent: kit.accentColor || BRAND_ACCENT,
     },
     slot.formato === "carrossel" ? slot.cardCarrossel : undefined,
     kit.segment,
@@ -526,7 +527,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
         companyName: kit.companyName,
         mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
-        accentColor: kit.accentColor || "#f4b000",
+        accentColor: kit.accentColor || BRAND_ACCENT,
         fontFamily: kit.fontPair || "Montserrat",
         secondaryFont: kit.secondaryFont,
         mood,
@@ -557,7 +558,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
         companyName: kit.companyName,
         mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
-        accentColor: kit.accentColor || "#f4b000",
+        accentColor: kit.accentColor || BRAND_ACCENT,
         fontFamily: kit.fontPair || "Montserrat",
         secondaryFont: kit.secondaryFont,
         mood,
@@ -591,7 +592,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       companyName: kit.companyName,
       mainActivity: kit.mainActivity,
       primaryColor: kit.primaryColor,
-      accentColor: kit.accentColor || "#f4b000",
+      accentColor: kit.accentColor || BRAND_ACCENT,
       fontFamily: kit.fontPair || "Montserrat",
       secondaryFont: kit.secondaryFont,
       mood,

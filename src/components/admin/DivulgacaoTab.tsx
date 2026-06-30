@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import heroDesktopUrl from "@/assets/lp-hero-desktop.png";
+import { BRAND_PRIMARY } from "@/data/brandColors";
 
 interface Plan {
   id: string;
@@ -113,7 +114,7 @@ async function generateCard(plan: Plan): Promise<void> {
   });
 
   // Full navy background
-  ctx.fillStyle = "#0f213f";
+  ctx.fillStyle = BRAND_PRIMARY;
   ctx.fillRect(0, 0, 1080, 1080);
 
   // Draw hero image at TOP (scaled to width 1080, show first portion)
@@ -127,7 +128,7 @@ async function generateCard(plan: Plan): Promise<void> {
   const gradTop = Math.max(0, imgH - 110);
   const grad = ctx.createLinearGradient(0, gradTop, 0, imgH + 70);
   grad.addColorStop(0, "rgba(15,33,63,0)");
-  grad.addColorStop(1, "#0f213f");
+  grad.addColorStop(1, BRAND_PRIMARY);
   ctx.fillStyle = grad;
   ctx.fillRect(0, gradTop, 1080, imgH + 70 - gradTop);
 
@@ -250,7 +251,7 @@ export function DivulgacaoTab() {
           onClick={handleDownloadAll}
           disabled={downloading !== null}
           style={{
-            background: "#0f213f",
+            background: "var(--brand-primary)",
             color: "#fff",
             border: "none",
             padding: "8px 16px",
@@ -302,14 +303,14 @@ export function DivulgacaoTab() {
                     left: 0,
                     right: 0,
                     height: 32,
-                    background: "linear-gradient(to bottom, rgba(15,33,63,0), #0f213f)",
+                    background: "linear-gradient(to bottom, rgba(15,33,63,0), var(--brand-primary))",
                   }}
                 />
               </div>
               {/* Text preview */}
               <div
                 style={{
-                  background: "#0f213f",
+                  background: "var(--brand-primary)",
                   padding: "10px 18px 18px",
                   display: "flex",
                   flexDirection: "column",
@@ -400,7 +401,7 @@ export function DivulgacaoTab() {
                   onClick={() => handleDownload(plan)}
                   disabled={downloading !== null}
                   style={{
-                    background: isDown ? "#64748b" : "#0f213f",
+                    background: isDown ? "#64748b" : "var(--brand-primary)",
                     color: "#fff",
                     border: "none",
                     padding: "5px 12px",

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { planMonthlyCost } from "@/lib/costs";
 
@@ -259,7 +259,7 @@ export function ClientesFinanceiroTab() {
                       style={{
                         fontWeight: 700,
                         fontSize: 14,
-                        color: "#0f213f",
+                        color: "var(--brand-primary)",
                         display: "flex",
                         gap: 8,
                         alignItems: "center",
@@ -336,7 +336,7 @@ export function ClientesFinanceiroTab() {
                         <div
                           style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 3 }}
                         >
-                          <span style={{ fontWeight: 700, fontSize: 12, color: "#0f213f" }}>
+                          <span style={{ fontWeight: 700, fontSize: 12, color: "var(--brand-primary)" }}>
                             {sl.label}
                           </span>
                           <span
@@ -464,7 +464,7 @@ function MiniCard({ label, value, color }: { label: string; value: string; color
       }}
     >
       <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 17, fontWeight: 800, color: color ?? "#0f213f" }}>{value}</div>
+      <div style={{ fontSize: 17, fontWeight: 800, color: color ?? "var(--brand-primary)" }}>{value}</div>
     </div>
   );
 }
@@ -485,7 +485,7 @@ function Stat({
       <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase" }}>
         {label}
       </div>
-      <div style={{ fontSize: big ? 17 : 14, fontWeight: 800, color: color ?? "#0f213f" }}>
+      <div style={{ fontSize: big ? 17 : 14, fontWeight: 800, color: color ?? "var(--brand-primary)" }}>
         {value}
       </div>
     </div>

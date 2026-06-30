@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+﻿import { useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getStorageStats, type StorageStatsResult } from "@/lib/storageStats.functions";
 
@@ -69,7 +69,7 @@ export function StorageTab() {
             fontSize: 13,
             fontWeight: 600,
             cursor: loading ? "default" : "pointer",
-            background: "#0f213f",
+            background: "var(--brand-primary)",
             color: "#fff",
             border: "none",
             borderRadius: 6,
@@ -278,7 +278,7 @@ function Metric({
       }}
     >
       <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 700, color: highlight ? "#1d4ed8" : "#0f213f" }}>
+      <div style={{ fontSize: 18, fontWeight: 700, color: highlight ? "#1d4ed8" : "var(--brand-primary)" }}>
         {value}
       </div>
       {sub && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{sub}</div>}

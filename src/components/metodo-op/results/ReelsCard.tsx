@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "../../../data/brandColors";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getImpersonation } from "@/hooks/useImpersonation";
@@ -228,7 +229,7 @@ export function ReelsCard({
         companyName: kit.companyName,
         mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
-        accentColor: kit.accentColor || "#f4b000",
+        accentColor: kit.accentColor || BRAND_ACCENT,
         fontFamily: kit.fontPair || "Montserrat",
         secondaryFont: kit.secondaryFont,
         mood,
@@ -401,7 +402,7 @@ export function ReelsCard({
             companyName: kit.companyName,
             mainActivity: kit.mainActivity,
             primaryColor: kit.primaryColor,
-            accentColor: kit.accentColor || "#f4b000",
+            accentColor: kit.accentColor || BRAND_ACCENT,
             fontFamily: kit.fontPair || "Montserrat",
             secondaryFont: kit.secondaryFont,
             mood,
@@ -539,7 +540,7 @@ export function ReelsCard({
         companyName: kit.companyName,
         mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
-        accentColor: kit.accentColor || "#f4b000",
+        accentColor: kit.accentColor || BRAND_ACCENT,
         fontFamily: kit.fontPair || "Montserrat",
         secondaryFont: kit.secondaryFont,
         mood,

@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "../../data/brandColors";
 import { useState } from "react";
 import { BrandKit, FontPair, LogoPosition, SecondaryFont, Segment } from "../../types";
 import { brandVoiceCatalog, defaultVoice } from "../../data/brandVoice";
@@ -77,7 +78,7 @@ const COLORS_PRESET = [
   "#059669",
   "#dc2626",
   "#d97706",
-  "#f4b000",
+  BRAND_ACCENT,
   "#e5e7eb",
   "#ffffff",
 ];
@@ -475,13 +476,13 @@ export default function BrandKitForm({
                 <div className="colorRow">
                   <input
                     type="color"
-                    value={kit[key] || "#f4b000"}
+                    value={kit[key] || BRAND_ACCENT}
                     onChange={(e) => update(key, e.target.value)}
                     className="colorPicker"
                   />
                   <input
                     type="text"
-                    value={kit[key] || "#f4b000"}
+                    value={kit[key] || BRAND_ACCENT}
                     onChange={(e) => update(key, e.target.value)}
                     className="colorHex"
                     placeholder="#000000"
@@ -495,7 +496,7 @@ export default function BrandKitForm({
                       className="colorDot"
                       style={{
                         background: c,
-                        border: kit[key] === c ? "2px solid #f4b000" : "2px solid transparent",
+                        border: kit[key] === c ? "2px solid var(--brand-accent)" : "2px solid transparent",
                       }}
                       onClick={() => update(key, c)}
                       title={c}

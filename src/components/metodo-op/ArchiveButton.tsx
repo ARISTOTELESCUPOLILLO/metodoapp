@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { saveGeneration, updateGeneration } from "@/lib/assets.functions";
 import { useImpersonation } from "@/hooks/useImpersonation";
@@ -132,7 +132,7 @@ export function ArchiveButton({
           ? "⚠ Tentar de novo"
           : "📥 Arquivar";
 
-  const bg = state === "done" ? "#16a34a" : state === "error" ? "#b91c1c" : "#0f213f";
+  const bg = state === "done" ? "#16a34a" : state === "error" ? "#b91c1c" : "var(--brand-primary)";
 
   return (
     <button

@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "@/data/brandColors";
 import {
   BrandKit,
   LogoPosition,
@@ -717,7 +718,7 @@ export function buildPostUnicoPrompt(params: {
   // rosto em primeiro plano (ver variationHasFaceNotDominant).
   const faceNotDominant = variationHasFaceNotDominant(variationBlock);
   const primary = kit.primaryColor || "#123a63";
-  const accent = kit.accentColor || kit.secondaryColor || "#f4b000";
+  const accent = kit.accentColor || kit.secondaryColor || BRAND_ACCENT;
   const zona = logoZoneDescription(kit.logoPosition);
 
   const typographyBlock = buildTypographyBlock(kit.fontPair);

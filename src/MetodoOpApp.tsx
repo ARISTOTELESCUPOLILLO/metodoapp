@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import BrandKitForm from "./components/metodo-op/BrandKitForm";
 import ConfirmDialog from "./components/metodo-op/ConfirmDialog";
 import ContentForm from "./components/metodo-op/ContentForm";
@@ -368,7 +368,7 @@ export default function App() {
           </span>
           <h1 style={{ fontWeight: 900 }}>
             <span style={{ color: "#ffffff" }}>MÉTODO</span>{" "}
-            <span style={{ color: "#f4b000" }}>OP</span>
+            <span style={{ color: "var(--brand-accent)" }}>OP</span>
           </h1>
           {greetingName && (
             <div style={{ color: "rgba(255,255,255,.78)", fontSize: 13, marginTop: 4, fontWeight: 500 }}>

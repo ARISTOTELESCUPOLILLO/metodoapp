@@ -1,4 +1,4 @@
-import { computeCycleFromExpiry } from "@/lib/cycle";
+﻿import { computeCycleFromExpiry } from "@/lib/cycle";
 import type { SlotInfo } from "@/hooks/useProfile";
 
 interface Props {
@@ -74,7 +74,7 @@ export function PlanCard({ slot, isAdmin }: Props) {
               <span
                 style={{
                   fontSize: 9,
-                  color: "#f4b000",
+                  color: "var(--brand-accent)",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: 0.6,

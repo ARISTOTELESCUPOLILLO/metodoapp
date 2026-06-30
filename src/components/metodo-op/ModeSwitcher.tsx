@@ -96,9 +96,9 @@ export function ModeSwitcher({
           style={{
             width: "100%",
             marginTop: 6,
-            background: selectedSlot === "bonus" ? "#f4b000" : "transparent",
-            color: selectedSlot === "bonus" ? "#0f213f" : "#f4b000",
-            border: "2px solid #f4b000",
+            background: selectedSlot === "bonus" ? "var(--brand-accent)" : "transparent",
+            color: selectedSlot === "bonus" ? "var(--brand-primary)" : "var(--brand-accent)",
+            border: "2px solid var(--brand-accent)",
             borderRadius: 12,
             padding: "7px 16px",
             fontWeight: 800,

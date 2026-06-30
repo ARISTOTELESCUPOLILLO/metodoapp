@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
@@ -416,7 +416,7 @@ export function ProjecaoTab() {
                 padding: 14,
               }}
             >
-              <div style={{ fontWeight: 800, fontSize: 13, color: "#0f213f", marginBottom: 10 }}>
+              <div style={{ fontWeight: 800, fontSize: 13, color: "var(--brand-primary)", marginBottom: 10 }}>
                 TOTAL PREVISTO
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -459,7 +459,7 @@ export function ProjecaoTab() {
                   <Th>Custo USD</Th>
                   <Th>Custo R$</Th>
                   <Th style={{ color: "#15803d" }}>Receita R$</Th>
-                  <Th style={{ color: "#0f213f" }}>Lucro R$</Th>
+                  <Th style={{ color: "var(--brand-primary)" }}>Lucro R$</Th>
                   <Th style={{ fontSize: 11, color: "#94a3b8" }}>Planos</Th>
                 </tr>
               </thead>
@@ -490,7 +490,7 @@ export function ProjecaoTab() {
               </tbody>
               <tfoot style={{ background: "#f8fafc", borderTop: "2px solid #e2e8f0" }}>
                 <tr>
-                  <Td style={{ fontWeight: 700, color: "#0f213f" }}>TOTAL PREVISTO</Td>
+                  <Td style={{ fontWeight: 700, color: "var(--brand-primary)" }}>TOTAL PREVISTO</Td>
                   <Td style={{ fontWeight: 700, color: "#6d28d9" }}>{usd(totalFal)}</Td>
                   <Td style={{ fontWeight: 700, color: "#0369a1" }}>{usd(totalOai)}</Td>
                   <Td style={{ fontWeight: 700 }}>{usd(totalFal + totalOai)}</Td>
@@ -548,7 +548,7 @@ export function ProjecaoTab() {
                       fontWeight: 700,
                       fontSize: 13,
                       marginBottom: ok ? 6 : 10,
-                      color: ok ? "#15803d" : "#0f213f",
+                      color: ok ? "#15803d" : "var(--brand-primary)",
                     }}
                   >
                     {label}
@@ -654,7 +654,7 @@ export function ProjecaoTab() {
             padding: "6px 14px",
             borderRadius: 6,
             cursor: "pointer",
-            color: "#0f213f",
+            color: "var(--brand-primary)",
             marginBottom: 10,
           }}
         >
@@ -910,7 +910,7 @@ function SectionTitle({
   style?: React.CSSProperties;
 }) {
   return (
-    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0f213f", marginBottom: 10, ...style }}>
+    <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 10, ...style }}>
       {children}
     </h3>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
 
@@ -758,7 +758,7 @@ function SummaryCard({
   warn?: boolean;
   highlight?: boolean;
 }) {
-  const bg = dark ? "#0f213f" : highlight ? "#fef2f2" : warn ? "#fffbeb" : "#f1f5f9";
+  const bg = dark ? "var(--brand-primary)" : highlight ? "#fef2f2" : warn ? "#fffbeb" : "#f1f5f9";
   const col = dark ? "#fff" : "#0f172a";
   const subCol = dark ? "rgba(255,255,255,.5)" : warn ? "#92400e" : "#94a3b8";
   return (

@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "../data/brandColors";
 import { jsPDF } from "jspdf";
 import { BrandKit, MethodOpResult, MoodCode, CarouselCard, FeedItem } from "../types";
 import { mopName } from "./file";
@@ -80,7 +81,7 @@ export function generateSequencePdf(
   doc.text(new Date().toLocaleDateString("pt-BR"), margin, y);
   y += 6;
 
-  const ac = (kit.accentColor || "#f4b000").replace("#", "");
+  const ac = (kit.accentColor || BRAND_ACCENT).replace("#", "");
   doc.setDrawColor(
     parseInt(ac.slice(0, 2), 16),
     parseInt(ac.slice(2, 4), 16),
@@ -201,7 +202,7 @@ export function generateSequencePdf(
     estaticosFinais.forEach((item: FeedItem, i: number) => {
       checkPage(45);
       // Tag com cor accent — sinaliza visualmente que é peça de fechamento, não abertura.
-      tag(`FECHAMENTO ${i + 1} · ESTÁTICO FINAL`, kit.accentColor || "#f4b000", "#ffffff");
+      tag(`FECHAMENTO ${i + 1} · ESTÁTICO FINAL`, kit.accentColor || BRAND_ACCENT, "#ffffff");
       body(item.titulo, 12, true);
       label("Texto");
       body(item.texto);

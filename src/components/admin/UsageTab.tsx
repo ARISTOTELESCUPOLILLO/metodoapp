@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -362,6 +362,6 @@ const Td = ({ children }: { children: React.ReactNode }) => (
 const Card = ({ label, value }: { label: string; value: string }) => (
   <div style={{ background: "#f1f5f9", padding: 12, borderRadius: 8 }}>
     <div style={{ fontSize: 12, color: "#64748b" }}>{label}</div>
-    <div style={{ fontSize: 20, fontWeight: 700, color: "#0f213f", marginTop: 2 }}>{value}</div>
+    <div style={{ fontSize: 20, fontWeight: 700, color: "var(--brand-primary)", marginTop: 2 }}>{value}</div>
   </div>
 );

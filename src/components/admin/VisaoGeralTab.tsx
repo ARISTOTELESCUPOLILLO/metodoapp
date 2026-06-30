@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
 
@@ -153,7 +153,7 @@ export function VisaoGeralTab() {
             label="Clientes reais"
             value={String(clients.length)}
             sub={`${activeClients} ativo${activeClients !== 1 ? "s" : ""} · ${clients.length - activeClients} inativo${clients.length - activeClients !== 1 ? "s" : ""}`}
-            color="#0f213f"
+            color="var(--brand-primary)"
           />
           <BigCard label="Usuários teste" value={String(tests.length)} color="#92400e" />
           <BigCard label="Admins" value={String(admins.length)} color="#4c1d95" />
@@ -258,7 +258,7 @@ function BigCard({
       }}
     >
       <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: color ?? "#0f213f", lineHeight: 1 }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: color ?? "var(--brand-primary)", lineHeight: 1 }}>
         {value}
       </div>
       {sub && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{sub}</div>}
@@ -292,13 +292,13 @@ function ApiCard({
         flex: 1,
       }}
     >
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#0f213f", marginBottom: 8 }}>{name}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 8 }}>{name}</div>
 
       <div
         style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}
       >
         <span style={{ color: "#64748b" }}>Saldo</span>
-        <span style={{ fontWeight: 700, color: "#0f213f" }}>{balance}</span>
+        <span style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{balance}</span>
       </div>
       <div
         style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 10 }}

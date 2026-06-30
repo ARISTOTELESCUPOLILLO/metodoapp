@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "../../../data/brandColors";
 import { useEffect, useMemo, useState } from "react";
 import { BrandKit, FeedItem, MoodCode } from "../../../types";
 import { PersonagemGender } from "../../../core/visualDirection";
@@ -87,7 +88,7 @@ export function FeedCard({
         companyName: kit.companyName,
         mainActivity: kit.mainActivity,
         primaryColor: kit.primaryColor,
-        accentColor: kit.accentColor || "#f4b000",
+        accentColor: kit.accentColor || BRAND_ACCENT,
         fontFamily: kit.fontPair || "Montserrat",
         secondaryFont: kit.secondaryFont,
         mood,

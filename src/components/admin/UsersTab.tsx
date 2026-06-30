@@ -468,7 +468,7 @@ export function UsersTab() {
                           fontSize: 14,
                           fontWeight: 700,
                           padding: "2px 6px",
-                          border: "1px solid #0f213f",
+                          border: "1px solid var(--brand-primary)",
                           borderRadius: 4,
                           width: 140,
                         }}
@@ -492,7 +492,7 @@ export function UsersTab() {
                   {r.is_admin && (
                     <span
                       style={{
-                        background: "#0f213f",
+                        background: "var(--brand-primary)",
                         color: "#fff",
                         fontSize: 10,
                         padding: "1px 6px",
@@ -611,7 +611,7 @@ export function UsersTab() {
               <MRow k="Admin">
                 <button
                   onClick={() => toggleAdmin(r)}
-                  style={pill(r.is_admin ? "#0f213f" : "#94a3b8")}
+                  style={pill(r.is_admin ? "var(--brand-primary)" : "#94a3b8")}
                 >
                   {r.is_admin ? "admin" : "user"}
                 </button>
@@ -672,9 +672,9 @@ export function UsersTab() {
                   onClick={() => actAs(r)}
                   style={{
                     ...actionBtn,
-                    background: "#0f213f",
+                    background: "var(--brand-primary)",
                     color: "#fff",
-                    borderColor: "#0f213f",
+                    borderColor: "var(--brand-primary)",
                     fontWeight: 700,
                   }}
                   disabled={r.is_admin}
@@ -747,7 +747,7 @@ export function UsersTab() {
                               fontSize: 13,
                               fontWeight: 600,
                               padding: "2px 6px",
-                              border: "1px solid #0f213f",
+                              border: "1px solid var(--brand-primary)",
                               borderRadius: 4,
                               width: 130,
                             }}
@@ -771,7 +771,7 @@ export function UsersTab() {
                       {r.is_admin && (
                         <span
                           style={{
-                            background: "#0f213f",
+                            background: "var(--brand-primary)",
                             color: "#fff",
                             fontSize: 10,
                             padding: "1px 6px",
@@ -928,9 +928,9 @@ export function UsersTab() {
                           onClick={() => actAs(r)}
                           style={{
                             ...actionBtn,
-                            background: "#0f213f",
+                            background: "var(--brand-primary)",
                             color: "#fff",
-                            borderColor: "#0f213f",
+                            borderColor: "var(--brand-primary)",
                             fontWeight: 700,
                             fontSize: 11,
                           }}
@@ -965,7 +965,7 @@ export function UsersTab() {
                         </button>
                         <button
                           onClick={() => toggleAdmin(r)}
-                          style={pill(r.is_admin ? "#0f213f" : "#94a3b8")}
+                          style={pill(r.is_admin ? "var(--brand-primary)" : "#94a3b8")}
                         >
                           {r.is_admin ? "admin" : "user"}
                         </button>
@@ -1107,7 +1107,7 @@ export function UsersTab() {
                   onClick={assignSlot}
                   disabled={!assignModal.selectedPlanId || !assignModal.dateVal}
                   style={{
-                    background: "#0f213f",
+                    background: "var(--brand-primary)",
                     color: "#fff",
                     border: "none",
                     padding: "8px 16px",
@@ -1189,7 +1189,7 @@ function PlanCell({
                 borderRadius: 4,
                 fontSize: 12,
                 cursor: "pointer",
-                color: "#0f213f",
+                color: "var(--brand-primary)",
                 fontWeight: 600,
               }}
             >
@@ -1273,7 +1273,7 @@ function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey
   if (!slots.length) {
     if (row.is_admin)
       return (
-        <span style={{ color: "#f4b000", fontWeight: 600, fontSize: 12 }}>Ilimitado (admin)</span>
+        <span style={{ color: "var(--brand-accent)", fontWeight: 600, fontSize: 12 }}>Ilimitado (admin)</span>
       );
     return <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>;
   }
@@ -1324,7 +1324,7 @@ function SlotsConsumption({ row, onRenew }: { row: Row; onRenew?: (slot: SlotKey
                     onClick={() => onRenew(s.key)}
                     title="Atribuir plano / renovar ciclo"
                     style={{
-                      background: "#0f213f",
+                      background: "var(--brand-primary)",
                       color: "#fff",
                       border: "none",
                       padding: "1px 6px",

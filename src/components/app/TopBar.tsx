@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+﻿import { Link } from "@tanstack/react-router";
 import { Home, Moon, Sun, History, Users, LogOut, UserX, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { useAuth, signOut } from "@/hooks/useAuth";
@@ -16,7 +16,7 @@ export function TopBar() {
   if (!user) return null;
 
   const iconBtn: React.CSSProperties = {
-    background: "#0f213f",
+    background: "var(--brand-primary)",
     border: "none",
     color: "#fff",
     width: 32,

@@ -1,4 +1,4 @@
-import { PlanCard } from "./PlanCard";
+﻿import { PlanCard } from "./PlanCard";
 import type { SlotInfo } from "../../hooks/useProfile";
 
 interface Props {
@@ -16,8 +16,8 @@ export function PlanSlotsBar({ profileLoading, slots, effectiveAdmin }: Props) {
           {effectiveAdmin && (
             <span
               style={{
-                background: "#f4b000",
-                color: "#0f213f",
+                background: "var(--brand-accent)",
+                color: "var(--brand-primary)",
                 padding: "3px 12px",
                 borderRadius: 999,
                 fontSize: 12,
@@ -35,8 +35,8 @@ export function PlanSlotsBar({ profileLoading, slots, effectiveAdmin }: Props) {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <span
             style={{
-              background: "#f4b000",
-              color: "#0f213f",
+              background: "var(--brand-accent)",
+              color: "var(--brand-primary)",
               padding: "3px 12px",
               borderRadius: 999,
               fontSize: 12,

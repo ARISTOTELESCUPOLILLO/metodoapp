@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function SettingsTab() {
@@ -78,7 +78,7 @@ export function SettingsTab() {
             padding: 14,
           }}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#0f213f", marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 10 }}>
             Custos unitários — fal.ai
           </div>
           <div className="settingsGrid2">
@@ -108,7 +108,7 @@ export function SettingsTab() {
             padding: 14,
           }}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#0f213f", marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 10 }}>
             Custo unitário — OpenAI
           </div>
           <Field
@@ -126,7 +126,7 @@ export function SettingsTab() {
             padding: 14,
           }}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#0f213f", marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 10 }}>
             Saldos disponíveis
           </div>
           <div className="settingsGrid2">
@@ -143,7 +143,7 @@ export function SettingsTab() {
             padding: 14,
           }}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#0f213f", marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 10 }}>
             Câmbio
           </div>
           <Field label="Dólar (R$ por US$ 1)" value={usdRate} onChange={setUsdRate} />
@@ -176,7 +176,7 @@ export function SettingsTab() {
           type="submit"
           disabled={saving}
           style={{
-            background: "#0f213f",
+            background: "var(--brand-primary)",
             color: "#fff",
             border: "none",
             padding: "10px 16px",

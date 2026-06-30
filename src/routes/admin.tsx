@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { AuthGate } from "@/components/app/AuthGate";
 import { TopBar } from "@/components/app/TopBar";
 import { ClientesTab } from "@/components/admin/ClientesTab";
@@ -10,6 +9,7 @@ import { FinanceiroTab } from "@/components/admin/FinanceiroTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { DivulgacaoTab } from "@/components/admin/DivulgacaoTab";
 import { StorageTab } from "@/components/admin/StorageTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/admin")({
   component: () => (
@@ -20,29 +20,10 @@ export const Route = createFileRoute("/admin")({
   ),
 });
 
-type Tab =
-  | "clientes"
-  | "convites"
-  | "planos"
-  | "consumo"
-  | "financeiro"
-  | "configuracoes"
-  | "divulgacao"
-  | "storage";
+const trigger =
+  "rounded-none bg-transparent shadow-none px-3.5 py-2.5 text-sm font-semibold -mb-px border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=inactive]:text-slate-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none";
 
 function AdminPage() {
-  const [tab, setTab] = useState<Tab>("clientes");
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "clientes", label: "Clientes" },
-    { id: "convites", label: "Convites" },
-    { id: "planos", label: "Planos" },
-    { id: "consumo", label: "Consumo" },
-    { id: "financeiro", label: "Financeiro" },
-    { id: "configuracoes", label: "Configurações" },
-    { id: "divulgacao", label: "Divulgação" },
-    { id: "storage", label: "Storage" },
-  ];
-
   return (
     <div style={{ maxWidth: 1100, margin: "24px auto", padding: "0 12px" }}>
       <div
@@ -57,50 +38,32 @@ function AdminPage() {
         <h1 style={{ fontSize: 22, fontWeight: 700 }}>Administração</h1>
         <Link
           to="/"
-          style={{ fontSize: 13, color: "#0f213f", textDecoration: "none", fontWeight: 600 }}
+          style={{ fontSize: 13, color: "var(--brand-primary)", textDecoration: "none", fontWeight: 600 }}
         >
           ← Voltar para Home
         </Link>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 4,
-          borderBottom: "1px solid #e2e8f0",
-          marginBottom: 20,
-          flexWrap: "wrap",
-        }}
-      >
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              background: "transparent",
-              border: "none",
-              padding: "10px 14px",
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-              color: tab === t.id ? "#0f213f" : "#64748b",
-              borderBottom: tab === t.id ? "2px solid #0f213f" : "2px solid transparent",
-              marginBottom: -1,
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "clientes" && <ClientesTab />}
-      {tab === "convites" && <InvitesTab />}
-      {tab === "planos" && <PlansTab />}
-      {tab === "consumo" && <UsageTab />}
-      {tab === "financeiro" && <FinanceiroTab />}
-      {tab === "configuracoes" && <SettingsTab />}
-      {tab === "divulgacao" && <DivulgacaoTab />}
-      {tab === "storage" && <StorageTab />}
+      <Tabs defaultValue="clientes">
+        <TabsList className="h-auto gap-0 bg-transparent p-0 border-b border-slate-200 mb-5 flex-wrap rounded-none">
+          <TabsTrigger value="clientes" className={trigger}>Clientes</TabsTrigger>
+          <TabsTrigger value="convites" className={trigger}>Convites</TabsTrigger>
+          <TabsTrigger value="planos" className={trigger}>Planos</TabsTrigger>
+          <TabsTrigger value="consumo" className={trigger}>Consumo</TabsTrigger>
+          <TabsTrigger value="financeiro" className={trigger}>Financeiro</TabsTrigger>
+          <TabsTrigger value="configuracoes" className={trigger}>Configurações</TabsTrigger>
+          <TabsTrigger value="divulgacao" className={trigger}>Divulgação</TabsTrigger>
+          <TabsTrigger value="storage" className={trigger}>Storage</TabsTrigger>
+        </TabsList>
+        <TabsContent value="clientes"><ClientesTab /></TabsContent>
+        <TabsContent value="convites"><InvitesTab /></TabsContent>
+        <TabsContent value="planos"><PlansTab /></TabsContent>
+        <TabsContent value="consumo"><UsageTab /></TabsContent>
+        <TabsContent value="financeiro"><FinanceiroTab /></TabsContent>
+        <TabsContent value="configuracoes"><SettingsTab /></TabsContent>
+        <TabsContent value="divulgacao"><DivulgacaoTab /></TabsContent>
+        <TabsContent value="storage"><StorageTab /></TabsContent>
+      </Tabs>
     </div>
   );
 }

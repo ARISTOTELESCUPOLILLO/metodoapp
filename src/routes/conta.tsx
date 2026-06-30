@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { AuthGate } from "@/components/app/AuthGate";
 import { TopBar } from "@/components/app/TopBar";
 import { useProfile, SlotInfo } from "@/hooks/useProfile";
@@ -166,7 +166,7 @@ function ContaPage() {
           </h1>
           <Link
             to="/"
-            style={{ fontSize: 13, color: "#0f213f", textDecoration: "none", fontWeight: 600 }}
+            style={{ fontSize: 13, color: "var(--brand-primary)", textDecoration: "none", fontWeight: 600 }}
           >
             ← Voltar para Home
           </Link>
@@ -245,7 +245,7 @@ function ContaPage() {
           ))}
         </section>
       ) : isAdmin ? (
-        <div style={{ padding: 16, borderRadius: 12, background: "#0f213f", color: "#fff" }}>
+        <div style={{ padding: 16, borderRadius: 12, background: "var(--brand-primary)", color: "#fff" }}>
           <strong>Acesso de administrador</strong> — sem plano próprio atribuído.
         </div>
       ) : (

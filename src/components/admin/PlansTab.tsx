@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -149,7 +149,7 @@ export function PlansTab() {
         <button
           onClick={() => setEditing({ ...empty })}
           style={{
-            background: "#0f213f",
+            background: "var(--brand-primary)",
             color: "#fff",
             border: "none",
             padding: "8px 14px",
@@ -382,7 +382,7 @@ export function PlansTab() {
                   borderRadius: 8,
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#0f213f", marginBottom: 6 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 6 }}>
                   ★ Personalizados base por tipo
                 </div>
                 <div style={{ fontSize: 11, color: "#64748b", marginBottom: 10 }}>
@@ -434,7 +434,7 @@ export function PlansTab() {
                   onClick={save}
                   disabled={saving}
                   style={{
-                    background: "#0f213f",
+                    background: "var(--brand-primary)",
                     color: "#fff",
                     border: "none",
                     padding: "8px 14px",

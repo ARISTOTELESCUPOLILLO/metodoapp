@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "./brandColors";
 import { defaultVoice } from "./brandVoice";
 import type { BrandKit, ContentFormData, PostUnicoFormData, PostUnicoVisualSelection } from "../types";
 import { lsGet, lsSetQuotaSafe } from "../lib/storage/store";
@@ -11,7 +12,7 @@ export const defaultKit: BrandKit = {
   logoHasName: true,
   primaryColor: "#123a63",
   secondaryColor: "#0f172a",
-  accentColor: "#f4b000",
+  accentColor: BRAND_ACCENT,
   fontPair: "Montserrat",
   brandVoice: defaultVoice("SERVIÇOS"),
   mainActivity: "",

@@ -1,53 +1,25 @@
-import { useState } from "react";
 import { CustosTab } from "./CustosTab";
 import { ProjecaoTab } from "./ProjecaoTab";
 import { ClientesFinanceiroTab } from "./ClientesFinanceiroTab";
 import { VisaoGeralTab } from "./VisaoGeralTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type Sub = "visao" | "custos" | "projecao" | "clientes";
-
-const SUB_TABS: { id: Sub; label: string }[] = [
-  { id: "visao", label: "Painel" },
-  { id: "custos", label: "Custos e Consumo" },
-  { id: "projecao", label: "Projeção de Compras" },
-  { id: "clientes", label: "Clientes" },
-];
-
-const subStyle = (active: boolean): React.CSSProperties => ({
-  background: "transparent",
-  border: "none",
-  padding: "7px 14px",
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: "pointer",
-  color: active ? "#0f213f" : "#64748b",
-  borderBottom: active ? "2px solid #0f213f" : "2px solid transparent",
-  marginBottom: -1,
-});
+const trigger =
+  "rounded-none bg-transparent shadow-none px-3.5 py-2 text-[13px] font-semibold -mb-px border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=inactive]:text-slate-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none";
 
 export function FinanceiroTab() {
-  const [sub, setSub] = useState<Sub>("visao");
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          gap: 2,
-          borderBottom: "1px solid #e2e8f0",
-          marginBottom: 20,
-          flexWrap: "wrap",
-        }}
-      >
-        {SUB_TABS.map((t) => (
-          <button key={t.id} onClick={() => setSub(t.id)} style={subStyle(sub === t.id)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {sub === "visao" && <VisaoGeralTab />}
-      {sub === "custos" && <CustosTab />}
-      {sub === "projecao" && <ProjecaoTab />}
-      {sub === "clientes" && <ClientesFinanceiroTab />}
-    </div>
+    <Tabs defaultValue="visao">
+      <TabsList className="h-auto gap-0 bg-transparent p-0 border-b border-slate-200 mb-5 flex-wrap rounded-none">
+        <TabsTrigger value="visao" className={trigger}>Painel</TabsTrigger>
+        <TabsTrigger value="custos" className={trigger}>Custos e Consumo</TabsTrigger>
+        <TabsTrigger value="projecao" className={trigger}>Projeção de Compras</TabsTrigger>
+        <TabsTrigger value="clientes" className={trigger}>Clientes</TabsTrigger>
+      </TabsList>
+      <TabsContent value="visao"><VisaoGeralTab /></TabsContent>
+      <TabsContent value="custos"><CustosTab /></TabsContent>
+      <TabsContent value="projecao"><ProjecaoTab /></TabsContent>
+      <TabsContent value="clientes"><ClientesFinanceiroTab /></TabsContent>
+    </Tabs>
   );
 }

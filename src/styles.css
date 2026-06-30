@@ -19,6 +19,8 @@
  */
 
 @theme inline {
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-accent: var(--brand-accent);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

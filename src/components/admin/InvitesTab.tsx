@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useServerFn } from "@tanstack/react-start";
@@ -228,7 +228,7 @@ export function InvitesTab() {
         "—"
       : null;
   const statusColor = (s: string) =>
-    s === "aceito" ? "#15803d" : s === "revogado" ? "#b91c1c" : "#0f213f";
+    s === "aceito" ? "#15803d" : s === "revogado" ? "#b91c1c" : "var(--brand-primary)";
   const statusLabel = (s: string) =>
     s === "aceito" ? "Ativo" : s === "revogado" ? "Bloqueado" : "Convidado";
 
