@@ -1,6 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Raleway:wght@400;600;700;800&family=Roboto+Slab:wght@400;600;700&family=Playfair+Display:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Allura&family=Great+Vibes&display=swap');
 
-:root { font-family: Inter, system-ui, sans-serif; color: #111827; background: #f3f4f6; }
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+  /* Identidade fixa da plataforma (navio+ouro do Método OP) — usada no
+     chrome do app (TopBar, hero, botões de ação), independente do Kit de
+     Marca do usuário (que usa suas próprias cores via inline style). Sem
+     esses valores, todo `var(--brand-primary)`/`var(--brand-accent)` sem
+     fallback resolvia como propriedade inválida: texto herdava a cor do
+     ancestral (branco) e fundo virava transparente — os botões de ícone
+     do TopBar ficavam brancos sobre branco, invisíveis. */
+  --brand-primary: #0f213f;
+  --brand-accent: #f4b000;
+}
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, input, textarea, select { font: inherit; }

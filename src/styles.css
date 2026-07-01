@@ -64,6 +64,14 @@
 }
 
 :root {
+  /* Identidade fixa da plataforma (navy+ouro do Método OP) — usada no
+     chrome do app inteiro (TopBar, hero, botões de ação do admin como
+     "Atuar como"), independente do Kit de Marca do usuário. Sem esses
+     valores, `var(--brand-primary)`/`var(--brand-accent)` sem fallback
+     resolviam como propriedade inválida (fundo/borda transparentes, texto
+     herdando branco do ancestral) — botões brancos sobre branco, invisíveis. */
+  --brand-primary: #0f213f;
+  --brand-accent: #f4b000;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
