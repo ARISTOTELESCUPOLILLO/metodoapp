@@ -1,59 +1,14 @@
-﻿import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
-
-interface Profile {
-  id: string;
-  nome: string | null;
-  email: string;
-  status: string;
-  is_test: boolean;
-  plano1_id: string | null;
-  plano1_preco_brl: number | null;
-  plano2_id: string | null;
-  plano2_preco_brl: number | null;
-  bonus_id: string | null;
-  bonus_preco_brl: number | null;
-}
-interface Plan {
-  id: string;
-  codigo: string;
-  limite_imagens: number;
-  limite_renders: number;
-  limite_geracoes: number;
-}
-interface Settings {
-  image_price_usd: number;
-  render_price_usd: number;
-  geracao_price_usd: number;
-  usd_brl_rate: number;
-  falai_balance_usd: number;
-  openai_balance_usd: number;
-}
-
-const R = (n: number) =>
-  `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const U = (n: number) => `US$ ${n.toFixed(2)}`;
-
-function coverColor(cycles: number | null) {
-  if (cycles === null) return "#64748b";
-  if (cycles > 2) return "#15803d";
-  if (cycles > 1) return "#d97706";
-  return "#dc2626";
-}
-function coverLabel(cycles: number | null) {
-  if (cycles === null || cycles === Infinity) return "—";
-  if (cycles > 20) return "> 20 ciclos";
-  return `~${cycles.toFixed(1)} ciclo(s)`;
-}
-function coverBg(cycles: number | null) {
-  if (cycles === null) return "#64748b";
-  if (cycles > 2) return "#dcfce7";
-  if (cycles > 1) return "#fef3c7";
-  return "#fee2e2";
-}
+import { useEffect, useState, useCallback } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { loadVisaoGeralData } from "@/lib/visaoGeral.functions";
+import { computeVisaoGeralView } from "./visaoGeral/computeVisaoGeralView";
+import { SectionTitle, BigCard, R, U } from "./visaoGeral/primitives";
+import { ApiCard } from "./visaoGeral/ApiCard";
+import type { Plan, Profile, Settings } from "./visaoGeral/types";
 
 export function VisaoGeralTab() {
+  const loadVisaoGeralDataFn = useServerFn(loadVisaoGeralData);
+
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
@@ -62,36 +17,13 @@ export function VisaoGeralTab() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: profs }, { data: pls }, { data: roles }, { data: s }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "id,nome,email,status,is_test," +
-            "plano1_id,plano1_preco_brl," +
-            "plano2_id,plano2_preco_brl," +
-            "bonus_id,bonus_preco_brl",
-        ),
-      supabase
-        .from("plans")
-        .select("id,codigo,limite_imagens,limite_renders,limite_geracoes")
-        .eq("ativo", true),
-      supabase.from("user_roles").select("user_id,role"),
-      supabase
-        .from("app_settings")
-        .select(
-          "image_price_usd,render_price_usd,geracao_price_usd,usd_brl_rate,falai_balance_usd,openai_balance_usd",
-        )
-        .eq("id", true)
-        .maybeSingle(),
-    ]);
-    setProfiles((profs || []) as unknown as Profile[]);
-    setPlans((pls || []) as Plan[]);
-    setAdminIds(
-      new Set<string>((roles || []).filter((r) => r.role === "admin").map((r) => r.user_id)),
-    );
-    if (s) setSettings(s as unknown as Settings);
+    const data = await loadVisaoGeralDataFn({ data: undefined });
+    setProfiles(data.profiles);
+    setPlans(data.plans);
+    setAdminIds(new Set(data.adminIds));
+    setSettings(data.settings);
     setLoading(false);
-  }, []);
+  }, [loadVisaoGeralDataFn]);
 
   useEffect(() => {
     load();
@@ -99,49 +31,7 @@ export function VisaoGeralTab() {
 
   if (loading) return <p style={{ color: "#64748b", padding: 12 }}>Carregando painel…</p>;
 
-  const admins = profiles.filter((p) => adminIds.has(p.id));
-  const tests = profiles.filter((p) => p.is_test && !adminIds.has(p.id));
-  const clients = profiles.filter((p) => !p.is_test && !adminIds.has(p.id));
-  const activeClients = clients.filter((p) => p.status === "ativo").length;
-
-  const planMap = new Map((plans || []).map((p) => [p.id, p]));
-  const prices = {
-    image_price_usd: settings?.image_price_usd ?? 0.058,
-    render_price_usd: settings?.render_price_usd ?? 1.6,
-    geracao_price_usd: settings?.geracao_price_usd ?? 0.013,
-  };
-  const rate = settings?.usd_brl_rate ?? 5.8;
-  const falB = settings?.falai_balance_usd ?? 0;
-  const oaiB = settings?.openai_balance_usd ?? 0;
-
-  let totalSold = 0;
-  let falaiCost = 0; // USD
-  let openaiCost = 0; // USD
-
-  for (const p of clients) {
-    const slots = [
-      { planId: p.plano1_id, preco: p.plano1_preco_brl },
-      { planId: p.plano2_id, preco: p.plano2_preco_brl },
-      { planId: p.bonus_id, preco: p.bonus_preco_brl },
-    ];
-    for (const s of slots) {
-      if (!s.planId) continue;
-      const plan = planMap.get(s.planId);
-      if (!plan) continue;
-      totalSold += s.preco ?? 0;
-      falaiCost += planMonthlyFalaiCost(plan, prices);
-      openaiCost += planMonthlyOpenaiCost(plan, prices);
-    }
-  }
-
-  const totalCostBrl = (falaiCost + openaiCost) * rate;
-  const lucro = totalSold - totalCostBrl;
-  const margin = totalSold > 0 ? (lucro / totalSold) * 100 : null;
-
-  const falaiCycles = falaiCost > 0 ? falB / falaiCost : null;
-  const openaiCycles = openaiCost > 0 ? oaiB / openaiCost : null;
-  const falaiBarPct = Math.min(100, ((falaiCycles ?? 0) / 3) * 100);
-  const openaiBarPct = Math.min(100, ((openaiCycles ?? 0) / 3) * 100);
+  const view = computeVisaoGeralView(profiles, plans, adminIds, settings);
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
@@ -151,12 +41,12 @@ export function VisaoGeralTab() {
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <BigCard
             label="Clientes reais"
-            value={String(clients.length)}
-            sub={`${activeClients} ativo${activeClients !== 1 ? "s" : ""} · ${clients.length - activeClients} inativo${clients.length - activeClients !== 1 ? "s" : ""}`}
+            value={String(view.clients.length)}
+            sub={`${view.activeClients} ativo${view.activeClients !== 1 ? "s" : ""} · ${view.clients.length - view.activeClients} inativo${view.clients.length - view.activeClients !== 1 ? "s" : ""}`}
             color="var(--brand-primary)"
           />
-          <BigCard label="Usuários teste" value={String(tests.length)} color="#92400e" />
-          <BigCard label="Admins" value={String(admins.length)} color="#4c1d95" />
+          <BigCard label="Usuários teste" value={String(view.tests.length)} color="#92400e" />
+          <BigCard label="Admins" value={String(view.admins.length)} color="#4c1d95" />
         </div>
       </section>
 
@@ -164,20 +54,20 @@ export function VisaoGeralTab() {
       <section>
         <SectionTitle>Financeiro — clientes reais</SectionTitle>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <BigCard label="Total vendido" value={R(totalSold)} color="#15803d" />
-          <BigCard label="Custo proj." value={R(totalCostBrl)} color="#b45309" />
+          <BigCard label="Total vendido" value={R(view.totalSold)} color="#15803d" />
+          <BigCard label="Custo proj." value={R(view.totalCostBrl)} color="#b45309" />
           <BigCard
             label="Lucro estimado"
-            value={R(lucro)}
-            color={lucro >= 0 ? "#15803d" : "#dc2626"}
+            value={R(view.lucro)}
+            color={view.lucro >= 0 ? "#15803d" : "#dc2626"}
           />
           <BigCard
             label="Margem"
-            value={margin !== null ? `${margin.toFixed(0)}%` : "—"}
-            color={margin !== null && margin >= 0 ? "#15803d" : "#dc2626"}
+            value={view.margin !== null ? `${view.margin.toFixed(0)}%` : "—"}
+            color={view.margin !== null && view.margin >= 0 ? "#15803d" : "#dc2626"}
           />
         </div>
-        {totalSold === 0 && (
+        {view.totalSold === 0 && (
           <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>
             Nenhum preço preenchido ainda. Preencha o campo "R$" em cada plano do cliente (aba
             Clientes).
@@ -191,18 +81,18 @@ export function VisaoGeralTab() {
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           <ApiCard
             name="fal.ai (imagens e vídeos)"
-            balance={U(falB)}
-            custo={falaiCost > 0 ? `${U(falaiCost)} / ciclo` : "Sem planos ativos"}
-            cycles={falaiCycles}
-            barPct={falaiBarPct}
+            balance={U(view.falB)}
+            custo={view.falaiCost > 0 ? `${U(view.falaiCost)} / ciclo` : "Sem planos ativos"}
+            cycles={view.falaiCycles}
+            barPct={view.falaiBarPct}
           />
 
           <ApiCard
             name="OpenAI (conteúdo)"
-            balance={U(oaiB)}
-            custo={openaiCost > 0 ? `${U(openaiCost)} / ciclo` : "Sem planos ativos"}
-            cycles={openaiCycles}
-            barPct={openaiBarPct}
+            balance={U(view.oaiB)}
+            custo={view.openaiCost > 0 ? `${U(view.openaiCost)} / ciclo` : "Sem planos ativos"}
+            cycles={view.openaiCycles}
+            barPct={view.openaiBarPct}
           />
         </div>
       </section>
@@ -213,128 +103,6 @@ export function VisaoGeralTab() {
         veja "Custos e Consumo". Cobertura = saldo da API ÷ custo projetado por ciclo dos clientes
         reais.
       </p>
-    </div>
-  );
-}
-
-// ── Sub-componentes ──────────────────────────────────
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3
-      style={{
-        fontSize: 13,
-        fontWeight: 700,
-        color: "#64748b",
-        textTransform: "uppercase",
-        letterSpacing: "0.05em",
-        marginBottom: 10,
-      }}
-    >
-      {children}
-    </h3>
-  );
-}
-
-function BigCard({
-  label,
-  value,
-  sub,
-  color,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  color?: string;
-}) {
-  return (
-    <div
-      style={{
-        background: "#f8fafc",
-        border: "1px solid #e2e8f0",
-        borderRadius: 10,
-        padding: "12px 18px",
-        minWidth: 130,
-      }}
-    >
-      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: color ?? "var(--brand-primary)", lineHeight: 1 }}>
-        {value}
-      </div>
-      {sub && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{sub}</div>}
-    </div>
-  );
-}
-
-function ApiCard({
-  name,
-  balance,
-  custo,
-  cycles,
-  barPct,
-}: {
-  name: string;
-  balance: string;
-  custo: string;
-  cycles: number | null;
-  barPct: number;
-}) {
-  const cc = coverColor(cycles);
-  const bg = coverBg(cycles);
-  return (
-    <div
-      style={{
-        background: "#f8fafc",
-        border: "1px solid #e2e8f0",
-        borderRadius: 10,
-        padding: "14px 18px",
-        minWidth: 240,
-        flex: 1,
-      }}
-    >
-      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-primary)", marginBottom: 8 }}>{name}</div>
-
-      <div
-        style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}
-      >
-        <span style={{ color: "#64748b" }}>Saldo</span>
-        <span style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{balance}</span>
-      </div>
-      <div
-        style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 10 }}
-      >
-        <span style={{ color: "#64748b" }}>Custo proj.</span>
-        <span style={{ fontWeight: 600, color: "#b45309" }}>{custo}</span>
-      </div>
-
-      {/* Barra de cobertura */}
-      <div style={{ background: "#e2e8f0", borderRadius: 99, height: 6, marginBottom: 6 }}>
-        <div
-          style={{
-            background: cc,
-            borderRadius: 99,
-            height: 6,
-            width: `${Math.max(2, barPct)}%`,
-            transition: "width .3s",
-          }}
-        />
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 11, color: "#64748b" }}>Cobertura</span>
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            background: bg,
-            color: cc,
-            padding: "2px 8px",
-            borderRadius: 999,
-          }}
-        >
-          {coverLabel(cycles)}
-        </span>
-      </div>
     </div>
   );
 }
