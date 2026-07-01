@@ -14,7 +14,9 @@ import {
   CENARIO_SLOTS,
 } from "../../utils/imageKitStorage";
 import { ordemGruposPorSegmento, PU_MAX_PRODUTOS } from "../../core/referenciasPolicy";
-import { AGE_OPTIONS, mapFaixaToAnchorAge } from "../../core/audienceAge";
+import { mapFaixaToAnchorAge } from "../../core/audienceAge";
+import { Tile } from "./composicaoVisual/Tile";
+import { PersonagemSemAvatarBlock } from "./composicaoVisual/PersonagemSemAvatarBlock";
 
 const MAX_PRODUTOS_PU = PU_MAX_PRODUTOS;
 
@@ -45,9 +47,11 @@ export default function PostUnicoComposicaoVisual({
   useEffect(() => {
     if (!selection.personagemSemAvatar?.ativo) return;
     const newGenero =
-      generoPref === "F" ? "mulher"
-      : generoPref === "M" ? "homem"
-      : selection.personagemSemAvatar.genero;
+      generoPref === "F"
+        ? "mulher"
+        : generoPref === "M"
+          ? "homem"
+          : selection.personagemSemAvatar.genero;
     const newIdade = faixaEtaria
       ? (mapFaixaToAnchorAge(faixaEtaria) ?? selection.personagemSemAvatar.idade)
       : selection.personagemSemAvatar.idade;
@@ -64,7 +68,7 @@ export default function PostUnicoComposicaoVisual({
         },
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generoPref, faixaEtaria]);
 
   const hasAvatar1 = !!imageKit.avatar;
@@ -274,149 +278,13 @@ export default function PostUnicoComposicaoVisual({
       )}
 
       {!selection.useAvatar && (
-        <div
-          style={{
-            marginTop: 8,
-            padding: "8px 10px",
-            background: selection.personagemSemAvatar?.ativo ? "#ecfeff" : "#f8fafc",
-            border: `1px solid ${selection.personagemSemAvatar?.ativo ? "#67e8f9" : "#e2e8f0"}`,
-            borderRadius: 8,
-          }}
-        >
-          <label className="checkRow" style={{ fontWeight: 700, fontSize: 12, color: "#0f172a" }}>
-            <input
-              type="checkbox"
-              checked={!!selection.personagemSemAvatar?.ativo}
-              onChange={(e) => {
-                const ativando = e.target.checked;
-                const generoPreenchido = ativando && generoPref
-                  ? (generoPref === "F" ? "mulher" : "homem")
-                  : (selection.personagemSemAvatar?.genero ?? "homem");
-                const idadePreenchida = ativando && faixaEtaria
-                  ? (mapFaixaToAnchorAge(faixaEtaria) ?? selection.personagemSemAvatar?.idade ?? AGE_OPTIONS[2])
-                  : (selection.personagemSemAvatar?.idade ?? AGE_OPTIONS[2]);
-                onChange({
-                  ...selection,
-                  personagemSemAvatar: {
-                    ativo: ativando,
-                    genero: generoPreenchido,
-                    idade: idadePreenchida,
-                    comUniforme: selection.personagemSemAvatar?.comUniforme ?? false,
-                  },
-                });
-              }}
-            />
-            <span>Gerar personagem (sem avatar) — público-alvo</span>
-            {selection.personagemSemAvatar?.ativo && (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#475569",
-                  background: "#fff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 6,
-                  padding: "2px 8px",
-                  letterSpacing: 0.3,
-                }}
-              >
-                {selection.personagemSemAvatar.genero === "mulher" ? "F" : "M"} ·{" "}
-                {(selection.personagemSemAvatar.idade ?? "").replace(" anos", "").replace(" ano", "")} ·{" "}
-                {selection.personagemSemAvatar.comUniforme && kit.uniformeDataUrl
-                  ? "Emissor"
-                  : "Público-alvo"}
-              </span>
-            )}
-          </label>
-          <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>
-            Por padrão esse personagem representa o <b>público-alvo</b> (figurino livre) — não
-            precisa de uniforme cadastrado para aparecer.
-          </p>
-          {selection.personagemSemAvatar?.ativo && (
-            <div
-              style={{
-                marginTop: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  onChange({
-                    ...selection,
-                    personagemSemAvatar: {
-                      ...selection.personagemSemAvatar!,
-                      genero:
-                        selection.personagemSemAvatar!.genero === "mulher" ? "homem" : "mulher",
-                    },
-                  })
-                }
-                style={{
-                  fontSize: 11,
-                  padding: "3px 10px",
-                  border: "1px solid #bfdbfe",
-                  background: "#eff6ff",
-                  color: "#1d4ed8",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Trocar p/{" "}
-                {selection.personagemSemAvatar.genero === "mulher" ? "Masculino" : "Feminino"}
-              </button>
-              <select
-                value={selection.personagemSemAvatar.idade}
-                onChange={(e) =>
-                  onChange({
-                    ...selection,
-                    personagemSemAvatar: {
-                      ...selection.personagemSemAvatar!,
-                      idade: e.target.value,
-                    },
-                  })
-                }
-                style={{
-                  fontSize: 11,
-                  padding: "3px 6px",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 6,
-                  background: "#fff",
-                  color: "#475569",
-                  cursor: "pointer",
-                }}
-              >
-                {AGE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          {selection.personagemSemAvatar?.ativo && !!kit.uniformeDataUrl && (
-            <label className="checkRow" style={{ marginTop: 8, fontSize: 12, color: "#0f172a" }}>
-              <input
-                type="checkbox"
-                checked={!!selection.personagemSemAvatar.comUniforme}
-                onChange={(e) =>
-                  onChange({
-                    ...selection,
-                    personagemSemAvatar: {
-                      ...selection.personagemSemAvatar!,
-                      comUniforme: e.target.checked,
-                    },
-                  })
-                }
-              />
-              Vestir com uniforme da empresa (esse personagem passa a ser o emissor, não o
-              público-alvo)
-            </label>
-          )}
-        </div>
+        <PersonagemSemAvatarBlock
+          selection={selection}
+          onChange={onChange}
+          uniformeDataUrl={kit.uniformeDataUrl}
+          generoPref={generoPref}
+          faixaEtaria={faixaEtaria}
+        />
       )}
 
       {(!hasAvatar || !hasFachada || !hasCenario || !hasProdutos) && (
@@ -507,101 +375,5 @@ export default function PostUnicoComposicaoVisual({
         </div>
       )}
     </div>
-  );
-}
-
-function Tile({
-  checked,
-  onToggle,
-  url,
-  label,
-  disabled,
-}: {
-  checked: boolean;
-  onToggle: () => void;
-  url?: string;
-  label: string;
-  disabled?: boolean;
-}) {
-  return (
-    <label
-      title={disabled ? "Limite atingido — desmarque um item para trocar" : undefined}
-      style={{
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 4,
-        padding: 4,
-        borderRadius: 8,
-        cursor: disabled ? "not-allowed" : "pointer",
-        background: checked ? "#cffafe" : "#fff",
-        border: `1px solid ${checked ? "#0891b2" : "#e2e8f0"}`,
-        fontSize: 10,
-        opacity: disabled ? 0.45 : 1,
-      }}
-    >
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          aspectRatio: "1 / 1",
-          borderRadius: 6,
-          overflow: "hidden",
-          background: "#fff",
-          border: "1px solid #cbd5e1",
-        }}
-      >
-        {url ? (
-          <img
-            src={url}
-            alt={label}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
-          <span
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 10,
-              color: "#94a3b8",
-            }}
-          >
-            —
-          </span>
-        )}
-        <input
-          type="checkbox"
-          checked={checked}
-          disabled={disabled}
-          onChange={onToggle}
-          style={{
-            position: "absolute",
-            top: 4,
-            left: 4,
-            width: 16,
-            height: 16,
-            minWidth: 16,
-            margin: 0,
-            padding: 0,
-            cursor: disabled ? "not-allowed" : "pointer",
-          }}
-        />
-      </div>
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: "#0f172a",
-          textAlign: "center",
-          lineHeight: 1.15,
-        }}
-      >
-        {label}
-      </span>
-    </label>
   );
 }
