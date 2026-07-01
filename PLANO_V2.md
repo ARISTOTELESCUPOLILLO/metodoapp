@@ -428,6 +428,78 @@ Mudar comportamento de geração de prompt (novo bloco, nova condição, novo se
 
 ---
 
+## 6. PROCESSO DE EXECUÇÃO OBRIGATÓRIO (v2.1 — consolidado em 2026-07-01)
+
+Esta seção documenta o método usado para concluir a Fase 9.1 (fatiamento de todos os
+megafiles de componente/admin/engine para abaixo do limite de linhas) e **passa a ser
+processo padrão obrigatório** para qualquer ajuste estrutural, melhoria ou otimização
+futura no Método OP — não só fatiamento de arquivo. Nenhuma mudança de estrutura (novo
+componente, novo hook, refactor, extração, unificação de lógica) deve ser considerada
+concluída sem seguir os passos abaixo.
+
+### 6.1 Divisão de trabalho por modelo
+
+- **Planejamento e verificação sempre por um modelo em modo cuidadoso** (equivalente ao
+  papel do Sonnet nesta sessão): ler o arquivo/módulo inteiro antes de propor qualquer
+  mudança, decidir o corte exato (o que vira arquivo/hook novo), e — em extrações
+  mecânicas — escrever o conteúdo dos arquivos novos pessoalmente, sem ambiguidade, antes
+  de delegar a fiação.
+- **Implementação delicada sempre com Opus 4.8**: a fiação (trocar blocos removidos por
+  chamadas aos arquivos novos, ajustar imports) é delegada a um agente rodando Opus 4.8,
+  com um prompt exaustivo — cada variável, cada linha de import a manter/remover, a ordem
+  exata de wiring — para minimizar julgamento improvisado do agente.
+- **Nenhuma mudança em regra de negócio, texto ou comportamento é permitida durante uma
+  extração mecânica.** Se a tarefa exigir mudar lógica de verdade (não só mover código),
+  isso é uma tarefa separada, declarada como tal, não uma "extração".
+
+### 6.2 Checklist de verificação obrigatório (antes de qualquer commit)
+
+1. `npx tsc --noEmit` — zero erros novos.
+2. `npx eslint` nos arquivos tocados — zero erros novos (erros pré-existentes devem ser
+   confirmados como tal via `git show HEAD:<arquivo>` antes de serem ignorados, nunca
+   presumidos).
+3. `npx vitest run` — suíte de testes automatizados sem regressão.
+4. `npm run build` — build de produção limpo.
+5. **Revisão do diff linha a linha** (`git diff`) — confirmar que as únicas mudanças reais
+   são estrutura/wiring, nunca lógica ou texto alterado (especialmente crítico em motores
+   de geração de prompt/imagem, onde uma palavra trocada muda o resultado da IA).
+6. **Teste ao vivo** sempre que o fluxo permitir sem custo real: sessão de usuário real
+   (não mock) dirigida via Playwright, exercitando a interação de verdade (clicar,
+   digitar, marcar checkbox) — não só carregar a página. Quando o fluxo dispara geração
+   real (IA de imagem/vídeo, que custa dinheiro) e não há uma sequência já gerada
+   disponível, a verificação estática (itens 1–5) é o critério aceito — documentar
+   explicitamente essa decisão, não pular a verificação sem registrar o motivo.
+7. **Deploy só depois de todos os itens acima**: `npm run deploy` (nunca build ou
+   wrangler isolado), seguido de um smoke test em produção real (mesma técnica de sessão
+   real, contra a URL pública) antes de considerar a tarefa concluída.
+
+### 6.3 Limite de linhas (reforça a Regra 1 da Seção 5)
+
+Meta de 400 linhas por componente/arquivo, teto rígido de 500 como sinal de alerta (não
+bloqueador automático — arquivos que já são o corte mais coeso possível sem fragmentar um
+fluxo único, como um motor de gravação de voz ou o bloco de copy do Post Único, podem
+ficar levemente acima e serem aceitos conscientemente, com essa decisão registrada).
+
+### 6.4 Documentação obrigatória a cada mudança estrutural
+
+- Registrar no arquivo de memória do projeto (`project-fase9-status.md` ou equivalente
+  para trabalho futuro) o antes/depois de linhas, o commit, e qualquer achado real (bug
+  descoberto durante a validação, decisão de aceitar algo fora do padrão).
+- Se um bug real de produção for encontrado durante a validação (não hipotético — algo
+  que quebra de verdade), ele é tratado com a mesma seriedade da tarefa principal:
+  investigado com evidência (não suposição), corrigido, testado em produção real, e
+  documentado — nunca arquivado como "não é meu problema agora".
+
+### 6.5 Supervisão
+
+O **Agente de Conformidade Estrutural** (`.claude/agents/conformidade-estrutural.md`) é
+o agente designado para revisar qualquer mudança estrutural relevante contra esta seção
+antes de ser considerada concluída. Deve ser invocado explicitamente ao final de tarefas
+de refactor/otimização/melhoria que alterem a estrutura de arquivos, hooks ou
+componentes — não é opcional nem substituível por "parece que está bom".
+
+---
+
 ## Sumário executivo
 
 Os bugs recorrentes do Método OP (modo PU↔MOP trocando sozinho, audience resetando, gênero errado, produto aparecendo em formato proibido, contadores zerando, copy perdido ao navegar) têm **duas causas-raiz estruturais**, não bugs pontuais:

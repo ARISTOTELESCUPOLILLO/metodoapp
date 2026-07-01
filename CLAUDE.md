@@ -88,5 +88,25 @@ Função central em `regenerateWithKit.ts` — monta `PostUnicoReferences` a par
 - **Supabase admin:** usar `supabaseAdmin` (service role) para operações que bypassam RLS
 - **Cloudflare Workers:** sem `fs`, sem `path`, sem APIs Node.js nativas
 
+## Processo obrigatório para refactor/melhoria estrutural
+**Leia `PLANO_V2.md` (Seção 5 — Regras de Convenção, Seção 6 — Processo de Execução)
+antes de qualquer extração de componente/hook, fatiamento de arquivo, unificação de
+lógica duplicada ou reorganização estrutural.** Isso vale para qualquer sessão, não só
+a que consolidou o processo — não é um plano descartável, é o padrão vigente do projeto.
+Resumo do que a Seção 6 exige (não pule nenhum item):
+1. Ler o arquivo/módulo inteiro antes de propor o corte; escrever o conteúdo dos
+   arquivos novos pessoalmente em extrações mecânicas (sem ambiguidade) antes de
+   delegar a fiação a um agente Opus 4.8 com prompt exaustivo.
+2. Extração mecânica = zero mudança de lógica/texto/comportamento. Mudança de
+   comportamento é uma tarefa separada, declarada como tal.
+3. Antes de commitar: `tsc --noEmit`, `eslint` nos arquivos tocados, `vitest run`,
+   `npm run build`, revisão do `git diff` linha a linha, e teste ao vivo (sessão real
+   via Playwright) sempre que o fluxo não custar dinheiro real (geração de IA).
+4. Deploy só depois de tudo verde: `npm run deploy` + smoke test em produção real.
+5. Documentar antes/depois de linhas, commit e achados reais na memória do projeto.
+6. **Ao final, invocar o Agente de Conformidade Estrutural**
+   (`.claude/agents/conformidade-estrutural.md`) para auditar a mudança contra este
+   processo — não é opcional, é o portão de saída da tarefa.
+
 ## Idioma
 Todas as respostas e comentários de código em **português brasileiro**.
