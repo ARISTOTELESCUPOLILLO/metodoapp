@@ -8,20 +8,18 @@
 // Custo: GRÁTIS dentro do plano. O extra só entra para liberar uma
 // combinação que o plano não cobre (SERVIÇO/MARCA + produtos no carrossel).
 
-import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { lsGetRaw, lsSetRaw } from "../../lib/storage/store";
+import { Fragment } from "react";
 import type { BrandKit, ImageKit, MoodCode } from "../../types";
-import { regenerateWithKit } from "../../services/regenerateWithKit";
 import { cenarioLabel } from "../../utils/imageKitStorage";
-import type { ModeloOP, SlotFormato, SlotPersonalizacao } from "../../core/personalizacaoMop";
-import {
-  descrevePolicy,
-  ordemGruposPorSegmento,
-  policyComExtras,
-  policyPorFormato,
-  type RefPolicy,
-} from "../../core/referenciasPolicy";
+import type { ModeloOP, SlotFormato } from "../../core/personalizacaoMop";
+import { descrevePolicy, ordemGruposPorSegmento } from "../../core/referenciasPolicy";
 import type { PersonagemGender } from "../../core/visualDirection";
+import { Tile } from "./usoReferenciasDia/Tile";
+import { useUsoReferenciasState } from "./usoReferenciasDia/useUsoReferenciasState";
+
+// eslint-disable-next-line react-refresh/only-export-components -- re-export do hook acoplado ao componente deste arquivo
+export { useRefSelection } from "./usoReferenciasDia/useRefSelection";
+export type { RefSelectionState } from "./usoReferenciasDia/useRefSelection";
 
 interface Props {
   segmento: BrandKit["segment"];
@@ -107,182 +105,52 @@ export default function UsoReferenciasDia(props: Props) {
     ancoragePapel,
   } = props;
 
-  // Policy efetiva (com extras de carrossel quando se aplica)
-  const policyBase = useMemo(
-    () => policyPorFormato(segmento, formato, modelo),
-    [segmento, formato, modelo],
-  );
-  const policy: RefPolicy = useMemo(
-    () => policyComExtras(policyBase, { segmento, formato, modelo, extrasCarrossel }),
-    [policyBase, segmento, formato, modelo, extrasCarrossel],
-  );
-  // (extra de carrossel já está embutido na `policy.produtos` via policyComExtras)
-
-  // Disponibilidade real no Kit
-  const cenariosDisp = useMemo(
-    () =>
-      imageKit.cenarios.map((c, i) => (c ? i + 1 : null)).filter((n): n is number => n !== null),
-    [imageKit.cenarios],
-  );
-  const produtosDisp = useMemo(
-    () =>
-      imageKit.produtos.map((p, i) => (p ? i + 1 : null)).filter((n): n is number => n !== null),
-    [imageKit.produtos],
-  );
-  const temAlguma =
-    (policy.avatar && (!!imageKit.avatar || !!imageKit.avatar2)) ||
-    (policy.fachada && !!imageKit.fachada) ||
-    (policy.cenarios > 0 && cenariosDisp.length > 0) ||
-    (policy.produtos > 0 && produtosDisp.length > 0);
-
-  // Estado UI persistido
-  const [enabled, setEnabled] = useState<boolean>(false);
-  // Qual avatar está marcado (1, 2 ou nenhum). Único — só 1 avatar por geração.
-  const [avatarNum, setAvatarNum] = useState<number | null>(null);
-  const [usarFachada, setUsarFachada] = useState(false);
-  const [cenarioNum, setCenarioNum] = useState<number | null>(null);
-  const [produtosNums, setProdutosNums] = useState<number[]>([]);
-  const [useUniforme, setUseUniforme] = useState(false);
-  const [produtoTelaInformativa, setProdutoTelaInformativa] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Hydrate do localStorage
-  useEffect(() => {
-    try {
-      const raw = lsGetRaw(storageKey);
-      if (raw) {
-        const s = JSON.parse(raw);
-        if (typeof s.enabled === "boolean") setEnabled(s.enabled);
-        if (typeof s.avatarNum === "number" || s.avatarNum === null) {
-          setAvatarNum(s.avatarNum);
-        } else if (typeof s.usarAvatar === "boolean") {
-          // Migração do formato antigo (boolean) → avatarNum (1|2|null).
-          setAvatarNum(s.usarAvatar ? 1 : null);
-        }
-        if (typeof s.usarFachada === "boolean") setUsarFachada(s.usarFachada);
-        if (typeof s.cenarioNum === "number" || s.cenarioNum === null) setCenarioNum(s.cenarioNum);
-        if (Array.isArray(s.produtosNums)) setProdutosNums(s.produtosNums);
-        if (typeof s.useUniforme === "boolean") setUseUniforme(s.useUniforme);
-        if (typeof s.produtoTelaInformativa === "boolean") {
-          setProdutoTelaInformativa(s.produtoTelaInformativa);
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [storageKey]);
-
-  // Persist
-  useEffect(() => {
-    lsSetRaw(
-      storageKey,
-      JSON.stringify({
-        enabled,
-        avatarNum,
-        usarFachada,
-        cenarioNum,
-        produtosNums,
-        useUniforme,
-        produtoTelaInformativa,
-      }),
-    );
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("uso-ref:changed", { detail: { key: storageKey } }));
-    }
-  }, [
+  const {
+    policy,
+    cenariosDisp,
+    produtosDisp,
+    temAlguma,
     enabled,
+    setEnabled,
     avatarNum,
+    setAvatarNum,
     usarFachada,
+    setUsarFachada,
     cenarioNum,
+    setCenarioNum,
     produtosNums,
+    toggleProduto,
+    produtosNoLimite,
     useUniforme,
+    setUseUniforme,
     produtoTelaInformativa,
+    setProdutoTelaInformativa,
+    busy,
+    error,
+    podeGerar,
+    handleGerar,
+  } = useUsoReferenciasState({
+    segmento,
+    modelo,
+    formato,
+    posicao,
+    cardCarrossel,
+    extrasCarrossel,
+    kit,
+    imageKit,
+    mood,
+    titulo,
+    texto,
+    imagePrompt,
+    leituraCenica,
+    formatoOverride,
+    onGerou,
     storageKey,
-  ]);
-
-  // Remove fantasmas: produtos marcados que não existem mais no Kit (foto
-  // deletada/reordenada desde a última seleção) — sem isso o badge de ordem
-  // fica deslocado (ex.: "4"/"5" em vez de "1"/"2") e a distribuição no
-  // carrossel aponta pra um índice que não existe mais, deixando o card sem
-  // produto na geração final.
-  useEffect(() => {
-    setProdutosNums((prev) => {
-      const filtered = prev.filter((n) => produtosDisp.includes(n));
-      return filtered.length === prev.length ? prev : filtered;
-    });
-  }, [produtosDisp]);
-
-  function toggleProduto(n: number) {
-    setProdutosNums((prev) => {
-      if (prev.includes(n)) return prev.filter((x) => x !== n);
-      if (prev.length >= policy.produtos) return prev; // no limite: precisa desmarcar antes de trocar
-      return [...prev, n];
-    });
-  }
-  const produtosNoLimite = produtosNums.length >= policy.produtos;
-
-  const totalSelecionado =
-    (avatarNum != null ? 1 : 0) +
-    (usarFachada ? 1 : 0) +
-    (cenarioNum != null ? 1 : 0) +
-    produtosNums.length;
-  const podeGerar = !busy && enabled && totalSelecionado > 0;
-
-  // A distribuição "1 produto por card" do carrossel é feita pelo bloco
-  // consolidado em ResultsView.tsx (selecaoParaCard/distributeProduto) —
-  // este componente nunca é instanciado com cardCarrossel (sempre `compact`
-  // para carrossel, com o disparo de geração via footerAction), então usa
-  // sempre a seleção tal como o usuário marcou.
-  const produtosNumsParaUso = produtosNums;
-
-  async function handleGerar() {
-    if (!podeGerar) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const slot: SlotPersonalizacao = {
-        formato,
-        posicao,
-        elemento: "avatar", // ignorado pois selecaoDireta tem precedência
-        cardCarrossel,
-        motivo: "",
-      };
-      const url = await regenerateWithKit({
-        slot,
-        kit,
-        imageKit,
-        mood,
-        keyInfo: `${titulo || ""}. ${imagePrompt || ""}`.slice(0, 500),
-        titulo,
-        texto,
-        imagePrompt,
-        leituraCenica,
-        forcedGender,
-        anchoraPersonagem,
-        ancoragePapel,
-        formato: formatoOverride,
-        selecaoDireta: {
-          usarAvatar: avatarNum != null,
-          avatarNum: avatarNum as 1 | 2 | null,
-          usarFachada,
-          cenarioNum: cenarioNum,
-          produtosNums: produtosNumsParaUso,
-          useUniforme: avatarNum != null && useUniforme,
-          produtoTelaInformativa: produtosNumsParaUso.length > 0 && produtoTelaInformativa,
-        },
-        userId,
-      });
-      onGerou(url, {
-        cobrouCarrosselProduto: false,
-        produtoNum: produtosNumsParaUso[0],
-      });
-    } catch (e) {
-      setError((e as Error).message || "Falha ao gerar com referências.");
-    } finally {
-      setBusy(false);
-    }
-  }
+    userId,
+    forcedGender,
+    anchoraPersonagem,
+    ancoragePapel,
+  });
 
   // Política não permite NENHUMA imagem para este formato/segmento → não mostra nada.
   const policyAllowsAny =
@@ -600,239 +468,5 @@ export default function UsoReferenciasDia(props: Props) {
 
       {error && <p style={{ margin: "6px 0 0", color: "#b91c1c", fontSize: 11 }}>{error}</p>}
     </div>
-  );
-}
-
-function Tile({
-  checked,
-  onToggle,
-  url,
-  label,
-  badge,
-  disabled,
-}: {
-  checked: boolean;
-  onToggle: () => void;
-  url?: string;
-  label: string;
-  badge?: number;
-  disabled?: boolean;
-}) {
-  return (
-    <label
-      title={disabled ? "Limite atingido — desmarque um item para trocar" : undefined}
-      style={{
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 4,
-        padding: 4,
-        borderRadius: 8,
-        cursor: disabled ? "not-allowed" : "pointer",
-        background: checked ? "#cffafe" : "#fff",
-        border: `1px solid ${checked ? "#0891b2" : "#e2e8f0"}`,
-        fontSize: 10,
-        opacity: disabled ? 0.45 : 1,
-      }}
-    >
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          aspectRatio: "1 / 1",
-          borderRadius: 6,
-          overflow: "hidden",
-          background: "#fff",
-          border: "1px solid #cbd5e1",
-        }}
-      >
-        {url ? (
-          <img
-            src={url}
-            alt={label}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
-          <span
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 10,
-              color: "#94a3b8",
-            }}
-          >
-            —
-          </span>
-        )}
-        <input
-          type="checkbox"
-          checked={checked}
-          disabled={disabled}
-          onChange={onToggle}
-          style={{
-            position: "absolute",
-            top: 4,
-            left: 4,
-            width: 16,
-            height: 16,
-            minWidth: 16,
-            margin: 0,
-            padding: 0,
-            cursor: disabled ? "not-allowed" : "pointer",
-          }}
-        />
-        {badge !== undefined && (
-          <span
-            style={{
-              position: "absolute",
-              top: 4,
-              right: 4,
-              minWidth: 18,
-              height: 18,
-              padding: "0 5px",
-              borderRadius: 9,
-              background: "#0891b2",
-              color: "#fff",
-              fontSize: 11,
-              fontWeight: 800,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 1px 2px rgba(0,0,0,.25)",
-            }}
-          >
-            {badge}
-          </span>
-        )}
-      </div>
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: "#0f172a",
-          textAlign: "center",
-          lineHeight: 1.15,
-        }}
-      >
-        {label}
-      </span>
-    </label>
-  );
-}
-
-// Hook reaproveitável: lê o estado de seleção persistido por uma peça
-// (mesma `storageKey` usada pelo <UsoReferenciasDia>) e re-renderiza
-// quando muda (mesma aba via evento custom, outras abas via 'storage').
-export interface RefSelectionState {
-  enabled: boolean;
-  // Qual avatar está marcado (1, 2 ou nenhum).
-  avatarNum: number | null;
-  usarFachada: boolean;
-  cenarioNum: number | null;
-  produtosNums: number[];
-  useUniforme: boolean;
-  // O(s) produto(s) selecionados são, eles mesmos, uma tela/dispositivo cujo
-  // conteúdo exibido é a identidade do produto — ver promptRules.buildDeviceRule.
-  produtoTelaInformativa: boolean;
-  hasAny: boolean;
-}
-
-const EMPTY_SEL: RefSelectionState = {
-  enabled: false,
-  avatarNum: null,
-  usarFachada: false,
-  cenarioNum: null,
-  produtosNums: [],
-  useUniforme: false,
-  produtoTelaInformativa: false,
-  hasAny: false,
-};
-
-function readSel(storageKey: string): RefSelectionState {
-  try {
-    if (typeof window === "undefined") return EMPTY_SEL;
-    const raw = lsGetRaw(storageKey);
-    if (!raw) return EMPTY_SEL;
-    const s = JSON.parse(raw);
-    const enabled = !!s.enabled;
-    // Migração do formato antigo (usarAvatar boolean) → avatarNum (1|2|null).
-    const avatarNum =
-      typeof s.avatarNum === "number" || s.avatarNum === null
-        ? s.avatarNum
-        : s.usarAvatar
-          ? 1
-          : null;
-    const usarFachada = !!s.usarFachada;
-    const cenarioNum = typeof s.cenarioNum === "number" ? s.cenarioNum : null;
-    const produtosNums = Array.isArray(s.produtosNums)
-      ? s.produtosNums.filter((n: unknown) => typeof n === "number")
-      : [];
-    const useUniforme = avatarNum != null && !!s.useUniforme;
-    const produtoTelaInformativa = produtosNums.length > 0 && !!s.produtoTelaInformativa;
-    const hasAny =
-      enabled &&
-      (avatarNum != null || usarFachada || cenarioNum != null || produtosNums.length > 0);
-    return {
-      enabled,
-      avatarNum,
-      usarFachada,
-      cenarioNum,
-      produtosNums,
-      useUniforme,
-      produtoTelaInformativa,
-      hasAny,
-    };
-  } catch {
-    return EMPTY_SEL;
-  }
-}
-
-// Cache simples por storageKey para o snapshot ser estável.
-const selCache = new Map<string, RefSelectionState>();
-function getSnapshot(storageKey: string): RefSelectionState {
-  const fresh = readSel(storageKey);
-  const cached = selCache.get(storageKey);
-  if (
-    cached &&
-    cached.enabled === fresh.enabled &&
-    cached.avatarNum === fresh.avatarNum &&
-    cached.usarFachada === fresh.usarFachada &&
-    cached.cenarioNum === fresh.cenarioNum &&
-    cached.produtosNums.length === fresh.produtosNums.length &&
-    cached.produtosNums.every((n, i) => n === fresh.produtosNums[i]) &&
-    cached.useUniforme === fresh.useUniforme &&
-    cached.produtoTelaInformativa === fresh.produtoTelaInformativa
-  ) {
-    return cached;
-  }
-  selCache.set(storageKey, fresh);
-  return fresh;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components -- hook acoplado ao componente deste arquivo
-export function useRefSelection(storageKey: string): RefSelectionState {
-  return useSyncExternalStore(
-    (cb) => {
-      if (typeof window === "undefined") return () => {};
-      const onStorage = (e: StorageEvent) => {
-        if (e.key === storageKey) cb();
-      };
-      const onLocal = (e: Event) => {
-        const ce = e as CustomEvent<{ key: string }>;
-        if (ce.detail?.key === storageKey) cb();
-      };
-      window.addEventListener("storage", onStorage);
-      window.addEventListener("uso-ref:changed", onLocal as EventListener);
-      return () => {
-        window.removeEventListener("storage", onStorage);
-        window.removeEventListener("uso-ref:changed", onLocal as EventListener);
-      };
-    },
-    () => getSnapshot(storageKey),
-    () => EMPTY_SEL,
   );
 }
