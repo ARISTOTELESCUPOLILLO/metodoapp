@@ -3,8 +3,102 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { assertAdmin } from "@/repository/authz";
+import type { Plan, Row } from "@/components/admin/testUsers/types";
 
 const SegmentoEnum = z.enum(["SERVIÇOS", "VAREJO", "MARCA"]);
+const SlotKeyEnum = z.enum(["plano1", "plano2", "bonus"]);
+
+// Substitui TestUsersTab.load()
+export const loadTestUsersData = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+
+    const [{ data: profs }, { data: pls }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select(
+          "id,nome,email,client_code,segmento,created_at,plano1_id,plano1_imgs_usadas,plano1_imgs_limite,plano1_renders_usados,plano1_renders_limite,plano1_geracoes_usadas,plano1_geracoes_limite,plano2_id,plano2_imgs_usadas,plano2_imgs_limite,plano2_renders_usados,plano2_renders_limite,plano2_geracoes_usadas,plano2_geracoes_limite,bonus_id,bonus_imgs_usadas,bonus_imgs_limite,bonus_renders_usados,bonus_renders_limite,bonus_geracoes_usadas,bonus_geracoes_limite",
+        )
+        .eq("is_test", true)
+        .order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("plans")
+        .select("id,codigo,nome,elegivel_bonus")
+        .eq("ativo", true)
+        .order("nome"),
+    ]);
+
+    return {
+      rows: (profs as Row[]) || [],
+      plans: (pls as Plan[]) || [],
+    };
+  });
+
+// Substitui TestUsersTab.changeSeg()
+export const updateTestSegmento = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ userId: z.string().uuid(), segmento: SegmentoEnum.nullable() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ segmento: data.segmento })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Substitui TestUsersTab.changeSlot()
+export const updateTestSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        slot: SlotKeyEnum,
+        planId: z.string().uuid().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const update =
+      data.slot === "plano1"
+        ? { plano1_id: data.planId }
+        : data.slot === "plano2"
+          ? { plano2_id: data.planId }
+          : { bonus_id: data.planId };
+    const { error } = await supabaseAdmin.from("profiles").update(update).eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Substitui TestUsersTab.resetCounters()
+export const resetTestCounters = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ userId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        plano1_imgs_usadas: 0,
+        plano1_renders_usados: 0,
+        plano1_geracoes_usadas: 0,
+        plano2_imgs_usadas: 0,
+        plano2_renders_usados: 0,
+        plano2_geracoes_usadas: 0,
+        bonus_imgs_usadas: 0,
+        bonus_renders_usados: 0,
+        bonus_geracoes_usadas: 0,
+      })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
 
 export const createTestUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
