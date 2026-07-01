@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
-import { downloadDataUrl } from "../../utils/canvasComposer";
+import { useState } from "react";
 import { mopName } from "../../utils/file";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { useImageGenAlert } from "./PreImageAlert";
-import { ArchiveButton } from "./ArchiveButton";
-import { MetaPublish } from "./MetaPublish";
+import { PostUnicoActionsBar } from "./PostUnicoActionsBar";
 import type { PostUnicoCaption } from "../../services/postUnico";
 import { useTextCorrection } from "../../hooks/useTextCorrection";
+import { useCaptionHistory } from "../../hooks/useCaptionHistory";
 
 function insertSignature(caption: string, signature: string): string {
   const trimmed = caption.trim();
@@ -78,50 +77,26 @@ export default function PostUnicoResult({
   const [copied, setCopied] = useState(false);
   // Contagem persistida no app (não reseta ao trocar de aba).
   const captionRegens = captionRegenCount ?? 0;
-  const [editedCaption, setEditedCaption] = useState<string | null>(null);
-  const [captionHistory, setCaptionHistory] = useState<PostUnicoCaption[]>([]);
-  const [selectedIdx, setSelectedIdx] = useState(0);
   const isMobile = useIsMobile();
   const { guard, dialog } = useImageGenAlert();
   const captionCorrection = useTextCorrection();
   const CAPTION_MAX = 2;
   const captionExhausted = captionRegens >= CAPTION_MAX;
 
-  // Reseta o histórico de regeneração de legenda a cada nova imagem gerada
-  // (o contador é zerado no app, setPuCaptionRegen, junto com a nova
-  // geração). NÃO zera `editedCaption` aqui — regenerar a IMAGEM não deve
-  // descartar uma edição manual da legenda (ex.: assinatura inserida pelo
-  // botão "Inserir Assinatura"); isso só é zerado quando a legenda em si
-  // muda (ver efeito abaixo, que reage a `caption`).
-  useEffect(() => {
-    setCaptionHistory([]);
-    setSelectedIdx(0);
-  }, [imageDataUrl]);
-
-  // Mantém histórico de até 2 legendas (inicial + 1 regerada).
-  useEffect(() => {
-    if (!caption) return;
-    setCaptionHistory((prev) => {
-      if (prev.some((c) => c.full === caption.full)) {
-        const idx = prev.findIndex((c) => c.full === caption.full);
-        setSelectedIdx(idx);
-        setEditedCaption(null);
-        return prev;
-      }
-      const next = prev.length >= 2 ? [prev[0], caption] : [...prev, caption];
-      setSelectedIdx(next.length - 1);
-      setEditedCaption(null);
-      return next;
-    });
-  }, [caption]);
+  const {
+    captionHistory,
+    selectedIdx,
+    setSelectedIdx,
+    setEditedCaption,
+    activeCaption,
+    captionText,
+  } = useCaptionHistory(caption, imageDataUrl);
 
   const hasAnything =
     !!imageDataUrl || !!caption || captionLoading || !!captionError || !!started || !!regenerating;
   if (!hasAnything) return null;
 
   const isReady = !!imageDataUrl;
-  const activeCaption = captionHistory[selectedIdx] ?? caption;
-  const captionText = editedCaption ?? activeCaption?.full ?? "";
 
   const filename = mopName({ company: companyName, tipo: "pu01", ext: "png" });
   const txtFilename = mopName({ company: companyName, tipo: "pu01_legenda", ext: "txt" });
@@ -369,139 +344,29 @@ export default function PostUnicoResult({
           )}
         </div>
 
-        {/* Barra única de ações — todos os botões juntos */}
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            flexWrap: "wrap",
-            justifyContent: "center",
-            width: "100%",
-            maxWidth: 480,
+        <PostUnicoActionsBar
+          imageDataUrl={imageDataUrl}
+          filename={filename}
+          slot={slot}
+          companyName={companyName}
+          captionText={captionText}
+          onRegenerate={onRegenerate}
+          regenerating={regenerating}
+          guard={guard}
+          caption={caption}
+          captionLoading={captionLoading}
+          captionError={captionError}
+          copied={copied}
+          onCopy={handleCopy}
+          assinatura={assinatura}
+          onInsertSignature={() => {
+            if (assinatura && !captionText.includes(assinatura))
+              setEditedCaption(insertSignature(captionText, assinatura));
           }}
-        >
-          {(() => {
-            const lightBtn = {
-              background: "#f8fafc",
-              color: "#0f172a",
-              border: "1px solid #cbd5e1",
-              borderRadius: 12,
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
-              whiteSpace: "nowrap" as const,
-            };
-            return (
-              <>
-                {imageDataUrl && (
-                  <>
-                    <button
-                      className="primaryBtn"
-                      type="button"
-                      style={{ width: "auto" }}
-                      onClick={() => downloadDataUrl(imageDataUrl, filename)}
-                    >
-                      Baixar PNG
-                    </button>
-                    <ArchiveButton
-                      tipo="PU"
-                      formato="estatico"
-                      slot={slot}
-                      legenda={captionText}
-                      titulo={companyName ? `Post Único — ${companyName}` : "Post Único"}
-                      imageDataUrls={[imageDataUrl]}
-                      disabledReason="Gere o Post Único antes de arquivar"
-                    />
-                  </>
-                )}
-                {onRegenerate && (
-                  <button
-                    type="button"
-                    onClick={() => guard({ hasPreview: true, tipo: "Estático", run: onRegenerate })}
-                    disabled={regenerating}
-                    style={{
-                      ...lightBtn,
-                      opacity: regenerating ? 0.6 : 1,
-                      cursor: regenerating ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {regenerating ? "Gerando…" : "Gerar outra imagem"}
-                  </button>
-                )}
-                {caption && !captionLoading && !captionError && (
-                  <>
-                    <button
-                      className="primaryBtn"
-                      type="button"
-                      style={{ width: "auto" }}
-                      onClick={handleCopy}
-                    >
-                      {copied ? "✓ Copiado!" : "Copiar legenda"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!(assinatura && !captionText.includes(assinatura))}
-                      onClick={() => {
-                        if (assinatura && !captionText.includes(assinatura))
-                          setEditedCaption(insertSignature(captionText, assinatura));
-                      }}
-                      style={{
-                        ...lightBtn,
-                        background:
-                          assinatura && !captionText.includes(assinatura) ? "#0f172a" : "#e2e8f0",
-                        color: assinatura && !captionText.includes(assinatura) ? "#fff" : "#94a3b8",
-                        border: "none",
-                        cursor:
-                          assinatura && !captionText.includes(assinatura) ? "pointer" : "default",
-                      }}
-                    >
-                      Inserir Assinatura
-                    </button>
-                    <button type="button" style={lightBtn} onClick={handleDownloadTxt}>
-                      Baixar legenda
-                    </button>
-                    {isMobile && (
-                      <button
-                        type="button"
-                        style={{
-                          ...lightBtn,
-                          background: "#25D366",
-                          color: "#fff",
-                          border: "1px solid #1ebe5d",
-                        }}
-                        onClick={() => {
-                          const d = new Date();
-                          const p = (n: number) => String(n).padStart(2, "0");
-                          const data = `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
-                          const text = `Legenda Post Único – ${data}\n\n${captionText.trim()}`;
-                          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-                        }}
-                      >
-                        Compartilhar no WhatsApp
-                      </button>
-                    )}
-                  </>
-                )}
-                {imageDataUrl && <MetaPublish imageDataUrl={imageDataUrl} caption={captionText} />}
-                {onClear && (
-                  <button
-                    type="button"
-                    onClick={onClear}
-                    disabled={regenerating}
-                    style={{
-                      ...lightBtn,
-                      opacity: regenerating ? 0.6 : 1,
-                      cursor: regenerating ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    Limpar conteúdo
-                  </button>
-                )}
-              </>
-            );
-          })()}
-        </div>
+          onDownloadTxt={handleDownloadTxt}
+          isMobile={isMobile}
+          onClear={onClear}
+        />
       </div>
       {dialog}
     </section>
