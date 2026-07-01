@@ -28,9 +28,12 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
 
   // Checklist de produtos/serviços — todos marcados por padrão; reseta
   // quando a lista do Kit de Marca muda (ex.: kit carregado ou editado).
+  // Dependência é `kit.products` (undefined é estável) e não `products`
+  // (que recriava um array novo a cada render enquanto kit.products fosse
+  // undefined, disparando o efeito incondicionalmente em loop).
   useEffect(() => {
-    setSelectedProducts(products || []);
-  }, [products]);
+    setSelectedProducts(kit.products || []);
+  }, [kit.products]);
 
   const update = <K extends keyof ContentFormData>(key: K, value: ContentFormData[K]) =>
     onChange({ ...data, [key]: value });

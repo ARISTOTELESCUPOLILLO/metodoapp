@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from "react";
+﻿import { useState, useRef, useMemo } from "react";
 import BrandKitForm from "./components/metodo-op/BrandKitForm";
 import ConfirmDialog from "./components/metodo-op/ConfirmDialog";
 import ContentForm from "./components/metodo-op/ContentForm";
@@ -90,7 +90,10 @@ export default function App() {
   const loadKitServerFn = useServerFn(loadKitServer);
   const saveKitServerFn = useServerFn(saveKitServer);
   const effectiveAdmin = impersonation ? isAdmin : isSelfAdmin || isAdmin;
-  const planAccess = buildPlanAccess(slots, false);
+  // Memoizado: sem isso, planAccess era um objeto novo a cada render e,
+  // usado como dependência de useEffect em ContentForm.tsx, disparava
+  // aquele efeito em todo render (não só quando `slots` de fato mudasse).
+  const planAccess = useMemo(() => buildPlanAccess(slots, false), [slots]);
   const rendersTotal = slots.reduce((s, sl) => s + (sl.rendersLimite || 0), 0);
   const rendersUsadosSum = slots.reduce((s, sl) => s + (sl.rendersUsados || 0), 0);
   const rendersRestantes = Math.max(0, rendersTotal - rendersUsadosSum);
