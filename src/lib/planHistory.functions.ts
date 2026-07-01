@@ -182,16 +182,29 @@ export const loadPlanHistorico = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
 
-    // Busca histórico com join para nome/email do usuário (user_id tem FK)
+    // Busca histórico com join para nome/email do usuário (user_id tem FK).
+    // !inner é necessário pro PostgREST aceitar filtro .or() na tabela referenciada.
+    const joinSpec = data.search
+      ? "profiles!plan_purchases_user_id_fkey!inner(nome, email)"
+      : "profiles!plan_purchases_user_id_fkey(nome, email)";
+    let query = supabaseAdmin
+      .from("plan_purchases")
+      .select(`*, ${joinSpec}`, { count: "exact" })
+      .order("created_at", { ascending: false });
+
+    if (data.search) {
+      // Escapa vírgula/parênteses, que têm significado especial na sintaxe .or() do PostgREST.
+      const escaped = data.search.replace(/[,()]/g, "");
+      query = query.or(`nome.ilike.%${escaped}%,email.ilike.%${escaped}%`, {
+        referencedTable: "profiles",
+      });
+    }
+
     const {
       data: rows,
       count,
       error,
-    } = await supabaseAdmin
-      .from("plan_purchases")
-      .select("*, profiles!plan_purchases_user_id_fkey(nome, email)", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range(data.offset, data.offset + data.limit - 1);
+    } = await query.range(data.offset, data.offset + data.limit - 1);
 
     if (error) throw new Error(error.message);
 
