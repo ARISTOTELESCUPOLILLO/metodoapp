@@ -1,14 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
-import {
-  AnchoraVisual,
-  BrandKit,
-  FaixaEtaria,
-  ImageKit,
-  MethodOpResult,
-  MoodCode,
-} from "../../types";
-import { mapFaixaToAnchorAge } from "../../core/audienceAge";
+import { BrandKit, FaixaEtaria, ImageKit, MethodOpResult, MoodCode } from "../../types";
 import { PersonagemGender } from "../../core/visualDirection";
 import { generateSequencePdf } from "../../utils/generatePdf";
 import { mopName } from "../../utils/file";
@@ -20,9 +12,9 @@ import {
 } from "../../core/personalizacaoMop";
 import { useAppProfile } from "../../contexts/ProfileContext";
 import { useImageGenAlert } from "./PreImageAlert";
-import { type AnchorControl } from "./results/AnchorIndicator";
 import { AnchorBanner } from "./results/AnchorBanner";
 import { useBlockGenders } from "./results/useBlockGenders";
+import { useAnchorControl } from "./results/useAnchorControl";
 import { buildDaySequence } from "./results/sequence";
 import { FeedCard } from "./results/FeedCard";
 import { FinalCard } from "./results/FinalCard";
@@ -67,10 +59,6 @@ export default function ResultsView({
   generoPrefForm,
 }: Props) {
   const [savingPdf, setSavingPdf] = useState(false);
-  const [anchorGenderFlipped, setAnchorGenderFlipped] = useState(false);
-  const [anchorAgeOverride, setAnchorAgeOverride] = useState<string | undefined>(undefined);
-  const [anchorBannerOpen, setAnchorBannerOpen] = useState(false);
-  const [anchorMode, setAnchorMode] = useState<"ancora" | "livre">("ancora");
   const { guard, dialog } = useImageGenAlert();
   const { cotaPersonalizados, isAdmin, refreshProfile } = useAppProfile();
 
@@ -80,17 +68,16 @@ export default function ResultsView({
     refreshProfile();
   }, [refreshProfile]);
 
-  // A cada nova geração, pré-preenche a âncora visual com a faixa etária e
-  // o gênero escolhidos no form. O usuário pode ajustar depois no painel.
-  useEffect(() => {
-    if (!result) return;
-    const mappedAge = mapFaixaToAnchorAge(faixaEtariaForm);
-    setAnchorAgeOverride(mappedAge);
-    if (generoPrefForm && result.ancora_visual) {
-      const iaGenero = result.ancora_visual.genero; // "M" | "F"
-      setAnchorGenderFlipped(iaGenero !== generoPrefForm);
-    }
-  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
+  const {
+    anchorBannerOpen,
+    setAnchorBannerOpen,
+    anchorMode,
+    setAnchorMode,
+    anchorControl,
+    anchorGenderEffective,
+    anchoraPersonagem,
+    ancoragePapel,
+  } = useAnchorControl(result, faixaEtariaForm, generoPrefForm);
 
   // `track` não consta em MethodOpResult e o motor não o popula hoje (o valor é
   // inferido por trackResolved abaixo); leitura defensiva p/ compat — mantido
@@ -120,38 +107,6 @@ export default function ResultsView({
     ? { estatico: INF, carrossel: INF, estatico_final: INF, reels: INF }
     : cotaPersonalizados || ZERO_COTA;
   const extrasCarrossel = cotaPorTipo.carrossel || 0;
-
-  // ancora_visual gerada pela IA junto com a sequência. Mostra sempre que existir —
-  // a supressão por avatar acontece POR CARD em regenerateWithKit (hasAvatarRef),
-  // não aqui: ter avatar no kit ≠ avatar sendo usado nesta geração específica.
-  const ancoragem: AnchoraVisual | undefined = result?.ancora_visual;
-  const anchorAgeEffective = anchorAgeOverride ?? ancoragem?.faixa_etaria ?? "";
-  // No modo 'livre' o gerador de imagem não recebe constraint de tipo —
-  // gênero é balanceado livremente por peça (M/F alternados).
-  const anchorGenderEffective: PersonagemGender | undefined =
-    ancoragem && anchorMode === "ancora"
-      ? anchorGenderFlipped
-        ? ancoragem.genero === "F"
-          ? "homem"
-          : "mulher"
-        : ancoragem.genero === "F"
-          ? "mulher"
-          : "homem"
-      : undefined;
-  const anchoraPersonagem: string | undefined =
-    ancoragem && anchorMode === "ancora"
-      ? [anchorAgeEffective].filter(Boolean).join(", ") || undefined
-      : undefined;
-  const ancoragePapel: string | undefined = ancoragem?.papel;
-  const anchorControl: AnchorControl | undefined = ancoragem
-    ? {
-        ancoragem,
-        genderEffective: anchorGenderEffective ?? (ancoragem.genero === "F" ? "mulher" : "homem"),
-        ageEffective: anchorAgeEffective,
-        onFlipGender: () => setAnchorGenderFlipped((f) => !f),
-        onChangeAge: (age) => setAnchorAgeOverride(age),
-      }
-    : undefined;
 
   // Gênero do personagem por bloco (estático + carrossel + fechamento + reels)
   // — ver useBlockGenders.
