@@ -80,7 +80,9 @@ export const assignPlanSlot = createServerFn({ method: "POST" })
     // 3. Buscar limites do novo plano
     const { data: plan, error: planErr } = await supabaseAdmin
       .from("plans")
-      .select("limite_imagens,limite_renders,limite_geracoes")
+      .select(
+        "limite_imagens,limite_renders,limite_geracoes,limite_regen_texto,limite_sugestoes,limite_primeira_geracao",
+      )
       .eq("id", data.planId)
       .maybeSingle();
     if (planErr) throw new Error(planErr.message);
@@ -93,11 +95,21 @@ export const assignPlanSlot = createServerFn({ method: "POST" })
       [`${data.slot}_imgs_limite`]: plan?.limite_imagens ?? 0,
       [`${data.slot}_renders_limite`]: plan?.limite_renders ?? 0,
       [`${data.slot}_geracoes_limite`]: plan?.limite_geracoes ?? 0,
+      // Os 3 contadores de camada adicional (Gerar outro/Sugestão/Primeira
+      // Geração, 2026-07) tinham ficado de fora desta função — renovar ou
+      // trocar de plano pela UI nunca atualizava o limite nem zerava o uso
+      // deles, deixando o cliente preso num limite/consumo do ciclo anterior.
+      [`${data.slot}_regen_texto_limite`]: plan?.limite_regen_texto ?? 0,
+      [`${data.slot}_sugestoes_limite`]: plan?.limite_sugestoes ?? 0,
+      [`${data.slot}_primeira_geracao_limite`]: plan?.limite_primeira_geracao ?? 0,
       ...(data.resetCounters
         ? {
             [`${data.slot}_imgs_usadas`]: 0,
             [`${data.slot}_renders_usados`]: 0,
             [`${data.slot}_geracoes_usadas`]: 0,
+            [`${data.slot}_regen_texto_usadas`]: 0,
+            [`${data.slot}_sugestoes_usadas`]: 0,
+            [`${data.slot}_primeira_geracao_usadas`]: 0,
             [`extra_${data.extraPrefix}_estatico`]: 0,
             [`extra_${data.extraPrefix}_carrossel`]: 0,
             [`extra_${data.extraPrefix}_estatico_final`]: 0,
@@ -152,6 +164,14 @@ export const removePlanSlot = createServerFn({ method: "POST" })
       [`${data.slot}_imgs_usadas`]: 0,
       [`${data.slot}_renders_usados`]: 0,
       [`${data.slot}_geracoes_usadas`]: 0,
+      // Mesma lacuna de assignPlanSlot — os 3 contadores novos não eram
+      // limpos ao remover o plano.
+      [`${data.slot}_regen_texto_limite`]: 0,
+      [`${data.slot}_regen_texto_usadas`]: 0,
+      [`${data.slot}_sugestoes_limite`]: 0,
+      [`${data.slot}_sugestoes_usadas`]: 0,
+      [`${data.slot}_primeira_geracao_limite`]: 0,
+      [`${data.slot}_primeira_geracao_usadas`]: 0,
       [`extra_${data.extraPrefix}_estatico`]: 0,
       [`extra_${data.extraPrefix}_carrossel`]: 0,
       [`extra_${data.extraPrefix}_estatico_final`]: 0,
