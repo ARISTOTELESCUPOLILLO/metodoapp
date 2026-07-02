@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getVoiceProfile } from "@/data/brandVoice";
-import { getUserIdFromRequest, checkBalance, balanceFailMessage } from "@/lib/usage.server";
+import {
+  resolveEffectiveUser,
+  checkBalance,
+  balanceFailMessage,
+  debitUsage,
+} from "@/lib/usage.server";
+import { isAdmin as checkIsAdmin } from "@/repository/authz";
+import { COST_USD } from "@/lib/costs";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import {
   truncateWords,
@@ -197,20 +204,32 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const userId = await getUserIdFromRequest(request);
-          if (!userId) {
+          // Usuário efetivo (respeita impersonação) — assim o débito da
+          // Sugestão vai para o usuário de teste quando o admin atua como ele,
+          // igual generate-content.ts.
+          const effective = await resolveEffectiveUser(request);
+          if (!effective) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
-          // Exigia login mas não checava plano — usuário autenticado sem
-          // nenhum plano atribuído (ex.: comprador aguardando consultoria)
-          // conseguia gerar Sugestões via gpt-4.1 à vontade. Não debita (a
-          // Sugestão nunca contou como geração), só exige plano atribuído.
-          const balance = await checkBalance(userId, 0, 0, 0);
-          if (!balance.ok) {
-            return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
-          }
+          const userId = effective.userId;
+          const isAdminUser = await checkIsAdmin(effective.userId);
 
           const body = await request.json();
+          const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)
+            ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
+            : undefined;
+
+          // Cota real do contador sugestoes. O admin NÃO é travado por esse
+          // contador novo (nem o debita); os limites gerais do plano continuam
+          // valendo para ele. O débito acontece 1× por clique, depois do loop
+          // de retry de qualidade (não 1 por tentativa interna).
+          if (!isAdminUser) {
+            const balance = await checkBalance(userId, 0, 0, 0, preferredSlot, { sugestoes: 1 });
+            if (!balance.ok) {
+              return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
+            }
+          }
+
           const today = new Date().toLocaleDateString("pt-BR", {
             weekday: "long",
             day: "numeric",
@@ -649,6 +668,25 @@ Retorne JSON EXATAMENTE assim:
             // (lens/lensBlock existem em MOP e PU).
             motivos = motivos.concat(checkLensNameLeak(sugestao, lens.nome));
             if (motivos.length === 0) break;
+          }
+
+          // Debita 1 clique de Sugestão (1 clique do usuário = 1 débito, fora do
+          // loop de retry). Nunca para o admin. custoUsd = buffer que saiu de
+          // content_* (COST_USD.sugestao). Falha no débito não invalida a
+          // sugestão já gerada (só loga).
+          if (!isAdminUser) {
+            try {
+              await debitUsage(userId, 0, 0, {
+                evento: "suggest_keyinfo",
+                modulo: mode,
+                sugestoes: 1,
+                custoUsd: COST_USD.sugestao,
+                impersonatedBy: effective.impersonatedBy,
+                preferredSlot,
+              });
+            } catch (e) {
+              console.warn("[suggest-keyinfo] debit failed", (e as Error).message);
+            }
           }
 
           return Response.json({ sugestao });

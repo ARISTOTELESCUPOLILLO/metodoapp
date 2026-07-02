@@ -67,6 +67,24 @@ export function PlanEditModal({
             value={String(editing.limite_geracoes)}
             onChange={(v) => onChange({ ...editing, limite_geracoes: Number(v) })}
           />
+          <Inp
+            label={'Limite "Gerar outro" de bloco (0 = ilimitado)'}
+            type="number"
+            value={String(editing.limite_regen_texto ?? 0)}
+            onChange={(v) => onChange({ ...editing, limite_regen_texto: Number(v) })}
+          />
+          <Inp
+            label={'Limite "Sugestão" (0 = ilimitado)'}
+            type="number"
+            value={String(editing.limite_sugestoes ?? 0)}
+            onChange={(v) => onChange({ ...editing, limite_sugestoes: Number(v) })}
+          />
+          <Inp
+            label={'Limite "Primeira Geração" (0 = ilimitado)'}
+            type="number"
+            value={String(editing.limite_primeira_geracao ?? 0)}
+            onChange={(v) => onChange({ ...editing, limite_primeira_geracao: Number(v) })}
+          />
 
           <div
             style={{

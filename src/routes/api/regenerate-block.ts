@@ -14,7 +14,14 @@ import {
   TECNICISMO_RULE,
 } from "@/core/textValidation";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
-import { resolveEffectiveUser, checkBalance, balanceFailMessage } from "@/lib/usage.server";
+import {
+  resolveEffectiveUser,
+  checkBalance,
+  balanceFailMessage,
+  debitUsage,
+} from "@/lib/usage.server";
+import { isAdmin as checkIsAdmin } from "@/repository/authz";
+import { COST_USD } from "@/lib/costs";
 
 type Kind = "titulo" | "texto" | "legenda";
 
@@ -65,22 +72,30 @@ export const Route = createFileRoute("/api/regenerate-block")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          // Endpoint pago (chama gpt-4.1) que estava sem qualquer autenticação
-          // ou checagem de plano — qualquer request na internet conseguia
-          // gastar a cota de OpenAI. Mesmo padrão de gate usado em
-          // generate-content.ts: usuário efetivo (respeita impersonação) +
-          // saldo/plano atribuído, sem debitar (regeneração de bloco nunca
-          // foi contada como geração separada).
+          // Endpoint pago (chama gpt-4.1). Gate: usuário efetivo (respeita
+          // impersonação) + cota real do contador regen_texto ("Gerar outro").
+          // O admin NÃO é travado por esse contador novo (nem o debita) — mas
+          // os limites gerais de imagem/render/geração continuam valendo para
+          // ele (bypass geral permanece removido, ver debit_usage).
           const effective = await resolveEffectiveUser(request);
           if (!effective) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
-          const balance = await checkBalance(effective.userId, 0, 0, 0);
-          if (!balance.ok) {
-            return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
+          const body = await request.json();
+          const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)
+            ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
+            : undefined;
+          const isAdminUser = await checkIsAdmin(effective.userId);
+
+          if (!isAdminUser) {
+            const balance = await checkBalance(effective.userId, 0, 0, 0, preferredSlot, {
+              regenTexto: 1,
+            });
+            if (!balance.ok) {
+              return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
+            }
           }
 
-          const body = await request.json();
           const kind = String(body.kind || "") as Kind;
           if (kind !== "titulo" && kind !== "texto" && kind !== "legenda") {
             return Response.json({ error: "kind inválido" }, { status: 400 });
@@ -178,6 +193,25 @@ Retorne JSON EXATAMENTE assim:
               : kind === "texto"
                 ? validateTexto(value)
                 : validateLegenda(value);
+
+          // Debita 1 do contador regen_texto após o sucesso da geração — nunca
+          // para o admin (isento do contador novo). custoUsd = proxy do "Gerar
+          // outro" (mesmo valor de content_pu antes da remoção do buffer). Falha
+          // no débito não invalida a resposta já gerada (só loga).
+          if (!isAdminUser) {
+            try {
+              await debitUsage(effective.userId, 0, 0, {
+                evento: "regenerate_block",
+                modulo: kind,
+                regenTexto: 1,
+                custoUsd: COST_USD.regen_bloco,
+                impersonatedBy: effective.impersonatedBy,
+                preferredSlot,
+              });
+            } catch (e) {
+              console.warn("[regenerate-block] debit failed", (e as Error).message);
+            }
+          }
 
           return Response.json({ value, ...(motivos.length > 0 ? { flags: motivos } : {}) });
         } catch (e) {

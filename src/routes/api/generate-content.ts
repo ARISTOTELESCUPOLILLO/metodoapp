@@ -7,6 +7,8 @@ import {
   balanceFailMessage,
 } from "@/lib/usage.server";
 import { mopContentCost } from "@/lib/costs";
+import { isAdmin as checkIsAdmin } from "@/repository/authz";
+import { mopPiecesCount } from "@/core/organizaMethodEngine";
 
 const LEITURA_CENICA_SCHEMA = {
   anyOf: [
@@ -193,12 +195,19 @@ export const Route = createFileRoute("/api/generate-content")({
             return Response.json({ error: "prompt obrigatório" }, { status: 400 });
           }
 
+          // Tamanho efetivo da sequência — calculado cedo porque também alimenta
+          // o gate/débito de "Primeira Geração" (camada adicional) abaixo, além
+          // do orçamento de tempo/tokens mais adiante.
+          const effectiveSize = track === "experimentacao" ? 3 : sequenceSize || 6;
+          const piecesCount = mopPiecesCount(effectiveSize);
+
           // Gate: limite de gerações por plano. Usa usuário efetivo (teste quando admin impersona).
           const effective = await resolveEffectiveUser(request);
           if (!effective) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
           const { userId, impersonatedBy } = effective;
+          const isAdminUser = await checkIsAdmin(userId);
           if (!impersonatedBy) {
             const rate = await checkRateLimit(userId);
             if (!rate.ok) {
@@ -211,12 +220,16 @@ export const Route = createFileRoute("/api/generate-content")({
               );
             }
           }
+          // "geracoes:1" é o gate PRINCIPAL existente (não muda, vale igual pra
+          // admin). "primeiraGeracao" é camada ADICIONAL — isenta para admin —
+          // combinada na MESMA chamada (mesmo slot, 1 round-trip só).
           const balance = await checkBalance(
             userId,
             0,
             0,
             1,
             preferredSlot as "plano1" | "plano2" | "bonus" | undefined,
+            isAdminUser ? undefined : { primeiraGeracao: piecesCount },
           );
           if (!balance.ok) {
             return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
@@ -235,7 +248,6 @@ export const Route = createFileRoute("/api/generate-content")({
           // Trilhas maiores (mais dias/cards/leituraCenica) geram mais tokens e
           // demoram mais com gpt-4.1 + json_schema strict — escala o timeout
           // pelo tamanho efetivo da sequência em vez de um valor fixo.
-          const effectiveSize = track === "experimentacao" ? 3 : sequenceSize || 6;
           // Trilhas visual/experimentação fecham com "Estático Final" dentro de
           // "feed" — a chave "reels" não existe nessas trilhas (ver buildMetodoOpSchema).
           const includeReels = track !== "visual" && track !== "experimentacao";
@@ -492,11 +504,16 @@ export const Route = createFileRoute("/api/generate-content")({
                 }
 
                 // Debita sempre (para rastreio de custo; usuário efetivo já resolvido acima).
+                // primeiraGeracao (camada adicional, N peças de título+texto+
+                // legenda desta sequência) entra no MESMO débito — nunca para
+                // admin; custoUsd já cobre o ciclo inteiro (sem custo extra
+                // duplicado pra esse contador).
                 try {
                   await debitUsage(userId, 0, 0, {
                     evento: "gerar_conteudo_mop",
                     modulo: "mop",
                     geracoes: 1,
+                    primeiraGeracao: isAdminUser ? undefined : piecesCount,
                     custoUsd: mopContentCost(effectiveSize),
                     impersonatedBy,
                     preferredSlot:

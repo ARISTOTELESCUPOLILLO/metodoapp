@@ -1,14 +1,27 @@
+// Buffer médio de 1 clique no botão "Sugestão" (gpt-4.1, ~$0,0070/clique).
+// Até 2026-07 esse buffer estava EMBUTIDO em cada content_* de COST_USD — a
+// Sugestão não era contada nem debitada separadamente. Agora que a Sugestão
+// tem limite próprio por plano e é projetada à parte (planExtrasMonthlyCost),
+// o buffer foi REMOVIDO de content_* (subtraído dos valores abaixo) para não
+// contar o custo duas vezes.
+const SUGESTAO_BUFFER_USD = 0.007;
+
 // Custo unitário por operação (USD) — preços reais cobrados ao cliente.
-// content_* já inclui um buffer médio de 1 clique no botão "Sugestão"
-// (gpt-4.1, ~$0,0070/clique, limite de 3 por sessão) — não debitado separadamente.
 export const COST_USD = {
   image_base: 0.06, // GPT Image 2 — geração base
   image_edit: 0.08, // GPT Image 2 — edição com referências
   video: 1.6, // VEO 3 fast + render
-  content_pu: 0.0115, // Post Único — copy (gpt-4.1) + legenda (gpt-4.1-mini)
-  content_mop_s3: 0.0405, // Método OP — ciclo de Sequência 3 (gpt-4.1)
-  content_mop_s6: 0.0555, // Método OP — ciclo de Sequência 6 (gpt-4.1)
-  content_mop_s9: 0.071, // Método OP — ciclo de Sequência 9 (gpt-4.1)
+  content_pu: 0.0045, // Post Único — copy (gpt-4.1) + legenda (gpt-4.1-mini) — era 0.0115 (−buffer Sugestão)
+  content_mop_s3: 0.0335, // Método OP — ciclo de Sequência 3 (gpt-4.1) — era 0.0405 (−buffer Sugestão)
+  content_mop_s6: 0.0485, // Método OP — ciclo de Sequência 6 (gpt-4.1) — era 0.0555 (−buffer Sugestão)
+  content_mop_s9: 0.064, // Método OP — ciclo de Sequência 9 (gpt-4.1) — era 0.071 (−buffer Sugestão)
+  // Custo de 1 clique de "Sugestão" (botão que gera Informação-chave, gpt-4.1).
+  // É o buffer que saiu de content_* — agora contado/debitado à parte.
+  sugestao: SUGESTAO_BUFFER_USD,
+  // Custo de 1 clique de "Gerar outro" de bloco (regenerate-block, gpt-4.1).
+  // Proxy: mesmo valor do content_pu ANTES da remoção do buffer (0.0115) —
+  // estimativa aceita pelo dono do produto, não precisa ser exata.
+  regen_bloco: 0.0115,
 } as const;
 
 // Custo nominal (preço de tabela dos provedores — fal.ai / OpenAI, sem o
@@ -21,6 +34,8 @@ export const COST_NOMINAL_USD = {
   content_mop_s3: 0.0334,
   content_mop_s6: 0.0487,
   content_mop_s9: 0.064,
+  sugestao: SUGESTAO_BUFFER_USD,
+  regen_bloco: 0.0115,
 } as const;
 
 // Planos de Sequência (S3/S6/S9, Visual ou Cinemática) têm limite_geracoes=0
@@ -82,4 +97,51 @@ export function planMonthlyOpenaiCost(plan: PlanForCost, prices: UnitPrices): nu
 // pra evitar reimplementações divergentes da mesma fórmula.
 export function planMonthlyCost(plan: PlanForCost, prices: UnitPrices): number {
   return planMonthlyFalaiCost(plan, prices) + planMonthlyOpenaiCost(plan, prices);
+}
+
+// Plano com os limites dos 3 contadores de camada adicional (regen "Gerar
+// outro", "Sugestão" e "Primeira Geração"). `codigo` é usado só para decidir
+// o custo unitário de "Primeira Geração" (planos de Sequência vs. avulsos —
+// ver primeiraGeracaoUnitCost). Todos opcionais para compat com
+// chamadores/tipos antigos que ainda não conhecem os campos — tratados como
+// 0/ausente quando não informados.
+export interface PlanExtras {
+  codigo?: string;
+  limite_regen_texto?: number | null;
+  limite_sugestoes?: number | null;
+  limite_primeira_geracao?: number | null;
+}
+
+// Custo por peça de "Primeira Geração" (título+texto[+legenda] gerados na
+// criação inicial da peça/post — não precisa ser exato, é camada adicional).
+// Reaproveita o custo que a MESMA operação já tinha, em vez de inventar um
+// valor novo:
+//  - Planos de Sequência (S3/S6/S9): mopContentCost(seqSize) já cobre o ciclo
+//    inteiro — dividido pelo nº de peças da sequência (7/14/21) dá o custo
+//    por peça.
+//  - Demais planos (PU8/PU4/PU2, EX01): content_pu — mesma convenção que
+//    planMonthlyOpenaiCost já usa pra qualquer plano fora do padrão S3/S6/S9
+//    (EX01 inclusive, que no cálculo de custo OpenAI já era tratado como
+//    avulso, não como sequência).
+const MOP_PIECES_POR_SEQUENCIA: Record<number, number> = { 3: 7, 6: 14, 9: 21 };
+function primeiraGeracaoUnitCost(codigo?: string): number {
+  const seqSize = codigo ? mopSequenceSize(codigo) : null;
+  if (seqSize) {
+    const pecas = MOP_PIECES_POR_SEQUENCIA[seqSize] ?? MOP_PIECES_POR_SEQUENCIA[6];
+    return mopContentCost(seqSize) / pecas;
+  }
+  return COST_USD.content_pu;
+}
+
+// Custo mensal projetado dos 3 gastos de OpenAI que passaram a ter limite
+// próprio por plano — "Gerar outro" de bloco (regen_bloco), "Sugestão"
+// (sugestao) e "Primeira Geração" (primeiraGeracaoUnitCost). FONTE ÚNICA da
+// fórmula: usada tanto pela aba Planos quanto pela aba Custos, para as duas
+// não divergirem (cada tela reimplementar a fórmula já causou bug antes).
+export function planExtrasMonthlyCost(plan: PlanExtras): number {
+  return (
+    (plan.limite_regen_texto ?? 0) * COST_USD.regen_bloco +
+    (plan.limite_sugestoes ?? 0) * COST_USD.sugestao +
+    (plan.limite_primeira_geracao ?? 0) * primeiraGeracaoUnitCost(plan.codigo)
+  );
 }

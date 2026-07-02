@@ -9,6 +9,7 @@ export function PlansSection({
   planRows,
   prevTotalFalai,
   prevTotalOpenai,
+  prevTotalExtras,
   mesesFalai,
   mesesOpenai,
   editMax,
@@ -20,6 +21,7 @@ export function PlansSection({
   planRows: PlanRow[];
   prevTotalFalai: number;
   prevTotalOpenai: number;
+  prevTotalExtras: number;
   mesesFalai: string;
   mesesOpenai: string;
   editMax: Record<string, string>;
@@ -39,8 +41,12 @@ export function PlansSection({
               <Th>Imgs</Th>
               <Th>Vídeos</Th>
               <Th>Conteúdos</Th>
+              <Th>Gerar outro</Th>
+              <Th>Sugestões</Th>
+              <Th>Primeira Ger.</Th>
               <Th>fal.ai R$</Th>
               <Th>OpenAI R$</Th>
+              <Th>Texto R$</Th>
               <Th>Custo real R$</Th>
               <Th>Custo proj. R$</Th>
               <Th>
@@ -65,8 +71,12 @@ export function PlansSection({
                 <Td>{r.imgs}</Td>
                 <Td>{r.renders}</Td>
                 <Td>{r.geracoes}</Td>
+                <Td>{r.regenTextoTotal}</Td>
+                <Td>{r.sugestoesTotal}</Td>
+                <Td>{r.primeiraGeracaoTotal}</Td>
                 <Td>{brl(r.custoFalaiPrev)}</Td>
                 <Td>{brl(r.custoOpenaiPrev)}</Td>
+                <Td>{brl(r.custoExtrasPrev)}</Td>
                 <Td>{brl(r.custoRealUsd)}</Td>
                 <Td style={{ color: "#64748b" }}>{brl(r.projecaoUsd)}</Td>
                 <Td style={{ color: "#15803d", fontWeight: 600 }}>R$ {r.precoMin.toFixed(2)}</Td>
@@ -117,8 +127,12 @@ export function PlansSection({
               <Td>—</Td>
               <Td>—</Td>
               <Td>—</Td>
+              <Td>—</Td>
+              <Td>—</Td>
+              <Td>—</Td>
               <Td>{brl(prevTotalFalai)}</Td>
               <Td>{brl(prevTotalOpenai)}</Td>
+              <Td>{brl(prevTotalExtras)}</Td>
               <Td>—</Td>
               <Td>—</Td>
               <Td>—</Td>

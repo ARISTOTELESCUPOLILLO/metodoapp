@@ -21,8 +21,12 @@ export interface PlanRow {
   imgs: number;
   renders: number;
   geracoes: number;
+  regenTextoTotal: number;
+  sugestoesTotal: number;
+  primeiraGeracaoTotal: number;
   custoFalaiPrev: number;
   custoOpenaiPrev: number;
+  custoExtrasPrev: number;
   custoRealUsd: number;
   projecaoUsd: number;
   precoMin: number;

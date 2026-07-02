@@ -199,6 +199,7 @@ export function CustosTab() {
             planRows={view.planRows}
             prevTotalFalai={view.prevTotalFalai}
             prevTotalOpenai={view.prevTotalOpenai}
+            prevTotalExtras={view.prevTotalExtras}
             mesesFalai={view.mesesFalai}
             mesesOpenai={view.mesesOpenai}
             editMax={editMax}

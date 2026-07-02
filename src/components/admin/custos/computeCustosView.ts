@@ -1,7 +1,7 @@
 // Cálculos derivados da aba Custos — extraído de CustosTab.tsx (Fase 9).
 // Função pura: recebe os dados brutos (logs, planos, perfis, admins,
 // configurações) e devolve todas as visões já processadas para o render.
-import { planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
+import { planExtrasMonthlyCost, planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
 import type {
   AdminRow,
   AllTimeLog,
@@ -83,10 +83,21 @@ export function computeCustosView(
       const geracoes = totalClientes * p.limite_geracoes;
       const custoFalaiPrev = imgs * settings.image_price_usd + renders * settings.render_price_usd;
       const custoOpenaiPrev = totalClientes * planMonthlyOpenaiCost(p, settings);
+      // Quantidade projetada dos 3 contadores de camada adicional ("Gerar
+      // outro" + "Sugestão" + "Primeira Geração") — custo projetado (em USD)
+      // vem da FONTE ÚNICA planExtrasMonthlyCost em costs.ts (mesma fórmula
+      // da aba Planos), já inclui os 3.
+      const regenTextoTotal = totalClientes * p.limite_regen_texto;
+      const sugestoesTotal = totalClientes * p.limite_sugestoes;
+      const primeiraGeracaoTotal = totalClientes * p.limite_primeira_geracao;
+      const custoExtrasPrev = totalClientes * planExtrasMonthlyCost(p);
 
       const planLogs = logs.filter((l) => l.user_id && userIds.has(l.user_id));
       const custoReal = planLogs.reduce((s, l) => s + Number(l.custo_usd || 0), 0);
-      const projecao = planMonthlyFalaiCost(p, settings) + planMonthlyOpenaiCost(p, settings);
+      const projecao =
+        planMonthlyFalaiCost(p, settings) +
+        planMonthlyOpenaiCost(p, settings) +
+        planExtrasMonthlyCost(p);
       // precoMin = tabela de preços: custo projetado em R$ × 3 (piso comercial)
       const precoMin = projecao * rate * 3;
       // precoMed = média dos preços efetivamente cobrados nos perfis dos clientes deste plano
@@ -110,8 +121,12 @@ export function computeCustosView(
         imgs,
         renders,
         geracoes,
+        regenTextoTotal,
+        sugestoesTotal,
+        primeiraGeracaoTotal,
         custoFalaiPrev,
         custoOpenaiPrev,
+        custoExtrasPrev,
         custoRealUsd: custoReal,
         projecaoUsd: projecao,
         precoMin,
@@ -125,6 +140,7 @@ export function computeCustosView(
 
   const prevTotalFalai = planRows.reduce((s, r) => s + r.custoFalaiPrev, 0);
   const prevTotalOpenai = planRows.reduce((s, r) => s + r.custoOpenaiPrev, 0);
+  const prevTotalExtras = planRows.reduce((s, r) => s + r.custoExtrasPrev, 0);
   const mesesFalai =
     prevTotalFalai > 0 ? (settings.falai_balance_usd / prevTotalFalai).toFixed(1) : "∞";
   const mesesOpenai =
@@ -181,6 +197,7 @@ export function computeCustosView(
     planRows,
     prevTotalFalai,
     prevTotalOpenai,
+    prevTotalExtras,
     mesesFalai,
     mesesOpenai,
     testRows,

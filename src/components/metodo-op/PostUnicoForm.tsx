@@ -184,6 +184,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
           subMode: "sugerir",
           previousSuggestions: allSessionSuggestionsRef.current,
           selectedProducts,
+          preferredSlot: puSlot,
         }),
       });
       if (!res.ok) {
