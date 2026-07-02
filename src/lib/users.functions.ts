@@ -277,12 +277,21 @@ export const resetUserCounters = createServerFn({ method: "POST" })
         plano1_imgs_usadas: 0,
         plano1_renders_usados: 0,
         plano1_geracoes_usadas: 0,
+        plano1_regen_texto_usadas: 0,
+        plano1_sugestoes_usadas: 0,
+        plano1_primeira_geracao_usadas: 0,
         plano2_imgs_usadas: 0,
         plano2_renders_usados: 0,
         plano2_geracoes_usadas: 0,
+        plano2_regen_texto_usadas: 0,
+        plano2_sugestoes_usadas: 0,
+        plano2_primeira_geracao_usadas: 0,
         bonus_imgs_usadas: 0,
         bonus_renders_usados: 0,
         bonus_geracoes_usadas: 0,
+        bonus_regen_texto_usadas: 0,
+        bonus_sugestoes_usadas: 0,
+        bonus_primeira_geracao_usadas: 0,
       })
       .eq("id", data.userId);
     if (error) throw new Error(error.message);

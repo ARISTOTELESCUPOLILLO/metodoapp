@@ -187,6 +187,38 @@ export const removePlanSlot = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// "Colher de chá" pontual: zera só o consumo do ciclo atual de um slot —
+// imagens, renders, gerações e os 3 contadores novos (Gerar outro/Sugestão/
+// Primeira Geração) — sem tocar em início, validade, contrato ou limites.
+// Diferente de assignPlanSlot (que sempre muda a data) e de renewCycle (que
+// muda a data mas NÃO zera consumo) — este é o meio-termo: dá fôlego extra
+// dentro do mesmo ciclo, sem contar como renovação nem mexer no prazo.
+export const resetSlotUsage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ userId: z.string().uuid(), slot: SlotEnum }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const extraPrefix = data.slot === "plano1" ? "p1" : data.slot === "plano2" ? "p2" : "b";
+    const patch: Record<string, number> = {
+      [`${data.slot}_imgs_usadas`]: 0,
+      [`${data.slot}_renders_usados`]: 0,
+      [`${data.slot}_geracoes_usadas`]: 0,
+      [`${data.slot}_regen_texto_usadas`]: 0,
+      [`${data.slot}_sugestoes_usadas`]: 0,
+      [`${data.slot}_primeira_geracao_usadas`]: 0,
+      [`extra_${extraPrefix}_estatico`]: 0,
+      [`extra_${extraPrefix}_carrossel`]: 0,
+      [`extra_${extraPrefix}_estatico_final`]: 0,
+      [`extra_${extraPrefix}_reels`]: 0,
+    };
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update(patch as any)
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // Lê histórico de compras para exibir na aba Histórico
 export const loadPlanHistorico = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

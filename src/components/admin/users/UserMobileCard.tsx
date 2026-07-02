@@ -259,6 +259,7 @@ export function UserMobileCard({
           onRenew={(slot) =>
             actions.onOpenAssignModal(r, slot, slot === "bonus" ? bonusPlans : mainPlans, true)
           }
+          onZerarConsumo={(slot) => actions.onResetSlotUsage(r, slot)}
         />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 10 }}>

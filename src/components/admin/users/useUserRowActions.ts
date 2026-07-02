@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { startImpersonation } from "@/hooks/useImpersonation";
 import { useConfirm } from "@/hooks/useConfirm";
-import { assignPlanSlot, removePlanSlot } from "@/lib/planHistory.functions";
+import { assignPlanSlot, removePlanSlot, resetSlotUsage } from "@/lib/planHistory.functions";
 import {
   deleteUser,
   updateUserNome,
@@ -28,6 +28,7 @@ export function useUserRowActions(
 
   const assignPlanSlotFn = useServerFn(assignPlanSlot);
   const removePlanSlotFn = useServerFn(removePlanSlot);
+  const resetSlotUsageFn = useServerFn(resetSlotUsage);
   const deleteUserFn = useServerFn(deleteUser);
   const updateUserNomeFn = useServerFn(updateUserNome);
   const updateUserSlotPrecoFn = useServerFn(updateUserSlotPreco);
@@ -202,6 +203,23 @@ export function useUserRowActions(
     setBusy(null);
   }
 
+  async function resetSlotUsageAction(r: Row, slot: SlotKey) {
+    if (
+      !(await confirm(
+        `Zerar o consumo de ${slot === "plano1" ? "Plano 1" : slot === "plano2" ? "Plano 2" : "Bônus"} de ${r.email}? A data de início e a validade do plano NÃO mudam — é só uma folga pontual dentro do ciclo atual.`,
+      ))
+    )
+      return;
+    setBusy(r.id);
+    try {
+      await resetSlotUsageFn({ data: { userId: r.id, slot } });
+    } catch (e) {
+      toast.error(`Erro: ${(e as Error).message}`);
+    }
+    await load({ silent: true });
+    setBusy(null);
+  }
+
   async function handleDeleteUser(r: Row) {
     if (r.is_admin) {
       toast.error("Não é possível excluir um administrador. Remova o papel de admin antes.");
@@ -271,6 +289,7 @@ export function useUserRowActions(
     onToggleAdmin: toggleAdmin,
     onChangeSegmento: changeSegmento,
     onResetCounters: resetCounters,
+    onResetSlotUsage: resetSlotUsageAction,
     onResetPassword: resetPassword,
     onDeleteUser: handleDeleteUser,
     onToggleVoiceAvatar: toggleVoiceAvatar,

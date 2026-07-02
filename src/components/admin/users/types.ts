@@ -32,6 +32,7 @@ export interface UserRowActions {
   onToggleAdmin: (r: Row) => void;
   onChangeSegmento: (r: Row, seg: string) => void;
   onResetCounters: (r: Row) => void;
+  onResetSlotUsage: (r: Row, slot: SlotKey) => void;
   onResetPassword: (r: Row) => void;
   onDeleteUser: (r: Row) => void;
   onToggleVoiceAvatar: (r: Row, slot: 1 | 2) => void;

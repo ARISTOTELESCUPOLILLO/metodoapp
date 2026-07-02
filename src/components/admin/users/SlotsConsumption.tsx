@@ -5,9 +5,14 @@ import type { Row, SlotKey } from "./types";
 export function SlotsConsumption({
   row,
   onRenew,
+  onZerarConsumo,
 }: {
   row: Row;
   onRenew?: (slot: SlotKey) => void;
+  // Zera só os contadores de uso do ciclo atual (imagens, gerações, Gerar
+  // outro, Sugestão, Primeira Geração) — mantém data de início, validade e
+  // contrato intactos. "Colher de chá" pontual, sem contar como renovação.
+  onZerarConsumo?: (slot: SlotKey) => void;
 }) {
   const slots = [
     {
@@ -91,6 +96,26 @@ export function SlotsConsumption({
                 <span style={{ color: "#94a3b8" }}>
                   {s.inicio ? new Date(s.inicio).toLocaleDateString("pt-BR") : "—"}
                 </span>
+                {onZerarConsumo && (
+                  <button
+                    type="button"
+                    onClick={() => onZerarConsumo(s.key)}
+                    title="Zerar consumo do ciclo atual — mantém data de início e validade"
+                    style={{
+                      background: "#fff",
+                      color: "#475569",
+                      border: "1px solid #cbd5e1",
+                      padding: "1px 6px",
+                      borderRadius: 3,
+                      fontSize: 9,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      textTransform: "lowercase",
+                    }}
+                  >
+                    zerar
+                  </button>
+                )}
                 {onRenew && (
                   <button
                     type="button"

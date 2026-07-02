@@ -221,6 +221,7 @@ export function UserTableRow({
           onRenew={(slot) =>
             actions.onOpenAssignModal(r, slot, slot === "bonus" ? bonusPlans : mainPlans, true)
           }
+          onZerarConsumo={(slot) => actions.onResetSlotUsage(r, slot)}
         />
       </Td>
       <Td>
