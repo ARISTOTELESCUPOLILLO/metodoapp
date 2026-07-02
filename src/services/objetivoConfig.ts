@@ -145,28 +145,15 @@ export const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, "nenhum">, s
 // "nenhum" não entra aqui: forçar uma paleta pré-definida (mesmo que "neutra")
 // contradiz e neutraliza a liberdade cromática anunciada na combinação Livre+Nenhum
 // — ver branch dedicado em buildColorBlock, que libera a escolha entre fria/quente.
-// institucional/promocao/oportunidade também não entram aqui — migraram para
-// OBJETIVO_TONALIDADES_ROTACAO (rodízio determinístico + observador, mesmo
-// motivo do LIVRE_TONALIDADES abaixo). Os 4 objetivos restantes continuam com
-// sorteio simples: não houve relato de convergência de cor para eles.
-export const OBJETIVO_PALETAS: Record<
-  Exclude<PostUnicoObjetivo, "nenhum" | "institucional" | "promocao" | "oportunidade">,
-  string[]
-> = {
-  aviso: [
-    `PALETA DESTA PEÇA — ATENÇÃO: amarelo, grafite e branco. Sinalização clara sem alarme.`,
-    `PALETA DESTA PEÇA — ORIENTAÇÃO: azul médio, branco e cinza. Clareza informativa e direção.`,
-    `PALETA DESTA PEÇA — SEGURANÇA: azul profundo, branco e verde suave. Tranquilidade na comunicação.`,
-    `PALETA DESTA PEÇA — ORGANIZAÇÃO VISUAL: cinza técnico, azul claro e branco. Precisão e ordem.`,
-    `PALETA DESTA PEÇA — ALERTA CONTROLADO: laranja suave, azul escuro e branco. Destaque sem tensão excessiva.`,
-  ],
-  homenagem: [
-    `PALETA DESTA PEÇA — GRATIDÃO: dourado suave, bege e branco. Celebração com elegância e afeto.`,
-    `PALETA DESTA PEÇA — CARINHO: rosa queimado, creme e branco. Ternura e proximidade emocional.`,
-    `PALETA DESTA PEÇA — RECONHECIMENTO: vinho, dourado e bege. Prestígio e valorização genuína.`,
-    `PALETA DESTA PEÇA — RESPEITO SOLENE: azul profundo, dourado discreto e branco. Solenidade com calor.`,
-    `PALETA DESTA PEÇA — PROXIMIDADE: terracota, areia e creme. Afeto terroso e pertencimento.`,
-  ],
+// institucional/promocao/oportunidade/aviso/homenagem também não entram aqui —
+// migraram para OBJETIVO_TONALIDADES_ROTACAO (rodízio determinístico +
+// observador, mesmo motivo do LIVRE_TONALIDADES abaixo). Só fatos/venda
+// permanecem com sorteio simples: são objetivos de FIDELIDADE À FOTO REAL
+// (Kit Imagem fato/venda) — a cor nasce da foto enviada, não de uma escolha
+// criativa do modelo, e as 5/3 "paletas" abaixo são variações redacionais da
+// mesma instrução ("preserve, não invente"), não opções cromáticas de fato —
+// rodízio não se aplica a uma decisão que não existe.
+export const OBJETIVO_PALETAS: Record<Extract<PostUnicoObjetivo, "fatos" | "venda">, string[]> = {
   fatos: [
     `PALETA DESTA PEÇA — AUTENTICIDADE: tons neutros (bege claro, cinza suave e branco). Paleta fiel ao real — sem saturação artificial, sem dramatização cromática. Preserva a atmosfera visual do momento registrado.`,
     `PALETA DESTA PEÇA — REALIDADE: azul claro dessaturado, cinza quente e branco. Registro limpo que respeita a luz e as cores originais do evento. Equilíbrio sem intervenção artificial.`,
@@ -185,10 +172,11 @@ export const OBJETIVO_PALETAS: Record<
 // core/colorRotation.ts) para os 3 objetivos com relato de convergência de cor
 // no Direção Livre — mesmo texto de paleta que existia antes em OBJETIVO_PALETAS,
 // agora com `hue` de referência para o observador de conflito com a cor de
-// acento da marca. Os outros objetivos (aviso, homenagem, fatos, venda)
-// continuam com sorteio simples em OBJETIVO_PALETAS, sem relato do problema.
+// acento da marca. fatos/venda continuam com sorteio simples em
+// OBJETIVO_PALETAS — são objetivos de fidelidade à foto real, sem escolha de
+// cor de fato a rotacionar (ver comentário em OBJETIVO_PALETAS acima).
 export const OBJETIVO_TONALIDADES_ROTACAO: Record<
-  "institucional" | "promocao" | "oportunidade",
+  "institucional" | "promocao" | "oportunidade" | "aviso" | "homenagem",
   TonalidadeCandidata[]
 > = {
   institucional: [
@@ -255,6 +243,50 @@ export const OBJETIVO_TONALIDADES_ROTACAO: Record<
     {
       hue: 195,
       bloco: `PALETA DESTA PEÇA — POSSIBILIDADE: azul céu, turquesa e branco. Horizonte amplo e otimismo.`,
+    },
+  ],
+  aviso: [
+    {
+      hue: 50,
+      bloco: `PALETA DESTA PEÇA — ATENÇÃO: amarelo, grafite e branco. Sinalização clara sem alarme.`,
+    },
+    {
+      hue: 210,
+      bloco: `PALETA DESTA PEÇA — ORIENTAÇÃO: azul médio, branco e cinza. Clareza informativa e direção.`,
+    },
+    {
+      hue: 200,
+      bloco: `PALETA DESTA PEÇA — SEGURANÇA: azul profundo, branco e verde suave. Tranquilidade na comunicação.`,
+    },
+    {
+      hue: 205,
+      bloco: `PALETA DESTA PEÇA — ORGANIZAÇÃO VISUAL: cinza técnico, azul claro e branco. Precisão e ordem.`,
+    },
+    {
+      hue: 25,
+      bloco: `PALETA DESTA PEÇA — ALERTA CONTROLADO: laranja suave, azul escuro e branco. Destaque sem tensão excessiva.`,
+    },
+  ],
+  homenagem: [
+    {
+      hue: 45,
+      bloco: `PALETA DESTA PEÇA — GRATIDÃO: dourado suave, bege e branco. Celebração com elegância e afeto.`,
+    },
+    {
+      hue: 350,
+      bloco: `PALETA DESTA PEÇA — CARINHO: rosa queimado, creme e branco. Ternura e proximidade emocional.`,
+    },
+    {
+      hue: 345,
+      bloco: `PALETA DESTA PEÇA — RECONHECIMENTO: vinho, dourado e bege. Prestígio e valorização genuína.`,
+    },
+    {
+      hue: 215,
+      bloco: `PALETA DESTA PEÇA — RESPEITO SOLENE: azul profundo, dourado discreto e branco. Solenidade com calor.`,
+    },
+    {
+      hue: 20,
+      bloco: `PALETA DESTA PEÇA — PROXIMIDADE: terracota, areia e creme. Afeto terroso e pertencimento.`,
     },
   ],
 };
