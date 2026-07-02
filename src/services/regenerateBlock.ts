@@ -1,4 +1,5 @@
 import { applyDeterministicFallback } from "../core/textValidation";
+import { getAuthHeaders } from "./authHeaders";
 
 export type RegenKind = "titulo" | "texto" | "legenda";
 
@@ -20,9 +21,10 @@ export interface RegenResult {
 }
 
 async function callRegenerateBlock(ctx: RegenContext): Promise<RegenResult> {
+  const auth = await getAuthHeaders();
   const res = await fetch("/api/regenerate-block", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...auth },
     body: JSON.stringify(ctx),
   });
   if (!res.ok) {

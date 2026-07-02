@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getUserIdFromRequest } from "@/lib/usage.server";
+import { getUserIdFromRequest, checkBalance } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 const SAFE_DATA = /^data:image\/(jpeg|png|webp);base64,/i;
@@ -12,6 +12,11 @@ export const Route = createFileRoute("/api/judge-logo")({
         try {
           const userId = await getUserIdFromRequest(request);
           if (!userId) return Response.json({ fiel: true }); // fail open
+          // Mesmo furo dos outros juízes: login exigido mas sem checagem de
+          // plano. Sem plano não há geração legítima para julgar — mesmo
+          // fail-open já usado acima para requests sem autenticação.
+          const balance = await checkBalance(userId, 0, 0, 0);
+          if (!balance.ok) return Response.json({ fiel: true });
 
           const body = await request.json();
           const geradaDataUrl = String(body.geradaDataUrl || "");

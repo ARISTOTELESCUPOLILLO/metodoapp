@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getUserIdFromRequest } from "@/lib/usage.server";
+import { getUserIdFromRequest, checkBalance, balanceFailMessage } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 export const Route = createFileRoute("/api/correct-text")({
@@ -10,6 +10,11 @@ export const Route = createFileRoute("/api/correct-text")({
           const userId = await getUserIdFromRequest(request);
           if (!userId) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
+          }
+          // Exigia login mas não checava plano — mesmo furo de suggest-keyinfo.ts.
+          const balance = await checkBalance(userId, 0, 0, 0);
+          if (!balance.ok) {
+            return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
           }
 
           const body = await request.json();

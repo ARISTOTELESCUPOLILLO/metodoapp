@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getVoiceProfile } from "@/data/brandVoice";
-import { getUserIdFromRequest } from "@/lib/usage.server";
+import { getUserIdFromRequest, checkBalance, balanceFailMessage } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import {
   truncateWords,
@@ -200,6 +200,14 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
           const userId = await getUserIdFromRequest(request);
           if (!userId) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
+          }
+          // Exigia login mas não checava plano — usuário autenticado sem
+          // nenhum plano atribuído (ex.: comprador aguardando consultoria)
+          // conseguia gerar Sugestões via gpt-4.1 à vontade. Não debita (a
+          // Sugestão nunca contou como geração), só exige plano atribuído.
+          const balance = await checkBalance(userId, 0, 0, 0);
+          if (!balance.ok) {
+            return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
           }
 
           const body = await request.json();

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getUserIdFromRequest } from "@/lib/usage.server";
+import { getUserIdFromRequest, checkBalance } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 const SEGMENT_LABEL: Record<string, string> = {
@@ -24,6 +24,15 @@ export const Route = createFileRoute("/api/judge-content")({
           const userId = await getUserIdFromRequest(request);
           if (!userId) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
+          }
+          // Exigia login mas não checava plano. Este juiz roda automático
+          // depois de uma geração já paga em outro endpoint — sem plano,
+          // não há geração legítima para julgar, então falha aberto (sem
+          // reprovações) em vez de erro, mantendo o padrão não-bloqueante
+          // já usado abaixo para items.length === 0.
+          const balance = await checkBalance(userId, 0, 0, 0);
+          if (!balance.ok) {
+            return Response.json({ avaliacoes: [] });
           }
 
           const body = await request.json();

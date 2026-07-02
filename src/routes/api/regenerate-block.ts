@@ -14,6 +14,7 @@ import {
   TECNICISMO_RULE,
 } from "@/core/textValidation";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
+import { resolveEffectiveUser, checkBalance, balanceFailMessage } from "@/lib/usage.server";
 
 type Kind = "titulo" | "texto" | "legenda";
 
@@ -64,6 +65,21 @@ export const Route = createFileRoute("/api/regenerate-block")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          // Endpoint pago (chama gpt-4.1) que estava sem qualquer autenticação
+          // ou checagem de plano — qualquer request na internet conseguia
+          // gastar a cota de OpenAI. Mesmo padrão de gate usado em
+          // generate-content.ts: usuário efetivo (respeita impersonação) +
+          // saldo/plano atribuído, sem debitar (regeneração de bloco nunca
+          // foi contada como geração separada).
+          const effective = await resolveEffectiveUser(request);
+          if (!effective) {
+            return Response.json({ error: "Não autenticado" }, { status: 401 });
+          }
+          const balance = await checkBalance(effective.userId, 0, 0, 0);
+          if (!balance.ok) {
+            return Response.json({ error: balanceFailMessage(balance.reason) }, { status: 402 });
+          }
+
           const body = await request.json();
           const kind = String(body.kind || "") as Kind;
           if (kind !== "titulo" && kind !== "texto" && kind !== "legenda") {
