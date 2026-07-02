@@ -49,6 +49,13 @@ export function usePostUnicoGeneration({
   const [puCopy, setPuCopy] = useState<PostUnicoCopy | null>(null);
   const [puCopyOriginal, setPuCopyOriginal] = useState<PostUnicoCopy | null>(null);
   const postUnicoGenderRef = useRef<PersonagemGender | undefined>(undefined);
+  // Rodízio de tonalidade (Direção Livre + Objetivo "nenhum" — ver
+  // core/colorRotation.ts): seed sorteado uma vez por sessão, tentativa
+  // avança a cada geração (inclusive regeneração), garantindo que as 5
+  // tonalidades do pool sejam percorridas em sequência antes de repetir —
+  // em vez da escolha 100% livre que convergia sempre em verde→azul.
+  const postUnicoTonalidadeSeedRef = useRef<number | undefined>(undefined);
+  const postUnicoTonalidadeAttemptRef = useRef<number>(0);
   const lastPuCopyRef = useRef<{ titulo: string; texto: string } | undefined>(undefined);
 
   useEffect(() => {
@@ -169,6 +176,13 @@ export function usePostUnicoGeneration({
         (personagemSemAvatar?.genero as PersonagemGender | undefined) ??
         formGender ??
         postUnicoGenderRef.current;
+      if (postUnicoTonalidadeSeedRef.current === undefined) {
+        postUnicoTonalidadeSeedRef.current = Math.floor(Math.random() * 5);
+      } else {
+        postUnicoTonalidadeAttemptRef.current += 1;
+      }
+      const tonalidadeSeed =
+        postUnicoTonalidadeSeedRef.current + postUnicoTonalidadeAttemptRef.current;
       const dataUrl = await generatePostUnico({
         data,
         kit,
@@ -177,6 +191,7 @@ export function usePostUnicoGeneration({
         preferredSlot: selectedSlot,
         forcedGender: effectiveForcedGender,
         variationHint: isRegenerate,
+        tonalidadeSeed,
       });
       lsSetQuotaSafe(PU_IMG_KEY, JSON.stringify(dataUrl), effectiveUserId);
       lsSetQuotaSafe(PU_STARTED_KEY, "false", effectiveUserId);
@@ -196,6 +211,8 @@ export function usePostUnicoGeneration({
     setCaption(undefined);
     setCaptionError("");
     postUnicoGenderRef.current = undefined;
+    postUnicoTonalidadeSeedRef.current = undefined;
+    postUnicoTonalidadeAttemptRef.current = 0;
     lastPuCopyRef.current = undefined;
     setPuTituloRegen(0);
     setPuTextoRegen(0);

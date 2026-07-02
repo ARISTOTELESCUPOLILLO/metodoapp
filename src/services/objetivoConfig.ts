@@ -3,6 +3,7 @@
 // por buildPuPrompt.ts.
 
 import { MoodCode, PostUnicoObjetivo } from "../types";
+import type { TonalidadeCandidata } from "../core/colorRotation";
 
 export const OBJETIVO_LABEL: Record<PostUnicoObjetivo, string> = {
   promocao: "Promoção comercial — gerar desejo e ação",
@@ -193,6 +194,37 @@ export const OBJETIVO_PALETAS: Record<Exclude<PostUnicoObjetivo, "nenhum">, stri
     `PALETA DESTA PEÇA — FIDELIDADE AO PRODUTO: areia, cinza neutro e branco. Documental e honesto — a paleta não inventa atmosfera, apenas organiza o que estava presente na foto.`,
   ],
 };
+
+// Tonalidades para Direção Livre + Objetivo "nenhum" (a combinação mais aberta
+// do sistema — sem mood, sem objetivo, sem pool de cor até aqui). Rodízio
+// determinístico por sessão (ver pickTonalidade em core/colorRotation.ts e
+// postUnicoTonalidadeSeedRef em usePostUnicoGeneration.ts) substitui a escolha
+// 100% delegada ao modelo de imagem, que convergia sempre nos mesmos 2
+// atratores cromáticos (verde na primeira geração, azul na regeneração) para
+// o mesmo briefing. `hue` (0-360) é usado apenas pelo observador de conflito
+// com a cor de acento da marca — não aparece no prompt.
+export const LIVRE_TONALIDADES: TonalidadeCandidata[] = [
+  {
+    hue: 210,
+    bloco: `PALETA DESTA PEÇA — PROFUNDIDADE FRIA: azul petróleo profundo, grafite e branco. Sobriedade contemporânea, frieza sofisticada.`,
+  },
+  {
+    hue: 30,
+    bloco: `PALETA DESTA PEÇA — CALOR TERROSO: terracota, âmbar e areia clara. Autenticidade quente, energia contida.`,
+  },
+  {
+    hue: 150,
+    bloco: `PALETA DESTA PEÇA — FRESCOR NATURAL: verde esmeralda profundo, grafite e branco. Vitalidade sóbria, crescimento.`,
+  },
+  {
+    hue: 330,
+    bloco: `PALETA DESTA PEÇA — INTENSIDADE ELEGANTE: vinho borgonha, rosé queimado e creme. Presença marcante, sofisticação.`,
+  },
+  {
+    hue: 270,
+    bloco: `PALETA DESTA PEÇA — ORIGINALIDADE CRIATIVA: roxo ameixa profundo, malva e branco. Autoralidade discreta, personalidade própria.`,
+  },
+];
 
 // Papel do personagem por segmento + objetivo — só relevante quando há avatar
 // de referência ativo: nesse caso showConcreteAction fica false (a foto já

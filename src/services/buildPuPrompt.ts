@@ -36,8 +36,10 @@ import {
   LIVRE_TOTAL_ARCHETYPES,
   OBJETIVO_ARCHETYPES,
   OBJETIVO_PALETAS,
+  LIVRE_TONALIDADES,
   AVATAR_ROLE_BY_SEGMENT_OBJETIVO,
 } from "./objetivoConfig";
+import { pickTonalidade } from "../core/colorRotation";
 
 function direcaoBlock(
   direcao: PostUnicoDirecao,
@@ -130,6 +132,7 @@ function buildColorBlock(
   accent: string,
   isMood: boolean,
   objetivo?: PostUnicoFormData["objetivo"],
+  tonalidadeSeed?: number,
 ): string {
   if (isMood) {
     return `Referência cromática da marca (subordinada ao mood): primária ${primary}, apoio ${accent}.`;
@@ -137,11 +140,17 @@ function buildColorBlock(
 
   const obj = objetivo ?? "nenhum";
 
-  // Livre + Nenhum: liberar a cor por completo, coerente com a "liberdade total"
-  // já anunciada em direcaoBlock — uma paleta pré-definida (mesmo "neutra") aqui
-  // cancelaria a variação fria/quente prometida ali. Ver LIVRE_TOTAL_ARCHETYPES.
+  // Livre + Nenhum: antes a cor era 100% delegada ao modelo ("escolha livre"),
+  // o que na prática convergia sempre nos mesmos atratores cromáticos do
+  // gpt-image-2 para o mesmo briefing (verde na 1ª geração, azul na regen —
+  // ver core/colorRotation.ts). Agora um rodízio determinístico de 5
+  // tonalidades (seed fixado por sessão em usePostUnicoGeneration.ts) decide a
+  // paleta, com observador que pula a tonalidade se ela conflitar em matiz com
+  // a cor de acento da marca (aplicada em 1 palavra do título).
   if (obj === "nenhum") {
-    return `PALETA DESTA PEÇA — LIVRE: a IA escolhe a combinação cromática que melhor sirva ao conceito visual desta geração — pode ser fria OU quente, suave OU saturada, clara OU escura, monocromática OU contrastante — desde que internamente coerente e harmônica. Não há sensação cromática pré-definida a comunicar: a paleta nasce do conceito escolhido para esta peça específica, não de uma fórmula fixa repetida entre gerações.
+    const tonalidade = pickTonalidade(LIVRE_TONALIDADES, tonalidadeSeed ?? 0, accent);
+    return `${tonalidade.bloco}
+Dentro desta paleta, a IA tem liberdade para variar luz, saturação exata e textura — mas a combinação cromática de base é esta, não uma escolha nova a cada geração.
 Referência cromática da marca (use apenas se houver harmonia natural com a paleta escolhida): primária ${primary}, apoio ${accent}.
 COR DO LETTERING: escolha livremente a cor que garanta a melhor leitura visual sobre o fundo desta paleta — branco, preto, tom claro ou escuro conforme o contraste necessário. Legibilidade e destaque visual são prioritários.`;
   }
@@ -180,8 +189,10 @@ export function buildPostUnicoPrompt(params: {
   forcedGender?: PersonagemGender;
   /** true quando é "Gerar outra imagem" — força execução visual diferente da anterior. */
   variationHint?: boolean;
+  /** Índice-base do rodízio de tonalidade (Direção Livre + Objetivo "nenhum") — ver core/colorRotation.ts. */
+  tonalidadeSeed?: number;
 }): string {
-  const { data, kit, copy, references, forcedGender, variationHint } = params;
+  const { data, kit, copy, references, forcedGender, variationHint, tonalidadeSeed } = params;
   const isNenhum = data.objetivo === "nenhum";
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
@@ -357,7 +368,7 @@ ${CONCEITO_FIRST_RULE}
 ${papelBlock}
 ${direcao}${variationBlock}${livreGenderBlock}${regenVariationBlock}
 
-${buildColorBlock(primary, accent, data.direcao === "mood", data.objetivo)}
+${buildColorBlock(primary, accent, data.direcao === "mood", data.objetivo, tonalidadeSeed)}
 
 ${typographyBlock}
 ${scriptAccentBlock}

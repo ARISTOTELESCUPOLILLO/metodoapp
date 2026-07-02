@@ -121,9 +121,28 @@ export async function generatePostUnico(params: {
   forcedGender?: PersonagemGender;
   /** true quando é "Gerar outra imagem" — força execução visual diferente. */
   variationHint?: boolean;
+  /** Índice-base do rodízio de tonalidade (Direção Livre + Objetivo "nenhum") — ver core/colorRotation.ts. */
+  tonalidadeSeed?: number;
 }): Promise<string> {
-  const { data, kit, copy, references, preferredSlot, forcedGender, variationHint } = params;
-  const prompt = buildPostUnicoPrompt({ data, kit, copy, references, forcedGender, variationHint });
+  const {
+    data,
+    kit,
+    copy,
+    references,
+    preferredSlot,
+    forcedGender,
+    variationHint,
+    tonalidadeSeed,
+  } = params;
+  const prompt = buildPostUnicoPrompt({
+    data,
+    kit,
+    copy,
+    references,
+    forcedGender,
+    variationHint,
+    tonalidadeSeed,
+  });
 
   // Coleta refs ordenadas: avatar -> uniforme -> cenário -> produtos por número.
   // Uniforme não é removido no retry sem avatar (foto sem rosto, não deve
