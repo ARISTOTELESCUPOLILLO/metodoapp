@@ -1,4 +1,5 @@
 // Tipos da aba Planos — extraído de PlansTab.tsx (Fase 9).
+import { planExtrasMonthlyCost } from "@/lib/costs";
 
 export interface Plan {
   id: string;
@@ -8,6 +9,8 @@ export interface Plan {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
+  limite_regen_texto: number;
+  limite_sugestoes: number;
   limite_imgs_display: number | null;
   limite_renders_display: number | null;
   limite_geracoes_display: number | null;
@@ -32,6 +35,8 @@ export const EMPTY_PLAN: Omit<Plan, "id"> = {
   limite_imagens: 0,
   limite_renders: 0,
   limite_geracoes: 0,
+  limite_regen_texto: 0,
+  limite_sugestoes: 0,
   limite_imgs_display: null,
   limite_renders_display: null,
   limite_geracoes_display: null,
@@ -44,12 +49,22 @@ export const EMPTY_PLAN: Omit<Plan, "id"> = {
 };
 
 export function calcCusto(
-  p: Pick<Plan, "limite_imagens" | "limite_renders" | "limite_geracoes">,
+  p: Pick<
+    Plan,
+    | "limite_imagens"
+    | "limite_renders"
+    | "limite_geracoes"
+    | "limite_regen_texto"
+    | "limite_sugestoes"
+  >,
   costs: Costs,
 ) {
   return (
     p.limite_imagens * costs.imageRef +
     p.limite_renders * costs.video +
-    p.limite_geracoes * costs.content
+    p.limite_geracoes * costs.content +
+    // Contadores de texto (regen "Gerar outro" + "Sugestão") — fórmula na FONTE
+    // ÚNICA de costs.ts, para não divergir da aba Custos.
+    planExtrasMonthlyCost(p)
   );
 }

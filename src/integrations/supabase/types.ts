@@ -435,8 +435,10 @@ export type Database = {
           limite_geracoes_display: number | null;
           limite_imagens: number;
           limite_imgs_display: number | null;
+          limite_regen_texto: number;
           limite_renders: number;
           limite_renders_display: number | null;
+          limite_sugestoes: number;
           nome: string;
           preco_maximo_brl: number | null;
           tipo: string;
@@ -458,8 +460,10 @@ export type Database = {
           limite_geracoes_display?: number | null;
           limite_imagens?: number;
           limite_imgs_display?: number | null;
+          limite_regen_texto?: number;
           limite_renders?: number;
           limite_renders_display?: number | null;
+          limite_sugestoes?: number;
           nome: string;
           preco_maximo_brl?: number | null;
           tipo: string;
@@ -481,8 +485,10 @@ export type Database = {
           limite_geracoes_display?: number | null;
           limite_imagens?: number;
           limite_imgs_display?: number | null;
+          limite_regen_texto?: number;
           limite_renders?: number;
           limite_renders_display?: number | null;
+          limite_sugestoes?: number;
           nome?: string;
           preco_maximo_brl?: number | null;
           tipo?: string;
@@ -561,6 +567,18 @@ export type Database = {
           renders_usados: number;
           segmento: string | null;
           status: string;
+          plano1_regen_texto_limite: number;
+          plano1_regen_texto_usadas: number;
+          plano1_sugestoes_limite: number;
+          plano1_sugestoes_usadas: number;
+          plano2_regen_texto_limite: number;
+          plano2_regen_texto_usadas: number;
+          plano2_sugestoes_limite: number;
+          plano2_sugestoes_usadas: number;
+          bonus_regen_texto_limite: number;
+          bonus_regen_texto_usadas: number;
+          bonus_sugestoes_limite: number;
+          bonus_sugestoes_usadas: number;
           ultimo_login: string | null;
           updated_at: string;
           voice_avatar1_enabled: boolean;
@@ -635,6 +653,18 @@ export type Database = {
           renders_usados?: number;
           segmento?: string | null;
           status?: string;
+          plano1_regen_texto_limite?: number;
+          plano1_regen_texto_usadas?: number;
+          plano1_sugestoes_limite?: number;
+          plano1_sugestoes_usadas?: number;
+          plano2_regen_texto_limite?: number;
+          plano2_regen_texto_usadas?: number;
+          plano2_sugestoes_limite?: number;
+          plano2_sugestoes_usadas?: number;
+          bonus_regen_texto_limite?: number;
+          bonus_regen_texto_usadas?: number;
+          bonus_sugestoes_limite?: number;
+          bonus_sugestoes_usadas?: number;
           ultimo_login?: string | null;
           updated_at?: string;
           voice_avatar1_enabled?: boolean;
@@ -709,6 +739,18 @@ export type Database = {
           renders_usados?: number;
           segmento?: string | null;
           status?: string;
+          plano1_regen_texto_limite?: number;
+          plano1_regen_texto_usadas?: number;
+          plano1_sugestoes_limite?: number;
+          plano1_sugestoes_usadas?: number;
+          plano2_regen_texto_limite?: number;
+          plano2_regen_texto_usadas?: number;
+          plano2_sugestoes_limite?: number;
+          plano2_sugestoes_usadas?: number;
+          bonus_regen_texto_limite?: number;
+          bonus_regen_texto_usadas?: number;
+          bonus_sugestoes_limite?: number;
+          bonus_sugestoes_usadas?: number;
           ultimo_login?: string | null;
           updated_at?: string;
           voice_avatar1_enabled?: boolean;
@@ -1043,6 +1085,18 @@ export type Database = {
               _imgs: number;
               _preferred_slot?: string;
               _renders: number;
+              _user_id: string;
+            };
+            Returns: string;
+          }
+        | {
+            Args: {
+              _geracoes?: number;
+              _imgs: number;
+              _preferred_slot?: string;
+              _regen_texto?: number;
+              _renders: number;
+              _sugestoes?: number;
               _user_id: string;
             };
             Returns: string;

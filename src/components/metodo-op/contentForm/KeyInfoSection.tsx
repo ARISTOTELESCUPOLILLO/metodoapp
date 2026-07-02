@@ -7,6 +7,7 @@ import { ContentFormData, Segment } from "../../../types";
 import { getAuthHeaders } from "../../../services/authHeaders";
 import ProductsChecklist from "../ProductsChecklist";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
+import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 
 const KEYINFO_EXAMPLE: Record<Segment, string> = {
   SERVIÇOS:
@@ -44,6 +45,7 @@ export function KeyInfoSection({
   isAdmin,
   onOpenIdeias,
 }: Props) {
+  const { selectedSlot } = usePlanSlotsCtx();
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
@@ -107,6 +109,7 @@ export function KeyInfoSection({
           previousSuggestions: allSessionSuggestionsRef.current,
           brandVoice: data.brandVoice || "",
           selectedProducts,
+          preferredSlot: selectedSlot,
         }),
       });
       if (!res.ok) {

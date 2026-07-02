@@ -79,11 +79,18 @@ export async function checkBalance(
   renders: number,
   geracoes = 0,
   preferredSlot?: "plano1" | "plano2" | "bonus",
+  // Novos contadores de texto: "Gerar outro" de bloco (regenTexto) e "Sugestão"
+  // (sugestoes). Parâmetro no FINAL para não quebrar os chamadores existentes
+  // (generate-content, generate-caption, generate-image, generate-pu-copy,
+  // confirm-voice), que continuam chamando sem passá-lo.
+  extra?: { regenTexto?: number; sugestoes?: number },
 ): Promise<{ ok: boolean; isAdmin: boolean; reason?: BalanceFailReason }> {
+  const regenTexto = extra?.regenTexto ?? 0;
+  const sugestoes = extra?.sugestoes ?? 0;
   const { data: p, error } = await supabaseAdmin
     .from("profiles")
     .select(
-      "plano1_id, plano1_imgs_limite, plano1_imgs_usadas, plano1_renders_limite, plano1_renders_usados, plano1_geracoes_limite, plano1_geracoes_usadas, plano1_expira_em, plano2_id, plano2_imgs_limite, plano2_imgs_usadas, plano2_renders_limite, plano2_renders_usados, plano2_geracoes_limite, plano2_geracoes_usadas, plano2_expira_em, bonus_id, bonus_imgs_limite, bonus_imgs_usadas, bonus_renders_limite, bonus_renders_usados, bonus_geracoes_limite, bonus_geracoes_usadas, bonus_expira_em",
+      "plano1_id, plano1_imgs_limite, plano1_imgs_usadas, plano1_renders_limite, plano1_renders_usados, plano1_geracoes_limite, plano1_geracoes_usadas, plano1_regen_texto_limite, plano1_regen_texto_usadas, plano1_sugestoes_limite, plano1_sugestoes_usadas, plano1_expira_em, plano2_id, plano2_imgs_limite, plano2_imgs_usadas, plano2_renders_limite, plano2_renders_usados, plano2_geracoes_limite, plano2_geracoes_usadas, plano2_regen_texto_limite, plano2_regen_texto_usadas, plano2_sugestoes_limite, plano2_sugestoes_usadas, plano2_expira_em, bonus_id, bonus_imgs_limite, bonus_imgs_usadas, bonus_renders_limite, bonus_renders_usados, bonus_geracoes_limite, bonus_geracoes_usadas, bonus_regen_texto_limite, bonus_regen_texto_usadas, bonus_sugestoes_limite, bonus_sugestoes_usadas, bonus_expira_em",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -100,13 +107,19 @@ export async function checkBalance(
     rUsed: number,
     gLim: number,
     gUsed: number,
+    rtLim: number,
+    rtUsed: number,
+    sgLim: number,
+    sgUsed: number,
     expiraEm: string | null,
   ) =>
     !!id &&
     notExpired(expiraEm) &&
     fits(iLim, iUsed, imgs) &&
     fits(rLim, rUsed, renders) &&
-    fits(gLim, gUsed, geracoes);
+    fits(gLim, gUsed, geracoes) &&
+    fits(rtLim, rtUsed, regenTexto) &&
+    fits(sgLim, sgUsed, sugestoes);
   // Classifica por que um slot específico não serve — usado só quando o slot
   // falhou em slotOk, para reportar a causa real em vez de "esgotado" genérico.
   const classifySlot = (id: string | null, expiraEm: string | null): BalanceFailReason =>
@@ -123,6 +136,10 @@ export async function checkBalance(
       p.plano1_renders_usados,
       p.plano1_geracoes_limite ?? 0,
       p.plano1_geracoes_usadas ?? 0,
+      p.plano1_regen_texto_limite ?? 0,
+      p.plano1_regen_texto_usadas ?? 0,
+      p.plano1_sugestoes_limite ?? 0,
+      p.plano1_sugestoes_usadas ?? 0,
       p.plano1_expira_em ?? null,
     );
     return {
@@ -140,6 +157,10 @@ export async function checkBalance(
       p.plano2_renders_usados,
       p.plano2_geracoes_limite ?? 0,
       p.plano2_geracoes_usadas ?? 0,
+      p.plano2_regen_texto_limite ?? 0,
+      p.plano2_regen_texto_usadas ?? 0,
+      p.plano2_sugestoes_limite ?? 0,
+      p.plano2_sugestoes_usadas ?? 0,
       p.plano2_expira_em ?? null,
     );
     return {
@@ -157,6 +178,10 @@ export async function checkBalance(
       p.bonus_renders_usados,
       p.bonus_geracoes_limite ?? 0,
       p.bonus_geracoes_usadas ?? 0,
+      p.bonus_regen_texto_limite ?? 0,
+      p.bonus_regen_texto_usadas ?? 0,
+      p.bonus_sugestoes_limite ?? 0,
+      p.bonus_sugestoes_usadas ?? 0,
       p.bonus_expira_em ?? null,
     );
     return {
@@ -176,6 +201,10 @@ export async function checkBalance(
       p.plano1_renders_usados,
       p.plano1_geracoes_limite ?? 0,
       p.plano1_geracoes_usadas ?? 0,
+      p.plano1_regen_texto_limite ?? 0,
+      p.plano1_regen_texto_usadas ?? 0,
+      p.plano1_sugestoes_limite ?? 0,
+      p.plano1_sugestoes_usadas ?? 0,
       p.plano1_expira_em ?? null,
     ) ||
     slotOk(
@@ -186,6 +215,10 @@ export async function checkBalance(
       p.plano2_renders_usados,
       p.plano2_geracoes_limite ?? 0,
       p.plano2_geracoes_usadas ?? 0,
+      p.plano2_regen_texto_limite ?? 0,
+      p.plano2_regen_texto_usadas ?? 0,
+      p.plano2_sugestoes_limite ?? 0,
+      p.plano2_sugestoes_usadas ?? 0,
       p.plano2_expira_em ?? null,
     ) ||
     slotOk(
@@ -196,6 +229,10 @@ export async function checkBalance(
       p.bonus_renders_usados,
       p.bonus_geracoes_limite ?? 0,
       p.bonus_geracoes_usadas ?? 0,
+      p.bonus_regen_texto_limite ?? 0,
+      p.bonus_regen_texto_usadas ?? 0,
+      p.bonus_sugestoes_limite ?? 0,
+      p.bonus_sugestoes_usadas ?? 0,
       p.bonus_expira_em ?? null,
     );
 
@@ -241,12 +278,16 @@ export async function debitUsage(
     modulo?: string;
     payload?: Record<string, unknown>;
     geracoes?: number;
+    regenTexto?: number;
+    sugestoes?: number;
     custoUsd?: number;
     impersonatedBy?: string;
     preferredSlot?: "plano1" | "plano2" | "bonus";
   },
 ): Promise<{ slot: string }> {
   const geracoes = meta.geracoes ?? 0;
+  const regenTexto = meta.regenTexto ?? 0;
+  const sugestoes = meta.sugestoes ?? 0;
 
   let slot: string | null = null;
   let rpcError: Error | null = null;
@@ -262,6 +303,11 @@ export async function debitUsage(
     _renders: renders,
     _geracoes: geracoes,
     _preferred_slot: meta.preferredSlot ?? null,
+    // Sempre enviados (mesmo 0) — omitir a chave deixaria 2 overloads de
+    // debit_usage (5 e 7 args) igualmente válidos pro Postgres, que recusaria
+    // a chamada por ambiguidade ("Could not choose the best candidate function").
+    _regen_texto: regenTexto,
+    _sugestoes: sugestoes,
   });
   if (error) {
     // Captura o erro mas NÃO lança ainda — o log abaixo deve ocorrer mesmo assim.

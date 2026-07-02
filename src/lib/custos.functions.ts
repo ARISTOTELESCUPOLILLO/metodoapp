@@ -28,6 +28,8 @@ export interface CustosPlan {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
+  limite_regen_texto: number;
+  limite_sugestoes: number;
   preco_maximo_brl: number;
   ativo: boolean;
 }
@@ -89,7 +91,7 @@ export const loadCustosData = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("plans")
         .select(
-          "id,codigo,nome,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl,ativo",
+          "id,codigo,nome,limite_imagens,limite_renders,limite_geracoes,limite_regen_texto,limite_sugestoes,preco_maximo_brl,ativo",
         ),
       supabaseAdmin
         .from("profiles")

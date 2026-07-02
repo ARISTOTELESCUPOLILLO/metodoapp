@@ -47,6 +47,8 @@ export function PlansList({
             <Row k="Imagens" v={String(p.limite_imagens)} />
             <Row k="Renders" v={String(p.limite_renders)} />
             <Row k="Gerações" v={String(p.limite_geracoes)} />
+            <Row k="Gerar outro" v={String(p.limite_regen_texto ?? 0)} />
+            <Row k="Sugestões" v={String(p.limite_sugestoes ?? 0)} />
             <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
               <button onClick={() => onEdit(p)} style={{ ...btn, flex: 1 }}>
                 Editar
@@ -76,6 +78,8 @@ export function PlansList({
             <Th>Imgs</Th>
             <Th>Renders</Th>
             <Th>Gerações</Th>
+            <Th title='Limite do botão "Gerar outro" de bloco'>Gerar outro</Th>
+            <Th title='Limite do botão "Sugestão"'>Sugestões</Th>
             <Th>Ativo</Th>
             <Th>Ações</Th>
           </tr>
@@ -103,6 +107,8 @@ export function PlansList({
                 <Td>{p.limite_imagens}</Td>
                 <Td>{p.limite_renders}</Td>
                 <Td>{p.limite_geracoes}</Td>
+                <Td>{p.limite_regen_texto ?? 0}</Td>
+                <Td>{p.limite_sugestoes ?? 0}</Td>
                 <Td>{p.ativo ? "sim" : "não"}</Td>
                 <Td>
                   <button onClick={() => onEdit(p)} style={btn}>

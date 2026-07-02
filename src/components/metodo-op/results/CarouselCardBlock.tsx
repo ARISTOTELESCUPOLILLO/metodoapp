@@ -10,6 +10,7 @@ import { ArchiveButton } from "../ArchiveButton";
 import UsoReferenciasDia from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
+import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 import { RefSelectorProps, RefsRegenButton } from "./RefsRegenButton";
 import ConfirmDialog from "../ConfirmDialog";
 import { insertSignature, kitHasRefsForFormat, shareLegendaWhatsApp } from "./utils";
@@ -47,6 +48,7 @@ export function CarouselCardBlock({
 } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { selectedSlot } = usePlanSlotsCtx();
   const blockStorageKey = `uso-ref:carrossel:${dayNumber}:bloco`;
 
   const {
@@ -247,6 +249,7 @@ export function CarouselCardBlock({
                 tituloAtual: titulos[index],
                 textoAtual: textos[index],
                 legendaAtual: legendas[index],
+                preferredSlot: selectedSlot,
               });
               return (
                 <div key={card.card} className="carouselCardBlock">

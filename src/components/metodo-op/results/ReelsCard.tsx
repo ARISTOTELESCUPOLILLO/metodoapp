@@ -11,6 +11,7 @@ import { ArchiveButton } from "../ArchiveButton";
 import UsoReferenciasDia from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
+import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 import { RefSelectorProps, RefsRegenButton } from "./RefsRegenButton";
 import { insertSignature, shareLegendaWhatsApp } from "./utils";
 import { useReelsCopyEdit } from "./useReelsCopyEdit";
@@ -51,6 +52,7 @@ export function ReelsCard({
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const isMobile = useIsMobile();
+  const { selectedSlot } = usePlanSlotsCtx();
 
   const {
     hook,
@@ -128,6 +130,7 @@ export function ReelsCard({
     tituloAtual: hook,
     textoAtual: `Roteiro: ${script}`,
     legendaAtual: legenda,
+    preferredSlot: selectedSlot,
   });
 
   return (

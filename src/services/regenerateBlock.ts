@@ -13,6 +13,9 @@ export interface RegenContext {
   textoAtual?: string;
   legendaAtual?: string;
   motivoReprovacao?: string;
+  // Slot do plano a debitar o contador regen_texto no servidor. Quando ausente,
+  // o servidor cai no slot preferido padrão (plano1) — ver debit_usage.
+  preferredSlot?: "plano1" | "plano2" | "bonus";
 }
 
 export interface RegenResult {

@@ -16,6 +16,7 @@ import { ArchiveButton } from "../ArchiveButton";
 import UsoReferenciasDia, { useRefSelection } from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
+import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 import { RefSelectorProps } from "./RefsRegenButton";
 import {
   insertSignature,
@@ -63,6 +64,7 @@ export function FinalCard({
     setSessionImage(userId, cacheKey, value);
   }
   const isMobile = useIsMobile();
+  const { selectedSlot } = usePlanSlotsCtx();
   const storageKey = `uso-ref:estatico_final:${item.dia}`;
   const sel = useRefSelection(storageKey);
 
@@ -167,6 +169,7 @@ export function FinalCard({
     tituloAtual: titulo,
     textoAtual: texto,
     legendaAtual: legenda,
+    preferredSlot: selectedSlot,
   });
 
   return (
