@@ -33,6 +33,24 @@ export const SEQUENCE_COMPOSITION = {
   9: { estatico: 3, carrossel: 3, fechamento: 3 },
 };
 
+// Nº total de "peças" de título+texto(+legenda) geradas numa chamada de
+// generate-content.ts — usado pelo contador "Primeira Geração" (camada
+// adicional de bloqueio, não precisa ser matematicamente perfeito). Cada
+// estático/estático-final é 1 peça; cada sequência de carrossel tem 5 cards
+// (título+texto por card, legenda 1x por sequência — mas conta como peça
+// igual às demais pro propósito deste contador). Ex.: S3 = 1+5+1 = 7,
+// S6 = 2+10+2 = 14, S9 = 3+15+3 = 21 — mesmo bucketing defensivo de
+// mopContentCost() (costs.ts) para tolerar um sequenceSize fora de {3,6,9}.
+export function mopPiecesCount(sequenceSize: number): number {
+  const comp =
+    sequenceSize <= 3
+      ? SEQUENCE_COMPOSITION[3]
+      : sequenceSize >= 9
+        ? SEQUENCE_COMPOSITION[9]
+        : SEQUENCE_COMPOSITION[6];
+  return comp.estatico + comp.carrossel * 5 + comp.fechamento;
+}
+
 function buildPostProgression(qty: number, entrada: string, isB2BOperational: boolean): string {
   // A modulação do momento ("entryModifier") já é declarada uma única vez em
   // ANÁLISE INTERNA → "4. Modulação do momento" — não repetir aqui.

@@ -49,6 +49,7 @@ const planPayloadSchema = z.object({
   limite_geracoes: z.number(),
   limite_regen_texto: z.number(),
   limite_sugestoes: z.number(),
+  limite_primeira_geracao: z.number(),
   limite_imgs_display: z.number().nullable(),
   limite_renders_display: z.number().nullable(),
   preco_maximo_brl: z.number(),

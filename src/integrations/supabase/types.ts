@@ -435,6 +435,7 @@ export type Database = {
           limite_geracoes_display: number | null;
           limite_imagens: number;
           limite_imgs_display: number | null;
+          limite_primeira_geracao: number;
           limite_regen_texto: number;
           limite_renders: number;
           limite_renders_display: number | null;
@@ -460,6 +461,7 @@ export type Database = {
           limite_geracoes_display?: number | null;
           limite_imagens?: number;
           limite_imgs_display?: number | null;
+          limite_primeira_geracao?: number;
           limite_regen_texto?: number;
           limite_renders?: number;
           limite_renders_display?: number | null;
@@ -485,6 +487,7 @@ export type Database = {
           limite_geracoes_display?: number | null;
           limite_imagens?: number;
           limite_imgs_display?: number | null;
+          limite_primeira_geracao?: number;
           limite_regen_texto?: number;
           limite_renders?: number;
           limite_renders_display?: number | null;
@@ -579,6 +582,12 @@ export type Database = {
           bonus_regen_texto_usadas: number;
           bonus_sugestoes_limite: number;
           bonus_sugestoes_usadas: number;
+          plano1_primeira_geracao_limite: number;
+          plano1_primeira_geracao_usadas: number;
+          plano2_primeira_geracao_limite: number;
+          plano2_primeira_geracao_usadas: number;
+          bonus_primeira_geracao_limite: number;
+          bonus_primeira_geracao_usadas: number;
           ultimo_login: string | null;
           updated_at: string;
           voice_avatar1_enabled: boolean;
@@ -665,6 +674,12 @@ export type Database = {
           bonus_regen_texto_usadas?: number;
           bonus_sugestoes_limite?: number;
           bonus_sugestoes_usadas?: number;
+          plano1_primeira_geracao_limite?: number;
+          plano1_primeira_geracao_usadas?: number;
+          plano2_primeira_geracao_limite?: number;
+          plano2_primeira_geracao_usadas?: number;
+          bonus_primeira_geracao_limite?: number;
+          bonus_primeira_geracao_usadas?: number;
           ultimo_login?: string | null;
           updated_at?: string;
           voice_avatar1_enabled?: boolean;
@@ -751,6 +766,12 @@ export type Database = {
           bonus_regen_texto_usadas?: number;
           bonus_sugestoes_limite?: number;
           bonus_sugestoes_usadas?: number;
+          plano1_primeira_geracao_limite?: number;
+          plano1_primeira_geracao_usadas?: number;
+          plano2_primeira_geracao_limite?: number;
+          plano2_primeira_geracao_usadas?: number;
+          bonus_primeira_geracao_limite?: number;
+          bonus_primeira_geracao_usadas?: number;
           ultimo_login?: string | null;
           updated_at?: string;
           voice_avatar1_enabled?: boolean;
@@ -1094,6 +1115,19 @@ export type Database = {
               _geracoes?: number;
               _imgs: number;
               _preferred_slot?: string;
+              _regen_texto?: number;
+              _renders: number;
+              _sugestoes?: number;
+              _user_id: string;
+            };
+            Returns: string;
+          }
+        | {
+            Args: {
+              _geracoes?: number;
+              _imgs: number;
+              _preferred_slot?: string;
+              _primeira_geracao?: number;
               _regen_texto?: number;
               _renders: number;
               _sugestoes?: number;

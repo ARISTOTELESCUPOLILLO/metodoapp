@@ -83,10 +83,13 @@ export function computeCustosView(
       const geracoes = totalClientes * p.limite_geracoes;
       const custoFalaiPrev = imgs * settings.image_price_usd + renders * settings.render_price_usd;
       const custoOpenaiPrev = totalClientes * planMonthlyOpenaiCost(p, settings);
-      // Custo projetado dos 2 contadores de texto ("Gerar outro" + "Sugestão")
-      // — FONTE ÚNICA em costs.ts (mesma fórmula da aba Planos).
+      // Quantidade projetada dos 3 contadores de camada adicional ("Gerar
+      // outro" + "Sugestão" + "Primeira Geração") — custo projetado (em USD)
+      // vem da FONTE ÚNICA planExtrasMonthlyCost em costs.ts (mesma fórmula
+      // da aba Planos), já inclui os 3.
       const regenTextoTotal = totalClientes * p.limite_regen_texto;
       const sugestoesTotal = totalClientes * p.limite_sugestoes;
+      const primeiraGeracaoTotal = totalClientes * p.limite_primeira_geracao;
       const custoExtrasPrev = totalClientes * planExtrasMonthlyCost(p);
 
       const planLogs = logs.filter((l) => l.user_id && userIds.has(l.user_id));
@@ -120,6 +123,7 @@ export function computeCustosView(
         geracoes,
         regenTextoTotal,
         sugestoesTotal,
+        primeiraGeracaoTotal,
         custoFalaiPrev,
         custoOpenaiPrev,
         custoExtrasPrev,

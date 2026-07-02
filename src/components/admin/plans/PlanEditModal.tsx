@@ -79,6 +79,12 @@ export function PlanEditModal({
             value={String(editing.limite_sugestoes ?? 0)}
             onChange={(v) => onChange({ ...editing, limite_sugestoes: Number(v) })}
           />
+          <Inp
+            label={'Limite "Primeira Geração" (0 = ilimitado)'}
+            type="number"
+            value={String(editing.limite_primeira_geracao ?? 0)}
+            onChange={(v) => onChange({ ...editing, limite_primeira_geracao: Number(v) })}
+          />
 
           <div
             style={{

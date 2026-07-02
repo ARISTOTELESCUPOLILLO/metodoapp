@@ -23,6 +23,7 @@ export interface PlanRow {
   geracoes: number;
   regenTextoTotal: number;
   sugestoesTotal: number;
+  primeiraGeracaoTotal: number;
   custoFalaiPrev: number;
   custoOpenaiPrev: number;
   custoExtrasPrev: number;

@@ -53,6 +53,7 @@ export function PlansTab() {
           limite_geracoes: Number(editing.limite_geracoes),
           limite_regen_texto: Number(editing.limite_regen_texto || 0),
           limite_sugestoes: Number(editing.limite_sugestoes || 0),
+          limite_primeira_geracao: Number(editing.limite_primeira_geracao || 0),
           limite_imgs_display:
             editing.limite_imgs_display !== null ? Number(editing.limite_imgs_display) : null,
           limite_renders_display:

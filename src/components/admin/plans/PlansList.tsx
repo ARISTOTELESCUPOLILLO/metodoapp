@@ -49,6 +49,7 @@ export function PlansList({
             <Row k="Gerações" v={String(p.limite_geracoes)} />
             <Row k="Gerar outro" v={String(p.limite_regen_texto ?? 0)} />
             <Row k="Sugestões" v={String(p.limite_sugestoes ?? 0)} />
+            <Row k="Primeira Geração" v={String(p.limite_primeira_geracao ?? 0)} />
             <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
               <button onClick={() => onEdit(p)} style={{ ...btn, flex: 1 }}>
                 Editar
@@ -80,6 +81,9 @@ export function PlansList({
             <Th>Gerações</Th>
             <Th title='Limite do botão "Gerar outro" de bloco'>Gerar outro</Th>
             <Th title='Limite do botão "Sugestão"'>Sugestões</Th>
+            <Th title="Limite da geração inicial de título+texto(+legenda) por peça/post">
+              Primeira Geração
+            </Th>
             <Th>Ativo</Th>
             <Th>Ações</Th>
           </tr>
@@ -109,6 +113,7 @@ export function PlansList({
                 <Td>{p.limite_geracoes}</Td>
                 <Td>{p.limite_regen_texto ?? 0}</Td>
                 <Td>{p.limite_sugestoes ?? 0}</Td>
+                <Td>{p.limite_primeira_geracao ?? 0}</Td>
                 <Td>{p.ativo ? "sim" : "não"}</Td>
                 <Td>
                   <button onClick={() => onEdit(p)} style={btn}>

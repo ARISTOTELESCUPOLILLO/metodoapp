@@ -6,7 +6,13 @@ import {
   TECNICISMO_RULE,
 } from "@/core/textValidation";
 import { getVoiceProfile } from "@/data/brandVoice";
-import { resolveEffectiveUser, checkBalance, balanceFailMessage } from "@/lib/usage.server";
+import {
+  resolveEffectiveUser,
+  checkBalance,
+  balanceFailMessage,
+  debitUsage,
+} from "@/lib/usage.server";
+import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
 import type { FaixaEtaria } from "@/types";
@@ -65,9 +71,32 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
             return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
           const userId = effective.userId;
+          // Gate PRINCIPAL existente (geracoes:1) — intocado, mesma checagem
+          // "qualquer slot" de antes (sem preferredSlot).
           const bal = await checkBalance(userId, 0, 0, 1);
           if (!bal.ok) {
             return Response.json({ error: balanceFailMessage(bal.reason) }, { status: 402 });
+          }
+
+          // Camada ADICIONAL: "Primeira Geração" (título+texto desta chamada —
+          // 1 clique = 1 unidade, a legenda tem seu próprio fluxo em
+          // generate-caption.ts). Chamada SEPARADA da checagem acima pra não
+          // alterar o comportamento existente (que nunca teve preferredSlot).
+          // Isenta para admin.
+          const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)
+            ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
+            : undefined;
+          const isAdminUser = await checkIsAdmin(userId);
+          if (!isAdminUser) {
+            const balPrimeira = await checkBalance(userId, 0, 0, 0, preferredSlot, {
+              primeiraGeracao: 1,
+            });
+            if (!balPrimeira.ok) {
+              return Response.json(
+                { error: balanceFailMessage(balPrimeira.reason) },
+                { status: 402 },
+              );
+            }
           }
 
           const tom = OBJETIVO_TOM[objetivo as keyof typeof OBJETIVO_TOM] ?? OBJETIVO_TOM.promocao;
@@ -181,6 +210,25 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
           // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas
           // sinalizam para a orquestração de regeneração no cliente (E3).
           const flags = validatePieceFields("copy", { titulo, texto }, keyInfo);
+
+          // Debita 1 unidade de "Primeira Geração" (camada adicional, nunca
+          // para admin). SEM custoUsd — o custo real desta operação (gpt-4.1)
+          // já é registrado no evento "gerar_post_unico" (generate-caption.ts,
+          // clique final "Gerar Post Único"); logar custo aqui de novo
+          // duplicaria o gasto real reportado na aba Custos.
+          if (!isAdminUser) {
+            try {
+              await debitUsage(userId, 0, 0, {
+                evento: "gerar_pu_copy",
+                modulo: "pu",
+                primeiraGeracao: 1,
+                impersonatedBy: effective.impersonatedBy,
+                preferredSlot,
+              });
+            } catch (e) {
+              console.warn("[generate-pu-copy] debit failed", (e as Error).message);
+            }
+          }
 
           return Response.json({ titulo, texto, ...(flags.length > 0 ? { flags } : {}) });
         } catch (e) {

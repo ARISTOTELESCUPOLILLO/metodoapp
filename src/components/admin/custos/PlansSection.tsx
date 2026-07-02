@@ -43,6 +43,7 @@ export function PlansSection({
               <Th>Conteúdos</Th>
               <Th>Gerar outro</Th>
               <Th>Sugestões</Th>
+              <Th>Primeira Ger.</Th>
               <Th>fal.ai R$</Th>
               <Th>OpenAI R$</Th>
               <Th>Texto R$</Th>
@@ -72,6 +73,7 @@ export function PlansSection({
                 <Td>{r.geracoes}</Td>
                 <Td>{r.regenTextoTotal}</Td>
                 <Td>{r.sugestoesTotal}</Td>
+                <Td>{r.primeiraGeracaoTotal}</Td>
                 <Td>{brl(r.custoFalaiPrev)}</Td>
                 <Td>{brl(r.custoOpenaiPrev)}</Td>
                 <Td>{brl(r.custoExtrasPrev)}</Td>
@@ -121,6 +123,7 @@ export function PlansSection({
             ))}
             <tr style={{ background: "#f1f5f9", fontWeight: 700 }}>
               <Td>TOTAL</Td>
+              <Td>—</Td>
               <Td>—</Td>
               <Td>—</Td>
               <Td>—</Td>
