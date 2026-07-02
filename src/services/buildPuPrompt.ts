@@ -36,6 +36,7 @@ import {
   LIVRE_TOTAL_ARCHETYPES,
   OBJETIVO_ARCHETYPES,
   OBJETIVO_PALETAS,
+  OBJETIVO_TONALIDADES_ROTACAO,
   LIVRE_TONALIDADES,
   AVATAR_ROLE_BY_SEGMENT_OBJETIVO,
 } from "./objetivoConfig";
@@ -152,6 +153,20 @@ function buildColorBlock(
     return `${tonalidade.bloco}
 Dentro desta paleta, a IA tem liberdade para variar luz, saturação exata e textura — mas a combinação cromática de base é esta, não uma escolha nova a cada geração.
 Referência cromática da marca (use apenas se houver harmonia natural com a paleta escolhida): primária ${primary}, apoio ${accent}.
+COR DO LETTERING: escolha livremente a cor que garanta a melhor leitura visual sobre o fundo desta paleta — branco, preto, tom claro ou escuro conforme o contraste necessário. Legibilidade e destaque visual são prioritários.`;
+  }
+
+  // institucional/promocao/oportunidade: mesma convergência de cor relatada
+  // no caso "nenhum" (sorteio Math.random() puro, sem seed, sem observador) —
+  // migrados para o rodízio determinístico com anti-conflito de acento.
+  if (obj === "institucional" || obj === "promocao" || obj === "oportunidade") {
+    const tonalidade = pickTonalidade(
+      OBJETIVO_TONALIDADES_ROTACAO[obj],
+      tonalidadeSeed ?? 0,
+      accent,
+    );
+    return `${tonalidade.bloco}
+As cores são definidas pela intenção emocional da peça, não pelas cores institucionais como base da composição. Referência cromática da marca (use apenas se houver harmonia natural): primária ${primary}, apoio ${accent}.
 COR DO LETTERING: escolha livremente a cor que garanta a melhor leitura visual sobre o fundo desta paleta — branco, preto, tom claro ou escuro conforme o contraste necessário. Legibilidade e destaque visual são prioritários.`;
   }
 

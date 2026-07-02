@@ -145,28 +145,14 @@ export const OBJETIVO_ARCHETYPES: Record<Exclude<PostUnicoObjetivo, "nenhum">, s
 // "nenhum" não entra aqui: forçar uma paleta pré-definida (mesmo que "neutra")
 // contradiz e neutraliza a liberdade cromática anunciada na combinação Livre+Nenhum
 // — ver branch dedicado em buildColorBlock, que libera a escolha entre fria/quente.
-export const OBJETIVO_PALETAS: Record<Exclude<PostUnicoObjetivo, "nenhum">, string[]> = {
-  institucional: [
-    `PALETA DESTA PEÇA — CONFIANÇA: azul profundo, branco e cinza. Solidez institucional e credibilidade.`,
-    `PALETA DESTA PEÇA — CREDIBILIDADE: azul petróleo, grafite e branco. Maturidade e autoridade discreta.`,
-    `PALETA DESTA PEÇA — ESTABILIDADE: azul escuro, verde escuro e cinza. Presença de longo prazo.`,
-    `PALETA DESTA PEÇA — PROFISSIONALISMO: azul marinho, prata e branco. Rigor e competência.`,
-    `PALETA DESTA PEÇA — RESPEITO: grafite, azul profundo e bege claro. Sobriedade com calor humano.`,
-  ],
-  promocao: [
-    `PALETA DESTA PEÇA — ENERGIA: laranja, amarelo e branco. Vitalidade que convida à ação imediata.`,
-    `PALETA DESTA PEÇA — MOVIMENTO: vermelho moderado, laranja e cinza escuro. Dinamismo e urgência controlada.`,
-    `PALETA DESTA PEÇA — OPORTUNIDADE CROMÁTICA: amarelo dourado, azul intenso e branco. Destaque e valorização da oferta.`,
-    `PALETA DESTA PEÇA — ENTUSIASMO: coral, amarelo e azul claro. Animação e desejo de participação.`,
-    `PALETA DESTA PEÇA — DINAMISMO: laranja vibrante, azul escuro e branco. Contraste que ativa o olhar.`,
-  ],
-  oportunidade: [
-    `PALETA DESTA PEÇA — DESCOBERTA: turquesa, branco e azul céu. Abertura e novidade ao alcance.`,
-    `PALETA DESTA PEÇA — RENOVAÇÃO: verde claro, branco e bege. Frescor e recomeço.`,
-    `PALETA DESTA PEÇA — REALIZAÇÃO: dourado suave, laranja discreto e branco. Conquista e resultado concreto.`,
-    `PALETA DESTA PEÇA — FUTURO: azul elétrico, violeta suave e prata. Inovação e antecipação.`,
-    `PALETA DESTA PEÇA — POSSIBILIDADE: azul céu, turquesa e branco. Horizonte amplo e otimismo.`,
-  ],
+// institucional/promocao/oportunidade também não entram aqui — migraram para
+// OBJETIVO_TONALIDADES_ROTACAO (rodízio determinístico + observador, mesmo
+// motivo do LIVRE_TONALIDADES abaixo). Os 4 objetivos restantes continuam com
+// sorteio simples: não houve relato de convergência de cor para eles.
+export const OBJETIVO_PALETAS: Record<
+  Exclude<PostUnicoObjetivo, "nenhum" | "institucional" | "promocao" | "oportunidade">,
+  string[]
+> = {
   aviso: [
     `PALETA DESTA PEÇA — ATENÇÃO: amarelo, grafite e branco. Sinalização clara sem alarme.`,
     `PALETA DESTA PEÇA — ORIENTAÇÃO: azul médio, branco e cinza. Clareza informativa e direção.`,
@@ -192,6 +178,84 @@ export const OBJETIVO_PALETAS: Record<Exclude<PostUnicoObjetivo, "nenhum">, stri
     `PALETA DESTA PEÇA — AUTENTICIDADE COMERCIAL: tons neutros (bege claro, cinza suave e branco). Paleta fiel ao real — sem saturação artificial, sem dramatização cromática. Preserva a atmosfera visual da foto registrada.`,
     `PALETA DESTA PEÇA — DEMONSTRAÇÃO REAL: azul claro dessaturado, cinza quente e branco. Registro limpo que respeita a luz e as cores originais da cena. Equilíbrio sem intervenção artificial.`,
     `PALETA DESTA PEÇA — FIDELIDADE AO PRODUTO: areia, cinza neutro e branco. Documental e honesto — a paleta não inventa atmosfera, apenas organiza o que estava presente na foto.`,
+  ],
+};
+
+// Tonalidades com rodízio determinístico + observador (ver pickTonalidade em
+// core/colorRotation.ts) para os 3 objetivos com relato de convergência de cor
+// no Direção Livre — mesmo texto de paleta que existia antes em OBJETIVO_PALETAS,
+// agora com `hue` de referência para o observador de conflito com a cor de
+// acento da marca. Os outros objetivos (aviso, homenagem, fatos, venda)
+// continuam com sorteio simples em OBJETIVO_PALETAS, sem relato do problema.
+export const OBJETIVO_TONALIDADES_ROTACAO: Record<
+  "institucional" | "promocao" | "oportunidade",
+  TonalidadeCandidata[]
+> = {
+  institucional: [
+    {
+      hue: 220,
+      bloco: `PALETA DESTA PEÇA — CONFIANÇA: azul profundo, branco e cinza. Solidez institucional e credibilidade.`,
+    },
+    {
+      hue: 195,
+      bloco: `PALETA DESTA PEÇA — CREDIBILIDADE: azul petróleo, grafite e branco. Maturidade e autoridade discreta.`,
+    },
+    {
+      hue: 185,
+      bloco: `PALETA DESTA PEÇA — ESTABILIDADE: azul escuro, verde escuro e cinza. Presença de longo prazo.`,
+    },
+    {
+      hue: 225,
+      bloco: `PALETA DESTA PEÇA — PROFISSIONALISMO: azul marinho, prata e branco. Rigor e competência.`,
+    },
+    {
+      hue: 215,
+      bloco: `PALETA DESTA PEÇA — RESPEITO: grafite, azul profundo e bege claro. Sobriedade com calor humano.`,
+    },
+  ],
+  promocao: [
+    {
+      hue: 35,
+      bloco: `PALETA DESTA PEÇA — ENERGIA: laranja, amarelo e branco. Vitalidade que convida à ação imediata.`,
+    },
+    {
+      hue: 12,
+      bloco: `PALETA DESTA PEÇA — MOVIMENTO: vermelho moderado, laranja e cinza escuro. Dinamismo e urgência controlada.`,
+    },
+    {
+      hue: 48,
+      bloco: `PALETA DESTA PEÇA — OPORTUNIDADE CROMÁTICA: amarelo dourado, azul intenso e branco. Destaque e valorização da oferta.`,
+    },
+    {
+      hue: 20,
+      bloco: `PALETA DESTA PEÇA — ENTUSIASMO: coral, amarelo e azul claro. Animação e desejo de participação.`,
+    },
+    {
+      hue: 28,
+      bloco: `PALETA DESTA PEÇA — DINAMISMO: laranja vibrante, azul escuro e branco. Contraste que ativa o olhar.`,
+    },
+  ],
+  oportunidade: [
+    {
+      hue: 185,
+      bloco: `PALETA DESTA PEÇA — DESCOBERTA: turquesa, branco e azul céu. Abertura e novidade ao alcance.`,
+    },
+    {
+      hue: 110,
+      bloco: `PALETA DESTA PEÇA — RENOVAÇÃO: verde claro, branco e bege. Frescor e recomeço.`,
+    },
+    {
+      hue: 42,
+      bloco: `PALETA DESTA PEÇA — REALIZAÇÃO: dourado suave, laranja discreto e branco. Conquista e resultado concreto.`,
+    },
+    {
+      hue: 235,
+      bloco: `PALETA DESTA PEÇA — FUTURO: azul elétrico, violeta suave e prata. Inovação e antecipação.`,
+    },
+    {
+      hue: 195,
+      bloco: `PALETA DESTA PEÇA — POSSIBILIDADE: azul céu, turquesa e branco. Horizonte amplo e otimismo.`,
+    },
   ],
 };
 
