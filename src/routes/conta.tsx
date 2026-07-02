@@ -4,6 +4,11 @@ import { TopBar } from "@/components/app/TopBar";
 import { useProfile, SlotInfo } from "@/hooks/useProfile";
 import { MetaConnect } from "@/components/metodo-op/MetaConnect";
 
+// Conta de teste do Ari (não é a conta admin real) — botão de conexão Meta
+// fica desligado só para essa conta, pra evitar conectar/desconectar a
+// integração real durante testes. Demais contas seguem normalmente.
+const META_CONNECT_DISABLED_EMAIL = "acupolillo@uol.com.br";
+
 export const Route = createFileRoute("/conta")({
   component: () => (
     <AuthGate>
@@ -266,7 +271,7 @@ function ContaPage() {
         >
           Redes Sociais
         </div>
-        <MetaConnect />
+        <MetaConnect disabled={profile.email === META_CONNECT_DISABLED_EMAIL} />
       </section>
 
       <section style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>

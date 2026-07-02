@@ -26,7 +26,17 @@ async function authHeader(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export function MetaConnect() {
+// Estilo "desligado" para os botões de ação — usado quando a conta do
+// usuário está na lista de contas com a conexão Meta bloqueada por decisão
+// operacional (ver DISABLED_BUTTON_STYLE em uso abaixo).
+const DISABLED_BUTTON_STYLE = {
+  background: "#e2e8f0",
+  color: "#94a3b8",
+  border: "1px solid #cbd5e1",
+  cursor: "not-allowed" as const,
+};
+
+export function MetaConnect({ disabled }: { disabled?: boolean }) {
   const [status, setStatus] = useState<MetaStatus | null>(null);
   const [rawStatus, setRawStatus] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -221,8 +231,8 @@ export function MetaConnect() {
             {status.expired && (
               <button
                 type="button"
-                onClick={handleConnect}
-                disabled={connecting}
+                onClick={disabled ? undefined : handleConnect}
+                disabled={disabled || connecting}
                 style={{
                   padding: "8px 16px",
                   background: "#f5a623",
@@ -232,6 +242,7 @@ export function MetaConnect() {
                   fontWeight: 700,
                   fontSize: 13,
                   cursor: "pointer",
+                  ...(disabled ? DISABLED_BUTTON_STYLE : {}),
                 }}
               >
                 {connecting ? "Abrindo…" : "↺ Reconectar"}
@@ -239,8 +250,8 @@ export function MetaConnect() {
             )}
             <button
               type="button"
-              onClick={handleDisconnect}
-              disabled={disconnecting}
+              onClick={disabled ? undefined : handleDisconnect}
+              disabled={disabled || disconnecting}
               style={{
                 padding: "8px 16px",
                 background: "#fff",
@@ -251,6 +262,7 @@ export function MetaConnect() {
                 fontSize: 13,
                 cursor: "pointer",
                 opacity: disconnecting ? 0.6 : 1,
+                ...(disabled ? DISABLED_BUTTON_STYLE : {}),
               }}
             >
               {disconnecting ? "Desconectando…" : "Desconectar"}
@@ -265,8 +277,8 @@ export function MetaConnect() {
           </p>
           <button
             type="button"
-            onClick={handleConnect}
-            disabled={connecting}
+            onClick={disabled ? undefined : handleConnect}
+            disabled={disabled || connecting}
             style={{
               alignSelf: "flex-start",
               padding: "10px 18px",
@@ -278,6 +290,7 @@ export function MetaConnect() {
               fontSize: 14,
               cursor: connecting ? "not-allowed" : "pointer",
               opacity: connecting ? 0.7 : 1,
+              ...(disabled ? DISABLED_BUTTON_STYLE : {}),
             }}
           >
             {connecting ? "Abrindo autorização…" : "Conectar Instagram / Facebook"}
