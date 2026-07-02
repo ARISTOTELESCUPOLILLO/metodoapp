@@ -7,10 +7,16 @@
 // cena é definido por tipo para que a tampa/verso errado não possa aparecer por
 // geometria. Sorteado a cada chamada (mesmo padrão de pickImageVariationBlock em
 // visualDirection.ts) para também evitar que a peça sempre mostre notebook.
+// A regra de ponto de vista (ver "FÍSICA DA TELA" em buildDeviceRule) deixou de
+// forçar a câmera sempre do lado da tela — celular/tablet também podem compor
+// em RETRATO (câmera do lado oposto, vendo o verso liso, personagem olhando
+// para a própria tela) — achado real: personagem com tablet cuja tela aparecia
+// nítida pra câmera mas o olhar não estava na tela, porque a regra antiga só
+// admitia um ângulo e nenhuma regra amarrava olhar→tela.
 const DEVICE_CELULAR =
-  "CELULAR/SMARTPHONE: tela voltada para cima sobre a mesa OU na mão da pessoa, mostrando a tela ao observador. A parte de trás do aparelho nunca fica voltada para a câmera.";
+  "CELULAR/SMARTPHONE: tela voltada para cima sobre a mesa, OU em mãos seguindo o ENQUADRAMENTO escolhido mais abaixo (MOSTRAR A TELA ao observador, ou RETRATO DO PERSONAGEM com o verso liso voltado à câmera e o personagem olhando para a própria tela).";
 const DEVICE_TABLET =
-  "TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa OU em mãos mostrando a tela ao observador. A tampa/verso nunca fica voltada para a câmera.";
+  "TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa, OU em mãos seguindo o ENQUADRAMENTO escolhido mais abaixo (MOSTRAR A TELA ao observador, ou RETRATO DO PERSONAGEM com o verso liso voltado à câmera e o personagem olhando para a própria tela).";
 const DEVICE_NOTEBOOK =
   'NOTEBOOK/LAPTOP: SOMENTE de perfil lateral — câmera paralela ao eixo da dobradiça, mostrando a espessura do aparelho aberto em ângulo "V", nunca de frente nem de costas. A tampa traseira nunca fica visível para a câmera.';
 const DEVICE_MONITOR =
@@ -150,15 +156,22 @@ export function buildDeviceRule(
     : "no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen";
   return `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, celular, monitor e outros dispositivos são PERMITIDOS quando a cena pedir, em uso natural — abertos, na mão, apoiados sobre a mesa. NÃO forçar dispositivo fechado. ${screenContentClause(!!preserveScreenContent)}
 
-REGRA DE PONTO DE VISTA — ABSOLUTA (vale para qualquer dispositivo com tela: notebook, monitor, tablet, celular): o único "observador" da tela na cena é o PERSONAGEM, que está posicionado na frente do display. A câmera — ou seja, quem vê a peça publicitária — fica SEMPRE do mesmo lado do personagem, o lado da tela, nunca do lado oposto/atrás do equipamento. Enquadrar a cena por trás do dispositivo é PROIBIDO: esconderia o rosto do personagem e mostraria apenas a carcaça traseira, um ângulo não-natural para uma peça publicitária (nenhum fotógrafo se posicionaria atrás do monitor/notebook, perdendo o rosto de quem está sendo fotografado). As regras de composição por tipo abaixo aplicam esse princípio a cada formato de dispositivo.
+FÍSICA DA TELA — PRINCÍPIO DE CENA (entenda a geometria; as proibições abaixo são reforço, não a regra primária): todo dispositivo com tela tem DUAS faces opostas — a TELA (face ativa, único lugar onde existe conteúdo) e o VERSO/carcaça (face lisa e opaca, sem nada). A tela fica sempre voltada para o rosto de quem está usando o aparelho. Disso decorrem 3 consequências:
+1. OLHAR: se o personagem está usando o dispositivo, os olhos dele estão NA TELA — olhar dirigido a ela, nunca solto, nunca para o lado, nunca para fora de quadro. Essa regra tem PRECEDÊNCIA sobre qualquer instrução de câmera do mood que peça "olhar para longe" ou "espaço negativo à frente do olhar" — quando há dispositivo em uso, o olhar vai para a tela, e o espaço negativo (se o mood exigir) se organiza ao redor desse eixo, não contra ele. Se a cena pede olhar em outra direção, o dispositivo fica em REPOUSO (abaixado, sobre a mesa) — não erguido como se estivesse em uso.
+2. O QUE A CÂMERA VÊ: a câmera vê OU a tela (quando está do mesmo lado do olhar do personagem) OU o verso liso (quando está do lado oposto, de frente para o personagem). Nunca as duas faces ao mesmo tempo — é fisicamente impossível. Ver o verso é natural e correto nesse ângulo; NÃO torça o aparelho nem o personagem para a tela "aparecer" mesmo assim.
+3. CONTEÚDO: existe SOMENTE na face da tela. Conteúdo, logo ou interface no verso/carcaça é fisicamente impossível — PROIBIDO em qualquer ângulo de câmera, sem exceção.
 
-COMPOSIÇÃO POR TIPO DE DISPOSITIVO — define o ÂNGULO da cena para que a tampa/carcaça errada não possa aparecer por geometria (em vez de só proibir). SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração:
+ENQUADRAMENTO COM DISPOSITIVO — escolha a geometria coerente com a câmera sorteada para esta cena:
+· MOSTRAR A TELA: câmera do mesmo lado do olhar do personagem (lateral, por cima do ombro, oblíqua) — a tela aparece ao observador com o conteúdo tratado pela regra acima, rosto do personagem sempre visível.
+· RETRATO DO PERSONAGEM (inclui contra-plongée e planos fechados no rosto): válido APENAS para CELULAR e TABLET em mãos — câmera de frente para o personagem, do lado oposto à tela: mostra o verso liso do aparelho enquanto o personagem olha para baixo, para a própria tela (ver regra de OLHAR acima). NOTEBOOK e MONITOR NUNCA usam este enquadramento — a carcaça traseira desses equipamentos é grande demais e esconde o personagem; eles seguem sempre a composição de perfil/oblíqua definida abaixo.${preserveScreenContent ? "\nQuando o conteúdo da tela É o produto referenciado (ver regra de tela acima), use SEMPRE o enquadramento MOSTRAR A TELA — a peça existe para exibir esse conteúdo, o enquadramento RETRATO não se aplica aqui." : ""}
+
+COMPOSIÇÃO POR TIPO DE DISPOSITIVO — aplica o enquadramento escolhido acima a cada formato. SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração:
 TIPO DESTA GERAÇÃO: ${pickDeviceTypeLine()}
 DIVERSIFICAÇÃO OBRIGATÓRIA: não repita sempre notebook entre as peças de uma mesma sequência — alterne com celular, tablet, monitor de desktop ou tela/TV de fundo conforme a atividade da empresa e o que a cena pede.
 PROTAGONISMO: o dispositivo digital é elemento de APOIO à cena, nunca o protagonista visual — o foco principal é a pessoa e a ação dela. Mantenha o dispositivo proporcionalmente pequeno no quadro, nunca em primeiro plano ocupando a maior área da composição. EXCEÇÃO: quando o próprio dispositivo for o produto sendo vendido (ex.: loja de eletrônicos/celulares/informática) — nesse caso ele pode ocupar o centro da composição como protagonista.
 
 CARCAÇA E TAMPA — REGRA ABSOLUTA (vale mesmo com a composição correta, como reforço): tampa, verso e carcaça de qualquer dispositivo DEVEM ser completamente lisas, sem nenhuma marca, símbolo, logo, maçã, ícone, adesivo, gravação ou iluminação. Use equipamento genérico, sem marca. MÁXIMO 1 DISPOSITIVO por cena.
-NEGATIVE: ${screenNegative}, no images or graphics on device casing or back cover, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no device rear casing facing camera, camera on the screen side only, never positioned behind the device.`;
+NEGATIVE: ${screenNegative}, no images or graphics on device casing or back cover, no content or interface visible on back casing under any camera angle, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no notebook rear casing facing camera, character holding device but gaze not directed at its screen while in use.`;
 }
 
 export const AMBIENTES_RULE = `⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.`;
