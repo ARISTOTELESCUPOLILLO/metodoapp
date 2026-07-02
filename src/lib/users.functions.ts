@@ -115,6 +115,9 @@ export interface UsersListPlan {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
+  limite_regen_texto: number;
+  limite_sugestoes: number;
+  limite_primeira_geracao: number;
   preco_maximo_brl: number;
 }
 
@@ -144,7 +147,8 @@ export const loadUsersList = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("plans")
         .select(
-          "id,nome,codigo,elegivel_bonus,tipo,limite_imagens,limite_renders,limite_geracoes,preco_maximo_brl",
+          "id,nome,codigo,elegivel_bonus,tipo,limite_imagens,limite_renders,limite_geracoes," +
+            "limite_regen_texto,limite_sugestoes,limite_primeira_geracao,preco_maximo_brl",
         )
         .eq("ativo", true)
         .order("nome"),
@@ -169,7 +173,7 @@ export const loadUsersList = createServerFn({ method: "POST" })
     };
     const usdRate = Number(s?.usd_brl_rate) || 5.8;
 
-    return { rows, plans: (pls as UsersListPlan[]) || [], costs, usdRate };
+    return { rows, plans: (pls as unknown as UsersListPlan[]) || [], costs, usdRate };
   });
 
 // Substitui UsersTab.changeNome()

@@ -24,7 +24,10 @@ export const loadClientesFinanceiroData = createServerFn({ method: "POST" })
         .eq("is_test", false),
       supabaseAdmin
         .from("plans")
-        .select("id,codigo,nome,tipo,limite_imagens,limite_renders,limite_geracoes")
+        .select(
+          "id,codigo,nome,tipo,limite_imagens,limite_renders,limite_geracoes," +
+            "limite_regen_texto,limite_sugestoes,limite_primeira_geracao",
+        )
         .eq("ativo", true),
       supabaseAdmin.from("user_roles").select("user_id,role"),
       supabaseAdmin
@@ -38,7 +41,7 @@ export const loadClientesFinanceiroData = createServerFn({ method: "POST" })
 
     return {
       profiles: (profs || []) as unknown as Profile[],
-      plans: (pls || []) as Plan[],
+      plans: (pls || []) as unknown as Plan[],
       adminIds,
       usdRate: Number(s?.usd_brl_rate) || 5.8,
       imgRef: Number(s?.image_price_usd) || 0.08,

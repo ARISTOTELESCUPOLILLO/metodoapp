@@ -1,7 +1,7 @@
 // Cálculos derivados da aba Painel (Visão Geral) — extraído de
 // VisaoGeralTab.tsx (Fase 9). Função pura: recebe perfis + planos + admins +
 // configurações e devolve os totais já calculados para o render.
-import { planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
+import { planMonthlyFalaiCost, planMonthlyOpenaiCost, planExtrasMonthlyCost } from "@/lib/costs";
 import type { Plan, Profile, Settings } from "./types";
 
 export function coverColor(cycles: number | null) {
@@ -59,7 +59,11 @@ export function computeVisaoGeralView(
       if (!plan) continue;
       totalSold += s.preco ?? 0;
       falaiCost += planMonthlyFalaiCost(plan, prices);
-      openaiCost += planMonthlyOpenaiCost(plan, prices);
+      // Os 3 contadores de camada adicional (Gerar outro/Sugestão/Primeira
+      // Geração) são todos custo OpenAI (gpt-4.1/gpt-4.1-mini) — somam no
+      // openaiCost, não no falaiCost, pra "saldo cobre N ciclos" continuar
+      // separando por provedor corretamente.
+      openaiCost += planMonthlyOpenaiCost(plan, prices) + planExtrasMonthlyCost(plan);
     }
   }
 

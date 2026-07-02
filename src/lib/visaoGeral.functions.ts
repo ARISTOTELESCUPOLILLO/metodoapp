@@ -23,7 +23,10 @@ export const loadVisaoGeralData = createServerFn({ method: "POST" })
         ),
       supabaseAdmin
         .from("plans")
-        .select("id,codigo,limite_imagens,limite_renders,limite_geracoes")
+        .select(
+          "id,codigo,limite_imagens,limite_renders,limite_geracoes," +
+            "limite_regen_texto,limite_sugestoes,limite_primeira_geracao",
+        )
         .eq("ativo", true),
       supabaseAdmin.from("user_roles").select("user_id,role"),
       supabaseAdmin
@@ -37,7 +40,7 @@ export const loadVisaoGeralData = createServerFn({ method: "POST" })
 
     return {
       profiles: (profs || []) as unknown as Profile[],
-      plans: (pls || []) as Plan[],
+      plans: (pls || []) as unknown as Plan[],
       adminIds: (roles || []).filter((r) => r.role === "admin").map((r) => r.user_id),
       settings: s ? (s as unknown as Settings) : null,
     };

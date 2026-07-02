@@ -68,6 +68,14 @@ export interface PlanForCost {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
+  // Opcionais — telas/tipos antigos que ainda não selecionam essas colunas
+  // continuam funcionando (tratadas como 0 em planExtrasMonthlyCost), mas
+  // planMonthlyCost já soma os 3 contadores de camada adicional quando
+  // informados, para não repetir o bug de "aba mostra custo divergente"
+  // com quem já foi corrigido (aba Custos/Planos).
+  limite_regen_texto?: number | null;
+  limite_sugestoes?: number | null;
+  limite_primeira_geracao?: number | null;
 }
 
 export interface UnitPrices {
@@ -92,11 +100,17 @@ export function planMonthlyOpenaiCost(plan: PlanForCost, prices: UnitPrices): nu
   return seqSize ? mopMonthlyCost(seqSize) : plan.limite_geracoes * prices.geracao_price_usd;
 }
 
-// Custo mensal total projetado de um plano (fal.ai + OpenAI). Fonte única —
-// usada por todas as telas admin que mostram custo/preço mínimo por plano,
-// pra evitar reimplementações divergentes da mesma fórmula.
+// Custo mensal total projetado de um plano (fal.ai + OpenAI + os 3
+// contadores de camada adicional — Gerar outro/Sugestão/Primeira Geração,
+// via planExtrasMonthlyCost mais abaixo). Fonte única — usada por todas as
+// telas admin que mostram custo/preço mínimo por plano, pra evitar
+// reimplementações divergentes da mesma fórmula.
 export function planMonthlyCost(plan: PlanForCost, prices: UnitPrices): number {
-  return planMonthlyFalaiCost(plan, prices) + planMonthlyOpenaiCost(plan, prices);
+  return (
+    planMonthlyFalaiCost(plan, prices) +
+    planMonthlyOpenaiCost(plan, prices) +
+    planExtrasMonthlyCost(plan)
+  );
 }
 
 // Plano com os limites dos 3 contadores de camada adicional (regen "Gerar

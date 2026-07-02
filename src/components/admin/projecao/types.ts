@@ -29,6 +29,12 @@ export interface Profile {
   plano1_renders_limite: number;
   plano1_geracoes_usadas: number;
   plano1_geracoes_limite: number;
+  plano1_regen_texto_usadas: number;
+  plano1_regen_texto_limite: number;
+  plano1_sugestoes_usadas: number;
+  plano1_sugestoes_limite: number;
+  plano1_primeira_geracao_usadas: number;
+  plano1_primeira_geracao_limite: number;
   plano1_preco_brl: number | null;
   plano2_id: string | null;
   plano2_inicio: string | null;
@@ -38,6 +44,12 @@ export interface Profile {
   plano2_renders_limite: number;
   plano2_geracoes_usadas: number;
   plano2_geracoes_limite: number;
+  plano2_regen_texto_usadas: number;
+  plano2_regen_texto_limite: number;
+  plano2_sugestoes_usadas: number;
+  plano2_sugestoes_limite: number;
+  plano2_primeira_geracao_usadas: number;
+  plano2_primeira_geracao_limite: number;
   plano2_preco_brl: number | null;
   bonus_id: string | null;
   bonus_inicio: string | null;
@@ -47,6 +59,12 @@ export interface Profile {
   bonus_renders_limite: number;
   bonus_geracoes_usadas: number;
   bonus_geracoes_limite: number;
+  bonus_regen_texto_usadas: number;
+  bonus_regen_texto_limite: number;
+  bonus_sugestoes_usadas: number;
+  bonus_sugestoes_limite: number;
+  bonus_primeira_geracao_usadas: number;
+  bonus_primeira_geracao_limite: number;
   bonus_preco_brl: number | null;
 }
 

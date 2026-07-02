@@ -1,7 +1,7 @@
 // Cálculos derivados da aba Projeção — extraído de ProjecaoTab.tsx (Fase 9).
 // Funções puras: recebem os dados brutos (perfis, planos, admins, configurações)
 // e devolvem as projeções por slot + os totais agregados por janela de vencimento.
-import { mopMonthlyCost, mopSequenceSize } from "@/lib/costs";
+import { mopMonthlyCost, mopSequenceSize, planExtrasMonthlyCost } from "@/lib/costs";
 import {
   BUCKETS,
   type Bucket,
@@ -58,6 +58,12 @@ export function buildProjections(
         rl: prof.plano1_renders_limite,
         gu: prof.plano1_geracoes_usadas,
         gl: prof.plano1_geracoes_limite,
+        rtu: prof.plano1_regen_texto_usadas,
+        rtl: prof.plano1_regen_texto_limite,
+        sgu: prof.plano1_sugestoes_usadas,
+        sgl: prof.plano1_sugestoes_limite,
+        pgu: prof.plano1_primeira_geracao_usadas,
+        pgl: prof.plano1_primeira_geracao_limite,
         preco: prof.plano1_preco_brl || 0,
       },
       {
@@ -70,6 +76,12 @@ export function buildProjections(
         rl: prof.plano2_renders_limite,
         gu: prof.plano2_geracoes_usadas,
         gl: prof.plano2_geracoes_limite,
+        rtu: prof.plano2_regen_texto_usadas,
+        rtl: prof.plano2_regen_texto_limite,
+        sgu: prof.plano2_sugestoes_usadas,
+        sgl: prof.plano2_sugestoes_limite,
+        pgu: prof.plano2_primeira_geracao_usadas,
+        pgl: prof.plano2_primeira_geracao_limite,
         preco: prof.plano2_preco_brl || 0,
       },
       {
@@ -82,6 +94,12 @@ export function buildProjections(
         rl: prof.bonus_renders_limite,
         gu: prof.bonus_geracoes_usadas,
         gl: prof.bonus_geracoes_limite,
+        rtu: prof.bonus_regen_texto_usadas,
+        rtl: prof.bonus_regen_texto_limite,
+        sgu: prof.bonus_sugestoes_usadas,
+        sgl: prof.bonus_sugestoes_limite,
+        pgu: prof.bonus_primeira_geracao_usadas,
+        pgl: prof.bonus_primeira_geracao_limite,
         preco: prof.bonus_preco_brl || 0,
       },
     ];
@@ -96,7 +114,19 @@ export function buildProjections(
       // "ilimitado por ciclo") — remGeracoes fica sempre 0 pra eles, então o
       // custo OpenAI real (ciclos MOP) usa mopMonthlyCost em vez do contador.
       const seqSize = mopSequenceSize(plan.codigo);
-      const openaiCost = seqSize ? mopMonthlyCost(seqSize) : remGeracoes * s.geracao_price_usd;
+      // Custo restante dos 3 contadores de camada adicional (Gerar outro/
+      // Sugestão/Primeira Geração) — reaproveita planExtrasMonthlyCost
+      // passando a quantidade RESTANTE no lugar do limite total do plano
+      // (a função só multiplica por custo unitário, funciona igual pra
+      // "quanto ainda pode custar" quanto pra "quanto custa no total").
+      const remExtrasCost = planExtrasMonthlyCost({
+        codigo: plan.codigo,
+        limite_regen_texto: Math.max(0, slot.rtl - slot.rtu),
+        limite_sugestoes: Math.max(0, slot.sgl - slot.sgu),
+        limite_primeira_geracao: Math.max(0, slot.pgl - slot.pgu),
+      });
+      const openaiCost =
+        (seqSize ? mopMonthlyCost(seqSize) : remGeracoes * s.geracao_price_usd) + remExtrasCost;
       if (remImgs === 0 && remRenders === 0 && openaiCost === 0) continue;
       const endDate = calcEndDate(slot.inicio, plan.tipo);
       const daysLeft = endDate ? Math.ceil((endDate.getTime() - now.getTime()) / 86400000) : null;

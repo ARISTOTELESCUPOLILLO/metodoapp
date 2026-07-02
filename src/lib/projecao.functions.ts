@@ -17,9 +17,9 @@ const DEFAULT_SETTINGS: Settings = {
 
 const PROFILE_COLUMNS =
   "id,nome,email,is_test," +
-  "plano1_id,plano1_inicio,plano1_imgs_usadas,plano1_imgs_limite,plano1_renders_usados,plano1_renders_limite,plano1_geracoes_usadas,plano1_geracoes_limite,plano1_preco_brl," +
-  "plano2_id,plano2_inicio,plano2_imgs_usadas,plano2_imgs_limite,plano2_renders_usados,plano2_renders_limite,plano2_geracoes_usadas,plano2_geracoes_limite,plano2_preco_brl," +
-  "bonus_id,bonus_inicio,bonus_imgs_usadas,bonus_imgs_limite,bonus_renders_usados,bonus_renders_limite,bonus_geracoes_usadas,bonus_geracoes_limite,bonus_preco_brl";
+  "plano1_id,plano1_inicio,plano1_imgs_usadas,plano1_imgs_limite,plano1_renders_usados,plano1_renders_limite,plano1_geracoes_usadas,plano1_geracoes_limite,plano1_regen_texto_usadas,plano1_regen_texto_limite,plano1_sugestoes_usadas,plano1_sugestoes_limite,plano1_primeira_geracao_usadas,plano1_primeira_geracao_limite,plano1_preco_brl," +
+  "plano2_id,plano2_inicio,plano2_imgs_usadas,plano2_imgs_limite,plano2_renders_usados,plano2_renders_limite,plano2_geracoes_usadas,plano2_geracoes_limite,plano2_regen_texto_usadas,plano2_regen_texto_limite,plano2_sugestoes_usadas,plano2_sugestoes_limite,plano2_primeira_geracao_usadas,plano2_primeira_geracao_limite,plano2_preco_brl," +
+  "bonus_id,bonus_inicio,bonus_imgs_usadas,bonus_imgs_limite,bonus_renders_usados,bonus_renders_limite,bonus_geracoes_usadas,bonus_geracoes_limite,bonus_regen_texto_usadas,bonus_regen_texto_limite,bonus_sugestoes_usadas,bonus_sugestoes_limite,bonus_primeira_geracao_usadas,bonus_primeira_geracao_limite,bonus_preco_brl";
 
 // Substitui ProjecaoTab.load() — settings + perfis + planos ativos + admins,
 // numa só chamada.

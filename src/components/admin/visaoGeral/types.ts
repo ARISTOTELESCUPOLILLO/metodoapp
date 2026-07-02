@@ -20,6 +20,9 @@ export interface Plan {
   limite_imagens: number;
   limite_renders: number;
   limite_geracoes: number;
+  limite_regen_texto: number;
+  limite_sugestoes: number;
+  limite_primeira_geracao: number;
 }
 
 export interface Settings {
