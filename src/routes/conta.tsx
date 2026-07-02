@@ -2,12 +2,13 @@
 import { AuthGate } from "@/components/app/AuthGate";
 import { TopBar } from "@/components/app/TopBar";
 import { useProfile, SlotInfo } from "@/hooks/useProfile";
+import { useImpersonation } from "@/hooks/useImpersonation";
 import { MetaConnect } from "@/components/metodo-op/MetaConnect";
 
-// Conta de teste do Ari (não é a conta admin real) — botão de conexão Meta
-// fica desligado só para essa conta, pra evitar conectar/desconectar a
-// integração real durante testes. Demais contas seguem normalmente.
-const META_CONNECT_DISABLED_EMAIL = "acupolillo@uol.com.br";
+// Conexão Meta ainda não é liberada pros clientes — fica desligada (botão
+// desabilitado) para TODOS os usuários, cadastrados e futuros. Só a conta de
+// teste do Ari mantém o botão ativo, pra continuar testando a integração real.
+const META_CONNECT_ENABLED_EMAIL = "acupolillo@uol.com.br";
 
 export const Route = createFileRoute("/conta")({
   component: () => (
@@ -148,7 +149,11 @@ function SlotCard({ slot }: { slot: SlotInfo }) {
 }
 
 function ContaPage() {
-  const { profile, slots, isAdmin, loading } = useProfile();
+  // "Minha Conta" não respeitava impersonação — useProfile() sem
+  // targetUserId sempre carregava o perfil do admin logado, mesmo em modo
+  // "Atuar como". Mesmo padrão já usado em MetodoOpApp.tsx/historico.tsx.
+  const impersonation = useImpersonation();
+  const { profile, slots, isAdmin, loading } = useProfile(impersonation?.userId || null);
   if (loading) return <div style={{ padding: 24 }}>Carregando…</div>;
   if (!profile) return <div style={{ padding: 24 }}>Perfil não encontrado.</div>;
 
@@ -271,7 +276,7 @@ function ContaPage() {
         >
           Redes Sociais
         </div>
-        <MetaConnect disabled={profile.email === META_CONNECT_DISABLED_EMAIL} />
+        <MetaConnect disabled={profile.email !== META_CONNECT_ENABLED_EMAIL} />
       </section>
 
       <section style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
