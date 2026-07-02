@@ -449,8 +449,37 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
           // distintas (sem repetir até esgotar o conjunto); usar Math.random()
           // aqui de novo quebraria essa garantia, porque o servidor reavalia a
           // cada request HTTP independente, perdendo a relação entre tentativas.
-          const lensIndex = (attempt + sessionSeed) % OPENING_LENSES.length;
-          const lens = OPENING_LENSES[lensIndex];
+          // Lentes seguras pro formato positivo "[item] para [resultado]"
+          // exigido no MOP (linha ~318 abaixo, elementoConcretoBlock) —
+          // comparação/dúvida/erro/sinal/detalhe tendem a produzir
+          // condicional, defeito ou pergunta, o que colide com a proibição
+          // de crítica ao cliente do metodoPrompt ("PROIBIDO... crítica ou
+          // cobrança ao cliente", mais abaixo). Ficam disponíveis só no PU,
+          // onde esse formato é legítimo (ver ESTILO DA SUGESTÃO (POST
+          // ÚNICO) mais abaixo).
+          const MOP_SAFE_LENS_NAMES = new Set([
+            "Resultado observável",
+            "Necessidade percebida",
+            "Escolha antes da compra",
+            "Processo",
+            "Oportunidade",
+          ]);
+          // No PU, "Sinal de hora de agir" e "Erro evitável" pressupõem um
+          // ciclo de desgaste/troca ou um erro de uso físico — non-sequitur
+          // quando o elemento concreto desta sugestão é um serviço/
+          // procedimento (sem esse ciclo). Exclui as duas só nesse caso;
+          // produto físico (VAREJO) ou item não classificado mantém o pool
+          // cheio, já que ali a premissa das duas lentes faz sentido.
+          const itemType = concreteItem ? classifyItemType(concreteItem) : null;
+          const SERVICE_RISKY_LENS_NAMES = new Set(["Sinal de hora de agir", "Erro evitável"]);
+          const lensPool =
+            mode === "metodo"
+              ? OPENING_LENSES.filter((l) => MOP_SAFE_LENS_NAMES.has(l.nome))
+              : itemType === "SERVIÇOS"
+                ? OPENING_LENSES.filter((l) => !SERVICE_RISKY_LENS_NAMES.has(l.nome))
+                : OPENING_LENSES;
+          const lensIndex = (attempt + sessionSeed) % lensPool.length;
+          const lens = lensPool[lensIndex];
           const lensGuardrail = ` Esta lente define apenas o ÂNGULO da frase dentro do CONTEXTO REAL DE USO já identificado — não cria uma situação nova, não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal. A lente é um mecanismo interno: a frase final não deve deixar reconhecível qual lente foi usada — só devem aparecer produto/serviço, contexto real de uso e situação plausível em linguagem natural.${segment !== "MARCA" ? ` PROIBIDO usar tom de vínculo/comunidade com o público — "nosso(s)", "nossa(s)", "juntos", "nossa comunidade", "cuidar juntos", "fazemos parte da sua vida" — esse registro pertence ao segmento MARCA; em ${segment}, descreva produto/serviço e situação na 3ª pessoa, sem incluir o público como coautor ou parceiro emocional.` : ""}`;
           const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}${lensGuardrail}`;
           // Na PU, a lente serve só para variar o ASSUNTO do post único — não
@@ -582,15 +611,25 @@ Retorne JSON EXATAMENTE assim:
             }
 
             const sugestaoMaxWords = 7;
-            sugestao = truncateWords(
-              String(parsed.sugestao || "")
-                .trim()
-                .replace(/^"|"$/g, ""),
-              sugestaoMaxWords,
-            );
+            const rawSugestao = String(parsed.sugestao || "")
+              .trim()
+              .replace(/^"|"$/g, "");
+            const rawWordCount = rawSugestao.split(/\s+/).filter(Boolean).length;
+            sugestao = truncateWords(rawSugestao, sugestaoMaxWords);
             if (!sugestao) return Response.json({ error: "Sugestão vazia" }, { status: 502 });
 
             motivos = validateSugestao(sugestao, sugestaoMaxWords);
+            // truncateWords só remove conjunção/preposição do final — corta
+            // no meio de substantivo/adjetivo sem avisar, e a frase cortada
+            // passava pela validação como se estivesse completa (o corte
+            // acontecia ANTES da checagem de tamanho). Sinaliza aqui, pelo
+            // texto BRUTO (antes do corte), pra virar motivo de retry real
+            // em vez de devolver a frase capenga sem o modelo saber.
+            if (rawWordCount > sugestaoMaxWords) {
+              motivos.push(
+                `frase original tinha ${rawWordCount} palavras e foi cortada no meio — reescreva já dentro do limite de ${sugestaoMaxWords} palavras, sem depender de corte`,
+              );
+            }
             motivos = motivos.concat(
               checkInventedPromotion(sugestao, allowedContext, {
                 allowPromoLanguage: allowPromoLanguagePU,
