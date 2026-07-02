@@ -21,8 +21,8 @@ export function SettingsTab() {
       .maybeSingle()
       .then(({ data: s }) => {
         if (s) {
-          setImageBasePrice(String(s.image_base_price_usd ?? 0.046));
-          setImageRefPrice(String(s.image_price_usd ?? 0.058));
+          setImageBasePrice(String(s.image_base_price_usd ?? 0.06));
+          setImageRefPrice(String(s.image_price_usd ?? 0.08));
           setRenderPrice(String(s.render_price_usd ?? 1.6));
           setGeracaoPrice(String(s.geracao_price_usd ?? 0.013));
           setUsdRate(String(s.usd_brl_rate ?? 5.8));

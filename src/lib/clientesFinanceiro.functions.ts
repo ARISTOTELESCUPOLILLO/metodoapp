@@ -41,7 +41,7 @@ export const loadClientesFinanceiroData = createServerFn({ method: "POST" })
       plans: (pls || []) as Plan[],
       adminIds,
       usdRate: Number(s?.usd_brl_rate) || 5.8,
-      imgRef: Number(s?.image_price_usd) || 0.058,
+      imgRef: Number(s?.image_price_usd) || 0.08,
       renderPrice: Number(s?.render_price_usd) || 1.6,
       geracaoPrice: Number(s?.geracao_price_usd) || 0.013,
     };

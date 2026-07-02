@@ -163,7 +163,7 @@ export const loadUsersList = createServerFn({ method: "POST" })
       is_admin: adminSet.has(p.id),
     }));
     const costs: UsersListCosts = {
-      imageRef: Number(s?.image_price_usd) || 0.058,
+      imageRef: Number(s?.image_price_usd) || 0.08,
       video: Number(s?.render_price_usd) || 1.6,
       content: Number(s?.geracao_price_usd) || 0.013,
     };

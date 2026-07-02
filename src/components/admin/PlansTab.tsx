@@ -17,7 +17,8 @@ export function PlansTab() {
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usdRate, setUsdRate] = useState(5.8);
-  const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.6, content: 0.013 });
+  // Estado inicial antes do load() resolver — mesmo fallback de plans.functions.ts (DEFAULT_COSTS).
+  const [costs, setCosts] = useState<Costs>({ imageRef: 0.08, video: 1.6, content: 0.013 });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<EditingPlan | null>(null);
   const [saving, setSaving] = useState(false);

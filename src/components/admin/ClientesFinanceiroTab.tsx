@@ -31,7 +31,7 @@ export function ClientesFinanceiroTab() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
   const [usdRate, setUsdRate] = useState(5.8);
-  const [imgRef, setImgRef] = useState(0.058);
+  const [imgRef, setImgRef] = useState(0.08);
   const [renderPrice, setRenderPrice] = useState(1.6);
   const [geracaoPrice, setGeracaoPrice] = useState(0.013);
   const [loading, setLoading] = useState(true);

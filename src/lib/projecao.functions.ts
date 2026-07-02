@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS: Settings = {
   usd_brl_rate: 5.8,
   falai_balance_usd: 0,
   openai_balance_usd: 0,
-  image_price_usd: 0.058,
+  image_price_usd: 0.08,
   render_price_usd: 1.6,
   geracao_price_usd: 0.013,
 };

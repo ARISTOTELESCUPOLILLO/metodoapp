@@ -11,7 +11,7 @@ export function useUsersData() {
   const [rows, setRows] = useState<Row[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [costs, setCosts] = useState<Costs>({ imageRef: 0.058, video: 1.6, content: 0.013 });
+  const [costs, setCosts] = useState<Costs>({ imageRef: 0.08, video: 1.6, content: 0.013 });
   const [usdRate, setUsdRate] = useState(5.8);
 
   const load = useCallback(

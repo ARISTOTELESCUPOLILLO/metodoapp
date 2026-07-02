@@ -35,7 +35,7 @@ export function computeVisaoGeralView(
 
   const planMap = new Map(plans.map((p) => [p.id, p]));
   const prices = {
-    image_price_usd: settings?.image_price_usd ?? 0.058,
+    image_price_usd: settings?.image_price_usd ?? 0.08,
     render_price_usd: settings?.render_price_usd ?? 1.6,
     geracao_price_usd: settings?.geracao_price_usd ?? 0.013,
   };

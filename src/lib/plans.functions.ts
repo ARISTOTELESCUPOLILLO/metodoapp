@@ -6,7 +6,11 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { assertAdmin } from "@/repository/authz";
 import type { Costs, Plan } from "@/components/admin/plans/types";
 
-const DEFAULT_COSTS: Costs = { imageRef: 0.058, video: 1.6, content: 0.013 };
+// Fallback só para quando a query de app_settings falhar/vier vazia — os
+// valores reais vêm do banco (linha única, id=true). imageRef alinhado com
+// COST_USD.image_edit (costs.ts) — 0.058 estava desatualizado em relação ao
+// custo real debitado por imagem com referência (0.08).
+const DEFAULT_COSTS: Costs = { imageRef: 0.08, video: 1.6, content: 0.013 };
 
 // Substitui PlansTab.load()
 export const loadPlansData = createServerFn({ method: "POST" })
