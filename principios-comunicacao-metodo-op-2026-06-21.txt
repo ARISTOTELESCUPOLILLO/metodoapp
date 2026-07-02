@@ -177,8 +177,16 @@ sempre apoio).
   foto).
 - Dispositivos digitais (notebook, celular etc.) na cena: nunca ocupam o papel de
   protagonista visual — são elemento de apoio. Diversificar o tipo de dispositivo
-  entre peças da mesma sequência. Câmera nunca posicionada atrás do dispositivo
-  (esconderia o rosto do personagem).
+  entre peças da mesma sequência. [Refinado em 02/07/2026 — ver Parte 2.5] A regra
+  não é mais "câmera nunca atrás do dispositivo" em si — é "o rosto do personagem
+  nunca pode ficar escondido, cortado ou obstruído pelo dispositivo". Para
+  NOTEBOOK/MONITOR isso ainda significa câmera sempre do lado da tela (a carcaça
+  grande esconderia o personagem). Para CELULAR/TABLET nas mãos, a câmera pode
+  ficar do lado do verso (retrato do personagem, olhando para a própria tela) sem
+  violar a regra, porque o aparelho pequeno não cobre o rosto. Além disso: quando
+  o personagem estiver usando o dispositivo, o olhar dele vai SEMPRE para a tela
+  (nunca solto) — isso tem precedência sobre instruções de câmera do mood que
+  peçam olhar para longe.
 - Ausência de marcas em dispositivos: carcaça/tampa sempre lisa, sem marca/logo real.
 - Legenda unificada em MOP e PU (ver número atual em REGRAS DE PRODUÇÃO).
 - Referências visuais (avatar/cenário/produto) enviadas pelo usuário têm prioridade
@@ -302,6 +310,38 @@ deveriam valer. Achados e correções já aplicadas no mesmo dia:
   equilíbrio 50/50 decidido em 2.2. Ajustado: avatar continua sendo a exceção
   deliberada (emissor), mas quando há produto na mesma cena, os dois dividem o
   protagonismo em peso igual, em vez de o avatar "apresentar" o produto.
+
+2.5 CÂMERA "ATRÁS DO DISPOSITIVO" — regra antiga era ambígua, não errada
+------------------------------------------------------------
+[Conflito identificado e resolvido em 02/07/2026 — processo falho na origem: Claude
+Code editou visualDirection.lexicon.ts para corrigir um bug real (personagem com
+tablet cuja tela aparecia nítida pra câmera mas o olhar não estava na tela) SEM
+consultar este documento antes, e sem levar o conflito pra cá antes de decidir.
+Encontrado só numa auditoria posterior, a pedido de Aristóteles. Falha de processo,
+registrada para não repetir.]
+
+O que aconteceu: pra resolver o bug do olhar solto, o código passou a ensinar a
+"física da tela" (todo dispositivo tem uma face ativa e um verso liso; a tela segue
+o olhar de quem usa; câmera vê uma face OU a outra, nunca as duas) e, a partir
+disso, passou a permitir que a câmera ficasse do lado do VERSO do aparelho (não mais
+sempre do lado da tela) quando fizer sentido — ex.: retrato de contra-plongée com
+celular/tablet nas mãos, mostrando o verso liso enquanto o personagem olha pra
+própria tela. Isso contradiz o texto literal da regra 1.5 ("câmera nunca posicionada
+atrás do dispositivo").
+
+Resolução: o motivo original da regra 1.5, entre parênteses, é "esconderia o rosto
+do personagem" — não a posição da câmera em si. A física da tela NÃO viola esse
+motivo: o rosto do personagem continua sempre visível e nunca coberto pelo aparelho
+(reforçado no código com uma cláusula explícita e inviolável de rosto). A regra foi
+refinada, não descartada: NOTEBOOK/MONITOR mantêm a regra antiga sem mudança (câmera
+sempre do lado da tela — a carcaça desses aparelhos é grande o bastante pra esconder
+o personagem de verdade). CELULAR/TABLET nas mãos ganham a exceção, porque o
+aparelho pequeno nunca chega a cobrir o rosto. Ver 1.5 (texto atualizado) e
+utils/promptRules.ts (buildDeviceRule) para a implementação.
+
+Lição de processo: da próxima vez que uma mudança tocar visualDirection.ts/
+.lexicon.ts, promptRules.ts (usado por ambos MOP e PU) ou postUnico.ts, consultar
+este documento ANTES de editar — não depois, numa auditoria posterior.
 
 ============================================================
 PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO
