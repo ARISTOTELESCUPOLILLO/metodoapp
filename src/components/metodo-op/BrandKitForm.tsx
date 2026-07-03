@@ -62,7 +62,9 @@ export default function BrandKitForm({
 }: Props) {
   const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false);
   const [confirmRemoveUniforme, setConfirmRemoveUniforme] = useState(false);
-  const [isOpen, setIsOpen] = useState(!kit.companyName?.trim());
+  // Sempre começa fechado — preencher pela primeira vez ou revisar depois
+  // não deveria forçar a visão de todos os campos de cara (cansativo).
+  const [isOpen, setIsOpen] = useState(false);
   const update = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) =>
     onChange({ ...kit, [key]: value });
   const changeSegment = (segment: Segment) =>
