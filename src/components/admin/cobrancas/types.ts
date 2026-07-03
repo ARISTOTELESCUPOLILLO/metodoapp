@@ -49,3 +49,12 @@ export interface VencimentoItem {
   mesesContrato: number;
   cycle: CycleInfo;
 }
+
+// Agrupa todos os slots de um mesmo cliente num único box.
+// `minDaysLeft` = menor daysLeft entre os slots do grupo, usado só pra
+// ordenar os boxes (cliente com plano mais urgente primeiro).
+export interface VencimentoGroup {
+  user: Row;
+  items: VencimentoItem[];
+  minDaysLeft: number;
+}

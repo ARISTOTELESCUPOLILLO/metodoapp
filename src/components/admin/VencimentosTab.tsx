@@ -1,13 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useConfirm } from "@/hooks/useConfirm";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { loadCobrancasData, renewContrato } from "@/lib/cobrancas.functions";
-import { computeVencimentosItems } from "./cobrancas/computeVencimentosItems";
+import {
+  computeVencimentosItems,
+  groupVencimentosItems,
+} from "./cobrancas/computeVencimentosItems";
 import { VencimentosTable } from "./cobrancas/VencimentosTable";
 import type { Plan, Row, VencimentoItem } from "./cobrancas/types";
 
 export function VencimentosTab() {
   const { confirm, dialog } = useConfirm();
+  const isMobile = useIsMobile();
   const loadCobrancasDataFn = useServerFn(loadCobrancasData);
   const renewContratoFn = useServerFn(renewContrato);
 
@@ -57,7 +62,9 @@ export function VencimentosTab() {
           (it.user.client_code || "").toLowerCase().includes(s),
       )
     : items;
-  const visible = filtered.slice(0, visibleCount);
+  // Agrupa por cliente DEPOIS de filtrar; a paginação conta boxes/clientes.
+  const groups = groupVencimentosItems(filtered);
+  const visible = groups.slice(0, visibleCount);
 
   return (
     <div>
@@ -87,7 +94,7 @@ export function VencimentosTab() {
             maxWidth: 320,
           }}
         />
-        <span style={{ fontSize: 12, color: "#64748b" }}>{filtered.length} contrato(s)</span>
+        <span style={{ fontSize: 12, color: "#64748b" }}>{groups.length} cliente(s)</span>
       </div>
 
       {items.length === 0 ? (
@@ -98,7 +105,12 @@ export function VencimentosTab() {
         </div>
       ) : (
         <>
-          <VencimentosTable items={visible} busy={busy} onRenewContrato={handleRenewContrato} />
+          <VencimentosTable
+            groups={visible}
+            busy={busy}
+            isMobile={isMobile}
+            onRenewContrato={handleRenewContrato}
+          />
           <div
             style={{
               marginTop: 12,
@@ -110,9 +122,9 @@ export function VencimentosTab() {
             }}
           >
             <span>
-              Mostrando {visible.length} de {filtered.length} contrato(s)
+              Mostrando {visible.length} de {groups.length} cliente(s)
             </span>
-            {filtered.length > visibleCount && (
+            {groups.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount((n) => n + 20)}
                 style={{

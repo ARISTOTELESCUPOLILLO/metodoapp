@@ -30,3 +30,27 @@ export const actionBtn: React.CSSProperties = {
   fontSize: 12,
   cursor: "pointer",
 };
+
+// Box de cliente (um por cliente, agrupando os slots dele).
+export const mCard: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid #e2e8f0",
+  borderRadius: 10,
+  padding: 14,
+};
+
+// Linha label:valor empilhada (usada no layout mobile de cada slot).
+export const Row = ({ k, v, vColor }: { k: string; v: string; vColor?: string }) => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      padding: "4px 0",
+      fontSize: 13,
+      borderTop: "1px solid #f1f5f9",
+    }}
+  >
+    <span style={{ color: "#64748b" }}>{k}</span>
+    <span style={{ fontWeight: 600, color: vColor ?? "#0f172a" }}>{v}</span>
+  </div>
+);
