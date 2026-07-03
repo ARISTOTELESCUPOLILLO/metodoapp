@@ -16,7 +16,7 @@ export const loadCobrancasData = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("profiles")
         .select(
-          "id,nome,email,client_code,plano1_id,plano1_inicio,plano1_last_charged_at,plano2_id,plano2_inicio,plano2_last_charged_at,bonus_id,bonus_inicio,bonus_last_charged_at",
+          "id,nome,email,client_code,plano1_id,plano1_inicio,plano1_last_charged_at,plano1_contrato_fim,plano1_meses_contrato,plano2_id,plano2_inicio,plano2_last_charged_at,plano2_contrato_fim,plano2_meses_contrato,bonus_id,bonus_inicio,bonus_last_charged_at,bonus_contrato_fim,bonus_meses_contrato",
         )
         .eq("is_test", false),
       supabaseAdmin.from("plans").select("id,codigo"),
@@ -67,6 +67,39 @@ export const renewCycle = createServerFn({ method: "POST" })
           ? { plano2_inicio: now }
           : { bonus_inicio: now };
     const { error } = await supabaseAdmin.from("profiles").update(update).eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Estende o fim do contrato — diferente de renewCycle (que mexe em `inicio` e
+// só afeta o ciclo mensal): aqui incrementamos `meses_contrato`, o que o
+// trigger apply_slot_limits usa pra recalcular `contrato_fim` a partir do
+// `inicio` atual, sem tocar em consumo nem no ciclo mensal.
+export const renewContrato = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        slot: z.enum(["plano1", "plano2", "bonus"]),
+        mesesAdicionais: z.number().int().min(1).default(3),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const col = `${data.slot}_meses_contrato` as const;
+    const { data: prof, error: profErr } = await supabaseAdmin
+      .from("profiles")
+      .select(col)
+      .eq("id", data.userId)
+      .maybeSingle();
+    if (profErr) throw new Error(profErr.message);
+    const atual = Number((prof as Record<string, number> | null)?.[col] ?? 1);
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ [col]: atual + data.mesesAdicionais } as never)
+      .eq("id", data.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

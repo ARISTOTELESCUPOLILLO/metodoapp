@@ -1,6 +1,7 @@
 import { UsersTab } from "./UsersTab";
 import { TestUsersTab } from "./TestUsersTab";
 import { CobrancasTab } from "./CobrancasTab";
+import { VencimentosTab } from "./VencimentosTab";
 import { PlanHistoricoTab } from "./PlanHistoricoTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -11,15 +12,37 @@ export function ClientesTab() {
   return (
     <Tabs defaultValue="usuarios">
       <TabsList className="h-auto gap-0 bg-transparent p-0 border-b border-slate-200 mb-5 flex-wrap rounded-none">
-        <TabsTrigger value="usuarios" className={trigger}>Usuários</TabsTrigger>
-        <TabsTrigger value="testes" className={trigger}>Testes</TabsTrigger>
-        <TabsTrigger value="cobrancas" className={trigger}>Cobranças</TabsTrigger>
-        <TabsTrigger value="historico" className={trigger}>Histórico de Planos</TabsTrigger>
+        <TabsTrigger value="usuarios" className={trigger}>
+          Usuários
+        </TabsTrigger>
+        <TabsTrigger value="testes" className={trigger}>
+          Testes
+        </TabsTrigger>
+        <TabsTrigger value="cobrancas" className={trigger}>
+          Cobranças
+        </TabsTrigger>
+        <TabsTrigger value="vencimentos" className={trigger}>
+          Vencimentos
+        </TabsTrigger>
+        <TabsTrigger value="historico" className={trigger}>
+          Histórico de Planos
+        </TabsTrigger>
       </TabsList>
-      <TabsContent value="usuarios"><UsersTab /></TabsContent>
-      <TabsContent value="testes"><TestUsersTab /></TabsContent>
-      <TabsContent value="cobrancas"><CobrancasTab /></TabsContent>
-      <TabsContent value="historico"><PlanHistoricoTab /></TabsContent>
+      <TabsContent value="usuarios">
+        <UsersTab />
+      </TabsContent>
+      <TabsContent value="testes">
+        <TestUsersTab />
+      </TabsContent>
+      <TabsContent value="cobrancas">
+        <CobrancasTab />
+      </TabsContent>
+      <TabsContent value="vencimentos">
+        <VencimentosTab />
+      </TabsContent>
+      <TabsContent value="historico">
+        <PlanHistoricoTab />
+      </TabsContent>
     </Tabs>
   );
 }

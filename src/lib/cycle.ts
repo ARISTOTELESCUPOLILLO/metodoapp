@@ -20,22 +20,27 @@ function daysLeftFromDue(due: Date, now: Date): number {
   return Math.round((startOfDue.getTime() - startOfToday.getTime()) / msPerDay);
 }
 
-function statusFromDays(daysLeft: number): CycleStatus {
+function statusFromDays(daysLeft: number, dueSoonDays: number = DUE_SOON_DAYS): CycleStatus {
   if (daysLeft < 0) return "overdue";
-  if (daysLeft <= DUE_SOON_DAYS) return "due_soon";
+  if (daysLeft <= dueSoonDays) return "due_soon";
   return "ok";
 }
 
-/** Usa a data de expiração já persistida no banco (plano*_expira_em). */
+/**
+ * Usa uma data de expiração já persistida no banco (plano*_expira_em ou
+ * plano*_contrato_fim). `dueSoonDays` permite um horizonte de aviso maior
+ * que o padrão mensal (5d) — ex.: 30d para vencimento de contrato.
+ */
 export function computeCycleFromExpiry(
   expiraEm: string | null | undefined,
   now: Date = new Date(),
+  dueSoonDays: number = DUE_SOON_DAYS,
 ): CycleInfo {
   if (!expiraEm) return { dueAt: null, daysLeft: 0, status: "none" };
   const due = new Date(expiraEm);
   if (isNaN(due.getTime())) return { dueAt: null, daysLeft: 0, status: "none" };
   const daysLeft = daysLeftFromDue(due, now);
-  return { dueAt: due, daysLeft, status: statusFromDays(daysLeft) };
+  return { dueAt: due, daysLeft, status: statusFromDays(daysLeft, dueSoonDays) };
 }
 
 /** Calcula on-the-fly a partir de `inicio` (fallback quando expira_em não está disponível). */
