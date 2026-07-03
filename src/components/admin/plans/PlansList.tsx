@@ -28,46 +28,64 @@ export function PlansList({
   if (isMobile) {
     return (
       <div style={{ display: "grid", gap: 10 }}>
-        {plans.map((p) => (
-          <div key={p.id} style={mCard}>
-            <div
-              style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8 }}
-            >
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{p.nome}</div>
-                <div style={{ fontSize: 12, color: "#64748b" }}>{p.codigo}</div>
-              </div>
-              <span
+        {plans.map((p) => {
+          const custoUsd = calcCusto(p, costs);
+          const custoBrl = custoUsd * usdRate;
+          const precoMin = custoBrl * 3;
+          return (
+            <div key={p.id} style={mCard}>
+              <div
                 style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: "2px 8px",
-                  borderRadius: 999,
-                  background: p.ativo ? "#dcfce7" : "#fee2e2",
-                  color: p.ativo ? "#166534" : "#991b1b",
-                  height: "fit-content",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 8,
+                  marginBottom: 8,
                 }}
               >
-                {p.ativo ? "ativo" : "inativo"}
-              </span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{p.nome}</div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>{p.codigo}</div>
+                </div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    background: p.ativo ? "#dcfce7" : "#fee2e2",
+                    color: p.ativo ? "#166534" : "#991b1b",
+                    height: "fit-content",
+                  }}
+                >
+                  {p.ativo ? "ativo" : "inativo"}
+                </span>
+              </div>
+              <Row k="Custo calc. USD" v={`US$ ${custoUsd.toFixed(3)}`} vColor="#b45309" />
+              <Row k="Custo R$" v={`R$ ${custoBrl.toFixed(2)}`} vColor="#0369a1" />
+              <Row k="Preço mín. R$ (×3)" v={`R$ ${precoMin.toFixed(2)}`} vColor="#15803d" />
+              <Row
+                k="Preço máx. R$"
+                v={p.preco_maximo_brl ? `R$ ${Number(p.preco_maximo_brl).toFixed(2)}` : "—"}
+                vColor={p.preco_maximo_brl ? "#0f172a" : "#94a3b8"}
+              />
+              <Row k="Tipo" v={p.tipo} />
+              <Row k="Imagens" v={String(p.limite_imagens)} />
+              <Row k="Renders" v={String(p.limite_renders)} />
+              <Row k="Gerações" v={geracoesLabel(p)} />
+              <Row k="Gerar outro" v={String(p.limite_regen_texto ?? 0)} />
+              <Row k="Sugestões" v={String(p.limite_sugestoes ?? 0)} />
+              <Row k="Primeira Geração" v={String(p.limite_primeira_geracao ?? 0)} />
+              <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                <button onClick={() => onEdit(p)} style={{ ...btn, flex: 1 }}>
+                  Editar
+                </button>
+                <button onClick={() => onRemove(p)} style={{ ...btn, flex: 1, color: "#b91c1c" }}>
+                  Excluir
+                </button>
+              </div>
             </div>
-            <Row k="Tipo" v={p.tipo} />
-            <Row k="Imagens" v={String(p.limite_imagens)} />
-            <Row k="Renders" v={String(p.limite_renders)} />
-            <Row k="Gerações" v={geracoesLabel(p)} />
-            <Row k="Gerar outro" v={String(p.limite_regen_texto ?? 0)} />
-            <Row k="Sugestões" v={String(p.limite_sugestoes ?? 0)} />
-            <Row k="Primeira Geração" v={String(p.limite_primeira_geracao ?? 0)} />
-            <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-              <button onClick={() => onEdit(p)} style={{ ...btn, flex: 1 }}>
-                Editar
-              </button>
-              <button onClick={() => onRemove(p)} style={{ ...btn, flex: 1, color: "#b91c1c" }}>
-                Excluir
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

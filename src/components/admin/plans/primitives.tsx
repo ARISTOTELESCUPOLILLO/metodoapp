@@ -74,7 +74,7 @@ export const mCard: React.CSSProperties = {
   borderRadius: 10,
   padding: 14,
 };
-export const Row = ({ k, v }: { k: string; v: string }) => (
+export const Row = ({ k, v, vColor }: { k: string; v: string; vColor?: string }) => (
   <div
     style={{
       display: "flex",
@@ -85,6 +85,6 @@ export const Row = ({ k, v }: { k: string; v: string }) => (
     }}
   >
     <span style={{ color: "#64748b" }}>{k}</span>
-    <span style={{ fontWeight: 600, color: "#0f172a" }}>{v}</span>
+    <span style={{ fontWeight: 600, color: vColor ?? "#0f172a" }}>{v}</span>
   </div>
 );
