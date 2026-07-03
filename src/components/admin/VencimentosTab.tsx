@@ -16,6 +16,8 @@ export function VencimentosTab() {
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(20);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -46,17 +48,87 @@ export function VencimentosTab() {
   if (loading) return <p>Carregando vencimentos…</p>;
 
   const items = computeVencimentosItems(profiles, plans, adminIds);
+  const s = search.toLowerCase().trim();
+  const filtered = s
+    ? items.filter(
+        (it) =>
+          (it.user.nome || "").toLowerCase().includes(s) ||
+          (it.user.email || "").toLowerCase().includes(s) ||
+          (it.user.client_code || "").toLowerCase().includes(s),
+      )
+    : items;
+  const visible = filtered.slice(0, visibleCount);
 
   return (
     <div>
       {dialog}
-      <div style={{ marginBottom: 12, color: "#64748b", fontSize: 13 }}>
-        {items.length === 0
-          ? "Nenhum contrato vencendo nos próximos 30 dias."
-          : `${items.length} contrato(s) vencendo em até 30 dias ou já vencidos.`}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+          gap: 12,
+        }}
+      >
+        <input
+          placeholder="Buscar por nome, e-mail ou código"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setVisibleCount(20);
+          }}
+          style={{
+            padding: "8px 10px",
+            border: "1px solid #cbd5e1",
+            borderRadius: 6,
+            fontSize: 14,
+            flex: 1,
+            maxWidth: 320,
+          }}
+        />
+        <span style={{ fontSize: 12, color: "#64748b" }}>{filtered.length} contrato(s)</span>
       </div>
-      {items.length > 0 && (
-        <VencimentosTable items={items} busy={busy} onRenewContrato={handleRenewContrato} />
+
+      {items.length === 0 ? (
+        <div style={{ color: "#64748b", fontSize: 13 }}>Nenhum contrato ativo encontrado.</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ color: "#64748b", fontSize: 13 }}>
+          Nenhum contrato encontrado para “{search.trim()}”.
+        </div>
+      ) : (
+        <>
+          <VencimentosTable items={visible} busy={busy} onRenewContrato={handleRenewContrato} />
+          <div
+            style={{
+              marginTop: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              color: "#64748b",
+              fontSize: 13,
+            }}
+          >
+            <span>
+              Mostrando {visible.length} de {filtered.length} contrato(s)
+            </span>
+            {filtered.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount((n) => n + 20)}
+                style={{
+                  padding: "6px 12px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 6,
+                  background: "#fff",
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                Mostrar mais 20
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

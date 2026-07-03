@@ -1,7 +1,8 @@
-// Monta a lista de contratos vencendo/vencidos — irmã de computeCobrancasItems,
+// Monta a lista de contratos — irmã de computeCobrancasItems,
 // mas olha `contrato_fim` (fim do contrato) em vez do ciclo mensal de cobrança.
-// Função pura: recebe perfis + planos + admins e devolve só os slots que
-// precisam de atenção (due_soon dentro de 30d ou overdue), ordenados por urgência.
+// Função pura: recebe perfis + planos + admins e devolve TODOS os slots ativos
+// (com planId e contratoFim), ordenados por urgência (crescente por daysLeft),
+// cobrindo vencidos, vencendo e tranquilos numa lista só. Admins são excluídos.
 import { computeCycleFromExpiry } from "@/lib/cycle";
 import type { Plan, Row, SlotKey, VencimentoItem } from "./types";
 
@@ -49,7 +50,6 @@ export function computeVencimentosItems(
     for (const s of slots) {
       if (!s.planId || !s.contratoFim) continue;
       const cycle = computeCycleFromExpiry(s.contratoFim, new Date(), CONTRATO_DUE_SOON_DAYS);
-      if (cycle.status !== "due_soon" && cycle.status !== "overdue") continue;
       all.push({
         user: r,
         slot: s.key,

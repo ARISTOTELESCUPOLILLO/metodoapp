@@ -57,20 +57,18 @@ export function VencimentosTable({
                 <Td>{it.mesesContrato}</Td>
                 <Td>{new Date(it.contratoFim).toLocaleDateString("pt-BR")}</Td>
                 <Td>
-                  {c && (
-                    <span
-                      style={{
-                        background: c.bg,
-                        color: c.fg,
-                        padding: "2px 8px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {cycleLabel(it.cycle)}
-                    </span>
-                  )}
+                  <span
+                    style={{
+                      background: c?.bg,
+                      color: c?.fg ?? "#64748b",
+                      padding: c ? "2px 8px" : 0,
+                      borderRadius: 4,
+                      fontSize: c ? 11 : 12,
+                      fontWeight: c ? 700 : 400,
+                    }}
+                  >
+                    {cycleLabel(it.cycle)}
+                  </span>
                 </Td>
                 <Td>
                   <button onClick={() => onRenewContrato(it)} style={actionBtn}>
