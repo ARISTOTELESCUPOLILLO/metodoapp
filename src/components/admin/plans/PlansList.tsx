@@ -3,11 +3,16 @@ import { mopPiecesPerMonth } from "@/lib/costs";
 import { Th, Td, btn, mCard, Row } from "./primitives";
 import { calcCusto, type Costs, type Plan } from "./types";
 
-// Planos de Sequência guardam limite_geracoes=0 por convenção de "ilimitado
-// por ciclo" — exibir isso cru como "0" parece bug. Mostra a cadência real.
+// "Gerações" foi aposentada do bloqueio/financeiro em todos os planos
+// (2026-07-03) — quem manda agora é Primeira Geração (+ Imagens/Renders).
+// limite_geracoes=0 em qualquer plano (Sequência ou PU) é sempre essa
+// convenção "campo morto", nunca falta de custo/limite real — exibir cru
+// como "0" parece bug. Planos de Sequência ainda mostram a cadência real
+// de peças/mês (dado útil); os demais só indicam o campo morto.
 function geracoesLabel(p: Plan): string {
   const pecasMes = mopPiecesPerMonth(p.codigo);
-  return pecasMes ? `ilimitado (${pecasMes} peças/mês)` : String(p.limite_geracoes);
+  if (pecasMes) return `ilimitado (${pecasMes} peças/mês)`;
+  return p.limite_geracoes === 0 ? "— (ver Primeira Geração)" : String(p.limite_geracoes);
 }
 
 export function PlansList({

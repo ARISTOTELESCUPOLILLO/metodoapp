@@ -193,8 +193,22 @@ export const Route = createFileRoute("/api/generate-caption")({
           // para o saldo verificado ser o mesmo slot efetivamente debitado —
           // sem isso, esta checagem caía no fallback "qualquer slot serve" e
           // podia liberar a geração mesmo quando o slot preferido não tinha saldo.
+          //
+          // Gate em IMAGENS, não em "Gerações" (2026-07-03): "Gerações" foi
+          // aposentada do bloqueio (limite_geracoes=0 nos planos PU — vira
+          // ilimitado, ver migration 20260703120000). A unidade de "Primeira
+          // Geração" já foi debitada no rascunho de título/texto
+          // (generate-pu-copy.ts) — a legenda é o 3º componente do MESMO
+          // post, não um novo post, então NÃO soma outro débito de
+          // primeira_geracao (isso reduziria o teto efetivo do plano pela
+          // metade). No clique final a legenda sempre dispara junto com a
+          // geração da imagem (mesmo clique) — gatear em imagens fecha o
+          // caminho de abuso (chamada avulsa à API sem crédito de imagem)
+          // sem criar um bloqueio incorreto no último post do ciclo (checar
+          // primeira_geracao de novo aqui daria falso-bloqueio: a cota já
+          // foi consumida no rascunho).
           if (debit) {
-            const bal = await checkBalance(userId, 0, 0, 1, preferredSlot);
+            const bal = await checkBalance(userId, 1, 0, 0, preferredSlot);
             if (!bal.ok) {
               return Response.json({ error: balanceFailMessage(bal.reason) }, { status: 402 });
             }
@@ -330,7 +344,9 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
 
           let ctaValue = sanitizeForbiddenTerms(rawCta);
           if (!ctaValue)
-            ctaValue = OBJETIVO_CTA_FALLBACK[objetivo as keyof typeof OBJETIVO_CTA_FALLBACK] ?? OBJETIVO_CTA_FALLBACK.promocao;
+            ctaValue =
+              OBJETIVO_CTA_FALLBACK[objetivo as keyof typeof OBJETIVO_CTA_FALLBACK] ??
+              OBJETIVO_CTA_FALLBACK.promocao;
           ctaValue = truncateWords(ctaValue, LEGENDA_CTA_MAX_WORDS);
           if (!/[.!?]$/.test(ctaValue)) ctaValue += ".";
 
@@ -343,12 +359,18 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
               sanitizeTag,
             ).filter((t) => !hashtagsArr.includes(t) && !FORBIDDEN_HASHTAG_STEMS.has(t));
             const fallback =
-              OBJETIVO_HASHTAG_FALLBACK[objetivo as keyof typeof OBJETIVO_HASHTAG_FALLBACK] ?? OBJETIVO_HASHTAG_FALLBACK.promocao;
+              OBJETIVO_HASHTAG_FALLBACK[objetivo as keyof typeof OBJETIVO_HASHTAG_FALLBACK] ??
+              OBJETIVO_HASHTAG_FALLBACK.promocao;
             hashtagsArr = [...new Set([...hashtagsArr, ...derived, ...fallback])].slice(0, 3);
           }
 
           if (debit && userId) {
             try {
+              // geracoes:1 não bloqueia mais nada (limite_geracoes=0 nos
+              // planos PU) — mantido só como registro histórico real de
+              // consumo (aba Consumo) e para custoUsd entrar corretamente
+              // no log de custo real (aba Custos). O gate de verdade já
+              // aconteceu acima, contra imagens.
               await debitUsage(userId, 0, 0, {
                 evento: "gerar_post_unico",
                 modulo: "pu",
