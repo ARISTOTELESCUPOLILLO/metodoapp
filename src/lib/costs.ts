@@ -127,23 +127,13 @@ export interface PlanExtras {
 }
 
 // Custo por peça de "Primeira Geração" (título+texto[+legenda] gerados na
-// criação inicial da peça/post — não precisa ser exato, é camada adicional).
-// Reaproveita o custo que a MESMA operação já tinha, em vez de inventar um
-// valor novo:
-//  - Planos de Sequência (S3/S6/S9): mopContentCost(seqSize) já cobre o ciclo
-//    inteiro — dividido pelo nº de peças da sequência (7/14/21) dá o custo
-//    por peça.
-//  - Demais planos (PU8/PU4/PU2, EX01): content_pu — mesma convenção que
-//    planMonthlyOpenaiCost já usa pra qualquer plano fora do padrão S3/S6/S9
-//    (EX01 inclusive, que no cálculo de custo OpenAI já era tratado como
-//    avulso, não como sequência).
+// criação inicial do post — não precisa ser exato, é camada adicional).
+// Só se aplica a planos avulsos (PU8/PU4/PU2, EX01) — em planos de
+// Sequência (S3/S6/S9) o custo já está 100% coberto por mopMonthlyCost
+// (mesmo ciclo, mesma chamada de debitUsage; ver planExtrasMonthlyCost),
+// então não é chamada pra esses planos.
 const MOP_PIECES_POR_SEQUENCIA: Record<number, number> = { 3: 7, 6: 14, 9: 21 };
-function primeiraGeracaoUnitCost(codigo?: string): number {
-  const seqSize = codigo ? mopSequenceSize(codigo) : null;
-  if (seqSize) {
-    const pecas = MOP_PIECES_POR_SEQUENCIA[seqSize] ?? MOP_PIECES_POR_SEQUENCIA[6];
-    return mopContentCost(seqSize) / pecas;
-  }
+function primeiraGeracaoUnitCost(): number {
   return COST_USD.content_pu;
 }
 
@@ -162,10 +152,17 @@ export function mopPiecesPerMonth(codigo: string): number | null {
 // (sugestao) e "Primeira Geração" (primeiraGeracaoUnitCost). FONTE ÚNICA da
 // fórmula: usada tanto pela aba Planos quanto pela aba Custos, para as duas
 // não divergirem (cada tela reimplementar a fórmula já causou bug antes).
+//
+// "Primeira Geração" só entra pra planos avulsos (PU8/PU4/PU2, EX01) — em
+// planos de Sequência (S3/S6/S9) ela re-precificaria o MESMO ciclo que
+// planMonthlyOpenaiCost já cobre inteiro (achado de auditoria 2026-07-03:
+// somar os dois inflava o custo de texto projetado em 143%, mesmo o custo
+// REAL debitado — generate-content.ts, 1 chamada, 1 custoUsd — nunca dobrando).
 export function planExtrasMonthlyCost(plan: PlanExtras): number {
+  const isSequencia = !!(plan.codigo && mopSequenceSize(plan.codigo));
   return (
     (plan.limite_regen_texto ?? 0) * COST_USD.regen_bloco +
     (plan.limite_sugestoes ?? 0) * COST_USD.sugestao +
-    (plan.limite_primeira_geracao ?? 0) * primeiraGeracaoUnitCost(plan.codigo)
+    (isSequencia ? 0 : (plan.limite_primeira_geracao ?? 0) * primeiraGeracaoUnitCost())
   );
 }
