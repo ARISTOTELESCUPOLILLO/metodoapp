@@ -147,6 +147,16 @@ function primeiraGeracaoUnitCost(codigo?: string): number {
   return COST_USD.content_pu;
 }
 
+// Peças reais geradas por mês por um plano de Sequência (null para planos
+// avulsos, que usam limite_geracoes diretamente). Usado na aba Planos para
+// exibir "ilimitado (N peças/mês)" em vez do limite_geracoes=0 cru.
+export function mopPiecesPerMonth(codigo: string): number | null {
+  const seqSize = mopSequenceSize(codigo);
+  if (!seqSize) return null;
+  const pecas = MOP_PIECES_POR_SEQUENCIA[seqSize] ?? MOP_PIECES_POR_SEQUENCIA[6];
+  return pecas * (MOP_CICLOS_POR_MES[seqSize] ?? 4);
+}
+
 // Custo mensal projetado dos 3 gastos de OpenAI que passaram a ter limite
 // próprio por plano — "Gerar outro" de bloco (regen_bloco), "Sugestão"
 // (sugestao) e "Primeira Geração" (primeiraGeracaoUnitCost). FONTE ÚNICA da

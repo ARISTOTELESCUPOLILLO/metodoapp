@@ -1,5 +1,5 @@
 // Tipos da aba Planos — extraído de PlansTab.tsx (Fase 9).
-import { planExtrasMonthlyCost } from "@/lib/costs";
+import { planExtrasMonthlyCost, planMonthlyFalaiCost, planMonthlyOpenaiCost } from "@/lib/costs";
 
 export interface Plan {
   id: string;
@@ -63,10 +63,18 @@ export function calcCusto(
   >,
   costs: Costs,
 ) {
+  // Planos de Sequência (S3/S6/S9) guardam limite_geracoes=0 por convenção de
+  // "ilimitado por ciclo" — multiplicar direto por costs.content zerava o
+  // custo de texto desses planos. planMonthlyOpenaiCost (FONTE ÚNICA de
+  // costs.ts, já usada pela aba Custos) trata esse caso certo.
+  const prices = {
+    image_price_usd: costs.imageRef,
+    render_price_usd: costs.video,
+    geracao_price_usd: costs.content,
+  };
   return (
-    p.limite_imagens * costs.imageRef +
-    p.limite_renders * costs.video +
-    p.limite_geracoes * costs.content +
+    planMonthlyFalaiCost(p, prices) +
+    planMonthlyOpenaiCost(p, prices) +
     // Contadores de camada adicional (regen "Gerar outro" + "Sugestão" +
     // "Primeira Geração") — fórmula na FONTE ÚNICA de costs.ts, para não
     // divergir da aba Custos.

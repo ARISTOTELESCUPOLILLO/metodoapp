@@ -1,6 +1,14 @@
 // Lista de planos (mobile + desktop) da aba Planos — extraído de PlansTab.tsx (Fase 9).
+import { mopPiecesPerMonth } from "@/lib/costs";
 import { Th, Td, btn, mCard, Row } from "./primitives";
 import { calcCusto, type Costs, type Plan } from "./types";
+
+// Planos de Sequência guardam limite_geracoes=0 por convenção de "ilimitado
+// por ciclo" — exibir isso cru como "0" parece bug. Mostra a cadência real.
+function geracoesLabel(p: Plan): string {
+  const pecasMes = mopPiecesPerMonth(p.codigo);
+  return pecasMes ? `ilimitado (${pecasMes} peças/mês)` : String(p.limite_geracoes);
+}
 
 export function PlansList({
   isMobile,
@@ -46,7 +54,7 @@ export function PlansList({
             <Row k="Tipo" v={p.tipo} />
             <Row k="Imagens" v={String(p.limite_imagens)} />
             <Row k="Renders" v={String(p.limite_renders)} />
-            <Row k="Gerações" v={String(p.limite_geracoes)} />
+            <Row k="Gerações" v={geracoesLabel(p)} />
             <Row k="Gerar outro" v={String(p.limite_regen_texto ?? 0)} />
             <Row k="Sugestões" v={String(p.limite_sugestoes ?? 0)} />
             <Row k="Primeira Geração" v={String(p.limite_primeira_geracao ?? 0)} />
@@ -110,7 +118,7 @@ export function PlansList({
                 </Td>
                 <Td>{p.limite_imagens}</Td>
                 <Td>{p.limite_renders}</Td>
-                <Td>{p.limite_geracoes}</Td>
+                <Td>{geracoesLabel(p)}</Td>
                 <Td>{p.limite_regen_texto ?? 0}</Td>
                 <Td>{p.limite_sugestoes ?? 0}</Td>
                 <Td>{p.limite_primeira_geracao ?? 0}</Td>
