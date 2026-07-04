@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getUserIdFromRequest, checkBalance, balanceFailMessage } from "@/lib/usage.server";
+import {
+  getUserIdFromRequest,
+  checkBalance,
+  checkRateLimit,
+  balanceFailMessage,
+} from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 export const Route = createFileRoute("/api/correct-text")({
@@ -10,6 +15,13 @@ export const Route = createFileRoute("/api/correct-text")({
           const userId = await getUserIdFromRequest(request);
           if (!userId) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
+          }
+          const rate = await checkRateLimit(userId);
+          if (!rate.ok) {
+            return Response.json(
+              { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+              { status: 429 },
+            );
           }
           // Exigia login mas não checava plano — mesmo furo de suggest-keyinfo.ts.
           const balance = await checkBalance(userId, 0, 0, 0);

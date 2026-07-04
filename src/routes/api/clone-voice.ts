@@ -4,7 +4,12 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getUserIdFromRequest, checkBalance, balanceFailMessage } from "@/lib/usage.server";
+import {
+  getUserIdFromRequest,
+  checkBalance,
+  checkRateLimit,
+  balanceFailMessage,
+} from "@/lib/usage.server";
 import { probeAudio } from "@/lib/audioProbe.server";
 
 const ELEVENLABS_API = "https://api.elevenlabs.io/v1";
@@ -88,6 +93,16 @@ export const Route = createFileRoute("/api/clone-voice")({
             return Response.json(
               { code: "unauthorized", message: "Faça login para treinar sua voz." },
               { status: 401 },
+            );
+          }
+          const rate = await checkRateLimit(userId);
+          if (!rate.ok) {
+            return Response.json(
+              {
+                code: "rate_limited",
+                message: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+              },
+              { status: 429 },
             );
           }
 

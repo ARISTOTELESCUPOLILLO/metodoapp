@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   resolveEffectiveUser,
   checkBalance,
+  checkRateLimit,
   debitUsage,
   balanceFailMessage,
 } from "@/lib/usage.server";
@@ -209,6 +210,16 @@ export const Route = createFileRoute("/api/generate-video")({
           }
           const userId = effective.userId;
           const impersonatedBy = effective.impersonatedBy;
+
+          if (!impersonatedBy) {
+            const rate = await checkRateLimit(userId);
+            if (!rate.ok) {
+              return Response.json(
+                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                { status: 429 },
+              );
+            }
+          }
 
           // Pré-checagem de saldo (1 render). Usa usuário efetivo (teste quando admin impersona).
           try {

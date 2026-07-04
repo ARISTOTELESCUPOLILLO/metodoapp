@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   resolveEffectiveUser,
   checkBalance,
+  checkRateLimit,
   debitUsage,
   balanceFailMessage,
 } from "@/lib/usage.server";
@@ -172,6 +173,16 @@ export const Route = createFileRoute("/api/generate-image")({
           } = body as StartBody;
           if (!prompt) {
             return Response.json({ error: "prompt obrigatório" }, { status: 400 });
+          }
+
+          if (!effective.impersonatedBy) {
+            const rate = await checkRateLimit(effective.userId);
+            if (!rate.ok) {
+              return Response.json(
+                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                { status: 429 },
+              );
+            }
           }
 
           // Pré-checagem de saldo — verifica apenas o slot preferido (sem fallback entre planos).

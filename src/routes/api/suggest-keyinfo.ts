@@ -3,6 +3,7 @@ import { getVoiceProfile } from "@/data/brandVoice";
 import {
   resolveEffectiveUser,
   checkBalance,
+  checkRateLimit,
   balanceFailMessage,
   debitUsage,
 } from "@/lib/usage.server";
@@ -213,6 +214,16 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
           }
           const userId = effective.userId;
           const isAdminUser = await checkIsAdmin(effective.userId);
+
+          if (!effective.impersonatedBy) {
+            const rate = await checkRateLimit(userId);
+            if (!rate.ok) {
+              return Response.json(
+                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                { status: 429 },
+              );
+            }
+          }
 
           const body = await request.json();
           const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)

@@ -4,7 +4,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getUserIdFromRequest, debitUsage } from "@/lib/usage.server";
+import { getUserIdFromRequest, checkRateLimit, debitUsage } from "@/lib/usage.server";
 
 export const Route = createFileRoute("/api/confirm-voice")({
   server: {
@@ -14,6 +14,16 @@ export const Route = createFileRoute("/api/confirm-voice")({
           const userId = await getUserIdFromRequest(request);
           if (!userId) {
             return Response.json({ code: "unauthorized", message: "Faça login." }, { status: 401 });
+          }
+          const rate = await checkRateLimit(userId);
+          if (!rate.ok) {
+            return Response.json(
+              {
+                code: "rate_limited",
+                message: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+              },
+              { status: 429 },
+            );
           }
           const body = await request.json();
           const decisao = String(body?.decisao || "");

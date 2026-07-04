@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   checkBalance,
+  checkRateLimit,
   debitUsage,
   resolveEffectiveUser,
   balanceFailMessage,
@@ -188,6 +189,16 @@ export const Route = createFileRoute("/api/generate-caption")({
           const impersonatedBy = effective.impersonatedBy;
           let isAdmin = false;
 
+          if (!impersonatedBy) {
+            const rate = await checkRateLimit(userId);
+            if (!rate.ok) {
+              return Response.json(
+                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                { status: 429 },
+              );
+            }
+          }
+
           // Débita geração apenas no clique inicial "Gerar Post Único".
           // preferredSlot é passado aqui (mesmo slot usado no debitUsage abaixo)
           // para o saldo verificado ser o mesmo slot efetivamente debitado —
@@ -207,13 +218,16 @@ export const Route = createFileRoute("/api/generate-caption")({
           // sem criar um bloqueio incorreto no último post do ciclo (checar
           // primeira_geracao de novo aqui daria falso-bloqueio: a cota já
           // foi consumida no rascunho).
-          if (debit) {
-            const bal = await checkBalance(userId, 1, 0, 0, preferredSlot);
-            if (!bal.ok) {
-              return Response.json({ error: balanceFailMessage(bal.reason) }, { status: 402 });
-            }
-            isAdmin = bal.isAdmin;
+          // Roda SEMPRE, mesmo com debit=false: sem plano ativo/não expirado,
+          // não há geração legítima a fazer aqui (fecha o caminho de chamar
+          // a API repetidamente com debit=false sem nunca checar saldo). Só
+          // o CUSTO exigido (imgs:1) muda com debit — o teste de "tem plano"
+          // é sempre feito.
+          const bal = await checkBalance(userId, debit ? 1 : 0, 0, 0, preferredSlot);
+          if (!bal.ok) {
+            return Response.json({ error: balanceFailMessage(bal.reason) }, { status: 402 });
           }
+          isAdmin = bal.isAdmin;
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {

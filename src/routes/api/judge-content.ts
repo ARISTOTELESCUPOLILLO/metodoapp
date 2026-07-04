@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getUserIdFromRequest, checkBalance } from "@/lib/usage.server";
+import { getUserIdFromRequest, checkBalance, checkRateLimit } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
 const SEGMENT_LABEL: Record<string, string> = {
@@ -32,6 +32,10 @@ export const Route = createFileRoute("/api/judge-content")({
           // já usado abaixo para items.length === 0.
           const balance = await checkBalance(userId, 0, 0, 0);
           if (!balance.ok) {
+            return Response.json({ avaliacoes: [] });
+          }
+          const rate = await checkRateLimit(userId);
+          if (!rate.ok) {
             return Response.json({ avaliacoes: [] });
           }
 

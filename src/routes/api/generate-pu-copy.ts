@@ -9,6 +9,7 @@ import { getVoiceProfile } from "@/data/brandVoice";
 import {
   resolveEffectiveUser,
   checkBalance,
+  checkRateLimit,
   balanceFailMessage,
   debitUsage,
 } from "@/lib/usage.server";
@@ -71,6 +72,15 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
             return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
           const userId = effective.userId;
+          if (!effective.impersonatedBy) {
+            const rate = await checkRateLimit(userId);
+            if (!rate.ok) {
+              return Response.json(
+                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                { status: 429 },
+              );
+            }
+          }
           // Gate PRINCIPAL existente (geracoes:1) — intocado, mesma checagem
           // "qualquer slot" de antes (sem preferredSlot).
           const bal = await checkBalance(userId, 0, 0, 1);

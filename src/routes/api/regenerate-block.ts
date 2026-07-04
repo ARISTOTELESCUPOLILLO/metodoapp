@@ -17,6 +17,7 @@ import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import {
   resolveEffectiveUser,
   checkBalance,
+  checkRateLimit,
   balanceFailMessage,
   debitUsage,
 } from "@/lib/usage.server";
@@ -86,6 +87,16 @@ export const Route = createFileRoute("/api/regenerate-block")({
             ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
             : undefined;
           const isAdminUser = await checkIsAdmin(effective.userId);
+
+          if (!effective.impersonatedBy) {
+            const rate = await checkRateLimit(effective.userId);
+            if (!rate.ok) {
+              return Response.json(
+                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                { status: 429 },
+              );
+            }
+          }
 
           if (!isAdminUser) {
             const balance = await checkBalance(effective.userId, 0, 0, 0, preferredSlot, {
