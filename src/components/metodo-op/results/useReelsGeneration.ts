@@ -37,6 +37,7 @@ export function useReelsGeneration(params: {
   forcedGender?: PersonagemGender;
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  clothingSeed?: number;
   onImageGenerated?: () => void;
   guard: ReturnType<typeof useImageGenAlert>["guard"];
   hook: string;
@@ -53,6 +54,7 @@ export function useReelsGeneration(params: {
     forcedGender,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
     onImageGenerated,
     guard,
     hook,
@@ -248,6 +250,7 @@ export function useReelsGeneration(params: {
         selecaoDireta: s,
         anchoraPersonagem,
         ancoragePapel,
+        clothingSeed,
         forcedGender,
         userId,
         modelo,

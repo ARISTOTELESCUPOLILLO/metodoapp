@@ -41,6 +41,7 @@ interface Params {
   forcedGender?: PersonagemGender;
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  clothingSeed?: number;
 }
 
 export function useUsoReferenciasState(params: Params) {
@@ -65,6 +66,7 @@ export function useUsoReferenciasState(params: Params) {
     forcedGender,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
   } = params;
 
   // Policy efetiva (com extras de carrossel quando se aplica)
@@ -221,6 +223,7 @@ export function useUsoReferenciasState(params: Params) {
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
+        clothingSeed,
         formato: formatoOverride,
         selecaoDireta: {
           usarAvatar: avatarNum != null,

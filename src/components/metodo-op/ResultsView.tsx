@@ -78,6 +78,7 @@ export default function ResultsView({
     anchorGenderEffective,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
   } = useAnchorControl(result, faixaEtariaForm, generoPrefForm);
 
   // `track` não consta em MethodOpResult e o motor não o popula hoje (o valor é
@@ -261,6 +262,7 @@ export default function ResultsView({
                   forcedGender={bg?.estatico ?? "homem"}
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
+                  clothingSeed={clothingSeed}
                 />
               );
             }
@@ -283,6 +285,7 @@ export default function ResultsView({
                   forcedGender={bg?.final ?? "homem"}
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
+                  clothingSeed={clothingSeed}
                 />
               );
             }
@@ -305,6 +308,7 @@ export default function ResultsView({
                   forcedGenders={bg?.carrossel ?? item.cards.map(() => "homem" as PersonagemGender)}
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
+                  clothingSeed={clothingSeed}
                 />
               );
             }
@@ -328,6 +332,7 @@ export default function ResultsView({
                   forcedGender={bg?.reels ?? "homem"}
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
+                  clothingSeed={clothingSeed}
                 />
               );
             }

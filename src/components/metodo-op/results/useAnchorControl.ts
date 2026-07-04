@@ -17,6 +17,11 @@ export function useAnchorControl(
   const [anchorAgeOverride, setAnchorAgeOverride] = useState<string | undefined>(undefined);
   const [anchorBannerOpen, setAnchorBannerOpen] = useState(false);
   const [anchorMode, setAnchorMode] = useState<"ancora" | "livre">("ancora");
+  // Seed de cor de roupa da sequência — sorteado UMA vez por geração (result
+  // novo) e repassado a todas as peças, pra que o avatar sem uniforme real
+  // vista a MESMA cor prevista no estático, carrossel, fechamento e reels
+  // (ver buildAnchorPrefix em regenerateWithKit).
+  const [clothingSeed, setClothingSeed] = useState<number>(() => Math.random());
 
   // A cada nova geração, pré-preenche a âncora visual com a faixa etária e
   // o gênero escolhidos no form. O usuário pode ajustar depois no painel.
@@ -28,6 +33,7 @@ export function useAnchorControl(
       const iaGenero = result.ancora_visual.genero; // "M" | "F"
       setAnchorGenderFlipped(iaGenero !== generoPrefForm);
     }
+    setClothingSeed(Math.random());
   }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ancora_visual gerada pela IA junto com a sequência. Mostra sempre que existir —
@@ -71,5 +77,6 @@ export function useAnchorControl(
     anchorGenderEffective,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
   };
 }

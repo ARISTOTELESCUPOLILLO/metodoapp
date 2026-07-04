@@ -34,6 +34,7 @@ export function CarouselCardBlock({
   forcedGenders,
   anchoraPersonagem,
   ancoragePapel,
+  clothingSeed,
 }: {
   cards: CarouselCard[];
   kit: BrandKit;
@@ -46,6 +47,7 @@ export function CarouselCardBlock({
   forcedGenders: PersonagemGender[];
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  clothingSeed?: number;
 } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -95,6 +97,7 @@ export function CarouselCardBlock({
     forcedGenders,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
     onImageGenerated,
     guard,
     titulos,

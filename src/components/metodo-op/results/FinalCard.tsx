@@ -42,6 +42,7 @@ export function FinalCard({
   forcedGender,
   anchoraPersonagem,
   ancoragePapel,
+  clothingSeed,
 }: {
   item: FeedItem;
   kit: BrandKit;
@@ -54,6 +55,7 @@ export function FinalCard({
   forcedGender: PersonagemGender;
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  clothingSeed?: number;
 } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -144,6 +146,7 @@ export function FinalCard({
         },
         anchoraPersonagem,
         ancoragePapel,
+        clothingSeed,
         forcedGender,
         userId,
         modelo,
@@ -203,6 +206,7 @@ export function FinalCard({
             forcedGender={forcedGender}
             anchoraPersonagem={anchoraPersonagem}
             ancoragePapel={ancoragePapel}
+            clothingSeed={clothingSeed}
             onGerou={async (url) => {
               try {
                 const final = await composeFinalPng(kit, { ...item, titulo, texto, legenda }, url);

@@ -44,6 +44,10 @@ export function buildAnchorPrefix(
   segment?: Segment,
   produtoDetalhe?: boolean,
   isPersonalBrand?: boolean,
+  // Seed estável por sequência (MOP) — mesma cor de roupa prevista em todas
+  // as peças quando o avatar é usado sem uniforme real. NÃO usa cardCarrossel:
+  // os pools de enquadramento variam POR CARD, a cor de roupa não.
+  clothingSeed?: number,
 ): string {
   // Ordem dos prefixos espelha a ordem em que as imagens são enviadas
   // (avatar → uniforme → fachada → cenário → produtos), pra que a numeração
@@ -60,7 +64,11 @@ export function buildAnchorPrefix(
       : kitColors
         ? (() => {
             const pool = buildClothingPool(kitColors.primary, kitColors.accent);
-            return ` COR DO VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
+            // Escolha determinística pelo seed da sequência quando presente;
+            // fallback pro sorteio livre se algum chamador não passar o seed.
+            const seed = clothingSeed ?? Math.random();
+            const idx = Math.min(pool.length - 1, Math.floor(seed * pool.length));
+            return ` COR DO VESTUÁRIO: ${pool[idx]}`;
           })()
         : "";
     const figurinoSentence = refs.uniforme

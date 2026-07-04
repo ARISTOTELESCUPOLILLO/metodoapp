@@ -77,6 +77,9 @@ interface Props {
   forcedGender?: PersonagemGender;
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  // Seed estável por sequência pra manter a mesma cor de roupa prevista do
+  // avatar (sem uniforme real) em todas as peças — ver useAnchorControl.
+  clothingSeed?: number;
 }
 
 export default function UsoReferenciasDia(props: Props) {
@@ -103,6 +106,7 @@ export default function UsoReferenciasDia(props: Props) {
     forcedGender,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
   } = props;
 
   const {
@@ -150,6 +154,7 @@ export default function UsoReferenciasDia(props: Props) {
     forcedGender,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
   });
 
   // Política não permite NENHUMA imagem para este formato/segmento → não mostra nada.

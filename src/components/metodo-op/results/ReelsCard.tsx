@@ -36,6 +36,7 @@ export function ReelsCard({
   forcedGender,
   anchoraPersonagem,
   ancoragePapel,
+  clothingSeed,
 }: {
   reels: ReelsGuide;
   kit: BrandKit;
@@ -49,6 +50,7 @@ export function ReelsCard({
   forcedGender?: PersonagemGender;
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  clothingSeed?: number;
 } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -107,6 +109,7 @@ export function ReelsCard({
     forcedGender,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
     onImageGenerated,
     guard,
     hook,
@@ -162,6 +165,7 @@ export function ReelsCard({
             forcedGender={forcedGender}
             anchoraPersonagem={anchoraPersonagem}
             ancoragePapel={ancoragePapel}
+            clothingSeed={clothingSeed}
             onGerou={handleReferenceImageGenerated}
           />
           <EditableField

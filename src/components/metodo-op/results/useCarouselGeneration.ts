@@ -60,6 +60,7 @@ export function useCarouselGeneration(params: {
   forcedGenders: PersonagemGender[];
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  clothingSeed?: number;
   onImageGenerated?: () => void;
   guard: ReturnType<typeof useImageGenAlert>["guard"];
   titulos: string[];
@@ -78,6 +79,7 @@ export function useCarouselGeneration(params: {
     forcedGenders,
     anchoraPersonagem,
     ancoragePapel,
+    clothingSeed,
     onImageGenerated,
     guard,
     titulos,
@@ -270,6 +272,7 @@ export function useCarouselGeneration(params: {
         selecaoDireta: s,
         anchoraPersonagem,
         ancoragePapel,
+        clothingSeed,
         forcedGender: forcedGenders[index],
         userId,
         modelo,
@@ -392,6 +395,7 @@ export function useCarouselGeneration(params: {
             selecaoDireta: s,
             anchoraPersonagem,
             ancoragePapel,
+            clothingSeed,
             forcedGender: forcedGenders[i],
             userId,
             modelo,

@@ -52,7 +52,12 @@ export function ArchiveButton({
     }
   }, [imageDataUrls]);
 
-  const ready = imageDataUrls.some(Boolean) && (formato !== "reels" || !!videoUrl);
+  // Carrossel tem várias entradas em imageDataUrls (uma por card) — precisa de
+  // TODAS geradas antes de liberar, senão arquiva o carrossel pela metade.
+  const ready =
+    imageDataUrls.length > 0 &&
+    imageDataUrls.every(Boolean) &&
+    (formato !== "reels" || !!videoUrl);
   const disabled = !ready || state === "busy";
 
   async function handle() {

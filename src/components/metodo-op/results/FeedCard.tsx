@@ -42,6 +42,7 @@ export function FeedCard({
   forcedGender,
   anchoraPersonagem,
   ancoragePapel,
+  clothingSeed,
 }: {
   item: FeedItem;
   kit: BrandKit;
@@ -54,6 +55,7 @@ export function FeedCard({
   forcedGender: PersonagemGender;
   anchoraPersonagem?: string;
   ancoragePapel?: string;
+  clothingSeed?: number;
 } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -149,6 +151,7 @@ export function FeedCard({
         },
         anchoraPersonagem,
         ancoragePapel,
+        clothingSeed,
         forcedGender,
         userId,
         modelo,
@@ -208,6 +211,7 @@ export function FeedCard({
             forcedGender={forcedGender}
             anchoraPersonagem={anchoraPersonagem}
             ancoragePapel={ancoragePapel}
+            clothingSeed={clothingSeed}
             onGerou={async (url) => {
               try {
                 const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);

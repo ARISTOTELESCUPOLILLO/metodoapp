@@ -83,6 +83,9 @@ export interface RegenerateInput {
   // Modelo/trilha da peça (MOP, EXP, PU2/PU4/PU8) — usado para revalidar a
   // policy de referências corretamente (EXP/PU têm limites próprios de produto).
   modelo?: ModeloOP | null;
+  // Seed estável por sequência (ver useAnchorControl) — mantém a MESMA cor de
+  // roupa prevista em todas as peças quando o avatar é usado sem uniforme real.
+  clothingSeed?: number;
 }
 
 // Ordenação de referências (avatar -> uniforme -> cenário -> produtos) agora
@@ -171,6 +174,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     forcedGender,
     userId,
     modelo,
+    clothingSeed,
   } = input;
 
   // Recarrega o Kit do servidor (autoritativo) antes de montar as
@@ -219,6 +223,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     kit.segment,
     selecaoDireta?.produtoDetalhe,
     kit.isPersonalBrand,
+    clothingSeed,
   );
 
   const inferred: "post" | "reels" = slot.formato === "reels" ? "reels" : "post";
