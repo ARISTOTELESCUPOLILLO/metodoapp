@@ -13,6 +13,7 @@ import { EditableField } from "./EditableField";
 import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 import { RefSelectorProps, RefsRegenButton } from "./RefsRegenButton";
 import ConfirmDialog from "../ConfirmDialog";
+import { USO_REF_PREFIX } from "../../../lib/storage/keys";
 import { insertSignature, kitHasRefsForFormat, shareLegendaWhatsApp } from "./utils";
 import { useCarouselCardEdits } from "./useCarouselCardEdits";
 import { useCarouselGeneration } from "./useCarouselGeneration";
@@ -49,7 +50,7 @@ export function CarouselCardBlock({
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
   const { selectedSlot } = usePlanSlotsCtx();
-  const blockStorageKey = `uso-ref:carrossel:${dayNumber}:bloco`;
+  const blockStorageKey = `${USO_REF_PREFIX}:${userId || "anon"}:carrossel:${dayNumber}:bloco`;
 
   const {
     titulos,
@@ -88,6 +89,7 @@ export function CarouselCardBlock({
     mood,
     dayNumber,
     segmento,
+    modelo,
     imageKit,
     userId,
     forcedGenders,
@@ -372,7 +374,7 @@ export function CarouselCardBlock({
                           : "⬇ Gerar card"}
                     </button>
                     <RefsRegenButton
-                      storageKey={`uso-ref:carrossel:${dayNumber}:c${card.card}`}
+                      storageKey={`${USO_REF_PREFIX}:${userId || "anon"}:carrossel:${dayNumber}:c${card.card}`}
                       fallbackKey={blockStorageKey}
                       busy={(busyIndex === index && busyMode === "refs") || busyAll}
                       onRun={() => handleGenerateWithRefs(index)}

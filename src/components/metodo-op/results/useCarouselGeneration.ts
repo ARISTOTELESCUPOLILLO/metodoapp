@@ -5,6 +5,8 @@ import { useState } from "react";
 import { lsGetRaw } from "../../../lib/storage/store";
 import { BrandKit, CarouselCard, FeedItem, ImageKit, MoodCode } from "../../../types";
 import { PersonagemGender } from "../../../core/visualDirection";
+import type { ModeloOP } from "../../../core/personalizacaoMop";
+import { USO_REF_PREFIX } from "../../../lib/storage/keys";
 import { generatePostImage } from "../../../services/api";
 import { composeFeedPng } from "../../../utils/canvasComposer";
 import { emptyImageKit } from "../../../utils/imageKitStorage";
@@ -52,6 +54,7 @@ export function useCarouselGeneration(params: {
   mood: MoodCode;
   dayNumber: number;
   segmento: BrandKit["segment"];
+  modelo?: ModeloOP | null;
   imageKit?: ImageKit;
   userId?: string | null;
   forcedGenders: PersonagemGender[];
@@ -69,6 +72,7 @@ export function useCarouselGeneration(params: {
     mood,
     dayNumber,
     segmento,
+    modelo,
     imageKit,
     userId,
     forcedGenders,
@@ -218,7 +222,9 @@ export function useCarouselGeneration(params: {
     }
     // 2) Storage individual por card (legacy)
     try {
-      const raw = lsGetRaw(`uso-ref:carrossel:${dayNumber}:c${card.card}`);
+      const raw = lsGetRaw(
+        `${USO_REF_PREFIX}:${userId || "anon"}:carrossel:${dayNumber}:c${card.card}`,
+      );
       if (!raw) return null;
       const j = JSON.parse(raw);
       if (!j.enabled) return null;
@@ -266,6 +272,7 @@ export function useCarouselGeneration(params: {
         ancoragePapel,
         forcedGender: forcedGenders[index],
         userId,
+        modelo,
       });
       const item: FeedItem = {
         dia: dayNumber,
@@ -387,6 +394,7 @@ export function useCarouselGeneration(params: {
             ancoragePapel,
             forcedGender: forcedGenders[i],
             userId,
+            modelo,
           });
           const item: FeedItem = {
             dia: dayNumber,

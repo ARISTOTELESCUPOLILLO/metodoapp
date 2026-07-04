@@ -16,7 +16,7 @@ import { orderedReferenceImages } from "../shared/visual/references";
 import { generatePostImage } from "./api";
 import { judgeLogoUniforme } from "./judgeContent";
 import { loadImageKitAsync } from "../utils/imageKitStorage";
-import type { SlotPersonalizacao } from "../core/personalizacaoMop";
+import type { ModeloOP, SlotPersonalizacao } from "../core/personalizacaoMop";
 import type { PersonagemGender } from "../core/visualDirection";
 import { policyPorFormato } from "../core/referenciasPolicy";
 import { buildReferences } from "./regenerateWithKit/buildReferences";
@@ -80,6 +80,9 @@ export interface RegenerateInput {
   // uma foto já deletada (referência fantasma, ex.: produto removido do Kit
   // mas ainda enviado como referência obrigatória pro modelo de imagem).
   userId?: string | null;
+  // Modelo/trilha da peça (MOP, EXP, PU2/PU4/PU8) — usado para revalidar a
+  // policy de referências corretamente (EXP/PU têm limites próprios de produto).
+  modelo?: ModeloOP | null;
 }
 
 // Ordenação de referências (avatar -> uniforme -> cenário -> produtos) agora
@@ -167,6 +170,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     ancoragePapel,
     forcedGender,
     userId,
+    modelo,
   } = input;
 
   // Recarrega o Kit do servidor (autoritativo) antes de montar as
@@ -186,7 +190,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
   // segmento mudou (ex.: VAREJO → MARCA) a seleção antiga pode conter produtos
   // que a policy atual proíbe. A UI já bloqueia a seleção, mas não revalida
   // na geração, então este é o ponto central de defesa.
-  const policy = policyPorFormato(kit.segment, slot.formato, null);
+  const policy = policyPorFormato(kit.segment, slot.formato, modelo ?? null);
   const sanitizedSelecao =
     selecaoDireta && policy.produtos === 0
       ? { ...selecaoDireta, produtosNums: [], produtoTelaInformativa: false }

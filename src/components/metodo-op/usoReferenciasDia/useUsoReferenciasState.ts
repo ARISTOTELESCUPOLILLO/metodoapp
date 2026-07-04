@@ -232,6 +232,7 @@ export function useUsoReferenciasState(params: Params) {
           produtoTelaInformativa: produtosNumsParaUso.length > 0 && produtoTelaInformativa,
         },
         userId,
+        modelo,
       });
       onGerou(url, {
         cobrouCarrosselProduto: false,

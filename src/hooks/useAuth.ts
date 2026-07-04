@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { stopImpersonation } from "./useImpersonation";
 import { clearSessionImages } from "../utils/sessionImageCache";
-import { lsRemove, ssClearPrefix } from "../lib/storage/store";
+import { lsClearPrefix, lsRemove, ssClearPrefix } from "../lib/storage/store";
 import {
   RESULT_KEY,
   PU_IMG_KEY,
@@ -16,6 +16,7 @@ import {
   FORM_KEY,
   POSTUNICO_FORM_KEY,
   MODO_INIT_KEY,
+  USO_REF_PREFIX,
 } from "../lib/storage/keys";
 
 export interface AuthState {
@@ -68,6 +69,8 @@ export async function signOut() {
       }
       // Limpa imagens do MOP (memória + localStorage, via prefixo)
       clearSessionImages(userId);
+      // Seleção de referências do Kit Imagem por peça — mesmo padrão de prefixo.
+      lsClearPrefix(`${USO_REF_PREFIX}:${userId}:`);
     }
   } catch {
     /* sem sessão pra obter userId: nada pra limpar */

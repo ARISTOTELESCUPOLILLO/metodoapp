@@ -9,6 +9,8 @@ import { getImpersonation } from "@/hooks/useImpersonation";
 import { lsGetRaw } from "../../../lib/storage/store";
 import { BrandKit, ImageKit, MoodCode, ReelsGuide } from "../../../types";
 import { PersonagemGender } from "../../../core/visualDirection";
+import type { ModeloOP } from "../../../core/personalizacaoMop";
+import { USO_REF_PREFIX } from "../../../lib/storage/keys";
 import { generatePostImage } from "../../../services/api";
 import { composeReelsPng, composeReelsTitlePng } from "../../../utils/canvasComposer";
 import { emptyImageKit } from "../../../utils/imageKitStorage";
@@ -29,6 +31,7 @@ export function useReelsGeneration(params: {
   kit: BrandKit;
   mood: MoodCode;
   dayNumber: number;
+  modelo?: ModeloOP | null;
   imageKit?: ImageKit;
   userId?: string | null;
   forcedGender?: PersonagemGender;
@@ -44,6 +47,7 @@ export function useReelsGeneration(params: {
     kit,
     mood,
     dayNumber,
+    modelo,
     imageKit,
     userId,
     forcedGender,
@@ -204,7 +208,7 @@ export function useReelsGeneration(params: {
   }
 
   async function runGenerateWithRefs() {
-    const storageKey = `uso-ref:reels:${dayNumber}`;
+    const storageKey = `${USO_REF_PREFIX}:${userId || "anon"}:reels:${dayNumber}`;
     let s: {
       usarAvatar: boolean;
       avatarNum: 1 | 2 | null;
@@ -246,6 +250,7 @@ export function useReelsGeneration(params: {
         ancoragePapel,
         forcedGender,
         userId,
+        modelo,
       });
       const final = await composeReelsPng(kit, url);
       updatePreview(final);

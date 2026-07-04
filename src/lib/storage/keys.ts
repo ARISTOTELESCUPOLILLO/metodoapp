@@ -42,6 +42,9 @@ export const COPY_EDITS_KEY = "metodo-op-copyedits-v1";
 /** Prefixo de imagens geradas pelo MOP em sessão. Formato: `${PREFIX}:${userId}:${key}` */
 export const SESSION_IMG_PREFIX = "metodo-op-img-v1";
 
+/** Prefixo da seleção de referências do Kit Imagem por peça (MOP). Formato: `${PREFIX}:${userId}:${tipo}:...` */
+export const USO_REF_PREFIX = "uso-ref";
+
 // ── SessionStorage ────────────────────────────────────────────────────────────
 /** Flag de auto-seleção de modo por plano (1 por login por aba). */
 export const MODO_INIT_KEY = "metodo-op-modo-init-v1";

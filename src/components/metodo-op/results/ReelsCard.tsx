@@ -13,6 +13,7 @@ import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
 import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 import { RefSelectorProps, RefsRegenButton } from "./RefsRegenButton";
+import { USO_REF_PREFIX } from "../../../lib/storage/keys";
 import { insertSignature, shareLegendaWhatsApp } from "./utils";
 import { useReelsCopyEdit } from "./useReelsCopyEdit";
 import { useReelsGeneration } from "./useReelsGeneration";
@@ -100,6 +101,7 @@ export function ReelsCard({
     kit,
     mood,
     dayNumber,
+    modelo,
     imageKit,
     userId,
     forcedGender,
@@ -155,7 +157,7 @@ export function ReelsCard({
             mood={mood}
             imagePrompt={reels.imagePrompt}
             formatoOverride="reels"
-            storageKey={`uso-ref:reels:${dayNumber}`}
+            storageKey={`${USO_REF_PREFIX}:${userId || "anon"}:reels:${dayNumber}`}
             userId={userId}
             forcedGender={forcedGender}
             anchoraPersonagem={anchoraPersonagem}
@@ -263,7 +265,7 @@ export function ReelsCard({
                   : "⬇ Gerar imagem pura"}
             </button>
             <RefsRegenButton
-              storageKey={`uso-ref:reels:${dayNumber}`}
+              storageKey={`${USO_REF_PREFIX}:${userId || "anon"}:reels:${dayNumber}`}
               busy={busyRefs || busyVideo}
               onRun={handleGenerateWithRefs}
               imageKit={imageKit}

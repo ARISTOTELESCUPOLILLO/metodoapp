@@ -17,6 +17,7 @@ import UsoReferenciasDia, { useRefSelection } from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
 import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
+import { USO_REF_PREFIX } from "../../../lib/storage/keys";
 import { RefSelectorProps, RefsRegenButton } from "./RefsRegenButton";
 import {
   insertSignature,
@@ -65,7 +66,7 @@ export function FeedCard({
   }
   const isMobile = useIsMobile();
   const { selectedSlot } = usePlanSlotsCtx();
-  const storageKey = `uso-ref:estatico:${item.dia}`;
+  const storageKey = `${USO_REF_PREFIX}:${userId || "anon"}:estatico:${item.dia}`;
   const sel = useRefSelection(storageKey);
 
   const savedCopyEdit = useMemo(() => loadCopyEdit(userId, cacheKey), [userId, cacheKey]);
@@ -150,6 +151,7 @@ export function FeedCard({
         ancoragePapel,
         forcedGender,
         userId,
+        modelo,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
