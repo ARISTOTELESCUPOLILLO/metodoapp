@@ -58,6 +58,7 @@ export {
   checkSupplierLanguage,
   checkRepeatedOpening,
   checkLensNameLeak,
+  checkWeakEnding,
 } from "./sugestaoValidation";
 
 // Faixa de palavras do título (mesma usada no prompt e em

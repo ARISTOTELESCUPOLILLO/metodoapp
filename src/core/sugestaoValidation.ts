@@ -152,3 +152,175 @@ export function checkLensNameLeak(sugestao: string, lensNome: string): string[] 
   }
   return [];
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — fecho fraco da frase (PRINCÍPIO DO FECHO DA FRASE,
+// principios-comunicacao-metodo-op-2026-06-21.txt, topo + entrada 1.6):
+// as últimas palavras precisam nomear um resultado, necessidade ou benefício
+// CONCRETO do item — não deixar o pensamento em aberto. Espelho determinístico
+// do critério "FECHO DA FRASE" que já existe no prompt (suggest-keyinfo.ts):
+// sem esta checagem, as violações passavam sem retry (caso real de 04/07/2026,
+// MOP, empresa "Oficina de Propaganda", produto "Aplicativo Método OP").
+// Três famílias de fecho fraco, cada uma com motivo próprio e específico —
+// a mensagem alimenta o `reinforcement` do retry em suggest-keyinfo.ts, então
+// precisa dizer ao modelo exatamente O QUE corrigir:
+//   (a) ocasião de calendário/tempo solta no fim ("Uso do Método OP no carnaval");
+//   (b) o nome do próprio elemento concreto como últimas palavras
+//       ("Dicas práticas no Aplicativo Método OP");
+//   (c) qualificador adjetival vago como última palavra
+//       ("...para montar anúncios certos").
+// ─────────────────────────────────────────────────────────────────────────
+
+// Palavras-chave de ocasião/tempo de calendário (já normalizadas: minúsculas,
+// sem acento). Multi-palavra é permitido — a regex casa a expressão inteira.
+const OCCASION_KEYWORDS = [
+  "carnaval",
+  "natal",
+  "ano novo",
+  "reveillon",
+  "pascoa",
+  "black friday",
+  "festa junina",
+  "festas juninas",
+  "dia das maes",
+  "dia dos pais",
+  "dia das criancas",
+  "dia dos namorados",
+  "verao",
+  "inverno",
+  "outono",
+  "primavera",
+  "fim de semana",
+  "final de semana",
+  "feriado",
+  "feriados",
+  "temporada",
+  "evento",
+  "eventos",
+  // meses
+  "janeiro",
+  "fevereiro",
+  "marco",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+  // dias da semana
+  "segunda-feira",
+  "terca-feira",
+  "quarta-feira",
+  "quinta-feira",
+  "sexta-feira",
+  "segunda",
+  "terca",
+  "quarta",
+  "quinta",
+  "sexta",
+  "sabado",
+  "sabados",
+  "domingo",
+  "domingos",
+];
+
+// "no/na/em/durante [o/a/os/as] <ocasião>" como ÚLTIMAS palavras da frase.
+// A ocasião no meio da frase (como contexto) é legítima — só o FECHO nela
+// é fecho fraco.
+const OCCASION_END_RE = new RegExp(
+  `\\b(?:no|na|nos|nas|em|durante)\\s+(?:o\\s+|a\\s+|os\\s+|as\\s+)?(?:${OCCASION_KEYWORDS.map(
+    (k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+  ).join("|")})$`,
+);
+
+// Qualificadores adjetivais vagos de aprovação/adequação — quando são a
+// ÚLTIMA palavra, a frase fecha num juízo genérico que colaria em qualquer
+// produto/serviço ("anúncios certos", "escolha ideal", "tamanho perfeito").
+const VAGUE_CLOSING_ADJECTIVE_RE =
+  /^(certos?|certas?|ideal|ideais|perfeitos?|perfeitas?|adequados?|adequadas?|corretos?|corretas?|apropriados?|apropriadas?)$/;
+
+// Palavras funcionais ignoradas ao extrair o "núcleo" do nome do elemento
+// concreto (família b) — sobre texto já normalizado (sem acento).
+const ITEM_NAME_STOPWORDS = new Set([
+  "o",
+  "a",
+  "os",
+  "as",
+  "um",
+  "uma",
+  "uns",
+  "umas",
+  "de",
+  "do",
+  "da",
+  "dos",
+  "das",
+  "e",
+  "ou",
+  "para",
+  "pra",
+  "com",
+  "sem",
+  "em",
+  "no",
+  "na",
+  "nos",
+  "nas",
+  "por",
+  "ao",
+  "aos",
+]);
+
+export function checkWeakEnding(sugestao: string, concreteItem?: string | null): string[] {
+  const motivos: string[] = [];
+  // Normaliza e remove pontuação final — o fecho é avaliado pelas PALAVRAS.
+  const norm = normalizeForCompare(sugestao)
+    .replace(/[.!?…]+\s*$/g, "")
+    .trim();
+  if (!norm) return motivos;
+
+  // (a) Ocasião/tempo solto no fim — "…no carnaval", "…durante o verão".
+  const occMatch = norm.match(OCCASION_END_RE);
+  if (occMatch) {
+    motivos.push(
+      `fecho fraco (ocasião solta no fim): a frase termina em "${occMatch[0]}" — uma referência de calendário/tempo sem resultado. A ocasião pode aparecer no MEIO da frase como contexto; as ÚLTIMAS palavras devem nomear o resultado, necessidade ou benefício concreto que o item entrega`,
+    );
+  }
+
+  const sugTokens = norm.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const lastToken = sugTokens[sugTokens.length - 1] || "";
+
+  // (b) Fecho no nome do próprio elemento concreto — "…no Aplicativo Método OP".
+  // Só reprova quando o núcleo final do nome do item aparece LITERALMENTE como
+  // última palavra da sugestão (e, em nomes multi-palavra, com a penúltima
+  // palavra também pertencendo ao nome) — sem nenhum resultado/complemento
+  // depois dele. Item no meio da frase seguido de resultado é legítimo.
+  if (concreteItem) {
+    const itemTokens = normalizeForCompare(concreteItem)
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((t) => t && !ITEM_NAME_STOPWORDS.has(t));
+    const lastCore = itemTokens[itemTokens.length - 1];
+    if (lastCore && lastToken === lastCore) {
+      const penult = sugTokens[sugTokens.length - 2];
+      const endsOnItemName =
+        itemTokens.length === 1 || (penult !== undefined && itemTokens.includes(penult));
+      if (endsOnItemName) {
+        motivos.push(
+          `fecho fraco (nome do próprio item no fim): a frase termina no nome do próprio elemento concreto ("${concreteItem}") sem nomear resultado nenhum — as ÚLTIMAS palavras devem dizer o que o cliente ganha, resolve ou evita com ele, não repetir o nome do item`,
+        );
+      }
+    }
+  }
+
+  // (c) Qualificador adjetival vago como última palavra — "…anúncios certos".
+  if (lastToken && VAGUE_CLOSING_ADJECTIVE_RE.test(lastToken)) {
+    motivos.push(
+      `fecho fraco (qualificador vago no fim): a frase termina em "${lastToken}", adjetivo genérico de aprovação que serviria para qualquer produto/serviço — troque o fecho por um resultado, necessidade ou benefício concreto e específico deste item`,
+    );
+  }
+
+  return motivos;
+}

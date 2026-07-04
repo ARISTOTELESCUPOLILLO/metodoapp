@@ -17,6 +17,7 @@ import {
   checkSupplierLanguage,
   checkRepeatedOpening,
   checkLensNameLeak,
+  checkWeakEnding,
 } from "@/core/textValidation";
 import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 
@@ -199,6 +200,56 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
     guia: 'Dentro do contexto real de uso já identificado, escolha um detalhe específico do elemento que o cliente costuma não notar ou só percebe tarde demais — um aspecto concreto, nunca uma qualidade abstrata como "atenção aos detalhes".',
   },
 ];
+
+// ── Juiz semântico leve do FECHO DA FRASE (backstop conservador) ──────────
+// PRINCÍPIO DO FECHO DA FRASE (documento de princípios, topo + entrada 1.6):
+// as últimas palavras da Sugestão precisam nomear um resultado/benefício
+// concreto. As checagens determinísticas (checkWeakEnding + as demais) são a
+// primeira linha; este juiz só roda quando TODAS elas passaram — é um
+// backstop para fechos vagos que padrão nenhum pega, NUNCA mais rígido que
+// elas. Viés explícito de aprovar: só reprova com certeza (instrução no
+// prompt). Fail-open OBRIGATÓRIO: erro, timeout, JSON inválido ou resposta
+// ambígua → fecho aceito (true) — falha técnica nunca trava o clique do
+// usuário. Custo absorvido no mesmo evento de Sugestão (COST_USD.sugestao),
+// sem métrica separada (revisão de custos pode reavaliar depois).
+const JUDGE_FECHO_TIMEOUT_MS = 6_000;
+
+async function judgeFechoSugestao(
+  apiKey: string,
+  sugestao: string,
+  concreteItem?: string | null,
+): Promise<boolean> {
+  try {
+    const prompt = `Avalie APENAS o FECHO (as últimas 2-3 palavras) desta frase de pauta de conteúdo em português brasileiro:
+
+FRASE: "${sugestao}"${concreteItem ? `\nITEM/PRODUTO DE ORIGEM: "${concreteItem}"` : ""}
+
+PERGUNTA ÚNICA: as últimas 2-3 palavras desta frase nomeiam um resultado, necessidade ou benefício CONCRETO e específico deste item, que o cliente reconhece? Ou o fecho é uma ocasião solta (época/data sem resultado), o nome do próprio item, um qualificador vazio ("certo", "ideal", "de qualidade") ou qualquer coisa que serviria para qualquer produto/serviço?
+
+IMPORTANTE: em caso de dúvida real, ou se a frase parecer razoável, responda que o fecho ESTÁ OK — só reprove se tiver CERTEZA de que o fecho é vago/solto.
+
+Responda JSON EXATAMENTE assim: { "fechoOk": true } ou { "fechoOk": false }`;
+
+    const result = await fetchOpenAIChat(
+      apiKey,
+      {
+        model: "gpt-4.1-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1,
+        response_format: { type: "json_object" },
+      },
+      JUDGE_FECHO_TIMEOUT_MS,
+    );
+    if (!result.ok) return true;
+    const content = result.data.choices?.[0]?.message?.content;
+    if (!content) return true;
+    const parsed = JSON.parse(content) as { fechoOk?: unknown };
+    // Só reprova com `false` explícito — qualquer outro valor é ambíguo, passa.
+    return parsed.fechoOk !== false;
+  } catch {
+    return true;
+  }
+}
 
 export const Route = createFileRoute("/api/suggest-keyinfo")({
   server: {
@@ -519,7 +570,20 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
                 : OPENING_LENSES;
           const lensIndex = (attempt + sessionSeed) % lensPool.length;
           const lens = lensPool[lensIndex];
-          const lensGuardrail = ` Esta lente define apenas o ÂNGULO da frase dentro do CONTEXTO REAL DE USO já identificado — não cria uma situação nova, não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal. A lente é um mecanismo interno: a frase final não deve deixar reconhecível qual lente foi usada — só devem aparecer produto/serviço, contexto real de uso e situação plausível em linguagem natural.${segment !== "MARCA" ? ` PROIBIDO usar tom de vínculo/comunidade com o público — "nosso(s)", "nossa(s)", "juntos", "nossa comunidade", "cuidar juntos", "fazemos parte da sua vida" — esse registro pertence ao segmento MARCA; em ${segment}, descreva produto/serviço e situação na 3ª pessoa, sem incluir o público como coautor ou parceiro emocional.` : ""}`;
+          // Reconciliação da lente "Oportunidade" com o FECHO DA FRASE (e com
+          // o "PROIBIDO ... datas ou prazos não informados" do metodoPrompt,
+          // mais abaixo): a lente pede citar uma ocasião ESPECÍFICA do
+          // calendário/rotina, mas não dizia ONDE ela entra na frase — e o
+          // modelo tendia a fechar a frase nela ("Uso do Método OP no
+          // carnaval"), violando o critério FECHO DA FRASE. A cláusula
+          // condicional abaixo (mesmo padrão da cláusula de segment !==
+          // "MARCA") fixa a posição: a ocasião é CONTEXTO no MEIO da frase, o
+          // fecho continua sendo o resultado/benefício concreto do elemento.
+          // Ela também desfaz a aparente contradição com a proibição de datas/
+          // prazos não informados: a ocasião permitida pela lente é um momento
+          // reconhecível (estação, época, situação da rotina), nunca uma data
+          // ou prazo específico inventado.
+          const lensGuardrail = ` Esta lente define apenas o ÂNGULO da frase dentro do CONTEXTO REAL DE USO já identificado — não cria uma situação nova, não substitui o núcleo definido em SINTAXE — NÚCLEO DA FRASE, e não deve transformar conceito abstrato em núcleo principal. A lente é um mecanismo interno: a frase final não deve deixar reconhecível qual lente foi usada — só devem aparecer produto/serviço, contexto real de uso e situação plausível em linguagem natural.${segment !== "MARCA" ? ` PROIBIDO usar tom de vínculo/comunidade com o público — "nosso(s)", "nossa(s)", "juntos", "nossa comunidade", "cuidar juntos", "fazemos parte da sua vida" — esse registro pertence ao segmento MARCA; em ${segment}, descreva produto/serviço e situação na 3ª pessoa, sem incluir o público como coautor ou parceiro emocional.` : ""}${lens.nome === "Oportunidade" ? ` POSIÇÃO DA OCASIÃO (regra desta lente): a ocasião/momento de calendário ou rotina escolhido entra como CONTEXTO no MEIO da frase — NUNCA como as últimas palavras. O FECHO da frase (ver FECHO DA FRASE nos critérios de qualidade) continua sendo o resultado, necessidade ou benefício concreto que o elemento entrega: a ocasião situa, o fecho resolve. A ocasião é um momento reconhecível (estação, época, situação da rotina do cliente), não uma data ou prazo específico não informado.` : ""}`;
           const lensBlock = `LENTE INTERNA DE GERAÇÃO (uso interno apenas — NÃO cite o nome da lente nem deixe rastro dela na frase final): ${lens.guia}${lensGuardrail}`;
           // Na PU, a lente serve só para variar o ASSUNTO do post único — não
           // altera o formato definido em ESTILO DA SUGESTÃO (POST ÚNICO) e não
@@ -612,10 +676,11 @@ Retorne JSON EXATAMENTE assim:
               : "Você é estrategista de conteúdo brasileiro. Escreva com gramática e ortografia impecáveis conforme as normas do português brasileiro. Responda SEMPRE com JSON válido. PROIBIDO repetir a mesma palavra ou qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue) no mesmo texto — use sinônimos ou reformule. Antes de retornar, prefira que a frase parta de uma situação concreta e reconhecível da ATIVIDADE informada — produto, ferramenta, canal, procedimento ou momento do dia a dia desse ramo — em vez de um conceito amplo que serviria para qualquer empresa do segmento. Limite: entre 4 e 7 palavras por sugestão (máximo absoluto 7) — nunca ultrapasse 7. Frases com mais de 7 palavras devem ser cortadas antes de retornar.";
 
           // D1 (validateSugestao) + 1 retry no máximo: se a sugestão sair vaga
-          // (muito curta/longa, terminação pendurada ou frase-clichê), pede uma
-          // nova versão reforçando o motivo. Nunca retorna erro ao usuário por
-          // causa disso — devolve a melhor tentativa, sempre truncada a
-          // sugestaoMaxWords (7 palavras, MOP e PU).
+          // (muito curta/longa, terminação pendurada, frase-clichê ou fecho
+          // fraco — ver checkWeakEnding e o juiz semântico do fecho abaixo),
+          // pede uma nova versão reforçando o motivo. Nunca retorna erro ao
+          // usuário por causa disso — devolve a melhor tentativa, sempre
+          // truncada a sugestaoMaxWords (7 palavras, MOP e PU).
           const MAX_SUGGEST_ATTEMPTS = 2;
           let sugestao = "";
           let motivos: string[] = [];
@@ -679,6 +744,26 @@ Retorne JSON EXATAMENTE assim:
             // Vazamento do nome da lente interna — vale para AMBOS os modos
             // (lens/lensBlock existem em MOP e PU).
             motivos = motivos.concat(checkLensNameLeak(sugestao, lens.nome));
+            // Fecho fraco da frase (PRINCÍPIO DO FECHO DA FRASE) — ocasião de
+            // calendário solta, nome do próprio item ou qualificador vago nas
+            // últimas palavras. Incondicional para AMBOS os modos, igual à
+            // checkLensNameLeak.
+            motivos = motivos.concat(checkWeakEnding(sugestao, concreteItem));
+            // Juiz semântico do fecho — backstop conservador: só roda quando
+            // TODAS as checagens determinísticas acima passaram (motivos
+            // vazio), pra pegar fecho vago que padrão nenhum cobre. Fail-open
+            // (falha técnica = aprovado) e com viés de aprovar em caso de
+            // dúvida. Se reprovar, vira mais um motivo e o retry existente
+            // deste loop cuida do resto — sem loop separado (na tentativa 2,
+            // se as determinísticas passarem de novo, o juiz roda de novo).
+            if (motivos.length === 0) {
+              const fechoOk = await judgeFechoSugestao(apiKey, sugestao, concreteItem);
+              if (!fechoOk) {
+                motivos.push(
+                  "juiz semântico: o fecho da frase (últimas palavras) não nomeia um resultado, necessidade ou benefício concreto deste item — reescreva o fecho com o efeito específico que o cliente ganha, resolve ou evita com ele",
+                );
+              }
+            }
             if (motivos.length === 0) break;
           }
 

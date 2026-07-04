@@ -33,7 +33,7 @@ A regra de trabalho é:
 PRINCÍPIOS FUNDAMENTAIS DO MÉTODO OP
 ============================================================
 
-Estes 5 princípios vêm antes de qualquer regra de segmento ou de formato — toda
+Estes 6 princípios vêm antes de qualquer regra de segmento ou de formato — toda
 decisão futura de texto, imagem, experiência e automação deve respeitar todos eles.
 Quando um princípio operacional (Parte 1) parecer entrar em conflito com um destes,
 estes têm prioridade.
@@ -63,6 +63,16 @@ PRINCÍPIO DA IA
 ------------------------------------------------------------
 A IA ajuda a criar. A IA não substitui o conhecimento do empresário. Ela organiza,
 sugere e acelera.
+
+PRINCÍPIO DO FECHO DA FRASE
+------------------------------------------------------------
+"Tudo começa na palavra e termina na palavra" (Aristóteles, 04/07/2026). Toda frase
+gerada pelo Método OP é uma unidade de sentido fechada, do primeiro ao último termo —
+nenhuma palavra fica de enfeite, nenhuma deixa o pensamento em aberto. O fecho (as
+últimas palavras) precisa resolver a frase com algo concreto e específico — não uma
+ocasião solta, não o nome do próprio item, não um qualificador vazio que serviria para
+qualquer produto ou serviço. Vale para Sugestão, título, texto e legenda — a Sugestão
+é onde o princípio começa a valer, porque é a semente de tudo que vem depois.
 
 ============================================================
 PARTE 1 — PRINCÍPIOS DE COMUNICAÇÃO DECIDIDOS
@@ -196,6 +206,46 @@ sempre apoio).
   "agora", "já", "última chance").
 - Todo texto gerado segue normas do português brasileiro por padrão (concordância,
   ortografia, acentuação) — sem precisar pedir.
+
+1.6 FECHO DA FRASE: TODA FRASE FECHA UM PENSAMENTO COMPLETO
+------------------------------------------------------------
+[Decidido por Aristóteles em 04/07/2026 — "tudo começa na palavra e termina na
+palavra". Elevado a princípio fundamental (ver PRINCÍPIO DO FECHO DA FRASE no topo
+deste documento); esta entrada registra o detalhe operacional.]
+
+Origem: caso real observado em produção, na trilha MOP (empresa Oficina de
+Propaganda, produto "Aplicativo Método OP" marcado). Três sugestões geradas saíram
+com fecho fraco — cada uma de um jeito diferente:
+
+- "Aplicativo Método OP para montar anúncios certos" — fecha em "certos", qualificador
+  vago que colaria em qualquer produto.
+- "Uso do Método OP no carnaval" — fecha numa ocasião de calendário, sem nomear nenhum
+  resultado ou benefício.
+- "Dicas práticas no Aplicativo Método OP" — fecha no nome do próprio produto, sem
+  resultado nenhum.
+
+O princípio: o fecho da frase (as últimas palavras) precisa resolver o pensamento com
+algo concreto e específico do negócio. Três famílias de fecho fraco ficam proibidas:
+(a) qualificador vazio ("certos", "ideais", "de qualidade"), (b) ocasião de calendário
+sem resultado ("no carnaval", "no fim de ano"), (c) o nome do próprio item/produto
+como última palavra. Vale para MOP e PU.
+
+Por quê: a Sugestão é a semente de tudo que vem depois — título, texto, legenda e
+imagem nascem dela. Se a semente deixa o pensamento em aberto, todas as peças herdam
+a vagueza. Por isso a Sugestão é APENAS O PRIMEIRO lugar onde o princípio vale —
+título, texto e legenda também precisam ser auditados quanto a ele (investigação
+separada, ainda em andamento em 04/07/2026).
+
+Onde isso está implementado no código: AINDA NÃO ESTÁ — esta entrada é só o registro
+da decisão. O critério "FECHO DA FRASE" já existe como texto de prompt em
+src/routes/api/suggest-keyinfo.ts (linha ~446) desde 04/07/2026, mas SEM espelho
+determinístico de validação — foi por isso que as sugestões com fecho em ocasião de
+calendário e fecho no nome do produto passaram sem serem pegas. Diagnóstico completo
+numa investigação da mesma data.
+
+Status de implementação: DECISÃO REGISTRADA. Reforço pendente (próximo passo depois
+deste registro): validação determinística do fecho, reconciliação com a lente
+"Oportunidade" (que empurra para ocasiões de calendário) e juiz semântico leve.
 
 ============================================================
 REGRAS DE PRODUÇÃO (operacionais, não são princípios de comunicação)
@@ -378,7 +428,10 @@ judge-content.ts) com critérios genéricos (sem sentido, genérico demais, não
 com o segmento). Ela não sabe nada sobre os princípios específicos decididos aqui.
 Conforme este documento crescer, vale incluir um resumo dos princípios mais críticos
 nos critérios desse juiz — assim ele rejeita não só "texto mal escrito", mas "texto
-que contradiz uma decisão já registrada".
+que contradiz uma decisão já registrada". O PRINCÍPIO DO FECHO DA FRASE (ver topo do
+documento e 1.6) é um bom candidato a entrar nesses critérios quando o juiz for
+implementado/reforçado — fecho vago é exatamente o tipo de defeito que uma checagem
+determinística sozinha não pega por completo.
 
 3.5 Tamanho do ResultsView.tsx (3.777 linhas)
 ------------------------------------------------------------
