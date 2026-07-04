@@ -304,6 +304,11 @@ export default function App() {
       mainActivity: kit.mainActivity || "",
       audience: postUnico.audience,
       keyInfo: postUnico.keyInfo,
+      // Preferências de direcionamento sobrevivem ao "Limpar Post Único" —
+      // o botão limpa a PEÇA (imagem/legenda), não as preferências do usuário
+      // (mesmo tratamento já dado a audience/keyInfo).
+      faixaEtaria: postUnico.faixaEtaria,
+      generoPref: postUnico.generoPref,
     });
     clearPostUnicoState();
     setError("");

@@ -1,7 +1,7 @@
 // Persistência de estado do app raiz (localStorage/sessionStorage escopados
 // por usuário) — extraído de MetodoOpApp.tsx (PLANO_V2 Fase 9.1).
 // Efeitos movidos 1:1, sem mudança de comportamento.
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { SlotInfo } from "./useProfile";
 import type { Modo } from "../data/appDefaults";
 import { savePostUnico } from "../data/appDefaults";
@@ -51,8 +51,20 @@ export function useAppPersistence(params: {
     slots,
   } = params;
 
+  // Guarda contra gravação pré-restauração: no commit em que effectiveUserId
+  // chega (login/reload/troca de impersonação), `postUnico` ainda é o estado
+  // anterior (default ou do usuário anterior) — gravar aqui sobrescreveria o
+  // form salvo do novo usuário com dados obsoletos. Hoje o restore
+  // (useUserDataRestore) roda antes deste efeito por ordem de hooks no
+  // MetodoOpApp, mas o guard remove essa dependência frágil de ordem.
+  const puSaveUserRef = useRef<string | null>(null);
   useEffect(() => {
-    if (effectiveUserId) savePostUnico(postUnico, effectiveUserId);
+    if (!effectiveUserId) return;
+    if (puSaveUserRef.current !== effectiveUserId) {
+      puSaveUserRef.current = effectiveUserId;
+      return;
+    }
+    savePostUnico(postUnico, effectiveUserId);
   }, [postUnico, effectiveUserId]);
 
   useEffect(() => {

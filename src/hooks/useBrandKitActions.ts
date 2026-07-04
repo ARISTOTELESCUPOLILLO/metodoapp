@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import { defaultVoice } from "../data/brandVoice";
@@ -55,8 +55,20 @@ export function useBrandKitActions({
     if (effectiveUserId) saveKit(kit, effectiveUserId);
   }, [kit, effectiveUserId]);
 
+  // Guarda contra gravação pré-restauração: no commit em que effectiveUserId
+  // chega (login/reload/troca de impersonação), `form` ainda é o estado default
+  // — e este efeito roda ANTES do restore (useUserDataRestore é chamado depois
+  // deste hook no MetodoOpApp), o que sobrescrevia o form salvo do usuário com
+  // defaults antes do loadForm ler. Pulamos a gravação nesse commit; o restore
+  // seta o form e o efeito re-salva no commit seguinte.
+  const formSaveUserRef = useRef<string | null>(null);
   useEffect(() => {
-    if (effectiveUserId) saveForm(form, effectiveUserId);
+    if (!effectiveUserId) return;
+    if (formSaveUserRef.current !== effectiveUserId) {
+      formSaveUserRef.current = effectiveUserId;
+      return;
+    }
+    saveForm(form, effectiveUserId);
   }, [form, effectiveUserId]);
 
   // Quando o profile chega, sincroniza o segment do kit com o do perfil
