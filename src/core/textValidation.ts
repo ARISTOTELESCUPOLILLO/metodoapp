@@ -125,6 +125,13 @@ const SUGESTAO_GENERIC_PATTERNS: RegExp[] = [
   /o\s+melhor\s+para\s+voc[êe]/i,
   /alta\s+qualidade/i,
   /excel[êe]ncia/i,
+  /sempre$/i,
+  /recaídas?\s+comuns/i,
+  /problemas?\s+comuns/i,
+  /evita\s+problemas/i,
+  /com\s+seguran[çc]a$/i,
+  /do\s+jeito\s+certo$/i,
+  /na\s+medida\s+certa$/i,
 ];
 
 // Validação leve da sugestão/keyInfo gerada pelo botão "Sugestão": comprimento
