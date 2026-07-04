@@ -1,31 +1,15 @@
-import {
-  ContentFormData,
-  MethodOpResult,
-  FeedItem,
-  GenerationSummary,
-  Track,
-  ValidationFlag,
-} from "../types";
+import { ContentFormData, Track } from "../types";
 import { FAIXA_ETARIA_REGISTRO } from "./audienceAge";
 import { AUDIENCE_SEGMENT_CONFIG } from "../domain/audienceSegment.config";
 import { getVoiceProfile } from "../data/brandVoice";
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from "./visualDirection";
 import {
-  truncateWords,
-  validatePieceFields,
-  normalizeLegenda,
-  enforceLegendaLimits,
-  checkObserverSubject,
-  checkCrossPieceLabelRepeat,
-  checkCrossPieceTitleRepeat,
-  correctPortugueseSpelling,
   LEGENDA_CORPO_MAX_WORDS,
   LEGENDA_CTA_MAX_WORDS,
   LEGENDA_HASHTAGS,
   TECNICISMO_RULE,
 } from "./textValidation";
 import { momentModulators, SILABA_EXCECAO_RULE } from "./mopModulators";
-
 
 export const SEQUENCE_COMPOSITION = {
   3: { estatico: 1, carrossel: 1, fechamento: 1 },

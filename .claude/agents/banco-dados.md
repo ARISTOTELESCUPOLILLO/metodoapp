@@ -14,22 +14,23 @@ Você é o Agente de Banco de Dados e Supabase do projeto Método OP.
 - Diagnosticar problemas de permissão admin vs usuário
 - Revisar queries Supabase no código TypeScript
 - Analisar uso do Storage (bucket `image-kits`)
-- Diagnosticar problemas de billing (`debit_usage`, `user_plans`, `plan_usage_slots`)
+- Diagnosticar problemas de billing (`debit_usage`, `profiles` (colunas plano1_*/plano2_*/bonus_*), `usage_logs`)
 - Verificar consistência entre migrations e código TypeScript
 
 ## Tabelas principais
 
-- `profiles` — dados do usuário
+- `profiles` — dados do usuário + colunas de billing por slot (`plano1_*`, `plano2_*`, `bonus_*`: `_id`, `_imgs_limite/usadas`, `_geracoes_limite/usadas`, `_expira_em`, etc.)
 - `brand_kits` — Kit de Marca por usuário
 - `user_image_kits` — paths das fotos no Storage
 - `user_roles` — roles (admin, etc.)
-- `user_plans` — planos ativos
-- `plan_usage_slots` — uso por slot (S3V, S6V, S9V, PU)
+- `plans` — catálogo de planos disponíveis
+- `usage_logs` — histórico de eventos de consumo (débito por geração)
+- `plan_purchases` — compras/ativações de plano (Hotmart)
 - `invited_emails` — convites
 
 ## Regras críticas
 
-- **Admin bypass:** SEMPRE via `supabaseAdmin` (service role) + `rpc("has_role")` para verificar permissão — NUNCA via JWT claims ou `user_roles` table query direto
+- **Admin bypass:** verificar SE O CALLER é admin é SEMPRE via `rpc("has_role")` (nunca JWT claims direto) — mas consultar `user_roles` diretamente para LISTAR/relatar roles de outros usuários (ex.: telas financeiras/admin) é uso legítimo e existente no código (`src/lib/cobrancas.functions.ts`, `users.functions.ts`, `visaoGeral.functions.ts`, `clientesFinanceiro.functions.ts`, `projecao.functions.ts`, `custos.functions.ts`) — não é bug, é leitura de dados, não verificação de permissão.
 - **RLS:** todas as tabelas têm RLS ativo — operações de admin usam `supabaseAdmin`
 - **Storage:** bucket `image-kits` privado — acesso via signed URLs (TTL 1h)
 - **debit_usage:** RPC que debita do plano — admin NÃO tem bypass

@@ -65,7 +65,7 @@ Você é o Agente de Produto do Método OP — guardião da lógica central do a
 
 ## Arquivos centrais
 
-- `src/core/organizeMethodEngine.ts` — motor MOP
+- `src/core/organizaMethodEngine.ts` — motor MOP (fatiado na Fase 8 do PLANO_V2: lógica auxiliar em textValidation.ts, mopModulators.ts, normalizeMethodResult.ts, etc.)
 - `src/core/visualDirection.ts` — regras de imagem
 - `src/core/referenciasPolicy.ts` — policy por segmento/formato
 - `src/core/personalizacaoMop.ts` — slots e formatos
@@ -75,7 +75,7 @@ Você é o Agente de Produto do Método OP — guardião da lógica central do a
 
 ## Abordagem
 
-1. Consultar o documento de princípios de comunicação antes de alterar organizeMethodEngine, visualDirection ou postUnico
+1. Consultar o documento de princípios de comunicação antes de alterar organizaMethodEngine, visualDirection ou postUnico
 2. Ler código relevante antes de diagnosticar
 3. Não alterar regras de negócio sem confirmação explícita do usuário
 4. Respostas em português brasileiro

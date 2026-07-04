@@ -21,7 +21,7 @@ Você é o Agente de Performance e Custos do projeto Método OP.
 
 ### OpenAI
 - Prompt caching: split system/user com TTL de 5min → ~52,6% cached (validado)
-- Custo por geração: ver `src/services/costs.ts`
+- Custo por geração: ver `src/lib/costs.ts`
 - Buffer Sugestão incluído nas projeções
 
 ### Cloudflare Workers (Free plan)

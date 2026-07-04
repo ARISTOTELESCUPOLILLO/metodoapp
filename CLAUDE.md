@@ -6,7 +6,7 @@
 - **Build:** Vite + @cloudflare/vite-plugin
 - **Banco de dados:** Supabase (PostgreSQL, RLS, Storage)
 - **Geração de texto:** OpenAI GPT-4.1
-- **Geração de imagem:** fal.ai (flux)
+- **Geração de imagem:** fal.ai (fila) → modelo `openai/gpt-image-2` / `gpt-image-2/edit`
 - **Áudio/narração:** ElevenLabs
 - **Deploy:** `npm run deploy` → vite build + wrangler deploy
 - **Linguagem:** TypeScript (strict), React 18, CSS-in-JS via Tailwind
@@ -20,22 +20,21 @@ src/
     metodo-op/             # componentes do MOP e PU
     admin/                 # painel admin (UsersTab, CobrancasTab, etc.)
   core/
-    organizeMethodEngine.ts   # motor de geração MOP
+    organizaMethodEngine.ts   # motor de geração MOP
     visualDirection.ts        # regras de imagem (hierarquia produto/personagem)
     referenciasPolicy.ts      # policy de referências por segmento/formato
     personalizacaoMop.ts      # slots e formatos (S3V, S6V, S9V, carrossel, reels)
   services/
     postUnico.ts              # motor de geração PU
     regenerateWithKit.ts      # regen MOP com Kit Imagem
-    brandKit.ts               # CRUD do Kit de Marca (Supabase)
+    brandKit.ts               # CRUD + server functions do Kit de Marca (Supabase)
     api.ts                    # chamadas OpenAI e fal.ai
   lib/
     imageKit.functions.ts     # server functions Kit Imagem (Supabase Storage)
-    kit.functions.ts          # server functions Kit de Marca
   hooks/
     useAuth.ts                # autenticação Supabase
     useImpersonation.ts       # modo admin "Atuar como"
-    usePlan.ts                # planos e limites de uso
+    usePlanSlots.ts           # planos e limites de uso
   utils/
     storage.ts                # localStorage (form, kit, form-owner)
     sessionImageCache.ts      # cache de imagens MOP em memória + localStorage

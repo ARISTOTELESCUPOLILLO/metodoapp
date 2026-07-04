@@ -23,17 +23,17 @@ Você é o Agente de APIs e Integrações do projeto Método OP.
 - Arquivo principal: `src/services/api.ts`
 - Prompt caching: split system/user para aproveitar TTL de 5min (~52% cached)
 - Modelos usados: `gpt-4.1` para geração de conteúdo
-- Custos: ver `src/services/costs.ts`
+- Custos: ver `src/lib/costs.ts`
 
-### fal.ai (flux)
-- Geração de imagem: `src/services/api.ts` → `generatePostImage`
+### fal.ai (fila) — modelo openai/gpt-image-2
+- Geração de imagem: `src/services/api.ts` → `generatePostImage`; submissão via fila do fal.ai (`src/routes/api/generate-image.ts`)
+- Modelos: `openai/gpt-image-2` (sem referências) / `openai/gpt-image-2/edit` (com referências do Kit Imagem)
 - Reference images: array de URLs (signed URLs do Supabase Storage)
-- Parâmetros: aspect_ratio, num_images, guidance_scale
 - Formato: post (1:1 ou 4:5), reels (9:16)
 
-### ElevenLabs
-- Narração de reels
-- Arquivo: `src/services/elevenLabs.ts` (ou similar)
+### ElevenLabs (voz/narração)
+- Clonagem e TTS: `src/services/voiceClone.ts`
+- Rotas: `src/routes/api/tts-voice.ts` (TTS), `src/routes/api/clone-voice.ts` (clonagem)
 
 ### Meta (Instagram + Facebook)
 - Page Token dinâmico via System User ACCESS_TOKEN

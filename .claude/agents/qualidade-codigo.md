@@ -26,8 +26,8 @@ NODE_OPTIONS=--use-system-ca npx tsc --noEmit
 # Verificar lint
 npx eslint src/ --ext .ts,.tsx
 
-# Build completo
-npm run deploy
+# Build completo (sem deploy)
+npm run build
 ```
 
 ## Padrões do projeto
