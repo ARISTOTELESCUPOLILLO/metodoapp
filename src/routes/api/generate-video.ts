@@ -201,19 +201,23 @@ export const Route = createFileRoute("/api/generate-video")({
 
           console.info("[generate-video] mode=%s image_bytes=%d", videoMode, imageBase64.length);
 
-          // Pré-checagem de saldo (1 render). Usa usuário efetivo (teste quando admin impersona).
+          // Autenticação obrigatória — sem usuário efetivo, não gera (evita
+          // disparo do endpoint mais caro do sistema por requisição anônima).
           const effective = await resolveEffectiveUser(request).catch(() => null);
-          const userId = effective?.userId ?? null;
-          const impersonatedBy = effective?.impersonatedBy;
-          if (userId) {
-            try {
-              const { ok, reason } = await checkBalance(userId, 0, 1);
-              if (!ok) {
-                return Response.json({ error: balanceFailMessage(reason) }, { status: 402 });
-              }
-            } catch (e) {
-              console.warn("[balance pre-check video]", (e as Error).message);
+          if (!effective) {
+            return Response.json({ error: "Não autenticado" }, { status: 401 });
+          }
+          const userId = effective.userId;
+          const impersonatedBy = effective.impersonatedBy;
+
+          // Pré-checagem de saldo (1 render). Usa usuário efetivo (teste quando admin impersona).
+          try {
+            const { ok, reason } = await checkBalance(userId, 0, 1);
+            if (!ok) {
+              return Response.json({ error: balanceFailMessage(reason) }, { status: 402 });
             }
+          } catch (e) {
+            console.warn("[balance pre-check video]", (e as Error).message);
           }
 
           // Resolve voz clonada para o modo kit-voz.
