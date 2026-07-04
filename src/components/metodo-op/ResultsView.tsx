@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { BrandKit, FaixaEtaria, ImageKit, MethodOpResult, MoodCode } from "../../types";
 import { PersonagemGender } from "../../core/visualDirection";
 import { generateSequencePdf } from "../../utils/generatePdf";
@@ -127,9 +128,15 @@ export default function ResultsView({
       const filename = mopName({ company: kit.companyName, tipo: "plano", ext: "pdf" });
       const bytes = generateSequencePdf(result!, kit, mood);
       const base64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+      // Rota autenticada — envia o token de sessão (mesmo padrão de useReelsGeneration).
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
       await fetch("/api/supabase-pdf", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ companyName: kit.companyName, pdfBase64: base64, filename }),
       });
       // Auto-arquivamento foi substituído por botão "Arquivar" em cada box.

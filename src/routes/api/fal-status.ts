@@ -1,4 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getUserIdFromRequest } from "@/lib/usage.server";
+
+// URL real da fila do fal.ai — statusUrl/responseUrl devolvidos pelo submit
+// sempre começam com esse host. Validar contra ele fecha SSRF (impede que a
+// FAL_KEY seja enviada a um servidor arbitrário via query string).
+const FAL_QUEUE = "https://queue.fal.run";
 
 // Proxy de status para jobs assíncronos do fal.ai (Kling AI Avatar v2).
 // Frontend chama a cada 5s até receber status:'done' ou status:'failed'.
@@ -7,6 +13,12 @@ export const Route = createFileRoute("/api/fal-status")({
     handlers: {
       GET: async ({ request }) => {
         try {
+          // Rota autenticada — evita uso anônimo do proxy (que carrega a FAL_KEY).
+          const userId = await getUserIdFromRequest(request);
+          if (!userId) {
+            return Response.json({ status: "failed", error: "Não autenticado" }, { status: 401 });
+          }
+
           const url = new URL(request.url);
           const statusUrl = url.searchParams.get("statusUrl");
           const responseUrl = url.searchParams.get("responseUrl");
@@ -16,6 +28,11 @@ export const Route = createFileRoute("/api/fal-status")({
               { error: "statusUrl e responseUrl obrigatórios" },
               { status: 400 },
             );
+          }
+
+          // Anti-SSRF: só aceita URLs da fila oficial do fal.ai.
+          if (!statusUrl.startsWith(FAL_QUEUE) || !responseUrl.startsWith(FAL_QUEUE)) {
+            return Response.json({ status: "failed", error: "URL inválida" }, { status: 400 });
           }
 
           const falKey = process.env.FAL_KEY;
