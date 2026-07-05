@@ -8,7 +8,6 @@ export interface RefSelectorProps {
   segmento: BrandKit["segment"];
   modelo: ModeloOP | null;
   imageKit?: ImageKit;
-  extrasCarrossel: number;
 }
 
 // Botão "Gerar com refs" — só aparece se há seleção marcada E o kit tem imagens do tipo certo.

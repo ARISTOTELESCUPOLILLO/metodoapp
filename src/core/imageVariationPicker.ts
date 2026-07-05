@@ -97,14 +97,25 @@ export function pickImageVariationBlock(
       : variations;
   const variation = pickRandom(pool);
   const cameraStr = (() => {
-    if (mood === "OP-01") return `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. `;
+    // OP-01: a câmera já é sorteada e escrita na composição pela etapa de
+    // conteúdo (visualDirection.ts, mesmo bloco "VARIAÇÕES SORTEADAS") quando
+    // leituraCenica.composicao existe — sortear de novo aqui pode contradizer
+    // o ângulo que o GPT já registrou (ex.: "frontal" no texto vs. "lateral
+    // 3/4" aqui). OP-02 nunca recebe câmera no lado do conteúdo (só
+    // estrutura/gênero) e OP-03 usa câmera fixa sem sorteio — nenhum dos dois
+    // tem esse conflito, então continuam decidindo a câmera aqui sempre.
+    if (mood === "OP-01") {
+      return composicao ? "" : `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. `;
+    }
     if (mood === "OP-02") return `Câmera: ${pickRandom(IMPACTO_CAMERA_VARIATIONS)}. `;
     if (mood === "OP-03") return "Câmera: 35mm levemente alta, distância natural, grão sutil. ";
     return "";
   })();
 
   // Quando leituraCenica.composicao existe, a composição já está em cenaDetalhada —
-  // re-sortear aqui contradiz o que GPT-4.1 escreveu. Câmera e gênero ainda se aplicam.
+  // re-sortear aqui contradiz o que GPT-4.1 escreveu. Câmera (só OP-01, acima) e
+  // Estrutura (todos os moods deste bloco) são suprimidas nesse caso; gênero
+  // ainda se aplica.
   const estruturaBlock = composicao ? "" : `Estrutura: ${variation} `;
   // Gênero vem primeiro no bloco — é a restrição mais importante e não pode
   // ficar enterrada depois da câmera/estrutura (ver comentário acima).

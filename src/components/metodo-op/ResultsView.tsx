@@ -5,12 +5,7 @@ import { BrandKit, FaixaEtaria, ImageKit, MethodOpResult, MoodCode } from "../..
 import { PersonagemGender } from "../../core/visualDirection";
 import { generateSequencePdf } from "../../utils/generatePdf";
 import { mopName } from "../../utils/file";
-import {
-  resolveModelo,
-  ZERO_COTA,
-  type CotaPorTipo,
-  type ModeloOP,
-} from "../../core/personalizacaoMop";
+import { resolveModelo, type ModeloOP } from "../../core/personalizacaoMop";
 import { useAppProfile } from "../../contexts/ProfileContext";
 import { useImageGenAlert } from "./PreImageAlert";
 import { AnchorBanner } from "./results/AnchorBanner";
@@ -61,10 +56,10 @@ export default function ResultsView({
 }: Props) {
   const [savingPdf, setSavingPdf] = useState(false);
   const { guard, dialog } = useImageGenAlert();
-  const { cotaPersonalizados, isAdmin, refreshProfile } = useAppProfile();
+  const { refreshProfile } = useAppProfile();
 
-  // Força um refresh ao montar — evita defasagem entre o que o admin acabou
-  // de configurar (extras) e o que o app vê em cache.
+  // Força um refresh ao montar — evita defasagem entre dados de perfil
+  // atualizados (ex.: plano) e o que o app vê em cache.
   useEffect(() => {
     refreshProfile();
   }, [refreshProfile]);
@@ -101,14 +96,6 @@ export default function ResultsView({
   const trackResolved: "cinematica" | "visual" | "experimentacao" | undefined =
     hasFinal && !hasReels && trackRaw !== "experimentacao" ? "visual" : trackRaw;
   const modelo: ModeloOP | null = inferredSize ? resolveModelo(trackResolved, inferredSize) : null;
-
-  // Extras de carrossel agregados — usado apenas como "flag de liberação" para
-  // SERVIÇOS/MARCA exibirem produtos no carrossel. Não há débito por uso.
-  const INF = 9999;
-  const cotaPorTipo: CotaPorTipo = isAdmin
-    ? { estatico: INF, carrossel: INF, estatico_final: INF, reels: INF }
-    : cotaPersonalizados || ZERO_COTA;
-  const extrasCarrossel = cotaPorTipo.carrossel || 0;
 
   // Gênero do personagem por bloco (estático + carrossel + fechamento + reels)
   // — ver useBlockGenders.
@@ -256,7 +243,6 @@ export default function ResultsView({
                   segmento={kit.segment}
                   modelo={modelo}
                   imageKit={imageKit}
-                  extrasCarrossel={extrasCarrossel}
                   onImageGenerated={onImageGenerated}
                   userId={userId}
                   forcedGender={bg?.estatico ?? "homem"}
@@ -279,7 +265,6 @@ export default function ResultsView({
                   segmento={kit.segment}
                   modelo={modelo}
                   imageKit={imageKit}
-                  extrasCarrossel={extrasCarrossel}
                   onImageGenerated={onImageGenerated}
                   userId={userId}
                   forcedGender={bg?.final ?? "homem"}
@@ -302,7 +287,6 @@ export default function ResultsView({
                   segmento={kit.segment}
                   modelo={modelo}
                   imageKit={imageKit}
-                  extrasCarrossel={extrasCarrossel}
                   onImageGenerated={onImageGenerated}
                   userId={userId}
                   forcedGenders={bg?.carrossel ?? item.cards.map(() => "homem" as PersonagemGender)}
@@ -326,7 +310,6 @@ export default function ResultsView({
                   segmento={kit.segment}
                   modelo={modelo}
                   imageKit={imageKit}
-                  extrasCarrossel={extrasCarrossel}
                   onImageGenerated={onImageGenerated}
                   userId={userId}
                   forcedGender={bg?.reels ?? "homem"}

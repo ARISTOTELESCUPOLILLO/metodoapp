@@ -53,9 +53,18 @@ export function useAnchorControl(
           ? "mulher"
           : "homem"
       : undefined;
+  // marcadores_profissionais (ex.: "roupa casual do dia a dia, postura natural
+  // e atenta") é gerado pela IA junto com faixa_etaria mas ficava sem uso —
+  // já era o formato documentado aqui (ver comentário em buildImagePrompt.ts:
+  // "homem, 35-45 anos, camisa polo azul, postura técnica"), só faltava
+  // incluir. ambiente_base (achado na mesma auditoria) NÃO entra aqui —
+  // descreve o AMBIENTE típico do público-âncora, não um traço da pessoa, e
+  // colidiria com leituraCenica.ambiente (por peça); fica como decisão em
+  // aberto sobre como reconciliar os dois antes de fiar.
   const anchoraPersonagem: string | undefined =
     ancoragem && anchorMode === "ancora"
-      ? [anchorAgeEffective].filter(Boolean).join(", ") || undefined
+      ? [anchorAgeEffective, ancoragem.marcadores_profissionais].filter(Boolean).join(", ") ||
+        undefined
       : undefined;
   const ancoragePapel: string | undefined = ancoragem?.papel;
   const anchorControl: AnchorControl | undefined = ancoragem

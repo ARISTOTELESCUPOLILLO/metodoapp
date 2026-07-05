@@ -11,6 +11,22 @@ import { buildProductHierarchyBlock } from "../../core/visualDirection";
 
 const MOODS_CLAROS: ReadonlySet<MoodCode> = new Set<MoodCode>(["OP-01", "OP-06"]);
 
+// Tipos de figurino que a IA escolhe livremente por contexto quando não há
+// uniforme cadastrado — sem nenhum sinal de variedade, o modelo converge
+// sempre pro mesmo tipo "seguro" (ex.: sempre camisa social/polo), mesmo
+// quando o seed de COR (clothingSeed/buildClothingPool acima) já varia por
+// sessão. Reusa o mesmo seed com um offset pra sugerir um PONTO DE PARTIDA
+// de TIPO diferente por sessão — o modelo ainda pode ignorar se não combinar
+// com a cena (a frase deixa isso explícito), não é trava como o uniforme.
+const GARMENT_TYPE_POOL: readonly string[] = [
+  "camisa polo",
+  "camisa social",
+  "jaleco ou avental profissional",
+  "moletom ou casual",
+  "blazer",
+  "regata ou roupa de treino",
+];
+
 // Variações de ângulo + distância de câmera para o cenário do carrossel —
 // o MESMO cenário é compartilhado pelos 5 cards, então sem variação os fundos
 // saem quase idênticos. Cada item troca o ENQUADRAMENTO, nunca o lugar: o
@@ -71,9 +87,23 @@ export function buildAnchorPrefix(
             return ` COR DO VESTUÁRIO: ${pool[idx]}`;
           })()
         : "";
+    const garmentTypeHint = !refs.uniforme
+      ? (() => {
+          const seed = clothingSeed ?? Math.random();
+          // Offset de 0.37 sobre o mesmo seed usado na cor, pra que a mesma
+          // sessão não sempre caia no mesmo par cor+tipo (ex.: sempre "branco
+          // + camisa social") — sem precisar de um segundo seed independente.
+          const shifted = (seed + 0.37) % 1;
+          const idx = Math.min(
+            GARMENT_TYPE_POOL.length - 1,
+            Math.floor(shifted * GARMENT_TYPE_POOL.length),
+          );
+          return GARMENT_TYPE_POOL[idx];
+        })()
+      : "";
     const figurinoSentence = refs.uniforme
       ? "Vista o avatar com o uniforme obrigatório da próxima imagem. Não escolha figurino livre."
-      : "Vista o avatar com roupa NOVA, coerente com a cena e o contexto da empresa descritos abaixo (pode ser polo, camisa social, jaleco, uniforme, regata de treino, moletom, terno — escolha o que faz sentido para a situação e o ambiente).";
+      : `Vista o avatar com roupa NOVA, coerente com a cena e o contexto da empresa descritos abaixo — ponto de partida sugerido para esta sequência: ${garmentTypeHint} (pode trocar por polo, camisa social, jaleco, uniforme, regata de treino, moletom ou terno se o sugerido não combinar com a cena e o ambiente — o importante é não repetir sempre a mesma escolha "segura" entre gerações diferentes).`;
     lines.push(
       `IMAGEM #${idx} = AVATAR (referência de IDENTIDADE, não de figurino). PRESERVE EXATAMENTE: rosto, traços faciais, idade, cabelo, barba, tom de pele, etnia, sexo, biótipo/estatura/porte físico, óculos e acessórios fixos do rosto. NÃO rejuvenesça, NÃO envelheça, NÃO troque etnia, NÃO mude o gênero, NÃO altere o porte físico. IGNORE a roupa, a cor da roupa, a pose exata e os acessórios de vestuário (relógio, anéis, colares) da foto — eles servem só pra mostrar a pessoa, não o figurino. ${figurinoSentence}${clothingHint}`,
     );

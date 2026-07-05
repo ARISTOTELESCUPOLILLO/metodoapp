@@ -29,9 +29,6 @@ interface Props {
   posicao: number;
   // Card do carrossel (1..5), quando aplicável.
   cardCarrossel?: number;
-  // Extras de carrossel já agregados (P1+P2+B). > 0 libera produtos para
-  // SERVIÇO/MARCA no carrossel.
-  extrasCarrossel: number;
   kit: BrandKit;
   imageKit: ImageKit;
   mood: MoodCode;
@@ -89,7 +86,6 @@ export default function UsoReferenciasDia(props: Props) {
     formato,
     posicao,
     cardCarrossel,
-    extrasCarrossel,
     kit,
     imageKit,
     mood,
@@ -139,7 +135,6 @@ export default function UsoReferenciasDia(props: Props) {
     formato,
     posicao,
     cardCarrossel,
-    extrasCarrossel,
     kit,
     imageKit,
     mood,

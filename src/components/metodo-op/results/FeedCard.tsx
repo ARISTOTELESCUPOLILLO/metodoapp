@@ -36,7 +36,6 @@ export function FeedCard({
   segmento,
   modelo,
   imageKit,
-  extrasCarrossel,
   onImageGenerated,
   userId,
   forcedGender,
@@ -198,7 +197,6 @@ export function FeedCard({
             modelo={modelo}
             formato="estatico"
             posicao={dayNumber}
-            extrasCarrossel={extrasCarrossel}
             kit={kit}
             imageKit={imageKit ?? emptyImageKit}
             mood={mood}

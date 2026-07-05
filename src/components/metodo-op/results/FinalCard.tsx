@@ -36,7 +36,6 @@ export function FinalCard({
   segmento,
   modelo,
   imageKit,
-  extrasCarrossel,
   onImageGenerated,
   userId,
   forcedGender,
@@ -193,7 +192,6 @@ export function FinalCard({
             modelo={modelo}
             formato="estatico_final"
             posicao={dayNumber}
-            extrasCarrossel={extrasCarrossel}
             kit={kit}
             imageKit={imageKit ?? emptyImageKit}
             mood={mood}

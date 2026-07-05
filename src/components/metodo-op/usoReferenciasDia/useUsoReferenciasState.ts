@@ -7,7 +7,7 @@ import { lsGetRaw, lsSetRaw } from "../../../lib/storage/store";
 import type { BrandKit, ImageKit, MoodCode } from "../../../types";
 import { regenerateWithKit } from "../../../services/regenerateWithKit";
 import type { ModeloOP, SlotFormato, SlotPersonalizacao } from "../../../core/personalizacaoMop";
-import { policyComExtras, policyPorFormato, type RefPolicy } from "../../../core/referenciasPolicy";
+import { policyPorFormato, type RefPolicy } from "../../../core/referenciasPolicy";
 import type { PersonagemGender } from "../../../core/visualDirection";
 
 interface Params {
@@ -16,7 +16,6 @@ interface Params {
   formato: SlotFormato;
   posicao: number;
   cardCarrossel?: number;
-  extrasCarrossel: number;
   kit: BrandKit;
   imageKit: ImageKit;
   mood: MoodCode;
@@ -51,7 +50,6 @@ export function useUsoReferenciasState(params: Params) {
     formato,
     posicao,
     cardCarrossel,
-    extrasCarrossel,
     kit,
     imageKit,
     mood,
@@ -69,16 +67,10 @@ export function useUsoReferenciasState(params: Params) {
     clothingSeed,
   } = params;
 
-  // Policy efetiva (com extras de carrossel quando se aplica)
-  const policyBase = useMemo(
+  const policy: RefPolicy = useMemo(
     () => policyPorFormato(segmento, formato, modelo),
     [segmento, formato, modelo],
   );
-  const policy: RefPolicy = useMemo(
-    () => policyComExtras(policyBase, { segmento, formato, modelo, extrasCarrossel }),
-    [policyBase, segmento, formato, modelo, extrasCarrossel],
-  );
-  // (extra de carrossel já está embutido na `policy.produtos` via policyComExtras)
 
   // Disponibilidade real no Kit
   const cenariosDisp = useMemo(

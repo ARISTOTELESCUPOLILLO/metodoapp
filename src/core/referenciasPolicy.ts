@@ -69,20 +69,6 @@ export function policyPorFormato(
   return { avatar: true, fachada: true, cenarios: 1, produtos: 0 };
 }
 
-// Compat: extras personalizados foram removidos. A função permanece para
-// não quebrar imports, mas é no-op.
-export function policyComExtras(
-  base: RefPolicy,
-  _ctx: {
-    segmento: Segment;
-    formato: SlotFormato;
-    modelo: ModeloOP | null;
-    extrasCarrossel: number;
-  },
-): RefPolicy {
-  return base;
-}
-
 // Conta quantas imagens, no total, o usuário pode escolher para esta peça.
 export function totalImagens(p: RefPolicy): number {
   return (p.avatar ? 1 : 0) + (p.fachada ? 1 : 0) + p.cenarios + p.produtos;

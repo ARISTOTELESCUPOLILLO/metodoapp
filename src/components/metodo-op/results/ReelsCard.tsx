@@ -30,7 +30,6 @@ export function ReelsCard({
   segmento,
   modelo,
   imageKit,
-  extrasCarrossel,
   onImageGenerated,
   userId,
   forcedGender,
@@ -154,7 +153,6 @@ export function ReelsCard({
             modelo={modelo}
             formato="reels"
             posicao={dayNumber}
-            extrasCarrossel={extrasCarrossel}
             kit={kit}
             imageKit={imageKit ?? emptyImageKit}
             mood={mood}

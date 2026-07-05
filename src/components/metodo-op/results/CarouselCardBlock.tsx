@@ -28,7 +28,6 @@ export function CarouselCardBlock({
   segmento,
   modelo,
   imageKit,
-  extrasCarrossel,
   onImageGenerated,
   userId,
   forcedGenders,
@@ -178,7 +177,6 @@ export function CarouselCardBlock({
               modelo={modelo}
               formato="carrossel"
               posicao={dayNumber}
-              extrasCarrossel={extrasCarrossel}
               kit={kit}
               imageKit={imageKit ?? emptyImageKit}
               mood={mood}

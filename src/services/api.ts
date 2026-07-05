@@ -3,7 +3,7 @@ import { LogoPosition, MoodCode, SecondaryFont } from "../types";
 import { generateImageAsync } from "./imageGeneration";
 import { buildImagePrompt } from "./api/buildImagePrompt";
 import { moodVisualInstructions } from "./api/moodVisualInstructions";
-import { pickDeviceTypeLine, isNonDigitalActivity } from "../utils/promptRules";
+import { pickDeviceTypeLine, isNonDigitalActivity, buildNoDeviceRule } from "../utils/promptRules";
 import { buildReferenceAnchorWrapper } from "../shared/visual/referenceBlocks";
 
 export { generateMethodContent } from "./api/generateMethodContent";
@@ -136,10 +136,17 @@ export async function generatePostImage(params: {
       }`
     : "";
 
-  // Regra de dispositivos digitais para Reels — alinhada com buildDeviceRule() de promptRules.ts.
+  // Regra de dispositivos digitais para Reels. Ramo SEM dispositivo (ofício
+  // manual/físico) reusa a mesma função de promptRules.ts — é a mesma regra,
+  // sem diferença real para o formato Reels. Ramo COM dispositivo permitido
+  // é uma variante PROPOSITAL (não duplicação acidental): o Reels exige
+  // porta-voz sempre de frente/olhando pra câmera (rosto sempre visível,
+  // falando) — mais restrito que o enquadramento "câmera lateral/oblíqua"
+  // que buildDeviceRule() permite para posts estáticos. Se o texto abaixo for
+  // revisado, conferir se buildDeviceRule() ganhou alguma regra nova de
+  // física da tela que também deveria valer aqui.
   const DEVICE_RULE_REELS = isNonDigitalActivity(mainActivity)
-    ? `\n\n⚠ DISPOSITIVOS DIGITAIS — PROIBIDOS NESTE REELS: o ofício real do porta-voz é manual, físico ou artístico e NÃO passa por tela. PROIBIDO incluir notebook, laptop, tablet, celular, monitor, computador ou qualquer dispositivo digital na composição, mesmo como elemento de apoio.
-NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`
+    ? `\n\n${buildNoDeviceRule()}`
     : `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
 PESSOA FÍSICA NA CENA: o porta-voz deve aparecer como PESSOA REAL E FÍSICA dentro do ambiente — nunca como imagem exibida na tela ou carcaça de qualquer dispositivo.
 DISPOSITIVO: pode estar aberto, em mãos, em uso ou em qualquer posição natural — NÃO forçar fechado. Como o porta-voz está sempre de frente para a câmera (rosto sempre visível, regra do Reels), o dispositivo pode mostrar a TELA à câmera (lateralmente, sem tapar o rosto) OU o VERSO LISO (quando segurado à frente do corpo, entre o porta-voz e a câmera) — as duas geometrias são naturais; o que nunca pode existir é conteúdo no verso/carcaça. Quando a tela estiver visível à câmera: desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado) que sugere interface ou atividade; presença visual de conteúdo é desejável, opacidade total não. PROIBIDO: tela completamente apagada/escura em dispositivo em uso, conteúdo legível, logo reconhecível, interface clara, dashboard, gráfico, planilha, desfoque forte, borrão pesado ou qualquer efeito que pareça defeito de renderização — a tela deve parecer apenas levemente fora de foco, quase nítida.

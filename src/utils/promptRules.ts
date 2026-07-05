@@ -111,7 +111,7 @@ export function isNonDigitalActivity(mainActivity?: string): boolean {
   return NON_DIGITAL_ACTIVITY_KEYWORDS.some((kw) => normalized.includes(kw));
 }
 
-function buildNoDeviceRule(): string {
+export function buildNoDeviceRule(): string {
   return `⚠ DISPOSITIVOS DIGITAIS — PROIBIDOS NESTA CENA: o ofício real da empresa/profissional é manual, físico ou artístico e NÃO passa por tela. PROIBIDO incluir notebook, laptop, tablet, celular, monitor, computador ou qualquer dispositivo digital na composição, mesmo como elemento de apoio. A cena mostra o trabalho real com as mãos, ferramentas, materiais ou instrumentos do próprio ofício.
 NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`;
 }
@@ -182,4 +182,15 @@ export const HUMANIZACAO_RULE = `⚠ HUMANIZAÇÃO: imagens devem parecer humana
 
 export const FORBIDDEN_MOOD_WORDS = `PALAVRAS PROIBIDAS NA IMAGEM: NUNCA escreva, desenhe ou renderize como texto/lettering/título/etiqueta, em nenhum lugar da peça, as palavras CLAREZA, IMPACTO, INSTANTE, FRAGMENTO, DESVIO, SILÊNCIO, MOOD, OP-01, OP-02, OP-03, OP-04, OP-05, OP-06 — são códigos internos do sistema e nunca devem aparecer na arte final.`;
 
+// Camada GLOBAL do anti-clichê (roda em toda geração, MOP e PU). Duas outras
+// camadas reforçam PARTE dos mesmos itens em escopo mais estreito — NÃO são
+// cópias, são reforço em nível diferente (auditoria 2026-06-16/2026-07-05):
+// `OBJETIVO_VISUAL_EXCLUSIONS.oportunidade` (objetivoConfig.ts) estende
+// "porta entreaberta"/"seta pra cima" com uma lista maior específica de
+// oportunidade (portal luminoso, corredor, pôr do sol); `VISUAL_DIRECTIONS`
+// OP-04/OP-05 (visualDirection.lexicon.ts) reforça "kit papelaria genérico"/
+// "porta luminosa" só para os moods Fragmento/Desvio. Ao adicionar um clichê
+// novo aqui que já apareça num desses dois, considere se vale reforçar lá
+// também — não mesclar as 3 listas numa só (perderiam a especificidade por
+// objetivo/mood que justifica a redundância).
 export const CONCEITO_FIRST_RULE = `⚠ CONCEITO-FIRST — INEGOCIÁVEL: A cena nasce do conceito do título. O sujeito, verbo ou promessa central do título deve aparecer visualmente na imagem — a imagem NUNCA pode negar o que o título afirma. Se o título menciona equipe ou interação, há ao menos dois sujeitos ou troca visível entre pessoas; se menciona decisão, há o ato concreto de decidir; se menciona método ou processo, há ordem e etapas visíveis; se menciona escuta, há presença de interlocutor ou elemento de recepção. PROIBIDO como elemento central da cena: porta entreaberta com feixe de luz dourada · kit papelaria corporativa genérico (cartões + caneta + clipe sem relação com o tema do título) · mão escrevendo em caderno como substituto de cena concreta com personagem. PROIBIDO — TRADUÇÃO LITERAL DE PALAVRAS DO TÍTULO EM SÍMBOLOS GENÉRICOS: "ideia" ≠ lâmpada acesa; "crescimento" ou "ação" ≠ seta apontando para cima; "conexão" ou "juntos" ≠ mosquetões/carabiner/corda de escalada/engrenagens; "estratégia" ≠ peça de xadrez; "inovação" ≠ foguete; "sucesso" ≠ troféu ou pódio; "planejamento" ≠ Post-it com ícones de negócios; "avançar" ou "longe" ≠ degraus/pódio/horizonte vazio. A cena mostra o que acontece no negócio real quando a promessa do título se realiza — não o símbolo universal da palavra. ADJETIVOS/ADVÉRBIOS DO TÍTULO ancoram-se no ofício, não na sua propriedade física literal: "rápido" = eficiência no atendimento, não velocidade; "claro" = transparência, não iluminação; "forte" = coesão da equipe, não músculo; "sólido" = confiança, não material rígido. Exceção: quando o modificador é visível no negócio (equipe organizada, escritório cheio, produto artesanal), mantenha-o literal. SE O TÍTULO TEM "PESSOAS" COMO SUJEITO EXPLÍCITO, PESSOAS REAIS APARECEM NA IMAGEM — nunca espaço decorativo vazio, nunca pódio sem ocupante. NEGATIVE: lightbulb, upward arrow, chess piece, gear, carabiner, climbing rope, rocket, trophy, podium, post-it with business icons, empty stage as main element.`;

@@ -70,6 +70,10 @@ export const OBJETIVO_VISUAL_EXCLUSIONS: Record<Exclude<PostUnicoObjetivo, "nenh
     "Evitar skyline, prédio genérico, pessoa olhando janela e stock corporativo sem personalidade. ROSTO HUMANO É PERMITIDO E BEM-VINDO: a peça institucional pode mostrar pessoa com rosto visível — profissional com olhar direto ou contextual — quando isso comunicar melhor identidade e valores da marca.",
   promocao:
     "Evitar sacola genérica, carrinho de supermercado, etiqueta flutuante, porcentagem como elemento principal e aparência de panfleto.",
+  // Reforço PROPOSITAL de itens que já estão em CONCEITO_FIRST_RULE
+  // (promptRules.ts) — "oportunidade" tende especialmente a essas metáforas
+  // (porta/luz/caminho), então a lista aqui é mais extensa que a global. Ver
+  // comentário acima de CONCEITO_FIRST_RULE antes de mesclar/remover.
   oportunidade:
     'PROIBIDO ABSOLUTO: porta entreaberta com feixe de luz dourada, portal luminoso, arco com luz, luz no fim do túnel, corredor de qualquer tipo (concreto, madeira, luminoso ou arquitetônico), pôr do sol como metáfora, pessoa correndo, lâmpada isolada como símbolo de ideia, seta apontando para cima, Post-it com ícones de negócios, mosquetão/carabiner/corda de escalada/equipamento de montanhismo como metáfora de conexão ou parceria, degraus/pódio/palco vazio como metáfora de avanço. Esses elementos são clichês motivacionais banidos — não aparecem mesmo que o briefing não os cite. SE O TÍTULO TEM "PESSOAS" COMO SUJEITO, PESSOAS REAIS APARECEM — nunca espaço vazio/decorativo. NEGATIVE: glowing doorway, corridor, hallway, architectural passageway, lightbulb, upward arrow, carabiner, climbing rope, post-it icons, running person, empty podium, empty stage.',
   aviso: "Evitar alerta exagerado, placa genérica, triângulo de perigo e visual burocrático.",
