@@ -243,8 +243,9 @@ const VAGUE_CLOSING_ADJECTIVE_RE =
   /^(certos?|certas?|ideal|ideais|perfeitos?|perfeitas?|adequados?|adequadas?|corretos?|corretas?|apropriados?|apropriadas?)$/;
 
 // Palavras funcionais ignoradas ao extrair o "núcleo" do nome do elemento
-// concreto (família b) — sobre texto já normalizado (sem acento).
-const ITEM_NAME_STOPWORDS = new Set([
+// concreto (família b, e checkItemNameDrift abaixo) — sobre texto já
+// normalizado (sem acento).
+export const ITEM_NAME_STOPWORDS = new Set([
   "o",
   "a",
   "os",
@@ -323,4 +324,86 @@ export function checkWeakEnding(sugestao: string, concreteItem?: string | null):
   }
 
   return motivos;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — deriva do próprio elemento concreto e reescreve o nome
+// do produto/serviço (auditoria 2026-07-05): "Aplicativo Método OP" virando
+// "Ferramenta Método OP", "Método OP digital", "Uso do Método OP" entre
+// gerações da MESMA sessão. O núcleo da frase (ver SINTAXE — NÚCLEO DA FRASE
+// em suggest-keyinfo.ts) deve nomear o elemento concreto — não uma paráfrase
+// dele. Determinístico: exige que todas as palavras significativas do nome
+// cadastrado apareçam literalmente na sugestão. Só roda para nomes curtos
+// (até 5 palavras significativas) — nomes cadastrados mais longos já ocupam
+// sozinhos boa parte do limite de 7 palavras da frase, e exigir literalidade
+// total nesses casos sobraria pouco ou nenhum espaço pro complemento.
+// ─────────────────────────────────────────────────────────────────────────
+
+const ITEM_NAME_DRIFT_MAX_CORE_TOKENS = 5;
+
+export function checkItemNameDrift(sugestao: string, concreteItem?: string | null): string[] {
+  if (!concreteItem) return [];
+  const itemTokens = normalizeForCompare(concreteItem)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((t) => t && !ITEM_NAME_STOPWORDS.has(t));
+  if (!itemTokens.length || itemTokens.length > ITEM_NAME_DRIFT_MAX_CORE_TOKENS) return [];
+
+  const sugTokens = new Set(
+    normalizeForCompare(sugestao)
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter(Boolean),
+  );
+  const missing = itemTokens.filter((t) => !sugTokens.has(t));
+  if (!missing.length) return [];
+
+  return [
+    `nome do elemento concreto reescrito: a sugestão deveria nomear "${concreteItem}" mas não usa a(s) palavra(s) "${missing.join(", ")}" — use o nome exato do item, sem parafrasear ou trocar por sinônimo`,
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — poda determinística do fecho fraco (E2, sem custo de
+// API — auditoria 2026-07-05, PRINCÍPIO DO FECHO DA FRASE, doc mestre 1.6):
+// quando as tentativas de regeneração se esgotam e a sugestão AINDA reprova
+// por fecho fraco, corta o trecho já sabidamente errado em vez de entregar
+// a frase reprovada como está. Só cobre as famílias (a) ocasião solta e (c)
+// qualificador vago de checkWeakEnding — ambas são "lixo pendurado no fim"
+// que dá pra remover sem inventar conteúdo. A família (b) (nome do próprio
+// item como fecho) NÃO é tratada aqui: removê-la apagaria o próprio núcleo
+// da frase (o item concreto), piorando o resultado em vez de consertar —
+// esse caso fica sem poda determinística possível, cabe à regeneração via
+// LLM (loop de tentativas) ou é entregue como está no pior caso.
+// Retorna null quando não há nada seguro para podar, ou quando a poda
+// deixaria a frase abaixo do piso de 4 palavras (nenhuma poda é melhor que
+// uma frase mutilada).
+// ─────────────────────────────────────────────────────────────────────────
+
+export function pruneWeakEnding(sugestao: string): string | null {
+  const trailingPunct = sugestao.match(/[.!?…]+\s*$/)?.[0] ?? "";
+  const core = trailingPunct ? sugestao.slice(0, -trailingPunct.length) : sugestao;
+  const normCore = normalizeForCompare(core);
+
+  let pruned: string | null = null;
+
+  const occMatch = normCore.match(OCCASION_END_RE);
+  if (occMatch) {
+    const occWordCount = occMatch[0].split(/\s+/).filter(Boolean).length;
+    const words = core.trim().split(/\s+/).filter(Boolean);
+    pruned = words.slice(0, Math.max(0, words.length - occWordCount)).join(" ");
+  } else {
+    const tokens = core.trim().split(/\s+/).filter(Boolean);
+    const lastNorm = normalizeForCompare(tokens[tokens.length - 1] || "").replace(
+      /[^\p{L}\p{N}]/gu,
+      "",
+    );
+    if (VAGUE_CLOSING_ADJECTIVE_RE.test(lastNorm)) {
+      pruned = tokens.slice(0, -1).join(" ");
+    }
+  }
+
+  if (pruned === null) return null;
+  pruned = pruned.replace(/[,;:\-–—]+$/, "").trim();
+  const wordCount = pruned.split(/\s+/).filter(Boolean).length;
+  if (!pruned || wordCount < 4) return null;
+  return pruned;
 }

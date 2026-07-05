@@ -230,6 +230,19 @@ algo concreto e específico do negócio. Três famílias de fecho fraco ficam pr
 sem resultado ("no carnaval", "no fim de ano"), (c) o nome do próprio item/produto
 como última palavra. Vale para MOP e PU.
 
+REFINAMENTO DA FAMÍLIA (a) — QUALIFICADOR VAZIO (decidido por Aristóteles em
+05/07/2026, a partir de novos casos reais: "computador seguro", "vendas seguras",
+"briefing preciso", "leads qualificados", "Aplicativo Método OP exclusivo"): o defeito
+não é uma lista fechada de palavras proibidas — é um PADRÃO. Toda vez que a frase
+termina em [substantivo do complemento] + [adjetivo], e esse adjetivo não teria como
+ser diferente (nenhuma empresa anunciaria o oposto — "computador inseguro", "briefing
+impreciso"), o adjetivo é vazio: ele qualifica a palavra anterior sem especificar nada
+concreto novo, só preenche espaço. Uma lista de palavras proibidas nunca resolve isso
+de verdade, porque qualquer adjetivo genérico pode ocupar essa posição — o teste certo
+não é "essa palavra está na lista?", é "a última palavra especifica algo concreto
+sobre o que vem antes dela, ou só qualifica de forma genérica/redundante?". Esse teste
+é semântico, não léxico — cabe ao juiz que avalia a Sugestão, não a uma regex.
+
 Por quê: a Sugestão é a semente de tudo que vem depois — título, texto, legenda e
 imagem nascem dela. Se a semente deixa o pensamento em aberto, todas as peças herdam
 a vagueza. Por isso a Sugestão é APENAS O PRIMEIRO lugar onde o princípio vale —
@@ -243,9 +256,17 @@ determinístico de validação — foi por isso que as sugestões com fecho em o
 calendário e fecho no nome do produto passaram sem serem pegas. Diagnóstico completo
 numa investigação da mesma data.
 
-Status de implementação: DECISÃO REGISTRADA. Reforço pendente (próximo passo depois
-deste registro): validação determinística do fecho, reconciliação com a lente
-"Oportunidade" (que empurra para ocasiões de calendário) e juiz semântico leve.
+Status de implementação: reforço parcial já existia (checkWeakEnding + judgeFechoSugestao,
+implementados em 04/07/2026) mas com dois furos encontrados numa auditoria de casos
+reais em 05/07/2026: (1) as listas fixas de ocasião/qualificador vago não cobriam
+várias palavras reais que violam o princípio (ver REFINAMENTO acima), e (2) o juiz era
+fail-open enviesado a aprovar mesmo em dúvida real, e a frase reprovada pelo
+determinístico ainda assim era entregue ao esgotar as tentativas (sem bloqueio duro).
+Reforço em andamento em 05/07/2026: juiz estrutural único (fecho + núcleo + linguagem/
+jargão + genérico-demais) com viés invertido — só falha técnica/timeout permanece
+fail-open; dúvida real sobre o conteúdo passa a reprovar — e fallback determinístico
+final (poda a frase) para nunca mais entregar uma sugestão que o próprio sistema sabe
+estar quebrada.
 
 ============================================================
 REGRAS DE PRODUÇÃO (operacionais, não são princípios de comunicação)

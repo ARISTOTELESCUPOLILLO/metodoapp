@@ -31,11 +31,7 @@ export {
 
 // ── Morfologia e numérico ──────────────────────────────────────────────────────
 import { checkMorphRepetition, checkNumericClaims } from "./morphValidation";
-export {
-  checkMorphRepetition,
-  normalizeForCompare,
-  checkNumericClaims,
-} from "./morphValidation";
+export { checkMorphRepetition, normalizeForCompare, checkNumericClaims } from "./morphValidation";
 
 // ── Título ────────────────────────────────────────────────────────────────────
 import {
@@ -59,6 +55,8 @@ export {
   checkRepeatedOpening,
   checkLensNameLeak,
   checkWeakEnding,
+  checkItemNameDrift,
+  pruneWeakEnding,
 } from "./sugestaoValidation";
 
 // Faixa de palavras do título (mesma usada no prompt e em
@@ -71,7 +69,6 @@ export {
 // ideia até quebrar a gramática (ex.: "Rotina de ajustes prévios conta").
 export const TITULO_MIN_WORDS = 4;
 export const TITULO_MAX_WORDS = 6;
-
 
 export function validateTitulo(titulo: string): string[] {
   const motivos: string[] = [];
@@ -159,7 +156,6 @@ export function validateSugestao(sugestao: string, maxWords = 7): string[] {
 
   return motivos;
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────
 // E4 — limpeza determinística (fallback final, sem chamada de API)

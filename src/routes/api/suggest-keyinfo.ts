@@ -18,6 +18,8 @@ import {
   checkRepeatedOpening,
   checkLensNameLeak,
   checkWeakEnding,
+  checkItemNameDrift,
+  pruneWeakEnding,
 } from "@/core/textValidation";
 import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 
@@ -30,6 +32,14 @@ import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 // para o chamador reforçar no prompt que o ÂNGULO precisa variar bastante
 // (ver elementoConcretoBlock), já que a lente sozinha não basta quando o
 // núcleo da frase é forçosamente o mesmo (ver SINTAXE — NÚCLEO DA FRASE).
+// Decisão de produto (Aristóteles, 05/07/2026, ver Bloco C da auditoria de
+// 05/07/2026): quando só 1 item está marcado, ele vira ÂNCORA automática —
+// nunca sai do rodízio, só varia o ÂNGULO (lente) entre tentativas. Isso já
+// acontece matematicamente aqui embaixo (startIdx = (attempt+seed) % 1 é
+// sempre 0), então não precisa de ramo condicional novo: com 1 único item,
+// a rotação degenera pra sempre devolver esse mesmo item. Com 2+ itens
+// marcados, o rodízio normal entre eles continua sendo o comportamento
+// correto (o usuário marcou vários de propósito, pool de variação).
 function pickConcreteItem(
   items: string[],
   attempt: number,
@@ -201,34 +211,51 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
   },
 ];
 
-// ── Juiz semântico leve do FECHO DA FRASE (backstop conservador) ──────────
-// PRINCÍPIO DO FECHO DA FRASE (documento de princípios, topo + entrada 1.6):
-// as últimas palavras da Sugestão precisam nomear um resultado/benefício
-// concreto. As checagens determinísticas (checkWeakEnding + as demais) são a
-// primeira linha; este juiz só roda quando TODAS elas passaram — é um
-// backstop para fechos vagos que padrão nenhum pega, NUNCA mais rígido que
-// elas. Viés explícito de aprovar: só reprova com certeza (instrução no
-// prompt). Fail-open OBRIGATÓRIO: erro, timeout, JSON inválido ou resposta
-// ambígua → fecho aceito (true) — falha técnica nunca trava o clique do
-// usuário. Custo absorvido no mesmo evento de Sugestão (COST_USD.sugestao),
-// sem métrica separada (revisão de custos pode reavaliar depois).
-const JUDGE_FECHO_TIMEOUT_MS = 6_000;
+// ── Juiz estrutural único da Sugestão (backstop, fail-closed em dúvida real) ──
+// PRINCÍPIO DO FECHO DA FRASE (documento de princípios, topo + entrada 1.6,
+// refinado em 05/07/2026) + auditoria de casos reais de 05/07/2026: o juiz
+// anterior avaliava só o FECHO e tinha viés de aprovar em dúvida — o que
+// deixava passar fecho vago fora dos exemplos do prompt, núcleo abstrato
+// ("Escolha certa", "Falta do..."), jargão de marketing ("leads", "tráfego",
+// "briefing") e slogan genérico ("Marketing digital para gerar mais vendas").
+// Nenhuma dessas 4 falhas cabe em lista fixa de palavras — são semânticas,
+// então viram critério de um juiz único (1 chamada, 4 perguntas) em vez de
+// 4 checagens de regex fadadas a ficar sempre incompletas.
+// As checagens determinísticas (checkWeakEnding + as demais) continuam
+// sendo a primeira linha, mais barata; este juiz só roda quando TODAS elas
+// passaram — é o backstop que generaliza onde regex não alcança.
+// VIÉS INVERTIDO (mudança central desta auditoria): o juiz anterior tratava
+// "dúvida real" igual a "falha técnica" (as duas aprovavam). Aqui as duas
+// são tratadas diferente — falha TÉCNICA (erro de rede, timeout, JSON
+// inválido) continua fail-open (nunca trava o clique do usuário por
+// instabilidade de infraestrutura); mas dúvida REAL sobre o conteúdo (o
+// juiz respondeu, o JSON é válido, mas algum critério não veio
+// explicitamente `true`) passa a REPROVAR — porque aqui a chamada teve
+// sucesso técnico, a IA já avaliou o texto, e "não tenho certeza que está
+// bom" deve pesar a favor de reescrever, não de aprovar às cegas. Custo
+// absorvido no mesmo evento de Sugestão (COST_USD.sugestao).
+const JUDGE_ESTRUTURAL_TIMEOUT_MS = 6_000;
 
-async function judgeFechoSugestao(
+async function judgeSugestaoEstrutural(
   apiKey: string,
   sugestao: string,
-  concreteItem?: string | null,
-): Promise<boolean> {
+  concreteItem: string | null | undefined,
+  mainActivity: string,
+  segment: string,
+): Promise<{ ok: boolean; motivo?: string }> {
   try {
-    const prompt = `Avalie APENAS o FECHO (as últimas 2-3 palavras) desta frase de pauta de conteúdo em português brasileiro:
+    const prompt = `Avalie esta frase de pauta de conteúdo (Sugestão/Informação-chave) em português brasileiro, para uma empresa do ramo "${mainActivity || segment}":
 
-FRASE: "${sugestao}"${concreteItem ? `\nITEM/PRODUTO DE ORIGEM: "${concreteItem}"` : ""}
+FRASE: "${sugestao}"${concreteItem ? `\nELEMENTO CONCRETO DE ORIGEM: "${concreteItem}"` : ""}
 
-PERGUNTA ÚNICA: as últimas 2-3 palavras desta frase nomeiam um resultado, necessidade ou benefício CONCRETO e específico deste item, que o cliente reconhece? Ou o fecho é uma ocasião solta (época/data sem resultado), o nome do próprio item, um qualificador vazio ("certo", "ideal", "de qualidade") ou qualquer coisa que serviria para qualquer produto/serviço?
+Avalie os 4 critérios abaixo com RIGOR — em caso de DÚVIDA REAL sobre qualquer um deles, considere REPROVADO (false). Só marque true quando tiver certeza razoável de que o critério foi cumprido:
 
-IMPORTANTE: em caso de dúvida real, ou se a frase parecer razoável, responda que o fecho ESTÁ OK — só reprove se tiver CERTEZA de que o fecho é vago/solto.
+1. fechoOk — as últimas 2-3 palavras nomeiam um resultado, necessidade ou benefício CONCRETO e específico deste item/negócio? Reprove se o fecho for: ocasião de calendário solta (ex.: "durante feriados", "no verão"), o nome do próprio item sem resultado nenhum, OU um qualificador genérico que não especifica nada concreto novo sobre a palavra anterior — o teste é o PADRÃO, não uma lista fixa: "certo", "ideal", "exclusivo", "seguro", "preciso", "qualificado", "disponível" são exemplos, mas QUALQUER adjetivo cujo oposto seria absurdo de anunciar (ninguém anuncia "computador inseguro" ou "briefing impreciso") conta como vazio.
+2. nucleoOk — o centro GRAMATICAL da frase (o sujeito ou a locução que abre a frase) é o elemento concreto em si — e NÃO um termo abstrato/nominalização mesmo quando o item concreto aparece DEPOIS dele como complemento? Reprove construções do tipo "a escolha certa DE [item]", "a falta DE [item]", "o uso DE [item]", "planejamento DE [item]" — nelas o item aparece na frase, mas GRAMATICALMENTE é só complemento de um conceito abstrato ("escolha", "falta", "uso", "planejamento") que ocupa o lugar do núcleo; isso reprova mesmo com o item mencionado. Só aprove quando o próprio item/categoria/atividade for o sujeito ou abrir a locução (ex.: "Mesa para reuniões longas", "Cadeira que ajusta altura").
+3. linguagemOk — uma pessoa comum, leiga no assunto, entende a frase de primeira, SEM jargão técnico ou anglicismo de marketing/vendas (ex.: "leads", "tráfego pago", "briefing", "funil", "contatos quentes", "targeting", "conversão")?
+4. especificoOk — a frase tem ALGUMA ancoragem concreta (um item, categoria, procedimento ou situação real) — ou é um slogan institucional que não nomeia NADA concreto e serviria com as MESMAS palavras mesmo trocando o produto/serviço por outro completamente diferente (ex.: "Marketing digital para gerar mais vendas", "Qualidade que você pode confiar")? IMPORTANTE: uma frase que nomeia um item/categoria real (mesmo um item comum, tipo "cadeira", "mesa", "consulta") e descreve um resultado/característica verificável dele NÃO é genérica só porque um concorrente que vende o mesmo TIPO de item poderia dizer algo parecido — isso é esperado e correto, reprove aqui SÓ quando a frase não tiver nenhum item/situação concreta identificável, e sim apenas um conceito abstrato de negócio.
 
-Responda JSON EXATAMENTE assim: { "fechoOk": true } ou { "fechoOk": false }`;
+Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou false, "linguagemOk": true ou false, "especificoOk": true ou false, "motivo": "se algum item for false, 1 frase curta e objetiva dizendo o que corrigir; se todos forem true, string vazia" }`;
 
     const result = await fetchOpenAIChat(
       apiKey,
@@ -238,16 +265,47 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true } ou { "fechoOk": false }`;
         temperature: 0.1,
         response_format: { type: "json_object" },
       },
-      JUDGE_FECHO_TIMEOUT_MS,
+      JUDGE_ESTRUTURAL_TIMEOUT_MS,
     );
-    if (!result.ok) return true;
+    // Falha TÉCNICA (rede, timeout, status de erro) — fail-open: nunca trava
+    // o clique do usuário por instabilidade de infraestrutura.
+    if (!result.ok) return { ok: true };
     const content = result.data.choices?.[0]?.message?.content;
-    if (!content) return true;
-    const parsed = JSON.parse(content) as { fechoOk?: unknown };
-    // Só reprova com `false` explícito — qualquer outro valor é ambíguo, passa.
-    return parsed.fechoOk !== false;
+    if (!content) return { ok: true };
+
+    let parsed: {
+      fechoOk?: unknown;
+      nucleoOk?: unknown;
+      linguagemOk?: unknown;
+      especificoOk?: unknown;
+      motivo?: unknown;
+    };
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return { ok: true }; // JSON inválido é falha técnica, não dúvida de conteúdo.
+    }
+
+    // Fail-closed em dúvida REAL: diferente do juiz anterior (que só reprovava
+    // com `false` explícito), aqui qualquer valor que não seja EXATAMENTE
+    // `true` conta como reprovado — a chamada teve sucesso técnico, então
+    // ambiguidade é dúvida sobre o CONTEÚDO, e o produto pede rigor aqui.
+    const allOk =
+      parsed.fechoOk === true &&
+      parsed.nucleoOk === true &&
+      parsed.linguagemOk === true &&
+      parsed.especificoOk === true;
+    if (allOk) return { ok: true };
+
+    return {
+      ok: false,
+      motivo:
+        typeof parsed.motivo === "string" && parsed.motivo.trim()
+          ? parsed.motivo.trim()
+          : "juiz estrutural reprovou a frase (fecho, núcleo, linguagem ou especificidade) sem detalhar o motivo — reescreva com mais concretude e sem jargão",
+    };
   } catch {
-    return true;
+    return { ok: true }; // erro técnico (rede, exceção) — fail-open.
   }
 }
 
@@ -270,7 +328,10 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
             const rate = await checkRateLimit(userId);
             if (!rate.ok) {
               return Response.json(
-                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                {
+                  error:
+                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                },
                 { status: 429 },
               );
             }
@@ -682,8 +743,28 @@ Retorne JSON EXATAMENTE assim:
           // usuário por causa disso — devolve a melhor tentativa, sempre
           // truncada a sugestaoMaxWords (7 palavras, MOP e PU).
           const MAX_SUGGEST_ATTEMPTS = 2;
+          const SUGESTAO_MAX_WORDS = 7;
           let sugestao = "";
           let motivos: string[] = [];
+
+          // Reaplica as checagens determinísticas (sem chamar API) sobre um
+          // texto candidato — usado tanto dentro do loop quanto no fallback
+          // E2 (pruneWeakEnding) abaixo, pra confirmar que a poda de fato
+          // resolveu o problema antes de substituir a sugestão.
+          const runDeterministicChecks = (text: string): string[] => {
+            let m = validateSugestao(text, SUGESTAO_MAX_WORDS);
+            m = m.concat(
+              checkInventedPromotion(text, allowedContext, {
+                allowPromoLanguage: allowPromoLanguagePU,
+              }),
+            );
+            if (mode === "postunico") m = m.concat(checkSupplierLanguage(text));
+            m = m.concat(checkRepeatedOpening(text, previousSugs));
+            m = m.concat(checkLensNameLeak(text, lens.nome));
+            m = m.concat(checkWeakEnding(text, concreteItem));
+            m = m.concat(checkItemNameDrift(text, concreteItem));
+            return m;
+          };
 
           for (let pass = 1; pass <= MAX_SUGGEST_ATTEMPTS; pass++) {
             const reinforcement =
@@ -714,57 +795,68 @@ Retorne JSON EXATAMENTE assim:
               return Response.json({ error: "JSON inválido" }, { status: 502 });
             }
 
-            const sugestaoMaxWords = 7;
             const rawSugestao = String(parsed.sugestao || "")
               .trim()
               .replace(/^"|"$/g, "");
             const rawWordCount = rawSugestao.split(/\s+/).filter(Boolean).length;
-            sugestao = truncateWords(rawSugestao, sugestaoMaxWords);
+            sugestao = truncateWords(rawSugestao, SUGESTAO_MAX_WORDS);
             if (!sugestao) return Response.json({ error: "Sugestão vazia" }, { status: 502 });
 
-            motivos = validateSugestao(sugestao, sugestaoMaxWords);
+            motivos = runDeterministicChecks(sugestao);
             // truncateWords só remove conjunção/preposição do final — corta
             // no meio de substantivo/adjetivo sem avisar, e a frase cortada
             // passava pela validação como se estivesse completa (o corte
             // acontecia ANTES da checagem de tamanho). Sinaliza aqui, pelo
             // texto BRUTO (antes do corte), pra virar motivo de retry real
             // em vez de devolver a frase capenga sem o modelo saber.
-            if (rawWordCount > sugestaoMaxWords) {
+            if (rawWordCount > SUGESTAO_MAX_WORDS) {
               motivos.push(
-                `frase original tinha ${rawWordCount} palavras e foi cortada no meio — reescreva já dentro do limite de ${sugestaoMaxWords} palavras, sem depender de corte`,
+                `frase original tinha ${rawWordCount} palavras e foi cortada no meio — reescreva já dentro do limite de ${SUGESTAO_MAX_WORDS} palavras, sem depender de corte`,
               );
             }
-            motivos = motivos.concat(
-              checkInventedPromotion(sugestao, allowedContext, {
-                allowPromoLanguage: allowPromoLanguagePU,
-              }),
-            );
-            if (mode === "postunico") motivos = motivos.concat(checkSupplierLanguage(sugestao));
-            motivos = motivos.concat(checkRepeatedOpening(sugestao, previousSugs));
-            // Vazamento do nome da lente interna — vale para AMBOS os modos
-            // (lens/lensBlock existem em MOP e PU).
-            motivos = motivos.concat(checkLensNameLeak(sugestao, lens.nome));
-            // Fecho fraco da frase (PRINCÍPIO DO FECHO DA FRASE) — ocasião de
-            // calendário solta, nome do próprio item ou qualificador vago nas
-            // últimas palavras. Incondicional para AMBOS os modos, igual à
-            // checkLensNameLeak.
-            motivos = motivos.concat(checkWeakEnding(sugestao, concreteItem));
-            // Juiz semântico do fecho — backstop conservador: só roda quando
+            // Juiz estrutural único — backstop que generaliza onde regex não
+            // alcança (fecho, núcleo, jargão, especificidade). Só roda quando
             // TODAS as checagens determinísticas acima passaram (motivos
-            // vazio), pra pegar fecho vago que padrão nenhum cobre. Fail-open
-            // (falha técnica = aprovado) e com viés de aprovar em caso de
-            // dúvida. Se reprovar, vira mais um motivo e o retry existente
-            // deste loop cuida do resto — sem loop separado (na tentativa 2,
-            // se as determinísticas passarem de novo, o juiz roda de novo).
+            // vazio). Fail-open só em falha TÉCNICA; dúvida real sobre o
+            // conteúdo reprova (ver comentário na função). Se reprovar, vira
+            // mais um motivo e o retry existente deste loop cuida do resto —
+            // sem loop separado (na tentativa 2, se as determinísticas
+            // passarem de novo, o juiz roda de novo).
             if (motivos.length === 0) {
-              const fechoOk = await judgeFechoSugestao(apiKey, sugestao, concreteItem);
-              if (!fechoOk) {
+              const veredito = await judgeSugestaoEstrutural(
+                apiKey,
+                sugestao,
+                concreteItem,
+                mainActivity,
+                segment,
+              );
+              if (!veredito.ok) {
                 motivos.push(
-                  "juiz semântico: o fecho da frase (últimas palavras) não nomeia um resultado, necessidade ou benefício concreto deste item — reescreva o fecho com o efeito específico que o cliente ganha, resolve ou evita com ele",
+                  `juiz estrutural: ${veredito.motivo ?? "frase reprovada — reescreva com mais concretude e sem jargão"}`,
                 );
               }
             }
             if (motivos.length === 0) break;
+          }
+
+          // E2 — poda determinística (sem custo de API), PRINCÍPIO DO FECHO DA
+          // FRASE (doc mestre, 1.6): se as tentativas acima esgotaram e a
+          // sugestão AINDA reprova, tenta cortar o fecho fraco (ocasião solta
+          // ou qualificador vago — ver pruneWeakEnding) em vez de entregar a
+          // frase que o próprio sistema sabe estar quebrada. Só troca se a
+          // poda de fato reduzir o número de problemas (nunca piora); se não
+          // houver poda segura (ex.: fecho no nome do próprio item, ou
+          // problema de outra natureza como promoção inventada), mantém a
+          // melhor tentativa como já fazia antes.
+          if (motivos.length > 0) {
+            const pruned = pruneWeakEnding(sugestao);
+            if (pruned) {
+              const prunedMotivos = runDeterministicChecks(pruned);
+              if (prunedMotivos.length < motivos.length) {
+                sugestao = pruned;
+                motivos = prunedMotivos;
+              }
+            }
           }
 
           // Debita 1 clique de Sugestão (1 clique do usuário = 1 débito, fora do
