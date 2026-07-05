@@ -157,6 +157,137 @@ function classifyItemType(item: string): "VAREJO" | "SERVIÇOS" | null {
   return null;
 }
 
+// Decompõe a ATIVIDADE da empresa em itens concretos (produto/serviço/
+// categoria) via IA — usado como POOL do rodízio de pickConcreteItem quando
+// o usuário não tem produtos cadastrados no Kit de Marca. Reproduz a lição
+// do caso Ferrimaq (ver histórico do produto): decompor a atividade em itens
+// e ESCREVER a frase final precisam ser chamadas separadas — pedir pro mesmo
+// modelo fazer as duas coisas na mesma chamada produzia rodízio instável
+// (sempre "cadeira de escritório", nunca "poltrona de consultório").
+// GROUNDING (evita alucinação de produto que a empresa não vende): a IA é
+// obrigada a citar, para cada item, uma ÂNCORA — um trecho literal da
+// atividade que justifica o item — e o código descarta qualquer item cuja
+// âncora não seja de fato um substring da atividade informada. Isso não
+// impede sinônimo/generalização (o ITEM em si pode usar palavra diferente da
+// atividade, ex. "cadeira giratória" para atividade "móveis para
+// escritório"), só impede a IA inventar uma justificativa que não existe no
+// texto do usuário.
+const DECOMPOSE_TIMEOUT_MS = 6_000;
+
+function normalizeForOverlap(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+const OVERLAP_STOPWORDS = new Set([
+  "de",
+  "da",
+  "do",
+  "das",
+  "dos",
+  "e",
+  "a",
+  "o",
+  "as",
+  "os",
+  "para",
+  "com",
+  "em",
+  "um",
+  "uma",
+  "no",
+  "na",
+  "ou",
+]);
+
+// Cada palavra significativa da ÂNCORA precisa existir em algum lugar da
+// ATIVIDADE — não exige TRECHO CONTÍNUO (substring), porque a IA legitimamente
+// combina palavras de partes diferentes de uma lista (ex.: atividade "Móveis
+// para Escritório, Consultórios, Auditórios" → item "Móveis para
+// Consultórios" é uma combinação válida de "Móveis" + "Consultórios", mas não
+// é um substring contíguo do texto original). Ainda assim bloqueia âncora
+// inventada: só passa se TODAS as palavras relevantes forem reais.
+function ancoraIsGrounded(ancora: string, activityNorm: string): boolean {
+  const words = normalizeForOverlap(ancora)
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 3 && !OVERLAP_STOPWORDS.has(w));
+  if (words.length === 0) return false;
+  return words.every((w) => activityNorm.includes(w));
+}
+
+async function decomposeAtividadeEmItens(
+  apiKey: string,
+  mainActivity: string,
+  segment: string,
+): Promise<string[]> {
+  const activity = mainActivity.trim();
+  // Atividade curta demais (ex.: "Consultoria", 1 palavra) não dá base real
+  // pra decompor — a IA tende a INVENTAR subcategorias plausíveis mas não
+  // confirmadas (ex.: "Consultoria financeira", "Consultoria em RH") só para
+  // preencher a lista, e o grounding por palavra não pega isso porque a
+  // própria palavra da atividade aparece dentro do item inventado. Nesse
+  // caso é melhor cair no fallback já existente (ancoragemAtividade, sem
+  // elemento concreto) do que arriscar afirmar uma especialidade que a
+  // empresa pode não ter.
+  if (activity.split(/\s+/).filter(Boolean).length < 3) return [];
+  try {
+    const prompt = `Você recebe a descrição da ATIVIDADE de uma pequena empresa brasileira do segmento "${segment}". Decomponha essa atividade em 5 a 8 produtos, serviços, categorias ou procedimentos CONCRETOS e específicos que essa empresa provavelmente vende ou oferece — coisas reais e do dia a dia desse ramo, não conceitos abstratos de negócio.
+
+ATIVIDADE: "${activity}"
+
+Para cada item, informe também a ÂNCORA: as palavras da ATIVIDADE acima (podem vir de partes diferentes da descrição, mas cada palavra da âncora precisa existir literalmente na ATIVIDADE) que justificam esse item. Se você não conseguir apontar palavras reais da ATIVIDADE que sustentem o item, NÃO inclua esse item na lista.
+
+Se a atividade for vaga ou genérica demais para decompor em itens concretos e verificáveis, devolva uma lista vazia — NÃO invente item que a descrição não sustente.
+
+Responda JSON EXATAMENTE assim: { "itens": [{ "item": "nome curto do produto/serviço/categoria", "ancora": "trecho literal da atividade" }] }`;
+
+    const result = await fetchOpenAIChat(
+      apiKey,
+      {
+        model: "gpt-4.1-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        response_format: { type: "json_object" },
+      },
+      DECOMPOSE_TIMEOUT_MS,
+    );
+    if (!result.ok) return [];
+    const content = result.data.choices?.[0]?.message?.content;
+    if (!content) return [];
+
+    let parsed: { itens?: unknown };
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return [];
+    }
+    if (!Array.isArray(parsed.itens)) return [];
+
+    const activityNorm = normalizeForOverlap(activity);
+    const seen = new Set<string>();
+    const itens: string[] = [];
+    for (const raw of parsed.itens) {
+      if (!raw || typeof raw !== "object") continue;
+      const item = String((raw as { item?: unknown }).item || "")
+        .trim()
+        .slice(0, 80);
+      const ancora = String((raw as { ancora?: unknown }).ancora || "").trim();
+      if (!item || !ancora) continue;
+      // Grounding: todas as palavras significativas da ÂNCORA precisam ser
+      // reais na atividade — impede o modelo de inventar item sem base no
+      // texto do usuário (ver ancoraIsGrounded acima).
+      if (!ancoraIsGrounded(ancora, activityNorm)) continue;
+      const key = normalizeForOverlap(item);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      itens.push(item);
+      if (itens.length >= 8) break;
+    }
+    return itens;
+  } catch {
+    return [];
+  }
+}
+
 // Lentes de abertura — 11 formas internas de variar o ÂNGULO da
 // Informação-chave (Sugestão MOP e PU) sobre o CONTEXTO REAL DE USO já
 // identificado a partir do elemento concreto e da atividade. São orientação
@@ -392,6 +523,21 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
             ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
             : [];
 
+          const SEGMENTS = ["VAREJO", "SERVIÇOS", "MARCA"] as const;
+          type Seg = (typeof SEGMENTS)[number];
+          const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment)
+            ? (body.segment as Seg)
+            : "SERVIÇOS";
+          const isPersonalBrand = segment === "MARCA" && body.isPersonalBrand === true;
+
+          const apiKey = process.env.OPENAI_API_KEY_CONTENT;
+          if (!apiKey) {
+            return Response.json(
+              { error: "OPENAI_API_KEY_CONTENT não configurada" },
+              { status: 500 },
+            );
+          }
+
           const selectedProducts: string[] = Array.isArray(body.selectedProducts)
             ? body.selectedProducts
                 .slice(0, 10)
@@ -399,25 +545,31 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
                 .filter(Boolean)
             : [];
 
+          // Sem produtos cadastrados pelo usuário no Kit de Marca: decompõe a
+          // ATIVIDADE em itens concretos via IA (gpt-4.1-mini, barato) em vez
+          // de cair direto no fallback genérico de ancoragemAtividade — mesma
+          // lição do caso Ferrimaq (decompor precisa ser uma chamada separada
+          // de escrever a frase final), só que agora sem exigir que o usuário
+          // digite a lista. Ver decomposeAtividadeEmItens acima para o
+          // grounding contra alucinação (âncora literal na atividade).
+          const inferredProducts = selectedProducts.length
+            ? []
+            : await decomposeAtividadeEmItens(apiKey, mainActivity, segment);
+          const productsPool = selectedProducts.length ? selectedProducts : inferredProducts;
+
           // Elemento concreto — semente determinística escolhida a partir da
-          // lista de produtos/serviços marcados pelo usuário no Kit de Marca.
+          // lista de produtos/serviços marcados pelo usuário no Kit de Marca
+          // (ou, na ausência dela, da lista inferida da atividade acima).
           // Calculado antes da ancoragem na atividade porque define quem é o
           // dono do CONTEXTO REAL DE USO (ver ancoragemAtividade abaixo): com
           // elemento concreto, é o elementoConcretoBlock; sem ele, é a
           // ancoragem na atividade (fallback).
           const { item: concreteItem, repeated: concreteItemRepeated } = pickConcreteItem(
-            selectedProducts,
+            productsPool,
             attempt,
             previousSugs,
             sessionSeed,
           );
-
-          const SEGMENTS = ["VAREJO", "SERVIÇOS", "MARCA"] as const;
-          type Seg = (typeof SEGMENTS)[number];
-          const segment: Seg = (SEGMENTS as readonly string[]).includes(body.segment)
-            ? (body.segment as Seg)
-            : "SERVIÇOS";
-          const isPersonalBrand = segment === "MARCA" && body.isPersonalBrand === true;
 
           // Eixos de leitura por segmento — direcionam a sugestão sem virar
           // biblioteca fixa de respostas.
@@ -586,14 +738,6 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
           const previousBlock = previousSugs.length
             ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos — gere algo completamente diferente, sobre outro produto, serviço ou situação):\n${previousSugs.map((s) => `- "${s}"`).join("\n")}\n⚠ ABERTURA TAMBÉM PRECISA SER DIFERENTE: mesmo se o produto/serviço de origem desta sugestão tiver nome parecido com algum item acima (ex.: dois serviços cadastrados começando com as mesmas palavras), a FRASE FINAL não pode começar com as mesmas palavras de nenhuma sugestão acima — não preserve o nome literal do item como abertura fixa; extraia o conceito e construa uma frase nova, com estrutura e primeiras palavras visivelmente diferentes.`
             : "";
-
-          const apiKey = process.env.OPENAI_API_KEY_CONTENT;
-          if (!apiKey) {
-            return Response.json(
-              { error: "OPENAI_API_KEY_CONTENT não configurada" },
-              { status: 500 },
-            );
-          }
 
           const tom = OBJETIVO_TOM[objetivo as keyof typeof OBJETIVO_TOM] ?? OBJETIVO_TOM.promocao;
 
