@@ -137,14 +137,22 @@ export async function generatePostImage(params: {
     : "";
 
   // Regra de dispositivos digitais para Reels. Ramo SEM dispositivo (ofício
-  // manual/físico) reusa a mesma função de promptRules.ts — é a mesma regra,
-  // sem diferença real para o formato Reels. Ramo COM dispositivo permitido
-  // é uma variante PROPOSITAL (não duplicação acidental): o Reels exige
-  // porta-voz sempre de frente/olhando pra câmera (rosto sempre visível,
-  // falando) — mais restrito que o enquadramento "câmera lateral/oblíqua"
-  // que buildDeviceRule() permite para posts estáticos. Se o texto abaixo for
-  // revisado, conferir se buildDeviceRule() ganhou alguma regra nova de
-  // física da tela que também deveria valer aqui.
+  // manual/físico) passou a reusar buildNoDeviceRule() de promptRules.ts em
+  // vez de manter um texto próprio quase idêntico — ATENÇÃO: isso É uma
+  // pequena mudança de conteúdo do prompt (auditoria de conformidade
+  // 2026-07-05 pegou isso), não deduplicação byte-a-byte: o texto compartilhado
+  // fala em "PROIBIDOS NESTA CENA" (antes "NESTE REELS"), "ofício real da
+  // empresa/profissional" (antes "do porta-voz") e ganha 1 frase a mais ("A
+  // cena mostra o trabalho real com as mãos, ferramentas, materiais ou
+  // instrumentos do próprio ofício."). Reforço plausível de baixo risco, mas
+  // ainda não confirmado numa geração real de Reels de ofício não-digital
+  // (custa dinheiro) — conferir na próxima vez que isso rodar de verdade.
+  // Ramo COM dispositivo permitido é uma variante PROPOSITAL (não duplicação
+  // acidental): o Reels exige porta-voz sempre de frente/olhando pra câmera
+  // (rosto sempre visível, falando) — mais restrito que o enquadramento
+  // "câmera lateral/oblíqua" que buildDeviceRule() permite para posts
+  // estáticos. Se o texto abaixo for revisado, conferir se buildDeviceRule()
+  // ganhou alguma regra nova de física da tela que também deveria valer aqui.
   const DEVICE_RULE_REELS = isNonDigitalActivity(mainActivity)
     ? `\n\n${buildNoDeviceRule()}`
     : `\n\n⚠ DISPOSITIVOS DIGITAIS — REGRA GLOBAL INVIOLÁVEL (REELS):
