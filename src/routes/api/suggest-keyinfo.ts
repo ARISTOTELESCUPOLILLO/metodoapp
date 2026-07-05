@@ -218,9 +218,15 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
 // deixava passar fecho vago fora dos exemplos do prompt, núcleo abstrato
 // ("Escolha certa", "Falta do..."), jargão de marketing ("leads", "tráfego",
 // "briefing") e slogan genérico ("Marketing digital para gerar mais vendas").
-// Nenhuma dessas 4 falhas cabe em lista fixa de palavras — são semânticas,
-// então viram critério de um juiz único (1 chamada, 4 perguntas) em vez de
-// 4 checagens de regex fadadas a ficar sempre incompletas.
+// Nenhuma dessas falhas cabe em lista fixa de palavras — são semânticas,
+// então viram critério de um juiz único (1 chamada, 5 perguntas) em vez de
+// checagens de regex fadadas a ficar sempre incompletas.
+// 5º critério (economiaOk, auditoria AJUSTE_CONFLITO 05/07/2026): screenshots
+// reais mostraram sugestões gramaticalmente corretas mas com adjetivo de
+// recheio redundante no fecho ("susto inesperado", "negociações digitais",
+// "contatos ativos") — os 4 critérios originais não pegavam isso porque o
+// fecho apontava pra um resultado concreto de verdade; só o adjetivo colado
+// nele era vazio. economiaOk testa especificamente essa redundância/recheio.
 // As checagens determinísticas (checkWeakEnding + as demais) continuam
 // sendo a primeira linha, mais barata; este juiz só roda quando TODAS elas
 // passaram — é o backstop que generaliza onde regex não alcança.
@@ -248,14 +254,15 @@ async function judgeSugestaoEstrutural(
 
 FRASE: "${sugestao}"${concreteItem ? `\nELEMENTO CONCRETO DE ORIGEM: "${concreteItem}"` : ""}
 
-Avalie os 4 critérios abaixo com RIGOR — em caso de DÚVIDA REAL sobre qualquer um deles, considere REPROVADO (false). Só marque true quando tiver certeza razoável de que o critério foi cumprido:
+Avalie os 5 critérios abaixo com RIGOR — em caso de DÚVIDA REAL sobre qualquer um deles, considere REPROVADO (false). Só marque true quando tiver certeza razoável de que o critério foi cumprido:
 
 1. fechoOk — as últimas 2-3 palavras nomeiam um resultado, necessidade ou benefício CONCRETO e específico deste item/negócio? Reprove se o fecho for: ocasião de calendário solta (ex.: "durante feriados", "no verão", "no fim do verão", "no começo do inverno" — QUALQUER variação com conector no meio conta igual), o nome do próprio item sem resultado nenhum, um qualificador ADJETIVO genérico (o teste é o PADRÃO, não uma lista fixa: "certo", "ideal", "exclusivo", "seguro", "preciso", "qualificado", "disponível" são exemplos, mas QUALQUER adjetivo cujo oposto seria absurdo de anunciar conta como vazio), OU um SUBSTANTIVO ABSTRATO genérico de sensação/qualidade (ex.: "aconchego", "praticidade", "bem-estar", "conforto", "satisfação") — para substantivo, o teste não é o oposto absurdo (substantivo não tem oposto natural), é: "esse fecho serviria de encerramento pra QUALQUER produto/serviço do mercado, sem dizer nada específico deste item"? Se sim, é vazio mesmo sendo um substantivo "positivo".
 2. nucleoOk — o centro GRAMATICAL da frase (o sujeito ou a locução que abre a frase) é o elemento concreto em si — e NÃO um termo abstrato/nominalização mesmo quando o item concreto aparece DEPOIS dele como complemento? Reprove construções do tipo "a escolha certa DE [item]", "a falta DE [item]", "o uso DE [item]", "planejamento DE [item]" — nelas o item aparece na frase, mas GRAMATICALMENTE é só complemento de um conceito abstrato ("escolha", "falta", "uso", "planejamento") que ocupa o lugar do núcleo; isso reprova mesmo com o item mencionado. Só aprove quando o próprio item/categoria/atividade for o sujeito ou abrir a locução (ex.: "Mesa para reuniões longas", "Cadeira que ajusta altura").
 3. linguagemOk — uma pessoa comum, leiga no assunto, entende a frase de primeira, SEM jargão técnico ou anglicismo de marketing/vendas (ex.: "leads", "tráfego pago", "briefing", "funil", "contatos quentes", "targeting", "conversão")? EXCEÇÃO: se o ELEMENTO CONCRETO DE ORIGEM informado acima já É esse termo (o próprio produto/serviço cadastrado se chama assim — ex.: a empresa vende literalmente "Tráfego pago" como serviço), NÃO reprove por nomear o item pelo nome dele mesmo; reprove aqui só jargão ADICIONAL além do necessário pra nomear o item (ex.: mesmo citando "Tráfego pago" corretamente, "leads qualificados" ou "funil de conversão" no resto da frase ainda reprovam).
 4. especificoOk — a frase tem ALGUMA ancoragem concreta (um item, categoria, procedimento ou situação real) — ou é um slogan institucional que não nomeia NADA concreto e serviria com as MESMAS palavras mesmo trocando o produto/serviço por outro completamente diferente (ex.: "Marketing digital para gerar mais vendas", "Qualidade que você pode confiar")? IMPORTANTE: uma frase que nomeia um item/categoria real (mesmo um item comum, tipo "cadeira", "mesa", "consulta") e descreve um resultado/característica verificável dele NÃO é genérica só porque um concorrente que vende o mesmo TIPO de item poderia dizer algo parecido — isso é esperado e correto, reprove aqui SÓ quando a frase não tiver nenhum item/situação concreta identificável, e sim apenas um conceito abstrato de negócio.
+5. economiaOk — a última palavra (ou as últimas 2-3) é redundante/pleonástica com o resto da frase (ex.: "susto inesperado" — susto já é inesperado por definição), OU é um qualificador (adjetivo/particípio) colado ao substantivo final que NÃO muda nem especifica o resultado central (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "internações longas" — tire a palavra e o resultado continua o mesmo), OU está semanticamente deslocada do tipo real desse item/negócio (ex.: um acessório anunciado por um benefício que não é a função dele)? TESTE: apague mentalmente essa última palavra — se a frase perde informação real, marque economiaOk true (está OK); se a frase fica dizendo exatamente a mesma coisa, só mais curta, marque economiaOk false (é recheio, reprovado).
 
-Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou false, "linguagemOk": true ou false, "especificoOk": true ou false, "motivo": "se algum item for false, 1 frase curta e objetiva dizendo o que corrigir; se todos forem true, string vazia" }`;
+Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou false, "linguagemOk": true ou false, "especificoOk": true ou false, "economiaOk": true ou false, "motivo": "se algum item for false, 1 frase curta e objetiva dizendo o que corrigir; se todos forem true, string vazia" }`;
 
     const result = await fetchOpenAIChat(
       apiKey,
@@ -278,6 +285,7 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       nucleoOk?: unknown;
       linguagemOk?: unknown;
       especificoOk?: unknown;
+      economiaOk?: unknown;
       motivo?: unknown;
     };
     try {
@@ -294,7 +302,8 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       parsed.fechoOk === true &&
       parsed.nucleoOk === true &&
       parsed.linguagemOk === true &&
-      parsed.especificoOk === true;
+      parsed.especificoOk === true &&
+      parsed.economiaOk === true;
     if (allOk) return { ok: true };
 
     return {
@@ -302,7 +311,7 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       motivo:
         typeof parsed.motivo === "string" && parsed.motivo.trim()
           ? parsed.motivo.trim()
-          : "juiz estrutural reprovou a frase (fecho, núcleo, linguagem ou especificidade) sem detalhar o motivo — reescreva com mais concretude e sem jargão",
+          : "juiz estrutural reprovou a frase (fecho, núcleo, linguagem, especificidade ou economia) sem detalhar o motivo — reescreva com mais concretude, sem jargão e sem palavra de recheio no fim",
     };
   } catch {
     return { ok: true }; // erro técnico (rede, exceção) — fail-open.
@@ -465,7 +474,7 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === "MAR
               }
 
 CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
-O CONTEXTO REAL DE USO não precisa ser um cenário, local ou momento (ex.: "durante a consulta", "na sala de espera", "na reunião") — PREFIRA SEMPRE o RESULTADO ou EFEITO direto que "${concreteItem}" entrega, no formato "[item] para [resultado/efeito]"; esse formato já é o COMPLEMENTO ÚNICO da frase (ver CRITÉRIOS DE QUALIDADE) e não deve ganhar cenário extra. Cenário/local é EXCEÇÃO, não padrão: só use quando o resultado direto sozinho não for suficiente para a frase fazer sentido.
+O CONTEXTO REAL DE USO não precisa ser um cenário, local ou momento (ex.: "durante a consulta", "na sala de espera", "na reunião") — PREFIRA SEMPRE o RESULTADO ou EFEITO direto que "${concreteItem}" entrega; esse resultado/efeito já é o COMPLEMENTO ÚNICO da frase (ver CRITÉRIOS DE QUALIDADE) e não deve ganhar cenário extra. Cenário/local é EXCEÇÃO, não padrão: só use quando o resultado direto sozinho não for suficiente para a frase fazer sentido. VARIE A CONSTRUÇÃO: o formato "[item] para [resultado/efeito]" é UMA opção válida, não a única — alterne com locução sem verbo de outro tipo ou frase com sujeito e predicado (ver SINTAXE — NÚCLEO DA FRASE), conforme o que soar mais natural para este item; repetir sempre a mesma estrutura "para/que + verbo" entre sugestões é o que faz a Sugestão soar montada por fórmula. PROIBIDO colar um adjetivo ou particípio de recheio na última palavra só para o fecho "parecer" mais específico (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "sustos inesperados", "internações longas") quando essa palavra não muda nem especifica o efeito central — TESTE: apague a última palavra; se a frase continua dizendo exatamente a mesma coisa, ela é recheio e deve ser cortada ou trocada por um efeito que dependa dela para fazer sentido.
 DIREÇÃO DE ENTREGA: se a frase envolver entrega, envio ou deslocamento de "${concreteItem}" até alguém (ex.: "entregue", "leva até", "chega em"), o DESTINO é o CLIENTE/USO FINAL (a casa dele, o local onde ele vai usar) — NÃO o endereço da própria empresa/loja/clínica, salvo se "${mainActivity}" disser explicitamente que a entrega é feita até o estabelecimento. Se o destino exato não estiver claro em "${mainActivity}", não mencione local nenhum — descreva pelo RESULTADO/EFEITO direto ("[item] para [resultado]").`
             : "";
 
@@ -554,8 +563,8 @@ ${
     : "Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade."
 } Entre 4 e 7 palavras (máximo absoluto 7).
 SINTAXE — NÚCLEO DA FRASE: o núcleo (sujeito da frase ou centro da locução) segue esta ordem de prioridade: (1) o ELEMENTO CONCRETO desta sugestão (produto/serviço ou variação direta dele), quando houver; (2) categoria, procedimento, ferramenta, equipamento, recurso ou solução real da atividade; (3) a própria ATIVIDADE da empresa, quando não houver elemento concreto. A frase pode ser uma locução sem verbo (ex.: "[item] para [situação/uso]") ou uma frase com sujeito e predicado — ambas válidas, desde que o núcleo siga essa ordem. NÃO use como núcleo principal: termos abstratos ("confiança", "qualidade", "segurança", "clareza", "crescimento", "inovação", "autoridade", "relacionamento", "resultado", "presença", "organização"), verbos no infinitivo nominalizados ("crescer", "confiar", "melhorar", "transformar", "organizar") ou locuções genéricas ("o cuidado", "o diferencial", "a escolha certa") — esses termos só valem como consequência, predicado ou qualificador, nunca como núcleo.
-COMPLEMENTO ÚNICO: depois do núcleo, a frase carrega só UM traço — um resultado, uma situação ou uma característica. PROIBIDO empilhar mais de um traço (núcleo + traço + outro traço/qualificação/cenário) e PROIBIDO mais de uma oração subordinada ("que"); havendo uma relativa, ela é a única adição depois do núcleo e fecha a frase ali — sem encadear mais nada.
-FECHO DA FRASE: as últimas 2-3 palavras precisam nomear um resultado, necessidade ou benefício CONCRETO e reconhecível pelo cliente final — algo específico que ele ganha, resolve ou evita com este item. PROIBIDO fechar com generalidade de bula/institucional: "sempre", "de qualidade", "com segurança", "do jeito certo", "na medida certa", "evita problemas comuns", "recaídas comuns", ou qualquer qualificador vazio que serviria igual para outro produto/serviço. TESTE: lendo só o fecho (as últimas palavras), ele descreve um efeito específico deste item, ou colaria em qualquer produto/serviço do mercado? Se colar em qualquer coisa, reescreva o fecho com o efeito concreto deste item.
+COMPLEMENTO ÚNICO: depois do núcleo, a frase carrega só UM traço — um resultado, uma situação ou uma característica. PROIBIDO empilhar mais de um traço (núcleo + traço + outro traço/qualificação/cenário) e PROIBIDO mais de uma oração subordinada ("que"); havendo uma relativa, ela é a única adição depois do núcleo e fecha a frase ali — sem encadear mais nada. Isso vale também DENTRO do traço único: um adjetivo ou particípio colado ao substantivo do complemento (ex.: "negociações digitais", "contatos ativos") conta como um SEGUNDO traço enfeitando o primeiro, não como parte do mesmo traço — só mantenha esse adjetivo se ele for a própria característica que define o resultado (sem ele a frase perde informação real).
+FECHO DA FRASE: as últimas 2-3 palavras precisam nomear um resultado, necessidade ou benefício CONCRETO e reconhecível pelo cliente final — algo específico que ele ganha, resolve ou evita com este item. PROIBIDO fechar com generalidade de bula/institucional: "sempre", "de qualidade", "com segurança", "do jeito certo", "na medida certa", "evita problemas comuns", "recaídas comuns", ou qualquer qualificador vazio que serviria igual para outro produto/serviço. PROIBIDO TAMBÉM fechar com um qualificador redundante ou de recheio — que repete uma ideia já implícita ("susto inesperado": susto já é inesperado) ou que só finge especificidade sem mudar o resultado ("digital", "ativo", "híbrido", "longo/a", "especial", "feito" coladas a um substantivo que já fazia sentido sozinho). TESTE: lendo só o fecho (as últimas palavras), ele descreve um efeito específico deste item, ou colaria em qualquer produto/serviço do mercado? E, tirando a última palavra, a frase perde algum sentido real, ou fica exatamente igual (só mais curta)? Se colar em qualquer coisa, OU se a frase ficar igual sem a última palavra, reescreva o fecho com o efeito concreto deste item, sem o enfeite.
 VEROSSIMILHANÇA: a frase precisa ser algo que poderia acontecer de verdade com este produto, serviço ou atividade — sem função, causa-efeito, condição, benefício técnico ou comportamento não informado e implausível para o segmento ${segment}. Teste: "isso poderia acontecer de verdade com esse produto/serviço/atividade?" — se não, reescreva.
 TESTE DO CONTEXTO REAL DE USO (já identificado acima): a situação descrita combina com o contexto já estabelecido dentro de "${mainActivity}" — não é um cenário genérico que serviria igual para o mesmo item ou atividade em outro contexto (uso doméstico, social, outro ramo, outro tipo de cliente). Teste: "essa situação só faz sentido porque está em '${mainActivity}', ou serviria igual em qualquer outro lugar?" — se servir igual em qualquer lugar, reescreva ancorando no contexto real desse ramo.
 NATURALIDADE: a frase deve parecer uma pauta de conteúdo real, do jeito que alguém do ramo falaria — não um slogan, conceito institucional ou frase tecnicamente correta porém artificial. Locuções sem verbo são bem-vindas quando soarem mais naturais que uma frase completa. Se a frase parecer academicamente correta mas estranha ao jeito comum de falar do segmento ${segment}, reescreva de forma mais direta e reconhecível.
@@ -601,8 +610,9 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
           // aqui de novo quebraria essa garantia, porque o servidor reavalia a
           // cada request HTTP independente, perdendo a relação entre tentativas.
           // Lentes seguras pro formato positivo "[item] para [resultado]"
-          // exigido no MOP (linha ~318 abaixo, elementoConcretoBlock) —
-          // comparação/dúvida/erro/sinal/detalhe tendem a produzir
+          // (uma das construções preferenciais no MOP, não mais exclusiva —
+          // ver elementoConcretoBlock acima) — comparação/dúvida/erro/sinal/
+          // detalhe tendem a produzir
           // condicional, defeito ou pergunta, o que colide com a proibição
           // de crítica ao cliente do metodoPrompt ("PROIBIDO... crítica ou
           // cobrança ao cliente", mais abaixo). Ficam disponíveis só no PU,
@@ -820,7 +830,7 @@ Retorne JSON EXATAMENTE assim:
               );
             }
             // Juiz estrutural único — backstop que generaliza onde regex não
-            // alcança (fecho, núcleo, jargão, especificidade). Só roda quando
+            // alcança (fecho, núcleo, jargão, especificidade, economia). Só roda quando
             // TODAS as checagens determinísticas acima passaram (motivos
             // vazio). Fail-open só em falha TÉCNICA; dúvida real sobre o
             // conteúdo reprova (ver comentário na função). Se reprovar, vira
