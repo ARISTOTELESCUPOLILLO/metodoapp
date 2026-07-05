@@ -227,14 +227,31 @@ const OCCASION_KEYWORDS = [
   "domingos",
 ];
 
-// "no/na/em/durante [o/a/os/as] <ocasião>" como ÚLTIMAS palavras da frase.
-// A ocasião no meio da frase (como contexto) é legítima — só o FECHO nela
-// é fecho fraco.
-const OCCASION_END_RE = new RegExp(
-  `\\b(?:no|na|nos|nas|em|durante)\\s+(?:o\\s+|a\\s+|os\\s+|as\\s+)?(?:${OCCASION_KEYWORDS.map(
-    (k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-  ).join("|")})$`,
+// Ocasião como ÚLTIMAS palavras da frase — por SUFIXO, não mais por
+// adjacência de preposição (auditoria 2026-07-05): a versão anterior exigia
+// a palavra de calendário colada à preposição ("no verão"), e "no FIM DO
+// verão"/"no COMEÇO DO inverno" furavam porque havia um conector no meio
+// ("fim do", "começo do") entre a preposição e a ocasião — mesmo com a
+// palavra já estando em OCCASION_KEYWORDS. Enumerar todo conector possível
+// ("fim de", "começo de", "auge de", "meio de"...) é o mesmo jogo de gato e
+// rato das listas fixas; o que importa não é o que vem ANTES da ocasião, é
+// que a frase TERMINA nela — nenhum benefício concreto real termina bruto
+// numa estação/data/feriado, não importa o que a precede. Ordenado do mais
+// longo pro mais curto pra bater expressões de 2+ palavras ("ano novo",
+// "dia das maes") antes de um token isolado.
+const OCCASION_KEYWORDS_BY_LENGTH = [...OCCASION_KEYWORDS].sort(
+  (a, b) => b.split(/\s+/).length - a.split(/\s+/).length,
 );
+
+function matchOccasionEnding(normalizedText: string): string | null {
+  const tokens = normalizedText.split(/\s+/).filter(Boolean);
+  for (const kw of OCCASION_KEYWORDS_BY_LENGTH) {
+    const kwTokens = kw.split(/\s+/);
+    if (tokens.length < kwTokens.length) continue;
+    if (tokens.slice(-kwTokens.length).join(" ") === kw) return kw;
+  }
+  return null;
+}
 
 // Qualificadores adjetivais vagos de aprovação/adequação — quando são a
 // ÚLTIMA palavra, a frase fecha num juízo genérico que colaria em qualquer
@@ -283,11 +300,13 @@ export function checkWeakEnding(sugestao: string, concreteItem?: string | null):
     .trim();
   if (!norm) return motivos;
 
-  // (a) Ocasião/tempo solto no fim — "…no carnaval", "…durante o verão".
-  const occMatch = norm.match(OCCASION_END_RE);
+  // (a) Ocasião/tempo solto no fim — "…no carnaval", "…durante o verão",
+  // "…no fim do verão" (ver matchOccasionEnding: por sufixo, não por
+  // adjacência de preposição).
+  const occMatch = matchOccasionEnding(norm);
   if (occMatch) {
     motivos.push(
-      `fecho fraco (ocasião solta no fim): a frase termina em "${occMatch[0]}" — uma referência de calendário/tempo sem resultado. A ocasião pode aparecer no MEIO da frase como contexto; as ÚLTIMAS palavras devem nomear o resultado, necessidade ou benefício concreto que o item entrega`,
+      `fecho fraco (ocasião solta no fim): a frase termina em "${occMatch}" — uma referência de calendário/tempo sem resultado. A ocasião pode aparecer no MEIO da frase como contexto; as ÚLTIMAS palavras devem nomear o resultado, necessidade ou benefício concreto que o item entrega`,
     );
   }
 
@@ -378,6 +397,37 @@ export function checkItemNameDrift(sugestao: string, concreteItem?: string | nul
 // uma frase mutilada).
 // ─────────────────────────────────────────────────────────────────────────
 
+// Palavras funcionais de "entulho temporal" (preposição + conector) que
+// costumam anteceder a ocasião de calendário no fecho fraco família (a) —
+// usado só pela PODA (matchOccasionEnding, a detecção, não precisa disso:
+// já basta a frase terminar na ocasião). Conjunto pequeno e fechado de
+// palavras GRAMATICAIS (não de conteúdo, como nomes de feriados), por isso
+// não sofre do mesmo problema de lista infinita das palavras de conteúdo.
+const OCCASION_SCAFFOLD_WORDS = new Set([
+  "no",
+  "na",
+  "nos",
+  "nas",
+  "em",
+  "durante",
+  "do",
+  "da",
+  "dos",
+  "das",
+  "de",
+  "o",
+  "a",
+  "os",
+  "as",
+  "fim",
+  "final",
+  "comeco",
+  "inicio",
+  "meio",
+  "auge",
+  "metade",
+]);
+
 export function pruneWeakEnding(sugestao: string): string | null {
   const trailingPunct = sugestao.match(/[.!?…]+\s*$/)?.[0] ?? "";
   const core = trailingPunct ? sugestao.slice(0, -trailingPunct.length) : sugestao;
@@ -385,11 +435,22 @@ export function pruneWeakEnding(sugestao: string): string | null {
 
   let pruned: string | null = null;
 
-  const occMatch = normCore.match(OCCASION_END_RE);
+  const occMatch = matchOccasionEnding(normCore);
   if (occMatch) {
-    const occWordCount = occMatch[0].split(/\s+/).filter(Boolean).length;
+    const occWordCount = occMatch.split(/\s+/).filter(Boolean).length;
     const words = core.trim().split(/\s+/).filter(Boolean);
-    pruned = words.slice(0, Math.max(0, words.length - occWordCount)).join(" ");
+    let cut = words.length - occWordCount;
+    // Continua cortando pra trás enquanto houver entulho temporal ("no fim
+    // do", "no começo do") — teto de segurança pra não devorar a frase
+    // inteira em casos anômalos.
+    let extra = 0;
+    while (cut > 0 && extra < 4) {
+      const prevNorm = normalizeForCompare(words[cut - 1] || "").replace(/[^\p{L}]/gu, "");
+      if (!OCCASION_SCAFFOLD_WORDS.has(prevNorm)) break;
+      cut -= 1;
+      extra += 1;
+    }
+    pruned = words.slice(0, Math.max(0, cut)).join(" ");
   } else {
     const tokens = core.trim().split(/\s+/).filter(Boolean);
     const lastNorm = normalizeForCompare(tokens[tokens.length - 1] || "").replace(
