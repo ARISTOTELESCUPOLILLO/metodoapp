@@ -44,8 +44,9 @@ export function ProductsSection({ products, segment, onProductsChange }: Props) 
         </span>
       </div>
       <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>
-        Liste o que {segment === "MARCA" ? "a marca" : "a empresa"} vende, faz ou oferece. A IA usa
-        pra sugerir assuntos de post.
+        Liste o que {segment === "MARCA" ? "a marca" : "a empresa"} vende, faz ou oferece — um item
+        por produto/serviço. Quanto mais específico, melhor a Sugestão: prefira "Ração para
+        filhotes" e "Ração para cães adultos" em vez de só "Ração para cães e gatos".
       </p>
       {products.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -97,7 +98,7 @@ export function ProductsSection({ products, segment, onProductsChange }: Props) 
                 addProductItem();
               }
             }}
-            placeholder="Ex.: Troca de óleo e filtros"
+            placeholder="Ex.: Ração para filhotes (evite genérico, tipo só 'Ração')"
             style={{ flex: "1 1 160px", minWidth: 0 }}
           />
           <button
