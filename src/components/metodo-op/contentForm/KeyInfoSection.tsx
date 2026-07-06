@@ -84,7 +84,13 @@ export function KeyInfoSection({
   }, [data.keyInfo]);
 
   async function fetchSuggestion() {
-    if (suggestExhausted || hasKeyInfo) return;
+    // suggesting precisa entrar aqui (não só no `disabled` do botão): o botão
+    // "Gerar outra" some da tela só depois do próximo render, então um duplo
+    // clique físico rápido pode disparar 2 chamadas antes do React remover o
+    // botão — sem esse guard, as 2 chamadas usam o MESMO attempt/
+    // previousSuggestions (nenhuma delas atualizou o estado ainda) e
+    // pickConcreteItem, sendo determinístico, escolhe o MESMO item nas duas.
+    if (suggesting || suggestExhausted || hasKeyInfo) return;
     setSuggesting(true);
     setSuggestError(null);
     const attempt = suggestCount;
@@ -420,7 +426,7 @@ export function KeyInfoSection({
                   <button
                     type="button"
                     onClick={fetchSuggestion}
-                    disabled={hasKeyInfo}
+                    disabled={suggesting || hasKeyInfo}
                     style={{
                       background: "#fff",
                       color: "#0f172a",
@@ -429,8 +435,8 @@ export function KeyInfoSection({
                       padding: "6px 14px",
                       fontSize: 13,
                       fontWeight: 600,
-                      cursor: hasKeyInfo ? "not-allowed" : "pointer",
-                      opacity: hasKeyInfo ? 0.4 : 1,
+                      cursor: suggesting || hasKeyInfo ? "not-allowed" : "pointer",
+                      opacity: suggesting || hasKeyInfo ? 0.4 : 1,
                     }}
                   >
                     Gerar outra ({suggestCount}/{isAdmin ? "∞" : SUGGEST_MAX})

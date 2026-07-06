@@ -159,7 +159,13 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   };
 
   async function fetchSuggestion() {
-    if (suggestExhausted || hasKeyInfo) return;
+    // suggesting precisa entrar aqui (não só no `disabled` do botão): o botão
+    // "Gerar outra" some da tela só depois do próximo render, então um duplo
+    // clique físico rápido pode disparar 2 chamadas antes do React remover o
+    // botão — sem esse guard, as 2 chamadas usam o MESMO attempt/
+    // previousSuggestions (nenhuma delas atualizou o estado ainda) e
+    // pickConcreteItem, sendo determinístico, escolhe o MESMO item nas duas.
+    if (suggesting || suggestExhausted || hasKeyInfo) return;
     setSuggesting(true);
     setSuggestError(null);
     const attempt = suggestCount;

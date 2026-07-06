@@ -354,7 +354,7 @@ export function PostUnicoKeyInfoSection({
                   <button
                     type="button"
                     onClick={fetchSuggestion}
-                    disabled={hasKeyInfo}
+                    disabled={suggesting || hasKeyInfo}
                     style={{
                       background: "#fff",
                       color: "#0f172a",
@@ -363,8 +363,8 @@ export function PostUnicoKeyInfoSection({
                       padding: "6px 14px",
                       fontSize: 13,
                       fontWeight: 600,
-                      cursor: hasKeyInfo ? "not-allowed" : "pointer",
-                      opacity: hasKeyInfo ? 0.4 : 1,
+                      cursor: suggesting || hasKeyInfo ? "not-allowed" : "pointer",
+                      opacity: suggesting || hasKeyInfo ? 0.4 : 1,
                     }}
                   >
                     Gerar outra ({suggestCount}/{isAdmin ? "∞" : SUGGEST_MAX})
