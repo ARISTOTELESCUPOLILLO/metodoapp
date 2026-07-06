@@ -282,8 +282,12 @@ export function UserMobileCard({
         >
           Gerações
         </button>
-        <button onClick={() => actions.onResetCounters(r)} style={actionBtn}>
-          Zerar
+        <button
+          onClick={() => actions.onResetCounters(r)}
+          style={actionBtn}
+          title="Zera o consumo de TODOS os slots (P1, P2 e Bônus) — para zerar só um slot, use o botão ao lado do slot em Consumo"
+        >
+          Zerar tudo
         </button>
         <button onClick={() => actions.onResetPassword(r)} style={actionBtn}>
           Senha
