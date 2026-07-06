@@ -269,6 +269,7 @@ Retorne JSON EXATAMENTE assim:
         concreteItem,
         mainActivity,
         segment,
+        audience,
       );
       if (!veredito.ok) {
         motivos.push(`juiz estrutural: ${veredito.motivo ?? "frase reprovada"}`);

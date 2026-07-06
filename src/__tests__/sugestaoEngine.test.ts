@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mocka a chamada de rede à OpenAI — este teste não pode custar dinheiro real
-// nem depender de resposta do modelo. Ele existe só para provar que a
-// extração de suggest-keyinfo.ts para sugestaoEngine.ts (06/07/2026) NÃO
-// mudou o TEXTO do prompt final montado — é a rede de segurança golden/
-// snapshot recomendada pelo Agente de Conformidade Estrutural na auditoria
-// dessa extração. Se qualquer bloco de prompt (lente, ancoragem, critérios
-// de qualidade etc.) mudar de texto no futuro, o snapshot quebra e avisa.
+// nem depender de resposta do modelo. É a rede de segurança golden/snapshot
+// recomendada pelo Agente de Conformidade Estrutural na auditoria da
+// extração de suggest-keyinfo.ts para sugestaoEngine.ts (06/07/2026): trava
+// o TEXTO do prompt final montado, para que qualquer bloco (lente,
+// ancoragem, critérios de qualidade etc.) que mudar sem querer no futuro
+// quebre o snapshot e avise.
 const fetchOpenAIChatMock = vi.fn();
 vi.mock("@/lib/openaiClient.server", () => ({
   fetchOpenAIChat: (...args: unknown[]) =>
@@ -49,6 +49,7 @@ beforeEach(() => {
           linguagemOk: true,
           especificoOk: true,
           economiaOk: true,
+          contextoOk: true,
           motivo: "",
         }),
       };

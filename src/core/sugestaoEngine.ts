@@ -299,8 +299,15 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
     guia: 'Dentro do contexto real de uso já identificado, escolha um momento ou ocasião ESPECÍFICA (estação, fase, evento, situação concreta do calendário ou da rotina do cliente) em que o elemento se encaixa bem — descrito com um detalhe real e datável, nunca uma afirmação vaga de que "serve bem" ou "é uma boa opção".',
   },
   {
+    // Redação ajustada em 07/2026 (teste A/B Variante C, validado por Opus e
+    // Fable como juízes independentes): a versão original ("como ele é
+    // feito, escolhido ou mantido") não distinguia DE QUEM é essa etapa — o
+    // modelo podia descrever bastidor de quem VENDE (estoque, fabricação,
+    // preparo), o mesmo formato das falhas reais da Variante B rejeitada
+    // ("no armazenamento", "na escolha de acabamentos"). Esta versão amarra
+    // a etapa ao CLIENTE que a vive, nunca à empresa.
     nome: "Processo",
-    guia: "Dentro do contexto real de uso já identificado, escolha uma etapa do processo que envolve o elemento nesse contexto — como ele é feito, escolhido ou mantido.",
+    guia: "Dentro do contexto real de uso já identificado, escolha uma etapa do processo que o PRÓPRIO CLIENTE vive ao usar, escolher, ajustar ou manter o elemento (ex.: como ele decide, guarda, renova ou prepara isso na vida/rotina dele) — NUNCA uma etapa de bastidor de quem vende ou produz (estoque, fabricação, preparo interno, organização de fornecedores).",
   },
   {
     nome: "Resultado observável",
@@ -363,27 +370,37 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
 // absorvido no mesmo evento de Sugestão (COST_USD.sugestao).
 const JUDGE_ESTRUTURAL_TIMEOUT_MS = 6_000;
 
+// audience (6º critério contextoOk) — pivô COMPRADOR vs VENDEDOR adicionado
+// em 07/2026 (teste A/B Variante C, validado por Opus e Fable como juízes
+// independentes): fecha um buraco que o especificoOk não pegava — uma frase
+// pode ter ancoragem concreta (item + local real) e ainda assim descrever
+// bastidor de quem vende, não a vida de quem compra (ex.: "Vacinas no
+// armazenamento" tem âncora concreta, mas não é cena do cliente final).
 export async function judgeSugestaoEstrutural(
   apiKey: string,
   sugestao: string,
   concreteItem: string | null | undefined,
   mainActivity: string,
   segment: string,
+  audience: SugestaoAudience,
 ): Promise<{ ok: boolean; motivo?: string }> {
   try {
+    const criterioContexto = `
+6. contextoOk — se a frase ancora o item numa situação/momento/local, quem VIVE essa cena é quem COMPRA ou USA o item (ele se imagina usando, recebendo, escolhendo, precisando) — e não uma etapa interna de quem VENDE (estoque, armazenamento, preparo, escolha de insumos, organização interna)? Reprove só quando a cena existir apenas do lado de dentro do balcão (ex.: "no armazenamento", "na escolha de acabamentos", "na organização interna"). NÃO reprove frases sem situação nenhuma (isso é papel do especificoOk) nem rotina operacional que é do próprio cliente comprador (ex.: em B2B, "no fechamento dos pedidos" é rotina de quem compra, não bastidor de quem vende). PÚBLICO-ALVO desta empresa: ${audience === "B2C" ? "consumidor final (B2C) — a cena precisa ser vivida pela pessoa que usa o item na própria vida" : "empresarial (B2B) — o comprador é o dono/gestor do negócio, e a rotina de trabalho DELE (não da empresa que vende) conta como contexto legítimo"}.`;
+
     const prompt = `Avalie esta frase de pauta de conteúdo (Sugestão/Informação-chave) em português brasileiro, para uma empresa do ramo "${mainActivity || segment}":
 
 FRASE: "${sugestao}"${concreteItem ? `\nELEMENTO CONCRETO DE ORIGEM: "${concreteItem}"` : ""}
 
-Avalie os 5 critérios abaixo com RIGOR — em caso de DÚVIDA REAL sobre qualquer um deles, considere REPROVADO (false). Só marque true quando tiver certeza razoável de que o critério foi cumprido:
+Avalie os 6 critérios abaixo com RIGOR — em caso de DÚVIDA REAL sobre qualquer um deles, considere REPROVADO (false). Só marque true quando tiver certeza razoável de que o critério foi cumprido:
 
 1. fechoOk — as últimas 2-3 palavras nomeiam um resultado, necessidade ou benefício CONCRETO e específico deste item/negócio? Reprove se o fecho for: ocasião de calendário solta (ex.: "durante feriados", "no verão", "no fim do verão", "no começo do inverno" — QUALQUER variação com conector no meio conta igual), o nome do próprio item sem resultado nenhum, um qualificador ADJETIVO genérico (o teste é o PADRÃO, não uma lista fixa: "certo", "ideal", "exclusivo", "seguro", "preciso", "qualificado", "disponível" são exemplos, mas QUALQUER adjetivo cujo oposto seria absurdo de anunciar conta como vazio), OU um SUBSTANTIVO ABSTRATO genérico de sensação/qualidade (ex.: "aconchego", "praticidade", "bem-estar", "conforto", "satisfação") — para substantivo, o teste não é o oposto absurdo (substantivo não tem oposto natural), é: "esse fecho serviria de encerramento pra QUALQUER produto/serviço do mercado, sem dizer nada específico deste item"? Se sim, é vazio mesmo sendo um substantivo "positivo".
 2. nucleoOk — o centro GRAMATICAL da frase (o sujeito ou a locução que abre a frase) é o elemento concreto em si — e NÃO um termo abstrato/nominalização mesmo quando o item concreto aparece DEPOIS dele como complemento? Reprove construções do tipo "a escolha certa DE [item]", "a falta DE [item]", "o uso DE [item]", "planejamento DE [item]" — nelas o item aparece na frase, mas GRAMATICALMENTE é só complemento de um conceito abstrato ("escolha", "falta", "uso", "planejamento") que ocupa o lugar do núcleo; isso reprova mesmo com o item mencionado. Só aprove quando o próprio item/categoria/atividade for o sujeito ou abrir a locução (ex.: "Mesa para reuniões longas", "Cadeira que ajusta altura").
 3. linguagemOk — uma pessoa comum, leiga no assunto, entende a frase de primeira, SEM jargão técnico ou anglicismo de marketing/vendas (ex.: "leads", "tráfego pago", "briefing", "funil", "contatos quentes", "targeting", "conversão")? EXCEÇÃO: se o ELEMENTO CONCRETO DE ORIGEM informado acima já É esse termo (o próprio produto/serviço cadastrado se chama assim — ex.: a empresa vende literalmente "Tráfego pago" como serviço), NÃO reprove por nomear o item pelo nome dele mesmo; reprove aqui só jargão ADICIONAL além do necessário pra nomear o item (ex.: mesmo citando "Tráfego pago" corretamente, "leads qualificados" ou "funil de conversão" no resto da frase ainda reprovam).
 4. especificoOk — a frase tem ALGUMA ancoragem concreta (um item, categoria, procedimento ou situação real) — ou é um slogan institucional que não nomeia NADA concreto e serviria com as MESMAS palavras mesmo trocando o produto/serviço por outro completamente diferente (ex.: "Marketing digital para gerar mais vendas", "Qualidade que você pode confiar")? IMPORTANTE: uma frase que nomeia um item/categoria real (mesmo um item comum, tipo "cadeira", "mesa", "consulta") e descreve um resultado/característica verificável dele NÃO é genérica só porque um concorrente que vende o mesmo TIPO de item poderia dizer algo parecido — isso é esperado e correto, reprove aqui SÓ quando a frase não tiver nenhum item/situação concreta identificável, e sim apenas um conceito abstrato de negócio.
-5. economiaOk — a última palavra (ou as últimas 2-3) é redundante/pleonástica com o resto da frase (ex.: "susto inesperado" — susto já é inesperado por definição), OU é um qualificador (adjetivo/particípio) colado ao substantivo final que NÃO muda nem especifica o resultado central (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "internações longas" — tire a palavra e o resultado continua o mesmo), OU está semanticamente deslocada do tipo real desse item/negócio (ex.: um acessório anunciado por um benefício que não é a função dele)? TESTE: apague mentalmente essa última palavra — se a frase perde informação real, marque economiaOk true (está OK); se a frase fica dizendo exatamente a mesma coisa, só mais curta, marque economiaOk false (é recheio, reprovado).
+5. economiaOk — a última palavra (ou as últimas 2-3) é redundante/pleonástica com o resto da frase (ex.: "susto inesperado" — susto já é inesperado por definição), OU é um qualificador (adjetivo/particípio) colado ao substantivo final que NÃO muda nem especifica o resultado central (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "internações longas" — tire a palavra e o resultado continua o mesmo), OU está semanticamente deslocada do tipo real desse item/negócio (ex.: um acessório anunciado por um benefício que não é a função dele)? TESTE: apague mentalmente essa última palavra — se a frase perde informação real, marque economiaOk true (está OK); se a frase fica dizendo exatamente a mesma coisa, só mais curta, marque economiaOk false (é recheio, reprovado).${criterioContexto}
 
-Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou false, "linguagemOk": true ou false, "especificoOk": true ou false, "economiaOk": true ou false, "motivo": "se algum item for false, 1 frase curta e objetiva dizendo o que corrigir; se todos forem true, string vazia" }`;
+Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou false, "linguagemOk": true ou false, "especificoOk": true ou false, "economiaOk": true ou false, "contextoOk": true ou false, "motivo": "se algum item for false, 1 frase curta e objetiva dizendo o que corrigir; se todos forem true, string vazia" }`;
 
     const result = await fetchOpenAIChat(
       apiKey,
@@ -407,6 +424,7 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       linguagemOk?: unknown;
       especificoOk?: unknown;
       economiaOk?: unknown;
+      contextoOk?: unknown;
       motivo?: unknown;
     };
     try {
@@ -424,7 +442,8 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       parsed.nucleoOk === true &&
       parsed.linguagemOk === true &&
       parsed.especificoOk === true &&
-      parsed.economiaOk === true;
+      parsed.economiaOk === true &&
+      parsed.contextoOk === true;
     if (allOk) return { ok: true };
 
     return {
@@ -432,7 +451,7 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       motivo:
         typeof parsed.motivo === "string" && parsed.motivo.trim()
           ? parsed.motivo.trim()
-          : "juiz estrutural reprovou a frase (fecho, núcleo, linguagem, especificidade ou economia) sem detalhar o motivo — reescreva com mais concretude, sem jargão e sem palavra de recheio no fim",
+          : "juiz estrutural reprovou a frase (fecho, núcleo, linguagem, especificidade, economia ou contexto) sem detalhar o motivo — reescreva com mais concretude, sem jargão e sem palavra de recheio no fim",
     };
   } catch {
     return { ok: true }; // erro técnico (rede, exceção) — fail-open.
@@ -564,6 +583,23 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
     : "";
   const ancoragemBlock = segment === "MARCA" ? ancoragemAtividadeMarca : ancoragemAtividade;
 
+  // contextoFormaBlock — ajustado em 07/2026 (teste A/B Variante C, validado
+  // por Opus e Fable como juízes independentes): a regra anterior mandava
+  // SEMPRE preferir resultado/efeito sobre cenário/momento ("cenário é
+  // exceção, não padrão") — regra que contradizia o princípio "Contexto na
+  // MOP" do Aristóteles (bons exemplos dele são majoritariamente momento/
+  // cenário: "em manhãs frias", "antes de uma viagem") e a própria lente
+  // "Situação real" já em produção (que pede exatamente "um momento
+  // específico e cotidiano"). Descarta a hierarquia por TIPO (resultado vs
+  // cenário) e usa o eixo que os dois juízes convergiram ser o certo: QUEM
+  // VIVE a situação — comprador/usuário do item, nunca bastidor de quem
+  // vende — com a rotina do próprio cliente comprador (ex.: B2B) contando
+  // como legítima. Inclui também o princípio dos conectores (e/com/em/
+  // no-na/para/à) SEM listá-los como menu — listar as 6 formas recriaria o
+  // "molde forçado" da fórmula PRODUTO+CONECTOR+RECORTE já testada e
+  // rejeitada (scripts/ab-sugestao/variantB.ts).
+  const contextoFormaBlock = `O CONTEXTO REAL DE USO pode ser um resultado/efeito, um momento/ocasião, uma finalidade ou uma característica — NENHUMA forma é preferida sobre outra. O único requisito é QUEM VIVE essa situação: precisa ser o CLIENTE/COMPRADOR/USUÁRIO de "${concreteItem}" (ele se imagina usando, recebendo, escolhendo, precisando) — nunca uma etapa de bastidor de quem VENDE (estoque, armazenamento, preparo, organização interna, escolha de insumos), exceto quando essa etapa É a própria rotina de trabalho do cliente comprador (ex.: em B2B, "o fechamento dos pedidos" é rotina de quem compra o ERP, não bastidor de quem vende). Os conectores (e, com, em, no/na, para, à) não escolhem o assunto — eles só aproximam o produto de uma situação real vivida pelo cliente. TESTE: o cliente consegue imaginar essa situação acontecendo de verdade com ele? Bons exemplos: "Café em manhãs frias", "Vacinas para filhotes", "ERP no fechamento dos pedidos". Maus exemplos (bastidor de quem vende, não do cliente): "Café na escolha dos grãos", "Vacinas no armazenamento", "ERP na organização interna". VARIE A CONSTRUÇÃO: alterne entre essas formas e entre locução sem verbo ou frase com sujeito e predicado (ver SINTAXE — NÚCLEO DA FRASE), conforme o que soar mais natural para este item; repetir sempre a mesma estrutura entre sugestões é o que faz a Sugestão soar montada por fórmula. PROIBIDO colar um adjetivo ou particípio de recheio na última palavra só para o fecho "parecer" mais específico (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "sustos inesperados", "internações longas") quando essa palavra não muda nem especifica o efeito central — TESTE: apague a última palavra; se a frase continua dizendo exatamente a mesma coisa, ela é recheio e deve ser cortada ou trocada por um efeito que dependa dela para fazer sentido.`;
+
   // Elemento concreto — substitui a antiga "COBERTURA DA ATIVIDADE"
   // (rodízio mental por grupos da atividade) por um dado real e
   // explícito (concreteItem definido acima, antes da ancoragem).
@@ -577,7 +613,7 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === "MAR
       }
 
 CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
-O CONTEXTO REAL DE USO não precisa ser um cenário, local ou momento (ex.: "durante a consulta", "na sala de espera", "na reunião") — PREFIRA SEMPRE o RESULTADO ou EFEITO direto que "${concreteItem}" entrega; esse resultado/efeito já é o COMPLEMENTO ÚNICO da frase (ver CRITÉRIOS DE QUALIDADE) e não deve ganhar cenário extra. Cenário/local é EXCEÇÃO, não padrão: só use quando o resultado direto sozinho não for suficiente para a frase fazer sentido. VARIE A CONSTRUÇÃO: o formato "[item] para [resultado/efeito]" é UMA opção válida, não a única — alterne com locução sem verbo de outro tipo ou frase com sujeito e predicado (ver SINTAXE — NÚCLEO DA FRASE), conforme o que soar mais natural para este item; repetir sempre a mesma estrutura "para/que + verbo" entre sugestões é o que faz a Sugestão soar montada por fórmula. PROIBIDO colar um adjetivo ou particípio de recheio na última palavra só para o fecho "parecer" mais específico (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "sustos inesperados", "internações longas") quando essa palavra não muda nem especifica o efeito central — TESTE: apague a última palavra; se a frase continua dizendo exatamente a mesma coisa, ela é recheio e deve ser cortada ou trocada por um efeito que dependa dela para fazer sentido.
+${contextoFormaBlock}
 DIREÇÃO DE ENTREGA: se a frase envolver entrega, envio ou deslocamento de "${concreteItem}" até alguém (ex.: "entregue", "leva até", "chega em"), o DESTINO é o CLIENTE/USO FINAL (a casa dele, o local onde ele vai usar) — NÃO o endereço da própria empresa/loja/clínica, salvo se "${mainActivity}" disser explicitamente que a entrega é feita até o estabelecimento. Se o destino exato não estiver claro em "${mainActivity}", não mencione local nenhum — descreva pelo RESULTADO/EFEITO direto ("[item] para [resultado]").`
     : "";
 
@@ -948,6 +984,7 @@ Retorne JSON EXATAMENTE assim:
         concreteItem,
         mainActivity,
         segment,
+        audience,
       );
       if (!veredito.ok) {
         motivos.push(
