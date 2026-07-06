@@ -9,6 +9,25 @@ const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB
 
 const FormatoEnum = z.enum(["estatico", "carrossel", "estatico_final", "reels"]);
 
+// createSignedUrl pode falhar de forma transitória (rede/Storage); sem retry, uma
+// falha isolada some silenciosamente do histórico (ex.: 5 imagens no banco, só 4 na tela).
+async function createSignedUrlWithRetry(
+  path: string,
+  expiresIn: number,
+  attempts = 2,
+): Promise<string | null> {
+  let lastError: string | undefined;
+  for (let i = 0; i < attempts; i++) {
+    const { data, error } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .createSignedUrl(path, expiresIn);
+    if (data?.signedUrl) return data.signedUrl;
+    lastError = error?.message;
+  }
+  console.error(`createSignedUrl falhou após ${attempts} tentativas para "${path}": ${lastError}`);
+  return null;
+}
+
 const SaveSchema = z.object({
   tipo: z.enum(["S3V", "PU"]),
   slot: z.enum(["plano1", "plano2", "bonus"]),
@@ -34,7 +53,8 @@ async function resolveTargetUserId(
   asUserId: string | undefined,
 ): Promise<string> {
   if (!asUserId || asUserId === callerId) return callerId;
-  if (!(await isAdmin(callerId))) throw new Error("Forbidden: somente admin pode atuar como outro usuário");
+  if (!(await isAdmin(callerId)))
+    throw new Error("Forbidden: somente admin pode atuar como outro usuário");
   return asUserId;
 }
 
@@ -254,14 +274,12 @@ export const listMyGenerations = createServerFn({ method: "POST" })
         .in("generation_id", ids)
         .order("ordem", { ascending: true });
       for (const a of assets || []) {
-        const { data: signed } = await supabaseAdmin.storage
-          .from(BUCKET)
-          .createSignedUrl(a.storage_path, 60 * 30);
-        if (!signed?.signedUrl) continue;
+        const url = await createSignedUrlWithRetry(a.storage_path, 60 * 30);
+        if (!url) continue;
         (assetsByGen[a.generation_id] ||= []).push({
           id: a.id,
           ordem: a.ordem,
-          url: signed.signedUrl,
+          url,
         });
       }
     }
@@ -270,16 +288,12 @@ export const listMyGenerations = createServerFn({ method: "POST" })
     const videoUrls: Record<string, string> = {};
     for (const g of gens || []) {
       if (g.pdf_path) {
-        const { data: signed } = await supabaseAdmin.storage
-          .from(BUCKET)
-          .createSignedUrl(g.pdf_path, 60 * 30);
-        if (signed?.signedUrl) pdfUrls[g.id] = signed.signedUrl;
+        const url = await createSignedUrlWithRetry(g.pdf_path, 60 * 30);
+        if (url) pdfUrls[g.id] = url;
       }
       if (g.video_path) {
-        const { data: signed } = await supabaseAdmin.storage
-          .from(BUCKET)
-          .createSignedUrl(g.video_path, 60 * 30);
-        if (signed?.signedUrl) videoUrls[g.id] = signed.signedUrl;
+        const url = await createSignedUrlWithRetry(g.video_path, 60 * 30);
+        if (url) videoUrls[g.id] = url;
       }
     }
 
