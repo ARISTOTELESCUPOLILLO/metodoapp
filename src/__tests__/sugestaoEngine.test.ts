@@ -13,7 +13,11 @@ vi.mock("@/lib/openaiClient.server", () => ({
     fetchOpenAIChatMock(...(args as [string, Record<string, unknown>, number?])),
 }));
 
-import { generateSugestao, type SugestaoEngineInput } from "@/core/sugestaoEngine";
+import {
+  generateSugestao,
+  pickConcreteItem,
+  type SugestaoEngineInput,
+} from "@/core/sugestaoEngine";
 
 function jsonContent(obj: unknown) {
   return { choices: [{ message: { content: JSON.stringify(obj) } }] };
@@ -118,5 +122,56 @@ describe("generateSugestao — snapshot do prompt final (golden, sem IA real)", 
     // 1 chamada de geração (0.95) + 1 chamada de juiz (0.1); decompose (0.3)
     // nem roda aqui porque selectedProducts já veio preenchido.
     expect(fetchOpenAIChatMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("avisa sobre conector já usado no lote quando há sugestões anteriores com 'para'", async () => {
+    mockAnswer = "Correias industriais em revisão evitam parada";
+    await generateSugestao("fake-api-key", {
+      ...mopInput,
+      previousSuggestions: ["Correias industriais para evitar paradas"],
+    });
+    const promptText = JSON.stringify(capturedMainMessages);
+    expect(promptText).toContain("CONECTOR/VERBO JÁ USADO NESTE LOTE");
+    expect(promptText).toContain("usaram o conector");
+    expect(promptText).toContain("para");
+  });
+});
+
+describe("pickConcreteItem — guarda de família semântica (achado real AJUSTE_CONFLITO 07/2026)", () => {
+  // Pool real do print "Tudo MESA": 8 itens, os 3 últimos cadastrados em
+  // sequência são todos mesa/escrivaninha — antes do embaralhamento
+  // determinístico + guarda de família, o passeio por índice consecutivo
+  // podia entregar os 3 do mesmo lote, mesmo sendo itens distintos.
+  const items = [
+    "Armário de escritório",
+    "Poltrona de trabalho",
+    "Estante de escritório",
+    "Cadeira estofada de escritório",
+    "Cadeira de recepção de consultório",
+    "Mesa de secretária",
+    "Mesa de escritório",
+    "Mesa para gestores",
+  ];
+
+  it("não entrega 2+ itens da mesma família (mesma 1ª palavra significativa) no mesmo lote de 3", () => {
+    for (let sessionSeed = 0; sessionSeed < 200; sessionSeed++) {
+      const prev: string[] = [];
+      const picks: string[] = [];
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { item } = pickConcreteItem(items, attempt, prev, sessionSeed);
+        picks.push(item!);
+        prev.push(`${item} verbo qualquer aqui`);
+      }
+      const mesaCount = picks.filter((p) => p.toLowerCase().includes("mesa")).length;
+      expect(mesaCount, `seed=${sessionSeed}: ${picks.join(" | ")}`).toBeLessThan(2);
+    }
+  });
+
+  it("com 1 único item marcado, continua devolvendo sempre o mesmo item (âncora automática)", () => {
+    const single = ["Mesa para gestores"];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { item } = pickConcreteItem(single, attempt, [], 42);
+      expect(item).toBe("Mesa para gestores");
+    }
   });
 });

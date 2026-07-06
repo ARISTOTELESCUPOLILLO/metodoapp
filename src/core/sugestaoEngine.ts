@@ -30,6 +30,51 @@ import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 // a rotação degenera pra sempre devolver esse mesmo item. Com 2+ itens
 // marcados, o rodízio normal entre eles continua sendo o comportamento
 // correto (o usuário marcou vários de propósito, pool de variação).
+// PRNG determinístico simples (mulberry32) — só pra embaralhar a ORDEM dos
+// itens 1x por sessão (seeded por sessionSeed, sem dependência externa).
+// Achado real de produção (07/2026, prints em AJUSTE_CONFLITO/): o passeio
+// antigo por ÍNDICE CONSECUTIVO (startIdx, startIdx+1, startIdx+2) batia
+// sempre nos mesmos vizinhos de cadastro — como o usuário tende a cadastrar
+// variações do mesmo produto em sequência (3 tipos de mesa seguidos, 2
+// "Marketing digital" seguidos), o lote de 3 sugestões saía todo da MESMA
+// família ("tudo mesa"), mesmo sem repetir o item literal nenhuma vez.
+// Embaralhar 1x por sessão quebra essa correlação sem perder determinismo
+// (mesma sessão sempre gera a mesma sequência; sessões diferentes variam).
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  let s = seed >>> 0 || 1;
+  const rand = () => {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+// Palavras de ligação ignoradas ao achar a "primeira palavra significativa"
+// de um item (ex.: "Mesa de escritório" → "mesa", não "de").
+const FIRST_WORD_STOPWORDS = new Set([
+  "de",
+  "da",
+  "do",
+  "das",
+  "dos",
+  "para",
+  "com",
+  "em",
+  "no",
+  "na",
+  "e",
+  "a",
+  "o",
+]);
+
 export function pickConcreteItem(
   items: string[],
   attempt: number,
@@ -46,23 +91,44 @@ export function pickConcreteItem(
       .replace(/[óòõôö]/g, "o")
       .replace(/[úùûü]/g, "u")
       .replace(/ç/g, "c");
+  const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Word-boundary em vez de substring puro: evita falso positivo de um item
   // curto (ex.: "TEF") "casar" por coincidência dentro de outra palavra de
   // uma sugestão anterior não relacionada.
   const isUsed = (itemNorm: string) =>
-    previousSuggestions.some((sugg) => {
-      const s = norm(sugg);
-      return new RegExp(`\\b${itemNorm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(s);
-    });
-  // sessionSeed garante ponto de entrada diferente a cada sessão (evita que
-  // toda sessão nova comece sempre pelo produto 0 da lista cadastrada).
-  const startIdx = (((attempt + sessionSeed) % items.length) + items.length) % items.length;
-  for (let i = 0; i < items.length; i++) {
-    const idx = (startIdx + i) % items.length;
-    const n = norm(items[idx]);
-    if (!isUsed(n)) return { item: items[idx], repeated: false };
+    previousSuggestions.some((sugg) =>
+      new RegExp(`\\b${escapeRegex(itemNorm)}\\b`).test(norm(sugg)),
+    );
+  // familyUsed — guarda de família semântica (achado real de produção,
+  // ver comentário do seededShuffle acima): pega o caso em que o shuffle
+  // sozinho não é suficiente (a "primeira palavra significativa" do item
+  // candidato — ex.: "mesa" — já aparece em alguma sugestão anterior deste
+  // MESMO lote/sessão, mesmo sendo um item CADASTRADO diferente).
+  const familyUsed = (itemName: string) => {
+    const words = norm(itemName).split(/\s+/).filter(Boolean);
+    const fw = words.find((w) => !FIRST_WORD_STOPWORDS.has(w)) ?? words[0];
+    if (!fw) return false;
+    return previousSuggestions.some((sugg) =>
+      new RegExp(`\\b${escapeRegex(fw)}\\b`).test(norm(sugg)),
+    );
+  };
+  const shuffled = seededShuffle(items, sessionSeed);
+  const startIdx = ((attempt % shuffled.length) + shuffled.length) % shuffled.length;
+  // 1ª passada: evita item já citado literalmente E item da mesma família.
+  for (let i = 0; i < shuffled.length; i++) {
+    const idx = (startIdx + i) % shuffled.length;
+    const candidate = shuffled[idx];
+    if (!isUsed(norm(candidate)) && !familyUsed(candidate))
+      return { item: candidate, repeated: false };
   }
-  return { item: items[startIdx], repeated: previousSuggestions.length > 0 };
+  // 2ª passada: aceita mesma família (melhor um item de família repetida do
+  // que travar a geração), só evita repetir o item literal.
+  for (let i = 0; i < shuffled.length; i++) {
+    const idx = (startIdx + i) % shuffled.length;
+    const candidate = shuffled[idx];
+    if (!isUsed(norm(candidate))) return { item: candidate, repeated: false };
+  }
+  return { item: shuffled[startIdx], repeated: previousSuggestions.length > 0 };
 }
 
 // Classifica o ELEMENTO CONCRETO desta sugestão como produto físico (VAREJO)
@@ -711,7 +777,7 @@ ${
 SINTAXE — NÚCLEO DA FRASE: o núcleo (sujeito da frase ou centro da locução) segue esta ordem de prioridade: (1) o ELEMENTO CONCRETO desta sugestão (produto/serviço ou variação direta dele), quando houver; (2) categoria, procedimento, ferramenta, equipamento, recurso ou solução real da atividade; (3) a própria ATIVIDADE da empresa, quando não houver elemento concreto. A frase pode ser uma locução sem verbo (ex.: "[item] para [situação/uso]") ou uma frase com sujeito e predicado — ambas válidas, desde que o núcleo siga essa ordem. NÃO use como núcleo principal: termos abstratos ("confiança", "qualidade", "segurança", "clareza", "crescimento", "inovação", "autoridade", "relacionamento", "resultado", "presença", "organização"), verbos no infinitivo nominalizados ("crescer", "confiar", "melhorar", "transformar", "organizar") ou locuções genéricas ("o cuidado", "o diferencial", "a escolha certa") — esses termos só valem como consequência, predicado ou qualificador, nunca como núcleo.
 COMPLEMENTO ÚNICO: depois do núcleo, a frase carrega só UM traço — um resultado, uma situação ou uma característica. PROIBIDO empilhar mais de um traço (núcleo + traço + outro traço/qualificação/cenário) e PROIBIDO mais de uma oração subordinada ("que"); havendo uma relativa, ela é a única adição depois do núcleo e fecha a frase ali — sem encadear mais nada. Isso vale também DENTRO do traço único: um adjetivo ou particípio colado ao substantivo do complemento (ex.: "negociações digitais", "contatos ativos") conta como um SEGUNDO traço enfeitando o primeiro, não como parte do mesmo traço — só mantenha esse adjetivo se ele for a própria característica que define o resultado (sem ele a frase perde informação real).
 FECHO DA FRASE: as últimas 2-3 palavras precisam nomear um resultado, necessidade ou benefício CONCRETO e reconhecível pelo cliente final — algo específico que ele ganha, resolve ou evita com este item. PROIBIDO fechar com generalidade de bula/institucional: "sempre", "de qualidade", "com segurança", "do jeito certo", "na medida certa", "evita problemas comuns", "recaídas comuns", ou qualquer qualificador vazio que serviria igual para outro produto/serviço. PROIBIDO TAMBÉM fechar com um qualificador redundante ou de recheio — que repete uma ideia já implícita ("susto inesperado": susto já é inesperado) ou que só finge especificidade sem mudar o resultado ("digital", "ativo", "híbrido", "longo/a", "especial", "feito" coladas a um substantivo que já fazia sentido sozinho). TESTE: lendo só o fecho (as últimas palavras), ele descreve um efeito específico deste item, ou colaria em qualquer produto/serviço do mercado? E, tirando a última palavra, a frase perde algum sentido real, ou fica exatamente igual (só mais curta)? Se colar em qualquer coisa, OU se a frase ficar igual sem a última palavra, reescreva o fecho com o efeito concreto deste item, sem o enfeite.
-VEROSSIMILHANÇA: a frase precisa ser algo que poderia acontecer de verdade com este produto, serviço ou atividade — sem função, causa-efeito, condição, benefício técnico ou comportamento não informado e implausível para o segmento ${segment}. Teste: "isso poderia acontecer de verdade com esse produto/serviço/atividade?" — se não, reescreva.
+VEROSSIMILHANÇA: a frase precisa ser algo que poderia acontecer de verdade com este produto, serviço ou atividade — sem função, causa-efeito, condição, benefício técnico ou comportamento não informado e implausível para o segmento ${segment}. Teste: "isso poderia acontecer de verdade com esse produto/serviço/atividade?" — se não, reescreva. O efeito citado precisa estar na escala do que o item FAZ diretamente (ex.: "ERP organiza pedidos"), não um resultado comercial dois passos depois que o item não controla sozinho (ex.: NÃO "ERP para vendas sem atraso" — um sistema não garante venda).
 TESTE DO CONTEXTO REAL DE USO (já identificado acima): a situação descrita combina com o contexto já estabelecido dentro de "${mainActivity}" — não é um cenário genérico que serviria igual para o mesmo item ou atividade em outro contexto (uso doméstico, social, outro ramo, outro tipo de cliente). Teste: "essa situação só faz sentido porque está em '${mainActivity}', ou serviria igual em qualquer outro lugar?" — se servir igual em qualquer lugar, reescreva ancorando no contexto real desse ramo.
 NATURALIDADE: a frase deve parecer uma pauta de conteúdo real, do jeito que alguém do ramo falaria — não um slogan, conceito institucional ou frase tecnicamente correta porém artificial. Locuções sem verbo são bem-vindas quando soarem mais naturais que uma frase completa. Se a frase parecer academicamente correta mas estranha ao jeito comum de falar do segmento ${segment}, reescreva de forma mais direta e reconhecível.
 ${mode === "postunico" ? 'Se a categoria for "Novidade ou Oportunidade", use tendências e comportamentos emergentes — não invente datas ou promoções inexistentes.\n' : ""}${proibicoesInventar}
@@ -729,8 +795,37 @@ Foque em situações reais de trabalho: atendimento, resultado, organização, v
 Evite linguagem de grande consultoria e termos frios como "decisores", "receita previsível", "riscos operacionais".
 NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo — produto/serviço/categoria/atividade no núcleo, nunca um papel pessoal ("gestores", "equipes", "donos") nem um conceito abstrato de gestão. Exemplos de FORMATO de referência (não copie o vocabulário, mostram apenas a estrutura): "mesa de reunião para equipes maiores", "módulo financeiro para contas a pagar", "correia industrial para manutenção preventiva". NUNCA use "clientes", "consumidores" ou "compradores" como núcleo principal — esses termos fazem a frase soar como crítica ao cliente da empresa, não como espelho da realidade do receptor.`;
 
+  // Conector já usado no lote — achado real de produção (07/2026, prints em
+  // AJUSTE_CONFLITO/): mesmo sem bug nenhum, as 3 sugestões do mesmo lote são
+  // geradas por chamadas INDEPENDENTES, então "para" (o conector mais fácil/
+  // natural) dominava 2-3 de 3 sugestões seguidas. Detecta o conector de cada
+  // sugestão anterior por regex (lista fechada e pequena, sem NLP) e avisa —
+  // não bane (só repita "para" se nenhuma alternativa soar natural), pra não
+  // recriar o molde forçado da fórmula PRODUTO+CONECTOR+RECORTE já rejeitada.
+  const CONECTOR_PATTERNS: { nome: string; re: RegExp }[] = [
+    { nome: "para", re: /\bpara\b/ },
+    { nome: "com", re: /\bcom\b/ },
+    { nome: "em", re: /\bem\b/ },
+    { nome: "no", re: /\bno\b/ },
+    { nome: "na", re: /\bna\b/ },
+    { nome: "nos", re: /\bnos\b/ },
+    { nome: "nas", re: /\bnas\b/ },
+    { nome: "à", re: /\bà\b/ },
+    { nome: "e", re: /\be\b/ },
+  ];
+  const detectConector = (sugestao: string): string | null => {
+    const s = sugestao.toLowerCase();
+    return CONECTOR_PATTERNS.find(({ re }) => re.test(s))?.nome ?? null;
+  };
+  const conectoresUsados = Array.from(
+    new Set(previousSugs.map(detectConector).filter((c): c is string => !!c)),
+  );
+  const conectorWarning = conectoresUsados.length
+    ? ` CONECTOR/VERBO JÁ USADO NESTE LOTE: as sugestões acima já usaram o conector ${conectoresUsados.map((c) => `"${c}"`).join(", ")}. Se o mesmo conector também for o mais natural pra este item, prefira variar (outro conector, ou uma construção com verbo de ação direto) — só repita se nenhuma alternativa soar natural. O VERBO DE AÇÃO principal desta frase (se houver) também precisa ser diferente do das sugestões acima (ex.: não use "agiliza"/"agilizam" de novo se já apareceu).`
+    : "";
+
   const previousBlock = previousSugs.length
-    ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos — gere algo completamente diferente, sobre outro produto, serviço ou situação):\n${previousSugs.map((s) => `- "${s}"`).join("\n")}\n⚠ ABERTURA TAMBÉM PRECISA SER DIFERENTE: mesmo se o produto/serviço de origem desta sugestão tiver nome parecido com algum item acima (ex.: dois serviços cadastrados começando com as mesmas palavras), a FRASE FINAL não pode começar com as mesmas palavras de nenhuma sugestão acima — não preserve o nome literal do item como abertura fixa; extraia o conceito e construa uma frase nova, com estrutura e primeiras palavras visivelmente diferentes.`
+    ? `SUGESTÕES ANTERIORES NESTA SESSÃO (NÃO repita estes assuntos — gere algo completamente diferente, sobre outro produto, serviço ou situação):\n${previousSugs.map((s) => `- "${s}"`).join("\n")}\n⚠ ABERTURA TAMBÉM PRECISA SER DIFERENTE: mesmo se o produto/serviço de origem desta sugestão tiver nome parecido com algum item acima (ex.: dois serviços cadastrados começando com as mesmas palavras), a FRASE FINAL não pode começar com as mesmas palavras de nenhuma sugestão acima — não preserve o nome literal do item como abertura fixa; extraia o conceito e construa uma frase nova, com estrutura e primeiras palavras visivelmente diferentes.${conectorWarning}`
     : "";
 
   const tom = OBJETIVO_TOM[objetivo as keyof typeof OBJETIVO_TOM] ?? OBJETIVO_TOM.promocao;
