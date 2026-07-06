@@ -30,7 +30,7 @@ import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 // a rotação degenera pra sempre devolver esse mesmo item. Com 2+ itens
 // marcados, o rodízio normal entre eles continua sendo o comportamento
 // correto (o usuário marcou vários de propósito, pool de variação).
-function pickConcreteItem(
+export function pickConcreteItem(
   items: string[],
   attempt: number,
   previousSuggestions: string[],
@@ -70,7 +70,7 @@ function pickConcreteItem(
 // da empresa. Usado na PU para escolher a LENTE DO SEGMENTO certa quando a
 // empresa registra itens dos dois tipos (ex.: empresa de SERVIÇOS que também
 // vende produtos de VAREJO no Kit de Marca).
-function classifyItemType(item: string): "VAREJO" | "SERVIÇOS" | null {
+export function classifyItemType(item: string): "VAREJO" | "SERVIÇOS" | null {
   const norm = item.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
   const SERVICO_KEYWORDS = [
@@ -204,7 +204,7 @@ function ancoraIsGrounded(ancora: string, activityNorm: string): boolean {
   return words.every((w) => activityNorm.includes(w));
 }
 
-async function decomposeAtividadeEmItens(
+export async function decomposeAtividadeEmItens(
   apiKey: string,
   mainActivity: string,
   segment: string,
@@ -363,7 +363,7 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
 // absorvido no mesmo evento de Sugestão (COST_USD.sugestao).
 const JUDGE_ESTRUTURAL_TIMEOUT_MS = 6_000;
 
-async function judgeSugestaoEstrutural(
+export async function judgeSugestaoEstrutural(
   apiKey: string,
   sugestao: string,
   concreteItem: string | null | undefined,
@@ -653,6 +653,21 @@ PROIBIDO (ou variações próximas): "indicada por"/"indicado por", "ajustado co
   const allowPromoLanguagePU =
     mode === "postunico" && (objetivo === "promocao" || objetivo === "oportunidade");
 
+  // Verbo de benefício (só POST ÚNICO — auditoria A/B 06/07/2026): mérito
+  // parcial salvado do teste da hipótese "Produto+Conector+Recorte /
+  // Produto+Benefício Percebido" (ver memória do projeto) — os dois juízes
+  // (Opus e Fable) notaram, de forma independente, que a Variante A às
+  // vezes usa verbo de PROMESSA INFLADA ("transforma suas reuniões") onde
+  // um verbo de benefício verificável ("facilita reuniões produtivas")
+  // seria mais crível para o pequeno empresário. A fórmula rígida da
+  // hipótese foi rejeitada (regressão no MOP), mas esse ajuste pontual de
+  // verbo é isolado o bastante para entrar só na PU, sem mexer no MOP nem
+  // substituir a lógica livre da Variante A.
+  const verboBeneficioBlockPU =
+    mode === "postunico"
+      ? `VERBO DE BENEFÍCIO: quando a frase usar um verbo de ação sobre o produto/serviço, prefira um verbo que descreva um BENEFÍCIO VERIFICÁVEL e concreto (ex.: "organiza", "protege", "facilita", "controla", "economiza", "renova", "resolve") em vez de um verbo de PROMESSA INFLADA que soa exagerado e vazio (ex.: "transforma", "revoluciona", "muda sua vida"). TESTE: o verbo descreve algo que o produto/serviço realmente FAZ, ou é um exagero de propaganda que qualquer produto poderia prometer? Se for exagero, troque por um verbo mais concreto e crível.\n`
+      : "";
+
   const criteriosQualidadeSugestao = `CRITÉRIOS DE QUALIDADE:
 ${
   mode === "metodo"
@@ -825,6 +840,7 @@ ${lensBlockPU}
 
 ${criteriosQualidadeSugestao}
 
+${verboBeneficioBlockPU}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 frase, entre 4 e 7 palavras (máximo absoluto 7), em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
 
