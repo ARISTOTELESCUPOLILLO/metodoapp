@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ab:sugestao": "node --env-file=.env node_modules/vitest/vitest.mjs run --config vitest.ab.config.ts"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

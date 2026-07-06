@@ -1,0 +1,189 @@
+[
+  {
+    "id": "ferrimaq-mop-b2b",
+    "label": "FERRIMAQ (VAREJO/B2B) — MOP — promoção",
+    "input": {
+      "companyName": "FERRIMAQ",
+      "mainActivity": "Venda de Móveis para Escritório, Consultórios, Auditórios, Refeitório e Escolares",
+      "segment": "VAREJO",
+      "mode": "metodo",
+      "objetivo": "promocao",
+      "audience": "B2B",
+      "selectedProducts": [
+        "Cadeira de recepção de consultório"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Cadeira de recepção de consultório"
+    },
+    "variantB": {
+      "sugestao": "Cadeira de recepção em padronização visual corporativa"
+    }
+  },
+  {
+    "id": "ferrimaq-pu-b2b",
+    "label": "FERRIMAQ (VAREJO/B2B) — PU — promoção",
+    "input": {
+      "companyName": "FERRIMAQ",
+      "mainActivity": "Venda de Móveis para Escritório, Consultórios, Auditórios, Refeitório e Escolares",
+      "segment": "VAREJO",
+      "mode": "postunico",
+      "objetivo": "promocao",
+      "audience": "B2B",
+      "selectedProducts": [
+        "Mesa para gestores"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Mesa para gestores transforma suas reuniões"
+    },
+    "variantB": {
+      "sugestao": "Mesa para gestores facilita reuniões produtivas"
+    }
+  },
+  {
+    "id": "barbosa-mop-b2b",
+    "label": "Barbosa Lubrificantes (VAREJO/B2B) — MOP — oportunidade",
+    "input": {
+      "companyName": "Barbosa Lubrificantes",
+      "mainActivity": "Loja de lubrificantes, correias, mangueiras, ferramentas, EPI e serviço de prensa de mangueiras",
+      "segment": "VAREJO",
+      "mode": "metodo",
+      "objetivo": "oportunidade",
+      "audience": "B2B",
+      "selectedProducts": [
+        "Correias industriais"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Correias industriais novas evitam máquinas paradas"
+    },
+    "variantB": {
+      "sugestao": "Correias industriais no armazenamento de estoque"
+    }
+  },
+  {
+    "id": "barbosa-pu-b2b",
+    "label": "Barbosa Lubrificantes (VAREJO/B2B) — PU — aviso",
+    "input": {
+      "companyName": "Barbosa Lubrificantes",
+      "mainActivity": "Loja de lubrificantes, correias, mangueiras, ferramentas, EPI e serviço de prensa de mangueiras",
+      "segment": "VAREJO",
+      "mode": "postunico",
+      "objetivo": "aviso",
+      "audience": "B2B",
+      "selectedProducts": [
+        "Serviço de prensa de mangueiras"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Serviço de prensa de mangueiras sem espera"
+    },
+    "variantB": {
+      "sugestao": "Serviço de prensa de mangueiras agiliza manutenções"
+    }
+  },
+  {
+    "id": "prontovet-mop-b2c-servico",
+    "label": "Pronto Vet (SERVIÇOS/B2C) — MOP — promoção — item serviço",
+    "input": {
+      "companyName": "Pronto Vet",
+      "mainActivity": "Clínica veterinária, ração, remédios e acessórios",
+      "segment": "SERVIÇOS",
+      "mode": "metodo",
+      "objetivo": "promocao",
+      "audience": "B2C",
+      "selectedProducts": [
+        "Vacinas para cães e gatos"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Vacinas para cães e gatos"
+    },
+    "variantB": {
+      "sugestao": "Vacinas para cães e gatos no armazenamento"
+    }
+  },
+  {
+    "id": "prontovet-pu-b2c-produto",
+    "label": "Pronto Vet (SERVIÇOS/B2C) — PU — homenagem — item produto (troca de lente p/ VAREJO na Variante A)",
+    "input": {
+      "companyName": "Pronto Vet",
+      "mainActivity": "Clínica veterinária, ração, remédios e acessórios",
+      "segment": "SERVIÇOS",
+      "mode": "postunico",
+      "objetivo": "homenagem",
+      "audience": "B2C",
+      "selectedProducts": [
+        "Ração para cães e gatos"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Ração para cães e gatos no carinho"
+    },
+    "variantB": {
+      "sugestao": "Ração para cães e gatos nutre diariamente"
+    }
+  },
+  {
+    "id": "marca-institucional-mop-b2c",
+    "label": "MARCA institucional sintética (café de bairro) — MOP — institucional",
+    "input": {
+      "companyName": "Grão & Tempo Cafeteria",
+      "mainActivity": "Cafeteria de bairro com grãos torrados na casa e ambiente para trabalhar e ler",
+      "segment": "MARCA",
+      "mode": "metodo",
+      "objetivo": "institucional",
+      "audience": "B2C",
+      "selectedProducts": [
+        "Café coado na hora"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Café coado na hora em manhãs frias"
+    },
+    "variantB": {
+      "sugestao": "Café coado na hora na escolha"
+    }
+  },
+  {
+    "id": "marca-pessoal-pu-b2b",
+    "label": "MARCA pessoal sintética (consultora de marketing) — PU — promoção",
+    "input": {
+      "companyName": "Camila Reis Consultoria",
+      "mainActivity": "Consultoria de marketing digital para pequenas empresas, com mentoria individual",
+      "segment": "MARCA",
+      "mode": "postunico",
+      "objetivo": "promocao",
+      "audience": "B2B",
+      "selectedProducts": [
+        "Mentoria individual de marketing"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Mentoria individual de marketing para aumentar vendas"
+    },
+    "variantB": {
+      "sugestao": "Mentoria individual de marketing para impulsionar vendas"
+    }
+  },
+  {
+    "id": "sem-produtos-mop-b2b",
+    "label": "Sem produtos cadastrados sintético (marcenaria sob encomenda) — MOP — oportunidade",
+    "input": {
+      "companyName": "Marcenaria Vale Verde",
+      "mainActivity": "Marcenaria sob encomenda: móveis planejados, restauração de móveis antigos e projetos personalizados",
+      "segment": "VAREJO",
+      "mode": "metodo",
+      "objetivo": "oportunidade",
+      "audience": "B2C",
+      "selectedProducts": []
+    },
+    "variantA": {
+      "sugestao": "móveis planejados durante reformas ganham espaços extras"
+    },
+    "variantB": {
+      "sugestao": "móveis planejados na escolha de acabamentos"
+    }
+  }
+]
