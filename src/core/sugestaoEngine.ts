@@ -689,20 +689,18 @@ PROIBIDO (ou variações próximas): "indicada por"/"indicado por", "ajustado co
   const allowPromoLanguagePU =
     mode === "postunico" && (objetivo === "promocao" || objetivo === "oportunidade");
 
-  // Verbo de benefício (só POST ÚNICO — auditoria A/B 06/07/2026): mérito
-  // parcial salvado do teste da hipótese "Produto+Conector+Recorte /
-  // Produto+Benefício Percebido" (ver memória do projeto) — os dois juízes
-  // (Opus e Fable) notaram, de forma independente, que a Variante A às
-  // vezes usa verbo de PROMESSA INFLADA ("transforma suas reuniões") onde
-  // um verbo de benefício verificável ("facilita reuniões produtivas")
-  // seria mais crível para o pequeno empresário. A fórmula rígida da
-  // hipótese foi rejeitada (regressão no MOP), mas esse ajuste pontual de
-  // verbo é isolado o bastante para entrar só na PU, sem mexer no MOP nem
-  // substituir a lógica livre da Variante A.
-  const verboBeneficioBlockPU =
-    mode === "postunico"
-      ? `VERBO DE BENEFÍCIO: quando a frase usar um verbo de ação sobre o produto/serviço, prefira um verbo que descreva um BENEFÍCIO VERIFICÁVEL e concreto (ex.: "organiza", "protege", "facilita", "controla", "economiza", "renova", "resolve") em vez de um verbo de PROMESSA INFLADA que soa exagerado e vazio (ex.: "transforma", "revoluciona", "muda sua vida"). TESTE: o verbo descreve algo que o produto/serviço realmente FAZ, ou é um exagero de propaganda que qualquer produto poderia prometer? Se for exagero, troque por um verbo mais concreto e crível.\n`
-      : "";
+  // Verbo de benefício (auditoria A/B 06/07/2026, estendido ao MOP em
+  // 07/2026): mérito salvado do teste da hipótese "Produto+Conector+Recorte
+  // / Produto+Benefício Percebido" (ver memória do projeto) — os dois
+  // juízes (Opus e Fable) notaram, de forma independente, que a Variante A
+  // às vezes usa verbo de PROMESSA INFLADA ("transforma suas reuniões")
+  // onde um verbo de benefício verificável ("facilita reuniões produtivas")
+  // seria mais crível para o pequeno empresário. Nasceu isolado só na PU
+  // (a fórmula rígida da hipótese foi rejeitada, então o ajuste de verbo
+  // não mexeu no MOP na época); estendido ao MOP no teste da Variante C
+  // (07/2026, mesmos dois juízes) depois que a Variante C mostrou o mesmo
+  // deslize em um cenário MOP ("valoriza reuniões produtivas").
+  const verboBeneficioBlock = `VERBO DE BENEFÍCIO: quando a frase usar um verbo de ação sobre o produto/serviço, prefira um verbo que descreva um BENEFÍCIO VERIFICÁVEL e concreto (ex.: "organiza", "protege", "facilita", "controla", "economiza", "renova", "resolve") em vez de um verbo de PROMESSA INFLADA que soa exagerado e vazio (ex.: "transforma", "revoluciona", "muda sua vida", "valoriza"). TESTE: o verbo descreve algo que o produto/serviço realmente FAZ, ou é um exagero de propaganda que qualquer produto poderia prometer? Se for exagero, troque por um verbo mais concreto e crível.\n`;
 
   const criteriosQualidadeSugestao = `CRITÉRIOS DE QUALIDADE:
 ${
@@ -834,6 +832,7 @@ A Informação-chave é APENAS o ASSUNTO escolhido para esta peça — um produt
 
 PROIBIDO: linguagem de campanha ("não perca", "aproveite agora", "garanta já"), promessa emocional ("transforme", "mude sua vida", "realize seu sonho"), crítica ou cobrança ao cliente ("não sabem", "estão perdendo"), urgência, datas ou prazos não informados.
 ${sementeLembrete}
+${verboBeneficioBlock}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 linha, entre 4 e 7 palavras (máximo absoluto 7), sem hashtag, sem emoji, sem aspas, concreta, objetiva e específica, ligada à atividade" }`;
 
@@ -876,7 +875,7 @@ ${lensBlockPU}
 
 ${criteriosQualidadeSugestao}
 
-${verboBeneficioBlockPU}
+${verboBeneficioBlock}
 Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 frase, entre 4 e 7 palavras (máximo absoluto 7), em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
 
