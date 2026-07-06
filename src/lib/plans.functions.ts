@@ -10,7 +10,7 @@ import type { Costs, Plan } from "@/components/admin/plans/types";
 // valores reais vêm do banco (linha única, id=true). imageRef alinhado com
 // COST_USD.image_edit (costs.ts) — 0.058 estava desatualizado em relação ao
 // custo real debitado por imagem com referência (0.08).
-const DEFAULT_COSTS: Costs = { imageRef: 0.08, video: 1.6, content: 0.013 };
+const DEFAULT_COSTS: Costs = { imageRef: 0.08, video: 1.6, content: 0.0049 };
 
 // Substitui PlansTab.load()
 export const loadPlansData = createServerFn({ method: "POST" })

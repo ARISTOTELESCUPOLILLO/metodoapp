@@ -1,27 +1,28 @@
-// Buffer médio de 1 clique no botão "Sugestão" (gpt-4.1, ~$0,0070/clique).
-// Até 2026-07 esse buffer estava EMBUTIDO em cada content_* de COST_USD — a
-// Sugestão não era contada nem debitada separadamente. Agora que a Sugestão
-// tem limite próprio por plano e é projetada à parte (planExtrasMonthlyCost),
-// o buffer foi REMOVIDO de content_* (subtraído dos valores abaixo) para não
-// contar o custo duas vezes.
-const SUGESTAO_BUFFER_USD = 0.007;
+// Custo medido por CHAMADA REAL à OpenAI (07/2026, ver memória do projeto
+// "audit-custo-textual-2026-07-06") — substitui as estimativas antigas por
+// tokens reais × preço oficial (gpt-4.1: $2,00/1M in, $8,00/1M out; gpt-4.1-
+// mini: $0,40/1M in, $1,60/1M out). Sugestão é média ponderada pelo uso real
+// dos últimos 90 dias (54 MOP / 37 PU, ~59%/41%): MOP $0,0101 + PU $0,0093.
+// MOP S6/S9 são 1 amostra real cada (finish_reason="stop", não truncado) —
+// direção confiável (bem abaixo do estimado), valor exato vale reconferir
+// com mais amostras se o padrão de uso mudar muito.
+const SUGESTAO_BUFFER_USD = 0.0098;
 
 // Custo unitário por operação (USD) — preços reais cobrados ao cliente.
 export const COST_USD = {
   image_base: 0.06, // GPT Image 2 — geração base
   image_edit: 0.08, // GPT Image 2 — edição com referências
   video: 1.6, // VEO 3 fast + render
-  content_pu: 0.0045, // Post Único — copy (gpt-4.1) + legenda (gpt-4.1-mini) — era 0.0115 (−buffer Sugestão)
-  content_mop_s3: 0.0335, // Método OP — ciclo de Sequência 3 (gpt-4.1) — era 0.0405 (−buffer Sugestão)
-  content_mop_s6: 0.0485, // Método OP — ciclo de Sequência 6 (gpt-4.1) — era 0.0555 (−buffer Sugestão)
-  content_mop_s9: 0.064, // Método OP — ciclo de Sequência 9 (gpt-4.1) — era 0.071 (−buffer Sugestão)
+  content_pu: 0.0049, // Post Único — copy (gpt-4.1) + legenda (gpt-4.1-mini) — medido real 07/2026 (era 0.0045)
+  content_mop_s3: 0.0299, // Método OP — ciclo de Sequência 3 (gpt-4.1) — medido real 07/2026 (era 0.0335)
+  content_mop_s6: 0.0317, // Método OP — ciclo de Sequência 6 (gpt-4.1) — medido real 07/2026 (era 0.0485)
+  content_mop_s9: 0.0367, // Método OP — ciclo de Sequência 9 (gpt-4.1) — medido real 07/2026 (era 0.064)
   // Custo de 1 clique de "Sugestão" (botão que gera Informação-chave, gpt-4.1).
-  // É o buffer que saiu de content_* — agora contado/debitado à parte.
   sugestao: SUGESTAO_BUFFER_USD,
   // Custo de 1 clique de "Gerar outro" de bloco (regenerate-block, gpt-4.1).
-  // Proxy: mesmo valor do content_pu ANTES da remoção do buffer (0.0115) —
-  // estimativa aceita pelo dono do produto, não precisa ser exata.
-  regen_bloco: 0.0115,
+  // Medido real 07/2026 — era proxy de 0.0115 (estimativa aceita sem medir);
+  // a chamada real é bem menor (reescreve só 1 campo, não a peça inteira).
+  regen_bloco: 0.0017,
 } as const;
 
 // Custo nominal (preço de tabela dos provedores — fal.ai / OpenAI, sem o
@@ -30,12 +31,12 @@ export const COST_NOMINAL_USD = {
   image_base: 0.05,
   image_edit: 0.06,
   video: 1.5,
-  content_pu: 0.0045,
-  content_mop_s3: 0.0334,
-  content_mop_s6: 0.0487,
-  content_mop_s9: 0.064,
+  content_pu: 0.0049,
+  content_mop_s3: 0.0299,
+  content_mop_s6: 0.0317,
+  content_mop_s9: 0.0367,
   sugestao: SUGESTAO_BUFFER_USD,
-  regen_bloco: 0.0115,
+  regen_bloco: 0.0017,
 } as const;
 
 // Planos de Sequência (S3/S6/S9, Visual ou Cinemática) têm limite_geracoes=0

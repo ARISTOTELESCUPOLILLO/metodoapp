@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   image_base_price_usd: 0.06,
   image_price_usd: 0.08,
   render_price_usd: 1.6,
-  geracao_price_usd: 0.013,
+  geracao_price_usd: 0.0049, // Post Único real medido (07/2026) — ver costs.ts
 };
 
 export function CustosTab() {
