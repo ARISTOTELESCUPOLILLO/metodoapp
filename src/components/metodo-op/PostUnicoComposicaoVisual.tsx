@@ -82,6 +82,37 @@ export default function PostUnicoComposicaoVisual({
   const hasFato = !!imageKit.fato && objetivo === "fatos";
   const hasVenda = !!imageKit.venda && objetivo === "venda";
 
+  // Objetivo "Venda" usa a foto cadastrada quase sem alteração (ver aviso
+  // abaixo) — mostrar as demais referências (avatar/fachada/cenário/produtos)
+  // ao lado dela só dava chance de o usuário marcar a errada por engano ou
+  // misturar referências que a IA recriaria por cima da foto documental.
+  // Restringe a composição a SÓ a foto de Venda enquanto esse objetivo tiver
+  // foto cadastrada, e limpa qualquer seleção anterior de outras referências
+  // pra não vazar pra dentro da geração mesmo sem aparecer na tela.
+  useEffect(() => {
+    if (!hasVenda) return;
+    const hasOutrasRefs =
+      selection.useAvatar ||
+      selection.useFachada ||
+      selection.useCenario ||
+      selection.useProdutos ||
+      !!selection.personagemSemAvatar?.ativo;
+    if (!hasOutrasRefs) return;
+    onChange({
+      ...selection,
+      useAvatar: false,
+      useFachada: false,
+      useCenario: false,
+      cenarioSelecionado: null,
+      useProdutos: false,
+      produtosSelecionados: [],
+      personagemSemAvatar: selection.personagemSemAvatar
+        ? { ...selection.personagemSemAvatar, ativo: false }
+        : selection.personagemSemAvatar,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a hasVenda; `selection`/`onChange` são lidos, não devem re-disparar o efeito
+  }, [hasVenda]);
+
   const effectiveCenario = selection.cenarioSelecionado ?? null;
 
   const refsAtivas =
@@ -135,21 +166,29 @@ export default function PostUnicoComposicaoVisual({
         Marque quais imagens do seu <strong>Kit Imagem</strong> devem aparecer nesta peça.
         <strong> Se não marcar nenhuma, a peça é criada só a partir do texto.</strong>
       </p>
-      <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
-        Você pode combinar:{" "}
-        <b>
-          1 avatar + fachada + 1 cenário (dentre até {CENARIO_SLOTS} cadastrados) + até{" "}
-          {MAX_PRODUTOS_PU} produtos
-        </b>
-        .{produtosNoLimite && <> Limite de produtos atingido — desmarque um para escolher outro.</>}
-      </p>
+      {!hasVenda && (
+        <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
+          Você pode combinar:{" "}
+          <b>
+            1 avatar + fachada + 1 cenário (dentre até {CENARIO_SLOTS} cadastrados) + até{" "}
+            {MAX_PRODUTOS_PU} produtos
+          </b>
+          .
+          {produtosNoLimite && (
+            <> Limite de produtos atingido — desmarque um para escolher outro.</>
+          )}
+        </p>
+      )}
       {(hasFato || hasVenda) && (
         <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
           A foto de <b>{hasFato ? "Fato" : "Venda"}</b> é usada quase sem alteração, só com
-          marca/título/texto sobrepostos — diferente das outras imagens, que a IA recria.
+          marca/título/texto sobrepostos
+          {hasVenda
+            ? " — por isso é a única referência disponível neste objetivo."
+            : " — diferente das outras imagens, que a IA recria."}
         </p>
       )}
-      {kit.isPersonalBrand && !hasAvatar && (
+      {!hasVenda && kit.isPersonalBrand && !hasAvatar && (
         <p
           style={{
             margin: "0 0 12px",
@@ -173,70 +212,71 @@ export default function PostUnicoComposicaoVisual({
           gap: 6,
         }}
       >
-        {ordemGruposPorSegmento(kit.segment).map((grupo) => {
-          if (grupo === "avatar") {
-            return (
-              <Fragment key="avatar-group">
-                {hasAvatar1 && (
+        {!hasVenda &&
+          ordemGruposPorSegmento(kit.segment).map((grupo) => {
+            if (grupo === "avatar") {
+              return (
+                <Fragment key="avatar-group">
+                  {hasAvatar1 && (
+                    <Tile
+                      key="a1"
+                      checked={selection.useAvatar && selection.avatarSelecionado === 1}
+                      onToggle={() => pickAvatar(1)}
+                      url={imageKit.avatar || undefined}
+                      label="Avatar 1"
+                    />
+                  )}
+                  {hasAvatar2 && (
+                    <Tile
+                      key="a2"
+                      checked={selection.useAvatar && selection.avatarSelecionado === 2}
+                      onToggle={() => pickAvatar(2)}
+                      url={imageKit.avatar2 || undefined}
+                      label="Avatar 2"
+                    />
+                  )}
+                </Fragment>
+              );
+            }
+            if (grupo === "fachada") {
+              return (
+                hasFachada && (
                   <Tile
-                    key="a1"
-                    checked={selection.useAvatar && selection.avatarSelecionado === 1}
-                    onToggle={() => pickAvatar(1)}
-                    url={imageKit.avatar || undefined}
-                    label="Avatar 1"
+                    key="fachada"
+                    checked={!!selection.useFachada}
+                    onToggle={pickFachada}
+                    url={imageKit.fachada || undefined}
+                    label="Fachada"
                   />
-                )}
-                {hasAvatar2 && (
-                  <Tile
-                    key="a2"
-                    checked={selection.useAvatar && selection.avatarSelecionado === 2}
-                    onToggle={() => pickAvatar(2)}
-                    url={imageKit.avatar2 || undefined}
-                    label="Avatar 2"
-                  />
-                )}
-              </Fragment>
-            );
-          }
-          if (grupo === "fachada") {
-            return (
-              hasFachada && (
+                )
+              );
+            }
+            if (grupo === "cenario") {
+              return cenarios.map((num) => (
                 <Tile
-                  key="fachada"
-                  checked={!!selection.useFachada}
-                  onToggle={pickFachada}
-                  url={imageKit.fachada || undefined}
-                  label="Fachada"
+                  key={`c${num}`}
+                  checked={selection.useCenario && effectiveCenario === num}
+                  onToggle={() => pickCenario(num)}
+                  url={imageKit.cenarios[num - 1] || undefined}
+                  label={cenarioLabel(imageKit, num)}
                 />
-              )
-            );
-          }
-          if (grupo === "cenario") {
-            return cenarios.map((num) => (
-              <Tile
-                key={`c${num}`}
-                checked={selection.useCenario && effectiveCenario === num}
-                onToggle={() => pickCenario(num)}
-                url={imageKit.cenarios[num - 1] || undefined}
-                label={cenarioLabel(imageKit, num)}
-              />
-            ));
-          }
-          // produto
-          return produtos.map((num) => {
-            const checked = selection.produtosSelecionados.includes(num);
-            return (
-              <Tile
-                key={`p${num}`}
-                checked={checked}
-                disabled={!checked && produtosNoLimite}
-                onToggle={() => toggleProduto(num)}
-                url={imageKit.produtos[num - 1] || undefined}
-                label={`Produto ${num}`}
-              />
-            );
-          });
-        })}
+              ));
+            }
+            // produto
+            return produtos.map((num) => {
+              const checked = selection.produtosSelecionados.includes(num);
+              return (
+                <Tile
+                  key={`p${num}`}
+                  checked={checked}
+                  disabled={!checked && produtosNoLimite}
+                  onToggle={() => toggleProduto(num)}
+                  url={imageKit.produtos[num - 1] || undefined}
+                  label={`Produto ${num}`}
+                />
+              );
+            });
+          })}
         {hasFato && (
           <Tile
             checked={!!selection.useFato}
@@ -277,7 +317,7 @@ export default function PostUnicoComposicaoVisual({
         </label>
       )}
 
-      {!selection.useAvatar && (
+      {!hasVenda && !selection.useAvatar && (
         <PersonagemSemAvatarBlock
           selection={selection}
           onChange={onChange}
@@ -287,7 +327,7 @@ export default function PostUnicoComposicaoVisual({
         />
       )}
 
-      {(!hasAvatar || !hasFachada || !hasCenario || !hasProdutos) && (
+      {!hasVenda && (!hasAvatar || !hasFachada || !hasCenario || !hasProdutos) && (
         <div
           style={{
             marginTop: 10,
