@@ -186,6 +186,9 @@ export type PostUnicoObjetivo =
   | "venda"
   | "nenhum";
 export type PostUnicoDirecao = "livre" | "mood";
+// Formato do "texto de apoio" da peça — "topicos" só é honrado nos objetivos
+// institucional/oportunidade/promocao (ver OBJETIVOS_TOPICOS em generate-pu-copy.ts).
+export type PostUnicoFormatoTexto = "corrido" | "topicos";
 
 export interface PostUnicoFormData {
   companyName: string;
@@ -199,6 +202,9 @@ export interface PostUnicoFormData {
   faixaEtaria?: FaixaEtaria | null;
   // Gênero preferido para o personagemSemAvatar (pré-preenchimento).
   generoPref?: "M" | "F" | null;
+  // Formato do texto de apoio — "corrido" (padrão) ou "topicos" (3 tópicos
+  // com ícone, só nos objetivos institucional/oportunidade/promocao).
+  formatoTexto?: PostUnicoFormatoTexto;
 }
 
 export interface TemplateMood {

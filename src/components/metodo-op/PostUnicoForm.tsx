@@ -38,7 +38,12 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   const { kit } = useBrandKit();
   const { imageKit } = useImageKit();
   const { geracoesRestantes, geracoesTotal, semPlano, effectiveAdmin: isAdmin } = useAppProfile();
-  const { puImgsRestantes: imgsRestantes, puImgsTotal: imgsTotal, selectedSlot: puSlot, hasPostPlano } = usePlanSlotsCtx();
+  const {
+    puImgsRestantes: imgsRestantes,
+    puImgsTotal: imgsTotal,
+    selectedSlot: puSlot,
+    hasPostPlano,
+  } = usePlanSlotsCtx();
   const {
     visualSelection,
     setVisualSelection: onVisualSelectionChange,
@@ -88,6 +93,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
     copyKeyInfoRef,
     fetchCopy,
     regenField,
+    regenTopicos,
     clearCopy,
   } = usePostUnicoCopy({
     data,
@@ -312,9 +318,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
           Faixa etária do público
           <select
             value={data.faixaEtaria ?? ""}
-            onChange={(e) =>
-              update("faixaEtaria", (e.target.value || null) as FaixaEtaria | null)
-            }
+            onChange={(e) => update("faixaEtaria", (e.target.value || null) as FaixaEtaria | null)}
           >
             <option value="">Sem direcionamento</option>
             <option value="18-34">18 a 34 anos</option>
@@ -326,9 +330,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
           Gênero na imagem
           <select
             value={data.generoPref ?? ""}
-            onChange={(e) =>
-              update("generoPref", (e.target.value || null) as "M" | "F" | null)
-            }
+            onChange={(e) => update("generoPref", (e.target.value || null) as "M" | "F" | null)}
           >
             <option value="">Automático</option>
             <option value="M">Masculino</option>
@@ -396,6 +398,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         setCopyXSuggs={setCopyXSuggs}
         fetchCopy={fetchCopy}
         regenField={regenField}
+        regenTopicos={regenTopicos}
         clearCopy={clearCopy}
         isNenhum={isNenhum}
         direcao={data.direcao}
@@ -403,6 +406,9 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         isAdmin={isAdmin}
         copyTRegenCount={copyTRegenCount}
         copyXRegenCount={copyXRegenCount}
+        objetivo={data.objetivo}
+        formatoTexto={data.formatoTexto}
+        onFormatoTextoChange={(v) => update("formatoTexto", v)}
       />
 
       <DirecaoVisualSection

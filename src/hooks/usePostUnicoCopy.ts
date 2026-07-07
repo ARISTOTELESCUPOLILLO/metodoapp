@@ -62,6 +62,16 @@ export function usePostUnicoCopy({
         kit.segment,
         puSlot,
       );
+      // Modo "tópicos" usa schema próprio ({titulo, topicos}), incompatível
+      // com autoRegenerateFlaggedPostUnico/judgeAndRegeneratePostUnico (feitos
+      // para {titulo, texto}) — v1 deste formato usa só a validação
+      // determinística já aplicada no backend (ver topicoValidation.ts).
+      if (generated.topicos?.length) {
+        setCopy(generated);
+        setCopyOriginal(generated);
+        copyKeyInfoRef.current = data.keyInfo;
+        return;
+      }
       let result = await autoRegenerateFlaggedPostUnico(
         { titulo: generated.titulo, texto: generated.texto },
         generated.flags,
@@ -85,6 +95,39 @@ export function usePostUnicoCopy({
       setCopyError((e as Error).message);
     } finally {
       setCopyLoading(false);
+    }
+  }
+
+  // "Gerar outros tópicos" — mantém o TÍTULO fixo (mesmo princípio do
+  // "TÍTULO FIXO" em regenerate-block.ts) e busca só um novo conjunto de 3
+  // tópicos. Reaproveita o contador/limite já existente de "texto"
+  // (copyXRegenCount/onTextoRegen) — tópicos e texto corrido são mutuamente
+  // exclusivos nesta peça, então reaproveitar o mesmo contador é correto.
+  async function regenTopicos() {
+    if (!copy) return;
+    if ((!isAdmin && copyXRegenCount >= COPY_REGEN_MAX) || copyXBusy) return;
+    setCopyXBusy(true);
+    setCopyXError(null);
+    try {
+      const companyName = data.companyName || kit.companyName;
+      const mainActivity = data.mainActivity || kit.mainActivity || "";
+      const generated = await generatePostUnicoCopy(
+        { ...data, companyName, mainActivity },
+        kit.brandVoice,
+        kit.segment,
+        puSlot,
+        copy.titulo,
+      );
+      if (generated.topicos?.length) {
+        setCopy((c) => (c ? { ...c, topicos: generated.topicos, texto: generated.texto } : c));
+        onTextoRegen?.();
+      } else {
+        setCopyXError("Tópicos vazios — tente de novo.");
+      }
+    } catch (e) {
+      setCopyXError((e as Error).message);
+    } finally {
+      setCopyXBusy(false);
     }
   }
 
@@ -157,6 +200,7 @@ export function usePostUnicoCopy({
     copyKeyInfoRef,
     fetchCopy,
     regenField,
+    regenTopicos,
     clearCopy,
   };
 }

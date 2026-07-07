@@ -16,9 +16,23 @@ import { buildPostUnicoPrompt } from "./buildPuPrompt";
 // permanece re-exportado daqui para não quebrar quem já importa de "./postUnico".
 export { buildPostUnicoPrompt };
 
+// Tópico com ícone — elemento do formato alternativo "topicos" (ver
+// PostUnicoFormatoTexto em types.ts). O ícone é um conceito de um vocabulário
+// fechado (TOPICO_ICON_VOCAB, core/topicoValidation.ts) desenhado pela própria
+// IA de imagem junto com o texto — não é um asset SVG nosso.
+export interface PostUnicoTopico {
+  texto: string;
+  icone: string;
+}
+
 export interface PostUnicoCopy {
   titulo: string;
+  // Em modo "topicos", sintetizado como os 3 textos unidos (" • ") — só para
+  // compatibilidade com código que já lê copy.texto (nenhum consumidor crítico
+  // depende disso; legenda usa keyInfo, não copy.texto).
   texto: string;
+  // Presente (com exatamente 3 itens) quando formatoTexto === "topicos".
+  topicos?: PostUnicoTopico[];
   flags?: ValidationFlag[];
 }
 
@@ -27,6 +41,7 @@ export async function generatePostUnicoCopy(
   brandVoice?: string,
   segment?: string,
   preferredSlot?: string,
+  tituloFixo?: string,
 ): Promise<PostUnicoCopy> {
   const auth = await getAuthHeaders();
   const res = await fetch("/api/generate-pu-copy", {
@@ -41,7 +56,9 @@ export async function generatePostUnicoCopy(
       keyInfo: data.keyInfo,
       brandVoice: brandVoice || "",
       segment: segment || "",
+      formatoTexto: data.formatoTexto || "corrido",
       ...(preferredSlot ? { preferredSlot } : {}),
+      ...(tituloFixo ? { tituloFixo } : {}),
     }),
   });
   if (!res.ok) {
@@ -49,9 +66,18 @@ export async function generatePostUnicoCopy(
     throw new Error(err.error || `Falha ao gerar título e texto (${res.status})`);
   }
   const json = await res.json();
+  const topicos: PostUnicoTopico[] | undefined = Array.isArray(json.topicos)
+    ? json.topicos.map((t: { texto?: string; icone?: string }) => ({
+        texto: String(t?.texto || "").trim(),
+        icone: String(t?.icone || "").trim(),
+      }))
+    : undefined;
   return {
     titulo: String(json.titulo || "").trim(),
-    texto: String(json.texto || "").trim(),
+    texto: topicos?.length
+      ? topicos.map((t) => t.texto).join(" • ")
+      : String(json.texto || "").trim(),
+    ...(topicos?.length ? { topicos } : {}),
     ...(Array.isArray(json.flags) && json.flags.length > 0
       ? { flags: json.flags as ValidationFlag[] }
       : {}),

@@ -285,7 +285,8 @@ export function buildPostUnicoPrompt(params: {
     ? `\n${buildScriptAccentBlock(kit.secondaryFont, copy?.titulo || data.keyInfo || "")}\n`
     : "";
 
-  const hasCopy = copy && (copy.titulo || copy.texto);
+  const hasTopicos = !!(copy?.topicos && copy.topicos.length);
+  const hasCopy = copy && (copy.titulo || copy.texto || hasTopicos);
   // Tamanho do título escalona pela contagem de palavras — um piso fixo de
   // "35-45%" pra qualquer título (3 palavras ou 6) fazia títulos mais longos
   // (2-3 linhas) ficarem gigantes e dominarem a peça, brigando com produto/
@@ -295,15 +296,36 @@ export function buildPostUnicoPrompt(params: {
     tituloWordCount >= 5
       ? "ocupando entre 28% e 38% da altura útil do canvas — quebre em 2-3 linhas para manter o corpo grande e legível sem dominar o quadro"
       : "ocupando entre 35% e 45% da altura útil do canvas, em 1-2 linhas";
-  const copyBlock = hasCopy
-    ? `TÍTULO E TEXTO OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
+  // Formato alternativo "tópicos com ícone" (só institucional/oportunidade/
+  // promocao — ver PostUnicoFormatoTexto): substitui o TEXTO DE APOIO por 3
+  // blocos ícone+texto curtos, abaixo do título. O ícone já foi escolhido no
+  // passo de copy (generate-pu-copy.ts, vocabulário fechado em
+  // topicoValidation.ts) — aqui só reforça que a IA de imagem deve
+  // RENDERIZAR os 3 exatamente como vieram, sem inventar/trocar.
+  const topicosBlock =
+    hasTopicos && copy?.topicos
+      ? `TÍTULO E TÓPICOS OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
+TÍTULO: "${copy.titulo.toUpperCase()}"
+TÓPICOS (exatamente 3 — substituem o texto de apoio corrido nesta peça):
+1. ÍCONE: ${copy.topicos[0].icone} · TEXTO: "${copy.topicos[0].texto}"
+2. ÍCONE: ${copy.topicos[1].icone} · TEXTO: "${copy.topicos[1].texto}"
+3. ÍCONE: ${copy.topicos[2].icone} · TEXTO: "${copy.topicos[2].texto}"
+
+Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Abaixo do título, os 3 TÓPICOS aparecem em coluna (ou lado a lado, se a composição pedir): cada tópico é um ÍCONE simples, no estilo line-art/glifo minimalista (mesmo estilo visual e mesma cor nos 3 ícones), posicionado ao lado ou acima do seu texto correspondente. O texto de cada tópico tem corpo entre 40% e 55% do título — claramente legível, mais curto e discreto que um texto de apoio corrido. RENDERIZE EXATAMENTE estes 3 ícones e textos, NESTA ORDEM — PROIBIDO inventar um ícone diferente do indicado, trocar a ordem, fundir os tópicos em um só bloco de texto corrido ou adicionar um 4º tópico. POSIÇÃO do bloco título+tópicos é livre — explore ancoragens (topo, lateral, base).
+ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da paleta desta peça) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
+⚠ TÍTULO FIXO — ANTI-TRADUÇÃO LITERAL: o título acima é texto tipográfico a renderizar. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras abstratas do título. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`
+      : "";
+  const copyBlock = hasTopicos
+    ? topicosBlock
+    : hasCopy
+      ? `TÍTULO E TEXTO OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
 TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
 Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — claramente legível a distância normal de celular, nunca tamanho de legenda ou rodapé. POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).
 ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da paleta desta peça) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
 ⚠ TÍTULO FIXO — ANTI-TRADUÇÃO LITERAL: o título acima é texto tipográfico a renderizar. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras abstratas do título. Proibições diretas: "novo"/"novidade" ≠ caderno limpo, página em branco, objeto novo genérico; "ação"/"agir" ≠ seta, figura em movimento, objeto cinético; "rumo"/"caminho"/"direção" ≠ corredor, estrada, passagem, bússola, mapa, GPS, placa de sinalização; "hoje"/"agora" ≠ relógio, ampulheta, pôr do sol; "escolha"/"decisão" ≠ encruzilhada, bifurcação; "novo" ≠ porta se abrindo. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`
-    : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
+      : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
 A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
 Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, 3 a 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave${data.keyInfo.trim() ? ` "${data.keyInfo.trim()}"` : " fornecida"} e na atividade da empresa${objetivo ? ` com objetivo: ${objetivo}` : ""}.
 ⚠ REGRA ABSOLUTA DE TEXTO NA IMAGEM: a imagem contém EXATAMENTE 2 elementos de texto — (1) o TÍTULO em caixa alta e (2) o TEXTO DE APOIO. NENHUM outro texto, frase, citação ou trecho deve aparecer na imagem. A informação-chave é contexto criativo para INSPIRAR o título e o texto — JAMAIS deve aparecer escrita, citada ou resumida como terceiro elemento tipográfico na peça.
