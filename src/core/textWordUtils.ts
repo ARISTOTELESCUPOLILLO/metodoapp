@@ -1,6 +1,11 @@
 // Utilitários de texto base — sem dependências internas (importados por captionValidation, morphValidation, titleValidation).
+// Inclui as contrações de preposição+artigo ("em"+"a/o/as/os" = "na/no/nas/nos",
+// "por"+"o/a/os/as" = "pelo/pela/pelos/pelas", "a"+"a/as" = "à/às") — sem elas,
+// truncateWords cortava em 7 palavras e deixava a frase pendurada exatamente
+// nessas formas contraídas, que checkDanglingEnding (mais abaixo, mesmo
+// arquivo) já reconhece como corte, mas truncateWords não removia sozinho.
 const TRUNCATE_TRAILING_WORDS =
-  "e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|a|o|as|os|ao|por|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo";
+  "e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|na|no|nas|nos|num|numa|nuns|numas|a|o|as|os|ao|aos|à|às|por|pelo|pela|pelos|pelas|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo";
 
 export function truncateWords(s: string, max: number): string {
   const text = String(s ?? "");
@@ -56,7 +61,7 @@ export function correctPortugueseSpelling(text: string): string {
 // artigos indefinidos, pronomes relativos/possessivos/demonstrativos,
 // advérbios comparativos pendentes, verbos auxiliares sem complemento e
 // conjunções subordinativas.
-const DANGLING_END_WORDS = new Set([
+export const DANGLING_END_WORDS = new Set([
   "e",
   "ou",
   "mas",

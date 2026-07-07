@@ -1,4 +1,5 @@
 import { normalizeForCompare } from "./morphValidation";
+import { DANGLING_END_WORDS } from "./textWordUtils";
 
 // ─────────────────────────────────────────────────────────────────────────
 // Sugestão — bloqueio de promoção/urgência/data inventada
@@ -385,13 +386,15 @@ export function checkItemNameDrift(sugestao: string, concreteItem?: string | nul
 // API — auditoria 2026-07-05, PRINCÍPIO DO FECHO DA FRASE, doc mestre 1.6):
 // quando as tentativas de regeneração se esgotam e a sugestão AINDA reprova
 // por fecho fraco, corta o trecho já sabidamente errado em vez de entregar
-// a frase reprovada como está. Só cobre as famílias (a) ocasião solta e (c)
-// qualificador vago de checkWeakEnding — ambas são "lixo pendurado no fim"
-// que dá pra remover sem inventar conteúdo. A família (b) (nome do próprio
-// item como fecho) NÃO é tratada aqui: removê-la apagaria o próprio núcleo
-// da frase (o item concreto), piorando o resultado em vez de consertar —
-// esse caso fica sem poda determinística possível, cabe à regeneração via
-// LLM (loop de tentativas) ou é entregue como está no pior caso.
+// a frase reprovada como está. Cobre as famílias (a) ocasião solta e (c)
+// qualificador vago de checkWeakEnding, mais o conector/preposição solto no
+// fim (checkDanglingEnding, ex.: "...a confiança na") — todas são "lixo
+// pendurado no fim" que dá pra remover sem inventar conteúdo. A família (b)
+// (nome do próprio item como fecho) NÃO é tratada aqui: removê-la apagaria o
+// próprio núcleo da frase (o item concreto), piorando o resultado em vez de
+// consertar — esse caso fica sem poda determinística possível, cabe à
+// regeneração via LLM (loop de tentativas) ou é entregue como está no pior
+// caso.
 // Retorna null quando não há nada seguro para podar, ou quando a poda
 // deixaria a frase abaixo do piso de 4 palavras (nenhuma poda é melhor que
 // uma frase mutilada).
@@ -459,6 +462,21 @@ export function pruneWeakEnding(sugestao: string): string | null {
     );
     if (VAGUE_CLOSING_ADJECTIVE_RE.test(lastNorm)) {
       pruned = tokens.slice(0, -1).join(" ");
+    } else if (DANGLING_END_WORDS.has(lastNorm)) {
+      // Corta o(s) conector(es)/preposição(ões)/auxiliar(es) soltos no fim
+      // (ex.: "...a confiança na") — remover um pode expor outro dangling
+      // logo atrás (ex.: "...resultado que vem na" → corta "na", expõe
+      // "vem", também dangling), por isso repete a checagem; teto de
+      // segurança pra não devorar a frase inteira em casos anômalos.
+      let cut = tokens.length;
+      let extra = 0;
+      while (cut > 0 && extra < 4) {
+        const norm = normalizeForCompare(tokens[cut - 1] || "").replace(/[^\p{L}\p{N}]/gu, "");
+        if (!DANGLING_END_WORDS.has(norm)) break;
+        cut -= 1;
+        extra += 1;
+      }
+      pruned = tokens.slice(0, cut).join(" ");
     }
   }
 
