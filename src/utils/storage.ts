@@ -1,16 +1,12 @@
-import { lsGet, lsSet, lsRemove } from "../lib/storage/store";
+import { lsGet, lsRemove, lsSetQuotaSafe } from "../lib/storage/store";
 import { KIT_KEY, LOGO_KEY, FORM_KEY } from "../lib/storage/keys";
 
 export function saveKit(kit: { logoDataUrl?: string } & object, userId?: string | null) {
   try {
     const { logoDataUrl, ...kitWithoutLogo } = kit;
-    lsSet(KIT_KEY, JSON.stringify(kitWithoutLogo), userId);
+    lsSetQuotaSafe(KIT_KEY, JSON.stringify(kitWithoutLogo), userId);
     if (logoDataUrl) {
-      try {
-        lsSet(LOGO_KEY, logoDataUrl as string, userId);
-      } catch {
-        /* logo muito grande, ignora */
-      }
+      lsSetQuotaSafe(LOGO_KEY, logoDataUrl as string, userId);
     } else {
       lsRemove(LOGO_KEY, userId);
     }
@@ -36,7 +32,7 @@ export function loadKit<T extends { logoDataUrl?: string }>(
 
 export function saveForm(form: object, userId?: string | null) {
   try {
-    lsSet(FORM_KEY, JSON.stringify(form), userId);
+    lsSetQuotaSafe(FORM_KEY, JSON.stringify(form), userId);
   } catch (e) {
     console.error("saveForm: falha ao persistir formulário, não sobrevive a reload", e);
   }
