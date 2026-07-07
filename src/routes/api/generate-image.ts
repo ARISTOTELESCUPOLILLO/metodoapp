@@ -15,6 +15,25 @@ import { COST_USD } from "@/lib/costs";
 
 const FAL_QUEUE = "https://queue.fal.run";
 
+// fal.ai rejeita com 422 "string_too_long" acima de 32000 caracteres no campo
+// "prompt" — sem essa margem, um prompt real (MOP ou PU) que combine várias
+// referências do Kit Imagem verbosas (ex.: produto com tela informativa,
+// que sozinho já adiciona ~8000 caracteres de regras) pode passar do limite
+// e derrubar a geração inteira. Este é o ÚNICO ponto de envio ao fal.ai
+// (MOP e PU compartilham este endpoint) — corta aqui em vez de em cada
+// prompt-builder, que não sabe o limite real de terceiros.
+const FAL_PROMPT_MAX_CHARS = 31000;
+
+function truncatePromptSafe(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  // Prefere cortar num limite de parágrafo (linha em branco) perto do fim,
+  // em vez de partir uma instrução no meio — só usa o corte bruto se não
+  // houver quebra de parágrafo razoavelmente próxima do limite.
+  const lastBreak = slice.lastIndexOf("\n\n");
+  return (lastBreak > max * 0.8 ? slice.slice(0, lastBreak) : slice).trim();
+}
+
 type StartBody = {
   action?: "start";
   prompt: string;
@@ -179,7 +198,10 @@ export const Route = createFileRoute("/api/generate-image")({
             const rate = await checkRateLimit(effective.userId);
             if (!rate.ok) {
               return Response.json(
-                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                {
+                  error:
+                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                },
                 { status: 429 },
               );
             }
@@ -206,8 +228,16 @@ export const Route = createFileRoute("/api/generate-image")({
           const useEdit = allRefs.length > 0;
           const modelPath = useEdit ? "openai/gpt-image-2/edit" : "openai/gpt-image-2";
 
+          const safePrompt = truncatePromptSafe(prompt, FAL_PROMPT_MAX_CHARS);
+          if (safePrompt.length !== prompt.length) {
+            console.warn("[generate-image] prompt truncado para caber no limite do fal.ai", {
+              original: prompt.length,
+              final: safePrompt.length,
+            });
+          }
+
           const submitBody: Record<string, unknown> = {
-            prompt,
+            prompt: safePrompt,
             image_size: imageSizeFor(format),
             num_images: 1,
             quality: "medium",
@@ -217,7 +247,7 @@ export const Route = createFileRoute("/api/generate-image")({
           console.info("[generate-image] start fal", {
             model: modelPath,
             refs: allRefs.length,
-            promptChars: prompt.length,
+            promptChars: safePrompt.length,
           });
 
           const res = await fetch(`${FAL_QUEUE}/${modelPath}`, {
