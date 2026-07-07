@@ -15,6 +15,7 @@ import {
   LEGENDA_CORPO_MAX_WORDS,
   LEGENDA_CTA_MAX_WORDS,
   TECNICISMO_RULE,
+  checkCtaOpeningVem,
 } from "@/core/textValidation";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import {
@@ -265,7 +266,7 @@ INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 Retorne JSON com EXATAMENTE este formato:
 {
   "texto": "frase principal da legenda, até ${LEGENDA_CORPO_MAX_WORDS} palavras, no tom certo, sem hashtags e sem emojis exagerados, sem repetir o título/informação-chave inteira nem abrir assunto novo",
-  "cta": "uma chamada para ação que complementa o texto principal, até ${LEGENDA_CTA_MAX_WORDS} palavras, sem hashtag",
+  "cta": "uma chamada para ação que complementa o texto principal, até ${LEGENDA_CTA_MAX_WORDS} palavras, sem hashtag — PROIBIDO começar com 'vem'/'venha' (clichê batido, ex.: 'Vem conhecer...'); comece com um verbo direto no imperativo: conheça, descubra, aproveite, confira, garanta, agende, peça, experimente, fale com a gente, entre outros",
   "hashtags": ["tag1", "tag2", "tag3"]
 }
 
@@ -341,6 +342,11 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
 
             if (previousCaption && isCaptionTooSimilar(rawTexto, previousCaption)) {
               retryInstruction = `ATENÇÃO: a resposta anterior começou com a mesma abertura da legenda anterior. Reescreva com uma frase de abertura DIFERENTE, novo CTA e, se possível, novas hashtags.`;
+              continue;
+            }
+
+            if (checkCtaOpeningVem(rawCta)) {
+              retryInstruction = `ATENÇÃO: o CTA da resposta anterior começou com "vem"/"venha" — clichê proibido. Reescreva o CTA começando com outro verbo no imperativo (conheça, descubra, aproveite, confira, garanta, agende, peça, experimente, fale com a gente...).`;
               continue;
             }
 

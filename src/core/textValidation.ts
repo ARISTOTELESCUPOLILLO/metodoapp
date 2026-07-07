@@ -27,6 +27,7 @@ export {
   stripTrailingCtaSentence,
   normalizeLegenda,
   enforceLegendaLimits,
+  checkCtaOpeningVem,
 } from "./captionValidation";
 
 // ── Morfologia e numérico ──────────────────────────────────────────────────────

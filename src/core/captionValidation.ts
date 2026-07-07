@@ -80,6 +80,22 @@ export function checkLegendaStructure(legenda: string): string | null {
 const CTA_IMPERATIVE_RE =
   /^(compartilhe|salve|comente|marque|acesse|confira|aproveite|garanta|conhe[cç]a|saiba|visite|clique|siga|envie|chame|fale|pe[cç]a|agende|baixe|curta|deixe|mande|venha|descubra|corra|reserve|adquira|solicite|celebre|participe|inscreva-se|cadastre-se|entre em contato|n[aã]o perca|responda|vote|avalie|experimente|escolha)\b/i;
 
+// "Vem"/"venha" como abertura do CTA é um clichê publicitário genérico que o
+// modelo usa com muita frequência, sem ligação nenhuma com o segmento ou a
+// atividade específica — some usuários notam a repetição entre posts
+// diferentes. Como o CTA do Post Único é gerado campo a campo (com retry),
+// esta checagem entra no loop de tentativas em generate-caption.ts; a
+// legenda do MOP (1x por sequência, sem retry dedicado) depende só da
+// proibição equivalente no prompt (organizaMethodEngine.ts).
+export function checkCtaOpeningVem(cta: string): boolean {
+  const first = cta.trim().split(/\s+/)[0] || "";
+  const norm = first
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+  return norm === "vem" || norm === "venha";
+}
+
 function splitSentences(text: string): string[] {
   return text.match(/[^.!?]+[.!?]+/g) || [];
 }
