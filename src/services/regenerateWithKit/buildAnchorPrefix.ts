@@ -189,9 +189,15 @@ export function buildAnchorPrefix(
     // identidade do produto (ex.: tablet mostrando o app/print do negócio) —
     // a regra global de desfoque de tela (buildDeviceRule) é suspensa para
     // esta geração (ver mainActivity/preserveScreenContent em generatePostImage),
-    // então aqui reforçamos que o conteúdo da tela deve ficar nítido.
+    // então aqui reforçamos que o conteúdo da tela deve ficar nítido. Versão
+    // curta — o texto completo (contenção do conteúdo dentro da tela,
+    // proibição de vazar pra carcaça/verso) já vive em screenContentClause
+    // (src/utils/promptRules.ts, via buildDeviceRule) no MESMO prompt final;
+    // repetir tudo aqui só inchava o prompt sem ganho real (auditoria Opus
+    // 4.8 + Fable 5, 2026-07-07 — ajuda a evitar o 422 "string_too_long" do
+    // fal.ai em combinações com muitas referências).
     const telaClause = refs.produtoTelaInformativa
-      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — reproduza esse conteúdo de tela com NITIDEZ e LEGIBILIDADE total, sem desfoque, sem apagar, sem substituir por outra interface. Esse conteúdo — incluindo QUALQUER logomarca que faça parte dele — vive SOMENTE dentro do retângulo da tela: PROIBIDO repeti-lo ou estampá-lo na carcaça, no verso, na moldura, na mesa, na parede ou no fundo. Não desenhe a logomarca da marca em nenhum outro ponto da peça — a logo oficial é aplicada depois, fora da IA."
+      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — reproduza-o com nitidez (ver ⚠ CONTENÇÃO ABSOLUTA DO CONTEÚDO DE TELA no início do prompt)."
       : "";
     if (n === 1 && produtoDetalhe) {
       const detalhePick =

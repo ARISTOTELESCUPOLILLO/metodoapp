@@ -23,15 +23,35 @@ const FAL_QUEUE = "https://queue.fal.run";
 // (MOP e PU compartilham este endpoint) — corta aqui em vez de em cada
 // prompt-builder, que não sabe o limite real de terceiros.
 const FAL_PROMPT_MAX_CHARS = 31000;
+// Aviso antecipado (bem abaixo do limite real) — sinal de monitoramento pra
+// detectar prompts crescendo em direção ao limite antes que algum realmente
+// precise ser truncado (auditoria Opus 4.8 + Fable 5, 2026-07-07).
+const FAL_PROMPT_WARN_CHARS = 28000;
+// Reserva do FIM do prompt que NUNCA é cortada: tanto o buildPuPrompt.ts (PU)
+// quanto o buildImagePrompt.ts (MOP) terminam com as REGRAS finais (proibição
+// de escrever o nome da empresa/a informação-chave como texto na peça) e,
+// por último, FORBIDDEN_MOOD_WORDS (proíbe "CLAREZA"/"OP-01" etc. virarem
+// lettering). Um truncamento ingênuo pelo fim descartava exatamente essas
+// proibições — a parte mais recente do prompt, à qual os modelos de imagem
+// dão mais peso (mesmo princípio já documentado em puReferencesBlock.ts) —
+// e preservava o bloco que causou o estouro (que costuma ficar no início,
+// ex. buildDeviceRule). Corrigido após revisão cruzada Opus 4.8 + Fable 5.
+const PROTECTED_TAIL_CHARS = 2500;
 
 function truncatePromptSafe(text: string, max: number): string {
   if (text.length <= max) return text;
-  const slice = text.slice(0, max);
-  // Prefere cortar num limite de parágrafo (linha em branco) perto do fim,
-  // em vez de partir uma instrução no meio — só usa o corte bruto se não
-  // houver quebra de parágrafo razoavelmente próxima do limite.
-  const lastBreak = slice.lastIndexOf("\n\n");
-  return (lastBreak > max * 0.8 ? slice.slice(0, lastBreak) : slice).trim();
+  const tailStart = Math.max(0, text.length - PROTECTED_TAIL_CHARS);
+  const protectedTail = text.slice(tailStart).trim();
+  const separator = "\n\n";
+  const headBudget = max - protectedTail.length - separator.length;
+  if (headBudget <= 0) return protectedTail.slice(-max);
+  // Corta a CABEÇA (onde mora o bloco verboso que estourou o limite), no
+  // limite de parágrafo mais próximo do fim do orçamento — nunca no meio de
+  // uma instrução — e reanexa a cauda protegida na íntegra.
+  const headSlice = text.slice(0, headBudget);
+  const lastBreak = headSlice.lastIndexOf("\n\n");
+  const head = (lastBreak > headBudget * 0.5 ? headSlice.slice(0, lastBreak) : headSlice).trim();
+  return `${head}${separator}${protectedTail}`;
 }
 
 type StartBody = {
@@ -233,6 +253,10 @@ export const Route = createFileRoute("/api/generate-image")({
             console.warn("[generate-image] prompt truncado para caber no limite do fal.ai", {
               original: prompt.length,
               final: safePrompt.length,
+            });
+          } else if (prompt.length > FAL_PROMPT_WARN_CHARS) {
+            console.warn("[generate-image] prompt se aproximando do limite do fal.ai", {
+              length: prompt.length,
             });
           }
 

@@ -168,8 +168,14 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
   }
   if (refs.produtos && refs.produtos.length) {
     const lista = refs.produtos.map((p) => `Produto ${p.num}`).join(", ");
+    // Versão curta — o texto completo (nitidez, contenção do conteúdo dentro
+    // da tela, proibição de vazar pra carcaça/verso) já vive em
+    // screenContentClause (src/utils/promptRules.ts, via buildDeviceRule) que
+    // entra no MESMO prompt final; repetir tudo aqui só inchava o prompt sem
+    // ganho real (auditoria Opus 4.8 + Fable 5, 2026-07-07 — ajuda a evitar o
+    // 422 "string_too_long" do fal.ai em combinações com muitas referências).
     const telaClause = refs.produtoTelaInformativa
-      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — reproduza esse conteúdo de tela com NITIDEZ e LEGIBILIDADE total, sem desfoque, sem apagar, sem substituir por outra interface. Esse conteúdo — incluindo QUALQUER logomarca que faça parte dele — vive SOMENTE dentro do retângulo da tela: PROIBIDO repeti-lo ou estampá-lo na carcaça, no verso, na moldura, na mesa, na parede ou no fundo. Não desenhe a logomarca da marca em nenhum outro ponto da peça — a logo oficial é aplicada depois, fora da IA."
+      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — reproduza-o com nitidez (ver ⚠ CONTENÇÃO ABSOLUTA DO CONTEÚDO DE TELA no início do prompt)."
       : "";
     parts.push(
       `PRODUTOS SELECIONADOS (${lista}): elementos principais da composição. Preservar embalagem, formato, cores principais e características físicas. Apresentar de forma integrada à cena, evitando aparência de catálogo técnico ou montagem artificial.${telaClause}`,
