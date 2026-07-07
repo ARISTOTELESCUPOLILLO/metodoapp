@@ -130,6 +130,18 @@ export const Route = createFileRoute("/api/regenerate-block")({
 
           const rule = getRule(kind, formato);
 
+          // Quando o usuário regenera APENAS o texto ou a legenda, o título
+          // mostrado em "VERSÃO ATUAL" é o título FINAL escolhido/editado por
+          // ele — deve funcionar como âncora de sentido da nova versão, não ser
+          // reescrito nem ignorado. Sem esta instrução o modelo tende a derivar
+          // o novo texto/legenda da informação-chave ou do texto antigo e
+          // ignorar uma edição manual do título ("Gerar outro texto" saía
+          // incoerente com o título que o usuário digitou/ajustou).
+          const tituloAncoraBlock =
+            kind !== "titulo" && tituloAtual
+              ? `\n⚠ TÍTULO FIXO (DEFINIDO PELO USUÁRIO): o título em "VERSÃO ATUAL" acima é o título FINAL da peça — NÃO o reescreva e NÃO o ignore. A nova ${rule.label} PRECISA ser coerente com ESSE título exatamente como está escrito, sustentando a mesma mensagem. Se o texto/legenda/informação-chave atuais apontarem para outra direção, o TÍTULO prevalece.\n`
+              : "";
+
           const userPrompt = `Reescreva APENAS o ${rule.label} de uma peça de Instagram em português brasileiro, mantendo a intenção original mas trazendo uma alternativa realmente diferente.
 
 EMPRESA: ${companyName || "(não informada)"}
@@ -141,7 +153,7 @@ VERSÃO ATUAL:
 - Título: ${tituloAtual || "(vazio)"}
 - Texto: ${textoAtual || "(vazio)"}
 - Legenda: ${legendaAtual || "(vazia)"}
-${motivoReprovacao ? `\nMOTIVO DA REJEIÇÃO DA VERSÃO ATUAL: ${motivoReprovacao}\nA nova versão NÃO PODE repetir esse defeito específico.\n` : ""}
+${motivoReprovacao ? `\nMOTIVO DA REJEIÇÃO DA VERSÃO ATUAL: ${motivoReprovacao}\nA nova versão NÃO PODE repetir esse defeito específico.\n` : ""}${tituloAncoraBlock}
 REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.

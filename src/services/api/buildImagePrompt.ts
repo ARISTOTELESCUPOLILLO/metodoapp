@@ -199,6 +199,12 @@ export function buildImagePrompt(params: {
 `;
 
   // Proteção antecipada da zona da logomarca — lida ANTES da composição da cena.
+  // Emitida SEMPRE (paridade com a PU, que emite incondicionalmente): a logomarca
+  // oficial é carimbada por canvas (composeFeedPng/composeFinalPng/composeReelsPng)
+  // depois da IA em todos os caminhos estáticos e de capa, então a zona precisa
+  // estar reservada mesmo quando `hasLogo` é false (hasLogo = "IA desenha a logo",
+  // que só vale no ramo legado de uniforme). Sem essa reserva, a IA poderia pôr
+  // rosto/produto/texto exatamente onde o canvas vai carimbar a logo por cima.
   const LOGO_ZONE_RULE = `⚠ REGRA INVIOLÁVEL — ZONA DA LOGOMARCA (${reservaInstrucao.split(".")[0]}):
 PROIBIDO ABSOLUTO nessa área: texto, título, palavra, lettering, nome de empresa, slogan, call-to-action, hashtag, número, código, URL.
 PROIBIDO TAMBÉM: rosto, olhos, mão, objeto-foco, produto, gráfico, ícone, símbolo ou qualquer elemento visual essencial para a comunicação da mensagem.
@@ -244,7 +250,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
       ? "corpo GRANDE — entre 28% e 38% da altura do canvas, em 2-3 linhas — manchete editorial, sem dominar o quadro inteiro"
       : "corpo GRANDE — entre 35% e 45% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro";
 
-  return `${buildDeviceRule(mainActivity, hasProdutoTelaRef, hasProdutoFisicoRef)}\n\n${SAFE_ZONE_RULE}${hasLogo ? LOGO_ZONE_RULE : ""}${referenceAnchorBlock}Crie ${isCover ? "a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)" : "um post profissional"} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? "\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed." : ""}
+  return `${buildDeviceRule(mainActivity, hasProdutoTelaRef, hasProdutoFisicoRef)}\n\n${SAFE_ZONE_RULE}${LOGO_ZONE_RULE}${referenceAnchorBlock}Crie ${isCover ? "a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)" : "um post profissional"} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? "\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed." : ""}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
@@ -268,6 +274,7 @@ REGRAS:
 - ⚠ MARGEM DE ${safeMargin} para título e texto de apoio (zona segura definida no topo do prompt) — se o texto não couber, quebre em mais linhas ou reposicione; nunca reduza o corpo da fonte nem corte palavras
 - Todo texto em português, sem tradução, sem texto em inglês
 - Sem elementos decorativos genéricos
+- Sem watermarks, sem logo fictícia, sem assinatura textual — a logomarca oficial da marca é aplicada SEPARADAMENTE (por composição, fora da IA); PROIBIDO desenhar, inventar, imitar ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma ou nome da empresa como texto na arte.
 - Alta resolução, estética editorial contemporânea brasileira
 - A zona da logomarca (${pos === "top-center" ? "faixa superior" : pos === "bottom-center" ? "faixa inferior" : "canto inferior direito"}) é continuação natural da cena — SEM barra, painel, badge ou bloco de cor sólida atrás da logo; legível, sem dead space.
 
