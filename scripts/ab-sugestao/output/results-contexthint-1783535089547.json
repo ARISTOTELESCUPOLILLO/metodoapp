@@ -1,0 +1,72 @@
+[
+  {
+    "id": "ferrimaq",
+    "label": "FERRIMAQ (VAREJO/B2B) — item genérico: Móveis para escritório",
+    "genericItem": "Móveis para escritório",
+    "mainActivity": "Venda de Móveis para Escritório, Consultórios, Auditórios, Refeitório e Escolares",
+    "contextHint": "mobiliar consultórios com cadeiras e armários",
+    "mainActivityComHint": "Venda de Móveis para Escritório, Consultórios, Auditórios, Refeitório e Escolares — nesta sugestão, considere especialmente: mobiliar consultórios com cadeiras e armários",
+    "baseline": {
+      "sugestao": "Móveis para escritório deixam equipes trabalhando melhor"
+    },
+    "comHint": {
+      "sugestao": "Móveis para escritório melhoram o fluxo diário"
+    }
+  },
+  {
+    "id": "barbosa",
+    "label": "Barbosa Lubrificantes (VAREJO/B2B) — item genérico: Óleo lubrificante",
+    "genericItem": "Óleo lubrificante",
+    "mainActivity": "Loja de lubrificantes, correias, mangueiras, ferramentas e EPI",
+    "contextHint": "Lubrificação de máquinas agrícolas",
+    "mainActivityComHint": "Loja de lubrificantes, correias, mangueiras, ferramentas e EPI — nesta sugestão, considere especialmente: Lubrificação de máquinas agrícolas",
+    "baseline": {
+      "sugestao": "Óleo lubrificante para evitar parada inesperada"
+    },
+    "comHint": {
+      "sugestao": "Óleo lubrificante evita parada inesperada no campo"
+    }
+  },
+  {
+    "id": "prontovet",
+    "label": "Pronto Vet (SERVIÇOS/B2C) — item genérico: Ração",
+    "genericItem": "Ração",
+    "mainActivity": "Clínica veterinária, ração, remédios e acessórios",
+    "contextHint": "Alimentação recomendada após consulta veterinária",
+    "mainActivityComHint": "Clínica veterinária, ração, remédios e acessórios — nesta sugestão, considere especialmente: Alimentação recomendada após consulta veterinária",
+    "baseline": {
+      "sugestao": "Ração escolhida durante consulta resolve dúvidas"
+    },
+    "comHint": {
+      "sugestao": "Ração nova para menos vômitos depois"
+    }
+  },
+  {
+    "id": "roziner",
+    "label": "Roziner Artista e Poetisa (MARCA) — item genérico: Pintura",
+    "genericItem": "Pintura",
+    "mainActivity": "Reaproveitamento de objetos, decoração afetiva, pintura e poesias",
+    "contextHint": "pintura em objetos reaproveitados para decoração",
+    "mainActivityComHint": "Reaproveitamento de objetos, decoração afetiva, pintura e poesias — nesta sugestão, considere especialmente: pintura em objetos reaproveitados para decoração",
+    "baseline": {
+      "sugestao": "Pintura para dar cor ao móvel antigo"
+    },
+    "comHint": {
+      "sugestao": "Pintura dá nova cara ao móvel"
+    }
+  },
+  {
+    "id": "oficina-op",
+    "label": "Oficina de Propaganda (SERVIÇOS/B2B) — item genérico: Marketing digital",
+    "genericItem": "Marketing digital",
+    "mainActivity": "Consultoria de Marketing Digital",
+    "contextHint": "Planejamento estratégico para gestão de redes sociais",
+    "mainActivityComHint": "Consultoria de Marketing Digital — nesta sugestão, considere especialmente: Planejamento estratégico para gestão de redes sociais",
+    "baseline": {
+      "sugestao": "Marketing digital para acerto no contato"
+    },
+    "comHint": {
+      "sugestao": "Marketing digital que vira pedidos novos"
+    }
+  }
+]
