@@ -225,7 +225,9 @@ export function buildPostUnicoPrompt(params: {
   // quando essa proibição global já está ativa (ver resolveMoodRuleText).
   const noDeviceThisScene =
     isNonDigitalActivity(data.mainActivity || kit.mainActivity) ||
-    (!!references?.produtos?.length && !references?.produtoTelaInformativa);
+    (!!references?.produtos?.length &&
+      !references?.produtoTelaInformativa &&
+      !references?.produtoEhDispositivo);
   const direcao = direcaoBlock(
     data.direcao,
     data.mood,
@@ -384,6 +386,7 @@ Hierarquia tipográfica obrigatória:
     data.mainActivity || kit.mainActivity,
     references?.produtoTelaInformativa,
     !!references?.produtos?.length,
+    references?.produtoEhDispositivo,
   )}
 
 ${AMBIENTES_RULE}

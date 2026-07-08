@@ -70,6 +70,9 @@ export async function generatePostImage(params: {
   // Ver nota em buildImagePrompt — produto físico referenciado sem relação
   // com dispositivo digital (suprime notebook/tablet/etc irrelevante na cena).
   hasProdutoFisicoRef?: boolean;
+  // Ver nota em buildImagePrompt — produto referenciado é ele mesmo um
+  // dispositivo digital; impede que hasProdutoFisicoRef o banha da cena.
+  produtoEhDispositivo?: boolean;
   segment?: import("../types").Segment;
 }): Promise<string> {
   const {
@@ -96,6 +99,7 @@ export async function generatePostImage(params: {
     mainActivity,
     hasProdutoTelaRef,
     hasProdutoFisicoRef,
+    produtoEhDispositivo,
     segment,
   } = params;
 
@@ -209,6 +213,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         mainActivity,
         hasProdutoTelaRef,
         hasProdutoFisicoRef,
+        produtoEhDispositivo,
         segment,
       });
 

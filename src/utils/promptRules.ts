@@ -153,9 +153,18 @@ export function buildDeviceRule(
   mainActivity?: string,
   preserveScreenContent?: boolean,
   hasProdutoFisicoRef?: boolean,
+  produtoEhDispositivo?: boolean,
 ): string {
   if (isNonDigitalActivity(mainActivity)) return buildNoDeviceRule();
-  if (hasProdutoFisicoRef && !preserveScreenContent) return buildNoDeviceProdutoFisicoRule();
+  // Só proíbe dispositivo quando o produto de referência NÃO é ele mesmo um
+  // dispositivo. Quando o produto É um dispositivo (produtoEhDispositivo) mas a
+  // nitidez de tela foi degradada por causa do avatar (preserveScreenContent
+  // false), banir dispositivo transformaria o próprio produto num objeto
+  // genérico (pasta, placa) — bug real 2026-07-08. Nesse caso cai no
+  // tratamento comum de dispositivo abaixo (permite o aparelho, sem forçar
+  // nitidez de tela), preservando a forma reconhecível de dispositivo.
+  if (hasProdutoFisicoRef && !preserveScreenContent && !produtoEhDispositivo)
+    return buildNoDeviceProdutoFisicoRule();
   const screenNegative = preserveScreenContent
     ? "no blurred screen, no blank screen, no dark screen, no empty screen, no different content on screen than the reference image, screen content must stay strictly inside the screen, no brand logo outside the screen, no logo on wall or background, no logo on device casing or bezel, no floating brand mark, no duplicated logo, no screen content bleeding onto casing or desk, no screen content on laptop lid, no screenshot on notebook back cover, no interface on monitor rear, no content on the back of the device, screen face must be turned toward the camera"
     : "no blank screen, no dark screen, no empty screen, no sharp readable text on screen, no legible content on screen, no recognizable logo on screen, no dashboard on screen, no charts on screen, no spreadsheet on screen, no data visualization on screen";

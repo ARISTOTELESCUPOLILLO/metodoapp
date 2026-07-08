@@ -227,4 +227,35 @@ describe("buildReferences degrada produtoTelaInformativa quando há avatar", () 
     expect(refs.avatar).toBeDefined();
     expect(refs.produtoTelaInformativa).toBeUndefined();
   });
+
+  // Mesmo degradando a NITIDEZ de tela quando há avatar, o FATO de que o produto
+  // é um dispositivo deve persistir — senão buildDeviceRule proíbe o dispositivo
+  // e o próprio tablet vira objeto genérico (pasta/placa), bug real 2026-07-08.
+  it("produtoTelaInformativa: true COM avatar → refs.produtoEhDispositivo continua true", () => {
+    const refs = buildReferences("avatar+produto", fullKit, undefined, undefined, {
+      usarAvatar: true,
+      avatarNum: 1,
+      produtosNums: [1],
+      produtoTelaInformativa: true,
+    });
+    expect(refs.produtoTelaInformativa).toBeUndefined();
+    expect(refs.produtoEhDispositivo).toBe(true);
+  });
+
+  it("produtoTelaInformativa: true SEM avatar → refs.produtoEhDispositivo também true", () => {
+    const refs = buildReferences("produto", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      produtosNums: [1],
+      produtoTelaInformativa: true,
+    });
+    expect(refs.produtoEhDispositivo).toBe(true);
+  });
+
+  it("sem checkbox → refs.produtoEhDispositivo ausente", () => {
+    const refs = buildReferences("produto", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      produtosNums: [1],
+    });
+    expect(refs.produtoEhDispositivo).toBeUndefined();
+  });
 });

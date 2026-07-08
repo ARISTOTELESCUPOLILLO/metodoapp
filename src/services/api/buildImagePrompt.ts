@@ -86,6 +86,11 @@ export function buildImagePrompt(params: {
   // (achado real: peça de ração recebeu notebook sem motivo). Suprime o bloco
   // de dispositivo inteiro, mesma lógica já aplicada na PU (buildPuPrompt.ts).
   hasProdutoFisicoRef?: boolean;
+  // O produto de referência É ele mesmo um dispositivo digital (tablet/notebook/
+  // celular/monitor). Impede que hasProdutoFisicoRef banha o dispositivo quando
+  // a nitidez de tela foi degradada por avatar presente — sem isso o próprio
+  // tablet vira objeto genérico (bug real 2026-07-08). Ver buildDeviceRule.
+  produtoEhDispositivo?: boolean;
   segment?: import("../../types").Segment;
 }): string {
   const {
@@ -113,6 +118,7 @@ export function buildImagePrompt(params: {
     mainActivity,
     hasProdutoTelaRef,
     hasProdutoFisicoRef,
+    produtoEhDispositivo,
     segment,
   } = params;
   const isCover = format === "reels_cover";
@@ -250,7 +256,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
       ? "corpo GRANDE — entre 28% e 38% da altura do canvas, em 2-3 linhas — manchete editorial, sem dominar o quadro inteiro"
       : "corpo GRANDE — entre 35% e 45% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro";
 
-  return `${buildDeviceRule(mainActivity, hasProdutoTelaRef, hasProdutoFisicoRef)}\n\n${SAFE_ZONE_RULE}${LOGO_ZONE_RULE}${referenceAnchorBlock}Crie ${isCover ? "a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)" : "um post profissional"} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? "\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed." : ""}
+  return `${buildDeviceRule(mainActivity, hasProdutoTelaRef, hasProdutoFisicoRef, produtoEhDispositivo)}\n\n${SAFE_ZONE_RULE}${LOGO_ZONE_RULE}${referenceAnchorBlock}Crie ${isCover ? "a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)" : "um post profissional"} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? "\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed." : ""}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}

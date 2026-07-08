@@ -31,6 +31,13 @@ export interface PostUnicoReferences {
   // desfoque de tela (buildDeviceRule) para esta geração. Ver
   // PostUnicoVisualSelection.produtoTelaInformativa.
   produtoTelaInformativa?: boolean;
+  // O produto referenciado é ele mesmo um DISPOSITIVO DIGITAL (tablet, notebook,
+  // celular, monitor) — FATO físico do produto, independente de forçar nitidez
+  // de tela. Preserva esse fato mesmo quando produtoTelaInformativa é degradado
+  // por causa do avatar presente (ver buildReferences): sem ele, buildDeviceRule
+  // toma o ramo "produto físico → proibir todo dispositivo" e transforma o
+  // tablet num objeto genérico (pasta, placa) — bug real 2026-07-08.
+  produtoEhDispositivo?: boolean;
 }
 
 // Ordem fixa das imagens de referência enviadas ao modelo: avatar -> uniforme

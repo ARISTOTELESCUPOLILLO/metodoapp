@@ -76,6 +76,15 @@ export function buildReferences(
       // avatar (produto+cenário, por exemplo), o caso de uso real do
       // checkbox (produto digital como herói solo) permanece intacto.
       if (selecaoDireta?.produtoTelaInformativa && !refs.avatar) refs.produtoTelaInformativa = true;
+      // Marca que o produto É um dispositivo digital SEMPRE que o usuário
+      // marcou o checkbox — inclusive com avatar, quando a nitidez de tela
+      // acima foi degradada. Sem essa flag, buildDeviceRule via só "há produto
+      // físico + sem nitidez de tela" e tomava o ramo que PROÍBE todo
+      // dispositivo, transformando o tablet num objeto genérico (pasta, placa)
+      // — bug real 2026-07-08. Aqui só preserva o FATO de que é dispositivo;
+      // a decisão de forçar (ou não) nitidez de tela continua sendo do flag
+      // produtoTelaInformativa acima.
+      if (selecaoDireta?.produtoTelaInformativa) refs.produtoEhDispositivo = true;
     }
   }
   // Uniforme: veste o avatar (quando presente) OU cria um personagem do zero
