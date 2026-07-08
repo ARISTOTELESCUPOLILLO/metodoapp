@@ -9,6 +9,7 @@ import {
 import { mopContentCost } from "@/lib/costs";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { mopPiecesCount } from "@/core/organizaMethodEngine";
+import { sleep, parseRetryDelayFromText } from "@/lib/openaiClient.server";
 
 const LEITURA_CENICA_SCHEMA = {
   anyOf: [
@@ -445,7 +446,21 @@ export const Route = createFileRoute("/api/generate-content")({
                       r.status,
                       r.text.slice(0, 300),
                     );
-                    connError = `OpenAI: ${r.text || r.status}`;
+                    connError =
+                      r.status === 429
+                        ? "Limite de uso da OpenAI atingido no momento — tente novamente em alguns segundos."
+                        : `OpenAI: ${r.text || r.status}`;
+                    // 429 (rate_limit_exceeded) é transitório — a OpenAI informa
+                    // quanto esperar; sem essa pausa, a tentativa seguinte batia
+                    // no mesmo limite quase na hora, sem chance real de liberar.
+                    if (r.status === 429 && attempt < maxAttempts) {
+                      const remainingBudget = deadline - Date.now();
+                      const wait = Math.min(
+                        parseRetryDelayFromText(r.text),
+                        remainingBudget - 1000,
+                      );
+                      if (wait > 0) await sleep(wait);
+                    }
                     continue;
                   }
                   const validJson = (() => {
