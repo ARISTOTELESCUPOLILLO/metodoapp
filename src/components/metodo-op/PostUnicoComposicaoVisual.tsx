@@ -81,16 +81,21 @@ export default function PostUnicoComposicaoVisual({
   const hasProdutos = produtos.length > 0;
   const hasFato = !!imageKit.fato && objetivo === "fatos";
   const hasVenda = !!imageKit.venda && objetivo === "venda";
+  // Objetivos "Fatos" e "Venda" usam a foto cadastrada quase sem alteração
+  // (ver aviso abaixo) — mostrar as demais referências (avatar/fachada/
+  // cenário/produtos) ao lado dela só dava chance de o usuário marcar a
+  // errada por engano ou misturar referências que a IA recriaria por cima da
+  // foto documental. hasVenda já tinha essa restrição; estendida a hasFato
+  // pelo mesmo motivo (mesmo padrão de risco, mesmo aviso "usada quase sem
+  // alteração").
+  const hasDocFoto = hasFato || hasVenda;
 
-  // Objetivo "Venda" usa a foto cadastrada quase sem alteração (ver aviso
-  // abaixo) — mostrar as demais referências (avatar/fachada/cenário/produtos)
-  // ao lado dela só dava chance de o usuário marcar a errada por engano ou
-  // misturar referências que a IA recriaria por cima da foto documental.
-  // Restringe a composição a SÓ a foto de Venda enquanto esse objetivo tiver
-  // foto cadastrada, e limpa qualquer seleção anterior de outras referências
-  // pra não vazar pra dentro da geração mesmo sem aparecer na tela.
+  // Restringe a composição a SÓ a foto documental (Fato ou Venda) enquanto o
+  // objetivo tiver foto cadastrada, e limpa qualquer seleção anterior de
+  // outras referências pra não vazar pra dentro da geração mesmo sem
+  // aparecer na tela.
   useEffect(() => {
-    if (!hasVenda) return;
+    if (!hasDocFoto) return;
     const hasOutrasRefs =
       selection.useAvatar ||
       selection.useFachada ||
@@ -110,8 +115,8 @@ export default function PostUnicoComposicaoVisual({
         ? { ...selection.personagemSemAvatar, ativo: false }
         : selection.personagemSemAvatar,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a hasVenda; `selection`/`onChange` são lidos, não devem re-disparar o efeito
-  }, [hasVenda]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a hasDocFoto; `selection`/`onChange` são lidos, não devem re-disparar o efeito
+  }, [hasDocFoto]);
 
   const effectiveCenario = selection.cenarioSelecionado ?? null;
 
@@ -166,7 +171,7 @@ export default function PostUnicoComposicaoVisual({
         Marque quais imagens do seu <strong>Kit Imagem</strong> devem aparecer nesta peça.
         <strong> Se não marcar nenhuma, a peça é criada só a partir do texto.</strong>
       </p>
-      {!hasVenda && (
+      {!hasDocFoto && (
         <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
           Você pode combinar:{" "}
           <b>
@@ -179,16 +184,13 @@ export default function PostUnicoComposicaoVisual({
           )}
         </p>
       )}
-      {(hasFato || hasVenda) && (
+      {hasDocFoto && (
         <p style={{ margin: "0 0 12px", fontSize: 12, color: "#0e7490" }}>
           A foto de <b>{hasFato ? "Fato" : "Venda"}</b> é usada quase sem alteração, só com
-          marca/título/texto sobrepostos
-          {hasVenda
-            ? " — por isso é a única referência disponível neste objetivo."
-            : " — diferente das outras imagens, que a IA recria."}
+          marca/título/texto sobrepostos — por isso é a única referência disponível neste objetivo.
         </p>
       )}
-      {!hasVenda && kit.isPersonalBrand && !hasAvatar && (
+      {!hasDocFoto && kit.isPersonalBrand && !hasAvatar && (
         <p
           style={{
             margin: "0 0 12px",
@@ -212,7 +214,7 @@ export default function PostUnicoComposicaoVisual({
           gap: 6,
         }}
       >
-        {!hasVenda &&
+        {!hasDocFoto &&
           ordemGruposPorSegmento(kit.segment).map((grupo) => {
             if (grupo === "avatar") {
               return (
@@ -325,7 +327,7 @@ export default function PostUnicoComposicaoVisual({
         </label>
       )}
 
-      {!hasVenda && !selection.useAvatar && (
+      {!hasDocFoto && !selection.useAvatar && (
         <PersonagemSemAvatarBlock
           selection={selection}
           onChange={onChange}
@@ -335,7 +337,7 @@ export default function PostUnicoComposicaoVisual({
         />
       )}
 
-      {!hasVenda && (!hasAvatar || !hasFachada || !hasCenario || !hasProdutos) && (
+      {!hasDocFoto && (!hasAvatar || !hasFachada || !hasCenario || !hasProdutos) && (
         <div
           style={{
             marginTop: 10,

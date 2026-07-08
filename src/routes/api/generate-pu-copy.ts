@@ -31,7 +31,7 @@ import {
 // Objetivos que aceitam o formato alternativo "topicos" (3 tópicos com ícone
 // no lugar do texto de apoio corrido) — mesmo conjunto documentado em
 // PostUnicoFormatoTexto (types.ts).
-const OBJETIVOS_TOPICOS = new Set(["institucional", "oportunidade", "promocao"]);
+const OBJETIVOS_TOPICOS = new Set(["institucional", "oportunidade", "promocao", "venda"]);
 
 const OBJETIVO_INTENCAO: Record<string, string> = {
   institucional:

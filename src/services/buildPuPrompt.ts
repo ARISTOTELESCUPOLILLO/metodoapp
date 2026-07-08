@@ -297,7 +297,7 @@ export function buildPostUnicoPrompt(params: {
       ? "ocupando entre 28% e 38% da altura útil do canvas — quebre em 2-3 linhas para manter o corpo grande e legível sem dominar o quadro"
       : "ocupando entre 35% e 45% da altura útil do canvas, em 1-2 linhas";
   // Formato alternativo "tópicos com ícone" (só institucional/oportunidade/
-  // promocao — ver PostUnicoFormatoTexto): substitui o TEXTO DE APOIO por 3
+  // promocao/venda — ver PostUnicoFormatoTexto): substitui o TEXTO DE APOIO por 3
   // blocos ícone+texto curtos, abaixo do título. O ícone já foi escolhido no
   // passo de copy (generate-pu-copy.ts, vocabulário fechado em
   // topicoValidation.ts) — aqui só reforça que a IA de imagem deve
