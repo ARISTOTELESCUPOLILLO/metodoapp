@@ -189,7 +189,21 @@ export function buildDeviceRule(
     ? ""
     : `
 DIVERSIFICAÇÃO OBRIGATÓRIA: não repita sempre notebook entre as peças de uma mesma sequência — alterne com celular, tablet, monitor de desktop ou tela/TV de fundo conforme a atividade da empresa e o que a cena pede.`;
-  const composicaoPorTipo = `COMPOSIÇÃO POR TIPO DE DISPOSITIVO — aplica o enquadramento escolhido acima a cada formato. SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração:
+  // Quando o produto referenciado É um dispositivo (produtoEhDispositivo), o
+  // TIPO já está determinado pela foto real enviada — sortear um tipo daqui
+  // (pickDeviceTypeLine) pode contradizer a referência (achado real
+  // 2026-07-08: referência era um TABLET, sorteio escolheu CELULAR, o modelo
+  // desenhou um celular em vez do tablet da foto). Nesse caso, lista as 4
+  // composições possíveis e manda a IA usar a que corresponde ao tipo real da
+  // foto, em vez de sortear.
+  const composicaoPorTipo = produtoEhDispositivo
+    ? `COMPOSIÇÃO DO DISPOSITIVO — O TIPO JÁ ESTÁ DEFINIDO PELA FOTO DE REFERÊNCIA DO PRODUTO: mantenha EXATAMENTE o mesmo tipo de aparelho mostrado nela — NÃO troque celular por tablet, tablet por notebook, notebook por monitor, ou qualquer outra troca. O tipo não é uma escolha sua, é ditado pela imagem de referência enviada. Aplique só a composição abaixo que corresponde ao tipo real da foto:
+${DEVICE_CELULAR}
+${DEVICE_TABLET}
+${DEVICE_NOTEBOOK}
+${DEVICE_MONITOR}
+`
+    : `COMPOSIÇÃO POR TIPO DE DISPOSITIVO — aplica o enquadramento escolhido acima a cada formato. SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração:
 TIPO DESTA GERAÇÃO: ${pickDeviceTypeLine()}${diversificacao}
 `;
   return `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, celular, monitor e outros dispositivos são PERMITIDOS quando a cena pedir, em uso natural — abertos, na mão, apoiados sobre a mesa. NÃO forçar dispositivo fechado. ${screenContentClause(!!preserveScreenContent)}
