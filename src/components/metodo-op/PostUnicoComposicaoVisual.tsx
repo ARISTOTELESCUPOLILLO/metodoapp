@@ -296,14 +296,22 @@ export default function PostUnicoComposicaoVisual({
       </div>
 
       {selection.useProdutos && selection.produtosSelecionados.length > 0 && (
-        <label className="checkRow" style={{ marginTop: 8, fontSize: 12, fontWeight: 600 }}>
-          <input
-            type="checkbox"
-            checked={!!selection.produtoTelaInformativa}
-            onChange={(e) => onChange({ ...selection, produtoTelaInformativa: e.target.checked })}
-          />
-          Meu produto é digital (app, sistema ou painel) — mostrar a tela com nitidez
-        </label>
+        <>
+          <label className="checkRow" style={{ marginTop: 8, fontSize: 12, fontWeight: 600 }}>
+            <input
+              type="checkbox"
+              checked={!!selection.produtoTelaInformativa}
+              onChange={(e) => onChange({ ...selection, produtoTelaInformativa: e.target.checked })}
+            />
+            Meu produto é digital (app, sistema ou painel) — mostrar a tela com nitidez
+          </label>
+          {selection.produtoTelaInformativa && selection.useAvatar && (
+            <p style={{ margin: "4px 0 0", fontSize: 11, color: "#94a3b8" }}>
+              Com avatar marcado junto, a tela sai no tratamento padrão (sem forçar nitidez total) —
+              evita conteúdo de tela vazando pra fora do retângulo.
+            </p>
+          )}
+        </>
       )}
 
       {!!kit.uniformeDataUrl && selection.useAvatar && (

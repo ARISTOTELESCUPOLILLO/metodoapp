@@ -72,104 +72,77 @@ describe("buildReferences via elemento", () => {
 
 describe("buildReferences via selecaoDireta", () => {
   it("usarAvatar: true → refs.avatar preenchido", () => {
-    const refs = buildReferences(
-      "avatar",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: true, avatarNum: 1 },
-    );
+    const refs = buildReferences("avatar", fullKit, undefined, undefined, {
+      usarAvatar: true,
+      avatarNum: 1,
+    });
     expect(refs.avatar).toBe("https://img/avatar1.jpg");
   });
 
   it("avatarNum: 2 → usa avatar2", () => {
-    const refs = buildReferences(
-      "avatar",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: true, avatarNum: 2 },
-    );
+    const refs = buildReferences("avatar", fullKit, undefined, undefined, {
+      usarAvatar: true,
+      avatarNum: 2,
+    });
     expect(refs.avatar).toBe("https://img/avatar2.jpg");
   });
 
   it("avatarNum: 2 sem avatar2 → fallback para avatar1", () => {
-    const refs = buildReferences(
-      "avatar",
-      sparseKit,
-      undefined,
-      undefined,
-      { usarAvatar: true, avatarNum: 2 },
-    );
+    const refs = buildReferences("avatar", sparseKit, undefined, undefined, {
+      usarAvatar: true,
+      avatarNum: 2,
+    });
     // sparseKit não tem avatar nem avatar2 → refs.avatar deve ser undefined
     expect(refs.avatar).toBeUndefined();
   });
 
   it("usarFachada: true → refs.fachada preenchido", () => {
-    const refs = buildReferences(
-      "cenario",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: false, usarFachada: true },
-    );
+    const refs = buildReferences("cenario", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      usarFachada: true,
+    });
     expect(refs.fachada).toBe("https://img/fachada.jpg");
   });
 
   it("usarFachada: false → refs.fachada ausente mesmo com fachada no kit", () => {
-    const refs = buildReferences(
-      "cenario",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: false, usarFachada: false },
-    );
+    const refs = buildReferences("cenario", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      usarFachada: false,
+    });
     expect(refs.fachada).toBeUndefined();
   });
 
   it("cenarioNum: 1 → primeiro cenário do kit", () => {
-    const refs = buildReferences(
-      "cenario",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: false, cenarioNum: 1 },
-    );
+    const refs = buildReferences("cenario", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      cenarioNum: 1,
+    });
     expect(refs.cenario).toBe("https://img/cenario1.jpg");
   });
 
   it("cenarioNum: 2 → segundo cenário do kit", () => {
-    const refs = buildReferences(
-      "cenario",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: false, cenarioNum: 2 },
-    );
+    const refs = buildReferences("cenario", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      cenarioNum: 2,
+    });
     expect(refs.cenario).toBe("https://img/cenario2.jpg");
   });
 
   it("produtosNums: [1, 2] → refs.produtos com 2 {num, dataUrl}", () => {
-    const refs = buildReferences(
-      "produto",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: false, produtosNums: [1, 2] },
-    );
+    const refs = buildReferences("produto", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      produtosNums: [1, 2],
+    });
     expect(refs.produtos).toHaveLength(2);
     expect(refs.produtos![0].dataUrl).toBe("https://img/prod1.jpg");
     expect(refs.produtos![1].dataUrl).toBe("https://img/prod2.jpg");
   });
 
   it("produtosNums: [] → refs.produtos ausente ou vazio", () => {
-    const refs = buildReferences(
-      "produto",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: false, produtosNums: [] },
-    );
+    const refs = buildReferences("produto", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      produtosNums: [],
+    });
     // Lista vazia = sem produto nas referências
     expect(!refs.produtos || refs.produtos.length === 0).toBe(true);
   });
@@ -180,13 +153,10 @@ describe("buildReferences via selecaoDireta", () => {
       cenarios: [null, null],
       produtos: ["https://img/prod1.jpg", null, null, null, null, null, null, null],
     };
-    const refs = buildReferences(
-      "produto",
-      kit,
-      undefined,
-      undefined,
-      { usarAvatar: false, produtosNums: [1, 2] },
-    );
+    const refs = buildReferences("produto", kit, undefined, undefined, {
+      usarAvatar: false,
+      produtosNums: [1, 2],
+    });
     // produto 2 é null no kit → só produto 1 deve aparecer, com dataUrl válida
     expect(refs.produtos?.every((p) => !!p.dataUrl)).toBe(true);
     expect(refs.produtos).toHaveLength(1); // só o produto 1 (produto 2 é null)
@@ -224,13 +194,37 @@ describe("buildReferences via selecaoDireta", () => {
 
 describe("buildReferences respeita seleção vazia de produtos", () => {
   it("produtosNums vazio + kit com produtos → refs sem produto", () => {
-    const refs = buildReferences(
-      "avatar",
-      fullKit,
-      undefined,
-      undefined,
-      { usarAvatar: true, produtosNums: [] },
-    );
+    const refs = buildReferences("avatar", fullKit, undefined, undefined, {
+      usarAvatar: true,
+      produtosNums: [],
+    });
     expect(!refs.produtos || refs.produtos.length === 0).toBe(true);
+  });
+});
+
+// ── produtoTelaInformativa degrada com avatar ativo (2026-07-07) ─────────────
+// Achado real: avatar + produto-tela repetidamente vazou conteúdo de tela pra
+// carcaça/tampa mesmo com o texto de contenção reforçado (revisão Opus 4.8 +
+// Fable 5) — sem avatar (produto+cenário, por exemplo), o caso de uso real do
+// checkbox (produto digital como herói solo) permanece intacto.
+describe("buildReferences degrada produtoTelaInformativa quando há avatar", () => {
+  it("produtoTelaInformativa: true SEM avatar → refs.produtoTelaInformativa true", () => {
+    const refs = buildReferences("produto", fullKit, undefined, undefined, {
+      usarAvatar: false,
+      produtosNums: [1],
+      produtoTelaInformativa: true,
+    });
+    expect(refs.produtoTelaInformativa).toBe(true);
+  });
+
+  it("produtoTelaInformativa: true COM avatar → refs.produtoTelaInformativa ausente", () => {
+    const refs = buildReferences("avatar+produto", fullKit, undefined, undefined, {
+      usarAvatar: true,
+      avatarNum: 1,
+      produtosNums: [1],
+      produtoTelaInformativa: true,
+    });
+    expect(refs.avatar).toBeDefined();
+    expect(refs.produtoTelaInformativa).toBeUndefined();
   });
 });

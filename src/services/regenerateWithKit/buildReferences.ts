@@ -66,7 +66,16 @@ export function buildReferences(
       .filter((p): p is { num: number; dataUrl: string } => p !== null);
     if (lista.length) {
       refs.produtos = lista;
-      if (selecaoDireta?.produtoTelaInformativa) refs.produtoTelaInformativa = true;
+      // Degrada pro tratamento padrão de tela (sem forçar nitidez total)
+      // quando há avatar ativo na mesma geração — investigação real
+      // (2026-07-07, revisão cruzada Opus 4.8 + Fable 5) achou vazamento de
+      // conteúdo de tela pra tampa/carcaça repetidamente nessa combinação
+      // (avatar + produto-tela), mesmo após reforçar bastante o texto de
+      // contenção; a hipótese é "bleeding" entre duas referências do mesmo
+      // domínio fotorrealista, que texto de prompt sozinho não resolve. Sem
+      // avatar (produto+cenário, por exemplo), o caso de uso real do
+      // checkbox (produto digital como herói solo) permanece intacto.
+      if (selecaoDireta?.produtoTelaInformativa && !refs.avatar) refs.produtoTelaInformativa = true;
     }
   }
   // Uniforme: veste o avatar (quando presente) OU cria um personagem do zero

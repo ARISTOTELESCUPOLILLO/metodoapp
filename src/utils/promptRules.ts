@@ -142,7 +142,11 @@ function screenContentClause(preserveScreenContent: boolean): string {
     return `A TELA do dispositivo referenciado como produto exibe o CONTEÚDO REAL da imagem de referência — esse conteúdo É a identidade do produto sendo mostrado. PROIBIDO desfocar, apagar, escurecer ou substituir esse conteúdo por outra interface: reproduza-o com NITIDEZ e LEGIBILIDADE total, exatamente como aparece na referência.
 ⚠ CONTENÇÃO ABSOLUTA DO CONTEÚDO DE TELA: tudo o que esse conteúdo contém — interface, imagens, textos e QUALQUER logomarca ou marca que faça parte da tela — existe EXCLUSIVAMENTE dentro do retângulo da face ativa da tela, e em NENHUM outro lugar da composição. PROIBIDO repetir, espelhar, estampar ou fazer "sangrar" esse conteúdo (ou a logomarca contida nele) na carcaça, na tampa, no verso, na moldura/bezel do aparelho, na mesa, na parede, no fundo da cena ou flutuando como grafismo solto. A logomarca da marca NÃO deve ser desenhada por você em parte alguma da peça fora dessa tela — a logo oficial é aplicada depois, fora da IA, por composição; qualquer logo adicional que você desenhar é ERRO.`;
   }
-  return `A TELA, quando visível, mostra conteúdo com desfoque LEVE E SUTIL (~5% de intensidade — o mínimo necessário para impedir a leitura, não um borrão pesado); presença visual de conteúdo é desejável, opacidade total não. PROIBIDO desfoque forte, borrão pesado, glitch ou qualquer efeito que pareça defeito de renderização. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso; conteúdo identificável em tela (logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados).`;
+  // Sem exigência de desfoque artificial (removida 2026-07-07 — decisão do
+  // usuário após revisão Opus 4.8 + Fable 5): a IA decide a nitidez natural
+  // da cena; o que importa é não inventar conteúdo específico/identificável
+  // que pareça um produto real não referenciado, nem deixar a tela vazia.
+  return `A TELA, quando visível, mostra conteúdo genérico e discreto (textura de interface, cores e formas plausíveis) — sem forçar desfoque nem nitidez artificial, a composição decide naturalmente. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso; conteúdo identificável e específico em tela (logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados) que pareça um produto real não referenciado.`;
 }
 
 export function buildDeviceRule(
