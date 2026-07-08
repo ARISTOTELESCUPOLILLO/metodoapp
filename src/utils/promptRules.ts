@@ -24,6 +24,20 @@ const DEVICE_MONITOR =
 const DEVICE_TELA_FUNDO =
   "TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.";
 
+// Variantes "EXPOSTO" — usadas só no modo PRODUTO EXPOSTO — NÃO EM USO
+// (produtoEhDispositivo && preserveScreenContent, ver buildDeviceRule). Ao
+// contrário das variantes padrão acima, NENHUMA delas oferece a opção
+// "personagem segurando/olhando para a própria tela" — o dispositivo é um
+// objeto de composição, ninguém o usa, então essa opção não existe aqui.
+const DEVICE_CELULAR_EXPOSTO =
+  "CELULAR/SMARTPHONE EXPOSTO: apoiado sobre a mesa/superfície (nunca nas mãos de alguém usando), tela voltada para CIMA ou para a CÂMERA, legível — ninguém o segura nem olha para ela.";
+const DEVICE_TABLET_EXPOSTO =
+  "TABLET EXPOSTO: apoiado sobre a mesa/suporte (nunca nas mãos de alguém usando), tela voltada para CIMA ou para a CÂMERA, legível — ninguém o segura nem olha para ela.";
+const DEVICE_NOTEBOOK_EXPOSTO =
+  "NOTEBOOK/LAPTOP EXPOSTO: aberto sobre a mesa, tela voltada o suficiente para a câmera ler o conteúdo — câmera frontal/oblíqua (não estritamente de perfil, que esconderia o conteúdo). Ninguém está sentado usando-o.";
+const DEVICE_MONITOR_EXPOSTO =
+  "MONITOR DE DESKTOP EXPOSTO: sobre a mesa, tela voltada para a câmera o suficiente para ser lida. Ninguém está posicionado usando-o.";
+
 // Pool ponderado por repetição (não uniforme): celular/tablet/monitor saem bem
 // com mais frequência (confirmado em uso real); notebook reduzido por ainda
 // gerar tampa com conteúdo incorreto às vezes; tela/TV de fundo reduzida por
@@ -181,9 +195,20 @@ export function buildDeviceRule(
   // quando o tipo já é fixo — removê-la incondicionalmente (1ª tentativa desta
   // sessão) causou EXATAMENTE o defeito que ela previne (notebook mostrado
   // pela tampa/verso, tela não visível) em teste real. Mantida sempre.
-  const enquadramentoRetrato = preserveScreenContent
-    ? `Quando o conteúdo da tela É o produto referenciado (ver regra de tela acima), use SEMPRE o enquadramento MOSTRAR A TELA — a peça existe para exibir esse conteúdo.
-⚠ TELA VOLTADA À CÂMERA (precedência): se o dispositivo desta geração for NOTEBOOK ou MONITOR, a FACE DA TELA fica voltada para a câmera o suficiente para o conteúdo ser lido (câmera por cima do ombro ou oblíqua, do lado da tela) — aqui a exibição legível da tela tem PRECEDÊNCIA sobre a preferência de perfil lateral do notebook e sobre a oblíqua fechada do monitor. O conteúdo legível existe EXCLUSIVAMENTE nessa face frontal. JAMAIS resolva a exigência de legibilidade desenhando o conteúdo (ou qualquer parte dele) na tampa, no verso ou na carcaça: o verso permanece SEMPRE totalmente liso e vazio, mesmo que a tela apareça apenas parcialmente. Uma tela parcialmente visível é aceitável; conteúdo no verso NUNCA é.`
+  // PRODUTO EXPOSTO — NÃO EM USO: achado real 2026-07-08 (dilema AJUSTE_CONFLITO,
+  // Oficina de Propaganda). Quando o produto É um dispositivo com tela=identidade,
+  // o usuário decidiu que ele NÃO precisa estar nas mãos nem "em uso" por ninguém —
+  // fica exposto sobre uma superfície, tela voltada pra câmera, como objeto de
+  // composição independente do personagem. Isso evita a armadilha física da
+  // imagem 3 do dilema: pedir a tela de frente pra câmera E o personagem "usando"
+  // (olhando para) o mesmo dispositivo ao mesmo tempo é fisicamente impossível
+  // (a tela só pode encarar UM lado por vez — câmera OU o rosto de quem usa,
+  // nunca os dois). Ao declarar que ninguém usa o aparelho, a exigência de
+  // "olhos na tela" (ver FÍSICA DA TELA item 1 abaixo) deixa de se aplicar.
+  const dispositivoExposto = !!produtoEhDispositivo && !!preserveScreenContent;
+  const enquadramentoRetrato = dispositivoExposto
+    ? `Quando o conteúdo da tela É o produto referenciado (ver regra de tela acima), use SEMPRE o enquadramento PRODUTO EXPOSTO — a peça existe para exibir esse conteúdo, não para mostrar alguém usando o aparelho.
+⚠ PRODUTO EXPOSTO — NÃO EM USO: o dispositivo fica APOIADO sobre uma mesa/superfície/suporte, SEPARADO do personagem (fora das mãos dele, sem contato) — a TELA fica voltada para a CÂMERA, legível, como se estivesse sendo exibida diretamente para quem for ver a peça. NINGUÉM segura, usa ou lê o aparelho. O personagem (quando presente) NÃO precisa olhar para essa tela — ele ocupa seu papel normal na cena (olhando para a câmera, gesticulando, interagindo com outra coisa) — só olharia para ela se a tela estivesse mostrada DE PERFIL/lado para a câmera (não é o caso aqui, onde a tela encara a câmera de frente). PROIBIDO: personagem segurando o aparelho na frente do rosto; personagem com pose de "lendo"/"olhando" uma tela que está voltada para a câmera (fisicamente impossível — se a tela encara a câmera, ela não encara o personagem). JAMAIS resolva a exigência de legibilidade desenhando o conteúdo (ou qualquer parte dele) na tampa, no verso ou na carcaça: o verso permanece SEMPRE totalmente liso e vazio, mesmo que a tela apareça apenas parcialmente. Uma tela parcialmente visível é aceitável; conteúdo no verso NUNCA é.`
     : `· RETRATO DO PERSONAGEM (inclui contra-plongée e planos fechados no rosto): válido APENAS para CELULAR e TABLET em mãos — câmera de frente para o rosto do personagem (plenamente visível e enquadrado, nunca coberto), do lado oposto à tela: o aparelho pequeno nas mãos, abaixo do rosto, mostra o verso liso enquanto o personagem olha para baixo, para a própria tela (ver regra de OLHAR acima) — o dispositivo NUNCA se posiciona entre a câmera e o rosto. NOTEBOOK e MONITOR NUNCA usam este enquadramento — a carcaça traseira desses equipamentos é grande demais e esconderia o personagem, violando a regra de rosto acima; eles seguem sempre a composição de perfil/oblíqua definida abaixo.`;
   const diversificacao = preserveScreenContent
     ? ""
@@ -195,13 +220,15 @@ DIVERSIFICAÇÃO OBRIGATÓRIA: não repita sempre notebook entre as peças de um
   // 2026-07-08: referência era um TABLET, sorteio escolheu CELULAR, o modelo
   // desenhou um celular em vez do tablet da foto). Nesse caso, lista as 4
   // composições possíveis e manda a IA usar a que corresponde ao tipo real da
-  // foto, em vez de sortear.
+  // foto, em vez de sortear. No modo EXPOSTO (tela=identidade), usa as
+  // variantes EXPOSTO — sem a opção "personagem segurando/olhando pra tela",
+  // que não existe quando ninguém usa o aparelho.
   const composicaoPorTipo = produtoEhDispositivo
     ? `COMPOSIÇÃO DO DISPOSITIVO — O TIPO JÁ ESTÁ DEFINIDO PELA FOTO DE REFERÊNCIA DO PRODUTO: mantenha EXATAMENTE o mesmo tipo de aparelho mostrado nela — NÃO troque celular por tablet, tablet por notebook, notebook por monitor, ou qualquer outra troca. O tipo não é uma escolha sua, é ditado pela imagem de referência enviada. Aplique só a composição abaixo que corresponde ao tipo real da foto:
-${DEVICE_CELULAR}
-${DEVICE_TABLET}
-${DEVICE_NOTEBOOK}
-${DEVICE_MONITOR}
+${dispositivoExposto ? DEVICE_CELULAR_EXPOSTO : DEVICE_CELULAR}
+${dispositivoExposto ? DEVICE_TABLET_EXPOSTO : DEVICE_TABLET}
+${dispositivoExposto ? DEVICE_NOTEBOOK_EXPOSTO : DEVICE_NOTEBOOK}
+${dispositivoExposto ? DEVICE_MONITOR_EXPOSTO : DEVICE_MONITOR}
 `
     : `COMPOSIÇÃO POR TIPO DE DISPOSITIVO — aplica o enquadramento escolhido acima a cada formato. SE a cena envolver dispositivo digital, use o tipo e a composição sorteados para esta geração:
 TIPO DESTA GERAÇÃO: ${pickDeviceTypeLine()}${diversificacao}
@@ -209,7 +236,7 @@ TIPO DESTA GERAÇÃO: ${pickDeviceTypeLine()}${diversificacao}
   return `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, celular, monitor e outros dispositivos são PERMITIDOS quando a cena pedir, em uso natural — abertos, na mão, apoiados sobre a mesa. NÃO forçar dispositivo fechado. ${screenContentClause(!!preserveScreenContent)}
 
 FÍSICA DA TELA — PRINCÍPIO DE CENA (entenda a geometria; as proibições abaixo são reforço, não a regra primária): todo dispositivo com tela tem DUAS faces opostas — a TELA (face ativa, único lugar onde existe conteúdo) e o VERSO/carcaça (face lisa e opaca, sem nada). A tela fica sempre voltada para o rosto de quem está usando o aparelho. Disso decorrem 3 consequências:
-1. OLHAR: se o personagem está usando o dispositivo, os olhos dele estão NA TELA — olhar dirigido a ela, nunca solto, nunca para o lado, nunca para fora de quadro. Essa regra tem PRECEDÊNCIA sobre qualquer instrução de câmera do mood que peça "olhar para longe" ou "espaço negativo à frente do olhar" — quando há dispositivo em uso, o olhar vai para a tela, e o espaço negativo (se o mood exigir) se organiza ao redor desse eixo, não contra ele. Se a cena pede olhar em outra direção, o dispositivo fica em REPOUSO (abaixado, sobre a mesa) — não erguido como se estivesse em uso.
+1. OLHAR: se o personagem está usando o dispositivo, os olhos dele estão NA TELA — olhar dirigido a ela, nunca solto, nunca para o lado, nunca para fora de quadro. Essa regra tem PRECEDÊNCIA sobre qualquer instrução de câmera do mood que peça "olhar para longe" ou "espaço negativo à frente do olhar" — quando há dispositivo em uso, o olhar vai para a tela, e o espaço negativo (se o mood exigir) se organiza ao redor desse eixo, não contra ele. Se a cena pede olhar em outra direção, o dispositivo fica em REPOUSO (abaixado, sobre a mesa) — não erguido como se estivesse em uso. ⚠ EXCEÇÃO — PRODUTO EXPOSTO: quando o dispositivo está EXPOSTO como objeto de composição (ninguém o segura nem o usa — ver enquadramento PRODUTO EXPOSTO abaixo), esta regra de olhar NÃO se aplica — o personagem não está "usando" o aparelho, então seus olhos não precisam ir para a tela; ele olha para onde a cena pedir (câmera, interlocutor, ação). Ver a tela do dispositivo exigiria estar do mesmo lado dela — impossível quando a tela está voltada para a câmera/espectador.
 2. O QUE A CÂMERA VÊ: a câmera vê OU a tela (quando está do mesmo lado do olhar do personagem) OU o verso liso (quando está do lado oposto, de frente para o personagem). Nunca as duas faces ao mesmo tempo — é fisicamente impossível. Ver o verso é natural e correto nesse ângulo; NÃO torça o aparelho nem o personagem para a tela "aparecer" mesmo assim.
 3. CONTEÚDO: existe SOMENTE na face da tela. Conteúdo, logo ou interface no verso/carcaça é fisicamente impossível — PROIBIDO em qualquer ângulo de câmera, sem exceção.
 
@@ -219,10 +246,10 @@ ENQUADRAMENTO COM DISPOSITIVO — escolha a geometria coerente com a câmera sor
 · MOSTRAR A TELA: câmera do mesmo lado do olhar do personagem (lateral, por cima do ombro, oblíqua) — a tela aparece ao observador com o conteúdo tratado pela regra acima, rosto do personagem sempre visível.
 ${enquadramentoRetrato}
 
-${composicaoPorTipo}PROTAGONISMO: o dispositivo digital é elemento de APOIO à cena, nunca o protagonista visual — o foco principal é a pessoa e a ação dela. Mantenha o dispositivo proporcionalmente pequeno no quadro, nunca em primeiro plano ocupando a maior área da composição. EXCEÇÃO: quando o próprio dispositivo for o produto sendo vendido (ex.: loja de eletrônicos/celulares/informática) — nesse caso ele pode ocupar o centro da composição como protagonista.
+${composicaoPorTipo}PROTAGONISMO: o dispositivo digital é elemento de APOIO à cena, nunca o protagonista visual — o foco principal é a pessoa e a ação dela. Mantenha o dispositivo proporcionalmente pequeno no quadro, nunca em primeiro plano ocupando a maior área da composição. EXCEÇÃO: quando o próprio dispositivo for o produto sendo vendido (ex.: loja de eletrônicos/celulares/informática) OU quando sua tela for a identidade do produto referenciado (PRODUTO EXPOSTO, ver acima) — nesses casos ele pode, e deve, ocupar primeiro plano/centro da composição, grande o suficiente para o conteúdo da tela ser lido; isso não faz dele o protagonista NARRATIVO da peça quando há personagem (ver regra de hierarquia produto×personagem), só o protagonista de ESCALA/NITIDEZ.
 
 CARCAÇA E TAMPA — REGRA ABSOLUTA (vale mesmo com a composição correta, como reforço): tampa, verso e carcaça de qualquer dispositivo DEVEM ser completamente lisas, sem nenhuma marca, símbolo, logo, maçã, ícone, adesivo, gravação ou iluminação. Use equipamento genérico, sem marca. MÁXIMO 1 DISPOSITIVO por cena.
-NEGATIVE: ${screenNegative}, no images or graphics on device casing or back cover, no content or interface visible on back casing under any camera angle, no duplicated devices, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no notebook rear casing facing camera, character holding device but gaze not directed at its screen while in use, no device covering, blocking or obscuring the character's face.`;
+NEGATIVE: ${screenNegative}, no images or graphics on device casing or back cover, no content or interface visible on back casing under any camera angle, no duplicated devices, no second device in background, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no notebook rear casing facing camera, character holding device but gaze not directed at its screen while in use, no device covering, blocking or obscuring the character's face${dispositivoExposto ? ", no character reading or gazing at a screen that faces the camera, no character holding the exposed product device, device must rest on a surface not in anyone's hands" : ""}.`;
 }
 
 export const AMBIENTES_RULE = `⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.`;

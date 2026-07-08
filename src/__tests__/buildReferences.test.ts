@@ -202,12 +202,14 @@ describe("buildReferences respeita seleção vazia de produtos", () => {
   });
 });
 
-// ── produtoTelaInformativa degrada com avatar ativo (2026-07-07) ─────────────
-// Achado real: avatar + produto-tela repetidamente vazou conteúdo de tela pra
-// carcaça/tampa mesmo com o texto de contenção reforçado (revisão Opus 4.8 +
-// Fable 5) — sem avatar (produto+cenário, por exemplo), o caso de uso real do
-// checkbox (produto digital como herói solo) permanece intacto.
-describe("buildReferences degrada produtoTelaInformativa quando há avatar", () => {
+// ── produtoTelaInformativa NÃO degrada mais com avatar ativo (revertido 2026-07-08) ──
+// Até 2026-07-08 esta flag desligava com avatar presente (achado 2026-07-07:
+// bleeding de conteúdo de tela pra carcaça). Revertido: a causa era sobreposição
+// espacial (produto nas mãos/perto do rosto do avatar), não a mera presença de
+// avatar — o novo modo "PRODUTO EXPOSTO — NÃO EM USO" (buildDeviceRule) já impõe
+// separação física entre produto e personagem, resolvendo o bleeding original
+// sem precisar desligar a fidelidade de tela. Ver buildReferences.ts.
+describe("buildReferences NÃO degrada produtoTelaInformativa quando há avatar", () => {
   it("produtoTelaInformativa: true SEM avatar → refs.produtoTelaInformativa true", () => {
     const refs = buildReferences("produto", fullKit, undefined, undefined, {
       usarAvatar: false,
@@ -217,7 +219,7 @@ describe("buildReferences degrada produtoTelaInformativa quando há avatar", () 
     expect(refs.produtoTelaInformativa).toBe(true);
   });
 
-  it("produtoTelaInformativa: true COM avatar → refs.produtoTelaInformativa ausente", () => {
+  it("produtoTelaInformativa: true COM avatar → refs.produtoTelaInformativa continua true", () => {
     const refs = buildReferences("avatar+produto", fullKit, undefined, undefined, {
       usarAvatar: true,
       avatarNum: 1,
@@ -225,20 +227,20 @@ describe("buildReferences degrada produtoTelaInformativa quando há avatar", () 
       produtoTelaInformativa: true,
     });
     expect(refs.avatar).toBeDefined();
-    expect(refs.produtoTelaInformativa).toBeUndefined();
+    expect(refs.produtoTelaInformativa).toBe(true);
   });
 
-  // Mesmo degradando a NITIDEZ de tela quando há avatar, o FATO de que o produto
-  // é um dispositivo deve persistir — senão buildDeviceRule proíbe o dispositivo
-  // e o próprio tablet vira objeto genérico (pasta/placa), bug real 2026-07-08.
-  it("produtoTelaInformativa: true COM avatar → refs.produtoEhDispositivo continua true", () => {
+  // O FATO de que o produto é um dispositivo persiste com ou sem avatar — senão
+  // buildDeviceRule proíbe o dispositivo e o tablet vira objeto genérico
+  // (pasta/placa), bug real 2026-07-08.
+  it("produtoTelaInformativa: true COM avatar → refs.produtoEhDispositivo também true", () => {
     const refs = buildReferences("avatar+produto", fullKit, undefined, undefined, {
       usarAvatar: true,
       avatarNum: 1,
       produtosNums: [1],
       produtoTelaInformativa: true,
     });
-    expect(refs.produtoTelaInformativa).toBeUndefined();
+    expect(refs.produtoTelaInformativa).toBe(true);
     expect(refs.produtoEhDispositivo).toBe(true);
   });
 

@@ -66,16 +66,21 @@ export function buildReferences(
       .filter((p): p is { num: number; dataUrl: string } => p !== null);
     if (lista.length) {
       refs.produtos = lista;
-      // Degrada pro tratamento padrão de tela (sem forçar nitidez total)
-      // quando há avatar ativo na mesma geração — investigação real
-      // (2026-07-07, revisão cruzada Opus 4.8 + Fable 5) achou vazamento de
-      // conteúdo de tela pra tampa/carcaça repetidamente nessa combinação
-      // (avatar + produto-tela), mesmo após reforçar bastante o texto de
-      // contenção; a hipótese é "bleeding" entre duas referências do mesmo
-      // domínio fotorrealista, que texto de prompt sozinho não resolve. Sem
-      // avatar (produto+cenário, por exemplo), o caso de uso real do
-      // checkbox (produto digital como herói solo) permanece intacto.
-      if (selecaoDireta?.produtoTelaInformativa && !refs.avatar) refs.produtoTelaInformativa = true;
+      // Até 2026-07-08 esta flag era degradada (nunca ligava) quando havia
+      // avatar na mesma geração — investigação de 2026-07-07 (Opus 4.8 +
+      // Fable 5) achou vazamento de conteúdo de tela pra tampa/carcaça nessa
+      // combinação, hipótese "bleeding" entre duas referências fotorrealistas
+      // sobrepostas (avatar segurando o produto, rosto colado na tela).
+      // Revertido em 2026-07-08 (achado real: dilema AJUSTE_CONFLITO, avatar+
+      // uniforme+produto-tela em SERVIÇOS): a causa do bleeding era a
+      // SOBREPOSIÇÃO ESPACIAL (produto nas mãos/perto do rosto), não a mera
+      // presença de avatar — o novo modo "PRODUTO EXPOSTO — NÃO EM USO"
+      // (buildDeviceRule) já impõe que o dispositivo fique separado do
+      // personagem (apoiado numa superfície, fora das mãos), o que remove a
+      // condição que causava o vazamento. Sem essa flag ligada, a tela nunca
+      // era pedida fiel com avatar presente — causa raiz de 2 das 3 imagens
+      // de teste do dilema.
+      if (selecaoDireta?.produtoTelaInformativa) refs.produtoTelaInformativa = true;
       // Marca que o produto É um dispositivo digital SEMPRE que o usuário
       // marcou o checkbox — inclusive com avatar, quando a nitidez de tela
       // acima foi degradada. Sem essa flag, buildDeviceRule via só "há produto

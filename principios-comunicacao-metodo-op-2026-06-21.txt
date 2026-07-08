@@ -414,6 +414,43 @@ Lição de processo: da próxima vez que uma mudança tocar visualDirection.ts/
 .lexicon.ts, promptRules.ts (usado por ambos MOP e PU) ou postUnico.ts, consultar
 este documento ANTES de editar — não depois, numa auditoria posterior.
 
+2.6 PRODUTO-DISPOSITIVO COM TELA=IDENTIDADE EM SERVIÇOS — exceção à regra 1.3
+------------------------------------------------------------
+[Decidido por Aristóteles em 08/07/2026 — achado real na pasta AJUSTE_CONFLITO,
+empresa Oficina de Propaganda: 3 gerações reais (avatar+uniforme+produto) saíram
+com a tela do tablet em branco, virada de costas pra câmera, ou com o personagem numa
+pose fisicamente impossível de "ler" uma tela voltada para o espectador. Investigado
+por Opus 4.8 + Fable 5 antes de decidir.]
+
+A regra 1.3 diz que em SERVIÇOS o produto de referência é sempre elemento de apoio,
+"nunca o protagonista visual". Isso vale como regra geral, mas colide com um caso
+específico: quando o produto referenciado É um dispositivo digital (tablet, celular,
+notebook) e o CONTEÚDO DA TELA é a própria identidade do produto sendo divulgado (ex.:
+um app, um dashboard, um site — a tela não é acessório, é o produto). Empurrar esse
+dispositivo pro fundo, pequeno, não é só uma escolha de composição errada — é
+tecnicamente incompatível com mostrar a tela de forma legível (não há pixels
+suficientes pra IA copiar o conteúdo real a distância, e ela inventa uma interface
+genérica pra preencher).
+
+EXCEÇÃO: quando produto=dispositivo E tela=identidade, o produto fica em PRIMEIRO
+PLANO, grande o suficiente para a tela ser lida, EXPOSTO sobre uma superfície —
+independente do personagem, fora das mãos dele, sem que ninguém "use" o aparelho. Isso
+NÃO transfere o protagonismo NARRATIVO da peça (quem representa o serviço continua
+sendo o personagem) — é uma exceção de ESCALA/NITIDEZ do produto, não de PAPEL. Como
+ninguém usa o dispositivo, o personagem não precisa olhar para a tela (só olharia se
+ela estivesse de perfil, não de frente pra câmera) — isso evita a armadilha física de
+pedir "tela pra câmera" e "personagem usando o mesmo dispositivo" ao mesmo tempo
+(fisicamente impossível: a tela só encara um lado por vez).
+
+Implementação: `produtoTelaIdentidade` em `buildProductHierarchyBlock`
+(productHierarchy.ts, blocos PRODUTO_DISPOSITIVO_TELA_SERVICOS_*) e modo "PRODUTO
+EXPOSTO — NÃO EM USO" em `buildDeviceRule` (promptRules.ts). Também reverteu a
+degradação de `produtoTelaInformativa` quando há avatar (buildReferences.ts,
+decisão de 2026-07-07): a causa do vazamento de tela pra carcaça era a sobreposição
+espacial (produto nas mãos, perto do rosto), não a mera presença de avatar — a
+separação física agora exigida pelo modo exposto resolve o vazamento original sem
+precisar desligar a fidelidade de tela.
+
 ============================================================
 PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO
 ============================================================

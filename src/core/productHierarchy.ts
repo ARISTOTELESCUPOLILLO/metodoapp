@@ -69,6 +69,32 @@ const PRODUTO_APOIO_SERVICOS_PLURAL =
   "Mantenha fidelidade a cada produto real (mesma cor, forma, rótulo, acabamento), mas em plano secundário: menores, mais ao fundo ou parcialmente em uso/apoiados de forma natural no ambiente — sem ocupar o centro do quadro. " +
   "PROIBIDO ampliar os produtos, aproximar a câmera deles ou tratá-los como heróis da composição. O PERSONAGEM é quem ocupa esse papel.";
 
+// EXCEÇÃO — produto-dispositivo cuja TELA é a própria identidade do produto
+// (ex.: tablet mostrando a tela do próprio app do negócio), em SERVIÇOS.
+// Achado real 2026-07-08 (pasta AJUSTE_CONFLITO, Oficina de Propaganda): a
+// regra padrão de SERVIÇOS acima ("menor, mais ao fundo, PROIBIDO ampliar")
+// competia sem reconciliação com a exigência de fidelidade de tela
+// (screenContentClause em promptRules.ts — "NITIDEZ e LEGIBILIDADE total"),
+// e a IA resolvia o conflito de forma errática: tela em branco, tela virada
+// de costas, ou um segundo dispositivo inventado ao fundo. Investigação
+// (Opus 4.8 + Fable 5) confirmou que produto pequeno/distante também é
+// tecnicamente incompatível com fidelidade de tela — não há pixels
+// suficientes pra IA copiar o conteúdo real, então ela inventa uma interface
+// genérica. Esta exceção SUBSTITUI (não complementa) o bloco padrão de apoio
+// quando o produto é um dispositivo com tela=identidade: ele vai pra
+// primeiro plano, grande o bastante pra ser lido — sem virar o protagonista
+// NARRATIVO da peça (quem vende continua sendo o serviço/personagem).
+const PRODUTO_DISPOSITIVO_TELA_SERVICOS_SINGULAR =
+  "EXCEÇÃO DE SERVIÇOS — PRODUTO-DISPOSITIVO COM TELA=IDENTIDADE: o produto referenciado é um dispositivo cuja TELA é a própria identidade do produto (o conteúdo exibido nela É o que está sendo divulgado) — por isso, SÓ NESTA PEÇA, ele NÃO segue a regra geral de produto-apoio de SERVIÇOS. " +
+  "O dispositivo fica em PRIMEIRO PLANO, próximo da câmera, grande o suficiente para o conteúdo da tela ser lido com nitidez — apoiado sobre uma mesa/superfície/suporte, como elemento de composição independente. " +
+  "Isso NÃO transfere o protagonismo NARRATIVO da peça para o produto: quem representa o serviço continua sendo o PERSONAGEM (ver regra de personagem abaixo) — o dispositivo tem destaque de ESCALA e NITIDEZ, não de papel. " +
+  "PROIBIDO: empurrar o dispositivo para o fundo, deixá-lo pequeno ou distante, ou evitar aproximar a câmera dele — isso impediria a tela de ser lida.";
+
+const PERSONAGEM_VS_PRODUTO_DISPOSITIVO_TELA_SERVICOS_SINGULAR =
+  "PERSONAGEM vs PRODUTO-DISPOSITIVO (SERVIÇOS, TELA=IDENTIDADE) — o PERSONAGEM continua sendo o protagonista HUMANO da cena (expressão, postura, ação), mas NÃO precisa apresentar, segurar nem usar o dispositivo. " +
+  "O dispositivo é um objeto de composição EXPOSTO (ver FÍSICA DA TELA — PRODUTO EXPOSTO), separado do personagem — sobre a mesa, ao lado ou próximo dele, nunca nas mãos. " +
+  "O personagem ocupa seu papel normal na cena (olhando para a câmera, gesticulando, interagindo com outra coisa) — ele NÃO precisa olhar para a tela do dispositivo, só se ela estiver mostrada de PERFIL/lado (não de frente para a câmera).";
+
 const PERSONAGEM_VS_PRODUTO_SERVICOS_SINGULAR =
   "PERSONAGEM vs PRODUTO (SERVIÇOS) — o PERSONAGEM é o PROTAGONISTA absoluto da composição; o produto é coadjuvante adaptado à cena. " +
   "A postura, a expressão e a ação do personagem são o centro visual da imagem. O produto aparece de forma natural e secundária (sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-lo. " +
@@ -182,25 +208,54 @@ export function buildProductHierarchyBlock(opts: {
    * composição (objeto pequeno/vasto espaço; múltiplos blocos sem hero único)
    * contradiz a regra de protagonismo do produto se lida isoladamente. */
   mood?: MoodCode;
+  /** true quando o único produto referenciado é um dispositivo cuja TELA é a
+   * própria identidade do produto (produtoEhDispositivo && produtoTelaInformativa,
+   * ver buildReferences.ts) — achado real 2026-07-08 (dilema AJUSTE_CONFLITO):
+   * em SERVIÇOS, a regra padrão de produto-apoio (pequeno, ao fundo) é
+   * tecnicamente incompatível com a exigência de tela legível. Só se aplica
+   * com 1 produto (produtosCount === 1) — caso plural não tem uso real ainda. */
+  produtoTelaIdentidade?: boolean;
 }): string {
-  const { produtosCount, hasCenario, hasAvatar, segment, isPersonalBrand, faceNotDominant, mood } =
-    opts;
+  const {
+    produtosCount,
+    hasCenario,
+    hasAvatar,
+    segment,
+    isPersonalBrand,
+    faceNotDominant,
+    mood,
+    produtoTelaIdentidade,
+  } = opts;
   if (produtosCount <= 0) return "";
   const multi = produtosCount > 1;
 
   // SERVIÇOS: produto em segundo plano, adaptado ao cenário — quem protagoniza
   // é o personagem (o que se vende é o serviço, não o item de apoio).
+  // EXCEÇÃO (produtoTelaIdentidade, singular): produto-dispositivo com tela=
+  // identidade vai pra primeiro plano — ver blocos PRODUTO_DISPOSITIVO_TELA_*
+  // acima. Não se aplica a produtosCount > 1 (caso plural sem uso real ainda).
   if (segment === "SERVIÇOS") {
+    const useTelaIdentidade = !multi && produtoTelaIdentidade;
     const lines: string[] = [
-      multi ? PRODUTO_APOIO_SERVICOS_PLURAL : PRODUTO_APOIO_SERVICOS_SINGULAR,
+      useTelaIdentidade
+        ? PRODUTO_DISPOSITIVO_TELA_SERVICOS_SINGULAR
+        : multi
+          ? PRODUTO_APOIO_SERVICOS_PLURAL
+          : PRODUTO_APOIO_SERVICOS_SINGULAR,
     ];
     if (hasAvatar) {
       lines.push(
-        multi ? PERSONAGEM_VS_PRODUTO_SERVICOS_PLURAL : PERSONAGEM_VS_PRODUTO_SERVICOS_SINGULAR,
+        useTelaIdentidade
+          ? PERSONAGEM_VS_PRODUTO_DISPOSITIVO_TELA_SERVICOS_SINGULAR
+          : multi
+            ? PERSONAGEM_VS_PRODUTO_SERVICOS_PLURAL
+            : PERSONAGEM_VS_PRODUTO_SERVICOS_SINGULAR,
       );
       if (faceNotDominant) {
         lines.push(
-          "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, gesto, silhueta). Isso NÃO reduz o protagonismo do personagem definido acima: ele continua sendo o centro visual da composição através do GESTO, da AÇÃO ou da PRESENÇA PARCIAL, nunca do rosto. PROIBIDO recorrer a um retrato de rosto em primeiro plano só para satisfazer o protagonismo do personagem — expresse-o por mão, gesto ou ação, mantendo o produto em apoio conforme a regra acima.",
+          useTelaIdentidade
+            ? "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, gesto, silhueta). Isso NÃO reduz o protagonismo humano do personagem definido acima: ele continua sendo o centro visual da composição através do GESTO, da AÇÃO ou da PRESENÇA PARCIAL, nunca do rosto. PROIBIDO recorrer a um retrato de rosto em primeiro plano só para satisfazer o protagonismo do personagem — expresse-o por mão, gesto ou ação. O dispositivo continua em primeiro plano, exposto e separado do personagem, conforme a regra acima."
+            : "RECONCILIAÇÃO COM A VARIAÇÃO DE PERSONAGEM DESTA GERAÇÃO: a variação sorteada determina que o ROSTO do personagem NÃO é dominante nesta cena (presença parcial — mão, braço, gesto, silhueta). Isso NÃO reduz o protagonismo do personagem definido acima: ele continua sendo o centro visual da composição através do GESTO, da AÇÃO ou da PRESENÇA PARCIAL, nunca do rosto. PROIBIDO recorrer a um retrato de rosto em primeiro plano só para satisfazer o protagonismo do personagem — expresse-o por mão, gesto ou ação, mantendo o produto em apoio conforme a regra acima.",
         );
       }
     }

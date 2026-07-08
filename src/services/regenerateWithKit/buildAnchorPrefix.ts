@@ -197,7 +197,7 @@ export function buildAnchorPrefix(
     // 4.8 + Fable 5, 2026-07-07 — ajuda a evitar o 422 "string_too_long" do
     // fal.ai em combinações com muitas referências).
     const telaClause = refs.produtoTelaInformativa
-      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — reproduza-o com nitidez (ver ⚠ CONTENÇÃO ABSOLUTA DO CONTEÚDO DE TELA no início do prompt)."
+      ? " A TELA deste produto exibe conteúdo que É a identidade do produto — fica em PRIMEIRO PLANO, exposto (não em uso), com a tela voltada para a câmera e reproduzida com nitidez total (ver ⚠ CONTENÇÃO ABSOLUTA DO CONTEÚDO DE TELA e PRODUTO EXPOSTO — NÃO EM USO no início do prompt)."
       : refs.produtoEhDispositivo
         ? " Este produto É um DISPOSITIVO DIGITAL (tablet, notebook, celular ou monitor) — mantenha a forma reconhecível de dispositivo com tela; PROIBIDO transformá-lo em objeto físico não-digital (pasta, porta-documentos, placa, plaquinha de mesa, caderno, quadro)."
         : "";
@@ -226,6 +226,7 @@ export function buildAnchorPrefix(
           segment,
           isPersonalBrand,
           mood,
+          produtoTelaIdentidade: !!refs.produtoTelaInformativa && !!refs.produtoEhDispositivo,
         }),
       );
     }
