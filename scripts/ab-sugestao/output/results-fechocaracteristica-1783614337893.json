@@ -1,0 +1,328 @@
+[
+  {
+    "id": "ferrimaq",
+    "label": "FERRIMAQ (VAREJO/B2B) — item genérico: Móveis para escritório",
+    "attempt": 0,
+    "baseline": {
+      "sugestao": "Móveis para escritório na escolha diária",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'renovam salas de trabalho' é genérico e abstrato, não nomeia um resultado concreto e específico."
+        ],
+        [
+          "juiz estrutural: O fecho 'equipes produtivas' é um substantivo abstrato genérico e não um benefício concreto e específico; substitua por um resultado mais tangível e mensurável."
+        ],
+        [
+          "juiz estrutural: O fecho não apresenta um resultado concreto, é abstrato ('na escolha diária'); o núcleo da frase é 'Móveis para escritório na escolha diária', onde o sujeito é uma locução com termo abstrato ('escolha'), não o item concreto; a última palavra é redundante e não acrescenta informação específica."
+        ]
+      ]
+    },
+    "patched": {
+      "sugestao": "Móveis para escritório prontos na escolha",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'mudam meu dia' é um substantivo abstrato genérico e não específico para móveis de escritório; substitua por um resultado ou característica concreta e verificável."
+        ],
+        [
+          "juiz estrutural: O fecho 'minha rotina diária' é um substantivo abstrato genérico e não específico do item, deve ser um resultado ou característica concreta e verificável dos móveis para escritório."
+        ],
+        [
+          "fecho fraco (qualificador vago no fim): a frase termina em \"certa\", adjetivo genérico de aprovação que serviria para qualquer produto/serviço — troque o fecho por um resultado, necessidade ou benefício concreto e específico deste item"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "ferrimaq",
+    "label": "FERRIMAQ (VAREJO/B2B) — item genérico: Móveis para escritório",
+    "attempt": 1,
+    "baseline": {
+      "sugestao": "Móveis para escritório renovam qualquer mesa cheia",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "sugestão usa fala de fornecedor/catálogo (\"prontos para\") em vez de algo que o cliente diria, perguntaria, sentiria ou viveria"
+        ],
+        [
+          "juiz estrutural: O fecho 'mudam meu espaço agora' não nomeia um resultado concreto e específico, é vago e subjetivo."
+        ],
+        [
+          "juiz estrutural: O fecho 'mesa cheia' não nomeia um resultado, necessidade ou benefício concreto e específico; é vago e genérico."
+        ]
+      ]
+    },
+    "patched": {
+      "sugestao": "Móveis para escritório sem tempo de espera",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'minha rotina diária' é abstrato e genérico, não especifica um resultado concreto ou característica do móvel para escritório."
+        ],
+        [
+          "sugestão inventa \"prazo/data/urgência (hoje, até X, esta semana, última chance...)\" sem isso constar na informação/contexto do usuário",
+          "sugestão usa fala de fornecedor/catálogo (\"prontos para\") em vez de algo que o cliente diria, perguntaria, sentiria ou viveria"
+        ],
+        [
+          "juiz estrutural: O fecho 'sem tempo de espera' não nomeia um resultado ou característica concreta e específica do item, é uma promessa vaga e genérica."
+        ]
+      ]
+    }
+  },
+  {
+    "id": "barbosa",
+    "label": "Barbosa Lubrificantes (VAREJO/B2B) — item genérico: Óleo lubrificante",
+    "attempt": 0,
+    "baseline": {
+      "sugestao": "Óleo lubrificante novo evita paradas urgentes",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'que impede máquina parada' não nomeia um benefício concreto e específico, pois 'máquina parada' é uma situação genérica e o termo está mal formulado; reformular para um resultado claro e específico."
+        ],
+        [
+          "juiz estrutural: O fecho 'sem falha' é um substantivo abstrato genérico e não um benefício concreto e específico; substitua por um resultado claro e mensurável."
+        ],
+        []
+      ]
+    },
+    "patched": {
+      "sugestao": "Óleo lubrificante evita paradas não planejadas",
+      "tentativas": 1,
+      "reprovadoPorFechoOk": false,
+      "motivosPorTentativa": [
+        []
+      ]
+    }
+  },
+  {
+    "id": "barbosa",
+    "label": "Barbosa Lubrificantes (VAREJO/B2B) — item genérico: Óleo lubrificante",
+    "attempt": 1,
+    "baseline": {
+      "sugestao": "Óleo lubrificante evita parada não planejada",
+      "tentativas": 2,
+      "reprovadoPorFechoOk": false,
+      "motivosPorTentativa": [
+        [
+          "sugestão usa fala de fornecedor/catálogo (\"pronto para\") em vez de algo que o cliente diria, perguntaria, sentiria ou viveria"
+        ],
+        []
+      ]
+    },
+    "patched": {
+      "sugestao": "Óleo lubrificante evita barulho na máquina",
+      "tentativas": 1,
+      "reprovadoPorFechoOk": false,
+      "motivosPorTentativa": [
+        []
+      ]
+    }
+  },
+  {
+    "id": "prontovet",
+    "label": "Pronto Vet (SERVIÇOS/B2C) — item genérico: Ração",
+    "attempt": 0,
+    "baseline": {
+      "sugestao": "Ração certa diminui visitas ao consultório",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "termina com a palavra \"precisa\", que sugere frase incompleta/cortada"
+        ],
+        [
+          "juiz estrutural: O fecho não nomeia um benefício concreto e específico, e o contexto não é vivido pelo consumidor final, pois 'consulta veterinária rápida' é uma ação do serviço, não do uso da ração."
+        ],
+        [
+          "juiz estrutural: O fecho 'diminui visitas ao consultório' é genérico e não específico o suficiente; precisa ser mais concreto e específico sobre o benefício da ração."
+        ]
+      ]
+    },
+    "patched": {
+      "sugestao": "Ração escolhida para pet animado",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: fecho incorreto: 'no meio do mês' é ocasião de calendário solta; contexto incorreto: a frase descreve situação interna do estoque, não vivida pelo consumidor final."
+        ],
+        [
+          "juiz estrutural: O fecho 'repor urgente' é vago e genérico, não especifica uma característica ou benefício concreto e verificável da ração."
+        ],
+        [
+          "juiz estrutural: O fecho 'pet animado' é um substantivo abstrato genérico e não específico/verificável para o item 'ração'."
+        ]
+      ]
+    }
+  },
+  {
+    "id": "prontovet",
+    "label": "Pronto Vet (SERVIÇOS/B2C) — item genérico: Ração",
+    "attempt": 1,
+    "baseline": {
+      "sugestao": "Ração para bichos com dieta controlada",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "última palavra \"pet\" termina em consoante incomum no português, sugerindo corte no meio do token"
+        ],
+        [
+          "juiz estrutural: O fecho não apresenta um resultado concreto ou benefício específico; a frase é vaga e não indica claramente o contexto de uso pelo consumidor; a última palavra 'animal' é redundante e não acrescenta informação relevante."
+        ],
+        [
+          "juiz estrutural: O fecho 'dieta controlada' é um substantivo abstrato genérico que não especifica um benefício concreto e específico do item."
+        ]
+      ]
+    },
+    "patched": {
+      "sugestao": "Ração para filhotes ganhando mais vitalidade",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'evita trocas frequentes' é genérico e abstrato, não especifica uma característica concreta e verificável da ração."
+        ],
+        [
+          "juiz estrutural: Corrigir o fecho para indicar um benefício ou característica concreta e específica da ração; tornar o elemento concreto o núcleo da frase; e ajustar o contexto para que a cena seja vivida pelo consumidor final, não pelo vendedor no balcão."
+        ],
+        [
+          "juiz estrutural: O fecho 'ganhando mais vitalidade' é um substantivo abstrato genérico e não específico/verificável para ração."
+        ]
+      ]
+    }
+  },
+  {
+    "id": "roziner",
+    "label": "Roziner Artista e Poetisa (MARCA) — item genérico: Pintura",
+    "attempt": 0,
+    "baseline": {
+      "sugestao": "Pintura dando novo ar ao móvel antigo",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "sugestão usa fala de fornecedor/catálogo (\"pronta para\") em vez de algo que o cliente diria, perguntaria, sentiria ou viveria"
+        ],
+        [
+          "juiz estrutural: O fecho 'meu canto único' é abstrato e genérico, não nomeia um resultado concreto e específico do item."
+        ],
+        []
+      ]
+    },
+    "patched": {
+      "sugestao": "Pintura que destaca objetos de família",
+      "tentativas": 2,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'memórias queridas agora' é vago e abstrato, não nomeia um resultado ou característica concreta e específica da pintura."
+        ],
+        []
+      ]
+    }
+  },
+  {
+    "id": "roziner",
+    "label": "Roziner Artista e Poetisa (MARCA) — item genérico: Pintura",
+    "attempt": 1,
+    "baseline": {
+      "sugestao": "Pintura ganha novo sentido no lar",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'ambiente querido' é um substantivo abstrato genérico e não um resultado concreto e específico; substitua por um benefício concreto e tangível."
+        ],
+        [
+          "juiz estrutural: O fecho 'à sala' é genérico e não nomeia um resultado concreto e específico do item."
+        ],
+        [
+          "juiz estrutural: O fecho 'no lar' é uma situação genérica e vaga, não um resultado, necessidade ou benefício concreto e específico; substitua por um benefício claro e tangível."
+        ]
+      ]
+    },
+    "patched": {
+      "sugestao": "Pintura que traz cor ao quarto",
+      "tentativas": 2,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'ao lar' é um substantivo abstrato genérico e não específico para pintura; substitua por um resultado ou uso concreto e verificável."
+        ],
+        []
+      ]
+    }
+  },
+  {
+    "id": "oficina-op",
+    "label": "Oficina de Propaganda (SERVIÇOS/B2B) — item genérico: Marketing digital",
+    "attempt": 0,
+    "baseline": {
+      "sugestao": "Marketing digital para mais pedidos fechados hoje",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "termina com a palavra \"mais\", que sugere frase incompleta/cortada"
+        ],
+        [
+          "juiz estrutural: O fecho 'novos clientes confiantes' é um substantivo abstrato genérico e não um benefício concreto e específico; substitua por um resultado mais tangível e claro."
+        ],
+        [
+          "sugestão inventa \"prazo/data/urgência (hoje, até X, esta semana, última chance...)\" sem isso constar na informação/contexto do usuário"
+        ]
+      ]
+    },
+    "patched": {
+      "sugestao": "Marketing digital para mais pedidos todo mês",
+      "tentativas": 2,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'vendas paradas online' é genérico e abstrato, não especifica um resultado concreto e verificável do marketing digital."
+        ],
+        []
+      ]
+    }
+  },
+  {
+    "id": "oficina-op",
+    "label": "Oficina de Propaganda (SERVIÇOS/B2B) — item genérico: Marketing digital",
+    "attempt": 1,
+    "baseline": {
+      "sugestao": "Marketing digital para gerar contatos",
+      "tentativas": 3,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'clientes novos online' é genérico e abstrato, não nomeia um benefício concreto e específico."
+        ],
+        [
+          "juiz estrutural: O fecho 'perguntas sem resposta' é abstrato e não nomeia um benefício concreto; a frase não ancorou um item ou situação concreta; a última palavra é redundante e não acrescenta informação real."
+        ],
+        [
+          "fecho fraco (qualificador vago no fim): a frase termina em \"certos\", adjetivo genérico de aprovação que serviria para qualquer produto/serviço — troque o fecho por um resultado, necessidade ou benefício concreto e específico deste item"
+        ]
+      ]
+    },
+    "patched": {
+      "sugestao": "Marketing digital para buscas por serviços locais",
+      "tentativas": 2,
+      "reprovadoPorFechoOk": true,
+      "motivosPorTentativa": [
+        [
+          "juiz estrutural: O fecho 'clientes novos agora' é genérico e não específico/verificável para marketing digital; precisa ser mais concreto e específico."
+        ],
+        []
+      ]
+    }
+  }
+]
