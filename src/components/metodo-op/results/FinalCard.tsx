@@ -13,6 +13,7 @@ import { loadCopyEdit, saveCopyEdit } from "../../../utils/copyEditsStorage";
 import { regenerateWithKit } from "../../../services/regenerateWithKit";
 import { useIsMobile } from "../../../hooks/use-mobile";
 import { ArchiveButton } from "../ArchiveButton";
+import { MetaPublish } from "../MetaPublish";
 import UsoReferenciasDia, { useRefSelection } from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
@@ -334,6 +335,7 @@ export function FinalCard({
               disabledReason="Gere o fechamento antes de arquivar"
             />
           </div>
+          {preview && <MetaPublish imageDataUrl={preview} caption={legenda} />}
         </div>
       )}
     </article>

@@ -7,6 +7,7 @@ import { mopName } from "../../../utils/file";
 import { emptyImageKit } from "../../../utils/imageKitStorage";
 import { useIsMobile } from "../../../hooks/use-mobile";
 import { ArchiveButton } from "../ArchiveButton";
+import { MetaPublish } from "../MetaPublish";
 import UsoReferenciasDia from "../UsoReferenciasDia";
 import { useImageGenAlert } from "../PreImageAlert";
 import { EditableField } from "./EditableField";
@@ -404,6 +405,9 @@ export function CarouselCardBlock({
                       </button>
                     )}
                   </div>
+                  {previews[index] && (
+                    <MetaPublish imageDataUrl={previews[index]!} caption={legendas[index]} />
+                  )}
                 </div>
               );
             })}
