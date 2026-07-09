@@ -48,7 +48,7 @@ export const moodVisualInstructions: Record<MoodCode, string> = {
 
   "OP-06": `ESTILO VISUAL (raiz: Minimalista):
 - Fundo de paleta suave (areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido) — evitar branco puro dominante; espaço vazio como elemento principal
-- Título CENTRALIZADO, fonte tipográfica como protagonista, com muito respiro ao redor
+- Título alinhado à DIREITA, ocupando a metade direita do quadro, fonte tipográfica como protagonista, com muito respiro ao redor. A metade DIREITA permanece livre de outros elementos — nenhuma pessoa, produto ou equipamento aparece sob ou atrás do título
 - Detalhe mínimo de cor como assinatura
 - Composição com muito respiro, elementos reduzidos ao essencial
 - Sensação de premium, contenção e autoridade`,
