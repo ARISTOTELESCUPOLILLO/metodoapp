@@ -50,6 +50,28 @@ const CONFLITO_HUE_THRESHOLD = 40;
  * próximo do acento), usa a base mesmo assim — é heurística textual do
  * prompt, não checagem de contraste em pixels renderizados.
  */
+// Rodízio de tonalidade do mood SILÊNCIO (OP-06) — usado por MOP e PU.
+// Pool pequeno de propósito (3, não 5 como os outros rodízios): SILÊNCIO é o
+// mood menos usado do sistema, então o ganho de variedade de um pool maior
+// não justifica mais código pra manter (decisão do Aristóteles, 09/07/2026).
+// Cada `bloco` é uma fração de frase solta (sem prefixo "PALETA DESTA
+// PEÇA —") porque entra direto na linha "Paleta:"/"Fundo de paleta suave"
+// dos dois motores — ver uso em visualDirection.ts (PU) e api.ts (MOP).
+export const SILENCIO_TONALIDADES: TonalidadeCandidata[] = [
+  {
+    hue: 40,
+    bloco: "areia, cinza quente e marfim envelhecido — serenidade quente, presença discreta e atemporal",
+  },
+  {
+    hue: 205,
+    bloco: "azul névoa, taupe e off-white — distância contemplativa, frieza contida sem perder o calor humano",
+  },
+  {
+    hue: 110,
+    bloco: "verde sálvia claro, bege rosado e off-white — repouso natural, suavidade sem doçura",
+  },
+];
+
 export function pickTonalidade(
   pool: TonalidadeCandidata[],
   baseIndex: number,

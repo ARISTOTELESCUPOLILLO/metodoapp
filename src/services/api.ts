@@ -3,6 +3,7 @@ import { LogoPosition, MoodCode, SecondaryFont } from "../types";
 import { generateImageAsync } from "./imageGeneration";
 import { buildImagePrompt } from "./api/buildImagePrompt";
 import { moodVisualInstructions } from "./api/moodVisualInstructions";
+import { pickTonalidade, SILENCIO_TONALIDADES } from "../core/colorRotation";
 import { pickDeviceTypeLine, isNonDigitalActivity, buildNoDeviceRule } from "../utils/promptRules";
 import { buildReferenceAnchorWrapper } from "../shared/visual/referenceBlocks";
 
@@ -106,7 +107,24 @@ export async function generatePostImage(params: {
   const isReels = vertical === "reels";
   const isCover = vertical === "reels_cover";
   const isFinal = vertical === "estatico_final";
-  const moodInstructions = moodVisualInstructions[mood] || moodVisualInstructions["OP-01"];
+  // SILÊNCIO (OP-06): rodízio determinístico de tonalidade (ver
+  // core/colorRotation.ts), mesmo pool usado na PU — pedido do Aristóteles,
+  // 09/07/2026. Sem seed de sessão/tentativa disponível nesta chamada do MOP
+  // (ao contrário da PU), usa um hash simples e determinístico do título da
+  // peça como seed: a mesma peça sempre recebe a mesma tonalidade (estável em
+  // "gerar outra" quando o título não muda), peças diferentes tendem a variar.
+  // Os outros 5 moods continuam com a paleta fixa de sempre.
+  const moodInstructions = (() => {
+    const base = moodVisualInstructions[mood] || moodVisualInstructions["OP-01"];
+    if (mood !== "OP-06") return base;
+    let seed = 0;
+    for (let i = 0; i < titulo.length; i++) seed = (seed * 31 + titulo.charCodeAt(i)) | 0;
+    const paleta = pickTonalidade(SILENCIO_TONALIDADES, Math.abs(seed), accentColor).bloco;
+    return base.replace(
+      "areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido",
+      paleta,
+    );
+  })();
   // Frame do reels: logo aplicada por canvas (composeReelsPng) no chamador — NÃO via IA.
   // Quando logoDataUrl é passado por paths legados (posts estáticos), entra como referência.
   // Capa do Reels: logo aplicada por canvas (composeReelsPng) no chamador.

@@ -17,6 +17,7 @@
 // - ./imageVariationPicker.ts: pickImageVariationBlock.
 
 import { MoodCode, Segment } from "../types";
+import { pickTonalidade, SILENCIO_TONALIDADES } from "./colorRotation";
 import {
   getVisualDirection,
   SEGMENT_LAYERS,
@@ -147,12 +148,19 @@ export function buildSceneRoleRule(opts?: { includeConcreteAction?: boolean }): 
 // VISUAL_DIRECTIONS e MOOD_RULES: evita duas descrições do mesmo mood divergindo.
 export function buildMoodGrammarBlock(
   mood: MoodCode,
-  opts?: { noDeviceThisScene?: boolean },
+  opts?: { noDeviceThisScene?: boolean; tonalidadeSeed?: number; accentHex?: string },
 ): string {
   const v = getVisualDirection(mood);
+  // SILÊNCIO (OP-06): rodízio determinístico de tonalidade (ver
+  // core/colorRotation.ts) em vez da paleta fixa — pedido do Aristóteles,
+  // 09/07/2026. Os outros 5 moods continuam com a paleta estática de sempre.
+  const paleta =
+    mood === "OP-06"
+      ? pickTonalidade(SILENCIO_TONALIDADES, opts?.tonalidadeSeed ?? 0, opts?.accentHex).bloco
+      : v.paleta;
   const ruleText = resolveMoodRuleText(mood, !!opts?.noDeviceThisScene);
   const ruleBlock = ruleText ? `\n\nREGRA INEGOCIÁVEL DO MOOD ${v.nome}:\n${ruleText}` : "";
-  return `TENSÃO VISUAL CANÔNICA (técnicas Dondis, vocabulário inegociável): ${v.tensaoDondis}.\n\nGRAMÁTICA VISUAL DO MOOD ${v.nome}:\n- Luz: ${v.luz}\n- Paleta: ${v.paleta}\n- Composição: ${v.composicao}\n- Atitude da câmera: ${v.camera}\n- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${ruleBlock}`;
+  return `TENSÃO VISUAL CANÔNICA (técnicas Dondis, vocabulário inegociável): ${v.tensaoDondis}.\n\nGRAMÁTICA VISUAL DO MOOD ${v.nome}:\n- Luz: ${v.luz}\n- Paleta: ${paleta}\n- Composição: ${v.composicao}\n- Atitude da câmera: ${v.camera}\n- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${ruleBlock}`;
 }
 
 // Bloco pronto para injeção no prompt do motor.

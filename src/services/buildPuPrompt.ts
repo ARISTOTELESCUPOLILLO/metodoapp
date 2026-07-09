@@ -48,9 +48,11 @@ function direcaoBlock(
   objetivo?: PostUnicoFormData["objetivo"],
   hasProdutos?: boolean,
   noDeviceThisScene?: boolean,
+  tonalidadeSeed?: number,
+  accentHex?: string,
 ): string {
   if (direcao === "mood" && mood) {
-    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood, { noDeviceThisScene })}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
+    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood, { noDeviceThisScene, tonalidadeSeed, accentHex })}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
   }
   const obj = objetivo ?? "nenhum";
 
@@ -228,12 +230,19 @@ export function buildPostUnicoPrompt(params: {
     (!!references?.produtos?.length &&
       !references?.produtoTelaInformativa &&
       !references?.produtoEhDispositivo);
+  // Movido pra antes de direcaoBlock (era calculado só mais abaixo) porque o
+  // mood SILÊNCIO agora precisa do accent pra rodízio de tonalidade — ver
+  // core/colorRotation.ts. Sem mudança de valor, só de ordem.
+  const primary = kit.primaryColor || "#123a63";
+  const accent = kit.accentColor || kit.secondaryColor || BRAND_ACCENT;
   const direcao = direcaoBlock(
     data.direcao,
     data.mood,
     data.objetivo,
     !!references?.produtos?.length,
     noDeviceThisScene,
+    tonalidadeSeed,
+    accent,
   );
   // Quando não há personagem de referência (sem avatar e sem checkbox "personagem
   // sem avatar"), a faixaEtaria do form chega ao prompt de imagem como âncora de
@@ -277,8 +286,6 @@ export function buildPostUnicoPrompt(params: {
   // variação e o modelo de imagem resolvia o conflito gerando um retrato de
   // rosto em primeiro plano (ver variationHasFaceNotDominant).
   const faceNotDominant = variationHasFaceNotDominant(variationBlock);
-  const primary = kit.primaryColor || "#123a63";
-  const accent = kit.accentColor || kit.secondaryColor || BRAND_ACCENT;
   const zona = logoZoneDescription(kit.logoPosition);
 
   const typographyBlock = buildTypographyBlock(kit.fontPair);
