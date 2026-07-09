@@ -1,0 +1,132 @@
+[
+  {
+    "id": "ferrimaq",
+    "label": "FERRIMAQ (VAREJO/B2B) — item genérico: Móveis para escritório",
+    "item": "Móveis para escritório",
+    "mainActivity": "Venda de Móveis para Escritório, Consultórios, Auditórios, Refeitório e Escolares",
+    "tentativas": [
+      {
+        "attempt": 0,
+        "baseline": {
+          "sugestao": "Móveis para escritório mudam minha rotina inteira"
+        },
+        "comPatch": {
+          "sugestao": "Móveis para escritório seguros em qualquer mudança"
+        }
+      },
+      {
+        "attempt": 1,
+        "baseline": {
+          "sugestao": "Móveis para escritório ajudam reuniões sem atraso"
+        },
+        "comPatch": {
+          "sugestao": "Móveis para escritório que otimizam o espaço"
+        }
+      }
+    ]
+  },
+  {
+    "id": "barbosa",
+    "label": "Barbosa Lubrificantes (VAREJO/B2B) — item genérico: Óleo lubrificante",
+    "item": "Óleo lubrificante",
+    "mainActivity": "Loja de lubrificantes, correias, mangueiras, ferramentas e EPI",
+    "tentativas": [
+      {
+        "attempt": 0,
+        "baseline": {
+          "sugestao": "Óleo lubrificante para motor sem tranco"
+        },
+        "comPatch": {
+          "sugestao": "Óleo lubrificante reduz desgaste no uso"
+        }
+      },
+      {
+        "attempt": 1,
+        "baseline": {
+          "sugestao": "Óleo lubrificante para troca sem dor"
+        },
+        "comPatch": {
+          "sugestao": "Óleo lubrificante certo evita barulho estranho"
+        }
+      }
+    ]
+  },
+  {
+    "id": "prontovet",
+    "label": "Pronto Vet (SERVIÇOS/B2C) — item genérico: Ração",
+    "item": "Ração",
+    "mainActivity": "Clínica veterinária, ração, remédios e acessórios",
+    "tentativas": [
+      {
+        "attempt": 0,
+        "baseline": {
+          "sugestao": "Ração para apetite do pet voltar"
+        },
+        "comPatch": {
+          "sugestao": "Ração selecionada evita vômitos recorrentes"
+        }
+      },
+      {
+        "attempt": 1,
+        "baseline": {
+          "sugestao": "Ração ajuda animal seguir tratamento"
+        },
+        "comPatch": {
+          "sugestao": "Ração que resolve falta de apetite"
+        }
+      }
+    ]
+  },
+  {
+    "id": "roziner",
+    "label": "Roziner Artista e Poetisa (MARCA) — item genérico: Pintura",
+    "item": "Pintura",
+    "mainActivity": "Reaproveitamento de objetos, decoração afetiva, pintura e poesias",
+    "tentativas": [
+      {
+        "attempt": 0,
+        "baseline": {
+          "sugestao": "Pintura destacando aquele móvel querido"
+        },
+        "comPatch": {
+          "sugestao": "Pintura que traz cor para móveis esquecidos"
+        }
+      },
+      {
+        "attempt": 1,
+        "baseline": {
+          "sugestao": "Pintura que muda um cômodo antigo"
+        },
+        "comPatch": {
+          "sugestao": "Pintura que cria lembranças em casa"
+        }
+      }
+    ]
+  },
+  {
+    "id": "oficina-op",
+    "label": "Oficina de Propaganda (SERVIÇOS/B2B) — item genérico: Marketing digital",
+    "item": "Marketing digital",
+    "mainActivity": "Consultoria de Marketing Digital",
+    "tentativas": [
+      {
+        "attempt": 0,
+        "baseline": {
+          "sugestao": "Marketing digital trazendo mais pedidos hoje"
+        },
+        "comPatch": {
+          "sugestao": "Marketing digital na conquista de orçamentos maiores"
+        }
+      },
+      {
+        "attempt": 1,
+        "baseline": {
+          "sugestao": "Marketing digital para atrair mais clientes novos"
+        },
+        "comPatch": {
+          "sugestao": "Marketing digital para agendar consultas mais rápido"
+        }
+      }
+    ]
+  }
+]
