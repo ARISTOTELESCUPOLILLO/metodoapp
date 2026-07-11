@@ -28,6 +28,7 @@ export {
   normalizeLegenda,
   enforceLegendaLimits,
   checkCtaOpeningVem,
+  checkCorpoOpeningAntes,
 } from "./captionValidation";
 
 // ── Morfologia e numérico ──────────────────────────────────────────────────────

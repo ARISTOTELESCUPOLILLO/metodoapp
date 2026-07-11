@@ -16,6 +16,7 @@ import {
   LEGENDA_CTA_MAX_WORDS,
   TECNICISMO_RULE,
   checkCtaOpeningVem,
+  checkCorpoOpeningAntes,
 } from "@/core/textValidation";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import {
@@ -194,7 +195,10 @@ export const Route = createFileRoute("/api/generate-caption")({
             const rate = await checkRateLimit(userId);
             if (!rate.ok) {
               return Response.json(
-                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                {
+                  error:
+                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                },
                 { status: 429 },
               );
             }
@@ -265,7 +269,7 @@ INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 
 Retorne JSON com EXATAMENTE este formato:
 {
-  "texto": "frase principal da legenda, até ${LEGENDA_CORPO_MAX_WORDS} palavras, no tom certo, sem hashtags e sem emojis exagerados, sem repetir o título/informação-chave inteira nem abrir assunto novo",
+  "texto": "frase principal da legenda, até ${LEGENDA_CORPO_MAX_WORDS} palavras, no tom certo, sem hashtags e sem emojis exagerados, sem repetir o título/informação-chave inteira nem abrir assunto novo — PROIBIDO começar com 'Antes' (contraste antes/depois é a saída mais previsível e repetitiva pra fechar o ciclo; varie com afirmação direta, observação concreta, cena ou pergunta)",
   "cta": "uma chamada para ação que complementa o texto principal, até ${LEGENDA_CTA_MAX_WORDS} palavras, sem hashtag — PROIBIDO começar com 'vem'/'venha' (clichê batido, ex.: 'Vem conhecer...'); comece com um verbo direto no imperativo: conheça, descubra, aproveite, confira, garanta, agende, peça, experimente, fale com a gente, entre outros",
   "hashtags": ["tag1", "tag2", "tag3"]
 }
@@ -347,6 +351,11 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
 
             if (checkCtaOpeningVem(rawCta)) {
               retryInstruction = `ATENÇÃO: o CTA da resposta anterior começou com "vem"/"venha" — clichê proibido. Reescreva o CTA começando com outro verbo no imperativo (conheça, descubra, aproveite, confira, garanta, agende, peça, experimente, fale com a gente...).`;
+              continue;
+            }
+
+            if (checkCorpoOpeningAntes(rawTexto)) {
+              retryInstruction = `ATENÇÃO: o "texto" da resposta anterior começou com "Antes" — proibido, é a saída mais previsível e repetitiva pra essa legenda. Reescreva o "texto" com outra abertura (afirmação direta, observação concreta, cena ou pergunta), sem contraste antes/depois.`;
               continue;
             }
 

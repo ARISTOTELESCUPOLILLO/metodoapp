@@ -89,11 +89,22 @@ const CTA_IMPERATIVE_RE =
 // proibição equivalente no prompt (organizaMethodEngine.ts).
 export function checkCtaOpeningVem(cta: string): boolean {
   const first = cta.trim().split(/\s+/)[0] || "";
-  const norm = first
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+  const norm = first.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   return norm === "vem" || norm === "venha";
+}
+
+// "Antes" como 1ª palavra do corpo é a saída mais previsível do modelo
+// quando a instrução pede pra "retomar o conceito e fechar o ciclo"
+// (organizaMethodEngine.ts) — sem regra de variação, ele recorre sempre ao
+// mesmo contraste "antes/depois". Mesmo padrão de checkCtaOpeningVem acima:
+// proibido explicitamente no prompt, com checagem determinística no loop de
+// retry do Post Único (generate-caption.ts); a legenda do MOP (1x por
+// sequência, sem retry dedicado) depende só da proibição equivalente no
+// prompt (organizaMethodEngine.ts, REGRA DE LEGENDA).
+export function checkCorpoOpeningAntes(corpo: string): boolean {
+  const first = corpo.trim().split(/\s+/)[0] || "";
+  const norm = first.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return norm === "antes";
 }
 
 function splitSentences(text: string): string[] {

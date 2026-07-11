@@ -35,7 +35,7 @@ function getRule(kind: Kind, formato: string): { label: string; rule: string; ma
     return {
       label: "legenda do post",
       rule: `Estrutura OBRIGATÓRIA em exatamente 3 parágrafos, separados por LINHA EM BRANCO (uma quebra de linha dupla):
-1) Corpo: até ${LEGENDA_CORPO_MAX_WORDS} palavras, retomando o conceito central do título/imagem — sem repetir o título inteiro, sem abrir assunto novo, sem texto explicativo longo — terminando com PONTO FINAL. PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do parágrafo 2.
+1) Corpo: até ${LEGENDA_CORPO_MAX_WORDS} palavras, retomando o conceito central do título/imagem — sem repetir o título inteiro, sem abrir assunto novo, sem texto explicativo longo — terminando com PONTO FINAL. PROIBIDO terminar o corpo com frase no imperativo dirigida ao leitor (ex.: "Compartilhe...", "Salve...", "Acesse...") — isso é função EXCLUSIVA do parágrafo 2. PROIBIDO abrir o corpo com "Antes" (contraste antes/depois é a saída mais previsível e repetitiva) — varie com afirmação direta, observação concreta, cena ou pergunta.
 2) CTA: EXATAMENTE 1 frase curta (máx. ${LEGENDA_CTA_MAX_WORDS} palavras), terminando com PONTO FINAL — varie, ex.: "Salve este post.", "Comente o que achou.", "Compartilhe com quem precisa ver.". PROIBIDO incluir uma 2ª frase ou CTA indireto (ex.: "Acesse a bio...", "Acesse o site...") no mesmo parágrafo ou em parágrafo extra.
 3) Hashtags: EXATAMENTE ${LEGENDA_HASHTAGS}, todas em letra MINÚSCULA, sem acento e sem caracteres especiais, separadas por espaço (ex.: #marketing #comunicacao #estrategia), coerentes com o segmento — nunca genéricas demais.
 Formato final exato: "{corpo}\\n\\n{CTA}\\n\\n#hash1 #hash2 #hash3". Nunca emojis nas hashtags, nunca emojis exagerados no corpo ou no CTA.
@@ -92,7 +92,10 @@ export const Route = createFileRoute("/api/regenerate-block")({
             const rate = await checkRateLimit(effective.userId);
             if (!rate.ok) {
               return Response.json(
-                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                {
+                  error:
+                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                },
                 { status: 429 },
               );
             }
