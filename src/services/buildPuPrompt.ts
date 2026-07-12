@@ -311,6 +311,16 @@ export function buildPostUnicoPrompt(params: {
   // passo de copy (generate-pu-copy.ts, vocabulário fechado em
   // topicoValidation.ts) — aqui só reforça que a IA de imagem deve
   // RENDERIZAR os 3 exatamente como vieram, sem inventar/trocar.
+  // Mood SILÊNCIO (OP-06) reserva a metade DIREITA do quadro pro título
+  // (visualDirection.lexicon.ts, MOOD_RULES["OP-06"]) — a instrução de
+  // "posição livre" abaixo contradizia essa reserva quando o formato tinha
+  // tópicos, deixando o modelo livre pra ancorar o título no topo/base/
+  // esquerda enquanto a regra do mood já empurrava o objeto pra longe da
+  // direita (zona que ficava vazia à toa).
+  const isSilencioMood = data.direcao === "mood" && data.mood === "OP-06";
+  const topicosPosicaoClause = isSilencioMood
+    ? "POSIÇÃO do bloco título+tópicos: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (encostado no topo, centralizado verticalmente, ou na base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente."
+    : "POSIÇÃO do bloco título+tópicos é livre — explore ancoragens (topo, lateral, base).";
   const topicosBlock =
     hasTopicos && copy?.topicos
       ? `TÍTULO E TÓPICOS OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
@@ -320,10 +330,15 @@ TÓPICOS (exatamente 3 — substituem o texto de apoio corrido nesta peça):
 2. ÍCONE: ${copy.topicos[1].icone} · TEXTO: "${copy.topicos[1].texto}"
 3. ÍCONE: ${copy.topicos[2].icone} · TEXTO: "${copy.topicos[2].texto}"
 
-Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Abaixo do título, os 3 TÓPICOS aparecem em coluna (ou lado a lado, se a composição pedir): cada tópico é um ÍCONE simples, no estilo line-art/glifo minimalista (mesmo estilo visual e mesma cor nos 3 ícones), posicionado ao lado ou acima do seu texto correspondente. O texto de cada tópico tem corpo entre 40% e 55% do título — claramente legível, mais curto e discreto que um texto de apoio corrido. RENDERIZE EXATAMENTE estes 3 ícones e textos, NESTA ORDEM — PROIBIDO inventar um ícone diferente do indicado, trocar a ordem, fundir os tópicos em um só bloco de texto corrido ou adicionar um 4º tópico. POSIÇÃO do bloco título+tópicos é livre — explore ancoragens (topo, lateral, base).
+Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Abaixo do título, os 3 TÓPICOS aparecem em coluna (ou lado a lado, se a composição pedir): cada tópico é um ÍCONE simples, no estilo line-art/glifo minimalista (mesmo estilo visual e mesma cor nos 3 ícones), posicionado ao lado ou acima do seu texto correspondente. O texto de cada tópico tem corpo entre 40% e 55% do título — claramente legível, mais curto e discreto que um texto de apoio corrido. RENDERIZE EXATAMENTE estes 3 ícones e textos, NESTA ORDEM — PROIBIDO inventar um ícone diferente do indicado, trocar a ordem, fundir os tópicos em um só bloco de texto corrido ou adicionar um 4º tópico. ${topicosPosicaoClause}
 ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da paleta desta peça) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
 ⚠ TÍTULO FIXO — ANTI-TRADUÇÃO LITERAL: o título acima é texto tipográfico a renderizar. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras abstratas do título. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`
       : "";
+  // Mesma reserva de direita do mood SILÊNCIO (ver isSilencioMood acima),
+  // aplicada aqui ao formato título+texto corrido.
+  const textoPosicaoClause = isSilencioMood
+    ? "POSIÇÃO do bloco: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (topo, meio, base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente."
+    : "POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).";
   const copyBlock = hasTopicos
     ? topicosBlock
     : hasCopy
@@ -331,7 +346,7 @@ ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da 
 TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
-Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — claramente legível a distância normal de celular, nunca tamanho de legenda ou rodapé. POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).
+Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — claramente legível a distância normal de celular, nunca tamanho de legenda ou rodapé. ${textoPosicaoClause}
 ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da paleta desta peça) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
 ⚠ TÍTULO FIXO — ANTI-TRADUÇÃO LITERAL: o título acima é texto tipográfico a renderizar. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras abstratas do título. Proibições diretas: "novo"/"novidade" ≠ caderno limpo, página em branco, objeto novo genérico; "ação"/"agir" ≠ seta, figura em movimento, objeto cinético; "rumo"/"caminho"/"direção" ≠ corredor, estrada, passagem, bússola, mapa, GPS, placa de sinalização; "hoje"/"agora" ≠ relógio, ampulheta, pôr do sol; "escolha"/"decisão" ≠ encruzilhada, bifurcação; "novo" ≠ porta se abrindo. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`
       : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
@@ -340,7 +355,11 @@ Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, 3 a 6 palavras)
 ⚠ REGRA ABSOLUTA DE TEXTO NA IMAGEM: a imagem contém EXATAMENTE 2 elementos de texto — (1) o TÍTULO em caixa alta e (2) o TEXTO DE APOIO. NENHUM outro texto, frase, citação ou trecho deve aparecer na imagem. A informação-chave é contexto criativo para INSPIRAR o título e o texto — JAMAIS deve aparecer escrita, citada ou resumida como terceiro elemento tipográfico na peça.
 NÃO copie a informação-chave literalmente — interprete-a criativamente com tom publicitário.
 PROIBIDO usar o nome da empresa ou da marca como título ou texto — inspire-se na mensagem, na atividade e na informação-chave, nunca no nome da empresa. O nome da marca é representado pela logomarca, não pelo texto da arte.
-A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda". A liberdade é de POSIÇÃO e ESTILO, não de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.
+${
+  isSilencioMood
+    ? "O bloco de texto deve ancorar na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. A liberdade é de ESTILO e de variação vertical dentro dessa metade (topo, meio, base), nunca de posição horizontal: nunca à esquerda nem centralizado. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto."
+    : 'A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda". A liberdade é de POSIÇÃO e ESTILO, não de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.'
+}
 Hierarquia tipográfica obrigatória:
 • TÍTULO: DOMINANTE — renderizado em tamanho grande e impactante (pense em outdoor), ocupando entre 30% e 45% da altura útil do canvas (nunca mais que isso). A âncora é o CORPO da fonte permanecer grande e legível, não preencher área a qualquer custo: se o título tiver 4 ou mais palavras, quebre em 2-3 linhas para manter o corpo grande; se tiver 1-3 palavras, mantenha em 1-2 linhas — não infle artificialmente o corpo nem espalhe poucas palavras em muitas linhas só para preencher altura. Título curto ocupa naturalmente menos área, e isso é correto.
 • TEXTO DE APOIO: SUBTÍTULO DE REVISTA — corpo entre 55% e 70% do título, facilmente legível a distância normal de celular (nunca tamanho de legenda ou rodapé; se o texto tiver 2-3 linhas, cada linha deve ser claramente lida sem aproximar o olho da tela).
@@ -403,6 +422,9 @@ ${HUMANIZACAO_RULE}
 ${referenceAnchorBlock}Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
 ZONA SEGURA INVIOLÁVEL DE 110 PX em todas as bordas do canvas 1080x1350. Nada importante (rosto, olhos, mãos, produto-foco, lettering, gráficos, logo) entra nesse perímetro — bordas são continuação natural do fundo (ver regra específica de margem para título e texto de apoio nas REGRAS, abaixo).
+
+⚠ ZONA SEGURA PARA IMPULSIONAMENTO — MARGEM LATERAL DE 160 PX: esta peça pode ser impulsionada (Meta Ads/boost), que reformata automaticamente a mesma imagem para posicionamentos mais estreitos (Stories, Reels), cortando as laterais do quadro 4:5. Por isso, ROSTO, OLHOS, MÃOS e PRODUTO-FOCO nunca podem ficar a menos de 160 PX das bordas ESQUERDA e DIREITA do canvas — mantenha esses elementos numa faixa central mais estreita que o restante da composição. Essa margem lateral é ADICIONAL e maior que a zona de 110 px acima (que vale nas 4 bordas); aqui a exigência é especificamente sobre pessoas e produto-foco, e só nas bordas esquerda e direita.
+
 IMAGEM FULL BLEED — REGRA ABSOLUTA: a imagem preenche o canvas 1080x1350 completamente de borda a borda. PROIBIDO: moldura externa, frame decorativo, borda de cor sólida ao redor da arte, vinheta escura periférica como contentor, margem vazia ou espaço branco/preto separando a imagem das bordas do canvas. A composição começa e termina nas bordas — sem nenhum container ou enquadramento ao redor.
 
 ⚠ REGRA INVIOLÁVEL — ZONA DA LOGOMARCA: ${zona.reservaTopo}

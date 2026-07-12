@@ -204,6 +204,21 @@ export function buildImagePrompt(params: {
 
 `;
 
+  // Zona lateral de segurança pensada para IMPULSIONAMENTO (Meta Ads/boost),
+  // não pro feed orgânico: quando o post é promovido, a Meta gera variações
+  // automáticas para placements mais estreitos (Stories/Reels 9:16), cortando
+  // as laterais de um criativo 4:5 — um corte centralizado remove ~160px de
+  // cada lado. Sem essa regra, rosto/mão/produto-foco coladas na borda
+  // esquerda/direita (ok pro feed) saem cortadas ou espremidas no boost.
+  // Só se aplica ao formato feed (o reels_cover já nasce 9:16, imune a esse
+  // recorte específico).
+  const AD_SAFE_MARGIN = "160 px";
+  const AD_SAFE_ZONE_RULE = !isCover
+    ? `⚠ ZONA SEGURA PARA IMPULSIONAMENTO — MARGEM LATERAL DE ${AD_SAFE_MARGIN}: este post pode ser impulsionado (Meta Ads/boost), que reformata automaticamente a mesma imagem para posicionamentos mais estreitos (Stories, Reels), cortando as laterais do quadro 4:5. Por isso, ROSTO, OLHOS, MÃOS e PRODUTO-FOCO nunca podem ficar a menos de ${AD_SAFE_MARGIN} das bordas ESQUERDA e DIREITA do canvas — mantenha esses elementos numa faixa central mais estreita que o restante da composição. Essa margem lateral é ADICIONAL e maior que o suspiro de ${safeMargin} (que vale nas 4 bordas e é sobre texto/lettering) — aqui a exigência é especificamente sobre pessoas e produto-foco, e só nas bordas esquerda e direita.
+
+`
+    : "";
+
   // Proteção antecipada da zona da logomarca — lida ANTES da composição da cena.
   // Emitida SEMPRE (paridade com a PU, que emite incondicionalmente): a logomarca
   // oficial é carimbada por canvas (composeFeedPng/composeFinalPng/composeReelsPng)
@@ -256,7 +271,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
       ? "corpo GRANDE — entre 28% e 38% da altura do canvas, em 2-3 linhas — manchete editorial, sem dominar o quadro inteiro"
       : "corpo GRANDE — entre 35% e 45% da altura do canvas, em até 3 linhas — manchete editorial grande, sem dominar o quadro inteiro";
 
-  return `${buildDeviceRule(mainActivity, hasProdutoTelaRef, hasProdutoFisicoRef, produtoEhDispositivo)}\n\n${SAFE_ZONE_RULE}${LOGO_ZONE_RULE}${referenceAnchorBlock}Crie ${isCover ? "a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)" : "um post profissional"} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? "\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed." : ""}
+  return `${buildDeviceRule(mainActivity, hasProdutoTelaRef, hasProdutoFisicoRef, produtoEhDispositivo)}\n\n${SAFE_ZONE_RULE}${AD_SAFE_ZONE_RULE}${LOGO_ZONE_RULE}${referenceAnchorBlock}Crie ${isCover ? "a CAPA do Reels (imagem estática 9:16 que aparece como thumbnail no perfil e como primeiro frame visual ao final do vídeo)" : "um post profissional"} para Instagram em formato NATIVO ${canvasSize}px (proporção ${canvasRatio}), sem qualquer recorte posterior.${isCover ? "\n\nIMPORTANTE — COERÊNCIA DE SEQUÊNCIA: esta capa faz parte da MESMA SEQUÊNCIA visual do estático e do carrossel do dia. O lettering do título (peso, posição segundo o mood, tipografia, CAIXA ALTA) DEVE seguir as MESMAS regras do post estático abaixo, para que estático + carrossel + capa do reels formem uma composição harmônica no feed." : ""}
 ${coverRefBlock}${coverVerbatimBlock}
 ${moodInstructions}
 ${finalModifier}
