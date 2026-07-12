@@ -318,8 +318,15 @@ export function buildPostUnicoPrompt(params: {
   // esquerda enquanto a regra do mood já empurrava o objeto pra longe da
   // direita (zona que ficava vazia à toa).
   const isSilencioMood = data.direcao === "mood" && data.mood === "OP-06";
+  // Achado real (12/07/2026): oferecer "base" como opção vertical sem
+  // resguardo de respiro fez o modelo colar o bloco imediatamente acima da
+  // zona da logo (que só proíbe SOBREPOSIÇÃO, nunca exigiu distância) e
+  // deixar o topo da metade direita vazio — composição desequilibrada.
+  const LOGO_RESPIRO_CLAUSE =
+    " SE a variação escolhida for encostada na base: mantenha respiro generoso entre o último elemento do bloco e a zona da logomarca — NUNCA encoste o bloco imediatamente acima dela. PROIBIDO concentrar todo o bloco espremido embaixo enquanto o topo da metade direita fica vazio — distribua o peso vertical de forma equilibrada mesmo quando ancorado na base.";
   const topicosPosicaoClause = isSilencioMood
-    ? "POSIÇÃO do bloco título+tópicos: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (encostado no topo, centralizado verticalmente, ou na base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente."
+    ? "POSIÇÃO do bloco título+tópicos: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (encostado no topo, centralizado verticalmente, ou na base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente." +
+      LOGO_RESPIRO_CLAUSE
     : "POSIÇÃO do bloco título+tópicos é livre — explore ancoragens (topo, lateral, base).";
   const topicosBlock =
     hasTopicos && copy?.topicos
@@ -337,7 +344,8 @@ ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da 
   // Mesma reserva de direita do mood SILÊNCIO (ver isSilencioMood acima),
   // aplicada aqui ao formato título+texto corrido.
   const textoPosicaoClause = isSilencioMood
-    ? "POSIÇÃO do bloco: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (topo, meio, base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente."
+    ? "POSIÇÃO do bloco: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (topo, meio, base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente." +
+      LOGO_RESPIRO_CLAUSE
     : "POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).";
   const copyBlock = hasTopicos
     ? topicosBlock
@@ -357,7 +365,8 @@ NÃO copie a informação-chave literalmente — interprete-a criativamente com 
 PROIBIDO usar o nome da empresa ou da marca como título ou texto — inspire-se na mensagem, na atividade e na informação-chave, nunca no nome da empresa. O nome da marca é representado pela logomarca, não pelo texto da arte.
 ${
   isSilencioMood
-    ? "O bloco de texto deve ancorar na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. A liberdade é de ESTILO e de variação vertical dentro dessa metade (topo, meio, base), nunca de posição horizontal: nunca à esquerda nem centralizado. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto."
+    ? "O bloco de texto deve ancorar na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. A liberdade é de ESTILO e de variação vertical dentro dessa metade (topo, meio, base), nunca de posição horizontal: nunca à esquerda nem centralizado. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto." +
+      LOGO_RESPIRO_CLAUSE
     : 'A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda". A liberdade é de POSIÇÃO e ESTILO, não de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.'
 }
 Hierarquia tipográfica obrigatória:
