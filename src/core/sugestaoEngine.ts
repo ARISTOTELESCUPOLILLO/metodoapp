@@ -344,6 +344,70 @@ Responda JSON EXATAMENTE assim: { "itens": [{ "item": "nome curto do produto/ser
   }
 }
 
+// Relação real com teste de troca — investigação de 12/07/2026 (ver memória
+// do projeto: metodo-op-aristoteles-retorica-sugestao). Achado validado com
+// múltiplos itens reais da carteira, 2 juízes independentes (Opus) e
+// comparação contra baseline real da Variante A: pra item de SERVIÇOS sem
+// textura física (ex.: "Planejamento de Comunicação", "Criação de sites"),
+// o motor tende a INVENTAR uma cena de negócio plausível-soante em vez de
+// usar uma relação real e reconhecível — a ATIVIDADE sozinha não dá a
+// textura de uso que um produto físico dá de graça (ver ancoragemAtividade
+// mais abaixo, que já pede isso, mas sem uma chamada dedicada a validar a
+// relação ANTES de escrever a frase final).
+//
+// Escopo DELIBERADAMENTE restrito a SERVIÇOS sem produto físico (ver
+// `usaRelacaoReal` em generateSugestao): testado com N=5 itens físicos de
+// VAREJO (terno, cadeira de escritório, correia industrial, capacete de
+// moto, tênis) e a Variante A JÁ ganha sozinha em 4 de 5 — a textura física
+// do item ancora a cena sem precisar desta chamada extra, e adicionar uma
+// camada de abstração aqui SÓ PIORA o resultado nesse caso. Por isso esta
+// função nunca é chamada para item classificado como VAREJO.
+const RELACAO_REAL_TIMEOUT_MS = 6_000;
+
+export async function deriveRelacaoRealComTesteDeTroca(
+  apiKey: string,
+  concreteItem: string,
+  companyName: string,
+  mainActivity: string,
+  segment: string,
+): Promise<string | null> {
+  const prompt = `Você recebe um ITEM concreto que uma empresa brasileira vende ou oferece.
+
+EMPRESA: ${companyName || "(não informada)"}
+ATIVIDADE: ${mainActivity || "(não informada)"}
+SEGMENTO: ${segment}
+ITEM CONCRETO: "${concreteItem}"
+
+Identifique UMA relação real e verificável entre este item e uma situação, necessidade, momento ou consequência que um cliente DE VERDADE desse ramo reconheceria na hora como algo que já viveu — não invente uma situação "de negócio" que soa profissional mas ninguém confirmaria ter vivido.
+
+TESTE OBRIGATÓRIO antes de responder: se você trocasse "${concreteItem}" por outro item ou serviço qualquer do segmento ${segment}, vendido por um negócio DIFERENTE, a MESMA relação ainda seria verdadeira e faria sentido do mesmo jeito? Se sim, ela é genérica demais (poderia ter sido escrita sem saber que o item é "${concreteItem}") — descarte e ache uma relação que só é verdadeira PARA ESTE item específico.
+
+Responda em UMA frase curta e objetiva descrevendo a relação (uso interno, não é a frase final do post).
+
+Responda JSON EXATAMENTE assim: { "relacao": "1 frase objetiva descrevendo a relação real" }`;
+
+  try {
+    const result = await fetchOpenAIChat(
+      apiKey,
+      {
+        model: "gpt-4.1-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        response_format: { type: "json_object" },
+      },
+      RELACAO_REAL_TIMEOUT_MS,
+    );
+    if (!result.ok) return null;
+    const content = result.data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    const parsed = JSON.parse(content) as { relacao?: unknown };
+    const relacao = String(parsed.relacao || "").trim();
+    return relacao || null;
+  } catch {
+    return null;
+  }
+}
+
 // Lentes de abertura — 11 formas internas de variar o ÂNGULO da
 // Informação-chave (Sugestão MOP e PU) sobre o CONTEXTO REAL DE USO já
 // identificado a partir do elemento concreto e da atividade. São orientação
@@ -351,7 +415,9 @@ Responda JSON EXATAMENTE assim: { "itens": [{ "item": "nome curto do produto/ser
 // uma situação nova (o contexto real de uso já foi definido antes) e não
 // introduzem tensão, promessa emocional, progressão ou linguagem de
 // campanha — apenas escolhem um recorte dentro do contexto já identificado.
-const OPENING_LENSES: { nome: string; guia: string }[] = [
+// Exportado (11/07/2026) só pra reaproveitamento do harness de teste A/B
+// offline (scripts/ab-sugestao) — nenhum comportamento de produção muda.
+export const OPENING_LENSES: { nome: string; guia: string }[] = [
   {
     nome: "Situação real",
     guia: "Dentro do contexto real de uso já identificado, escolha um momento específico e cotidiano em que ele acontece — descrito sem dramatizar.",
@@ -404,6 +470,30 @@ const OPENING_LENSES: { nome: string; guia: string }[] = [
     guia: 'Dentro do contexto real de uso já identificado, escolha um detalhe específico do elemento que o cliente costuma não notar ou só percebe tarde demais — um aspecto concreto, nunca uma qualidade abstrata como "atenção aos detalhes".',
   },
 ];
+
+// Lentes seguras pro formato positivo "[item] para [resultado]" (uma das
+// construções preferenciais no MOP, não mais exclusiva — ver
+// elementoConcretoBlock) — comparação/dúvida/erro/sinal/detalhe tendem a
+// produzir condicional, defeito ou pergunta, o que colide com a proibição de
+// crítica ao cliente do metodoPrompt ("PROIBIDO... crítica ou cobrança ao
+// cliente"). Ficam disponíveis só no PU, onde esse formato é legítimo.
+// Exportado (11/07/2026) só pra reaproveitamento do harness de teste A/B
+// offline — nenhum comportamento de produção muda.
+export const MOP_SAFE_LENS_NAMES = new Set([
+  "Resultado observável",
+  "Necessidade percebida",
+  "Escolha antes da compra",
+  "Processo",
+  "Oportunidade",
+]);
+
+// No PU, "Sinal de hora de agir" e "Erro evitável" pressupõem um ciclo de
+// desgaste/troca ou um erro de uso físico — non-sequitur quando o elemento
+// concreto desta sugestão é um serviço/procedimento (sem esse ciclo). Exclui
+// as duas só nesse caso; produto físico (VAREJO) ou item não classificado
+// mantém o pool cheio, já que ali a premissa das duas lentes faz sentido.
+// Exportado (11/07/2026) pelo mesmo motivo de MOP_SAFE_LENS_NAMES acima.
+export const SERVICE_RISKY_LENS_NAMES = new Set(["Sinal de hora de agir", "Erro evitável"]);
 
 // ── Juiz estrutural único da Sugestão (backstop, fail-closed em dúvida real) ──
 // PRINCÍPIO DO FECHO DA FRASE (documento de princípios, topo + entrada 1.6,
@@ -606,6 +696,26 @@ export async function generateSugestao(
     previousSugs,
     sessionSeed,
   );
+
+  // Relação real com teste de troca (ver deriveRelacaoRealComTesteDeTroca
+  // acima) — só pra SERVIÇOS sem textura física de produto: item físico já
+  // ancora a cena sozinho (validado com N=5 itens de VAREJO, ver comentário
+  // da função), então a chamada extra só roda quando pode ajudar.
+  const itemTypeParaRelacaoReal = concreteItem ? classifyItemType(concreteItem) : null;
+  const usaRelacaoReal =
+    !!concreteItem && segment === "SERVIÇOS" && itemTypeParaRelacaoReal !== "VAREJO";
+  const relacaoReal = usaRelacaoReal
+    ? await deriveRelacaoRealComTesteDeTroca(
+        apiKey,
+        concreteItem!,
+        companyName,
+        mainActivity,
+        segment,
+      )
+    : null;
+  const relacaoRealBlock = relacaoReal
+    ? `\nRELAÇÃO REAL JÁ IDENTIFICADA (uso interno, embasa a frase — não precisa citar literalmente): "${relacaoReal}". A frase final deve preservar o GANCHO mais concreto e específico dessa relação (o sintoma/situação exato) — não parafraseie para um termo mais abstrato ou genérico de categoria só para soar mais "profissional"; prefira uma frase menos elegante que preserva o gancho a uma mais bonita que o perde.\n`
+    : "";
 
   // Eixos de leitura por segmento — direcionam a sugestão sem virar
   // biblioteca fixa de respostas.
@@ -851,21 +961,7 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
   // cobrança ao cliente", mais abaixo). Ficam disponíveis só no PU,
   // onde esse formato é legítimo (ver ESTILO DA SUGESTÃO (POST
   // ÚNICO) mais abaixo).
-  const MOP_SAFE_LENS_NAMES = new Set([
-    "Resultado observável",
-    "Necessidade percebida",
-    "Escolha antes da compra",
-    "Processo",
-    "Oportunidade",
-  ]);
-  // No PU, "Sinal de hora de agir" e "Erro evitável" pressupõem um
-  // ciclo de desgaste/troca ou um erro de uso físico — non-sequitur
-  // quando o elemento concreto desta sugestão é um serviço/
-  // procedimento (sem esse ciclo). Exclui as duas só nesse caso;
-  // produto físico (VAREJO) ou item não classificado mantém o pool
-  // cheio, já que ali a premissa das duas lentes faz sentido.
   const itemType = concreteItem ? classifyItemType(concreteItem) : null;
-  const SERVICE_RISKY_LENS_NAMES = new Set(["Sinal de hora de agir", "Erro evitável"]);
   const lensPool =
     mode === "metodo"
       ? OPENING_LENSES.filter((l) => MOP_SAFE_LENS_NAMES.has(l.nome))
@@ -914,7 +1010,7 @@ ${voiceBlock}${
 ${audienceDirective}
 
 ${elementoConcretoBlock}
-
+${relacaoRealBlock}
 ${ancoragemBlock}
 
 ${previousBlock}
@@ -959,7 +1055,7 @@ ATIVIDADE: ${mainActivity || "(não informada)"}
 ${voiceBlock}${segmentLensBlock}
 OBJETIVO: ${objetivo} (tom: ${tom})
 ${hint ? `PISTA DO USUÁRIO (refine/melhore a partir disso): "${hint}"` : "O usuário não deu pista — invente algo plausível e útil para a atividade."}
-${elementoConcretoBlock ? `\n${elementoConcretoBlock}\n` : ""}${ancoragemBlock ? `\n${ancoragemBlock}\n` : ""}${previousBlock ? `\n${previousBlock}\n` : ""}
+${elementoConcretoBlock ? `\n${elementoConcretoBlock}\n` : ""}${relacaoRealBlock}${ancoragemBlock ? `\n${ancoragemBlock}\n` : ""}${previousBlock ? `\n${previousBlock}\n` : ""}
 A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica com nome ou fato real quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.
 
 ESTILO DA SUGESTÃO (POST ÚNICO): a peça é uma comunicação direta e autônoma — NÃO abre uma sequência. A sugestão pode ser uma afirmação, ou uma pergunta direta, comercial, situacional ou de reconhecimento (ex.: "Já trocou o pneu para o frio?", "Sábado tem horário especial?"), ou uma chamada — o que fizer mais sentido para o objetivo. EVITE formatos de dica educativa ou abertura de jornada (ex.: "como escolher...", "o que considerar antes de...", "passo a passo para..."): isso é formato de sequência do Método OP, não de post único.
