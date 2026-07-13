@@ -58,6 +58,7 @@ export {
   checkLensNameLeak,
   checkWeakEnding,
   checkItemNameDrift,
+  checkInformalRegister,
   pruneWeakEnding,
 } from "./sugestaoValidation";
 

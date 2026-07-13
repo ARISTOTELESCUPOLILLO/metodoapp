@@ -9,6 +9,7 @@ import {
   checkLensNameLeak,
   checkWeakEnding,
   checkItemNameDrift,
+  checkInformalRegister,
   pruneWeakEnding,
 } from "@/core/textValidation";
 import { OBJETIVO_TOM } from "@/domain/objetivo.config";
@@ -1108,6 +1109,7 @@ Retorne JSON EXATAMENTE assim:
     m = m.concat(checkLensNameLeak(text, lens.nome));
     m = m.concat(checkWeakEnding(text, concreteItem));
     m = m.concat(checkItemNameDrift(text, concreteItem));
+    m = m.concat(checkInformalRegister(text));
     return m;
   };
 

@@ -98,6 +98,31 @@ export function checkSupplierLanguage(sugestao: string): string[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — registro informal de 2ª pessoa (achado 13/07/2026,
+// ver project-juiz-llm-gap-gramatica-alucinacao-2026-07-13): "tu/te/ti/teu/
+// tua/contigo" são uso regional/informal, fora da norma culta que o projeto
+// exige em todo texto gerado (feedback-normas-portugues). Caso real que
+// motivou a checagem: FERRIMAQ "mudando teu expediente agora" — passou pelo
+// juiz estrutural porque ele avalia estrutura da frase (fecho/núcleo/jargão/
+// especificidade/economia/contexto), não registro nem gramática. Checagem
+// determinística, sem exceção de contexto: o projeto sempre usa "você" na
+// 2ª pessoa, não existe caso legítimo de "tu/teu" em copy comercial B2B/B2C.
+// ─────────────────────────────────────────────────────────────────────────
+
+const INFORMAL_SECOND_PERSON_RE = /\b(tu|te|ti|teu|tua|teus|tuas|contigo)\b/;
+
+export function checkInformalRegister(sugestao: string): string[] {
+  const norm = normalizeForCompare(sugestao);
+  const m = norm.match(INFORMAL_SECOND_PERSON_RE);
+  if (m) {
+    return [
+      `sugestão usa pronome de 2ª pessoa informal/regional ("${m[0]}"), fora da norma culta — reescreva usando "você"/"seu"/"sua" ou reformule sem pronome de 2ª pessoa`,
+    ];
+  }
+  return [];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Sugestão (PU/MOP) — abertura repetida entre cliques da MESMA sessão
 // (auditoria 2026-06-22): mesmo quando o "elemento concreto" sorteado é
 // outro item da lista, se 2+ produtos/serviços cadastrados pelo usuário
