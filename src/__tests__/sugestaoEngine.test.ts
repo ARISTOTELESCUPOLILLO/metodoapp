@@ -54,6 +54,7 @@ beforeEach(() => {
           especificoOk: true,
           economiaOk: true,
           contextoOk: true,
+          gramaticaOk: true,
           motivo: "",
         }),
       };

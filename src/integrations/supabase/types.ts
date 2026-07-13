@@ -6,6 +6,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       app_settings: {
@@ -514,8 +539,14 @@ export type Database = {
           bonus_last_charged_at: string | null;
           bonus_meses_contrato: number;
           bonus_preco_brl: number | null;
+          bonus_primeira_geracao_limite: number;
+          bonus_primeira_geracao_usadas: number;
+          bonus_regen_texto_limite: number;
+          bonus_regen_texto_usadas: number;
           bonus_renders_limite: number;
           bonus_renders_usados: number;
+          bonus_sugestoes_limite: number;
+          bonus_sugestoes_usadas: number;
           client_code: string;
           client_seq: number;
           client_seq_segmento: number | null;
@@ -551,8 +582,14 @@ export type Database = {
           plano1_last_charged_at: string | null;
           plano1_meses_contrato: number;
           plano1_preco_brl: number | null;
+          plano1_primeira_geracao_limite: number;
+          plano1_primeira_geracao_usadas: number;
+          plano1_regen_texto_limite: number;
+          plano1_regen_texto_usadas: number;
           plano1_renders_limite: number;
           plano1_renders_usados: number;
+          plano1_sugestoes_limite: number;
+          plano1_sugestoes_usadas: number;
           plano2_contrato_fim: string | null;
           plano2_expira_em: string | null;
           plano2_geracoes_limite: number;
@@ -564,30 +601,18 @@ export type Database = {
           plano2_last_charged_at: string | null;
           plano2_meses_contrato: number;
           plano2_preco_brl: number | null;
+          plano2_primeira_geracao_limite: number;
+          plano2_primeira_geracao_usadas: number;
+          plano2_regen_texto_limite: number;
+          plano2_regen_texto_usadas: number;
           plano2_renders_limite: number;
           plano2_renders_usados: number;
+          plano2_sugestoes_limite: number;
+          plano2_sugestoes_usadas: number;
           renders_limite: number;
           renders_usados: number;
           segmento: string | null;
           status: string;
-          plano1_regen_texto_limite: number;
-          plano1_regen_texto_usadas: number;
-          plano1_sugestoes_limite: number;
-          plano1_sugestoes_usadas: number;
-          plano2_regen_texto_limite: number;
-          plano2_regen_texto_usadas: number;
-          plano2_sugestoes_limite: number;
-          plano2_sugestoes_usadas: number;
-          bonus_regen_texto_limite: number;
-          bonus_regen_texto_usadas: number;
-          bonus_sugestoes_limite: number;
-          bonus_sugestoes_usadas: number;
-          plano1_primeira_geracao_limite: number;
-          plano1_primeira_geracao_usadas: number;
-          plano2_primeira_geracao_limite: number;
-          plano2_primeira_geracao_usadas: number;
-          bonus_primeira_geracao_limite: number;
-          bonus_primeira_geracao_usadas: number;
           ultimo_login: string | null;
           updated_at: string;
           voice_avatar1_enabled: boolean;
@@ -606,8 +631,14 @@ export type Database = {
           bonus_last_charged_at?: string | null;
           bonus_meses_contrato?: number;
           bonus_preco_brl?: number | null;
+          bonus_primeira_geracao_limite?: number;
+          bonus_primeira_geracao_usadas?: number;
+          bonus_regen_texto_limite?: number;
+          bonus_regen_texto_usadas?: number;
           bonus_renders_limite?: number;
           bonus_renders_usados?: number;
+          bonus_sugestoes_limite?: number;
+          bonus_sugestoes_usadas?: number;
           client_code: string;
           client_seq: number;
           client_seq_segmento?: number | null;
@@ -643,8 +674,14 @@ export type Database = {
           plano1_last_charged_at?: string | null;
           plano1_meses_contrato?: number;
           plano1_preco_brl?: number | null;
+          plano1_primeira_geracao_limite?: number;
+          plano1_primeira_geracao_usadas?: number;
+          plano1_regen_texto_limite?: number;
+          plano1_regen_texto_usadas?: number;
           plano1_renders_limite?: number;
           plano1_renders_usados?: number;
+          plano1_sugestoes_limite?: number;
+          plano1_sugestoes_usadas?: number;
           plano2_contrato_fim?: string | null;
           plano2_expira_em?: string | null;
           plano2_geracoes_limite?: number;
@@ -656,30 +693,18 @@ export type Database = {
           plano2_last_charged_at?: string | null;
           plano2_meses_contrato?: number;
           plano2_preco_brl?: number | null;
+          plano2_primeira_geracao_limite?: number;
+          plano2_primeira_geracao_usadas?: number;
+          plano2_regen_texto_limite?: number;
+          plano2_regen_texto_usadas?: number;
           plano2_renders_limite?: number;
           plano2_renders_usados?: number;
+          plano2_sugestoes_limite?: number;
+          plano2_sugestoes_usadas?: number;
           renders_limite?: number;
           renders_usados?: number;
           segmento?: string | null;
           status?: string;
-          plano1_regen_texto_limite?: number;
-          plano1_regen_texto_usadas?: number;
-          plano1_sugestoes_limite?: number;
-          plano1_sugestoes_usadas?: number;
-          plano2_regen_texto_limite?: number;
-          plano2_regen_texto_usadas?: number;
-          plano2_sugestoes_limite?: number;
-          plano2_sugestoes_usadas?: number;
-          bonus_regen_texto_limite?: number;
-          bonus_regen_texto_usadas?: number;
-          bonus_sugestoes_limite?: number;
-          bonus_sugestoes_usadas?: number;
-          plano1_primeira_geracao_limite?: number;
-          plano1_primeira_geracao_usadas?: number;
-          plano2_primeira_geracao_limite?: number;
-          plano2_primeira_geracao_usadas?: number;
-          bonus_primeira_geracao_limite?: number;
-          bonus_primeira_geracao_usadas?: number;
           ultimo_login?: string | null;
           updated_at?: string;
           voice_avatar1_enabled?: boolean;
@@ -698,8 +723,14 @@ export type Database = {
           bonus_last_charged_at?: string | null;
           bonus_meses_contrato?: number;
           bonus_preco_brl?: number | null;
+          bonus_primeira_geracao_limite?: number;
+          bonus_primeira_geracao_usadas?: number;
+          bonus_regen_texto_limite?: number;
+          bonus_regen_texto_usadas?: number;
           bonus_renders_limite?: number;
           bonus_renders_usados?: number;
+          bonus_sugestoes_limite?: number;
+          bonus_sugestoes_usadas?: number;
           client_code?: string;
           client_seq?: number;
           client_seq_segmento?: number | null;
@@ -735,8 +766,14 @@ export type Database = {
           plano1_last_charged_at?: string | null;
           plano1_meses_contrato?: number;
           plano1_preco_brl?: number | null;
+          plano1_primeira_geracao_limite?: number;
+          plano1_primeira_geracao_usadas?: number;
+          plano1_regen_texto_limite?: number;
+          plano1_regen_texto_usadas?: number;
           plano1_renders_limite?: number;
           plano1_renders_usados?: number;
+          plano1_sugestoes_limite?: number;
+          plano1_sugestoes_usadas?: number;
           plano2_contrato_fim?: string | null;
           plano2_expira_em?: string | null;
           plano2_geracoes_limite?: number;
@@ -748,30 +785,18 @@ export type Database = {
           plano2_last_charged_at?: string | null;
           plano2_meses_contrato?: number;
           plano2_preco_brl?: number | null;
+          plano2_primeira_geracao_limite?: number;
+          plano2_primeira_geracao_usadas?: number;
+          plano2_regen_texto_limite?: number;
+          plano2_regen_texto_usadas?: number;
           plano2_renders_limite?: number;
           plano2_renders_usados?: number;
+          plano2_sugestoes_limite?: number;
+          plano2_sugestoes_usadas?: number;
           renders_limite?: number;
           renders_usados?: number;
           segmento?: string | null;
           status?: string;
-          plano1_regen_texto_limite?: number;
-          plano1_regen_texto_usadas?: number;
-          plano1_sugestoes_limite?: number;
-          plano1_sugestoes_usadas?: number;
-          plano2_regen_texto_limite?: number;
-          plano2_regen_texto_usadas?: number;
-          plano2_sugestoes_limite?: number;
-          plano2_sugestoes_usadas?: number;
-          bonus_regen_texto_limite?: number;
-          bonus_regen_texto_usadas?: number;
-          bonus_sugestoes_limite?: number;
-          bonus_sugestoes_usadas?: number;
-          plano1_primeira_geracao_limite?: number;
-          plano1_primeira_geracao_usadas?: number;
-          plano2_primeira_geracao_limite?: number;
-          plano2_primeira_geracao_usadas?: number;
-          bonus_primeira_geracao_limite?: number;
-          bonus_primeira_geracao_usadas?: number;
           ultimo_login?: string | null;
           updated_at?: string;
           voice_avatar1_enabled?: boolean;
@@ -808,10 +833,46 @@ export type Database = {
           },
         ];
       };
+      sugestao_judge_logs: {
+        Row: {
+          company_name: string | null;
+          created_at: string | null;
+          fail_reason: string | null;
+          id: string;
+          mode: string | null;
+          motivo: string | null;
+          ok: boolean;
+          pass: number | null;
+          segment: string | null;
+        };
+        Insert: {
+          company_name?: string | null;
+          created_at?: string | null;
+          fail_reason?: string | null;
+          id?: string;
+          mode?: string | null;
+          motivo?: string | null;
+          ok: boolean;
+          pass?: number | null;
+          segment?: string | null;
+        };
+        Update: {
+          company_name?: string | null;
+          created_at?: string | null;
+          fail_reason?: string | null;
+          id?: string;
+          mode?: string | null;
+          motivo?: string | null;
+          ok?: boolean;
+          pass?: number | null;
+          segment?: string | null;
+        };
+        Relationships: [];
+      };
       usage_logs: {
         Row: {
           created_at: string;
-          custo_usd: number;
+          custo_usd: number | null;
           evento: string;
           id: string;
           impersonated_by: string | null;
@@ -1105,28 +1166,6 @@ export type Database = {
               _geracoes?: number;
               _imgs: number;
               _preferred_slot?: string;
-              _renders: number;
-              _user_id: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              _geracoes?: number;
-              _imgs: number;
-              _preferred_slot?: string;
-              _regen_texto?: number;
-              _renders: number;
-              _sugestoes?: number;
-              _user_id: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              _geracoes?: number;
-              _imgs: number;
-              _preferred_slot?: string;
               _primeira_geracao?: number;
               _regen_texto?: number;
               _renders: number;
@@ -1288,6 +1327,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "user"],

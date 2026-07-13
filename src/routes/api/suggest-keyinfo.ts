@@ -13,6 +13,7 @@ import {
   type SugestaoSegment,
   type SugestaoAudience,
 } from "@/core/sugestaoEngine";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/suggest-keyinfo")({
   server: {
@@ -136,6 +137,29 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
               brandVoice,
             });
             sugestao = result.sugestao;
+
+            // Observabilidade do juiz LLM (achado 13/07/2026 — ver memória
+            // project-juiz-llm-veto-descartado-2026-07-13): grava cada
+            // veredito real (aprovado/reprovado/fail-open técnico) pra medir
+            // a taxa em produção. Non-fatal: falha aqui nunca invalida a
+            // sugestão já gerada, só loga (mesmo padrão do debitUsage abaixo).
+            if (result.judgeVerdicts.length > 0) {
+              try {
+                await supabaseAdmin.from("sugestao_judge_logs").insert(
+                  result.judgeVerdicts.map((v) => ({
+                    ok: v.ok,
+                    fail_reason: v.failReason ?? null,
+                    motivo: v.motivo ?? null,
+                    segment,
+                    mode,
+                    pass: v.pass,
+                    company_name: companyName || null,
+                  })),
+                );
+              } catch (e) {
+                console.warn("[suggest-keyinfo] judge log insert failed", (e as Error).message);
+              }
+            }
           } catch (e) {
             const status = (e as { status?: number }).status ?? 500;
             return Response.json({ error: (e as Error).message }, { status });

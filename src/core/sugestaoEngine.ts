@@ -533,6 +533,16 @@ const JUDGE_ESTRUTURAL_TIMEOUT_MS = 6_000;
 // pode ter ancoragem concreta (item + local real) e ainda assim descrever
 // bastidor de quem vende, não a vida de quem compra (ex.: "Vacinas no
 // armazenamento" tem âncora concreta, mas não é cena do cliente final).
+export interface JudgeVerdict {
+  ok: boolean;
+  motivo?: string;
+  // Só presente quando ok:true veio de falha TÉCNICA (timeout, rede, JSON
+  // inválido) — distingue "aprovado de verdade" de "passou sem checagem
+  // nenhuma" (ver project-juiz-llm-veto-descartado-2026-07-13 na memória:
+  // sem isso, era impossível medir quantas Sugestões escapavam do juiz).
+  failReason?: "falha_tecnica";
+}
+
 export async function judgeSugestaoEstrutural(
   apiKey: string,
   sugestao: string,
@@ -540,29 +550,36 @@ export async function judgeSugestaoEstrutural(
   mainActivity: string,
   segment: string,
   audience: SugestaoAudience,
-): Promise<{ ok: boolean; motivo?: string }> {
+): Promise<JudgeVerdict> {
   try {
     const criterioContexto = `
-6. contextoOk — se a frase ancora o item numa situação/momento/local, quem VIVE essa cena é quem COMPRA ou USA o item (ele se imagina usando, recebendo, escolhendo, precisando) — e não uma etapa interna de quem VENDE (estoque, armazenamento, preparo, escolha de insumos, organização interna)? Reprove só quando a cena existir apenas do lado de dentro do balcão (ex.: "no armazenamento", "na escolha de acabamentos", "na organização interna"). NÃO reprove frases sem situação nenhuma (isso é papel do especificoOk) nem rotina operacional que é do próprio cliente comprador (ex.: em B2B, "no fechamento dos pedidos" é rotina de quem compra, não bastidor de quem vende). PÚBLICO-ALVO desta empresa: ${audience === "B2C" ? "consumidor final (B2C) — a cena precisa ser vivida pela pessoa que usa o item na própria vida" : "empresarial (B2B) — o comprador é o dono/gestor do negócio, e a rotina de trabalho DELE (não da empresa que vende) conta como contexto legítimo"}.`;
+6. contextoOk — se a frase ancora o item numa situação/momento/local, quem VIVE essa cena é quem COMPRA ou USA o item (ele se imagina usando, recebendo, escolhendo, precisando) — e não uma etapa interna de quem VENDE (estoque, armazenamento, preparo, escolha de insumos, organização interna)? Reprove só quando a cena existir apenas do lado de dentro do balcão (ex.: "no armazenamento", "na escolha de acabamentos", "na organização interna"). NÃO reprove frases sem situação nenhuma (isso é papel do especificoOk) nem rotina operacional que é do próprio cliente comprador (ex.: em B2B, "no fechamento dos pedidos" é rotina de quem compra, não bastidor de quem vende). PÚBLICO-ALVO desta empresa: ${audience === "B2C" ? "consumidor final (B2C) — a cena precisa ser vivida pela pessoa que usa o item na própria vida" : "empresarial (B2B) — o comprador é o dono/gestor do negócio, e a rotina de trabalho DELE (não da empresa que vende) conta como contexto legítimo"}.
+7. gramaticaOk — a frase está gramaticalmente correta na norma culta do português brasileiro (concordância verbal e nominal, regência, verbo bem formado — sem construções estranhas ou sem sentido, ex.: "render jornada", "faz jus a paz"; sem pronome de 2ª pessoa informal/regional como "tu/te/ti/teu/tua/contigo")? E, além disso, ela evita AFIRMAR como fato uma característica ESPECÍFICA do item (medida, material, número, certificação, funcionalidade técnica) que NÃO dá pra confirmar só com o nome do item e a atividade informados acima — ou seja, não inventa um dado concreto que soa plausível mas não há como saber se é real (ex.: dizer que uma cadeira tem "ajuste lombar" ou que um lubrificante "aguenta 500 graus" quando isso não foi informado em lugar nenhum)? Em dúvida sobre gramática OU sobre se um dado específico é inventado, marque false.
+
+Avalie os 7 critérios abaixo com RIGOR — em caso de DÚVIDA REAL sobre qualquer um deles, considere REPROVADO (false). Só marque true quando tiver certeza razoável de que o critério foi cumprido:`;
 
     const prompt = `Avalie esta frase de pauta de conteúdo (Sugestão/Informação-chave) em português brasileiro, para uma empresa do ramo "${mainActivity || segment}":
 
 FRASE: "${sugestao}"${concreteItem ? `\nELEMENTO CONCRETO DE ORIGEM: "${concreteItem}"` : ""}
-
-Avalie os 6 critérios abaixo com RIGOR — em caso de DÚVIDA REAL sobre qualquer um deles, considere REPROVADO (false). Só marque true quando tiver certeza razoável de que o critério foi cumprido:
+${criterioContexto}
 
 1. fechoOk — as últimas 2-3 palavras nomeiam um resultado, necessidade, benefício OU uma característica/uso CONCRETO e específico deste item/negócio (não precisa ser necessariamente um ganho — uma característica real e verificável do item também conta como fecho válido, ex.: "com nome do pet", "em madeira maciça", "para filhotes pequenos")? Reprove se o fecho for: ocasião de calendário solta (ex.: "durante feriados", "no verão", "no fim do verão", "no começo do inverno" — QUALQUER variação com conector no meio conta igual), o nome do próprio item sem nada específico agregado, um qualificador ADJETIVO genérico (o teste é o PADRÃO, não uma lista fixa: "certo", "ideal", "exclusivo", "seguro", "preciso", "qualificado", "disponível" são exemplos, mas QUALQUER adjetivo cujo oposto seria absurdo de anunciar conta como vazio), OU um SUBSTANTIVO ABSTRATO genérico de sensação/qualidade (ex.: "aconchego", "praticidade", "bem-estar", "conforto", "satisfação"). O TESTE CENTRAL não é "é um benefício?" — é "é específico e verificável PARA ESTE item, ou serviria pra qualquer outro produto/serviço do mercado sem dizer nada particular?". Se colaria em qualquer coisa, é vazio mesmo sendo um substantivo "positivo" ou um benefício genérico ("melhora", "facilita a vida").
 2. nucleoOk — o centro GRAMATICAL da frase (o sujeito ou a locução que abre a frase) é o elemento concreto em si — e NÃO um termo abstrato/nominalização mesmo quando o item concreto aparece DEPOIS dele como complemento? Reprove construções do tipo "a escolha certa DE [item]", "a falta DE [item]", "o uso DE [item]", "planejamento DE [item]" — nelas o item aparece na frase, mas GRAMATICALMENTE é só complemento de um conceito abstrato ("escolha", "falta", "uso", "planejamento") que ocupa o lugar do núcleo; isso reprova mesmo com o item mencionado. Só aprove quando o próprio item/categoria/atividade for o sujeito ou abrir a locução (ex.: "Mesa para reuniões longas", "Cadeira que ajusta altura").
 3. linguagemOk — uma pessoa comum, leiga no assunto, entende a frase de primeira, SEM jargão técnico ou anglicismo de marketing/vendas (ex.: "leads", "tráfego pago", "briefing", "funil", "contatos quentes", "targeting", "conversão")? EXCEÇÃO: se o ELEMENTO CONCRETO DE ORIGEM informado acima já É esse termo (o próprio produto/serviço cadastrado se chama assim — ex.: a empresa vende literalmente "Tráfego pago" como serviço), NÃO reprove por nomear o item pelo nome dele mesmo; reprove aqui só jargão ADICIONAL além do necessário pra nomear o item (ex.: mesmo citando "Tráfego pago" corretamente, "leads qualificados" ou "funil de conversão" no resto da frase ainda reprovam).
 4. especificoOk — a frase tem ALGUMA ancoragem concreta (um item, categoria, procedimento ou situação real) — ou é um slogan institucional que não nomeia NADA concreto e serviria com as MESMAS palavras mesmo trocando o produto/serviço por outro completamente diferente (ex.: "Marketing digital para gerar mais vendas", "Qualidade que você pode confiar")? IMPORTANTE: uma frase que nomeia um item/categoria real (mesmo um item comum, tipo "cadeira", "mesa", "consulta") e descreve um resultado/característica verificável dele NÃO é genérica só porque um concorrente que vende o mesmo TIPO de item poderia dizer algo parecido — isso é esperado e correto, reprove aqui SÓ quando a frase não tiver nenhum item/situação concreta identificável, e sim apenas um conceito abstrato de negócio.
-5. economiaOk — a última palavra (ou as últimas 2-3) é redundante/pleonástica com o resto da frase (ex.: "susto inesperado" — susto já é inesperado por definição), OU é um qualificador (adjetivo/particípio) colado ao substantivo final que NÃO muda nem especifica o resultado central (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "internações longas" — tire a palavra e o resultado continua o mesmo), OU está semanticamente deslocada do tipo real desse item/negócio (ex.: um acessório anunciado por um benefício que não é a função dele)? TESTE: apague mentalmente essa última palavra — se a frase perde informação real, marque economiaOk true (está OK); se a frase fica dizendo exatamente a mesma coisa, só mais curta, marque economiaOk false (é recheio, reprovado).${criterioContexto}
+5. economiaOk — a última palavra (ou as últimas 2-3) é redundante/pleonástica com o resto da frase (ex.: "susto inesperado" — susto já é inesperado por definição), OU é um qualificador (adjetivo/particípio) colado ao substantivo final que NÃO muda nem especifica o resultado central (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "internações longas" — tire a palavra e o resultado continua o mesmo), OU está semanticamente deslocada do tipo real desse item/negócio (ex.: um acessório anunciado por um benefício que não é a função dele)? TESTE: apague mentalmente essa última palavra — se a frase perde informação real, marque economiaOk true (está OK); se a frase fica dizendo exatamente a mesma coisa, só mais curta, marque economiaOk false (é recheio, reprovado).
 
-Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou false, "linguagemOk": true ou false, "especificoOk": true ou false, "economiaOk": true ou false, "contextoOk": true ou false, "motivo": "se algum item for false, 1 frase curta e objetiva dizendo o que corrigir; se todos forem true, string vazia" }`;
+Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou false, "linguagemOk": true ou false, "especificoOk": true ou false, "economiaOk": true ou false, "contextoOk": true ou false, "gramaticaOk": true ou false, "motivo": "se algum item for false, 1 frase curta e objetiva dizendo o que corrigir; se todos forem true, string vazia" }`;
 
     const result = await fetchOpenAIChat(
       apiKey,
       {
-        model: "gpt-4.1-mini",
+        // Subido de gpt-4.1-mini pra gpt-4.1 (achado 13/07/2026, investigação
+        // Opus+Fable): o juiz era mais FRACO que o gerador (que já usa
+        // gpt-4.1), assimetria invertida — um juiz de nível igual/superior é
+        // pré-requisito pra pegar o que o mini deixava passar. Custo marginal
+        // baixo: roda 1x por tentativa, prompt curto.
+        model: "gpt-4.1",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.1,
         response_format: { type: "json_object" },
@@ -570,10 +587,11 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       JUDGE_ESTRUTURAL_TIMEOUT_MS,
     );
     // Falha TÉCNICA (rede, timeout, status de erro) — fail-open: nunca trava
-    // o clique do usuário por instabilidade de infraestrutura.
-    if (!result.ok) return { ok: true };
+    // o clique do usuário por instabilidade de infraestrutura. Sinaliza
+    // failReason pra quem loga o veredito distinguir isto de aprovação real.
+    if (!result.ok) return { ok: true, failReason: "falha_tecnica" };
     const content = result.data.choices?.[0]?.message?.content;
-    if (!content) return { ok: true };
+    if (!content) return { ok: true, failReason: "falha_tecnica" };
 
     let parsed: {
       fechoOk?: unknown;
@@ -582,12 +600,13 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       especificoOk?: unknown;
       economiaOk?: unknown;
       contextoOk?: unknown;
+      gramaticaOk?: unknown;
       motivo?: unknown;
     };
     try {
       parsed = JSON.parse(content);
     } catch {
-      return { ok: true }; // JSON inválido é falha técnica, não dúvida de conteúdo.
+      return { ok: true, failReason: "falha_tecnica" }; // JSON inválido é falha técnica, não dúvida de conteúdo.
     }
 
     // Fail-closed em dúvida REAL: diferente do juiz anterior (que só reprovava
@@ -600,7 +619,8 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       parsed.linguagemOk === true &&
       parsed.especificoOk === true &&
       parsed.economiaOk === true &&
-      parsed.contextoOk === true;
+      parsed.contextoOk === true &&
+      parsed.gramaticaOk === true;
     if (allOk) return { ok: true };
 
     return {
@@ -608,10 +628,10 @@ Responda JSON EXATAMENTE assim: { "fechoOk": true ou false, "nucleoOk": true ou 
       motivo:
         typeof parsed.motivo === "string" && parsed.motivo.trim()
           ? parsed.motivo.trim()
-          : "juiz estrutural reprovou a frase (fecho, núcleo, linguagem, especificidade, economia ou contexto) sem detalhar o motivo — reescreva com mais concretude, sem jargão e sem palavra de recheio no fim",
+          : "juiz estrutural reprovou a frase (fecho, núcleo, linguagem, especificidade, economia, contexto ou gramática) sem detalhar o motivo — reescreva com mais concretude, sem jargão e sem palavra de recheio no fim",
     };
   } catch {
-    return { ok: true }; // erro técnico (rede, exceção) — fail-open.
+    return { ok: true, failReason: "falha_tecnica" }; // erro técnico (rede, exceção) — fail-open.
   }
 }
 
@@ -648,7 +668,7 @@ export interface SugestaoEngineInput {
 export async function generateSugestao(
   apiKey: string,
   input: SugestaoEngineInput,
-): Promise<{ sugestao: string }> {
+): Promise<{ sugestao: string; judgeVerdicts: Array<JudgeVerdict & { pass: number }> }> {
   const {
     companyName,
     mainActivity,
@@ -1092,6 +1112,18 @@ Retorne JSON EXATAMENTE assim:
   const SUGESTAO_MAX_WORDS = 7;
   let sugestao = "";
   let motivos: string[] = [];
+  // Melhor tentativa vista até agora (menos motivos de reprovação) — achado
+  // 13/07/2026 (investigação Opus+Fable, project-juiz-llm-veto-descartado):
+  // sem isso, a ÚLTIMA tentativa era devolvida mesmo reprovada, mesmo quando
+  // uma tentativa anterior tinha menos problemas (o veto do juiz virava
+  // decorativo na 3ª/última passada). Null até a 1ª passada preencher.
+  let bestSugestao = "";
+  let bestMotivos: string[] | null = null;
+  // Cada chamada real ao juiz LLM vira 1 entrada aqui — devolvido ao chamador
+  // (rota suggest-keyinfo.ts) pra persistir em log e medir taxa real de
+  // aprovação/reprovação/fail-open em produção (motor continua puro, sem
+  // I/O de banco — ver comentário de generateSugestao sobre testabilidade).
+  const judgeVerdicts: Array<JudgeVerdict & { pass: number }> = [];
 
   // Reaplica as checagens determinísticas (sem chamar API) sobre um
   // texto candidato — usado tanto dentro do loop quanto no fallback
@@ -1178,14 +1210,26 @@ Retorne JSON EXATAMENTE assim:
         segment,
         audience,
       );
+      judgeVerdicts.push({ ...veredito, pass });
       if (!veredito.ok) {
         motivos.push(
           `juiz estrutural: ${veredito.motivo ?? "frase reprovada — reescreva com mais concretude e sem jargão"}`,
         );
       }
     }
+
+    if (bestMotivos === null || motivos.length < bestMotivos.length) {
+      bestSugestao = sugestao;
+      bestMotivos = motivos;
+    }
     if (motivos.length === 0) break;
   }
+
+  // Garante que a MELHOR tentativa (menos motivos de reprovação) prevalece,
+  // não necessariamente a última — corrige o descarte do veto na 3ª/última
+  // passada (ver comentário acima em bestSugestao/bestMotivos).
+  sugestao = bestSugestao;
+  motivos = bestMotivos ?? [];
 
   // E2 — poda determinística (sem custo de API), PRINCÍPIO DO FECHO DA
   // FRASE (doc mestre, 1.6): se as tentativas acima esgotaram e a
@@ -1207,5 +1251,5 @@ Retorne JSON EXATAMENTE assim:
     }
   }
 
-  return { sugestao };
+  return { sugestao, judgeVerdicts };
 }
