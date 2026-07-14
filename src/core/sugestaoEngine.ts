@@ -1076,6 +1076,11 @@ Para qualquer outra data comemorativa, use apenas se tiver certeza absoluta da d
 
   const dateLine = objetivo === "homenagem" ? `DATA DE HOJE: ${today}\n` : "";
 
+  // audienceDirective (definido acima, antes de contextoFormaBlock) era
+  // interpolado só no metodoPrompt — a PU nunca recebia a lista PROIBIDO de
+  // vocabulário B2C nem a regra de núcleo B2B (achado 14/07/2026, auditoria
+  // Fable+Opus da regressão VAREJO/B2C: todos os exemplos reportados eram de
+  // PU). Mesmo bloco do metodoPrompt, sem reescrita.
   const postUnicoPrompt = `Sugira UMA Informação-chave para um post único de Instagram em português brasileiro.
 
 ${dateLine}EMPRESA: ${companyName || "(não informada)"}
@@ -1083,6 +1088,8 @@ ATIVIDADE: ${mainActivity || "(não informada)"}
 ${voiceBlock}${segmentLensBlock}
 OBJETIVO: ${objetivo} (tom: ${tom})
 ${hint ? `PISTA DO USUÁRIO (refine/melhore a partir disso): "${hint}"` : "O usuário não deu pista — invente algo plausível e útil para a atividade."}
+
+${audienceDirective}
 ${elementoConcretoBlock ? `\n${elementoConcretoBlock}\n` : ""}${relacaoRealBlock}${ancoragemBlock ? `\n${ancoragemBlock}\n` : ""}${previousBlock ? `\n${previousBlock}\n` : ""}
 A Informação-chave é o FATO central que a peça vai comunicar (uma promoção concreta, um aviso, uma homenagem, uma oportunidade). Deve ser específica com nome ou fato real quando fizer sentido. NÃO é a legenda nem o título — é a matéria-prima do post.
 

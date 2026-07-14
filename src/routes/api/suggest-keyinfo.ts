@@ -79,8 +79,17 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
               ? sessionSeedRaw
               : Math.floor(Math.random() * 1e9);
 
+          // slice(-6): as MAIS RECENTES, não as 6 primeiras — o cliente monta o
+          // array com o histórico entre sessões primeiro e o lote ATUAL depois
+          // (ver allSessionSuggestionsRef em PostUnicoForm.tsx/KeyInfoSection.tsx),
+          // então slice(0, 6) (bug corrigido 14/07/2026) descartava todo o lote
+          // atual assim que o histórico acumulava 6+ itens — o motor ficava cego
+          // pras próprias sugestões do pedido em andamento e só via histórico
+          // antigo, às vezes de outra empresa (mesma chave de storage por
+          // userId). Com SUGGEST_MAX=3 no cliente, slice(-6) garante que o lote
+          // atual (sempre no fim do array) nunca fica de fora.
           const previousSugs: string[] = Array.isArray(body.previousSuggestions)
-            ? body.previousSuggestions.slice(0, 6).map(String).filter(Boolean)
+            ? body.previousSuggestions.slice(-6).map(String).filter(Boolean)
             : [];
 
           const SEGMENTS = ["VAREJO", "SERVIÇOS", "MARCA"] as const;
