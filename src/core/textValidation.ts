@@ -57,6 +57,7 @@ export {
   checkRepeatedOpening,
   checkLensNameLeak,
   checkWeakEnding,
+  checkVagueAdjectiveMidSentence,
   checkItemNameDrift,
   checkInformalRegister,
   pruneWeakEnding,

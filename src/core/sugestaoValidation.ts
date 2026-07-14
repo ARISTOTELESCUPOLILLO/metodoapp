@@ -372,6 +372,38 @@ export function checkWeakEnding(sugestao: string, concreteItem?: string | null):
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — adjetivo de recheio FORA do fecho (achado 14/07/2026,
+// auditoria B2C/B2B: "Óleos lubrificantes diferentes para máquinas
+// pesadas"). VAGUE_CLOSING_ADJECTIVE_RE e o economiaOk do juiz só cobrem a
+// ÚLTIMA palavra da frase — um adjetivo vazio colado ao NÚCLEO (no meio da
+// frase) passava batido por todas as camadas. Mesma lista de
+// VAGUE_CLOSING_ADJECTIVE_RE (adjetivo cujo oposto seria absurdo de
+// anunciar) mais a família "diferente/diferenciado/diverso/variado" que
+// motivou o achado — vago porque não diz DE QUE FORMA o item é diferente.
+// Ignora a última palavra da frase de propósito: essa posição já é coberta
+// por checkWeakEnding, checar aqui também só duplicaria o motivo.
+// ─────────────────────────────────────────────────────────────────────────
+
+const VAGUE_ADJECTIVE_ANYWHERE_RE =
+  /^(certos?|certas?|ideal|ideais|perfeitos?|perfeitas?|adequados?|adequadas?|corretos?|corretas?|apropriados?|apropriadas?|diferentes?|diferenciad[ao]s?|divers[ao]s?|variad[ao]s?)$/;
+
+export function checkVagueAdjectiveMidSentence(sugestao: string): string[] {
+  const norm = normalizeForCompare(sugestao)
+    .replace(/[.!?…]+\s*$/g, "")
+    .trim();
+  if (!norm) return [];
+  const tokens = norm.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (VAGUE_ADJECTIVE_ANYWHERE_RE.test(tokens[i])) {
+      return [
+        `sugestão usa adjetivo de recheio ("${tokens[i]}") no meio da frase — não especifica nada real deste item (o oposto seria absurdo de anunciar, ou não diz de que forma ele é diferente/variado); troque por uma característica concreta e específica, ou remova o adjetivo`,
+      ];
+    }
+  }
+  return [];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Sugestão (PU/MOP) — deriva do próprio elemento concreto e reescreve o nome
 // do produto/serviço (auditoria 2026-07-05): "Aplicativo Método OP" virando
 // "Ferramenta Método OP", "Método OP digital", "Uso do Método OP" entre
