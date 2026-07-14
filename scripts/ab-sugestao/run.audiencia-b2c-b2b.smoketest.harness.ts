@@ -22,7 +22,7 @@ const base: Omit<SugestaoEngineInput, "audience"> = {
   sessionSeed: 0,
   previousSuggestions: [],
   isPersonalBrand: false,
-  selectedProducts: ["Correias industriais"],
+  selectedProducts: ["Óleos lubrificantes"],
   brandVoice: "",
 };
 
