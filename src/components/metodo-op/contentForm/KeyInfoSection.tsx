@@ -8,6 +8,9 @@ import { getAuthHeaders } from "../../../services/authHeaders";
 import ProductsChecklist from "../ProductsChecklist";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
 import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
+import { useAuth } from "../../../hooks/useAuth";
+import { useImpersonation } from "../../../hooks/useImpersonation";
+import { loadSugestaoHistory, pushSugestaoHistory } from "../../../utils/storage";
 
 const KEYINFO_EXAMPLE: Record<Segment, string> = {
   SERVIÇOS:
@@ -57,6 +60,9 @@ export function KeyInfoSection({
   // sessão, mas variem entre sessões novas (ver lensIndex em suggest-keyinfo.ts).
   const sessionSeedRef = useRef<number>(Math.floor(Math.random() * 1e9));
   const keyInfoCorrection = useTextCorrection();
+  const { user } = useAuth();
+  const impersonation = useImpersonation();
+  const effectiveUserId = impersonation?.userId ?? user?.id;
 
   const hasKeyInfo = !!(data.keyInfo || "").trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
@@ -72,6 +78,24 @@ export function KeyInfoSection({
     allSessionSuggestionsRef.current = [];
     sessionSeedRef.current = Math.floor(Math.random() * 1e9);
   }, [segment]);
+
+  // Semeia o rodízio sintático com o histórico de rodadas ANTERIORES (outra
+  // visita/mount, não só cliques dentro deste carregamento de página) — sem
+  // isso, checkRepeatedOpening só compara sugestões da mesma sessão de
+  // página (achado 14/07/2026). Guard evita re-semear a cada render.
+  // Declarado DEPOIS do reset por `[segment]` de propósito: no mesmo commit
+  // de montagem, efeitos rodam na ordem em que aparecem no componente — se
+  // viesse antes, o reset por segmento (que roda incondicionalmente no
+  // mount) apagaria a semeadura no mesmo ciclo.
+  const historySeededRef = useRef(false);
+  useEffect(() => {
+    if (historySeededRef.current || !effectiveUserId) return;
+    historySeededRef.current = true;
+    allSessionSuggestionsRef.current = [
+      ...loadSugestaoHistory(effectiveUserId),
+      ...allSessionSuggestionsRef.current,
+    ];
+  }, [effectiveUserId]);
 
   useEffect(() => {
     if (!data.keyInfo) {
@@ -127,6 +151,7 @@ export function KeyInfoSection({
       if (newSugg) {
         setSuggestions((arr) => [...arr, newSugg]);
         allSessionSuggestionsRef.current = [...allSessionSuggestionsRef.current, newSugg];
+        pushSugestaoHistory(newSugg, effectiveUserId);
       }
       setSuggestCount((c) => c + 1);
     } catch (e) {

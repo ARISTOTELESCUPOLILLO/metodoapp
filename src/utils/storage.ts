@@ -1,5 +1,31 @@
 import { lsGet, lsRemove, lsSetQuotaSafe } from "../lib/storage/store";
-import { KIT_KEY, LOGO_KEY, FORM_KEY } from "../lib/storage/keys";
+import { KIT_KEY, LOGO_KEY, FORM_KEY, SUGESTAO_HISTORY_KEY } from "../lib/storage/keys";
+
+const SUGESTAO_HISTORY_MAX = 12;
+
+/**
+ * Últimas N sugestões geradas (MOP+PU), pra alimentar `previousSuggestions`
+ * mesmo numa rodada nova (mount novo do formulário) — sem isso, o rodízio
+ * sintático (checkRepeatedOpening) só enxerga sugestões da MESMA sessão de
+ * página, ficando "cego" entre rodadas/visitas diferentes.
+ */
+export function loadSugestaoHistory(userId?: string | null): string[] {
+  try {
+    const raw = lsGet(SUGESTAO_HISTORY_KEY, userId);
+    const arr: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter((s): s is string => typeof s === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Acrescenta `sugestao` ao histórico, mantendo só as últimas SUGESTAO_HISTORY_MAX. */
+export function pushSugestaoHistory(sugestao: string, userId?: string | null): void {
+  const trimmed = sugestao.trim();
+  if (!trimmed) return;
+  const next = [...loadSugestaoHistory(userId), trimmed].slice(-SUGESTAO_HISTORY_MAX);
+  lsSetQuotaSafe(SUGESTAO_HISTORY_KEY, JSON.stringify(next), userId);
+}
 
 export function saveKit(kit: { logoDataUrl?: string } & object, userId?: string | null) {
   try {

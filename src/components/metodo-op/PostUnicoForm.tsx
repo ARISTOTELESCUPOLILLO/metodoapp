@@ -14,6 +14,9 @@ import { CopySection } from "./postUnicoForm/CopySection";
 import { PostUnicoKeyInfoSection } from "./postUnicoForm/PostUnicoKeyInfoSection";
 import { DirecaoVisualSection } from "./postUnicoForm/DirecaoVisualSection";
 import { IdeiasSheet } from "./contentForm/IdeiasSheet";
+import { useAuth } from "../../hooks/useAuth";
+import { useImpersonation } from "../../hooks/useImpersonation";
+import { loadSugestaoHistory, pushSugestaoHistory } from "../../utils/storage";
 
 interface Props {
   data: PostUnicoFormData;
@@ -70,6 +73,9 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   const sessionSeedRef = useRef<number>(Math.floor(Math.random() * 1e9));
   const [selectedProducts, setSelectedProducts] = useState<string[]>(() => kit.products || []);
   const keyInfoCorrection = useTextCorrection();
+  const { user } = useAuth();
+  const impersonation = useImpersonation();
+  const effectiveUserId = impersonation?.userId ?? user?.id;
   const SUGGEST_MAX = 3;
   const hasKeyInfo = !!data.keyInfo.trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
@@ -118,6 +124,23 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
     allSessionSuggestionsRef.current = [];
     sessionSeedRef.current = Math.floor(Math.random() * 1e9);
   }, [data.objetivo, kit.companyName]);
+
+  // Semeia o rodízio sintático com o histórico de rodadas ANTERIORES (outra
+  // visita/mount, não só cliques dentro deste carregamento de página) — sem
+  // isso, checkRepeatedOpening só compara sugestões da mesma sessão de
+  // página (achado 14/07/2026). Declarado DEPOIS do reset por
+  // `[data.objetivo, kit.companyName]` de propósito: no mesmo commit de
+  // montagem, esse reset roda incondicionalmente e apagaria a semeadura se
+  // este efeito viesse antes. Guard evita re-semear a cada render.
+  const historySeededRef = useRef(false);
+  useEffect(() => {
+    if (historySeededRef.current || !effectiveUserId) return;
+    historySeededRef.current = true;
+    allSessionSuggestionsRef.current = [
+      ...loadSugestaoHistory(effectiveUserId),
+      ...allSessionSuggestionsRef.current,
+    ];
+  }, [effectiveUserId]);
 
   // Checklist de produtos/serviços — todos marcados por padrão; reseta
   // quando a lista do Kit de Marca muda (ex.: kit carregado ou editado).
@@ -208,6 +231,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
       if (newSugg) {
         setSuggestions((arr) => [...arr, newSugg]);
         allSessionSuggestionsRef.current = [...allSessionSuggestionsRef.current, newSugg];
+        pushSugestaoHistory(newSugg, effectiveUserId);
       }
       setSuggestCount((c) => c + 1);
     } catch (e) {

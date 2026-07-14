@@ -38,6 +38,15 @@ export const IMAGE_KIT_KEY = "metodo-op-image-kit-v1";
 /** Edições de copy (título/texto/legenda) por card do MOP. */
 export const COPY_EDITS_KEY = "metodo-op-copyedits-v1";
 
+/**
+ * Histórico recente de sugestões geradas (MOP+PU) — janela deslizante,
+ * persiste entre carregamentos de página. Fecha o gap de
+ * checkRepeatedOpening só comparar dentro do mesmo mount/sessão (achado
+ * 14/07/2026: rodadas de sugestão em visitas diferentes nunca se
+ * comparavam entre si).
+ */
+export const SUGESTAO_HISTORY_KEY = "metodo-op-sugestao-history-v1";
+
 // ── Prefixos para caches de sessão ────────────────────────────────────────────
 /** Prefixo de imagens geradas pelo MOP em sessão. Formato: `${PREFIX}:${userId}:${key}` */
 export const SESSION_IMG_PREFIX = "metodo-op-img-v1";
