@@ -780,6 +780,14 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
     : "";
   const ancoragemBlock = segment === "MARCA" ? ancoragemAtividadeMarca : ancoragemAtividade;
 
+  // Definido aqui (antes de contextoFormaBlock/elementoConcretoBlock) porque os
+  // dois blocos abaixo agora ramificam por audiência — achado de auditoria
+  // 14/07/2026: audience só entrava no audienceDirective (proibição de
+  // vocabulário) e no juiz (contextoOk), nunca no bloco que de fato instrui a
+  // IA a imaginar a cena — por isso B2C e B2B convergiam pro mesmo esqueleto
+  // de frase, só trocando substantivo.
+  const isB2C = audience === "B2C";
+
   // contextoFormaBlock — ajustado em 07/2026 (teste A/B Variante C, validado
   // por Opus e Fable como juízes independentes): a regra anterior mandava
   // SEMPRE preferir resultado/efeito sobre cenário/momento ("cenário é
@@ -795,7 +803,7 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
   // no-na/para/à) SEM listá-los como menu — listar as 6 formas recriaria o
   // "molde forçado" da fórmula PRODUTO+CONECTOR+RECORTE já testada e
   // rejeitada (scripts/ab-sugestao/variantB.ts).
-  const contextoFormaBlock = `O CONTEXTO REAL DE USO pode ser um resultado/efeito, um momento/ocasião, uma finalidade ou uma característica — NENHUMA forma é preferida sobre outra. O único requisito é QUEM VIVE essa situação: precisa ser o CLIENTE/COMPRADOR/USUÁRIO de "${concreteItem}" (ele se imagina usando, recebendo, escolhendo, precisando) — nunca uma etapa de bastidor de quem VENDE (estoque, armazenamento, preparo, organização interna, escolha de insumos), exceto quando essa etapa É a própria rotina de trabalho do cliente comprador (ex.: em B2B, "o fechamento dos pedidos" é rotina de quem compra o ERP, não bastidor de quem vende). Os conectores (e, com, em, no/na, para, à) não escolhem o assunto — eles só aproximam o produto de uma situação real vivida pelo cliente. TESTE: o cliente consegue imaginar essa situação acontecendo de verdade com ele? Bons exemplos: "Café em manhãs frias", "Vacinas para filhotes", "ERP no fechamento dos pedidos". Maus exemplos (bastidor de quem vende, não do cliente): "Café na escolha dos grãos", "Vacinas no armazenamento", "ERP na organização interna". VARIE A CONSTRUÇÃO: alterne entre essas formas e entre locução sem verbo ou frase com sujeito e predicado (ver SINTAXE — NÚCLEO DA FRASE), conforme o que soar mais natural para este item; repetir sempre a mesma estrutura entre sugestões é o que faz a Sugestão soar montada por fórmula. PROIBIDO colar um adjetivo ou particípio de recheio na última palavra só para o fecho "parecer" mais específico (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "sustos inesperados", "internações longas") quando essa palavra não muda nem especifica o efeito central — TESTE: apague a última palavra; se a frase continua dizendo exatamente a mesma coisa, ela é recheio e deve ser cortada ou trocada por um efeito que dependa dela para fazer sentido.`;
+  const contextoFormaBlock = `O CONTEXTO REAL DE USO pode ser um resultado/efeito, um momento/ocasião, uma finalidade ou uma característica — NENHUMA forma é preferida sobre outra. O único requisito é QUEM VIVE essa situação: precisa ser o CLIENTE/COMPRADOR/USUÁRIO de "${concreteItem}" (ele se imagina usando, recebendo, escolhendo, precisando) — nunca uma etapa de bastidor de quem VENDE (estoque, armazenamento, preparo, organização interna, escolha de insumos)${isB2C ? "" : `, exceto quando essa etapa É a própria rotina de trabalho do cliente comprador — em B2B, "o fechamento dos pedidos" é rotina de quem compra o ERP, não bastidor de quem vende`}. Os conectores (e, com, em, no/na, para, à) não escolhem o assunto — eles só aproximam o produto de uma situação real vivida pelo cliente. TESTE: o cliente consegue imaginar essa situação acontecendo de verdade com ele? Bons exemplos: "Café em manhãs frias", "Vacinas para filhotes", "ERP no fechamento dos pedidos". Maus exemplos (bastidor de quem vende, não do cliente): "Café na escolha dos grãos", "Vacinas no armazenamento", "ERP na organização interna". VARIE A CONSTRUÇÃO: alterne entre essas formas e entre locução sem verbo ou frase com sujeito e predicado (ver SINTAXE — NÚCLEO DA FRASE), conforme o que soar mais natural para este item; repetir sempre a mesma estrutura entre sugestões é o que faz a Sugestão soar montada por fórmula. PROIBIDO colar um adjetivo ou particípio de recheio na última palavra só para o fecho "parecer" mais específico (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "sustos inesperados", "internações longas") quando essa palavra não muda nem especifica o efeito central — TESTE: apague a última palavra; se a frase continua dizendo exatamente a mesma coisa, ela é recheio e deve ser cortada ou trocada por um efeito que dependa dela para fazer sentido.`;
 
   // Elemento concreto — substitui a antiga "COBERTURA DA ATIVIDADE"
   // (rodízio mental por grupos da atividade) por um dado real e
@@ -809,7 +817,7 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === "MAR
           : ""
       }
 
-CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
+CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). ${isB2C ? "Essa situação precisa ser vivida pela PESSOA que usa ou consome o item na própria vida, fora do ambiente de trabalho — não pelo dono do negócio, não por um funcionário." : "Essa situação precisa ser vivida por quem COMPRA ou USA o item dentro do próprio negócio — o dono, sócio ou responsável, na rotina DELE como comprador/usuário do item (recebendo, aplicando, decidindo, mantendo) — nunca uma etapa de quem VENDE o item para ele."} A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
 ${contextoFormaBlock}
 DIREÇÃO DE ENTREGA: se a frase envolver entrega, envio ou deslocamento de "${concreteItem}" até alguém (ex.: "entregue", "leva até", "chega em"), o DESTINO é o CLIENTE/USO FINAL (a casa dele, o local onde ele vai usar) — NÃO o endereço da própria empresa/loja/clínica, salvo se "${mainActivity}" disser explicitamente que a entrega é feita até o estabelecimento. Se o destino exato não estiver claro em "${mainActivity}", não mencione local nenhum — descreva pelo RESULTADO/EFEITO direto ("[item] para [resultado]").`
     : "";
@@ -846,8 +854,6 @@ DIREÇÃO DE ENTREGA: se a frase envolver entrega, envio ou deslocamento de "${c
 TESTE DE IDENTIFICAÇÃO DO CLIENTE: a frase final precisa ser algo que o CLIENTE (quem vê o post) diria, perguntaria, sentiria ou viveria. Se a frase descrever um atributo, processo ou metodologia do ponto de vista da empresa/fornecedor — e não uma situação, ganho ou rotina do cliente —, reescreva pelo que o cliente ganha ou pela situação que ele reconhece.
 PROIBIDO (ou variações próximas): "indicada por"/"indicado por", "ajustado conforme", "alinhada com análise", "humanizado"/"humanizada", "pronta(s)/pronto(s) para", "em tempo real", "bem vedada(s)" — são marcas de fala de catálogo ou de metodologia interna do fornecedor, não algo que o cliente diria.`;
   })();
-
-  const isB2C = audience === "B2C";
 
   const voiceProfile = getVoiceProfile(brandVoice);
   const voiceBlock = voiceProfile
