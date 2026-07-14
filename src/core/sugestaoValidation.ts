@@ -123,6 +123,38 @@ export function checkInformalRegister(sugestao: string): string[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Sugestão (PU/MOP) — vocabulário PROIBIDO do público B2C sem backstop
+// (achado 14/07/2026, auditoria Fable+Opus da regressão B2C/B2B: o
+// `audienceDirective` do prompt já lista esse vocabulário como PROIBIDO
+// pra B2C — ver `sugestaoEngine.ts` — mas isso sempre existiu só como
+// instrução de texto, sem checagem de código. Caso real que motivou a
+// checagem: mesmo com a instrução chegando ao prompt da PU (fix de hoje),
+// "Mesa para gestores amplia espaço de trabalho" saiu rotulada B2C
+// mesmo assim — prova de que só-prompt não segura em 100% dos casos.
+// Determinística, sem exceção de contexto: só roda quando `audience` é
+// B2C (ver chamada em `generateSugestao`) — em B2B esses termos são
+// vocabulário legítimo. Mesma lista do `audienceDirective`, exceto
+// "negócio como sujeito" (depende de posição sintática, não dá pra
+// checar com regex simples sem falso positivo) e "empresa cliente"
+// (checada à parte, por ser locução fixa).
+// ─────────────────────────────────────────────────────────────────────────
+
+const B2C_PROIBIDO_VOCAB_RE =
+  /\b(empreendedor(?:a|es|as)?|empres[áa]ri[oa]s?|gestor(?:a|es|as)?|decisor(?:es|as)?|lideran[çc]as?|equipes?|times?)\b/;
+const B2C_PROIBIDO_EMPRESA_CLIENTE_RE = /\bempresa\s+cliente\b/;
+
+export function checkB2CAudienceVocabulary(sugestao: string): string[] {
+  const norm = normalizeForCompare(sugestao);
+  const m = norm.match(B2C_PROIBIDO_VOCAB_RE) || norm.match(B2C_PROIBIDO_EMPRESA_CLIENTE_RE);
+  if (m) {
+    return [
+      `sugestão usa vocabulário PROIBIDO pra público B2C ("${m[0]}") — fala com o empresário/equipe da empresa, não com a pessoa que usa o produto/serviço na própria vida; reescreva sem esse termo`,
+    ];
+  }
+  return [];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Sugestão (PU/MOP) — abertura repetida entre cliques da MESMA sessão
 // (auditoria 2026-06-22): mesmo quando o "elemento concreto" sorteado é
 // outro item da lista, se 2+ produtos/serviços cadastrados pelo usuário

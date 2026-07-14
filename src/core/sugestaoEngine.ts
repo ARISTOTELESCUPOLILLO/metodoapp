@@ -11,6 +11,7 @@ import {
   checkVagueAdjectiveMidSentence,
   checkItemNameDrift,
   checkInformalRegister,
+  checkB2CAudienceVocabulary,
   pruneWeakEnding,
 } from "@/core/textValidation";
 import { OBJETIVO_TOM } from "@/domain/objetivo.config";
@@ -764,12 +765,28 @@ export async function generateSugestao(
   // de um conceito amplo que serviria para qualquer empresa do
   // segmento. A escolha do assunto concreto em si vem de
   // elementoConcretoBlock (lista de produtos/serviços do Kit).
+  // Exemplos fixos de "Contraste esperado" (achado 14/07/2026, auditoria
+  // Fable+Opus): 3 ramos hardcoded ("consultoria de marketing", "peças e
+  // lubrificantes", "ferramentas e máquinas") sempre presentes, iguais pra
+  // qualquer audiência. Quando o ramo real da empresa coincide com um deles
+  // (ex.: Barbosa Lubrificantes ≈ "peças e lubrificantes"), o vocabulário do
+  // exemplo ("filtro", "mangueira") vaza pro resultado mesmo sem estar no
+  // catálogo real — caso real: "Filtros para motores agrícolas" na Barbosa,
+  // que não vende filtro (só Óleos, Correias, Mangueiras, Ferramentas, EPI).
+  // Só entra quando NÃO há elemento concreto: nesse caso o `elementoConcretoBlock`
+  // já ancora a cena num item real e específico, tornando os exemplos
+  // genéricos redundantes e só arriscados; sem elemento concreto (atividade
+  // curta ou decomposição vazia), eles continuam ensinando o TIPO de
+  // especificidade esperado sem alternativa melhor disponível.
+  const contrasteExemplosBlock = concreteItem
+    ? ""
+    : `\nContraste esperado — exemplos de FORMATO de OUTROS RAMOS (não copie o vocabulário ou os produtos destes exemplos; servem só para mostrar o tipo de especificidade esperado — a sua sugestão deve usar vocabulário de "${mainActivity}", não destes exemplos): em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (exemplo do ramo consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (exemplo do ramo peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (exemplo do ramo ferramentas e máquinas).`;
+
   const ancoragemAtividade = mainActivity.trim()
     ? `FONTE PRINCIPAL DO ASSUNTO — ATIVIDADE DA EMPRESA:
 A ATIVIDADE descrita acima ("${mainActivity}") é a PRINCIPAL fonte para entender o que essa empresa faz, vende, resolve ou oferece — é dali que a sugestão deve nascer. O NOME DA EMPRESA serve apenas para IDENTIFICAÇÃO: não use o nome como pista de assunto, a menos que o que ele sugere também esteja descrito na ATIVIDADE.
 
-CENA CONCRETA: a sugestão deve partir de uma situação real e reconhecível desse ramo — um produto, peça, ferramenta, canal, procedimento ou momento específico do dia a dia — e NÃO de um conceito amplo que serviria para qualquer empresa do segmento ${segment} (ex.: "atendimento gera confiança", "escolha certa evita problemas", "empresa próxima vira referência").
-Contraste esperado — exemplos de FORMATO de OUTROS RAMOS (não copie o vocabulário ou os produtos destes exemplos; servem só para mostrar o tipo de especificidade esperado — a sua sugestão deve usar vocabulário de "${mainActivity}", não destes exemplos): em vez de conceitos amplos como esses, prefira algo do tipo: "Instagram sem gerar oportunidades" ou "WhatsApp sem resposta reduz conversões" (exemplo do ramo consultoria de marketing); "filtro correto protege o equipamento" ou "mangueira inadequada gera vazamentos" (exemplo do ramo peças e lubrificantes); "correia desgastada pode parar a operação" ou "ferramenta certa evita retrabalho" (exemplo do ramo ferramentas e máquinas).
+CENA CONCRETA: a sugestão deve partir de uma situação real e reconhecível desse ramo — um produto, peça, ferramenta, canal, procedimento ou momento específico do dia a dia — e NÃO de um conceito amplo que serviria para qualquer empresa do segmento ${segment} (ex.: "atendimento gera confiança", "escolha certa evita problemas", "empresa próxima vira referência").${contrasteExemplosBlock}
 TESTE: se a frase serviria igual para qualquer outra empresa do segmento ${segment}, reescreva ancorando em algo reconhecível do ramo "${mainActivity}". Para atividades mais abstratas (sem produto físico), a cena concreta pode ser um canal, um momento de decisão ou uma interação típica desse ramo — não force um elemento artificial.${concreteItem ? "" : " Essa cena é o CONTEXTO REAL DE USO da sugestão — a lente interna de geração (mais abaixo) escolhe apenas o ÂNGULO dentro dela, sem criar uma situação nova."}`
     : "";
   const ancoragemAtividadeMarca = mainActivity.trim()
@@ -809,6 +826,17 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
   // Elemento concreto — substitui a antiga "COBERTURA DA ATIVIDADE"
   // (rodízio mental por grupos da atividade) por um dado real e
   // explícito (concreteItem definido acima, antes da ancoragem).
+  // CONTEXTO REAL DE USO (ramo B2C) ajustado em 14/07/2026 (achado
+  // Fable+Opus, caso Pronto Vet): a versão anterior bania "fora do
+  // ambiente de trabalho" — mas pra negócios onde o uso legítimo do
+  // cliente acontece DENTRO do próprio estabelecimento (clínica
+  // veterinária, salão, oficina com espera), essa regra de LOCAL forçava
+  // uma cena artificial (ex.: "na saída do consultório", um gancho de
+  // balcão) só pra evitar citar o próprio ambiente. O requisito real
+  // nunca foi o local — é o PAPEL de quem vive a cena (cliente, não dono/
+  // funcionário) — por isso a regra passou a permitir uso no
+  // estabelecimento quando a cena é a experiência de quem recebe o
+  // produto/serviço.
   const elementoConcretoBlock = concreteItem
     ? `ELEMENTO CONCRETO DESTA SUGESTÃO: "${concreteItem}"
 Este é um produto, serviço, categoria ou especialidade real ${segment === "MARCA" ? "da marca" : "da empresa"} — ele é o NÚCLEO da sugestão (ver SINTAXE — NÚCLEO DA FRASE): a frase nomeia ou se refere diretamente a ele, e a cena, situação, dúvida, escolha, característica ou momento se constroem em torno dele.${companyName.trim() ? ` O nome "${companyName}" NÃO é fonte de assunto — serve só para identificação.` : ""}${
@@ -818,7 +846,7 @@ Este é um produto, serviço, categoria ou especialidade real ${segment === "MAR
           : ""
       }
 
-CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). ${isB2C ? "Essa situação precisa ser vivida pela PESSOA que usa ou consome o item na própria vida, fora do ambiente de trabalho — não pelo dono do negócio, não por um funcionário." : "Essa situação precisa ser vivida por quem COMPRA ou USA o item dentro do próprio negócio — o dono, sócio ou responsável, na rotina DELE como comprador/usuário do item (recebendo, aplicando, decidindo, mantendo) — nunca uma etapa de quem VENDE o item para ele."} A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
+CONTEXTO REAL DE USO: antes de aplicar a lente abaixo, identifique para que "${concreteItem}" é usado, em que situação aparece, que problema resolve ou que rotina envolve dentro de "${mainActivity}" especificamente — e não em outro contexto onde o mesmo tipo de item também existiria (uso doméstico, social, outro ramo). ${isB2C ? "Essa situação precisa ser vivida pela PESSOA que usa ou consome o item na própria vida, como CLIENTE — não pelo dono do negócio, não por um funcionário. Quando o uso acontece dentro do próprio estabelecimento (ex.: uma consulta, um banho e tosa, um corte de cabelo, uma prova de roupa), isso CONTA como uso real do cliente — o requisito não é o LOCAL, é o PAPEL: a cena precisa ser a experiência de quem recebe o produto/serviço, nunca o bastidor de quem o vende ou presta (estoque, agenda interna, preparo)." : "Essa situação precisa ser vivida por quem COMPRA ou USA o item dentro do próprio negócio — o dono, sócio ou responsável, na rotina DELE como comprador/usuário do item (recebendo, aplicando, decidindo, mantendo) — nunca uma etapa de quem VENDE o item para ele."} A frase nasce desse contexto real; a lente só escolhe o ÂNGULO dentro dele, sem criar uma situação nova.
 ${contextoFormaBlock}
 DIREÇÃO DE ENTREGA: se a frase envolver entrega, envio ou deslocamento de "${concreteItem}" até alguém (ex.: "entregue", "leva até", "chega em"), o DESTINO é o CLIENTE/USO FINAL (a casa dele, o local onde ele vai usar) — NÃO o endereço da própria empresa/loja/clínica, salvo se "${mainActivity}" disser explicitamente que a entrega é feita até o estabelecimento. Se o destino exato não estiver claro em "${mainActivity}", não mencione local nenhum — descreva pelo RESULTADO/EFEITO direto ("[item] para [resultado]").`
     : "";
@@ -1157,6 +1185,10 @@ Retorne JSON EXATAMENTE assim:
     m = m.concat(checkVagueAdjectiveMidSentence(text));
     m = m.concat(checkItemNameDrift(text, concreteItem));
     m = m.concat(checkInformalRegister(text));
+    // Backstop determinístico do vocabulário PROIBIDO de audienceDirective
+    // pra B2C (achado 14/07/2026, auditoria Fable+Opus): só roda em B2C —
+    // em B2B esses termos (gestor, equipe...) são vocabulário legítimo.
+    if (isB2C) m = m.concat(checkB2CAudienceVocabulary(text));
     return m;
   };
 

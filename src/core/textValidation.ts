@@ -60,6 +60,7 @@ export {
   checkVagueAdjectiveMidSentence,
   checkItemNameDrift,
   checkInformalRegister,
+  checkB2CAudienceVocabulary,
   pruneWeakEnding,
 } from "./sugestaoValidation";
 
