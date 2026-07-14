@@ -3,6 +3,7 @@
 // mudança de comportamento.
 import { useState } from "react";
 import type { Segment } from "../../../types";
+import { correctPortuguese } from "../../../services/textCorrection";
 
 export const MIN_PRODUCTS = 3;
 const MAX_PRODUCTS = 10;
@@ -15,13 +16,41 @@ interface Props {
 
 export function ProductsSection({ products, segment, onProductsChange }: Props) {
   const [newProductItem, setNewProductItem] = useState("");
+  const [checking, setChecking] = useState(false);
+  // Correção gramatical é opt-in: o corretor genérico pode marcar nome de marca
+  // ou termo técnico como "erro", então mostramos a sugestão e só aplicamos se o
+  // usuário confirmar — nunca autocorrigimos em silêncio.
+  const [suggestion, setSuggestion] = useState<{ original: string; corrected: string } | null>(
+    null,
+  );
 
-  const addProductItem = () => {
-    const v = newProductItem.trim();
-    if (!v || products.length >= MAX_PRODUCTS) return;
-    onProductsChange([...products, v]);
+  const commitProductItem = (text: string) => {
+    if (!text || products.length >= MAX_PRODUCTS) return;
+    onProductsChange([...products, text]);
     setNewProductItem("");
+    setSuggestion(null);
   };
+
+  const addProductItem = async () => {
+    const v = newProductItem.trim();
+    if (!v || products.length >= MAX_PRODUCTS || checking) return;
+    setChecking(true);
+    try {
+      const corrected = (await correctPortuguese(v)).trim();
+      if (corrected && corrected !== v) {
+        setSuggestion({ original: v, corrected });
+      } else {
+        commitProductItem(v);
+      }
+    } catch {
+      // Fail-open: falha do corretor (rede, rate limit, saldo) nunca bloqueia o
+      // cadastro — adiciona o item como digitado.
+      commitProductItem(v);
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const removeProductItem = (idx: number) => onProductsChange(products.filter((_, i) => i !== idx));
   const productsValid = products.length >= MIN_PRODUCTS;
 
@@ -91,20 +120,25 @@ export function ProductsSection({ products, segment, onProductsChange }: Props) 
           <input
             type="text"
             value={newProductItem}
-            onChange={(e) => setNewProductItem(e.target.value)}
+            onChange={(e) => {
+              setNewProductItem(e.target.value);
+              // Editar o texto invalida uma sugestão pendente (era de outro texto).
+              if (suggestion) setSuggestion(null);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
                 addProductItem();
               }
             }}
+            disabled={checking}
             placeholder="Ex.: Ração para filhotes (evite genérico, tipo só 'Ração')"
             style={{ flex: "1 1 160px", minWidth: 0 }}
           />
           <button
             type="button"
             onClick={addProductItem}
-            disabled={!newProductItem.trim()}
+            disabled={!newProductItem.trim() || checking}
             style={{
               background: "#0f172a",
               color: "#fff",
@@ -114,13 +148,80 @@ export function ProductsSection({ products, segment, onProductsChange }: Props) 
               minHeight: 40,
               fontWeight: 700,
               fontSize: 14,
-              cursor: newProductItem.trim() ? "pointer" : "not-allowed",
-              opacity: newProductItem.trim() ? 1 : 0.5,
+              cursor: newProductItem.trim() && !checking ? "pointer" : "not-allowed",
+              opacity: newProductItem.trim() && !checking ? 1 : 0.5,
               flexShrink: 0,
             }}
           >
-            + Adicionar
+            {checking ? "Verificando..." : "+ Adicionar"}
           </button>
+        </div>
+      )}
+      {suggestion && (
+        <div
+          style={{
+            background: "#f1f5f9",
+            border: "1px solid #e2e8f0",
+            borderRadius: 10,
+            padding: 12,
+            display: "grid",
+            gap: 8,
+          }}
+        >
+          <span style={{ fontSize: 12, color: "#64748b" }}>
+            Sugestão de correção:{" "}
+            <strong style={{ color: "#0f172a" }}>{suggestion.corrected}</strong>
+          </span>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => commitProductItem(suggestion.corrected)}
+              style={{
+                background: "#0f172a",
+                color: "#fff",
+                border: "none",
+                borderRadius: 10,
+                padding: "0 14px",
+                minHeight: 36,
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              Usar sugestão
+            </button>
+            <button
+              type="button"
+              onClick={() => commitProductItem(suggestion.original)}
+              style={{
+                background: "#fff",
+                color: "#0f172a",
+                border: "1px solid #cbd5e1",
+                borderRadius: 10,
+                padding: "0 14px",
+                minHeight: 36,
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              Manter como digitei
+            </button>
+            <button
+              type="button"
+              onClick={() => setSuggestion(null)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#64748b",
+                fontSize: 13,
+                cursor: "pointer",
+                padding: "0 4px",
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
       {!productsValid && (
