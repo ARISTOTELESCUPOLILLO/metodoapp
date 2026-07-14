@@ -90,7 +90,28 @@ function direcaoBlock(
   return `DIREÇÃO LIVRE — SENSAÇÃO DESEJADA: ${sensacao}.\nOrientação: ${orientacao}\n\n${exclusion}${archetypeHint}${derivacaoBlock}\n\nA IA tem liberdade de direção de arte dentro do objetivo informado. Varie ATIVAMENTE entre abordagens visuais possíveis: pode ser luz natural suave OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU mista. Escolha uma direção com personalidade própria e vá fundo nela. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
 }
 
-function logoZoneDescription(position: LogoPosition | undefined): {
+// Núcleo direcional de posição de TÍTULO por mood no PU — espelha as identidades
+// do MOP (services/api/moodVisualInstructions.ts). Retorna undefined para os moods
+// de posição LIVRE (INSTANTE/FRAGMENTO) e para SILÊNCIO (tratado à parte nos call
+// sites, com a reserva da metade direita + LOGO_RESPIRO_CLAUSE). Só CLAREZA/IMPACTO/
+// DESVIO recebem âncora fixa. É tipografia (overlay 2D), não composição da cena (3D).
+function moodTitleAnchor(mood: MoodCode | undefined): string | undefined {
+  switch (mood) {
+    case "OP-01": // CLAREZA
+      return "alinhado à ESQUERDA do quadro (alinhamento ortogonal), com respiro nas bordas";
+    case "OP-02": // IMPACTO
+      return "CENTRALIZADO horizontalmente no TERÇO SUPERIOR do quadro — centralize apenas o TEXTO; a cena e o sujeito permanecem assimétricos abaixo ou ao redor, ocupando os vazios escuros (não centralize a composição inteira)";
+    case "OP-05": // DESVIO
+      return "DESLOCADO e assimétrico, fora do centro, quebrando o equilíbrio esperado — sem cobrir o sujeito principal, que permanece nítido";
+    default: // OP-03 INSTANTE, OP-04 FRAGMENTO, indefinido → posição livre
+      return undefined;
+  }
+}
+
+function logoZoneDescription(
+  position: LogoPosition | undefined,
+  opts?: { compactTopBand?: boolean },
+): {
   reservaTopo: string;
   regraFinal: string;
 } {
@@ -107,8 +128,12 @@ function logoZoneDescription(position: LogoPosition | undefined): {
   // não basta: título/texto de apoio que ocupem essa linha colidem com a logo no
   // centro. Por isso a zona aqui é uma FAIXA HORIZONTAL COMPLETA — nenhuma linha
   // de texto pode cruzá-la, mesmo parcialmente.
-  const faixa =
-    "A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ~14% da altura. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.";
+  // IMPACTO (OP-02) + tópicos + logo topo-central: comprime a faixa (~14% → ~10%)
+  // para sobrar espaço vertical ao título dominante do terço superior. Guardado a
+  // top-center para não encolher a faixa da base em bottom-center.
+  const bandCompact = !!opts?.compactTopBand && pos === "top-center";
+  const alturaFaixa = bandCompact ? "~10%" : "~14%";
+  const faixa = `A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ${alturaFaixa} da altura. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.`;
   if (pos === "top-center") {
     return {
       reservaTopo: `Ponto da logo: TOPO CENTRAL. ${faixa}`,
@@ -286,7 +311,12 @@ export function buildPostUnicoPrompt(params: {
   // variação e o modelo de imagem resolvia o conflito gerando um retrato de
   // rosto em primeiro plano (ver variationHasFaceNotDominant).
   const faceNotDominant = variationHasFaceNotDominant(variationBlock);
-  const zona = logoZoneDescription(kit.logoPosition);
+  // Declarado aqui (antes era logo abaixo) porque logoZoneDescription agora
+  // precisa dele para comprimir a faixa da logo no caso IMPACTO+tópicos+topo.
+  const hasTopicos = !!(copy?.topicos && copy.topicos.length);
+  const zona = logoZoneDescription(kit.logoPosition, {
+    compactTopBand: data.mood === "OP-02" && hasTopicos,
+  });
 
   const typographyBlock = buildTypographyBlock(kit.fontPair);
   const typographyShort = buildTypographyShortRule(kit.fontPair);
@@ -294,7 +324,6 @@ export function buildPostUnicoPrompt(params: {
     ? `\n${buildScriptAccentBlock(kit.secondaryFont, copy?.titulo || data.keyInfo || "")}\n`
     : "";
 
-  const hasTopicos = !!(copy?.topicos && copy.topicos.length);
   const hasCopy = copy && (copy.titulo || copy.texto || hasTopicos);
   // Tamanho do título escalona pela contagem de palavras — um piso fixo de
   // "35-45%" pra qualquer título (3 palavras ou 6) fazia títulos mais longos
@@ -327,7 +356,9 @@ export function buildPostUnicoPrompt(params: {
   const topicosPosicaoClause = isSilencioMood
     ? "POSIÇÃO do bloco título+tópicos: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (encostado no topo, centralizado verticalmente, ou na base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente." +
       LOGO_RESPIRO_CLAUSE
-    : "POSIÇÃO do bloco título+tópicos é livre — explore ancoragens (topo, lateral, base).";
+    : moodTitleAnchor(data.mood)
+      ? `POSIÇÃO do bloco título+tópicos: ${moodTitleAnchor(data.mood)}.`
+      : "POSIÇÃO do bloco título+tópicos é livre — explore ancoragens (topo, lateral, base).";
   const topicosBlock =
     hasTopicos && copy?.topicos
       ? `TÍTULO E TÓPICOS OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
@@ -346,7 +377,9 @@ ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da 
   const textoPosicaoClause = isSilencioMood
     ? "POSIÇÃO do bloco: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (topo, meio, base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente." +
       LOGO_RESPIRO_CLAUSE
-    : "POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).";
+    : moodTitleAnchor(data.mood)
+      ? `POSIÇÃO do bloco: ${moodTitleAnchor(data.mood)}.`
+      : "POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).";
   const copyBlock = hasTopicos
     ? topicosBlock
     : hasCopy
@@ -367,7 +400,9 @@ ${
   isSilencioMood
     ? "O bloco de texto deve ancorar na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. A liberdade é de ESTILO e de variação vertical dentro dessa metade (topo, meio, base), nunca de posição horizontal: nunca à esquerda nem centralizado. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto." +
       LOGO_RESPIRO_CLAUSE
-    : 'A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda". A liberdade é de POSIÇÃO e ESTILO, não de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.'
+    : moodTitleAnchor(data.mood)
+      ? `O bloco de texto deve ancorar ${moodTitleAnchor(data.mood)}. A liberdade é de ESTILO tipográfico e de variação dentro dessa ancoragem, não de posição horizontal. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.`
+      : 'A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda". A liberdade é de POSIÇÃO e ESTILO, não de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.'
 }
 Hierarquia tipográfica obrigatória:
 • TÍTULO: DOMINANTE — renderizado em tamanho grande e impactante (pense em outdoor), ocupando entre 30% e 45% da altura útil do canvas (nunca mais que isso). A âncora é o CORPO da fonte permanecer grande e legível, não preencher área a qualquer custo: se o título tiver 4 ou mais palavras, quebre em 2-3 linhas para manter o corpo grande; se tiver 1-3 palavras, mantenha em 1-2 linhas — não infle artificialmente o corpo nem espalhe poucas palavras em muitas linhas só para preencher altura. Título curto ocupa naturalmente menos área, e isso é correto.

@@ -10,7 +10,7 @@ import { useImageKit } from "../../contexts/ImageKitContext";
 import { useAppProfile } from "../../contexts/ProfileContext";
 import { usePlanSlotsCtx } from "../../contexts/PlanSlotsContext";
 import { usePostUnicoState } from "../../contexts/PostUnicoStateContext";
-import { CopySection } from "./postUnicoForm/CopySection";
+import { CopySection, TOPICOS_OBJETIVOS } from "./postUnicoForm/CopySection";
 import { PostUnicoKeyInfoSection } from "./postUnicoForm/PostUnicoKeyInfoSection";
 import { DirecaoVisualSection } from "./postUnicoForm/DirecaoVisualSection";
 import { IdeiasSheet } from "./contentForm/IdeiasSheet";
@@ -242,6 +242,19 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   }
 
   const isNenhum = data.objetivo === "nenhum";
+  // Formato "tópicos com ícone" ativo — bloqueia o mood FRAGMENTO (OP-04) na
+  // Direção visual (a colagem fragmentada do FRAGMENTO conflita com a grade de
+  // 3 tópicos+ícone).
+  const topicosAtivo =
+    TOPICOS_OBJETIVOS.has(data.objetivo) && (data.formatoTexto ?? "corrido") === "topicos";
+  // FRAGMENTO (OP-04) é bloqueado quando o formato "tópicos com ícone" está
+  // ativo — se o mood já estava em OP-04 quando o formato virou tópicos, reseta.
+  useEffect(() => {
+    if (topicosAtivo && data.mood === "OP-04") {
+      update("mood", undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- update é estável por render; só reage à ativação de tópicos + mood atual
+  }, [topicosAtivo, data.mood]);
   const semGeracoes =
     typeof geracoesRestantes === "number" && geracoesRestantes <= 0 && (geracoesTotal || 0) > 0;
   const semImagens =
@@ -441,6 +454,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         isNenhum={isNenhum}
         setDirecao={setDirecao}
         onMoodChange={(code) => update("mood", code)}
+        fragmentoBloqueado={topicosAtivo}
       />
 
       <PostUnicoComposicaoVisual

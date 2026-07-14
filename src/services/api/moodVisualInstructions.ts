@@ -31,7 +31,7 @@ export const moodVisualInstructions: Record<MoodCode, string> = {
   "OP-04": `ESTILO VISUAL (raiz: Cubista):
 - Post-colagem com 3 a 5 blocos visuais distintos
 - Cada bloco carrega uma informação ou ângulo diferente
-- Título ancorado num bloco de cor, alinhado à ESQUERDA — NUNCA centralizado solto, NUNCA no canto inferior direito
+- Título sobreposto à composição em posição LIVRE e informal, sem ficar preso a um bloco de cor — pode ancorar sobre a grade modular, tratado como tipografia livre e não como um dos blocos de conteúdo; mantenha-o legível e fora do canto inferior direito (reservado para a assinatura)
 - Texto de apoio posicionado no centro ou terço superior, longe do canto inferior direito
 - Grid visível ou implícito organizando os fragmentos
 - Paleta controlada unificando os blocos

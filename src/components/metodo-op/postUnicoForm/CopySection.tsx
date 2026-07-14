@@ -17,7 +17,7 @@ const COPY_REGEN_MAX = 2;
 
 // Objetivos que aceitam o formato alternativo "tópicos com ícone" — mesmo
 // conjunto documentado em PostUnicoFormatoTexto (types.ts).
-const TOPICOS_OBJETIVOS = new Set<PostUnicoObjetivo>([
+export const TOPICOS_OBJETIVOS = new Set<PostUnicoObjetivo>([
   "institucional",
   "oportunidade",
   "promocao",

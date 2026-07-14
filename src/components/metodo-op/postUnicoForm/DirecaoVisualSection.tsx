@@ -28,9 +28,17 @@ interface Props {
   isNenhum: boolean;
   setDirecao: (dir: PostUnicoDirecao) => void;
   onMoodChange: (mood: MoodCode) => void;
+  fragmentoBloqueado?: boolean;
 }
 
-export function DirecaoVisualSection({ direcao, mood, isNenhum, setDirecao, onMoodChange }: Props) {
+export function DirecaoVisualSection({
+  direcao,
+  mood,
+  isNenhum,
+  setDirecao,
+  onMoodChange,
+  fragmentoBloqueado,
+}: Props) {
   return (
     <div className="formatBox">
       <strong>Direção visual</strong>
@@ -69,30 +77,38 @@ export function DirecaoVisualSection({ direcao, mood, isNenhum, setDirecao, onMo
             </p>
           )}
           <div className="sequenceGrid" style={{ marginTop: 12 }}>
-            {MOODS.map((m) => (
-              <button
-                key={m.code}
-                type="button"
-                className={`sequenceCard${mood === m.code ? " active" : ""}`}
-                onClick={() => onMoodChange(m.code)}
-              >
-                <span
-                  className="sequenceNum"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                    justifyContent: "center",
+            {MOODS.map((m) => {
+              const bloqueado = m.code === "OP-04" && !!fragmentoBloqueado;
+              return (
+                <button
+                  key={m.code}
+                  type="button"
+                  disabled={bloqueado}
+                  title={bloqueado ? "Indisponível no formato Tópicos com ícone" : undefined}
+                  className={`sequenceCard${mood === m.code ? " active" : ""}`}
+                  onClick={() => {
+                    if (!bloqueado) onMoodChange(m.code);
                   }}
+                  style={bloqueado ? { opacity: 0.4, cursor: "not-allowed" } : undefined}
                 >
-                  {m.label}
-                  {(() => {
-                    const Icon = MOOD_ICONS[m.code];
-                    return Icon ? <Icon size={12} strokeWidth={1.8} /> : null;
-                  })()}
-                </span>
-              </button>
-            ))}
+                  <span
+                    className="sequenceNum"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      justifyContent: "center",
+                    }}
+                  >
+                    {m.label}
+                    {(() => {
+                      const Icon = MOOD_ICONS[m.code];
+                      return Icon ? <Icon size={12} strokeWidth={1.8} /> : null;
+                    })()}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </>
       )}
