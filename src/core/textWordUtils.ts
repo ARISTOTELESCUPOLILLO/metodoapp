@@ -7,6 +7,28 @@
 const TRUNCATE_TRAILING_WORDS =
   "e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|na|no|nas|nos|num|numa|nuns|numas|a|o|as|os|ao|aos|à|às|por|pelo|pela|pelos|pelas|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo";
 
+// Tokeniza um título tratando "R$ 120,00" como 1 palavra só (não 2) — usado
+// pelo modo de título ajustado (PU objetivo=promocao com oferta concreta,
+// ver core/ofertaDetection.ts), onde o teto sobe de 6 para 9 palavras e um
+// valor monetário não pode "custar" 2 palavras da contagem.
+export function tituloWordTokens(titulo: string): string[] {
+  const words = titulo.trim().split(/\s+/).filter(Boolean);
+  const tokens: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    if (/^R\$$/i.test(words[i]) && i + 1 < words.length) {
+      tokens.push(`${words[i]} ${words[i + 1]}`);
+      i++;
+      continue;
+    }
+    tokens.push(words[i]);
+  }
+  return tokens;
+}
+
+export function countTituloWords(titulo: string): number {
+  return tituloWordTokens(titulo).length;
+}
+
 export function truncateWords(s: string, max: number): string {
   const text = String(s ?? "");
   const words = text.trim().split(/\s+/).filter(Boolean);

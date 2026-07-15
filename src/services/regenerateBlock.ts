@@ -1,4 +1,5 @@
 import { applyDeterministicFallback } from "../core/textValidation";
+import { isOfertaConcreta } from "../core/ofertaDetection";
 import { getAuthHeaders } from "./authHeaders";
 
 export type RegenKind = "titulo" | "texto" | "legenda";
@@ -9,6 +10,10 @@ export interface RegenContext {
   mainActivity?: string;
   keyInfo?: string;
   formato?: string;
+  // Objetivo do PU — só usado pelo servidor para decidir o modo de título
+  // AJUSTADO (objetivo=promocao + oferta concreta na informação-chave, ver
+  // core/ofertaDetection.ts). Ausente/irrelevante para MOP.
+  objetivo?: string;
   tituloAtual?: string;
   textoAtual?: string;
   legendaAtual?: string;
@@ -67,7 +72,13 @@ export async function regenerateBlockClean(ctx: RegenContext): Promise<string> {
       console.warn(
         `[regenerateBlockClean] ${ctx.kind} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`,
       );
-      return applyDeterministicFallback(value, ctx.kind);
+      const ajustePromocional =
+        ctx.kind === "titulo" && ctx.objetivo === "promocao" && isOfertaConcreta(ctx.keyInfo || "");
+      return applyDeterministicFallback(
+        value,
+        ctx.kind,
+        ajustePromocional ? { maxWords: 9 } : undefined,
+      );
     }
   }
   return value;

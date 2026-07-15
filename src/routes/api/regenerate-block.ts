@@ -23,10 +23,17 @@ import {
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { COST_USD } from "@/lib/costs";
+import { isOfertaConcreta } from "@/core/ofertaDetection";
 
 type Kind = "titulo" | "texto" | "legenda";
 
-function getRule(kind: Kind, formato: string): { label: string; rule: string; max: number } {
+const TITULO_MAX_WORDS_AJUSTADO = 9;
+
+function getRule(
+  kind: Kind,
+  formato: string,
+  ajustePromocional: boolean,
+): { label: string; rule: string; max: number } {
   const f = (formato || "").toLowerCase();
   const isCarrossel = f.startsWith("carrossel");
   const isReels = f.startsWith("reels");
@@ -45,6 +52,21 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: não repita a a
   }
 
   if (kind === "titulo") {
+    // Modo AJUSTADO (PU objetivo=promocao + oferta concreta na
+    // informação-chave, ver core/ofertaDetection.ts): teto sobe pra 9
+    // palavras (preço = 1 token) e a regra vira "manchete fiel ao que foi
+    // escrito" em vez de "ângulo/virada obrigatória" — mesma decisão de
+    // generate-pu-copy.ts, travada com o Ari 15/07/2026 (ver memória
+    // project-mic-equalizacao-keyinfo-2026-07-15).
+    if (ajustePromocional) {
+      const max = TITULO_MAX_WORDS_AJUSTADO;
+      return {
+        label: "título",
+        rule: `MÁXIMO ${max} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de responder). Esta é uma peça de OFERTA/PROMOÇÃO concreta: NÃO busque um ângulo diferente da informação-chave — reescreva como manchete publicitária, com clareza e fôlego de anúncio, preservando item, preço, prazo e condição de pagamento citados literalmente (troque por sinônimo só se estritamente necessário para caber no limite). PROIBIDO inventar valor, prazo, parcelamento ou condição que não estejam na informação-chave. Sem emoji, sem hashtag, sem aspas. Sem ponto final — EXCETO se for pergunta (raro nesse caso).
+A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: mude a ordem, a pontuação ou a construção da frase — mantendo os mesmos dados concretos (item, preço, prazo, condição).`,
+        max,
+      };
+    }
     const max = TITULO_MAX_WORDS; // mesma fonte de verdade de validateTitulo — evita gerar título que o D1 reprova de cara
     return {
       label: "título",
@@ -121,7 +143,10 @@ export const Route = createFileRoute("/api/regenerate-block")({
           const textoAtual = String(body.textoAtual || "").slice(0, 800);
           const legendaAtual = String(body.legendaAtual || "").slice(0, 1500);
           const formato = String(body.formato || "").slice(0, 60);
+          const objetivo = String(body.objetivo || "").slice(0, 30);
           const motivoReprovacao = String(body.motivoReprovacao || "").slice(0, 300);
+          const ajustePromocional =
+            kind === "titulo" && objetivo === "promocao" && isOfertaConcreta(keyInfo);
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
@@ -131,7 +156,7 @@ export const Route = createFileRoute("/api/regenerate-block")({
             );
           }
 
-          const rule = getRule(kind, formato);
+          const rule = getRule(kind, formato, ajustePromocional);
 
           // Quando o usuário regenera APENAS o texto ou a legenda, o título
           // mostrado em "VERSÃO ATUAL" é o título FINAL escolhido/editado por
@@ -215,7 +240,12 @@ Retorne JSON EXATAMENTE assim:
           // sinalizam para a orquestração de regeneração no cliente (E3).
           const motivos =
             kind === "titulo"
-              ? validateTitulo(value)
+              ? validateTitulo(
+                  value,
+                  ajustePromocional
+                    ? { maxWords: TITULO_MAX_WORDS_AJUSTADO, skipUrgencyCheck: true }
+                    : undefined,
+                )
               : kind === "texto"
                 ? validateTexto(value)
                 : validateLegenda(value);

@@ -19,6 +19,10 @@ interface JudgeContext {
   mainActivity?: string;
   keyInfo?: string;
   segment?: Segment;
+  // Objetivo do PU — repassado para autoRegenerateFlaggedPostUnico manter o
+  // modo de título AJUSTADO (ver RegenContext.objetivo) quando o D2 flagar
+  // algo e disparar uma regeneração. Ausente/irrelevante para MOP.
+  objetivo?: string;
 }
 
 interface JudgeItem {

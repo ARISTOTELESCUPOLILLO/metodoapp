@@ -9,6 +9,7 @@
 import { MethodOpResult, ValidationFlag } from "../types";
 import { regenerateBlockWithFlags } from "./regenerateBlock";
 import { applyDeterministicFallback } from "../core/textValidation";
+import { isOfertaConcreta } from "../core/ofertaDetection";
 
 type FieldKind = "titulo" | "texto" | "legenda";
 
@@ -16,6 +17,9 @@ interface AutoRegenContext {
   companyName?: string;
   mainActivity?: string;
   keyInfo?: string;
+  // Objetivo do PU — ver RegenContext.objetivo em regenerateBlock.ts.
+  // Ausente/irrelevante para MOP (autoRegenerateFlaggedFields).
+  objetivo?: string;
 }
 
 const MAX_ATTEMPTS = 2;
@@ -117,6 +121,7 @@ export async function autoRegenerateFlaggedPostUnico(
             companyName: ctx.companyName,
             mainActivity: ctx.mainActivity,
             keyInfo: ctx.keyInfo,
+            objetivo: ctx.objetivo,
             formato: "PostUnico",
             tituloAtual: field === "titulo" ? value : titulo,
             textoAtual: field === "texto" ? value : texto,
@@ -130,7 +135,15 @@ export async function autoRegenerateFlaggedPostUnico(
           }
           motivoReprovacao = regen.flags.join("; ");
           if (attempt === MAX_ATTEMPTS) {
-            const fallback = applyDeterministicFallback(value, field);
+            const ajustePromocional =
+              field === "titulo" &&
+              ctx.objetivo === "promocao" &&
+              isOfertaConcreta(ctx.keyInfo || "");
+            const fallback = applyDeterministicFallback(
+              value,
+              field,
+              ajustePromocional ? { maxWords: 9 } : undefined,
+            );
             if (field === "titulo") titulo = fallback;
             else texto = fallback;
             console.warn(

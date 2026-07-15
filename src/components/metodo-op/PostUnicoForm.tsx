@@ -420,6 +420,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         fetchSuggestion={fetchSuggestion}
         keyInfoCorrection={keyInfoCorrection}
         dictation={dictation}
+        objetivo={data.objetivo}
         onOpenIdeias={() => setShowIdeiasPanel(true)}
         products={kit.products || []}
         selectedProducts={selectedProducts}

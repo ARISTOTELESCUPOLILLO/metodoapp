@@ -19,6 +19,7 @@ import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
 import type { FaixaEtaria } from "@/types";
 import { OBJETIVO_TOM } from "@/domain/objetivo.config";
+import { isOfertaConcreta } from "@/core/ofertaDetection";
 import {
   TOPICO_MAX_WORDS,
   TOPICOS_COUNT,
@@ -76,6 +77,15 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
           // o título já escolhido (ver regenTopicos em usePostUnicoCopy.ts) —
           // mesmo princípio do bloco TÍTULO FIXO já usado em regenerate-block.ts.
           const tituloFixo = wantsTopicos ? String(body.tituloFixo || "").trim() || null : null;
+          // Modo AJUSTADO (PU objetivo=promocao + informação-chave descreve
+          // oferta/promoção concreta): título vira manchete de até 9 palavras
+          // fiel ao que foi escrito, sem buscar ângulo diferente — decisão
+          // travada com o Ari 15/07/2026 (ver memória
+          // project-mic-equalizacao-keyinfo-2026-07-15). tituloFixo já pula a
+          // geração de título (regen só de tópicos), então não entra aqui.
+          const ajustePromocional =
+            !tituloFixo && objetivo === "promocao" && isOfertaConcreta(keyInfo);
+          const TITULO_MAX_WORDS_AJUSTADO = 9;
 
           if (!keyInfo.trim()) {
             return Response.json({ error: "keyInfo obrigatório" }, { status: 400 });
@@ -190,6 +200,13 @@ Proibido mencionar literalmente o nome da voz no texto final.
     { "texto": "texto do tópico 2, mesmas regras", "icone": "..." },
     { "texto": "texto do tópico 3, mesmas regras", "icone": "..." }
   ]`;
+          // Descrição do "titulo" no schema JSON — ramifica no modo AJUSTADO
+          // (ver ajustePromocional acima): teto de 9 palavras (preço = 1
+          // token) em vez de 6, sem exigência de sílaba (manchete de oferta
+          // prioriza os dados concretos, não compactação silábica).
+          const tituloSchemaDesc = ajustePromocional
+            ? `título de OFERTA/PROMOÇÃO, reescrevendo a informação-chave como manchete publicitária clara, no MÁXIMO ${TITULO_MAX_WORDS_AJUSTADO} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de retornar), em português brasileiro`
+            : `título curto, no MÁXIMO 6 palavras, cada palavra com no máximo 4 sílabas (exceto o substantivo concreto central da informação-chave, se houver — limitado a 5 sílabas, nunca mais), impactante, em português brasileiro`;
           const schemaBlock = tituloFixo
             ? `Retorne JSON com EXATAMENTE este formato (o TÍTULO já está definido e fixo — NÃO o gere de novo, retorne APENAS os tópicos):
 {
@@ -198,17 +215,19 @@ ${topicosSchemaLines}
             : wantsTopicos
               ? `Retorne JSON com EXATAMENTE este formato:
 {
-  "titulo": "título curto, no MÁXIMO 6 palavras, cada palavra com no máximo 4 sílabas (exceto o substantivo concreto central da informação-chave, se houver — limitado a 5 sílabas, nunca mais), impactante, em português brasileiro",
+  "titulo": "${tituloSchemaDesc}",
 ${topicosSchemaLines}
 }`
               : `Retorne JSON com EXATAMENTE este formato:
 {
-  "titulo": "título curto, no MÁXIMO 6 palavras, cada palavra com no máximo 4 sílabas (exceto o substantivo concreto central da informação-chave, se houver — limitado a 5 sílabas, nunca mais), impactante, em português brasileiro",
+  "titulo": "${tituloSchemaDesc}",
   "texto": "texto de apoio curto, no MÁXIMO 14 palavras (CONTE antes de retornar), complementa o título sem repetir, em português brasileiro"
 }`;
           const tituloRulesBlock = tituloFixo
             ? `- O TÍTULO já está definido e FIXO: "${tituloFixo}" — NÃO o reescreva, NÃO gere um título novo, gere APENAS os tópicos.`
-            : `- "titulo" no máximo 6 palavras, cada palavra com no máximo 4 sílabas (ex.: "resultado" 4 sílabas ✓, "comunicação" 5 sílabas ✗ — use "contato", "presença"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 5 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 6+ sílabas devem ser trocados por sinônimo mais curto. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓`;
+            : ajustePromocional
+              ? `- "titulo" no máximo ${TITULO_MAX_WORDS_AJUSTADO} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de retornar), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir.`
+              : `- "titulo" no máximo 6 palavras, cada palavra com no máximo 4 sílabas (ex.: "resultado" 4 sílabas ✓, "comunicação" 5 sílabas ✗ — use "contato", "presença"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 5 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 6+ sílabas devem ser trocados por sinônimo mais curto. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓`;
           const textoOuTopicosRulesBlock = wantsTopicos
             ? `- Cada "texto" dos ${TOPICOS_COUNT} tópicos: no máximo ${TOPICO_MAX_WORDS} palavras (CONTE antes de retornar), frase direta e concreta — um ângulo, benefício ou ponto DIFERENTE em cada tópico, sem repetir a mesma ideia com palavras trocadas entre eles, sem hashtag, sem emoji, sem numeração própria (não escreva "1.", "Tópico 1" etc.).
 - Cada "icone" DEVE ser EXATAMENTE um destes termos, copiado literalmente (não traduza, não invente outro): ${topicIconList}. Escolha o mais coerente com o conteúdo de cada tópico; varie entre os ${TOPICOS_COUNT} quando fizer sentido, sem repetir o mesmo ícone à toa.`
@@ -232,7 +251,10 @@ ${TECNICISMO_RULE}
 ${
   tituloFixo
     ? ""
-    : `- O título deve soar natural — evite sintaxe artificial, metáfora confusa ou promessa exagerada.
+    : ajustePromocional
+      ? `- Este título é uma OFERTA/PROMOÇÃO concreta: NÃO busque um ângulo diferente do que a informação-chave já diz. Reescreva-a como manchete publicitária — com clareza, pontuação e fôlego de anúncio — preservando literalmente item, preço, prazo e condição de pagamento citados (troque por sinônimo direto só se for estritamente necessário para caber no limite de palavras). PROIBIDO inventar valor, prazo, parcelamento ou condição que não estejam na informação-chave. PROIBIDO omitir o preço/condição citados só para "soar mais criativo".
+- Título e texto/tópicos reforçam a MESMA oferta — não abra um ângulo paralelo que fuja da promoção anunciada no título.`
+      : `- O título deve soar natural — evite sintaxe artificial, metáfora confusa ou promessa exagerada.
 - SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL: qualquer classe gramatical pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, pronome ou locução (ex.: "Cuidar bem...", "Quem decide...", "Pronto para..."). O título NÃO precisa repetir a estrutura "[item] + [complemento]" da informação-chave — pode assumir outra construção, desde que a ANCORAGEM CONCRETA — PRESERVAÇÃO DO ELEMENTO abaixo seja respeitada. PROIBIDA construção passiva sem agente (ex.: "Entrega sem atraso garantida"). ATENÇÃO — sujeito abstrato + predicado abstrato vira frase vazia: se o sujeito escolhido for abstrato ou um verbo no infinitivo substantivado (ex.: "Responder...", "Cuidar..."), o predicado NÃO pode ser "faz/traz/gera/vira/se torna/transforma [outro abstrato]" (ex.: "Responder faz diferença de verdade" ✗ — nada para fotografar). Troque por ação, agente ou elemento concreto observável (ex.: "Responder rápido resolve o dia do cliente" ✓). PROIBIDO TAMBÉM terminar o título em fechamento abstrato/intercambiável entre qualquer empresa — "decisão certa", "escolha certa", "caminho certo", "confiança", "tranquilidade", "paz de espírito", "rotina resolvida" (e variações). Troque por um ganho de negócio ESPECÍFICO da atividade descrita (ex.: em vez de "...a escolha certa", "...mais clientes voltando").
 - ANCORAGEM CONCRETA — ANTI-SÍMBOLO: o título deve poder virar uma FOTO de pessoa(s) real(is) em ação observável (decidir, atender, revisar, fechar, apresentar, entregar). Teste: "dá para fotografar isso sem recorrer a objeto-metáfora ou cenário espacial genérico?" Se a única imagem possível for engrenagem, peão, seta, xadrez, escada, degraus, horizonte vazio, mosquetão ou aperto de mãos → título conceitual demais; reescreva com verbo de ação + agente. Prefira "Time alinhado fecha mais" a "Equipe forte traz bom ganho". PADRÕES PROIBIDOS DE ESTRUTURA: "[abstrato] traz/gera/faz/vira/se torna/transforma [resultado]", "[abstrato] é [abstrato]". Metáforas de jornada ("longe", "avançar", "crescer", "subir") e adjetivos de qualidade ("rápido", "forte", "claro", "sólido") SÃO PERMITIDOS nos títulos — a cena os traduzirá pelo ofício real, não por cenário físico nem propriedade literal.
 - ANCORAGEM CONCRETA — PRESERVAÇÃO DO ELEMENTO: se a informação-chave contém um produto, serviço, canal, objeto, procedimento ou situação concreta nomeada, o título OU o texto deve preservar pelo menos um desses elementos — literal ou sinônimo direto —, salvo se isso prejudicar gravemente a naturalidade da frase.
@@ -244,7 +266,7 @@ ${
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ""}
 ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ""}
-${tituloFixo ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}`;
+${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}`;
 
           const result = await fetchOpenAIChat(apiKey, {
             model: "gpt-4.1",
@@ -294,6 +316,9 @@ ${tituloFixo ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não pa
           let texto = "";
           let topicos: { texto: string; icone: string }[] | undefined;
           let flags: { campo: string; motivo: string }[];
+          const titleOpts = ajustePromocional
+            ? { maxWords: TITULO_MAX_WORDS_AJUSTADO, skipUrgencyCheck: true }
+            : undefined;
 
           if (wantsTopicos) {
             const rawTopicos = Array.isArray(parsed.topicos) ? parsed.topicos : [];
@@ -315,7 +340,7 @@ ${tituloFixo ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não pa
             );
             flags = tituloFixo
               ? topicoFlags
-              : [...validatePieceFields("copy", { titulo }, keyInfo), ...topicoFlags];
+              : [...validatePieceFields("copy", { titulo }, keyInfo, titleOpts), ...topicoFlags];
           } else {
             texto = correctPortugueseSpelling(truncateWords(String(parsed.texto || ""), 14));
             if (!texto)
@@ -324,7 +349,7 @@ ${tituloFixo ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não pa
             if (!/[.!?]$/.test(texto)) texto = texto + ".";
             // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas
             // sinalizam para a orquestração de regeneração no cliente (E3).
-            flags = validatePieceFields("copy", { titulo, texto }, keyInfo);
+            flags = validatePieceFields("copy", { titulo, texto }, keyInfo, titleOpts);
           }
 
           if (!isAdminUser) {

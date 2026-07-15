@@ -75,7 +75,7 @@ export function usePostUnicoCopy({
       let result = await autoRegenerateFlaggedPostUnico(
         { titulo: generated.titulo, texto: generated.texto },
         generated.flags,
-        { companyName, mainActivity, keyInfo: data.keyInfo },
+        { companyName, mainActivity, keyInfo: data.keyInfo, objetivo: data.objetivo },
       );
       try {
         const updated = await judgeAndRegeneratePostUnico(result, {
@@ -83,6 +83,7 @@ export function usePostUnicoCopy({
           mainActivity,
           keyInfo: data.keyInfo,
           segment: kit.segment,
+          objetivo: data.objetivo,
         });
         if (updated) result = updated;
       } catch {
@@ -152,6 +153,7 @@ export function usePostUnicoCopy({
         companyName: data.companyName || kit.companyName,
         mainActivity: data.mainActivity || kit.mainActivity || "",
         keyInfo: data.keyInfo,
+        objetivo: data.objetivo,
         formato: "PostUnico",
         tituloAtual: copy.titulo,
         textoAtual: copy.texto,

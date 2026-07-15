@@ -11,6 +11,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
 import { useVoiceDictation } from "@/hooks/useVoiceDictation";
 import ProductsChecklist from "../ProductsChecklist";
+import type { PostUnicoObjetivo } from "../../../types";
 
 const SUGGEST_MAX = 3;
 
@@ -45,6 +46,7 @@ interface Props {
   fetchSuggestion: () => void;
   keyInfoCorrection: ReturnType<typeof useTextCorrection>;
   dictation: ReturnType<typeof useVoiceDictation>;
+  objetivo: PostUnicoObjetivo;
   onOpenIdeias: () => void;
   products: string[];
   selectedProducts: string[];
@@ -72,6 +74,7 @@ export function PostUnicoKeyInfoSection({
   fetchSuggestion,
   keyInfoCorrection,
   dictation,
+  objetivo,
   onOpenIdeias,
   products,
   selectedProducts,
@@ -293,6 +296,14 @@ export function PostUnicoKeyInfoSection({
           color: "#0f172a",
         }}
       />
+      {objetivo === "promocao" && (
+        <p style={{ margin: "6px 0 0", fontSize: 11, color: "#64748b", lineHeight: 1.4 }}>
+          Em Promoção, se a informação-chave descrever uma oferta concreta (preço, parcelamento,
+          desconto), o título foca direto nela — sem buscar outro ângulo. Ex.: "Promoção Dia das
+          Mães com capacete a partir de R$ 120,00" (informação-chave) gera o título "Promoção Dia
+          das Mães, capacete a partir de R$ 120,00" e o texto/tópicos acompanham a mesma oferta.
+        </p>
+      )}
       {keyInfoCorrection.msg && (
         <p style={{ margin: "4px 0 0", fontSize: 11, color: "#16a34a" }}>{keyInfoCorrection.msg}</p>
       )}

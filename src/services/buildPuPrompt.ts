@@ -41,6 +41,7 @@ import {
   AVATAR_ROLE_BY_SEGMENT_OBJETIVO,
 } from "./objetivoConfig";
 import { pickTonalidade } from "../core/colorRotation";
+import { countTituloWords } from "../core/textWordUtils";
 
 function direcaoBlock(
   direcao: PostUnicoDirecao,
@@ -329,11 +330,17 @@ export function buildPostUnicoPrompt(params: {
   // "35-45%" pra qualquer título (3 palavras ou 6) fazia títulos mais longos
   // (2-3 linhas) ficarem gigantes e dominarem a peça, brigando com produto/
   // personagem. Mesmo critério já usado no branch sem copy fixo (abaixo).
-  const tituloWordCount = hasCopy ? copy.titulo.trim().split(/\s+/).filter(Boolean).length : 0;
+  // countTituloWords (não split cru) trata "R$ 120,00" como 1 palavra —
+  // mesma contagem usada pela validação de texto (textValidation.ts) — para
+  // não subestimar o degrau de escala do modo AJUSTADO (PU Promoção com
+  // oferta concreta, até 9 "palavras" nesse sentido, ver ofertaDetection.ts).
+  const tituloWordCount = hasCopy ? countTituloWords(copy.titulo) : 0;
   const tituloSizeClause =
-    tituloWordCount >= 5
-      ? "ocupando entre 28% e 38% da altura útil do canvas — quebre em 2-3 linhas para manter o corpo grande e legível sem dominar o quadro"
-      : "ocupando entre 35% e 45% da altura útil do canvas, em 1-2 linhas";
+    tituloWordCount >= 7
+      ? "ocupando entre 20% e 28% da altura útil do canvas — quebre em 3 linhas curtas para manter legibilidade sem dominar o quadro; se o título incluir um valor monetário, mantenha-o numa linha própria para garantir leitura clara do número"
+      : tituloWordCount >= 5
+        ? "ocupando entre 28% e 38% da altura útil do canvas — quebre em 2-3 linhas para manter o corpo grande e legível sem dominar o quadro"
+        : "ocupando entre 35% e 45% da altura útil do canvas, em 1-2 linhas";
   // Formato alternativo "tópicos com ícone" (só institucional/oportunidade/
   // promocao/venda — ver PostUnicoFormatoTexto): substitui o TEXTO DE APOIO por 3
   // blocos ícone+texto curtos, abaixo do título. O ícone já foi escolhido no

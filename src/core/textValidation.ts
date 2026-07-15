@@ -8,12 +8,20 @@ import type { ValidationFlag } from "../types";
 export type { ValidationFlag };
 
 // ── Utilitários base ──────────────────────────────────────────────────────────
-import { checkDanglingEnding, checkPunctuation, QUESTION_STARTERS } from "./textWordUtils";
+import {
+  checkDanglingEnding,
+  checkPunctuation,
+  QUESTION_STARTERS,
+  tituloWordTokens,
+  countTituloWords,
+} from "./textWordUtils";
 export {
   truncateWords,
   correctPortugueseSpelling,
   checkDanglingEnding,
   checkPunctuation,
+  tituloWordTokens,
+  countTituloWords,
 } from "./textWordUtils";
 
 // ── Legenda ───────────────────────────────────────────────────────────────────
@@ -75,13 +83,23 @@ export {
 export const TITULO_MIN_WORDS = 4;
 export const TITULO_MAX_WORDS = 6;
 
-export function validateTitulo(titulo: string): string[] {
+// `opts` cobre o modo de título AJUSTADO (PU objetivo=promocao com oferta
+// concreta, ver core/ofertaDetection.ts): teto de palavras maior (9, preço
+// como 1 token via countTituloWords) e sem a checagem de urgência temporal —
+// nesse modo, o prazo/condição vem literalmente da informação-chave escrita
+// pelo usuário, não é clichê de copy. Default preserva o comportamento de
+// sempre (6 palavras, urgência barrada) para MOP e PU fora desse caminho.
+export function validateTitulo(
+  titulo: string,
+  opts?: { maxWords?: number; skipUrgencyCheck?: boolean },
+): string[] {
   const motivos: string[] = [];
-  const words = titulo.trim().split(/\s+/).filter(Boolean).length;
+  const maxWords = opts?.maxWords ?? TITULO_MAX_WORDS;
+  const words = countTituloWords(titulo);
   if (words < TITULO_MIN_WORDS)
     motivos.push(`título com ${words} palavra(s) — abaixo do mínimo de ${TITULO_MIN_WORDS}`);
-  if (words > TITULO_MAX_WORDS)
-    motivos.push(`título com ${words} palavras — acima do máximo de ${TITULO_MAX_WORDS}`);
+  if (words > maxWords)
+    motivos.push(`título com ${words} palavras — acima do máximo de ${maxWords}`);
   const dangling = checkDanglingEnding(titulo);
   if (dangling) motivos.push(dangling);
   const punct = checkPunctuation(titulo, "titulo");
@@ -90,8 +108,10 @@ export function validateTitulo(titulo: string): string[] {
   if (abstractPredicate) motivos.push(abstractPredicate);
   const abstractClosing = checkAbstractClosing(titulo);
   if (abstractClosing) motivos.push(abstractClosing);
-  const urgency = checkTituloUrgency(titulo);
-  if (urgency) motivos.push(urgency);
+  if (!opts?.skipUrgencyCheck) {
+    const urgency = checkTituloUrgency(titulo);
+    if (urgency) motivos.push(urgency);
+  }
   return motivos;
 }
 
@@ -173,6 +193,7 @@ export function validateSugestao(sugestao: string, maxWords = 7): string[] {
 export function applyDeterministicFallback(
   value: string,
   kind: "titulo" | "texto" | "legenda",
+  opts?: { maxWords?: number },
 ): string {
   let text = value.trim();
   if (!text) return text;
@@ -193,10 +214,11 @@ export function applyDeterministicFallback(
   // sobrar acima do máximo após as tentativas de regeneração, corta em
   // fronteira de palavra completa antes da limpeza de terminação pendurada.
   if (kind === "titulo") {
-    const words = text.split(/\s+/).filter(Boolean);
-    if (words.length > TITULO_MAX_WORDS) {
-      text = words
-        .slice(0, TITULO_MAX_WORDS)
+    const maxWords = opts?.maxWords ?? TITULO_MAX_WORDS;
+    const tokens = tituloWordTokens(text);
+    if (tokens.length > maxWords) {
+      text = tokens
+        .slice(0, maxWords)
         .join(" ")
         .replace(/[,;:\-–—]+$/, "")
         .trim();
@@ -241,11 +263,12 @@ export function validatePieceFields(
   prefix: string,
   fields: { titulo?: string; texto?: string; legenda?: string },
   keyInfo?: string,
+  titleOpts?: { maxWords?: number; skipUrgencyCheck?: boolean },
 ): ValidationFlag[] {
   const flags: ValidationFlag[] = [];
 
   if (fields.titulo) {
-    for (const motivo of validateTitulo(fields.titulo))
+    for (const motivo of validateTitulo(fields.titulo, titleOpts))
       flags.push({ campo: `${prefix}.titulo`, motivo });
   }
   if (fields.texto) {
