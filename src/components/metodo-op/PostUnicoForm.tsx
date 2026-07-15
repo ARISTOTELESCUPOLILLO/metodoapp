@@ -78,7 +78,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
     if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || "";
     const current = (data.keyInfo || "").trim();
     update("keyInfo", current ? `${current} ${text}` : text);
-  });
+  }, selectedProducts);
   const { user } = useAuth();
   const impersonation = useImpersonation();
   const effectiveUserId = impersonation?.userId ?? user?.id;

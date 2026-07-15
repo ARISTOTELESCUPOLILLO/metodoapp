@@ -78,7 +78,7 @@ export function KeyInfoSection({
     if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || "";
     const current = (data.keyInfo || "").trim();
     update("keyInfo", current ? `${current} ${text}` : text);
-  });
+  }, selectedProducts);
 
   const hasKeyInfo = !!(data.keyInfo || "").trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;

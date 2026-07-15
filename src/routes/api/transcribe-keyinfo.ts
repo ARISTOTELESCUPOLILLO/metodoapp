@@ -85,6 +85,16 @@ export const Route = createFileRoute("/api/transcribe-keyinfo")({
 
           const body = await request.json();
           const audioDataUrl = String(body?.audioDataUrl || "");
+          // Catálogo de produtos/serviços marcados no Kit de Marca — candidatos
+          // para a equalização de nome (ver bloco de limpeza abaixo). Vem do
+          // cliente porque não é dado sensível nem afeta billing, só contexto de
+          // prompt; degradação graciosa se vier vazio (sem equalização).
+          const selectedProducts = Array.isArray(body?.selectedProducts)
+            ? body.selectedProducts
+                .map((p: unknown) => String(p || "").trim())
+                .filter(Boolean)
+                .slice(0, 30)
+            : [];
           if (!audioDataUrl.startsWith("data:audio/")) {
             return Response.json(
               { error: "Nenhum áudio recebido. Grave de novo." },
@@ -147,6 +157,22 @@ export const Route = createFileRoute("/api/transcribe-keyinfo")({
             );
           }
 
+          // Equalização de nome de produto/serviço (achado real 15/07/2026):
+          // fala coloquial ("capacete ali com desconto") não bate com o nome
+          // exato cadastrado no Kit de Marca ("Capacete Full Face X200
+          // Preto") — e checkItemNameDrift (sugestaoValidation.ts) e a
+          // geração de imagem por Kit Imagem dependem de correspondência
+          // literal do nome a jusante. Dobrada na MESMA chamada de limpeza
+          // (avaliado com Opus 4.8 antes de decidir) em vez de heurística de
+          // string (paráfrase/apelido falado não é erro de grafia, dá match
+          // fraco) ou de uma 3ª chamada de IA (custo/latência sem ganho).
+          const productsBlock = selectedProducts.length
+            ? `\n\nITENS CADASTRADOS NO KIT DE MARCA (candidatos para equalização de nome — podem não ter nenhuma correspondência no texto):\n${selectedProducts.map((p: string) => `- ${p}`).join("\n")}`
+            : "";
+          const equalizationRules = selectedProducts.length
+            ? `\n\nTAREFA 2 — EQUALIZAÇÃO DE PRODUTO/SERVIÇO: compare o que foi dito com os ITENS CADASTRADOS acima. Se — e SOMENTE se — houver um item que seja INEQUIVOCAMENTE o mesmo que o usuário mencionou (mesmo dito de forma coloquial, abreviada ou por apelido), substitua a menção pelo NOME EXATO E COMPLETO do item cadastrado, encaixado naturalmente na frase. Regras rígidas: (1) na dúvida, NÃO substitua — mantenha as palavras do usuário; (2) se houver mais de um item candidato plausível (ex.: variantes de cor/modelo) e a fala não distinguir qual, NÃO escolha por ele — mantenha o termo genérico dito; (3) NUNCA insira só um pedaço do nome cadastrado, sempre a string completa; (4) NÃO equalize menção a algo que claramente NÃO está na lista (produto genérico, concorrente, item novo); (5) se o texto já contém o nome exato, não mexa.`
+            : "";
+
           // Limpeza: remove vícios de fala e extrai a essência da ideia. Falha
           // não é fatal — devolve o texto cru da transcrição em vez de quebrar
           // o fluxo do usuário.
@@ -155,8 +181,11 @@ export const Route = createFileRoute("/api/transcribe-keyinfo")({
             messages: [
               {
                 role: "system",
-                content:
-                  'Você limpa transcrições de fala em português brasileiro para virar texto escrito. Remova hesitações, vícios de fala ("é", "tipo", "né", "então assim", repetições, autocorreções faladas) e capture apenas a ESSÊNCIA da ideia, em frase natural e bem formada, mantendo o sentido, o vocabulário e os números/valores citados literalmente. NÃO adicione informação nova, NÃO invente contexto, NÃO resuma a ponto de perder um dado concreto (preço, prazo, produto, nome). Se a transcrição já estiver limpa, devolva-a apenas com pontuação normalizada. Responda SEMPRE com JSON válido no formato { "clean": "texto limpo" }.',
+                content: `Você limpa transcrições de fala em português brasileiro para virar texto escrito.
+
+TAREFA 1 — LIMPEZA: remova hesitações, vícios de fala ("é", "tipo", "né", "então assim", repetições, autocorreções faladas) e capture apenas a ESSÊNCIA da ideia, em frase natural e bem formada, mantendo o sentido, o vocabulário e os números/valores citados literalmente. NÃO adicione informação nova, NÃO invente contexto, NÃO resuma a ponto de perder um dado concreto (preço, prazo, produto, nome). Se a transcrição já estiver limpa, devolva-a apenas com pontuação normalizada.${equalizationRules}${productsBlock}
+
+Responda SEMPRE com JSON válido no formato { "clean": "texto limpo" }.`,
               },
               { role: "user", content: raw },
             ],
