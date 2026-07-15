@@ -9,9 +9,20 @@
 // duplicar esse efeito.
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
+import { useVoiceDictation } from "@/hooks/useVoiceDictation";
 import ProductsChecklist from "../ProductsChecklist";
 
 const SUGGEST_MAX = 3;
+
+function mmss(s: number): string {
+  const m = Math.floor(s / 60)
+    .toString()
+    .padStart(2, "0");
+  const ss = Math.floor(s % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${m}:${ss}`;
+}
 
 interface Props {
   keyInfo: string;
@@ -33,6 +44,7 @@ interface Props {
   loading: boolean;
   fetchSuggestion: () => void;
   keyInfoCorrection: ReturnType<typeof useTextCorrection>;
+  dictation: ReturnType<typeof useVoiceDictation>;
   onOpenIdeias: () => void;
   products: string[];
   selectedProducts: string[];
@@ -59,6 +71,7 @@ export function PostUnicoKeyInfoSection({
   loading,
   fetchSuggestion,
   keyInfoCorrection,
+  dictation,
   onOpenIdeias,
   products,
   selectedProducts,
@@ -95,6 +108,69 @@ export function PostUnicoKeyInfoSection({
           >
             💡 Ideias
           </button>
+          <button
+            type="button"
+            onClick={dictation.state === "recording" ? dictation.stop : dictation.start}
+            disabled={
+              dictation.state === "transcribing" ||
+              suggesting ||
+              loading ||
+              keyInfoCorrection.correcting
+            }
+            title={
+              dictation.state === "recording"
+                ? "Parar gravação e transcrever"
+                : "Dite a informação-chave por voz"
+            }
+            style={{
+              background: dictation.state === "recording" ? "#fef2f2" : "none",
+              border: `1px solid ${dictation.state === "recording" ? "#fca5a5" : "#cbd5e1"}`,
+              borderRadius: 8,
+              padding: "2px 8px",
+              fontSize: 11,
+              fontWeight: 600,
+              color: dictation.state === "recording" ? "#b91c1c" : "#0f172a",
+              cursor:
+                dictation.state === "transcribing" ||
+                suggesting ||
+                loading ||
+                keyInfoCorrection.correcting
+                  ? "not-allowed"
+                  : "pointer",
+              opacity:
+                dictation.state === "transcribing" ||
+                suggesting ||
+                loading ||
+                keyInfoCorrection.correcting
+                  ? 0.4
+                  : 1,
+            }}
+          >
+            {dictation.state === "recording"
+              ? `⏹ Parar (${mmss(dictation.elapsed)})`
+              : dictation.state === "transcribing"
+                ? "Transcrevendo…"
+                : "🎙 Ditar"}
+          </button>
+          {dictation.state === "recording" && (
+            <button
+              type="button"
+              onClick={dictation.cancel}
+              title="Cancelar gravação"
+              style={{
+                background: "none",
+                border: "1px solid #cbd5e1",
+                borderRadius: 8,
+                padding: "2px 8px",
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#64748b",
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+          )}
           <button
             type="button"
             onClick={fetchSuggestion}
@@ -224,6 +300,9 @@ export function PostUnicoKeyInfoSection({
         <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>
           {keyInfoCorrection.error}
         </p>
+      )}
+      {dictation.error && (
+        <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{dictation.error}</p>
       )}
       {(suggesting || suggestions.length > 0 || suggestError) && (
         <div

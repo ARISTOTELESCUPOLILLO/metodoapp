@@ -7,6 +7,7 @@ import { ContentFormData, Segment } from "../../../types";
 import { getAuthHeaders } from "../../../services/authHeaders";
 import ProductsChecklist from "../ProductsChecklist";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
+import { useVoiceDictation } from "@/hooks/useVoiceDictation";
 import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 import { useAuth } from "../../../hooks/useAuth";
 import { useImpersonation } from "../../../hooks/useImpersonation";
@@ -22,6 +23,16 @@ const KEYINFO_EXAMPLE: Record<Segment, string> = {
 };
 
 const SUGGEST_MAX = 3;
+
+function mmss(s: number): string {
+  const m = Math.floor(s / 60)
+    .toString()
+    .padStart(2, "0");
+  const ss = Math.floor(s % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${m}:${ss}`;
+}
 
 interface Props {
   data: ContentFormData;
@@ -63,6 +74,11 @@ export function KeyInfoSection({
   const { user } = useAuth();
   const impersonation = useImpersonation();
   const effectiveUserId = impersonation?.userId ?? user?.id;
+  const dictation = useVoiceDictation((text) => {
+    if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || "";
+    const current = (data.keyInfo || "").trim();
+    update("keyInfo", current ? `${current} ${text}` : text);
+  });
 
   const hasKeyInfo = !!(data.keyInfo || "").trim();
   const suggestExhausted = !isAdmin && suggestCount >= SUGGEST_MAX;
@@ -193,6 +209,69 @@ export function KeyInfoSection({
           </button>
           <button
             type="button"
+            onClick={dictation.state === "recording" ? dictation.stop : dictation.start}
+            disabled={
+              dictation.state === "transcribing" ||
+              suggesting ||
+              loading ||
+              keyInfoCorrection.correcting
+            }
+            title={
+              dictation.state === "recording"
+                ? "Parar gravação e transcrever"
+                : "Dite a informação-chave por voz"
+            }
+            style={{
+              background: dictation.state === "recording" ? "#fef2f2" : "none",
+              border: `1px solid ${dictation.state === "recording" ? "#fca5a5" : "#cbd5e1"}`,
+              borderRadius: 8,
+              padding: "2px 8px",
+              fontSize: 11,
+              fontWeight: 600,
+              color: dictation.state === "recording" ? "#b91c1c" : "#0f172a",
+              cursor:
+                dictation.state === "transcribing" ||
+                suggesting ||
+                loading ||
+                keyInfoCorrection.correcting
+                  ? "not-allowed"
+                  : "pointer",
+              opacity:
+                dictation.state === "transcribing" ||
+                suggesting ||
+                loading ||
+                keyInfoCorrection.correcting
+                  ? 0.4
+                  : 1,
+            }}
+          >
+            {dictation.state === "recording"
+              ? `⏹ Parar (${mmss(dictation.elapsed)})`
+              : dictation.state === "transcribing"
+                ? "Transcrevendo…"
+                : "🎙 Ditar"}
+          </button>
+          {dictation.state === "recording" && (
+            <button
+              type="button"
+              onClick={dictation.cancel}
+              title="Cancelar gravação"
+              style={{
+                background: "none",
+                border: "1px solid #cbd5e1",
+                borderRadius: 8,
+                padding: "2px 8px",
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#64748b",
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+          )}
+          <button
+            type="button"
             onClick={fetchSuggestion}
             disabled={suggesting || loading || hasKeyInfo || suggestExhausted}
             title={
@@ -321,6 +400,9 @@ export function KeyInfoSection({
         <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>
           {keyInfoCorrection.error}
         </p>
+      )}
+      {dictation.error && (
+        <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{dictation.error}</p>
       )}
       {(suggesting || suggestions.length > 0 || suggestError) && (
         <div

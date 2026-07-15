@@ -5,6 +5,7 @@ import { usePostUnicoCopy } from "../../hooks/usePostUnicoCopy";
 import { getAuthHeaders } from "../../services/authHeaders";
 import PostUnicoComposicaoVisual from "./PostUnicoComposicaoVisual";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
+import { useVoiceDictation } from "@/hooks/useVoiceDictation";
 import { useBrandKit } from "../../contexts/BrandKitContext";
 import { useImageKit } from "../../contexts/ImageKitContext";
 import { useAppProfile } from "../../contexts/ProfileContext";
@@ -73,6 +74,11 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   const sessionSeedRef = useRef<number>(Math.floor(Math.random() * 1e9));
   const [selectedProducts, setSelectedProducts] = useState<string[]>(() => kit.products || []);
   const keyInfoCorrection = useTextCorrection();
+  const dictation = useVoiceDictation((text) => {
+    if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || "";
+    const current = (data.keyInfo || "").trim();
+    update("keyInfo", current ? `${current} ${text}` : text);
+  });
   const { user } = useAuth();
   const impersonation = useImpersonation();
   const effectiveUserId = impersonation?.userId ?? user?.id;
@@ -413,6 +419,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         loading={loading}
         fetchSuggestion={fetchSuggestion}
         keyInfoCorrection={keyInfoCorrection}
+        dictation={dictation}
         onOpenIdeias={() => setShowIdeiasPanel(true)}
         products={kit.products || []}
         selectedProducts={selectedProducts}

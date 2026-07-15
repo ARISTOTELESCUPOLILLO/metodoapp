@@ -23,6 +23,7 @@ import { Route as AjustesRouteImport } from './routes/ajustes'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTtsVoiceRouteImport } from './routes/api/tts-voice'
+import { Route as ApiTranscribeKeyinfoRouteImport } from './routes/api/transcribe-keyinfo'
 import { Route as ApiSupabasePdfRouteImport } from './routes/api/supabase-pdf'
 import { Route as ApiSuggestKeyinfoRouteImport } from './routes/api/suggest-keyinfo'
 import { Route as ApiRegenerateBlockRouteImport } from './routes/api/regenerate-block'
@@ -118,6 +119,11 @@ const IndexRoute = IndexRouteImport.update({
 const ApiTtsVoiceRoute = ApiTtsVoiceRouteImport.update({
   id: '/api/tts-voice',
   path: '/api/tts-voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTranscribeKeyinfoRoute = ApiTranscribeKeyinfoRouteImport.update({
+  id: '/api/transcribe-keyinfo',
+  path: '/api/transcribe-keyinfo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSupabasePdfRoute = ApiSupabasePdfRouteImport.update({
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
+  '/api/transcribe-keyinfo': typeof ApiTranscribeKeyinfoRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
   '/api/meta/autopost-facebook': typeof ApiMetaAutopostFacebookRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
+  '/api/transcribe-keyinfo': typeof ApiTranscribeKeyinfoRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
   '/api/meta/autopost-facebook': typeof ApiMetaAutopostFacebookRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
+  '/api/transcribe-keyinfo': typeof ApiTranscribeKeyinfoRoute
   '/api/tts-voice': typeof ApiTtsVoiceRoute
   '/api/meta/auth-url': typeof ApiMetaAuthUrlRoute
   '/api/meta/autopost-facebook': typeof ApiMetaAutopostFacebookRoute
@@ -411,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/regenerate-block'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
+    | '/api/transcribe-keyinfo'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
     | '/api/meta/autopost-facebook'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/regenerate-block'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
+    | '/api/transcribe-keyinfo'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
     | '/api/meta/autopost-facebook'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/api/regenerate-block'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
+    | '/api/transcribe-keyinfo'
     | '/api/tts-voice'
     | '/api/meta/auth-url'
     | '/api/meta/autopost-facebook'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   ApiRegenerateBlockRoute: typeof ApiRegenerateBlockRoute
   ApiSuggestKeyinfoRoute: typeof ApiSuggestKeyinfoRoute
   ApiSupabasePdfRoute: typeof ApiSupabasePdfRoute
+  ApiTranscribeKeyinfoRoute: typeof ApiTranscribeKeyinfoRoute
   ApiTtsVoiceRoute: typeof ApiTtsVoiceRoute
   ApiMetaAuthUrlRoute: typeof ApiMetaAuthUrlRoute
   ApiMetaAutopostFacebookRoute: typeof ApiMetaAutopostFacebookRoute
@@ -650,6 +663,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tts-voice'
       fullPath: '/api/tts-voice'
       preLoaderRoute: typeof ApiTtsVoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/transcribe-keyinfo': {
+      id: '/api/transcribe-keyinfo'
+      path: '/api/transcribe-keyinfo'
+      fullPath: '/api/transcribe-keyinfo'
+      preLoaderRoute: typeof ApiTranscribeKeyinfoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/supabase-pdf': {
@@ -866,6 +886,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRegenerateBlockRoute: ApiRegenerateBlockRoute,
   ApiSuggestKeyinfoRoute: ApiSuggestKeyinfoRoute,
   ApiSupabasePdfRoute: ApiSupabasePdfRoute,
+  ApiTranscribeKeyinfoRoute: ApiTranscribeKeyinfoRoute,
   ApiTtsVoiceRoute: ApiTtsVoiceRoute,
   ApiMetaAuthUrlRoute: ApiMetaAuthUrlRoute,
   ApiMetaAutopostFacebookRoute: ApiMetaAutopostFacebookRoute,
