@@ -113,69 +113,6 @@ export function PostUnicoKeyInfoSection({
           </button>
           <button
             type="button"
-            onClick={dictation.state === "recording" ? dictation.stop : dictation.start}
-            disabled={
-              dictation.state === "transcribing" ||
-              suggesting ||
-              loading ||
-              keyInfoCorrection.correcting
-            }
-            title={
-              dictation.state === "recording"
-                ? "Parar gravação e transcrever"
-                : "Dite a informação-chave por voz"
-            }
-            style={{
-              background: dictation.state === "recording" ? "#fef2f2" : "none",
-              border: `1px solid ${dictation.state === "recording" ? "#fca5a5" : "#cbd5e1"}`,
-              borderRadius: 8,
-              padding: "2px 8px",
-              fontSize: 11,
-              fontWeight: 600,
-              color: dictation.state === "recording" ? "#b91c1c" : "#0f172a",
-              cursor:
-                dictation.state === "transcribing" ||
-                suggesting ||
-                loading ||
-                keyInfoCorrection.correcting
-                  ? "not-allowed"
-                  : "pointer",
-              opacity:
-                dictation.state === "transcribing" ||
-                suggesting ||
-                loading ||
-                keyInfoCorrection.correcting
-                  ? 0.4
-                  : 1,
-            }}
-          >
-            {dictation.state === "recording"
-              ? `⏹ Parar (${mmss(dictation.elapsed)})`
-              : dictation.state === "transcribing"
-                ? "Transcrevendo…"
-                : "🎙 Ditar"}
-          </button>
-          {dictation.state === "recording" && (
-            <button
-              type="button"
-              onClick={dictation.cancel}
-              title="Cancelar gravação"
-              style={{
-                background: "none",
-                border: "1px solid #cbd5e1",
-                borderRadius: 8,
-                padding: "2px 8px",
-                fontSize: 11,
-                fontWeight: 600,
-                color: "#64748b",
-                cursor: "pointer",
-              }}
-            >
-              ×
-            </button>
-          )}
-          <button
-            type="button"
             onClick={fetchSuggestion}
             disabled={suggesting || loading || hasKeyInfo || suggestExhausted}
             title={
@@ -277,25 +214,103 @@ export function PostUnicoKeyInfoSection({
         selected={selectedProducts}
         onChange={setSelectedProducts}
       />
-      <textarea
-        value={keyInfo}
-        onChange={(e) => onKeyInfoChange(e.target.value)}
-        placeholder="Ex.: 30% de desconto em todos os tratamentos clareadores até sexta-feira."
-        rows={4}
-        style={{
-          width: "100%",
-          padding: 10,
-          borderRadius: 10,
-          border: `1px solid ${suggestExhausted ? "#fcd34d" : "#e2e8f0"}`,
-          fontFamily: "inherit",
-          fontSize: 14,
-          lineHeight: 1.45,
-          resize: "vertical",
-          minHeight: 84,
-          background: suggestExhausted ? "#fffbeb" : "#fff",
-          color: "#0f172a",
-        }}
-      />
+      <div style={{ position: "relative" }}>
+        <textarea
+          value={keyInfo}
+          onChange={(e) => onKeyInfoChange(e.target.value)}
+          placeholder="Ex.: 30% de desconto em todos os tratamentos clareadores até sexta-feira."
+          rows={4}
+          style={{
+            width: "100%",
+            padding: 10,
+            paddingRight: 84,
+            borderRadius: 10,
+            border: `1px solid ${suggestExhausted ? "#fcd34d" : "#e2e8f0"}`,
+            fontFamily: "inherit",
+            fontSize: 14,
+            lineHeight: 1.45,
+            resize: "vertical",
+            minHeight: 84,
+            background: suggestExhausted ? "#fffbeb" : "#fff",
+            color: "#0f172a",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          {dictation.state === "recording" && (
+            <button
+              type="button"
+              onClick={dictation.cancel}
+              title="Cancelar gravação"
+              style={{
+                background: "#fff",
+                border: "1px solid #cbd5e1",
+                borderRadius: 8,
+                padding: "2px 8px",
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#64748b",
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={dictation.state === "recording" ? dictation.stop : dictation.start}
+            disabled={
+              dictation.state === "transcribing" ||
+              suggesting ||
+              loading ||
+              keyInfoCorrection.correcting
+            }
+            title={
+              dictation.state === "recording"
+                ? "Parar gravação e transcrever"
+                : "Dite a informação-chave por voz"
+            }
+            style={{
+              background: dictation.state === "recording" ? "#fef2f2" : "#fff",
+              border: `1px solid ${dictation.state === "recording" ? "#fca5a5" : "#cbd5e1"}`,
+              borderRadius: 8,
+              padding: "2px 8px",
+              fontSize: 11,
+              fontWeight: 600,
+              color: dictation.state === "recording" ? "#b91c1c" : "#0f172a",
+              boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
+              cursor:
+                dictation.state === "transcribing" ||
+                suggesting ||
+                loading ||
+                keyInfoCorrection.correcting
+                  ? "not-allowed"
+                  : "pointer",
+              opacity:
+                dictation.state === "transcribing" ||
+                suggesting ||
+                loading ||
+                keyInfoCorrection.correcting
+                  ? 0.4
+                  : 1,
+            }}
+          >
+            {dictation.state === "recording"
+              ? `⏹ ${mmss(dictation.elapsed)}`
+              : dictation.state === "transcribing"
+                ? "Transcrevendo…"
+                : "🎙"}
+          </button>
+        </div>
+      </div>
       {objetivo === "promocao" && (
         <p style={{ margin: "6px 0 0", fontSize: 11, color: "#64748b", lineHeight: 1.4 }}>
           Em Promoção, se a informação-chave descrever uma oferta concreta (preço, parcelamento,
