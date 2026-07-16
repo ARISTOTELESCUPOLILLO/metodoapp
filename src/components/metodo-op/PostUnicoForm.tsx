@@ -452,6 +452,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         copyTRegenCount={copyTRegenCount}
         copyXRegenCount={copyXRegenCount}
         objetivo={data.objetivo}
+        keyInfo={data.keyInfo}
         formatoTexto={data.formatoTexto}
         onFormatoTextoChange={(v) => update("formatoTexto", v)}
       />

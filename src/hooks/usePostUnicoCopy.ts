@@ -64,11 +64,38 @@ export function usePostUnicoCopy({
       );
       // Modo "tópicos" usa schema próprio ({titulo, topicos}), incompatível
       // com autoRegenerateFlaggedPostUnico/judgeAndRegeneratePostUnico (feitos
-      // para {titulo, texto}) — v1 deste formato usa só a validação
-      // determinística já aplicada no backend (ver topicoValidation.ts).
+      // para {titulo, texto}) — os tópicos em si usam só a validação
+      // determinística já aplicada no backend (ver topicoValidation.ts). O
+      // título, porém, reaproveita o mesmo regen/fallback de E3/E4 do modo
+      // corrido (achado real 16/07: em Promoção com oferta concreta, sem essa
+      // rede de segurança um título flagado pelo D1 (ex.: perdeu o preço
+      // citado) ia pra tela sem chance de correção).
       if (generated.topicos?.length) {
-        setCopy(generated);
-        setCopyOriginal(generated);
+        let titulo = generated.titulo;
+        const tituloFlagado = generated.flags?.some((f) => f.campo === "copy.titulo");
+        if (tituloFlagado) {
+          try {
+            const regenerado = await regenerateBlockClean({
+              kind: "titulo",
+              companyName,
+              mainActivity,
+              keyInfo: data.keyInfo,
+              objetivo: data.objetivo,
+              formato: "PostUnico",
+              tituloAtual: generated.titulo,
+              motivoReprovacao: generated.flags
+                ?.filter((f) => f.campo === "copy.titulo")
+                .map((f) => f.motivo)
+                .join("; "),
+            });
+            if (regenerado.trim()) titulo = regenerado;
+          } catch {
+            // best-effort — se a regeneração falhar, segue com o título original
+          }
+        }
+        const withRegenTitulo = { ...generated, titulo };
+        setCopy(withRegenTitulo);
+        setCopyOriginal(withRegenTitulo);
         copyKeyInfoRef.current = data.keyInfo;
         return;
       }

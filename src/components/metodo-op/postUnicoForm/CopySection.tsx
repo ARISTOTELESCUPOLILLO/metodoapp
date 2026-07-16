@@ -5,9 +5,16 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { PostUnicoDirecao, PostUnicoFormatoTexto, PostUnicoObjetivo } from "../../../types";
 import type { PostUnicoCopy } from "../../../services/postUnico";
-import { truncateWords } from "@/core/textValidation";
+import { truncateWords, TITULO_MAX_WORDS } from "@/core/textValidation";
 import { TOPICO_MAX_WORDS } from "@/core/topicoValidation";
+import { countTituloWords } from "@/core/textWordUtils";
+import { isOfertaConcreta } from "@/core/ofertaDetection";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
+
+// Mesmo teto usado em generate-pu-copy.ts/regenerate-block.ts quando
+// objetivo=promocao com oferta concreta detectada no keyInfo — o contador
+// da UI precisa refletir o mesmo limite que o motor de geração usou.
+const TITULO_MAX_WORDS_AJUSTADO = 9;
 
 function wordCount(s: string): number {
   return s.trim().split(/\s+/).filter(Boolean).length;
@@ -49,6 +56,7 @@ interface Props {
   copyTRegenCount: number;
   copyXRegenCount: number;
   objetivo: PostUnicoObjetivo;
+  keyInfo: string;
   formatoTexto?: PostUnicoFormatoTexto;
   onFormatoTextoChange: (v: PostUnicoFormatoTexto) => void;
 }
@@ -78,12 +86,19 @@ export function CopySection({
   copyTRegenCount,
   copyXRegenCount,
   objetivo,
+  keyInfo,
   formatoTexto,
   onFormatoTextoChange,
 }: Props) {
   const wantsTopicos = TOPICOS_OBJETIVOS.has(objetivo);
   const copyTCorrection = useTextCorrection();
   const copyXCorrection = useTextCorrection();
+  // Mesma heurística usada em generate-pu-copy.ts/regenerate-block.ts: título
+  // ajustado (até 9 palavras) só em Promoção com oferta concreta no keyInfo.
+  const tituloMaxWords =
+    objetivo === "promocao" && isOfertaConcreta(keyInfo || "")
+      ? TITULO_MAX_WORDS_AJUSTADO
+      : TITULO_MAX_WORDS;
 
   return (
     <div
@@ -223,10 +238,10 @@ export function CopySection({
               <span
                 style={{
                   fontSize: 10,
-                  color: wordCount(copy.titulo) >= 6 ? "#f59e0b" : "#94a3b8",
+                  color: countTituloWords(copy.titulo) >= tituloMaxWords ? "#f59e0b" : "#94a3b8",
                 }}
               >
-                {wordCount(copy.titulo)}/6 palavras
+                {countTituloWords(copy.titulo)}/{tituloMaxWords} palavras
               </span>
             </div>
             <input
@@ -234,15 +249,17 @@ export function CopySection({
               value={copy.titulo}
               onChange={(e) => setCopy((c) => (c ? { ...c, titulo: e.target.value } : c))}
               onBlur={(e) =>
-                setCopy((c) => (c ? { ...c, titulo: truncateWords(e.target.value, 6) } : c))
+                setCopy((c) =>
+                  c ? { ...c, titulo: truncateWords(e.target.value, tituloMaxWords) } : c,
+                )
               }
               style={{
                 width: "100%",
                 fontSize: 16,
                 fontWeight: 800,
                 color: "#0f172a",
-                border: `1px solid ${wordCount(copy.titulo) >= 6 ? "#fcd34d" : "#e2e8f0"}`,
-                background: wordCount(copy.titulo) >= 6 ? "#fffbeb" : "#fff",
+                border: `1px solid ${countTituloWords(copy.titulo) >= tituloMaxWords ? "#fcd34d" : "#e2e8f0"}`,
+                background: countTituloWords(copy.titulo) >= tituloMaxWords ? "#fffbeb" : "#fff",
                 borderRadius: 6,
                 padding: "6px 8px",
                 boxSizing: "border-box",

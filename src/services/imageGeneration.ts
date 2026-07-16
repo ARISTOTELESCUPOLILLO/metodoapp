@@ -65,6 +65,112 @@ function friendlyError(status: number, raw: string, fallback: string): string {
   return fallback || snippet || `Erro ${status}`;
 }
 
+// Achado real 2026-07-16: um gpt-image-2/edit rodou ~71s na fila do fal.ai e só
+// falhou no fetch do resultado final (500 "downstream_service_error" — instabilidade
+// transitória da OpenAI, não rejeição de moderação: falha rápida de moderação não
+// gastaria 71s de execução). A fila também pode marcar o job direto como
+// FAILED/ERROR pelo mesmo tipo de instabilidade. Nos dois casos, rebuscar a mesma
+// responseUrl ou re-consultar o mesmo requestId só devolve o erro já gravado —
+// só resubmeter a geração do zero (novo START) tem chance de dar certo. Ver
+// memória project-generate-image-downstream-error-fix-2026-07-16.
+class DownstreamGenerationError extends Error {}
+
+async function pollAndFetchResult(opts: {
+  requestId: string;
+  modelPath?: string;
+  statusUrl?: string;
+  responseUrl?: string;
+  modulo?: string;
+  preferredSlot?: string;
+  maxMs: number;
+  pollMs: number;
+  onProgress?: (status: string) => void;
+}): Promise<string> {
+  const {
+    requestId,
+    modelPath,
+    statusUrl,
+    responseUrl,
+    modulo,
+    preferredSlot,
+    maxMs,
+    pollMs,
+    onProgress,
+  } = opts;
+
+  const t0 = Date.now();
+  let lastStatus = "IN_QUEUE";
+  let consecutiveFailures = 0;
+  const MAX_CONSECUTIVE_FAILURES = 5;
+  while (Date.now() - t0 < maxMs) {
+    await new Promise((r) => setTimeout(r, pollMs));
+    const st = await postJson<StatusResp>({
+      action: "status",
+      statusUrl,
+      requestId,
+      modelPath,
+    });
+    if (!st.ok) {
+      // 4xx fora 429 = abortar imediatamente
+      if (st.status >= 400 && st.status < 500 && st.status !== 429) {
+        throw new Error(st.data.error || `Falha ao consultar status (${st.status}).`);
+      }
+      consecutiveFailures++;
+      if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+        throw new Error(
+          "Não foi possível consultar o progresso da geração. Tente novamente em alguns segundos.",
+        );
+      }
+      continue;
+    }
+    consecutiveFailures = 0;
+    lastStatus = st.data.status || lastStatus;
+    onProgress?.(lastStatus);
+    if (lastStatus === "COMPLETED") break;
+    if (lastStatus === "FAILED" || lastStatus === "ERROR") {
+      throw new DownstreamGenerationError(
+        "Geração da peça falhou no servidor de imagem. Tente novamente.",
+      );
+    }
+  }
+  if (lastStatus !== "COMPLETED") {
+    throw new Error("A imagem ainda não ficou pronta. Tente novamente.");
+  }
+
+  const rr = await postJson<ResultResp>({
+    action: "result",
+    responseUrl,
+    requestId,
+    modelPath,
+    modulo: modulo || "metodo-op",
+    ...(preferredSlot ? { preferredSlot } : {}),
+  });
+  const rawUrl = rr.data.dataUrl || rr.data.imageUrl;
+  if (!rr.ok || !rawUrl) {
+    throw new DownstreamGenerationError(
+      friendlyError(rr.status, rr.raw, rr.data.error || "Imagem ausente na resposta."),
+    );
+  }
+  // Se já é data URL (legado), retorna direto.
+  if (rawUrl.startsWith("data:")) return rawUrl;
+  // É uma URL CDN — faz o download no browser (sem limite de Worker).
+  try {
+    const imgResp = await fetch(rawUrl, { mode: "cors" });
+    if (!imgResp.ok) throw new Error(`status ${imgResp.status}`);
+    const blob = await imgResp.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("Erro ao converter imagem."));
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    // Se CORS bloquear, retorna a URL HTTPS direta — composeFeedPng tenta usá-la
+    // no canvas; se falhar também, devolve a URL para exibição como <img src>.
+    return rawUrl;
+  }
+}
+
 export async function generateImageAsync(params: {
   prompt: string;
   format?: "post" | "reels";
@@ -111,7 +217,6 @@ export async function generateImageAsync(params: {
     console.warn("[imageGeneration] logo descartada no preparo (formato não suportado)");
   }
 
-  // 1) START — 1 retry automático em caso de 5xx transiente (ex.: fal.ai/OpenAI 500)
   const startBody = {
     action: "start",
     prompt,
@@ -121,88 +226,47 @@ export async function generateImageAsync(params: {
     modulo: modulo || "metodo-op",
     ...(preferredSlot ? { preferredSlot } : {}),
   };
-  let start = await postJson<StartResp>(startBody);
-  if (!start.ok && start.status >= 500) {
-    await new Promise((r) => setTimeout(r, 3000));
-    start = await postJson<StartResp>(startBody);
-  }
-  if (!start.ok || !start.data.requestId) {
-    throw new Error(
-      friendlyError(start.status, start.raw, start.data.error || "Falha ao iniciar a geração."),
-    );
-  }
-  const { requestId, modelPath, statusUrl, responseUrl } = start.data;
-
-  // 2) POLL — passa URLs opacas devolvidas pelo FAL quando disponíveis
-  const t0 = Date.now();
-  let lastStatus = "IN_QUEUE";
-  let consecutiveFailures = 0;
-  const MAX_CONSECUTIVE_FAILURES = 5;
-  while (Date.now() - t0 < maxMs) {
-    await new Promise((r) => setTimeout(r, pollMs));
-    const st = await postJson<StatusResp>({
-      action: "status",
-      statusUrl,
-      requestId,
-      modelPath,
-    });
-    if (!st.ok) {
-      // 4xx fora 429 = abortar imediatamente
-      if (st.status >= 400 && st.status < 500 && st.status !== 429) {
-        throw new Error(st.data.error || `Falha ao consultar status (${st.status}).`);
-      }
-      consecutiveFailures++;
-      if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-        throw new Error(
-          "Não foi possível consultar o progresso da geração. Tente novamente em alguns segundos.",
-        );
-      }
-      continue;
-    }
-    consecutiveFailures = 0;
-    lastStatus = st.data.status || lastStatus;
-    onProgress?.(lastStatus);
-    if (lastStatus === "COMPLETED") break;
-    if (lastStatus === "FAILED" || lastStatus === "ERROR") {
-      throw new Error("Geração da peça falhou no servidor de imagem. Tente novamente.");
-    }
-  }
-  if (lastStatus !== "COMPLETED") {
-    throw new Error("A imagem ainda não ficou pronta. Tente novamente.");
-  }
-
-  // 3) RESULT
   const slotToDebit = preferredSlot ?? _currentDebitSlot;
-  const rr = await postJson<ResultResp>({
-    action: "result",
-    responseUrl,
-    requestId,
-    modelPath,
-    modulo: modulo || "metodo-op",
-    ...(slotToDebit ? { preferredSlot: slotToDebit } : {}),
-  });
-  const rawUrl = rr.data.dataUrl || rr.data.imageUrl;
-  if (!rr.ok || !rawUrl) {
-    throw new Error(
-      friendlyError(rr.status, rr.raw, rr.data.error || "Imagem ausente na resposta."),
-    );
+
+  // 1 retry automático quando a geração falha no downstream (fal.ai/OpenAI) depois
+  // de já ter passado pelo START — resubmete o job inteiro do zero (ver
+  // DownstreamGenerationError acima). O START em si já tem seu próprio retry de
+  // 5xx logo abaixo, então uma falha nele não entra nesse loop.
+  const MAX_GENERATION_ATTEMPTS = 2;
+  for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
+    // 1) START — 1 retry automático em caso de 5xx transiente (ex.: fal.ai/OpenAI 500)
+    let start = await postJson<StartResp>(startBody);
+    if (!start.ok && start.status >= 500) {
+      await new Promise((r) => setTimeout(r, 3000));
+      start = await postJson<StartResp>(startBody);
+    }
+    if (!start.ok || !start.data.requestId) {
+      throw new Error(
+        friendlyError(start.status, start.raw, start.data.error || "Falha ao iniciar a geração."),
+      );
+    }
+
+    try {
+      // 2) POLL + 3) RESULT
+      return await pollAndFetchResult({
+        requestId: start.data.requestId,
+        modelPath: start.data.modelPath,
+        statusUrl: start.data.statusUrl,
+        responseUrl: start.data.responseUrl,
+        modulo,
+        preferredSlot: slotToDebit,
+        maxMs,
+        pollMs,
+        onProgress,
+      });
+    } catch (e) {
+      if (e instanceof DownstreamGenerationError && attempt < MAX_GENERATION_ATTEMPTS) {
+        onProgress?.("IN_QUEUE");
+        continue;
+      }
+      throw e;
+    }
   }
-  // Se já é data URL (legado), retorna direto.
-  if (rawUrl.startsWith("data:")) return rawUrl;
-  // É uma URL CDN — faz o download no browser (sem limite de Worker).
-  try {
-    const imgResp = await fetch(rawUrl, { mode: "cors" });
-    if (!imgResp.ok) throw new Error(`status ${imgResp.status}`);
-    const blob = await imgResp.blob();
-    return await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error("Erro ao converter imagem."));
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    // Se CORS bloquear, retorna a URL HTTPS direta — composeFeedPng tenta usá-la
-    // no canvas; se falhar também, devolve a URL para exibição como <img src>.
-    return rawUrl;
-  }
+  // Inalcançável — o loop sempre retorna ou lança antes de terminar as tentativas.
+  throw new Error("Falha desconhecida na geração da imagem.");
 }

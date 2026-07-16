@@ -131,6 +131,11 @@ export const Route = createFileRoute("/api/generate-image")({
             });
             const txt = await res.text();
             if (!res.ok) {
+              // Corpo completo no log do servidor (não truncar) — a resposta ao
+              // cliente continua curta. Achado real 2026-07-16: um erro de
+              // downstream (fal.ai/OpenAI) só ficou diagnosticável olhando o
+              // corpo inteiro, que o truncamento em 300 chars escondia.
+              console.error("[generate-image] fal status error", res.status, txt);
               return Response.json(
                 { error: `fal status ${res.status}: ${txt.slice(0, 300)}` },
                 { status: 502 },
@@ -156,6 +161,9 @@ export const Route = createFileRoute("/api/generate-image")({
             });
             const txt = await res.text();
             if (!res.ok) {
+              // Corpo completo no log do servidor — ver comentário equivalente
+              // no bloco STATUS acima.
+              console.error("[generate-image] fal result error", res.status, txt);
               return Response.json(
                 { error: `fal result ${res.status}: ${txt.slice(0, 300)}` },
                 { status: 502 },
@@ -281,7 +289,7 @@ export const Route = createFileRoute("/api/generate-image")({
           });
           const txt = await res.text();
           if (!res.ok) {
-            console.error("[generate-image] fal submit error", res.status, txt.slice(0, 300));
+            console.error("[generate-image] fal submit error", res.status, txt);
             return Response.json(
               { error: `fal submit ${res.status}: ${txt.slice(0, 300)}` },
               { status: 502 },
