@@ -183,7 +183,7 @@ export default function PostUnicoResult({
           >
             <span className="eyebrow">Legenda sugerida</span>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              {!captionLoading && !captionError && activeCaption && (
+              {!captionLoading && activeCaption && (
                 <button
                   type="button"
                   onClick={() =>
@@ -250,7 +250,7 @@ export default function PostUnicoResult({
             </div>
           )}
 
-          {!captionLoading && captionError && (
+          {!captionLoading && captionError && !activeCaption && (
             <div
               style={{
                 padding: 14,
@@ -260,7 +260,7 @@ export default function PostUnicoResult({
                 fontSize: 13,
               }}
             >
-              <span title={captionError}>Legenda indisponível.</span>{" "}
+              Legenda indisponível: {captionError}{" "}
               {onRegenerateCaption && !captionExhausted && (
                 <button
                   type="button"
@@ -280,8 +280,39 @@ export default function PostUnicoResult({
             </div>
           )}
 
-          {!captionLoading && !captionError && activeCaption && (
+          {!captionLoading && activeCaption && (
             <>
+              {captionError && (
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    background: "#fef2f2",
+                    color: "#b91c1c",
+                    fontSize: 12,
+                    marginBottom: 8,
+                  }}
+                >
+                  Não foi possível gerar uma nova versão da legenda: {captionError} A legenda
+                  anterior foi mantida abaixo.{" "}
+                  {onRegenerateCaption && !captionExhausted && (
+                    <button
+                      type="button"
+                      onClick={handleRegenCaption}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#b91c1c",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
+                    >
+                      Tentar de novo
+                    </button>
+                  )}
+                </div>
+              )}
               {captionHistory.length > 1 && (
                 <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                   {captionHistory.map((_, i) => (
@@ -355,7 +386,6 @@ export default function PostUnicoResult({
           guard={guard}
           caption={caption}
           captionLoading={captionLoading}
-          captionError={captionError}
           copied={copied}
           onCopy={handleCopy}
           assinatura={assinatura}

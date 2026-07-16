@@ -33,7 +33,6 @@ interface Props {
   guard: GuardFn;
   caption?: PostUnicoCaption;
   captionLoading?: boolean;
-  captionError?: string;
   copied: boolean;
   onCopy: () => void;
   assinatura?: string;
@@ -54,7 +53,6 @@ export function PostUnicoActionsBar({
   guard,
   caption,
   captionLoading,
-  captionError,
   copied,
   onCopy,
   assinatura,
@@ -109,7 +107,7 @@ export function PostUnicoActionsBar({
           {regenerating ? "Gerando…" : "Gerar outra imagem"}
         </button>
       )}
-      {caption && !captionLoading && !captionError && (
+      {caption && !captionLoading && (
         <>
           <button className="primaryBtn" type="button" style={{ width: "auto" }} onClick={onCopy}>
             {copied ? "✓ Copiado!" : "Copiar legenda"}

@@ -4,6 +4,7 @@ import {
   checkBalance,
   checkRateLimit,
   balanceFailMessage,
+  logLightAction,
 } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 
@@ -16,10 +17,13 @@ export const Route = createFileRoute("/api/correct-text")({
           if (!userId) {
             return Response.json({ error: "Não autenticado" }, { status: 401 });
           }
-          const rate = await checkRateLimit(userId);
+          const rate = await checkRateLimit(userId, "light");
           if (!rate.ok) {
             return Response.json(
-              { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+              {
+                error:
+                  "Limite de 25 correções por hora atingido. Aguarde antes de tentar novamente.",
+              },
               { status: 429 },
             );
           }
@@ -70,6 +74,7 @@ export const Route = createFileRoute("/api/correct-text")({
             return Response.json({ error: "JSON inválido" }, { status: 502 });
           }
 
+          await logLightAction(userId, "correct_text_light");
           return Response.json({ corrected: String(parsed.corrected ?? text) });
         } catch (e) {
           return Response.json({ error: (e as Error).message }, { status: 500 });

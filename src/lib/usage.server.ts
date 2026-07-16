@@ -44,23 +44,69 @@ export async function resolveEffectiveUser(
 }
 
 const RATE_LIMIT_PER_HOUR = 15;
+// Teto separado e mais generoso para ações textuais leves (regenerar bloco de
+// título/texto, regenerar legenda avulsa, corrigir português, Sugestão) —
+// achado real 16/07/2026: o teto único de 15/h contava gerações completas
+// (imagem, peça inteira) e ações leves de "terminar o que já foi gerado" no
+// MESMO balde, então testar várias peças completas numa hora travava até
+// pequenos ajustes de texto numa peça já pronta e paga. Ações leves não geram
+// peça nova nem custam o mesmo — usam este teto próprio.
+const RATE_LIMIT_LIGHT_PER_HOUR = 25;
+
+// Eventos de `usage_logs` que contam como "ação leve" pro teto acima — cada
+// endpoint leve grava um desses (via debitUsage já existente, ou via
+// logLightAction quando não tem cota própria) só para efeito de contagem.
+const LIGHT_RATE_LIMIT_EVENTS = [
+  "regenerate_block",
+  "suggest_keyinfo",
+  "caption_regenerate_light",
+  "correct_text_light",
+];
 
 export async function checkRateLimit(
   userId: string,
+  kind: "heavy" | "light" = "heavy",
 ): Promise<{ ok: boolean; usedLastHour: number }> {
   if (await checkIsAdmin(userId)) return { ok: true, usedLastHour: 0 };
 
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count, error } = await supabaseAdmin
-    .from("usage_logs")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gt("qtd_geracoes", 0)
-    .gte("created_at", oneHourAgo);
+  const { count, error } =
+    kind === "light"
+      ? await supabaseAdmin
+          .from("usage_logs")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .gte("created_at", oneHourAgo)
+          .in("evento", LIGHT_RATE_LIMIT_EVENTS)
+      : await supabaseAdmin
+          .from("usage_logs")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .gte("created_at", oneHourAgo)
+          .gt("qtd_geracoes", 0);
 
   if (error) return { ok: true, usedLastHour: 0 }; // fail open
   const usedLastHour = count ?? 0;
-  return { ok: usedLastHour < RATE_LIMIT_PER_HOUR, usedLastHour };
+  const limit = kind === "light" ? RATE_LIMIT_LIGHT_PER_HOUR : RATE_LIMIT_PER_HOUR;
+  return { ok: usedLastHour < limit, usedLastHour };
+}
+
+// Log-only para ações leves sem cota/débito próprio (ex.: correção de
+// português, legenda avulsa) — grava em usage_logs só para contar contra
+// RATE_LIMIT_LIGHT_PER_HOUR acima, sem passar pela RPC debit_usage (não
+// consome saldo de plano nenhum, porque essas ações nunca consumiram).
+export async function logLightAction(userId: string, evento: string): Promise<void> {
+  try {
+    await supabaseAdmin.from("usage_logs").insert({
+      user_id: userId,
+      evento,
+      qtd_imagens: 0,
+      qtd_renders: 0,
+      qtd_geracoes: 0,
+    });
+  } catch (e) {
+    console.warn("[usage_logs] light action log failed", e);
+  }
 }
 
 // Motivo de uma falha de saldo — permite que a UI/API diferencie "usuário sem

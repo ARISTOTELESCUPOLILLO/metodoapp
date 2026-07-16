@@ -31,12 +31,12 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
           const isAdminUser = await checkIsAdmin(effective.userId);
 
           if (!effective.impersonatedBy) {
-            const rate = await checkRateLimit(userId);
+            const rate = await checkRateLimit(userId, "light");
             if (!rate.ok) {
               return Response.json(
                 {
                   error:
-                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                    "Limite de 25 sugestões por hora atingido. Aguarde antes de tentar novamente.",
                 },
                 { status: 429 },
               );

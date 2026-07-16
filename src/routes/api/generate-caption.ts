@@ -5,6 +5,7 @@ import {
   debitUsage,
   resolveEffectiveUser,
   balanceFailMessage,
+  logLightAction,
 } from "@/lib/usage.server";
 import { COST_USD } from "@/lib/costs";
 import { getVoiceProfile } from "@/data/brandVoice";
@@ -191,13 +192,20 @@ export const Route = createFileRoute("/api/generate-caption")({
           const impersonatedBy = effective.impersonatedBy;
           let isAdmin = false;
 
+          // Legenda inicial (debit=true, junto com "Gerar Post Único") usa o
+          // teto de gerações completas; regeneração avulsa de legenda
+          // (debit=false, "Gerar outra legenda" numa peça já pronta) usa o
+          // teto leve — achado real 16/07/2026: contar as duas no mesmo
+          // balde travava até o ajuste de uma peça já paga quando o usuário
+          // já tinha testado várias peças completas na mesma hora.
           if (!impersonatedBy) {
-            const rate = await checkRateLimit(userId);
+            const rate = await checkRateLimit(userId, debit ? "heavy" : "light");
             if (!rate.ok) {
               return Response.json(
                 {
-                  error:
-                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                  error: debit
+                    ? "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente."
+                    : "Limite de 25 regenerações de legenda por hora atingido. Aguarde antes de tentar novamente.",
                 },
                 { status: 429 },
               );
@@ -411,6 +419,10 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
             } catch (e) {
               console.warn("[generate-caption] debit failed", e);
             }
+          } else {
+            // Regeneração avulsa: não debita cota nenhuma (nunca teve uma),
+            // só registra pro teto leve de RATE_LIMIT_LIGHT_PER_HOUR acima.
+            await logLightAction(userId, "caption_regenerate_light");
           }
 
           const cap = (s: string) => {

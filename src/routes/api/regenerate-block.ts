@@ -111,12 +111,12 @@ export const Route = createFileRoute("/api/regenerate-block")({
           const isAdminUser = await checkIsAdmin(effective.userId);
 
           if (!effective.impersonatedBy) {
-            const rate = await checkRateLimit(effective.userId);
+            const rate = await checkRateLimit(effective.userId, "light");
             if (!rate.ok) {
               return Response.json(
                 {
                   error:
-                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                    "Limite de 25 regenerações de texto por hora atingido. Aguarde antes de tentar novamente.",
                 },
                 { status: 429 },
               );
