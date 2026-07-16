@@ -8,7 +8,6 @@ import {
 } from "../services/postUnico";
 import { buildReferences } from "../services/regenerateWithKit";
 import { detectForcedGenderFromCopy, PersonagemGender } from "../core/visualDirection";
-import { mapFaixaToAnchorAge } from "../core/audienceAge";
 import { loadImageKitAsync } from "../utils/imageKitStorage";
 import { lsSetQuotaSafe } from "../lib/storage/store";
 import { PU_IMG_KEY, PU_STARTED_KEY } from "../lib/storage/keys";
@@ -118,21 +117,15 @@ export function usePostUnicoGeneration({
     try {
       const freshImageKit = await loadImageKitAsync(effectiveUserId).catch(() => imageKit);
       setImageKit(freshImageKit);
-      const rawPersonagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
+      // O gênero/idade do personagem sem avatar já vêm semeados a partir de
+      // generoPref/faixaEtaria só na ATIVAÇÃO do checkbox (ver
+      // PersonagemSemAvatarBlock.tsx) — depois disso, o toggle manual "Trocar
+      // p/ Feminino"/select de idade é a fonte da verdade. Reaplicar o
+      // override aqui a cada geração sobrescrevia silenciosamente a escolha
+      // manual do usuário de volta para o valor do formulário inicial
+      // (achado 16/07/2026).
+      const personagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
         ? visualSelection.personagemSemAvatar
-        : undefined;
-      const personagemSemAvatar = rawPersonagemSemAvatar
-        ? {
-            ...rawPersonagemSemAvatar,
-            ...(data.generoPref && {
-              genero: (data.generoPref === "F" ? "mulher" : "homem") as "mulher" | "homem",
-            }),
-            ...(data.faixaEtaria && {
-              idade:
-                mapFaixaToAnchorAge(data.faixaEtaria) ??
-                rawPersonagemSemAvatar.idade,
-            }),
-          }
         : undefined;
       const references = buildReferences(
         "avatar",
