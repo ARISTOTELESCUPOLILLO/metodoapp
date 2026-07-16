@@ -3,6 +3,7 @@
 // painel de sugestões — extraído de ContentForm.tsx (PLANO_V2 Fase 9.1).
 // JSX e lógica movidos 1:1, sem mudança de comportamento.
 import { useEffect, useRef, useState } from "react";
+import { Mic, Square, X } from "lucide-react";
 import { ContentFormData, Segment } from "../../../types";
 import { getAuthHeaders } from "../../../services/authHeaders";
 import ProductsChecklist from "../ProductsChecklist";
@@ -351,14 +352,17 @@ export function KeyInfoSection({
                 background: "#fff",
                 border: "1px solid #cbd5e1",
                 borderRadius: 8,
-                padding: "2px 8px",
-                fontSize: 11,
-                fontWeight: 600,
+                width: 30,
+                height: 30,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 color: "#64748b",
                 cursor: "pointer",
+                boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
               }}
             >
-              ×
+              <X size={15} strokeWidth={2.25} />
             </button>
           )}
           <button
@@ -379,8 +383,14 @@ export function KeyInfoSection({
               background: dictation.state === "recording" ? "#fef2f2" : "#fff",
               border: `1px solid ${dictation.state === "recording" ? "#fca5a5" : "#cbd5e1"}`,
               borderRadius: 8,
-              padding: "2px 8px",
-              fontSize: 11,
+              height: 30,
+              padding: dictation.state === "idle" ? 0 : "0 10px",
+              width: dictation.state === "idle" ? 30 : undefined,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              fontSize: 12,
               fontWeight: 600,
               color: dictation.state === "recording" ? "#b91c1c" : "#0f172a",
               boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
@@ -400,11 +410,16 @@ export function KeyInfoSection({
                   : 1,
             }}
           >
-            {dictation.state === "recording"
-              ? `⏹ ${mmss(dictation.elapsed)}`
-              : dictation.state === "transcribing"
-                ? "Transcrevendo…"
-                : "🎙"}
+            {dictation.state === "recording" ? (
+              <>
+                <Square size={13} fill="currentColor" strokeWidth={0} />
+                {mmss(dictation.elapsed)}
+              </>
+            ) : dictation.state === "transcribing" ? (
+              "Transcrevendo…"
+            ) : (
+              <Mic size={16} strokeWidth={2} />
+            )}
           </button>
         </div>
       </div>
