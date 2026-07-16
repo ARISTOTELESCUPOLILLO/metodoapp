@@ -10,6 +10,11 @@ interface Props {
   uniformeDataUrl?: string;
   generoPref?: "M" | "F" | null;
   faixaEtaria?: FaixaEtaria | null;
+  /** Avisa o pai que o usuário trocou o gênero manualmente (botão "Trocar
+   * p/"), pra ele parar de re-sincronizar esse campo a partir do formulário. */
+  onGeneroTocadoManualmente?: () => void;
+  /** Mesma ideia, para o select de idade. */
+  onIdadeTocadaManualmente?: () => void;
 }
 
 export function PersonagemSemAvatarBlock({
@@ -18,6 +23,8 @@ export function PersonagemSemAvatarBlock({
   uniformeDataUrl,
   generoPref,
   faixaEtaria,
+  onGeneroTocadoManualmente,
+  onIdadeTocadaManualmente,
 }: Props) {
   return (
     <div
@@ -96,15 +103,16 @@ export function PersonagemSemAvatarBlock({
         >
           <button
             type="button"
-            onClick={() =>
+            onClick={() => {
               onChange({
                 ...selection,
                 personagemSemAvatar: {
                   ...selection.personagemSemAvatar!,
                   genero: selection.personagemSemAvatar!.genero === "mulher" ? "homem" : "mulher",
                 },
-              })
-            }
+              });
+              onGeneroTocadoManualmente?.();
+            }}
             style={{
               fontSize: 11,
               padding: "3px 10px",
@@ -120,15 +128,16 @@ export function PersonagemSemAvatarBlock({
           </button>
           <select
             value={selection.personagemSemAvatar.idade}
-            onChange={(e) =>
+            onChange={(e) => {
               onChange({
                 ...selection,
                 personagemSemAvatar: {
                   ...selection.personagemSemAvatar!,
                   idade: e.target.value,
                 },
-              })
-            }
+              });
+              onIdadeTocadaManualmente?.();
+            }}
             style={{
               fontSize: 11,
               padding: "3px 6px",

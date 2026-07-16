@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import {
   BrandKit,
   FaixaEtaria,
@@ -43,18 +43,32 @@ export default function PostUnicoComposicaoVisual({
 }: Props) {
   // Mantém genero/idade dos controles em sincronia com as props do form,
   // para que mudanças em generoPref/faixaEtaria depois do checkbox já marcado
-  // sejam sempre refletidas na geração.
+  // sejam sempre refletidas na geração — EXCETO se o usuário já tocou
+  // manualmente no toggle "Trocar p/"/select de idade (achado 16/07/2026:
+  // esse efeito reescrevia por cima da escolha manual do usuário). Uma vez
+  // tocado, o campo manual manda até o personagem ser desativado.
+  const generoTocadoRef = useRef(false);
+  const idadeTocadoRef = useRef(false);
+  useEffect(() => {
+    if (!selection.personagemSemAvatar?.ativo) {
+      generoTocadoRef.current = false;
+      idadeTocadoRef.current = false;
+    }
+  }, [selection.personagemSemAvatar?.ativo]);
   useEffect(() => {
     if (!selection.personagemSemAvatar?.ativo) return;
-    const newGenero =
-      generoPref === "F"
+    const newGenero = generoTocadoRef.current
+      ? selection.personagemSemAvatar.genero
+      : generoPref === "F"
         ? "mulher"
         : generoPref === "M"
           ? "homem"
           : selection.personagemSemAvatar.genero;
-    const newIdade = faixaEtaria
-      ? (mapFaixaToAnchorAge(faixaEtaria) ?? selection.personagemSemAvatar.idade)
-      : selection.personagemSemAvatar.idade;
+    const newIdade = idadeTocadoRef.current
+      ? selection.personagemSemAvatar.idade
+      : faixaEtaria
+        ? (mapFaixaToAnchorAge(faixaEtaria) ?? selection.personagemSemAvatar.idade)
+        : selection.personagemSemAvatar.idade;
     if (
       newGenero !== selection.personagemSemAvatar.genero ||
       newIdade !== selection.personagemSemAvatar.idade
@@ -334,6 +348,8 @@ export default function PostUnicoComposicaoVisual({
           uniformeDataUrl={kit.uniformeDataUrl}
           generoPref={generoPref}
           faixaEtaria={faixaEtaria}
+          onGeneroTocadoManualmente={() => (generoTocadoRef.current = true)}
+          onIdadeTocadaManualmente={() => (idadeTocadoRef.current = true)}
         />
       )}
 
