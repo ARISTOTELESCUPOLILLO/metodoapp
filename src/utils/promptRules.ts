@@ -130,17 +130,28 @@ export function buildNoDeviceRule(): string {
 NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`;
 }
 
-// Quando há produto físico de referência selecionado (Kit Imagem) e ele NÃO é
-// ele mesmo uma tela (produtoTelaInformativa), esse produto já é o elemento
-// concreto e o foco da peça — sortear um dispositivo digital pelo pool abaixo
-// não tem relação narrativa com ele e só dilui o foco. Achado real: peça sobre
-// ração (Pronto Vet) recebeu um notebook sem nenhum motivo na cena. A regra de
-// atividade (isNonDigitalActivity) não cobre este caso porque a atividade da
-// empresa pode ser digital (ex. clínica com recepção) mesmo quando O PRODUTO
-// desta peça específica é físico — a decisão é por peça, não por empresa.
+// Quando há produto físico de referência selecionado (Kit Imagem) mas o
+// checkbox de tela (produtoEhDispositivo) está desmarcado, NÃO SABEMOS se o
+// produto de fato não é um dispositivo — o checkbox pode só não ter sido
+// marcado. A versão antiga desta regra bania categoricamente notebook/tablet/
+// celular/monitor "mesmo como elemento de apoio", o que apagava o PRÓPRIO
+// produto referenciado sempre que ele por acaso fosse um dispositivo com tela
+// (app, dashboard, print de sistema) — bug real confirmado ao vivo (PU, mood
+// SILÊNCIO, empresa Oficina de Propaganda, 2026-07-17): o produto sumiu da
+// peça inteira porque a proibição de "tablet/celular/monitor" incluía sem
+// querer o próprio produto referenciado. Referências visuais enviadas pelo
+// usuário têm PRIORIDADE MÁXIMA sobre qualquer proibição do resto do prompt
+// (documento de princípios, Parte 1.5) — "produto pedido pra aparecer sempre
+// aparece", em qualquer segmento, independente do checkbox de tela. Por isso
+// esta regra só pode proibir um SEGUNDO dispositivo inventado, nunca o
+// produto de referência em si. Mantém a motivação original (achado real:
+// peça sobre ração recebeu um notebook sem nenhum motivo na cena) sem mais
+// apagar o produto quando ele acontece de ser uma tela. Nitidez de tela
+// garantida (PRODUTO EXPOSTO, ver buildDeviceRule) continua exigindo o
+// checkbox — aqui só garantimos que o produto EXISTE na composição.
 function buildNoDeviceProdutoFisicoRule(): string {
-  return `⚠ DISPOSITIVOS DIGITAIS — PROIBIDOS NESTA CENA: o produto físico referenciado já é o elemento concreto e o foco desta peça. PROIBIDO incluir notebook, laptop, tablet, celular, monitor, computador ou qualquer dispositivo digital na composição, mesmo como elemento de apoio — eles não têm relação com o produto e disputariam atenção sem motivo narrativo.
-NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`;
+  return `⚠ DISPOSITIVOS DIGITAIS — SEM INVENÇÃO ADICIONAL: o produto físico referenciado já é o elemento concreto e o foco desta peça — ele DEVE aparecer normalmente, com fidelidade total (embalagem, formato, cores, tela, se houver), independente de ele ser ou não, ele mesmo, um dispositivo digital. Esta regra PROÍBE apenas um SEGUNDO dispositivo digital ADICIONAL (notebook, laptop, tablet, celular, monitor, computador) inventado sem relação narrativa com o produto — nunca proíbe o produto de referência em si, seja ele qual for.
+NEGATIVE: second unrelated digital device, extra invented laptop, extra invented tablet, extra invented smartphone, extra invented computer monitor unrelated to the referenced product, decorative electronic gadget added without narrative reason.`;
 }
 
 // Quando o produto referenciado (Kit Imagem) É ele mesmo um dispositivo cujo

@@ -451,6 +451,50 @@ espacial (produto nas mãos, perto do rosto), não a mera presença de avatar �
 separação física agora exigida pelo modo exposto resolve o vazamento original sem
 precisar desligar a fidelidade de tela.
 
+2.7 PRODUTO SELECIONADO SEMPRE APARECE — princípio geral, qualquer segmento/mood
+------------------------------------------------------------
+[Decidido por Aristóteles em 2026-07-17 — achado real na trilha PU, mood SILÊNCIO,
+Oficina de Propaganda: mesmo produto, duas gerações seguidas — sem o checkbox de
+"tela informativa" marcado, o produto SUMIU da peça inteira; com o checkbox marcado,
+apareceu certo. Investigado com Opus 4.8 antes de decidir/codar.]
+
+Princípio (extensão explícita da Parte 1.5, que já dizia que referências do usuário
+têm prioridade máxima em caso de conflito, mas nunca tinha sido testado contra este
+caso): um produto selecionado pelo usuário para ser mixado na peça DEVE aparecer —
+em qualquer segmento (VAREJO, SERVIÇOS, MARCA) e qualquer mood, sem exceção. Isso é
+incondicional. Separadamente, SE esse produto tiver tela, a tela precisa aparecer
+nítida/legível — mas isso é um requisito ADICIONAL, aplicável só quando o produto de
+fato for uma tela, nunca uma condição para o produto existir na peça.
+
+Causa raiz do bug: `buildNoDeviceProdutoFisicoRule()` (promptRules.ts) bania
+categoricamente "notebook, laptop, tablet, celular, monitor... mesmo como elemento de
+apoio" sempre que havia produto referenciado e o checkbox `produtoTelaInformativa`
+estava desmarcado. Como o checkbox desmarcado NÃO significa "o produto não é um
+dispositivo" (só significa que ninguém marcou), a regra apagava sem querer o próprio
+produto referenciado sempre que ele por acaso fosse um dispositivo com tela (app,
+dashboard, print de sistema). O mesmo padrão existia, de forma mais branda, no texto
+fixo do mood SILÊNCIO (OP-06: "PROIBIDO laptop, notebook aberto, smartphone... como
+elemento principal") e do mood DESVIO (OP-05: "notebook como centro da cena").
+
+Resolução: `buildNoDeviceProdutoFisicoRule()` deixou de banir categoricamente
+dispositivos digitais — passou a proibir só um SEGUNDO dispositivo INVENTADO/sem
+relação com o produto, nunca o produto de referência em si (seja ele qual for). As
+linhas fixas de OP-06 e OP-05 ganharam uma cláusula explícita: a proibição vale só
+para o objeto/composição que o mood escolhe autonomamente, nunca para um produto de
+referência selecionado pelo usuário. A nitidez de tela GARANTIDA (modo "PRODUTO
+EXPOSTO — NÃO EM USO", ver 2.6) continua exigindo o checkbox — este fix garante
+apenas que o produto EXISTE na composição; não promove a maquinaria de fidelidade de
+tela a incondicional (evitaria reintroduzir os 3 defeitos do dilema de 08/07 fora do
+escopo onde já foram resolvidos — ver 2.6).
+
+Escopo: PU e MOP (buildDeviceRule é compartilhado pelos dois via buildImagePrompt.ts
+e buildPuPrompt.ts) — corrigido também um gap de paridade em regenerateWithKit.ts
+(fluxo estático/carrossel não repassava `produtoEhDispositivo`, só reels/final).
+
+Implementação: `src/utils/promptRules.ts` (`buildNoDeviceProdutoFisicoRule`),
+`src/core/visualDirection.lexicon.ts` (MOOD_RULES OP-06 e OP-05),
+`src/services/regenerateWithKit.ts` (paridade estático/carrossel).
+
 ============================================================
 PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO
 ============================================================

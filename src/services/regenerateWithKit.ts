@@ -333,6 +333,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       hasUniformeRef,
       hasProdutoTelaRef: references.produtoTelaInformativa,
       hasProdutoFisicoRef: !!references.produtos?.length,
+      produtoEhDispositivo: references.produtoEhDispositivo,
       forcedGender,
       anchoraPersonagem,
       ancoragePapel,
