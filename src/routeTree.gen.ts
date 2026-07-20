@@ -17,6 +17,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as ExclusaoDeDadosRouteImport } from './routes/exclusao-de-dados'
 import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AjustesRouteImport } from './routes/ajustes'
@@ -89,6 +90,11 @@ const ExclusaoDeDadosRoute = ExclusaoDeDadosRouteImport.update({
 const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
   id: '/esqueci-senha',
   path: '/esqueci-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContaRoute = ContaRouteImport.update({
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/ajustes': typeof AjustesRoute
   '/app': typeof AppRoute
   '/conta': typeof ContaRoute
+  '/cookies': typeof CookiesRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/historico': typeof HistoricoRoute
@@ -308,6 +315,7 @@ export interface FileRoutesByTo {
   '/ajustes': typeof AjustesRoute
   '/app': typeof AppRoute
   '/conta': typeof ContaRoute
+  '/cookies': typeof CookiesRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/historico': typeof HistoricoRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/ajustes': typeof AjustesRoute
   '/app': typeof AppRoute
   '/conta': typeof ContaRoute
+  '/cookies': typeof CookiesRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/historico': typeof HistoricoRoute
@@ -397,6 +406,7 @@ export interface FileRouteTypes {
     | '/ajustes'
     | '/app'
     | '/conta'
+    | '/cookies'
     | '/esqueci-senha'
     | '/exclusao-de-dados'
     | '/historico'
@@ -440,6 +450,7 @@ export interface FileRouteTypes {
     | '/ajustes'
     | '/app'
     | '/conta'
+    | '/cookies'
     | '/esqueci-senha'
     | '/exclusao-de-dados'
     | '/historico'
@@ -483,6 +494,7 @@ export interface FileRouteTypes {
     | '/ajustes'
     | '/app'
     | '/conta'
+    | '/cookies'
     | '/esqueci-senha'
     | '/exclusao-de-dados'
     | '/historico'
@@ -527,6 +539,7 @@ export interface RootRouteChildren {
   AjustesRoute: typeof AjustesRoute
   AppRoute: typeof AppRoute
   ContaRoute: typeof ContaRoute
+  CookiesRoute: typeof CookiesRoute
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute
   ExclusaoDeDadosRoute: typeof ExclusaoDeDadosRoute
   HistoricoRoute: typeof HistoricoRoute
@@ -621,6 +634,13 @@ declare module '@tanstack/react-router' {
       path: '/esqueci-senha'
       fullPath: '/esqueci-senha'
       preLoaderRoute: typeof EsqueciSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conta': {
@@ -863,6 +883,7 @@ const rootRouteChildren: RootRouteChildren = {
   AjustesRoute: AjustesRoute,
   AppRoute: AppRoute,
   ContaRoute: ContaRoute,
+  CookiesRoute: CookiesRoute,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
   ExclusaoDeDadosRoute: ExclusaoDeDadosRoute,
   HistoricoRoute: HistoricoRoute,

@@ -18,6 +18,8 @@ import {
   Cookie,
   ShieldCheck,
 } from "lucide-react";
+import { LegalH3 } from "@/components/legal/LegalH3";
+import { CookiesContent } from "@/components/legal/CookiesContent";
 import heroDesktop from "@/assets/lp-hero-desktop.png";
 import heroMobile from "@/assets/lp-hero-mobile.png";
 import logoOp from "@/assets/lp-logo-op.png";
@@ -590,10 +592,6 @@ function LegalDialog({
   );
 }
 
-function LegalH3({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-white font-bold text-base md:text-lg mt-4 first:mt-0">{children}</h3>;
-}
-
 function PrivacyContent({ onOpenCookies }: { onOpenCookies: () => void }) {
   return (
     <>
@@ -690,69 +688,6 @@ function PrivacyContent({ onOpenCookies }: { onOpenCookies: () => void }) {
       <LegalH3>11. Encarregado (DPO)</LegalH3>
       <p>
         Contato do encarregado pelo tratamento de dados:{" "}
-        <a href={`mailto:${EMAIL}`} className="text-[#f5a623] hover:underline">
-          {EMAIL}
-        </a>
-        .
-      </p>
-    </>
-  );
-}
-
-function CookiesContent({ onReviewPreferences }: { onReviewPreferences: () => void }) {
-  return (
-    <>
-      <p>
-        Esta Política explica como o <strong>Método OP</strong> usa cookies e tecnologias similares
-        para fazer o aplicativo funcionar e melhorar sua experiência.
-      </p>
-
-      <LegalH3>1. O que são cookies</LegalH3>
-      <p>
-        Cookies são pequenos arquivos armazenados no seu navegador que permitem reconhecer seu
-        acesso, lembrar preferências e medir o uso do serviço.
-      </p>
-
-      <LegalH3>2. Tipos de cookies que usamos</LegalH3>
-      <ul className="list-disc pl-5 space-y-1.5">
-        <li>
-          <strong>Necessários</strong> (sempre ativos): essenciais para a sessão de login e o
-          funcionamento da interface.
-        </li>
-        <li>
-          <strong>Funcionais:</strong> lembram a marca e o kit visual em uso, evitando
-          reconfiguração a cada acesso.
-        </li>
-        <li>
-          <strong>Analíticos</strong> (opcionais, só com consentimento): métricas agregadas de uso
-          para ajudar a evoluir o produto.
-        </li>
-      </ul>
-
-      <LegalH3>3. Como gerenciar</LegalH3>
-      <p>
-        Use os botões "Aceitar todos" ou "Apenas necessários" no banner de consentimento. Você
-        também pode limpar cookies pelas configurações do seu navegador a qualquer momento.
-      </p>
-      <div>
-        <button
-          type="button"
-          onClick={onReviewPreferences}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#f5a623] text-[#0a1326] text-sm font-bold hover:bg-[#ffb838] transition-colors"
-        >
-          Revisar minhas preferências
-        </button>
-      </div>
-
-      <LegalH3>4. Terceiros</LegalH3>
-      <p>
-        Provedores de infraestrutura em nuvem podem definir cookies estritamente necessários ao
-        funcionamento do serviço.
-      </p>
-
-      <LegalH3>5. Atualizações e contato</LegalH3>
-      <p>
-        Esta política pode ser atualizada. Dúvidas:{" "}
         <a href={`mailto:${EMAIL}`} className="text-[#f5a623] hover:underline">
           {EMAIL}
         </a>
