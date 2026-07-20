@@ -198,6 +198,9 @@ function TermosPage() {
             <Link to="/privacidade" className="hover:text-white/60 transition-colors">
               Privacidade
             </Link>
+            <Link to="/cookies" className="hover:text-white/60 transition-colors">
+              Cookies
+            </Link>
           </div>
         </div>
       </footer>

@@ -182,6 +182,9 @@ function ExclusaoDadosPage() {
             <Link to="/exclusao-de-dados" className="hover:text-white/60 transition-colors">
               Exclusão de Dados
             </Link>
+            <Link to="/cookies" className="hover:text-white/60 transition-colors">
+              Cookies
+            </Link>
           </div>
         </div>
       </footer>
