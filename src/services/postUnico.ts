@@ -98,20 +98,21 @@ export async function generatePostUnicoCaption(
   data: PostUnicoFormData,
   opts?: { debit?: boolean; brandVoice?: string; preferredSlot?: string; previousCaption?: string },
 ): Promise<PostUnicoCaption> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (opts?.debit) {
-    try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data: s } = await supabase.auth.getSession();
-      const token = s.session?.access_token;
-      if (token) headers.Authorization = `Bearer ${token}`;
-    } catch {
-      /* sem sessão: segue sem Authorization, o servidor trata */
-    }
-  }
+  // Headers pelo getAuthHeaders, como as demais chamadas deste arquivo e dos outros
+  // servicos. Antes era montado a mao aqui, e so quando debit=true -- sobra da epoca
+  // em que /api/generate-caption aceitava acesso anonimo. O commit 3c49f3c (02/06/2026)
+  // tornou a autenticacao obrigatoria no endpoint e este chamador ficou para tras:
+  // "Gerar outra legenda" chama com debit=false, ia sem Authorization nenhum e voltava
+  // 401 "Nao autenticado" para qualquer usuario, sempre.
+  //
+  // O monte-a-mao tambem nunca enviava X-Impersonate-User-Id, que so o getAuthHeaders
+  // coloca. Sem ele o servidor resolvia o usuario efetivo como o proprio admin: com
+  // "Atuar como" ligado, saldo, plano e limite por hora eram checados e debitados na
+  // conta errada -- a do admin, nao a do usuario de teste.
+  const auth = await getAuthHeaders();
   const res = await fetch("/api/generate-caption", {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json", ...auth },
     body: JSON.stringify({
       companyName: data.companyName,
       mainActivity: data.mainActivity,
