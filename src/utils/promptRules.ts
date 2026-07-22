@@ -25,8 +25,13 @@ const DEVICE_NOTEBOOK =
 // desenhá-los justamente ali (efeito "não pense no elefante"); a supressão de
 // marca continua garantida pela regra de CARCAÇA e pelo NEGATIVE. Aqui só
 // descrevemos o que DEVE aparecer.
+// ATENÇÃO (achado real 2026-07-22): a 1ª versão desta frase terminava com "a
+// tela sempre voltada para a pessoa E para a câmera" — fisicamente impossível
+// (uma face só encara UM lado). O modelo obedecia "voltada para a pessoa" na
+// geometria e resolvia o "para a câmera" estampando o conteúdo na carcaça, que
+// é o que a câmera vê. Nunca peça a mesma face para dois lados opostos.
 const DEVICE_MONITOR =
-  "MONITOR DE DESKTOP: pessoa posicionada de frente para a tela — a câmera fica do mesmo lado da pessoa (o lado da tela), enquadrando o rosto dela e a tela de lado/oblíqua. Só a face frontal do monitor entra no quadro: a moldura fina ao redor da tela e o pé de apoio, com a tela sempre voltada para a pessoa e para a câmera.";
+  "MONITOR DE DESKTOP: o PERSONAGEM fica de frente para a tela; a câmera do OBSERVADOR fica do mesmo lado dele (por cima/ao lado do ombro), enquadrando o rosto do personagem e a tela em ângulo oblíquo. Só a face frontal do monitor entra no quadro: a moldura fina ao redor da tela e o pé de apoio.";
 const DEVICE_TELA_FUNDO =
   "TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.";
 
@@ -180,6 +185,33 @@ function screenContentClause(preserveScreenContent: boolean): string {
   return `A TELA, quando visível, mostra conteúdo genérico e discreto (textura de interface, cores e formas plausíveis) — sem forçar desfoque nem nitidez artificial, a composição decide naturalmente. PROIBIDO: tela apagada, escura ou em branco quando o dispositivo estiver aberto e em uso; conteúdo identificável e específico em tela (logo real, marca reconhecível, texto legível, interface clara, dashboard, gráfico, planilha, barra de dados) que pareça um produto real não referenciado.`;
 }
 
+// PONTO DE VISTA — PERSONAGEM × OBSERVADOR (ideia do usuário, 2026-07-22, após
+// o conteúdo voltar a aparecer na carcaça do monitor). Todas as regras de tela
+// eram PROIBIÇÕES ("não desenhe no verso"), enquanto screenContentClause impõe
+// uma OBRIGAÇÃO POSITIVA forte ("reproduza o conteúdo com nitidez total — é a
+// identidade do produto"). Proibição não vence obrigação: sem uma saída
+// declarada, quando a geometria põe a tela oblíqua/voltada ao personagem o
+// modelo satisfaz a obrigação na única superfície que a câmera enxerga — a
+// carcaça. Este bloco fecha o buraco de duas formas: (1) nomeia os dois pontos
+// de vista, desfazendo a ambiguidade de "para quem" a tela está voltada, e
+// (2) dá a VÁLVULA DE ESCAPE — tela não voltada ao observador ⇒ zero conteúdo
+// na peça inteira é o resultado CORRETO, não uma falha a compensar.
+// No modo PRODUTO EXPOSTO a válvula não pode virar desculpa pra tela vazia: lá
+// a geometria já obriga a tela a encarar o observador, então o conteúdo é
+// obrigatório — por isso o texto muda conforme dispositivoExposto.
+function pontoDeVistaBlock(dispositivoExposto: boolean): string {
+  const base = `⚠ DOIS PONTOS DE VISTA — DEFINIÇÃO (estes termos valem com este sentido exato em TODAS as regras abaixo):
+· PERSONAGEM = a pessoa que existe DENTRO da imagem gerada, na cena.
+· OBSERVADOR = quem vê a peça pronta depois de publicada, olhando a imagem de fora. É o ponto de vista da câmera.
+São dois lugares OPOSTOS: o que o personagem enxerga não é o que o observador enxerga. Uma tela é uma face única e plana — ela encara UM dos dois por vez, JAMAIS os dois ao mesmo tempo.
+
+⚠ REGRA DA TELA VOLTADA — TEM PRECEDÊNCIA SOBRE QUALQUER EXIGÊNCIA DE CONTEÚDO: conteúdo de tela (interface, print, app, dashboard, imagem, texto, logo) só pode existir na peça quando a FACE ATIVA da tela estiver voltada para o OBSERVADOR na imagem gerada.
+SE a face ativa da tela NÃO estiver voltada para o observador — porque encara o personagem, o lado, o teto, a mesa ou fica fora de quadro — então NENHUMA imagem de tela aparece em NENHUM lugar da peça: nem na carcaça, nem na tampa, nem no verso, nem na moldura/bezel, nem no pé/base, nem na mesa, nem na parede, nem flutuando. O equipamento aparece normalmente, apenas SEM nenhum conteúdo visível. Esse é o resultado CORRETO e esperado, não uma falha — é PROIBIDO "compensar" a tela invisível desenhando o conteúdo em qualquer superfície que o observador consiga ver.`;
+  if (!dispositivoExposto) return base;
+  return `${base}
+NESTA PEÇA a geometria já foi resolvida a favor do observador: o enquadramento PRODUTO EXPOSTO (abaixo) obriga a face ativa da tela a encarar o OBSERVADOR. Logo, a condição acima está satisfeita e o conteúdo da referência É obrigatório — dentro do retângulo da tela, e só ali. A válvula acima NUNCA autoriza tela vazia, apagada ou borrada nesta peça.`;
+}
+
 export function buildDeviceRule(
   mainActivity?: string,
   preserveScreenContent?: boolean,
@@ -252,6 +284,8 @@ TIPO DESTA GERAÇÃO: ${pickDeviceTypeLine()}${diversificacao}
 `;
   return `⚠ DISPOSITIVOS DIGITAIS: notebook, laptop, tablet, celular, monitor e outros dispositivos são PERMITIDOS quando a cena pedir, em uso natural — abertos, na mão, apoiados sobre a mesa. NÃO forçar dispositivo fechado. ${screenContentClause(!!preserveScreenContent)}
 
+${pontoDeVistaBlock(dispositivoExposto)}
+
 FÍSICA DA TELA — PRINCÍPIO DE CENA (entenda a geometria; as proibições abaixo são reforço, não a regra primária): todo dispositivo com tela tem DUAS faces opostas — a TELA (face ativa, único lugar onde existe conteúdo) e o VERSO/carcaça (face lisa e opaca, sem nada). A tela fica sempre voltada para o rosto de quem está usando o aparelho. Disso decorrem 3 consequências:
 1. OLHAR: se o personagem está usando o dispositivo, os olhos dele estão NA TELA — olhar dirigido a ela, nunca solto, nunca para o lado, nunca para fora de quadro. Essa regra tem PRECEDÊNCIA sobre qualquer instrução de câmera do mood que peça "olhar para longe" ou "espaço negativo à frente do olhar" — quando há dispositivo em uso, o olhar vai para a tela, e o espaço negativo (se o mood exigir) se organiza ao redor desse eixo, não contra ele. Se a cena pede olhar em outra direção, o dispositivo fica em REPOUSO (abaixado, sobre a mesa) — não erguido como se estivesse em uso. ⚠ EXCEÇÃO — PRODUTO EXPOSTO: quando o dispositivo está EXPOSTO como objeto de composição (ninguém o segura nem o usa — ver enquadramento PRODUTO EXPOSTO abaixo), esta regra de olhar NÃO se aplica — o personagem não está "usando" o aparelho, então seus olhos não precisam ir para a tela; ele olha para onde a cena pedir (câmera, interlocutor, ação). Ver a tela do dispositivo exigiria estar do mesmo lado dela — impossível quando a tela está voltada para a câmera/espectador.
 2. O QUE A CÂMERA VÊ: a câmera vê OU a tela (quando está do mesmo lado do olhar do personagem) OU o verso liso (quando está do lado oposto, de frente para o personagem). Nunca as duas faces ao mesmo tempo — é fisicamente impossível. Ver o verso é natural e correto nesse ângulo; NÃO torça o aparelho nem o personagem para a tela "aparecer" mesmo assim.
@@ -266,7 +300,7 @@ ${enquadramentoRetrato}
 ${composicaoPorTipo}PROTAGONISMO: o dispositivo digital é elemento de APOIO à cena, nunca o protagonista visual — o foco principal é a pessoa e a ação dela. Mantenha o dispositivo proporcionalmente pequeno no quadro, nunca em primeiro plano ocupando a maior área da composição. EXCEÇÃO: quando o próprio dispositivo for o produto sendo vendido (ex.: loja de eletrônicos/celulares/informática) OU quando sua tela for a identidade do produto referenciado (PRODUTO EXPOSTO, ver acima) — nesses casos ele pode, e deve, ocupar primeiro plano/centro da composição, grande o suficiente para o conteúdo da tela ser lido; isso não faz dele o protagonista NARRATIVO da peça quando há personagem (ver regra de hierarquia produto×personagem), só o protagonista de ESCALA/NITIDEZ.
 
 CARCAÇA E TAMPA — REGRA ABSOLUTA (vale mesmo com a composição correta, como reforço): tampa, verso e carcaça de qualquer dispositivo DEVEM ser completamente lisas, sem nenhuma marca, símbolo, logo, maçã, ícone, adesivo, gravação ou iluminação. Use equipamento genérico, sem marca. MÁXIMO 1 DISPOSITIVO por cena.
-NEGATIVE: ${screenNegative}, no images or graphics on device casing or back cover, no content or interface visible on back casing under any camera angle, no duplicated devices, no second device in background, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no notebook rear casing facing camera, character holding device but gaze not directed at its screen while in use, no device covering, blocking or obscuring the character's face${dispositivoExposto ? ", no character reading or gazing at a screen that faces the camera, no character holding the exposed product device, device must rest on a surface not in anyone's hands" : ""}.`;
+NEGATIVE: ${screenNegative}, no screen content anywhere in the image when the active screen face is turned away from the viewer, no user interface rendered on any surface other than the active screen face, no images or graphics on device casing or back cover, no content or interface visible on back casing under any camera angle, no duplicated devices, no second device in background, no corded phone, no rotary phone, casing must be plain and unbranded, no Apple logo, no glowing logo on lid, no backlit symbol on laptop, no brand mark on back cover, no laptop logo, generic unbranded laptop only, no laptop screen facing camera directly, no monitor seen from behind, no back of monitor facing camera, no notebook rear casing facing camera, character holding device but gaze not directed at its screen while in use, no device covering, blocking or obscuring the character's face${dispositivoExposto ? ", no character reading or gazing at a screen that faces the camera, no character holding the exposed product device, device must rest on a surface not in anyone's hands" : ""}.`;
 }
 
 export const AMBIENTES_RULE = `⚠ AMBIENTES VISUAIS: PROIBIDO paredes de concreto aparente, galpões industriais, estruturas arquitetônicas frias, corredores vazios como elemento dominante ou fundo para tipografia. Use fundos coloridos, texturas orgânicas, desfoque, gradiente ou fotografia quente. PROIBIDO TAMBÉM: formas geométricas abstratas flutuando (círculos, esferas, polígonos, espirais) sem propósito narrativo. A composição deve ter TEMA CONCRETO — humano, objeto real, natureza, tipografia ou cenário com sentido.`;
