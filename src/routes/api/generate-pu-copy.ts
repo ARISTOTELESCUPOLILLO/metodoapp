@@ -224,7 +224,7 @@ ${topicosSchemaLines}
   "texto": "texto de apoio curto, no MÁXIMO 14 palavras (CONTE antes de retornar), complementa o título sem repetir, em português brasileiro"
 }`;
           const tituloRulesBlock = tituloFixo
-            ? `- O TÍTULO já está definido e FIXO: "${tituloFixo}" — NÃO o reescreva, NÃO gere um título novo, gere APENAS os tópicos.`
+            ? `- ⚠ TÍTULO FIXO (DEFINIDO PELO USUÁRIO): o título FINAL desta peça é exatamente "${tituloFixo}" — ele pode ter sido escrito ou editado à mão pelo usuário depois da primeira geração. NÃO o reescreva, NÃO gere um título novo: gere APENAS os tópicos. Ele é a ÂNCORA DE SENTIDO dos tópicos abaixo.`
             : ajustePromocional
               ? `- "titulo" no máximo ${TITULO_MAX_WORDS_AJUSTADO} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de retornar), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir.`
               : `- "titulo" no máximo 6 palavras, cada palavra com no máximo 4 sílabas (ex.: "resultado" 4 sílabas ✓, "comunicação" 5 sílabas ✗ — use "contato", "presença"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 5 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 6+ sílabas devem ser trocados por sinônimo mais curto. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓`;
@@ -250,7 +250,17 @@ ${TECNICISMO_RULE}
 - Linguagem simples, natural e profissional. Ensino médio deve entender sem esforço. Evite "maximizar", "estratégias eficazes", "impacto real", "soluções digitais", "transformar seu negócio". Prefira: "melhorar", "vender", "organizar", "atender", "crescer", "mostrar".
 ${
   tituloFixo
-    ? ""
+    ? // Achado real 22/07/2026 (Ari, PU Promoção com oferta concreta, título
+      // 9/9 editado à mão): com tituloFixo este bloco inteiro virava STRING
+      // VAZIA — sumia justamente "Título e tópicos reforçam a MESMA oferta" e
+      // a ANCORAGEM CONCRETA. Sobrava só "não gere título novo", que é uma
+      // instrução de NÃO-GERAÇÃO, não de COERÊNCIA: os tópicos novos eram
+      // derivados da informação-chave e ignoravam a edição manual do título.
+      // Mesmo princípio do tituloAncoraBlock de regenerate-block.ts, que já
+      // resolvia isso no modo TEXTO CORRIDO — o modo TÓPICOS ficou de fora.
+      `- ⚠ COERÊNCIA COM O TÍTULO FIXO — REGRA PRINCIPAL DESTA GERAÇÃO: os ${TOPICOS_COUNT} tópicos são o APOIO deste título e precisam sustentar a MESMA mensagem que ele afirma, exatamente como está escrito. Cada tópico desenvolve, comprova ou detalha algo que o título promete — nenhum tópico abre ângulo paralelo, tema novo ou oferta diferente da anunciada no título.
+- O TÍTULO PREVALECE SOBRE A INFORMAÇÃO-CHAVE: se o título acima apontar para direção diferente da que a informação-chave descreve, siga o TÍTULO — ele é a decisão final do usuário. A informação-chave serve só como fonte de dados concretos (item, preço, prazo, condição de pagamento, canal) que NÃO contradigam o título.
+- PRESERVAÇÃO DOS DADOS CONCRETOS: quando a informação-chave traz preço, desconto, prazo ou condição, mantenha-os fiéis nos tópicos — sem inventar valor, prazo, parcelamento ou condição que não estejam lá, e sem omitir os que sustentam o que o título promete.`
     : ajustePromocional
       ? `- Este título é uma OFERTA/PROMOÇÃO concreta: NÃO busque um ângulo diferente do que a informação-chave já diz. Reescreva-a como manchete publicitária — com clareza, pontuação e fôlego de anúncio — preservando literalmente item, preço, prazo e condição de pagamento citados (troque por sinônimo direto só se for estritamente necessário para caber no limite de palavras). PROIBIDO inventar valor, prazo, parcelamento ou condição que não estejam na informação-chave. PROIBIDO omitir o preço/condição citados só para "soar mais criativo".
 - Título e texto/tópicos reforçam a MESMA oferta — não abra um ângulo paralelo que fuja da promoção anunciada no título.`
