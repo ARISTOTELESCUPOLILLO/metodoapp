@@ -286,11 +286,22 @@ export function buildPostUnicoPrompt(params: {
           faixaLabelImagem,
         )
       : "";
-  // Em Direção Livre, variationBlock é "". Se há preferência de gênero/idade e
-  // nenhuma referência com personagem (avatar ou checkbox) já declara isso no
-  // referencesBlock, injeta a restrição para o modelo não decidir livremente.
-  const livreGenderBlock =
-    data.direcao !== "mood" && semPersonagemRef && (forcedGender || faixaLabelImagem)
+  // Rede de segurança de gênero/idade — vale em QUALQUER direção, não só na Livre.
+  // A diretiva de gênero vinha por dois ramos mutuamente exclusivos: o bloco de
+  // variação do mood (pickImageVariationBlock) e este bloco. Os dois podiam ser
+  // pulados ao mesmo tempo, deixando a peça SEM nenhuma linha de gênero e o
+  // gpt-image-2 caindo no viés padrão (personagem feminino) mesmo com "Masculino"
+  // marcado (bug real). Dois buracos fechados aqui:
+  //   1) Direção "mood" com mood NÃO selecionado — pickImageVariationBlock retorna
+  //      "" (ver imageVariationPicker.ts: `if (!mood) return ""`), e a condição
+  //      antiga `data.direcao !== "mood"` também pulava este bloco.
+  //   2) Direção Livre com forcedGender ausente (a antiga condição dependia dele).
+  // Agora dispara sempre que o bloco do mood NÃO tiver declarado o gênero e não
+  // houver referência de personagem que já o fixe. O teste em variationBlock
+  // evita declaração duplicada quando o mood já o incluiu.
+  const moodJaDeclarouGenero = variationBlock.includes("GÊNERO OBRIGATÓRIO");
+  const genderSafetyBlock =
+    !moodJaDeclarouGenero && semPersonagemRef && (forcedGender || faixaLabelImagem)
       ? (() => {
           const idadeClause = faixaLabelImagem ? `, aparentando ${faixaLabelImagem}` : "";
           if (!forcedGender) {
@@ -494,7 +505,7 @@ ${
 ${copyBlock}
 ${CONCEITO_FIRST_RULE}
 ${papelBlock}
-${direcao}${variationBlock}${livreGenderBlock}${regenVariationBlock}
+${direcao}${variationBlock}${genderSafetyBlock}${regenVariationBlock}
 
 ${buildColorBlock(primary, accent, data.direcao === "mood", data.objetivo, tonalidadeSeed)}
 

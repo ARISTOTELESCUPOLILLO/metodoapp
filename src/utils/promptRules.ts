@@ -19,8 +19,14 @@ const DEVICE_TABLET =
   "TABLET: mesma lógica do celular — tela voltada para cima sobre a mesa, OU em mãos seguindo o ENQUADRAMENTO escolhido mais abaixo (MOSTRAR A TELA ao observador, ou RETRATO DO PERSONAGEM com o verso liso voltado à câmera e o personagem olhando para a própria tela).";
 const DEVICE_NOTEBOOK =
   'NOTEBOOK/LAPTOP: SOMENTE de perfil lateral — câmera paralela ao eixo da dobradiça, mostrando a espessura do aparelho aberto em ângulo "V", nunca de frente nem de costas. A tampa traseira nunca fica visível para a câmera.';
+// Enquadramento descrito SÓ pela face frontal (tela + moldura + pé de apoio).
+// Antes o texto citava "a parte de trás do gabinete nunca fica visível" e o
+// "logo de fabricante" — nomear a face traseira/o logo prima o gpt-image-2 a
+// desenhá-los justamente ali (efeito "não pense no elefante"); a supressão de
+// marca continua garantida pela regra de CARCAÇA e pelo NEGATIVE. Aqui só
+// descrevemos o que DEVE aparecer.
 const DEVICE_MONITOR =
-  "MONITOR DE DESKTOP: pessoa posicionada de frente para a tela — a câmera fica do mesmo lado da pessoa (o lado da tela), enquadrando o rosto dela e a tela de lado/oblíqua. A parte de trás do gabinete nunca fica visível para a câmera, nenhum logo de fabricante em evidência.";
+  "MONITOR DE DESKTOP: pessoa posicionada de frente para a tela — a câmera fica do mesmo lado da pessoa (o lado da tela), enquadrando o rosto dela e a tela de lado/oblíqua. Só a face frontal do monitor entra no quadro: a moldura fina ao redor da tela e o pé de apoio, com a tela sempre voltada para a pessoa e para a câmera.";
 const DEVICE_TELA_FUNDO =
   "TELA OU TV GRANDE AO FUNDO: equipamento em segundo plano, distante da câmera, como parte do ambiente (sala de apresentação, painel) — nunca em primeiro plano nem como foco da composição.";
 

@@ -312,7 +312,15 @@ export default function App() {
     });
     clearPostUnicoState();
     setError("");
-    setVisualSelection(defaultVisualSelection);
+    // O "usar personagem sem avatar" (e o gênero dele) é direcionamento tanto
+    // quanto faixaEtaria/generoPref preservados acima — resetá-lo junto do resto
+    // apagava silenciosamente o personagem/gênero escolhido, enquanto as demais
+    // preferências sobreviviam (peça saía sem o personagem masculino marcado).
+    // Preserva o personagem; zera só as escolhas de composição da peça.
+    setVisualSelection((prev) => ({
+      ...defaultVisualSelection,
+      personagemSemAvatar: prev.personagemSemAvatar,
+    }));
   }
 
   return (
