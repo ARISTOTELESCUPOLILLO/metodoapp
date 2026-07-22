@@ -42,6 +42,9 @@ export async function generatePostUnicoCopy(
   segment?: string,
   preferredSlot?: string,
   tituloFixo?: string,
+  // Tópicos já na tela — enviados só no "Gerar outros tópicos" para o motor
+  // saber o que NÃO repetir (ver naoRepetirBlock em generate-pu-copy.ts).
+  topicosAtuais?: string[],
 ): Promise<PostUnicoCopy> {
   const auth = await getAuthHeaders();
   const res = await fetch("/api/generate-pu-copy", {
@@ -59,6 +62,7 @@ export async function generatePostUnicoCopy(
       formatoTexto: data.formatoTexto || "corrido",
       ...(preferredSlot ? { preferredSlot } : {}),
       ...(tituloFixo ? { tituloFixo } : {}),
+      ...(topicosAtuais?.length ? { topicosAtuais } : {}),
     }),
   });
   if (!res.ok) {
@@ -96,7 +100,18 @@ export interface PostUnicoCaption {
 
 export async function generatePostUnicoCaption(
   data: PostUnicoFormData,
-  opts?: { debit?: boolean; brandVoice?: string; preferredSlot?: string; previousCaption?: string },
+  opts?: {
+    debit?: boolean;
+    brandVoice?: string;
+    preferredSlot?: string;
+    previousCaption?: string;
+    // Título e tópicos/texto FINAIS da peça (já editados pelo usuário, se ele
+    // editou). Sem eles a legenda era escrita só a partir do keyInfo e podia
+    // contradizer o que está escrito na imagem — ver tituloAncoraBlock em
+    // generate-caption.ts (achado real 22/07/2026).
+    titulo?: string;
+    topicos?: string[];
+  },
 ): Promise<PostUnicoCaption> {
   // Headers pelo getAuthHeaders, como as demais chamadas deste arquivo e dos outros
   // servicos. Antes era montado a mao aqui, e so quando debit=true -- sobra da epoca
@@ -122,6 +137,8 @@ export async function generatePostUnicoCaption(
       debit: opts?.debit === true,
       ...(opts?.preferredSlot ? { preferredSlot: opts.preferredSlot } : {}),
       ...(opts?.previousCaption ? { previousCaption: opts.previousCaption } : {}),
+      ...(opts?.titulo ? { titulo: opts.titulo } : {}),
+      ...(opts?.topicos?.length ? { topicos: opts.topicos } : {}),
     }),
   });
   if (!res.ok) {

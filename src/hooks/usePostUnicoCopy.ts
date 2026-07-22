@@ -145,6 +145,10 @@ export function usePostUnicoCopy({
         kit.segment,
         puSlot,
         copy.titulo,
+        // Tópicos na tela viram lista de "não repita" no motor — sem isso, o
+        // modelo partia do mesmo título + mesma informação-chave e devolvia
+        // frases quase idênticas às já entregues (achado real 22/07/2026).
+        copy.topicos?.map((t) => t.texto) ?? [],
       );
       if (generated.topicos?.length) {
         setCopy((c) => (c ? { ...c, topicos: generated.topicos, texto: generated.texto } : c));

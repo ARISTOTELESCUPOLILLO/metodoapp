@@ -71,7 +71,14 @@ export function usePostUnicoGeneration({
           companyName: postUnico.companyName || kit.companyName,
           mainActivity: postUnico.mainActivity || kit.mainActivity || "",
         },
-        { brandVoice: kit.brandVoice, previousCaption: caption?.full },
+        {
+          brandVoice: kit.brandVoice,
+          previousCaption: caption?.full,
+          // Título/tópicos finais da peça (já com edições manuais) — a legenda
+          // precisa continuar o que está escrito na arte, não o keyInfo antigo.
+          titulo: puCopy?.titulo,
+          topicos: puCopy?.topicos?.map((t) => t.texto),
+        },
       );
       setCaption(c);
       setPuCaptionRegen((n) => n + 1);
@@ -107,6 +114,10 @@ export function usePostUnicoGeneration({
       debit: true,
       brandVoice: kit.brandVoice,
       preferredSlot: selectedSlot,
+      // `copy` é o título/texto confirmado deste clique (inclui edição manual);
+      // puCopy cobre o caso em que a geração não recebeu copy explícito.
+      titulo: copy?.titulo || puCopy?.titulo,
+      topicos: puCopy?.topicos?.map((t) => t.texto),
     })
       .then((c) => {
         setCaption(c);

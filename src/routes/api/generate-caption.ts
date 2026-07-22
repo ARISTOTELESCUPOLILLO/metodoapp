@@ -174,6 +174,21 @@ export const Route = createFileRoute("/api/generate-caption")({
           const previousCaption = body.previousCaption
             ? String(body.previousCaption).slice(0, 400)
             : null;
+          // Título e tópicos FINAIS escritos na peça — podem ter sido editados
+          // à mão depois da geração do copy. Ver tituloAncoraBlock abaixo.
+          const titulo = String(body.titulo || "")
+            .trim()
+            .slice(0, 300);
+          const topicos: string[] = Array.isArray(body.topicos)
+            ? body.topicos
+                .map((t: unknown) =>
+                  String(t || "")
+                    .trim()
+                    .slice(0, 200),
+                )
+                .filter(Boolean)
+                .slice(0, 3)
+            : [];
           const debit = body.debit === true;
           const preferredSlot = ["plano1", "plano2", "bonus"].includes(body.preferredSlot)
             ? (body.preferredSlot as "plano1" | "plano2" | "bonus")
@@ -268,13 +283,31 @@ Proibido mencionar literalmente o nome da voz no texto final.
             ? `LEGENDA ANTERIOR GERADA (a nova versão precisa ser REALMENTE DIFERENTE): "${previousCaption}"\nNA NOVA VERSÃO: comece com uma frase de abertura diferente, use um novo CTA (diferente do anterior) e, quando possível, novas hashtags — não repita a estrutura, a frase inicial nem as palavras-chave principais da legenda anterior.\n`
             : "";
 
+          // TÍTULO COMO ÂNCORA DA LEGENDA (achado real 22/07/2026, Ari — PU
+          // Promoção com título ajustado de 9 palavras): a legenda era escrita
+          // SÓ a partir do keyInfo — nem título nem tópicos eram enviados. Nos
+          // outros casos isso passava despercebido porque título e legenda
+          // saíam da MESMA fonte e concordavam por acaso; no modo AJUSTADO o
+          // título é uma manchete de oferta que o usuário costuma editar à
+          // mão, e a legenda continuava presa ao keyInfo antigo. A regra do
+          // campo "texto" abaixo já mandava "sem repetir o título inteiro" —
+          // pedia coerência com um texto que o modelo nunca recebia.
+          // A legenda APROVEITA A INTENÇÃO do título (a mesma promessa, o mesmo
+          // assunto) sem repetir suas palavras — é continuação, não eco.
+          const tituloAncoraBlock = titulo
+            ? `TÍTULO ESCRITO NA PEÇA (é o que o leitor vê na imagem): "${titulo}"
+${topicos.length ? `TÓPICOS ESCRITOS NA PEÇA:\n${topicos.map((t, i) => `${i + 1}. ${t}`).join("\n")}\n` : ""}⚠ A LEGENDA CONTINUA ESTA PEÇA: ela desenvolve a MESMA intenção e a MESMA promessa do título acima — aproveite a intenção dele, sem copiar suas palavras nem repetir os tópicos. PROIBIDO abrir assunto, oferta ou benefício que o título não sustente.
+⚠ PRECEDÊNCIA: o título/tópicos acima são o que está publicado na arte e podem ter sido editados à mão pelo usuário DEPOIS da informação-chave — se os dois divergirem, vale o TÍTULO. A informação-chave serve como fonte de dados concretos (item, preço, prazo, condição) que não o contradigam.
+`
+            : "";
+
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
 
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
 ${voiceBlock}${previousBlock}OBJETIVO: ${objetivo} (tom: ${tom})
 INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
-
+${tituloAncoraBlock}
 Retorne JSON com EXATAMENTE este formato:
 {
   "texto": "frase principal da legenda, até ${LEGENDA_CORPO_MAX_WORDS} palavras, no tom certo, sem hashtags e sem emojis exagerados, sem repetir o título/informação-chave inteira nem abrir assunto novo — PROIBIDO começar com 'Antes' (contraste antes/depois é a saída mais previsível e repetitiva pra fechar o ciclo; varie com afirmação direta, observação concreta, cena ou pergunta)",

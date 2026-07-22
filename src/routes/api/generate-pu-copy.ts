@@ -77,6 +77,18 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
           // o título já escolhido (ver regenTopicos em usePostUnicoCopy.ts) —
           // mesmo princípio do bloco TÍTULO FIXO já usado em regenerate-block.ts.
           const tituloFixo = wantsTopicos ? String(body.tituloFixo || "").trim() || null : null;
+          // Tópicos já mostrados na tela, enviados só no "Gerar outros tópicos"
+          // — usados como lista de "não repita" (ver naoRepetirBlock abaixo).
+          const topicosAtuais: string[] = Array.isArray(body.topicosAtuais)
+            ? body.topicosAtuais
+                .map((t: unknown) =>
+                  String(t || "")
+                    .trim()
+                    .slice(0, 200),
+                )
+                .filter(Boolean)
+                .slice(0, TOPICOS_COUNT)
+            : [];
           // Modo AJUSTADO (PU objetivo=promocao + informação-chave descreve
           // oferta/promoção concreta): título vira manchete de até 9 palavras
           // fiel ao que foi escrito, sem buscar ângulo diferente — decisão
@@ -228,18 +240,49 @@ ${topicosSchemaLines}
             : ajustePromocional
               ? `- "titulo" no máximo ${TITULO_MAX_WORDS_AJUSTADO} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de retornar), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir.`
               : `- "titulo" no máximo 6 palavras, cada palavra com no máximo 4 sílabas (ex.: "resultado" 4 sílabas ✓, "comunicação" 5 sílabas ✗ — use "contato", "presença"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 5 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 6+ sílabas devem ser trocados por sinônimo mais curto. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓`;
+          // POSIÇÃO IMPORTA (achado real 22/07/2026, Ari): não bastou declarar
+          // a coerência no meio das regras. No modo tituloFixo o bloco de
+          // CONTEXTO terminava na INFORMAÇÃO-CHAVE — o material da PRIMEIRA
+          // geração ficava no ponto de maior saliência do prompt, entre aspas,
+          // enquanto o título novo (editado à mão) aparecia lá embaixo, no meio
+          // de ~15 regras. Resultado: parte dos tópicos seguia o título e algum
+          // deles escorregava de volta para a informação-chave antiga. O título
+          // agora fecha o bloco de contexto, com a informação-chave rebaixada
+          // explicitamente a material de origem possivelmente desatualizado.
+          const tituloAncoraContexto = tituloFixo
+            ? `TÍTULO FINAL DA PEÇA (JÁ DEFINIDO PELO USUÁRIO — NÃO REESCREVER): "${tituloFixo}"
+⚠ PRECEDÊNCIA: a INFORMAÇÃO-CHAVE acima é o material de origem da PRIMEIRA geração e pode estar DESATUALIZADA — o usuário pode ter reescrito o título depois dela. Em qualquer divergência entre os dois, vale o TÍTULO. Os ${TOPICOS_COUNT} tópicos apoiam o TÍTULO; a informação-chave serve só como fonte de dados concretos (item, preço, prazo, condição, canal) que NÃO contradigam o título.
+`
+            : "";
+          // "Gerar outros tópicos" precisa entregar tópicos DIFERENTES. Os
+          // tópicos atuais não eram enviados, então o modelo — partindo do mesmo
+          // título e da mesma informação-chave — reconstruía frases quase iguais
+          // às que já estavam na tela (queixa real: "veio texto do tópico
+          // anterior"). Listá-los como material a NÃO repetir é a única forma de
+          // o modelo saber o que já foi entregue.
+          const naoRepetirBlock =
+            tituloFixo && topicosAtuais.length
+              ? `\nTÓPICOS JÁ ENTREGUES NESTA PEÇA (o usuário pediu OUTROS — NÃO os repita):
+${topicosAtuais.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+⚠ Os ${TOPICOS_COUNT} tópicos novos precisam trazer ângulo, benefício ou informação DIFERENTE dos acima — não vale reescrever os mesmos com sinônimos ou ordem trocada. Continuam valendo o título e a precedência declarados acima.
+`
+              : "";
           const textoOuTopicosRulesBlock = wantsTopicos
             ? `- Cada "texto" dos ${TOPICOS_COUNT} tópicos: no máximo ${TOPICO_MAX_WORDS} palavras (CONTE antes de retornar), frase direta e concreta — um ângulo, benefício ou ponto DIFERENTE em cada tópico, sem repetir a mesma ideia com palavras trocadas entre eles, sem hashtag, sem emoji, sem numeração própria (não escreva "1.", "Tópico 1" etc.).
 - Cada "icone" DEVE ser EXATAMENTE um destes termos, copiado literalmente (não traduza, não invente outro): ${topicIconList}. Escolha o mais coerente com o conteúdo de cada tópico; varie entre os ${TOPICOS_COUNT} quando fizer sentido, sem repetir o mesmo ícone à toa.`
             : `- "texto" no máximo 14 palavras (CONTE antes de retornar — 15ª palavra em diante é cortada), frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji`;
 
-          const userPrompt = `Você cria o título ${wantsTopicos ? "e os tópicos de apoio" : "e o texto de apoio"} que aparecerão TIPOGRAFADOS dentro de uma peça publicitária para Instagram.
+          const userPrompt = `${
+            tituloFixo
+              ? "Você cria APENAS os tópicos de apoio que aparecerão TIPOGRAFADOS dentro de uma peça publicitária para Instagram. O TÍTULO desta peça JÁ ESTÁ DEFINIDO (ver abaixo) e não deve ser gerado nem reescrito."
+              : `Você cria o título ${wantsTopicos ? "e os tópicos de apoio" : "e o texto de apoio"} que aparecerão TIPOGRAFADOS dentro de uma peça publicitária para Instagram.`
+          }
 
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
 ${segmentBlock}${audienceBlock}${faixaBlock}${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
 ${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` : ""}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
-
+${tituloAncoraContexto}${naoRepetirBlock}
 ${schemaBlock}
 
 Regras:
