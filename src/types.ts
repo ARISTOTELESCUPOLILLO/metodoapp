@@ -265,6 +265,13 @@ export interface PostUnicoVisualSelection {
   // do Kit de Marca quando o usuário escolhe que ele seja o EMISSOR em vez do
   // público-alvo; só tem efeito quando kit.uniformeDataUrl está cadastrado.
   personagemSemAvatar?: PersonagemSemAvatar;
+  // Peça sem nenhuma pessoa na imagem — o sujeito visual passa a ser o
+  // produto, o ambiente (cenário/fachada) ou um objeto do ofício real. Vale
+  // nos 3 segmentos e em qualquer direção. Mutuamente exclusivo com useAvatar
+  // e com personagemSemAvatar.ativo (ver PostUnicoComposicaoVisual). Sem este
+  // flag, o prompt de imagem sempre afirma a existência de uma pessoa quando
+  // não há avatar — ver core/semPersonagem.ts.
+  semPersonagem?: boolean;
   // Usa a foto de Fato do Kit Imagem (objetivo "Fatos") — aplicação direta
   // sem reinvenção pela IA, só overlay de marca/título/texto.
   useFato?: boolean;

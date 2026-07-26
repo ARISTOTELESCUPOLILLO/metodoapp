@@ -7,20 +7,32 @@ import { buildClothingPool } from "../core/clothingPool";
 import type { PostUnicoReferences } from "../shared/visual/references";
 import { buildUltimaVerificacaoBlock } from "../shared/visual/referenceBlocks";
 
-function segmentRules(segment?: string, hasCenarioRef?: boolean): string {
+function segmentRules(segment?: string, hasCenarioRef?: boolean, semPersonagem?: boolean): string {
   if (segment === "VAREJO") {
-    return "CONTEXTO — SEGMENTO VAREJO: negócio de comercialização de produtos ao consumidor. Quando presentes, produtos comunicam desejo de compra e benefícios (apresentar de forma atraente, não como catálogo técnico); cenário cria atmosfera de experiência de compra ou lifestyle; avatar contextualiza atendimento ou uso do produto. O tom visual e textual é convidativo e orientado ao consumo.";
+    // A menção ao avatar sai quando a peça é sem personagem — deixá-la afirma
+    // um elemento que não existe nesta geração.
+    const avatarClause = semPersonagem
+      ? "a composição do produto no espaço contextualiza o uso e o momento de compra"
+      : "avatar contextualiza atendimento ou uso do produto";
+    return `CONTEXTO — SEGMENTO VAREJO: negócio de comercialização de produtos ao consumidor. Quando presentes, produtos comunicam desejo de compra e benefícios (apresentar de forma atraente, não como catálogo técnico); cenário cria atmosfera de experiência de compra ou lifestyle; ${avatarClause}. O tom visual e textual é convidativo e orientado ao consumo.`;
   }
   if (segment === "MARCA") {
     // "Cenário" só entra na frase quando há foto de cenário de fato enviada —
     // caso contrário o texto empurrava o modelo a inventar um ambiente/estilo
     // de vida mesmo sem referência, mesmo com a trava de fundo neutro ativa.
-    const cenarioClause = hasCenarioRef
-      ? "Cenário e avatar transmitem percepção, estilo de vida e valores da marca"
-      : "Avatar transmite percepção e valores da marca";
+    const cenarioClause = semPersonagem
+      ? hasCenarioRef
+        ? "O cenário e os objetos em cena transmitem percepção, território e valores da marca"
+        : "A composição de objeto, produto e luz transmite percepção e valores da marca"
+      : hasCenarioRef
+        ? "Cenário e avatar transmitem percepção, estilo de vida e valores da marca"
+        : "Avatar transmite percepção e valores da marca";
     return `CONTEXTO — SEGMENTO MARCA: construção de identidade e posicionamento. ${cenarioClause}; a composição reforça aspiração e propósito; produtos, se presentes, são ícones da identidade. O tom visual e textual é aspiracional e alinhado ao posicionamento da marca.`;
   }
-  return "CONTEXTO — SEGMENTO SERVIÇOS: prestação de serviços especializados. Avatar (quando presente) transmite autoridade, competência e confiança do profissional ou da equipe; cenário reforça o contexto profissional; a composição comunica expertise, credibilidade e entrega de valor. O tom visual e textual é confiante e orientado ao resultado.";
+  const servicosClause = semPersonagem
+    ? "Sem pessoas em cena, quem transmite autoridade e competência é o AMBIENTE e os INSTRUMENTOS do ofício — organização, cuidado, equipamento real, trabalho em andamento"
+    : "Avatar (quando presente) transmite autoridade, competência e confiança do profissional ou da equipe";
+  return `CONTEXTO — SEGMENTO SERVIÇOS: prestação de serviços especializados. ${servicosClause}; cenário reforça o contexto profissional; a composição comunica expertise, credibilidade e entrega de valor. O tom visual e textual é confiante e orientado ao resultado.`;
 }
 
 export function referencesBlock(
@@ -35,6 +47,9 @@ export function referencesBlock(
   mood?: MoodCode,
 ): string {
   if (!refs) return "";
+  // Peça sem personagem — lido direto das refs (não é parâmetro novo: o flag
+  // já viaja em PostUnicoReferences). Ver core/semPersonagem.ts.
+  const semPersonagem = !!refs.semPersonagemAtivo;
   const parts: string[] = [];
   const elementos: string[] = [];
   if (refs.avatar) elementos.push("AVATAR");
@@ -50,7 +65,7 @@ export function referencesBlock(
     `ESTRUTURA VISUAL DA PEÇA — usar como REFERÊNCIA VISUAL (não copiar literalmente, não fazer colagem):`,
   );
   parts.push(`Elementos enviados: ${elementos.join(", ")}.`);
-  parts.push(segmentRules(segment, !!refs.cenario));
+  parts.push(segmentRules(segment, !!refs.cenario, semPersonagem));
 
   if (refs.avatar) {
     const clothingHint = refs.uniforme
@@ -102,8 +117,14 @@ export function referencesBlock(
     );
   }
   if (refs.fachada) {
+    // Sem personagem, a alternativa "pessoa ou produto à frente" precisa
+    // fechar a porta explicitamente: fachada é o contexto onde o modelo mais
+    // tende a povoar a cena com transeuntes, clientes e funcionários.
+    const fachadaFrenteClause = semPersonagem
+      ? "O produto (quando houver) aparece à frente, na entrada ou apoiado no espaço, com a fachada claramente visível; sem qualquer pessoa em quadro — nem cliente, nem funcionário, nem transeunte, nem figura ao fundo ou atrás da vitrine."
+      : "A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo.";
     parts.push(
-      `FACHADA OBRIGATÓRIA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, a volumetria, a vitrine, os materiais e as cores do local, o ângulo da câmera e a atmosfera reconhecíveis. A pessoa ou produto deve aparecer à frente, na entrada ou com a fachada claramente visível ao fundo. Quem conhece o local deve reconhecê-lo pela arquitetura e pelas cores. TEXTO/NOME DO ESTABELECIMENTO NA FACHADA: se o nome ou a marca do estabelecimento JÁ aparecer nítido e legível na foto de referência (pintado na parede, em placa, testeira, faixa ou letreiro), PRESERVE-O fielmente como está na foto — mesma grafia, mesma posição, mesmas cores — exatamente como você preserva a arquitetura e as cores do local; NÃO apague, NÃO borre e NÃO substitua esse nome por uma área lisa/branca/genérica. O que é PROIBIDO é INVENTAR ou redesenhar do zero um letreiro/marca que NÃO esteja legível na referência: onde não houver escrita clara, mantenha apenas a forma/o suporte (a placa, a testeira, a faixa) de modo neutro, SEM criar letras ou marca fictícia. A logomarca oficial é aplicada depois, fora da IA, em outra área da peça — ela NÃO substitui o nome que já existe na fachada real. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, as cores e o nome do local permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final pela sua arquitetura e cores.`,
+      `FACHADA OBRIGATÓRIA: preserve FIELMENTE este espaço como ele é na imagem de referência. Mantenha a arquitetura, a volumetria, a vitrine, os materiais e as cores do local, o ângulo da câmera e a atmosfera reconhecíveis. ${fachadaFrenteClause} Quem conhece o local deve reconhecê-lo pela arquitetura e pelas cores. TEXTO/NOME DO ESTABELECIMENTO NA FACHADA: se o nome ou a marca do estabelecimento JÁ aparecer nítido e legível na foto de referência (pintado na parede, em placa, testeira, faixa ou letreiro), PRESERVE-O fielmente como está na foto — mesma grafia, mesma posição, mesmas cores — exatamente como você preserva a arquitetura e as cores do local; NÃO apague, NÃO borre e NÃO substitua esse nome por uma área lisa/branca/genérica. O que é PROIBIDO é INVENTAR ou redesenhar do zero um letreiro/marca que NÃO esteja legível na referência: onde não houver escrita clara, mantenha apenas a forma/o suporte (a placa, a testeira, a faixa) de modo neutro, SEM criar letras ou marca fictícia. A logomarca oficial é aplicada depois, fora da IA, em outra área da peça — ela NÃO substitui o nome que já existe na fachada real. É PERMITIDO limpar a composição de elementos visuais indesejados — fios elétricos, postes, cabos aéreos, lixo ou poluição visual cruzando a fachada — e, se o céu aparecer, substituí-lo por um céu mais bonito e coerente com o mood/horário (azul limpo, entardecer dourado, nublado suave), desde que a arquitetura, as cores e o nome do local permaneçam plenamente reconhecíveis e a peça não pareça artificial ou colada. NÃO invente outro lugar, NÃO substitua a arquitetura, NÃO mude o ângulo. O local deve ser reconhecível na imagem final pela sua arquitetura e cores.`,
     );
   }
   if (refs.cenario) {
@@ -119,7 +140,9 @@ export function referencesBlock(
     // não apareceu na peça.
     const produtoGuard =
       segment !== "VAREJO" && !temProduto
-        ? " Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço."
+        ? semPersonagem
+          ? " Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o ambiente e o objeto de foco da peça."
+          : " Itens de mercadoria, produtos de terceiros ou embalagens com marcas visíveis em primeiro plano NÃO devem ser reproduzidos como elementos centrais da composição — desfoque, exclua ou mantenha discretos ao fundo, priorizando o avatar e a ação de serviço."
         : "";
     const ambienteClause = temProduto
       ? "preserve a arquitetura, paredes, piso, iluminação geral e identidade visual do ambiente — móveis e objetos do cenário aparecem apenas como FUNDO de apoio, atrás e ao redor do produto referenciado, nunca à frente dele nem maiores ou mais nítidos que ele"
@@ -139,11 +162,17 @@ export function referencesBlock(
     // "PRECEDÊNCIA sobre qualquer personagem descrito no restante deste prompt",
     // o que subordina o gênero e deixa o modelo livre para cair no viés masculino.
     const cenarioGenderClause =
-      !refs.avatar && !refs.personagemSemAvatarAtivo && forcedGender
+      !semPersonagem && !refs.avatar && !refs.personagemSemAvatarAtivo && forcedGender
         ? ` O personagem inserido na cena DEVE ser ${forcedGender} — PROIBIDO gerar ${forcedGender === "mulher" ? "homem" : "mulher"} ou gênero ambíguo.`
         : "";
+    // "Adicione personagem e ação dentro deste espaço real" era a instrução
+    // que, sozinha, fazia toda peça com cenário marcado sair com gente —
+    // inclusive quando o usuário só queria mostrar o espaço ou o produto.
+    const cenarioOcupacaoClause = semPersonagem
+      ? "O espaço aparece SEM PESSOAS: a cena é composta pelo próprio ambiente e pelos objetos/produtos que pertencem a ele, sem inventar novos elementos. O que dá vida à cena é o vestígio de uso (material em trabalho, superfície ocupada, luz do horário), nunca alguém em quadro."
+      : "Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.";
     parts.push(
-      `CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. Adicione personagem e ação dentro deste espaço real sem inventar novos elementos.${cenarioGenderClause}${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`,
+      `CENÁRIO OBRIGATÓRIO — AMBIENTE: preserve FIELMENTE este espaço como ele é na imagem de referência. ${ambienteClause.charAt(0).toUpperCase()}${ambienteClause.slice(1)}. ${cenarioOcupacaoClause}${cenarioGenderClause}${produtoGuard} NÃO invente outro lugar, NÃO substitua a arquitetura. ${anguloClause} O local deve ser reconhecível na imagem final.`,
     );
   }
   if (refs.fato) {
@@ -192,6 +221,7 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         faceNotDominant,
         mood,
         produtoTelaIdentidade: !!refs.produtoTelaInformativa && !!refs.produtoEhDispositivo,
+        semPersonagem,
       }),
     );
     if (refs.produtos.length >= 2) {

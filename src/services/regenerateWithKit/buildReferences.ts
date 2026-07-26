@@ -20,9 +20,16 @@ export function buildReferences(
   uniformeDataUrl?: string,
 ): PostUnicoReferences {
   const refs: PostUnicoReferences = {};
-  const wantsAvatar = selecaoDireta
-    ? selecaoDireta.usarAvatar
-    : elemento === "avatar" || elemento === "cenario+avatar" || elemento === "avatar+produto";
+  // "Peça sem personagem" (PU) é exclusivo com qualquer forma de personagem: a
+  // UI já impede marcar os dois, e aqui a exclusão é reforçada no motor para
+  // que nenhum caminho (restauração de localStorage antigo, chamada
+  // programática) consiga enviar avatar/uniforme junto do flag.
+  const semPersonagem = !!selecaoDireta?.semPersonagem;
+  const wantsAvatar =
+    !semPersonagem &&
+    (selecaoDireta
+      ? selecaoDireta.usarAvatar
+      : elemento === "avatar" || elemento === "cenario+avatar" || elemento === "avatar+produto");
   const wantsFachada = !!selecaoDireta?.usarFachada;
   const wantsCenario = selecaoDireta
     ? selecaoDireta.cenarioNum != null
@@ -98,7 +105,9 @@ export function buildReferences(
   // representa o público-alvo por padrão; o uniforme só entra quando o
   // usuário escolhe explicitamente que esse personagem é o EMISSOR
   // (comUniforme=true) e há uma foto de uniforme cadastrada.
-  if (selecaoDireta?.useUniforme && refs.avatar && uniformeDataUrl) {
+  if (semPersonagem) {
+    refs.semPersonagemAtivo = true;
+  } else if (selecaoDireta?.useUniforme && refs.avatar && uniformeDataUrl) {
     refs.uniforme = uniformeDataUrl;
   } else if (!refs.avatar && selecaoDireta?.personagemSemAvatar?.ativo) {
     refs.personagemSemAvatarAtivo = true;

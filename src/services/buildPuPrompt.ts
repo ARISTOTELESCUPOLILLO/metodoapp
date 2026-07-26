@@ -42,6 +42,11 @@ import {
 } from "./objetivoConfig";
 import { pickTonalidade } from "../core/colorRotation";
 import { countTituloWords } from "../core/textWordUtils";
+import {
+  buildSemPersonagemBlock,
+  buildSemPersonagemVariationBlock,
+  SEM_PERSONAGEM_REFORCO_FINAL,
+} from "../core/semPersonagem";
 
 function direcaoBlock(
   direcao: PostUnicoDirecao,
@@ -244,6 +249,10 @@ export function buildPostUnicoPrompt(params: {
   tonalidadeSeed?: number;
 }): string {
   const { data, kit, copy, references, forcedGender, variationHint, tonalidadeSeed } = params;
+  // Peça sem personagem (ver core/semPersonagem.ts): desliga as instruções que
+  // AFIRMAM pessoa (gênero obrigatório, pose sorteada, personagem-padrão da
+  // cena) e injeta a regra de precedência máxima + o reforço final.
+  const semPersonagem = !!references?.semPersonagemAtivo;
   const isNenhum = data.objetivo === "nenhum";
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
@@ -274,9 +283,15 @@ export function buildPostUnicoPrompt(params: {
   // sem avatar"), a faixaEtaria do form chega ao prompt de imagem como âncora de
   // idade no bloco de variação (Mood) ou como instrução explícita (Direção Livre).
   const semPersonagemRef = !references?.avatar && !references?.personagemSemAvatarAtivo;
-  const faixaLabelImagem = semPersonagemRef ? mapFaixaToAnchorAge(data.faixaEtaria) : undefined;
-  const variationBlock =
-    data.direcao === "mood"
+  // Sem personagem não há pessoa para ancorar em faixa etária — a âncora de
+  // idade é, ela mesma, uma afirmação de que existe alguém na cena.
+  const faixaLabelImagem =
+    semPersonagemRef && !semPersonagem ? mapFaixaToAnchorAge(data.faixaEtaria) : undefined;
+  // pickImageVariationBlock sorteia pose de personagem e declara gênero em
+  // todos os moods — substituído pelo bloco de variação sem pessoa.
+  const variationBlock = semPersonagem
+    ? buildSemPersonagemVariationBlock(data.direcao === "mood" ? data.mood : undefined)
+    : data.direcao === "mood"
       ? pickImageVariationBlock(
           data.mood,
           !!references?.avatar,
@@ -301,7 +316,10 @@ export function buildPostUnicoPrompt(params: {
   // evita declaração duplicada quando o mood já o incluiu.
   const moodJaDeclarouGenero = variationBlock.includes("GÊNERO OBRIGATÓRIO");
   const genderSafetyBlock =
-    !moodJaDeclarouGenero && semPersonagemRef && (forcedGender || faixaLabelImagem)
+    !semPersonagem &&
+    !moodJaDeclarouGenero &&
+    semPersonagemRef &&
+    (forcedGender || faixaLabelImagem)
       ? (() => {
           const idadeClause = faixaLabelImagem ? `, aparentando ${faixaLabelImagem}` : "";
           if (!forcedGender) {
@@ -460,8 +478,15 @@ Hierarquia tipográfica obrigatória:
   const OBJETIVOS_SIMBOLICOS = new Set(["homenagem", "aviso"]);
   const MOODS_SIMBOLICOS = new Set(["OP-04", "OP-05", "OP-06"]);
   const moodEhSimbolico = data.direcao === "mood" && MOODS_SIMBOLICOS.has(data.mood ?? "");
+  // semPersonagem também suprime a ação concreta: o bloco começa por
+  // "PERSONAGEM-PADRÃO DA CENA — O PÚBLICO-ALVO", que é a única instrução a
+  // afirmar pessoa quando NENHUMA referência do Kit está marcada (refsBlock
+  // vazio). A trava anti-metáfora continua entrando.
   const showConcreteAction =
-    !refsBlock && !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? "") && !moodEhSimbolico;
+    !refsBlock &&
+    !semPersonagem &&
+    !OBJETIVOS_SIMBOLICOS.has(data.objetivo ?? "") &&
+    !moodEhSimbolico;
   // Quando a ação concreta é omitida (Kit Imagem ativo), preenche o vácuo com
   // um papel específico de segmento+objetivo, se houver um mapeado — ver
   // avatarRoleBlock acima.
@@ -481,7 +506,15 @@ ${AMBIENTES_RULE}
 
 ${HUMANIZACAO_RULE}
 
-${referenceAnchorBlock}Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
+${referenceAnchorBlock}${
+    semPersonagem
+      ? `${buildSemPersonagemBlock({
+          hasProdutos: !!references?.produtos?.length,
+          hasCenario: !!references?.cenario,
+          hasFachada: !!references?.fachada,
+        })}\n\n`
+      : ""
+  }Peça publicitária ÚNICA para Instagram, formato NATIVO 1080x1350px (4:5). NÃO carrossel, NÃO série — standalone.
 
 ZONA SEGURA INVIOLÁVEL DE 110 PX em todas as bordas do canvas 1080x1350. Nada importante (rosto, olhos, mãos, produto-foco, lettering, gráficos, logo) entra nesse perímetro — bordas são continuação natural do fundo (ver regra específica de margem para título e texto de apoio nas REGRAS, abaixo).
 
@@ -523,5 +556,5 @@ REGRAS:
 - Regras absolutas (dispositivos digitais, ambientes, humanização): ver início deste prompt
 - ${zona.regraFinal}
 
-${FORBIDDEN_MOOD_WORDS}`;
+${FORBIDDEN_MOOD_WORDS}${semPersonagem ? `\n\n${SEM_PERSONAGEM_REFORCO_FINAL}` : ""}`;
 }

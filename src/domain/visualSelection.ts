@@ -36,6 +36,9 @@ export interface SelecaoDireta {
   // Veste o avatar com a foto de uniforme do Kit de Marca.
   useUniforme?: boolean;
   personagemSemAvatar?: PersonagemSemAvatar;
+  // Peça sem nenhuma pessoa na imagem (PU). Exclusivo com usarAvatar e com
+  // personagemSemAvatar.ativo — ver core/semPersonagem.ts.
+  semPersonagem?: boolean;
   // Os produtos selecionados são telas/dispositivos cujo conteúdo exibido é a
   // identidade do produto — suspende a regra global de desfoque de tela.
   produtoTelaInformativa?: boolean;

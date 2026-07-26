@@ -157,6 +157,29 @@ const PERSONAGEM_PROTAGONISTA_MARCA_PESSOAL_PLURAL =
   "A postura, a expressão e a ação do personagem são o centro visual da imagem. Os produtos aparecem de forma natural e secundária (nas mãos, sobre a mesa, ao lado, em uso discreto) — sem que o personagem precise se posicionar para apresentá-los. " +
   "Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE a pessoa.";
 
+// PEÇA SEM PERSONAGEM (PU) — em SERVIÇOS e MARCA as regras acima apontam o
+// protagonismo para o PERSONAGEM ("o PERSONAGEM é quem ocupa esse papel",
+// "peso visual igual entre personagem e produto"). Sem ninguém em cena, essas
+// instruções apontam para um elemento inexistente e o modelo resolve o vácuo
+// inventando uma pessoa. Decisão de 26/07/2026: o sujeito passa a ser o
+// produto marcado (aqui), com o ambiente/objeto do ofício cobrindo os casos
+// sem produto (ver buildSemPersonagemBlock em core/semPersonagem.ts).
+// VAREJO não precisa deste ramo: sua regra já é produto-herói e não depende
+// de personagem.
+const PRODUTO_SUJEITO_SEM_PERSONAGEM_SINGULAR =
+  "SUJEITO DA COMPOSIÇÃO — PRODUTO, SEM PERSONAGEM: esta peça não tem pessoas (ver regra de precedência máxima no início do prompt); o PRODUTO referenciado é o sujeito visual da cena. " +
+  "Ele aparece nítido, bem iluminado e imediatamente legível como aquilo que a peça mostra — em primeiro plano ou plano médio, integrado ao ambiente, nunca pequeno, cortado, encoberto ou perdido ao fundo. " +
+  "O restante da cena (ambiente, superfícies, objetos de apoio) existe para dar contexto, escala e verdade ao produto. " +
+  "Isto NÃO transforma a peça em anúncio de catálogo nem em foto de e-commerce: a composição continua editorial, com direção de arte, respiro, atmosfera e a gramática visual definida acima. " +
+  "Fidelidade obrigatória ao produto real: mesma cor, forma, rótulo, embalagem e acabamento da referência.";
+
+const PRODUTO_SUJEITO_SEM_PERSONAGEM_PLURAL =
+  "SUJEITO DA COMPOSIÇÃO — PRODUTOS, SEM PERSONAGEM: esta peça não tem pessoas (ver regra de precedência máxima no início do prompt); os PRODUTOS referenciados são o sujeito visual da cena. " +
+  "Aparecem nítidos, bem iluminados e imediatamente legíveis como aquilo que a peça mostra — em primeiro plano ou plano médio, integrados ao ambiente, nenhum deles pequeno, cortado, encoberto ou perdido ao fundo. " +
+  "O restante da cena (ambiente, superfícies, objetos de apoio) existe para dar contexto, escala e verdade aos produtos. " +
+  "Isto NÃO transforma a peça em anúncio de catálogo nem em foto de e-commerce: a composição continua editorial, com direção de arte, respiro, atmosfera e a gramática visual definida acima. " +
+  "Fidelidade obrigatória a cada produto real: mesma cor, forma, rótulo, embalagem e acabamento da referência.";
+
 // Marca textual presente nas variações de personagem que retiram o rosto do
 // centro da composição (CLAREZA "DETALHE CONTEXTUAL", IMPACTO "SUJEITO SEM
 // PERSONAGEM DOMINANTE" — ver CLAREZA_CHARACTER_VARIATIONS/IMPACTO_CHARACTER_VARIATIONS
@@ -215,6 +238,9 @@ export function buildProductHierarchyBlock(opts: {
    * tecnicamente incompatível com a exigência de tela legível. Só se aplica
    * com 1 produto (produtosCount === 1) — caso plural não tem uso real ainda. */
   produtoTelaIdentidade?: boolean;
+  /** Peça sem nenhuma pessoa (PU — ver core/semPersonagem.ts): substitui, em
+   * SERVIÇOS e MARCA, as regras que dão o protagonismo ao personagem. */
+  semPersonagem?: boolean;
 }): string {
   const {
     produtosCount,
@@ -225,9 +251,27 @@ export function buildProductHierarchyBlock(opts: {
     faceNotDominant,
     mood,
     produtoTelaIdentidade,
+    semPersonagem,
   } = opts;
   if (produtosCount <= 0) return "";
   const multi = produtosCount > 1;
+
+  // Sem personagem: SERVIÇOS e MARCA (institucional ou pessoal) trocam a regra
+  // de protagonismo humano pelo produto como sujeito. VAREJO segue adiante
+  // para sua regra normal de produto-herói, que já não depende de pessoa.
+  if (semPersonagem && segment !== "VAREJO") {
+    const lines: string[] = [
+      multi ? PRODUTO_SUJEITO_SEM_PERSONAGEM_PLURAL : PRODUTO_SUJEITO_SEM_PERSONAGEM_SINGULAR,
+    ];
+    // A exceção de tela=identidade (PRODUTO_DISPOSITIVO_TELA_SERVICOS_*) NÃO
+    // entra aqui: ela existe para reconciliar produto-apoio com tela legível e
+    // termina dizendo que "quem representa o serviço continua sendo o
+    // PERSONAGEM". Sem personagem o problema já não existe — o produto é o
+    // sujeito, em primeiro plano e nítido —, e a fidelidade da tela continua
+    // garantida por buildDeviceRule/screenContentClause no mesmo prompt.
+    if (hasCenario) lines.push(multi ? CENARIO_VS_PRODUTO_PLURAL : CENARIO_VS_PRODUTO_SINGULAR);
+    return lines.join("\n");
+  }
 
   // SERVIÇOS: produto em segundo plano, adaptado ao cenário — quem protagoniza
   // é o personagem (o que se vende é o serviço, não o item de apoio).

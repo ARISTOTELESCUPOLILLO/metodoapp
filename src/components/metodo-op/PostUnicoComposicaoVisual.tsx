@@ -17,6 +17,7 @@ import { ordemGruposPorSegmento, PU_MAX_PRODUTOS } from "../../core/referenciasP
 import { mapFaixaToAnchorAge } from "../../core/audienceAge";
 import { Tile } from "./composicaoVisual/Tile";
 import { PersonagemSemAvatarBlock } from "./composicaoVisual/PersonagemSemAvatarBlock";
+import { SemPersonagemBlock } from "./composicaoVisual/SemPersonagemBlock";
 
 const MAX_PRODUTOS_PU = PU_MAX_PRODUTOS;
 
@@ -115,7 +116,8 @@ export default function PostUnicoComposicaoVisual({
       selection.useFachada ||
       selection.useCenario ||
       selection.useProdutos ||
-      !!selection.personagemSemAvatar?.ativo;
+      !!selection.personagemSemAvatar?.ativo ||
+      !!selection.semPersonagem;
     if (!hasOutrasRefs) return;
     onChange({
       ...selection,
@@ -128,6 +130,9 @@ export default function PostUnicoComposicaoVisual({
       personagemSemAvatar: selection.personagemSemAvatar
         ? { ...selection.personagemSemAvatar, ativo: false }
         : selection.personagemSemAvatar,
+      // A foto de Fato/Venda é preservada como está, com as pessoas reais que
+      // aparecem nela — "sem personagem" não se aplica e é desmarcado junto.
+      semPersonagem: false,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a hasDocFoto; `selection`/`onChange` são lidos, não devem re-disparar o efeito
   }, [hasDocFoto]);
@@ -147,7 +152,9 @@ export default function PostUnicoComposicaoVisual({
     if (selection.useAvatar && selection.avatarSelecionado === slot) {
       onChange({ ...selection, useAvatar: false });
     } else {
-      onChange({ ...selection, useAvatar: true, avatarSelecionado: slot });
+      // Marcar um avatar desliga "peça sem personagem" — os dois são
+      // mutuamente exclusivos.
+      onChange({ ...selection, useAvatar: true, avatarSelecionado: slot, semPersonagem: false });
     }
   }
   function pickFachada() {
@@ -330,6 +337,14 @@ export default function PostUnicoComposicaoVisual({
         </>
       )}
 
+      {!hasDocFoto && (
+        <SemPersonagemBlock
+          selection={selection}
+          onChange={onChange}
+          isPersonalBrand={kit.isPersonalBrand}
+        />
+      )}
+
       {!!kit.uniformeDataUrl && selection.useAvatar && (
         <label className="checkRow" style={{ marginTop: 8 }}>
           <input
@@ -341,7 +356,7 @@ export default function PostUnicoComposicaoVisual({
         </label>
       )}
 
-      {!hasDocFoto && !selection.useAvatar && (
+      {!hasDocFoto && !selection.useAvatar && !selection.semPersonagem && (
         <PersonagemSemAvatarBlock
           selection={selection}
           onChange={onChange}

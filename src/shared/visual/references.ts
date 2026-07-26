@@ -20,6 +20,12 @@ export interface PostUnicoReferences {
   // (figurino livre); veste uniforme apenas quando refs.uniforme também
   // está presente (usuário escolheu que esse personagem é o emissor).
   personagemSemAvatarAtivo?: boolean;
+  // Peça sem nenhuma pessoa na imagem — desliga as instruções que afirmam
+  // personagem (gênero obrigatório, personagem no cenário, papel do
+  // público-alvo) e declara o sujeito alternativo da composição. Ver
+  // core/semPersonagem.ts. Nunca coexiste com avatar/uniforme/
+  // personagemSemAvatarAtivo.
+  semPersonagemAtivo?: boolean;
   // Foto de um acontecimento (Kit Imagem, slot próprio) — objetivo "Fatos",
   // aplicação direta sem reinvenção pela IA.
   fato?: string;

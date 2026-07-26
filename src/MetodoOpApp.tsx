@@ -317,9 +317,14 @@ export default function App() {
     // apagava silenciosamente o personagem/gênero escolhido, enquanto as demais
     // preferências sobreviviam (peça saía sem o personagem masculino marcado).
     // Preserva o personagem; zera só as escolhas de composição da peça.
+    // "Peça sem personagem" é direcionamento da mesma natureza — preservado
+    // pelo mesmo motivo. Os dois nunca ficam ativos ao mesmo tempo (a
+    // Composição Visual desliga um ao ligar o outro), então preservar ambos
+    // não cria estado contraditório.
     setVisualSelection((prev) => ({
       ...defaultVisualSelection,
       personagemSemAvatar: prev.personagemSemAvatar,
+      semPersonagem: prev.semPersonagem,
     }));
   }
 

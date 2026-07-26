@@ -53,6 +53,7 @@ export const defaultVisualSelection: PostUnicoVisualSelection = {
   produtosSelecionados: [],
   cenarioSelecionado: null,
   useUniforme: false,
+  semPersonagem: false,
   useFato: false,
   useVenda: false,
 };

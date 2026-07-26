@@ -135,24 +135,30 @@ export function usePostUnicoGeneration({
       // override aqui a cada geração sobrescrevia silenciosamente a escolha
       // manual do usuário de volta para o valor do formulário inicial
       // (achado 16/07/2026).
-      const personagemSemAvatar = visualSelection.personagemSemAvatar?.ativo
-        ? visualSelection.personagemSemAvatar
-        : undefined;
+      // "Peça sem personagem" vence qualquer personagem que tenha ficado
+      // marcado antes (a UI já desmarca, isto cobre estado restaurado do
+      // localStorage de uma sessão anterior).
+      const semPersonagem = !!visualSelection.semPersonagem;
+      const personagemSemAvatar =
+        !semPersonagem && visualSelection.personagemSemAvatar?.ativo
+          ? visualSelection.personagemSemAvatar
+          : undefined;
       const references = buildReferences(
         "avatar",
         freshImageKit,
         undefined,
         undefined,
         {
-          usarAvatar: visualSelection.useAvatar,
+          usarAvatar: semPersonagem ? false : visualSelection.useAvatar,
           avatarNum: visualSelection.avatarSelecionado ?? 1,
           usarFachada: visualSelection.useFachada,
           cenarioNum: visualSelection.useCenario ? (visualSelection.cenarioSelecionado ?? 1) : null,
           produtosNums: visualSelection.useProdutos
             ? visualSelection.produtosSelecionados
             : undefined,
-          useUniforme: visualSelection.useUniforme,
+          useUniforme: semPersonagem ? false : visualSelection.useUniforme,
           personagemSemAvatar,
+          semPersonagem,
           produtoTelaInformativa: visualSelection.produtoTelaInformativa,
         },
         kit.uniformeDataUrl,
@@ -166,6 +172,7 @@ export function usePostUnicoGeneration({
         references.produtos?.length ||
         references.uniforme ||
         references.personagemSemAvatarAtivo ||
+        references.semPersonagemAtivo ||
         references.fato ||
         references.venda
       );
@@ -176,10 +183,15 @@ export function usePostUnicoGeneration({
           detectForcedGenderFromCopy(copy?.titulo, copy?.texto) ??
           (Math.random() < 0.5 ? "mulher" : "homem");
       }
-      const effectiveForcedGender: PersonagemGender | undefined =
-        (personagemSemAvatar?.genero as PersonagemGender | undefined) ??
-        formGender ??
-        postUnicoGenderRef.current;
+      // Sem personagem não existe gênero a forçar: mandar um aqui reativaria o
+      // bloco "a pessoa retratada DEVE ser X" (genderSafetyBlock em
+      // buildPuPrompt / genderBlock nos moods), que é justamente o que faz a
+      // peça sair com gente mesmo sem avatar.
+      const effectiveForcedGender: PersonagemGender | undefined = semPersonagem
+        ? undefined
+        : ((personagemSemAvatar?.genero as PersonagemGender | undefined) ??
+          formGender ??
+          postUnicoGenderRef.current);
       if (postUnicoTonalidadeSeedRef.current === undefined) {
         postUnicoTonalidadeSeedRef.current = Math.floor(Math.random() * 5);
       } else {
