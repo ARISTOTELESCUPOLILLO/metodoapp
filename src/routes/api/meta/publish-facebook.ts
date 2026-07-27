@@ -49,7 +49,12 @@ export const Route = createFileRoute("/api/meta/publish-facebook")({
           const res = await fetch(`https://graph.facebook.com/${META_VERSION}/${pageId}/photos`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: imageUrl, caption: text || "", access_token: token }),
+            // O texto do post no /photos vai no campo `message`. Com `caption`
+            // o Graph aceita a chamada e publica a foto SEM texto nenhum —
+            // mesmo bug já corrigido em test-publish.ts no commit 2b4a685
+            // (30/05/2026), que não chegou a este caminho (OAuth) nem ao
+            // autopost. Achado real 27/07/2026.
+            body: JSON.stringify({ url: imageUrl, message: text || "", access_token: token }),
           });
           const data = (await res.json()) as {
             id?: string;

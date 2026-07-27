@@ -25,7 +25,9 @@ export default {
         body: new URLSearchParams({
           access_token: env.FB_PAGE_TOKEN,
           url: image_url,
-          caption: text,
+          // `message` e nao `caption`: no /photos o `caption` e ignorado e a
+          // foto sai sem texto no feed.
+          message: text,
           published: 'true'
         })
       });

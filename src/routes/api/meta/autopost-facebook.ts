@@ -45,7 +45,8 @@ export const Route = createFileRoute("/api/meta/autopost-facebook")({
             body: new URLSearchParams({
               access_token: pageTokenData.access_token,
               url: image_url,
-              caption: fullCaption,
+              // `message`, não `caption` — ver publish-facebook.ts.
+              message: fullCaption,
               published: "true",
             }),
           });
