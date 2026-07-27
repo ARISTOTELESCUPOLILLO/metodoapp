@@ -217,6 +217,14 @@ const PRODUTO_RECONCILIACAO_SILENCIO_EQUILIBRIO =
 const PRODUTO_RECONCILIACAO_SILENCIO_APOIO =
   "RECONCILIAÇÃO COM O MOOD SILÊNCIO: o mood exige vasto espaço negativo, com os elementos da cena somados ocupando NO MÁXIMO 30% da composição. O produto continua em papel de apoio conforme a regra acima — mas apoio aqui significa PEQUENO, ISOLADO e silencioso dentro do vazio, nunca um segundo foco competindo nem um elemento que preencha o espaço que o mood exige vazio.";
 
+// Variante para produto-dispositivo com tela = identidade (usuário marcou "tela
+// visível"): ali a regra acima NÃO é "produto em apoio", é o oposto — dispositivo
+// em primeiro plano, exposto. Dizer "continua em apoio" contradiria a regra
+// imediatamente anterior no mesmo prompt (achado real 27/07/2026, na peça de
+// teste do Ari logo após o primeiro deploy desta reconciliação).
+const PRODUTO_RECONCILIACAO_SILENCIO_TELA =
+  "RECONCILIAÇÃO COM O MOOD SILÊNCIO: o mood exige vasto espaço negativo, com os elementos da cena somados ocupando NO MÁXIMO 30% da composição. O dispositivo CONTINUA em primeiro plano, exposto e com a tela nítida e legível conforme a regra acima — o que muda é a ESCALA e o entorno: ele aparece isolado e silencioso dentro do vazio, próximo o suficiente para a tela ser lida, sem preencher o quadro nem ocupar o espaço que o mood exige vazio.";
+
 // Conflito PERSONAGEM × MOOD — não existia nenhuma reconciliação para pessoa,
 // só para produto (achado real 27/07/2026). A gramática do SILÊNCIO diz "se
 // aparecer pessoa: fragmento parcial APENAS — NUNCA rosto inteiro posado",
@@ -317,7 +325,13 @@ export function buildProductHierarchyBlock(opts: {
           ? PRODUTO_APOIO_SERVICOS_PLURAL
           : PRODUTO_APOIO_SERVICOS_SINGULAR,
     ];
-    if (mood === "OP-06") lines.push(PRODUTO_RECONCILIACAO_SILENCIO_APOIO);
+    if (mood === "OP-06") {
+      lines.push(
+        useTelaIdentidade
+          ? PRODUTO_RECONCILIACAO_SILENCIO_TELA
+          : PRODUTO_RECONCILIACAO_SILENCIO_APOIO,
+      );
+    }
     if (hasAvatar) {
       lines.push(
         useTelaIdentidade
