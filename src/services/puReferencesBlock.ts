@@ -2,7 +2,11 @@
 // do Post Único — extraído de postUnico.ts (Fase 8).
 
 import { MoodCode, PostUnicoObjetivo, Segment } from "../types";
-import { PersonagemGender, buildProductHierarchyBlock } from "../core/visualDirection";
+import {
+  PersonagemGender,
+  buildProductHierarchyBlock,
+  buildPersonagemMoodReconciliation,
+} from "../core/visualDirection";
 import { buildClothingPool } from "../core/clothingPool";
 import type { PostUnicoReferences } from "../shared/visual/references";
 import { buildUltimaVerificacaoBlock } from "../shared/visual/referenceBlocks";
@@ -79,6 +83,11 @@ export function referencesBlock(
     parts.push(
       `AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, de costas parcial, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro, três-quartos, OU peça sem rosto visível (mãos trabalhando, detalhe de gesto, ambiente com presença implícita). Escolha a combinação que melhor serve à mensagem desta peça específica.`,
     );
+    // Reconciliação personagem × mood — entra DENTRO do bloco de referência,
+    // que é o de PRIORIDADE MÁXIMA no prompt. Colocada fora dele, perderia para
+    // a própria instrução do avatar logo acima (ver productHierarchy.ts).
+    const reconciliacaoMood = buildPersonagemMoodReconciliation(mood);
+    if (reconciliacaoMood) parts.push(reconciliacaoMood);
   }
   if (refs.uniforme) {
     const personagemClause = refs.avatar

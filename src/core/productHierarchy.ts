@@ -209,6 +209,36 @@ const PRODUTO_RECONCILIACAO_SILENCIO_HERO =
 const PRODUTO_RECONCILIACAO_SILENCIO_EQUILIBRIO =
   "RECONCILIAÇÃO COM O MOOD SILÊNCIO: o mood SILÊNCIO exige vasto espaço negativo e objeto/fragmento humano ocupando NO MÁXIMO 30% da composição — isso SUBSTITUI, PARA ESTA PEÇA, a proibição de o produto ficar pequeno da regra acima. O equilíbrio de peso visual entre produto e personagem permanece (nenhum dos dois domina o outro), mas ambos pequenos e isolados dentro do espaço vazio — não grandes ou centrais.";
 
+// SERVIÇOS e MARCA PESSOAL nunca recebiam reconciliação de mood (só VAREJO e
+// MARCA institucional tinham) — achado real 27/07/2026 na PU do Ari: SERVIÇOS +
+// avatar + SILÊNCIO saiu com ZERO linha de reconciliação no prompt. Aqui o
+// produto é apoio, então o conflito não é de tamanho mínimo, é de ocupação do
+// vazio que o mood exige.
+const PRODUTO_RECONCILIACAO_SILENCIO_APOIO =
+  "RECONCILIAÇÃO COM O MOOD SILÊNCIO: o mood exige vasto espaço negativo, com os elementos da cena somados ocupando NO MÁXIMO 30% da composição. O produto continua em papel de apoio conforme a regra acima — mas apoio aqui significa PEQUENO, ISOLADO e silencioso dentro do vazio, nunca um segundo foco competindo nem um elemento que preencha o espaço que o mood exige vazio.";
+
+// Conflito PERSONAGEM × MOOD — não existia nenhuma reconciliação para pessoa,
+// só para produto (achado real 27/07/2026). A gramática do SILÊNCIO diz "se
+// aparecer pessoa: fragmento parcial APENAS — NUNCA rosto inteiro posado",
+// enquanto o bloco do AVATAR (que tem PRIORIDADE MÁXIMA no prompt) manda usar
+// a pessoa como personagem com semelhança de rosto, e o segmento SERVIÇOS
+// afirma que o personagem é "protagonista absoluto". Resultado: retrato em
+// plano médio, luz baixa, sujeito dominando — o oposto do mood.
+// Decisão de produto do Ari (27/07/2026): RETRATO EM CHAVE DE SILÊNCIO — o
+// rosto continua aparecendo, mas obedece luz, paleta, escala e espaço do mood.
+// Proibição sozinha não vence obrigação positiva: por isso o bloco suspende
+// nominalmente a exigência de fragmento e redefine COMO o protagonismo se
+// expressa, em vez de só proibir o retrato.
+const PERSONAGEM_RECONCILIACAO_SILENCIO =
+  "RECONCILIAÇÃO COM O MOOD SILÊNCIO — ESTA PEÇA É UM RETRATO EM CHAVE DE SILÊNCIO: o rosto do avatar CONTINUA visível e reconhecível (a exigência de semelhança facial permanece integralmente válida); fica SUSPENSA, apenas para esta peça, a exigência do mood de que a pessoa apareça somente como fragmento parcial (mão, nuca, silhueta). Em troca, a pessoa OBEDECE o resto da gramática do mood, sem exceção: (a) ocupa NO MÁXIMO 30% da área da composição — pequena e isolada dentro do quadro; PROIBIDO close, meio corpo ou plano médio preenchendo o quadro; (b) fica DESLOCADA do centro, com vasto espaço negativo respirando ao redor; (c) é iluminada em LUZ ALTA-CHAVE suave e difusa, sombras quase ausentes — PROIBIDO luz baixa, penumbra, fundo escuro ou clima dramático, MESMO QUE a foto de referência do avatar tenha sido tirada assim; (d) o fundo segue a paleta clara do mood (areia, off-white, cinza quente, bege rosado, verde sálvia claro) — da foto original do avatar aproveite APENAS o rosto e as características físicas, NUNCA a iluminação, a cor ou o ambiente dela. O protagonismo humano exigido pelo segmento permanece — a pessoa continua sendo o único sujeito e o centro de atenção —, mas se expressa pelo ISOLAMENTO dentro do vazio, não pelo tamanho no quadro. NEGATIVE: dark background, low-key lighting, dramatic shadows, medium shot portrait filling the frame, subject dominating composition, olive or dark muted backdrop.";
+
+/** Reconciliação entre o personagem de referência (avatar) e a gramática do
+ * mood, quando as duas se contradizem. Hoje só SILÊNCIO (OP-06) precisa.
+ * Consumido pelos dois motores: PU (puReferencesBlock) e MOP (buildAnchorPrefix). */
+export function buildPersonagemMoodReconciliation(mood?: MoodCode): string {
+  return mood === "OP-06" ? PERSONAGEM_RECONCILIACAO_SILENCIO : "";
+}
+
 // FRAGMENTO exige 3 a 5 blocos visuais distintos com "múltiplos focos pequenos
 // coexistindo" (ver MOOD_RULES["OP-04"] no léxico) — estruturalmente oposto à regra de
 // protagonismo do produto, que exige UM herói único e dominante. Mesma classe
@@ -287,6 +317,7 @@ export function buildProductHierarchyBlock(opts: {
           ? PRODUTO_APOIO_SERVICOS_PLURAL
           : PRODUTO_APOIO_SERVICOS_SINGULAR,
     ];
+    if (mood === "OP-06") lines.push(PRODUTO_RECONCILIACAO_SILENCIO_APOIO);
     if (hasAvatar) {
       lines.push(
         useTelaIdentidade
@@ -312,6 +343,7 @@ export function buildProductHierarchyBlock(opts: {
     const lines: string[] = [
       multi ? PRODUTO_APOIO_MARCA_PESSOAL_PLURAL : PRODUTO_APOIO_MARCA_PESSOAL_SINGULAR,
     ];
+    if (mood === "OP-06") lines.push(PRODUTO_RECONCILIACAO_SILENCIO_APOIO);
     if (hasAvatar) {
       lines.push(
         multi

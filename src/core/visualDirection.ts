@@ -37,12 +37,21 @@ import {
   FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE,
   FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED,
 } from "./visualDirection.lexicon";
-import { buildProductHierarchyBlock, variationHasFaceNotDominant } from "./productHierarchy";
+import {
+  buildProductHierarchyBlock,
+  variationHasFaceNotDominant,
+  buildPersonagemMoodReconciliation,
+} from "./productHierarchy";
 import { pickImageVariationBlock } from "./imageVariationPicker";
 
 // Re-exports — mantêm o import único "./visualDirection" (ou "../core/visualDirection")
 // para todo o restante do código após o fatiamento da Fase 8.
-export { buildProductHierarchyBlock, variationHasFaceNotDominant, pickImageVariationBlock };
+export {
+  buildProductHierarchyBlock,
+  variationHasFaceNotDominant,
+  buildPersonagemMoodReconciliation,
+  pickImageVariationBlock,
+};
 
 export type PersonagemGender = "mulher" | "homem";
 

@@ -7,7 +7,10 @@ import type { MoodCode, Segment } from "../../types";
 import type { PostUnicoReferences } from "../../shared/visual/references";
 import { buildUltimaVerificacaoBlock } from "../../shared/visual/referenceBlocks";
 import { buildClothingPool } from "../../core/clothingPool";
-import { buildProductHierarchyBlock } from "../../core/visualDirection";
+import {
+  buildProductHierarchyBlock,
+  buildPersonagemMoodReconciliation,
+} from "../../core/visualDirection";
 
 const MOODS_CLAROS: ReadonlySet<MoodCode> = new Set<MoodCode>(["OP-01", "OP-06"]);
 
@@ -107,6 +110,11 @@ export function buildAnchorPrefix(
     lines.push(
       `IMAGEM #${idx} = AVATAR (referência de IDENTIDADE, não de figurino). PRESERVE EXATAMENTE: rosto, traços faciais, idade, cabelo, barba, tom de pele, etnia, sexo, biótipo/estatura/porte físico, óculos e acessórios fixos do rosto. NÃO rejuvenesça, NÃO envelheça, NÃO troque etnia, NÃO mude o gênero, NÃO altere o porte físico. IGNORE a roupa, a cor da roupa, a pose exata e os acessórios de vestuário (relógio, anéis, colares) da foto — eles servem só pra mostrar a pessoa, não o figurino. ${figurinoSentence}${clothingHint}`,
     );
+    // Mesma reconciliação personagem × mood usada na PU — o MOP tem o mesmo
+    // conflito (avatar com semelhança de rosto × gramática do SILÊNCIO, que
+    // pede fragmento parcial). Fonte canônica: core/productHierarchy.ts.
+    const reconciliacaoMood = buildPersonagemMoodReconciliation(mood);
+    if (reconciliacaoMood) lines.push(reconciliacaoMood);
     idx++;
   }
   if (refs.uniforme) {
