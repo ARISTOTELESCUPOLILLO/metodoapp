@@ -477,8 +477,10 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
         </div>
       )}
 
-      {/* Publicar no Meta */}
-      {gen.assets.length > 0 && (
+      {/* Publicar no Meta — reels fica de fora de propósito: o asset arquivado
+          de um reels é a capa PNG, não o vídeo. Publicar aqui postaria a capa
+          como foto estática no lugar do reels. */}
+      {gen.assets.length > 0 && gen.formato !== "reels" && (
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f1f5f9" }}>
           <MetaPublish imageDataUrl={gen.assets[0].url} caption={gen.legenda} />
         </div>

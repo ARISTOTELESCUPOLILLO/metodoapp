@@ -1,14 +1,15 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { META_ALLOWED_EMAILS } from "@/lib/metaAllowlist";
 
 export const META_VERSION = "v25.0";
 export const META_BUCKET = "meta-publish";
 // Emails autorizados a publicar via Meta — separados por vírgula na env var META_PUBLISH_ALLOWED_EMAILS
-// Fallback para o email do admin principal caso a env não esteja definida
+// Fallback para a allowlist compartilhada com o cliente (metaAllowlist.ts)
 export const META_PUBLISH_ALLOWED_EMAILS: string[] = (
-  process.env.META_PUBLISH_ALLOWED_EMAILS || "acupolillo@uol.com.br"
+  process.env.META_PUBLISH_ALLOWED_EMAILS || META_ALLOWED_EMAILS.join(",")
 )
   .split(",")
-  .map((e) => e.trim())
+  .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
 export function getEmailFromJwt(request: Request): string | null {
@@ -20,7 +21,9 @@ export function getEmailFromJwt(request: Request): string | null {
     if (parts.length !== 3) return null;
     const padded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     const payload = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
-    return (payload?.email as string) || null;
+    // normalizado em minúsculas — a allowlist também é, para a comparação não
+    // depender de como o email foi digitado no cadastro
+    return ((payload?.email as string) || "").trim().toLowerCase() || null;
   } catch {
     return null;
   }

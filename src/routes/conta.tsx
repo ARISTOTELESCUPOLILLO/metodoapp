@@ -4,11 +4,12 @@ import { TopBar } from "@/components/app/TopBar";
 import { useProfile, SlotInfo } from "@/hooks/useProfile";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { MetaConnect } from "@/components/metodo-op/MetaConnect";
+import { isMetaAllowed } from "@/lib/metaAllowlist";
 
 // Conexão Meta ainda não é liberada pros clientes — fica desligada (botão
-// desabilitado) para TODOS os usuários, cadastrados e futuros. Só a conta de
-// teste do Ari mantém o botão ativo, pra continuar testando a integração real.
-const META_CONNECT_ENABLED_EMAIL = "acupolillo@uol.com.br";
+// desabilitado) para TODOS os usuários, cadastrados e futuros. Só as contas do
+// Ari (usuário e admin) mantêm o botão ativo, pra continuar testando a
+// integração real — ver metaAllowlist.ts.
 
 export const Route = createFileRoute("/conta")({
   component: () => (
@@ -276,7 +277,7 @@ function ContaPage() {
         >
           Redes Sociais
         </div>
-        <MetaConnect disabled={profile.email !== META_CONNECT_ENABLED_EMAIL} />
+        <MetaConnect disabled={!isMetaAllowed(profile.email)} />
       </section>
 
       <section style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>

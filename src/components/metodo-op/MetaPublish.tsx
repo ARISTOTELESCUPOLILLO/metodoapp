@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-
-const META_ALLOWED_EMAIL = "acupolillo@uol.com.br";
+import { isMetaAllowed } from "@/lib/metaAllowlist";
 
 interface Props {
   imageDataUrl?: string;
@@ -77,7 +76,7 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
     })();
   }, []);
 
-  if (!user || user.email !== META_ALLOWED_EMAIL) return null;
+  if (!isMetaAllowed(user?.email)) return null;
   if (!status) return null;
   if (!imageDataUrl && !status.devMode) return null;
 
