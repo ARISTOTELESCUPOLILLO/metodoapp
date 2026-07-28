@@ -5,6 +5,9 @@ import { isMetaAllowed } from "@/lib/metaAllowlist";
 
 interface Props {
   imageDataUrl?: string;
+  // Carrossel: as imagens NA ORDEM dos cards. Com 2 ou mais, o componente
+  // publica um post único (carrossel nativo) em vez de uma foto por card.
+  imageDataUrls?: string[];
   caption?: string;
 }
 
@@ -35,7 +38,7 @@ const fbIcon = (
   </svg>
 );
 
-export function MetaPublish({ imageDataUrl, caption }: Props) {
+export function MetaPublish({ imageDataUrl, imageDataUrls, caption }: Props) {
   const { user } = useAuth();
   const [status, setStatus] = useState<MetaStatus | null>(null);
 
@@ -76,11 +79,20 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
     })();
   }, []);
 
+  // Carrossel nativo: só a partir de 2 imagens (limite do Instagram). Com 1 só,
+  // cai no caminho de foto única.
+  const carouselUrls = (imageDataUrls || []).filter(Boolean);
+  const isCarousel = carouselUrls.length >= 2;
+  const endpoint = isCarousel ? "/api/meta/publish-carousel" : "/api/meta/test-publish";
+  const mediaBody = isCarousel ? { imageDataUrls: carouselUrls } : { imageDataUrl };
+  const sufixo = isCarousel ? " carrossel" : "";
+
   if (!isMetaAllowed(user?.email)) return null;
   if (!status) return null;
-  if (!imageDataUrl && !status.devMode) return null;
+  if (!imageDataUrl && !isCarousel && !status.devMode) return null;
 
-  const hasRegular = status.connected && !status.expired;
+  // O caminho OAuth só publica foto única — não oferecer carrossel por ali.
+  const hasRegular = status.connected && !status.expired && !isCarousel;
 
   const primaryBtn = (busy: boolean): React.CSSProperties => ({
     display: "inline-flex",
@@ -135,10 +147,10 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
     setBothIgError("");
     setBothFbError("");
     try {
-      const res = await fetch("/api/meta/test-publish", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await authHeader()) },
-        body: JSON.stringify({ imageDataUrl, target: "both", caption: caption || "" }),
+        body: JSON.stringify({ ...mediaBody, target: "both", caption: caption || "" }),
       });
       const d = (await res.json()) as {
         success?: boolean;
@@ -283,8 +295,18 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
             >
               {igIcon}
               {fbIcon}
-              {bothLoading ? "Publicando…" : "Publicar Instagram + Facebook"}
+              {bothLoading
+                ? "Publicando…"
+                : isCarousel
+                  ? "Publicar carrossel no Instagram + Facebook"
+                  : "Publicar Instagram + Facebook"}
             </button>
+          )}
+
+          {isCarousel && !bothDone && (
+            <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>
+              {carouselUrls.length} cards na ordem gerada · legenda do carrossel · post único
+            </p>
           )}
 
           {/* Botões individuais */}
@@ -296,8 +318,8 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
                 type="button"
                 onClick={() =>
                   callPublish(
-                    "/api/meta/test-publish",
-                    { imageDataUrl, target: "instagram", caption: caption || "" },
+                    endpoint,
+                    { ...mediaBody, target: "instagram", caption: caption || "" },
                     setIgTestState,
                     setIgTestError,
                   )
@@ -310,7 +332,7 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
                 }}
               >
                 {igIcon}
-                {igTestState === "loading" ? "Publicando…" : "Publicar no Instagram"}
+                {igTestState === "loading" ? "Publicando…" : `Publicar${sufixo} no Instagram`}
               </button>
             )}
             {fbTestState === "ok" ? (
@@ -320,8 +342,8 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
                 type="button"
                 onClick={() =>
                   callPublish(
-                    "/api/meta/test-publish",
-                    { imageDataUrl, target: "facebook", caption: caption || "" },
+                    endpoint,
+                    { ...mediaBody, target: "facebook", caption: caption || "" },
                     setFbTestState,
                     setFbTestError,
                   )
@@ -334,7 +356,7 @@ export function MetaPublish({ imageDataUrl, caption }: Props) {
                 }}
               >
                 {fbIcon}
-                {fbTestState === "loading" ? "Publicando…" : "Publicar no Facebook"}
+                {fbTestState === "loading" ? "Publicando…" : `Publicar${sufixo} no Facebook`}
               </button>
             )}
           </div>

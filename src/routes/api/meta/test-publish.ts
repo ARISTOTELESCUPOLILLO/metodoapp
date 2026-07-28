@@ -2,15 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getUserIdFromRequest } from "@/lib/usage.server";
 import {
   META_VERSION,
+  META_IG_USER_ID as IG_USER_ID,
+  META_PAGE_ID as PAGE_ID,
   META_PUBLISH_ALLOWED_EMAILS,
   getEmailFromJwt,
+  getPageAccessToken,
   uploadImageToMetaBucket,
   pollContainerStatus,
 } from "@/lib/meta.server";
-
-// IDs fixos da OPropaganda — não mudam
-const IG_USER_ID = "17841403020053112";
-const PAGE_ID = "144773495865295";
 
 async function postToInstagram(token: string, imageUrl: string, caption: string) {
   const createRes = await fetch(`https://graph.facebook.com/${META_VERSION}/${IG_USER_ID}/media`, {
@@ -39,17 +38,7 @@ async function postToInstagram(token: string, imageUrl: string, caption: string)
 
 async function postToFacebook(token: string, imageUrl: string, caption: string) {
   // 1. Troca System User token por Page Access Token
-  const pageTokenRes = await fetch(
-    `https://graph.facebook.com/${META_VERSION}/${PAGE_ID}?fields=access_token&access_token=${token}`,
-  );
-  const pageTokenData = (await pageTokenRes.json()) as {
-    access_token?: string;
-    error?: { message: string };
-  };
-
-  if (!pageTokenData.access_token) {
-    throw new Error(pageTokenData.error?.message || "Falha ao obter Page Access Token");
-  }
+  const pageToken = await getPageAccessToken(token);
 
   // 2. Posta foto usando Page Token
   const res = await fetch(`https://graph.facebook.com/${META_VERSION}/${PAGE_ID}/photos`, {
@@ -58,7 +47,7 @@ async function postToFacebook(token: string, imageUrl: string, caption: string) 
     body: JSON.stringify({
       url: imageUrl,
       message: caption,
-      access_token: pageTokenData.access_token,
+      access_token: pageToken,
     }),
   });
 

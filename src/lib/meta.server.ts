@@ -3,6 +3,24 @@ import { META_ALLOWED_EMAILS } from "@/lib/metaAllowlist";
 
 export const META_VERSION = "v25.0";
 export const META_BUCKET = "meta-publish";
+
+// Conta de destino da publicação via System User da BM — IDs fixos da
+// OPropaganda. Não dependem de quem está logado: o token da BM só publica aqui.
+export const META_IG_USER_ID = "17841403020053112";
+export const META_PAGE_ID = "144773495865295";
+
+// O System User token não posta direto na página: primeiro troca por um Page
+// Access Token. Compartilhado entre test-publish (foto única) e publish-carousel.
+export async function getPageAccessToken(systemUserToken: string): Promise<string> {
+  const res = await fetch(
+    `https://graph.facebook.com/${META_VERSION}/${META_PAGE_ID}?fields=access_token&access_token=${systemUserToken}`,
+  );
+  const data = (await res.json()) as { access_token?: string; error?: { message: string } };
+  if (!data.access_token) {
+    throw new Error(data.error?.message || "Falha ao obter Page Access Token");
+  }
+  return data.access_token;
+}
 // Emails autorizados a publicar via Meta — separados por vírgula na env var META_PUBLISH_ALLOWED_EMAILS
 // Fallback para a allowlist compartilhada com o cliente (metaAllowlist.ts)
 export const META_PUBLISH_ALLOWED_EMAILS: string[] = (

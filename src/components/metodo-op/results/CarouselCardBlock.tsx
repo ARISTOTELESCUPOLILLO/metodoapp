@@ -405,12 +405,21 @@ export function CarouselCardBlock({
                       </button>
                     )}
                   </div>
-                  {previews[index] && (
-                    <MetaPublish imageDataUrl={previews[index]!} caption={legendas[index]} />
-                  )}
                 </div>
               );
             })}
+            {/* Publicação do carrossel INTEIRO: um post único, cards na ordem
+                gerada, com a legenda do carrossel (a do último card — a mesma
+                que o arquivamento usa). Só aparece com todos os cards gerados,
+                senão o post sairia incompleto. */}
+            {previews.length >= 2 && previews.every(Boolean) && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e2e8f0" }}>
+                <MetaPublish
+                  imageDataUrls={previews as string[]}
+                  caption={legendas[legendas.length - 1] || ""}
+                />
+              </div>
+            )}
             <div
               style={{
                 marginTop: 12,

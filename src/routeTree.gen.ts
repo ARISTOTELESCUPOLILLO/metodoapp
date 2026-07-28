@@ -46,6 +46,7 @@ import { Route as ApiMetaTestPublishRouteImport } from './routes/api/meta/test-p
 import { Route as ApiMetaStatusRouteImport } from './routes/api/meta/status'
 import { Route as ApiMetaPublishInstagramRouteImport } from './routes/api/meta/publish-instagram'
 import { Route as ApiMetaPublishFacebookRouteImport } from './routes/api/meta/publish-facebook'
+import { Route as ApiMetaPublishCarouselRouteImport } from './routes/api/meta/publish-carousel'
 import { Route as ApiMetaDisconnectRouteImport } from './routes/api/meta/disconnect'
 import { Route as ApiMetaDebugAccountsRouteImport } from './routes/api/meta/debug-accounts'
 import { Route as ApiMetaAutopostInstagramRouteImport } from './routes/api/meta/autopost-instagram'
@@ -238,6 +239,11 @@ const ApiMetaPublishFacebookRoute = ApiMetaPublishFacebookRouteImport.update({
   path: '/api/meta/publish-facebook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetaPublishCarouselRoute = ApiMetaPublishCarouselRouteImport.update({
+  id: '/api/meta/publish-carousel',
+  path: '/api/meta/publish-carousel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetaDisconnectRoute = ApiMetaDisconnectRouteImport.update({
   id: '/api/meta/disconnect',
   path: '/api/meta/disconnect',
@@ -302,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/api/meta/autopost-instagram': typeof ApiMetaAutopostInstagramRoute
   '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
+  '/api/meta/publish-carousel': typeof ApiMetaPublishCarouselRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
@@ -346,6 +353,7 @@ export interface FileRoutesByTo {
   '/api/meta/autopost-instagram': typeof ApiMetaAutopostInstagramRoute
   '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
+  '/api/meta/publish-carousel': typeof ApiMetaPublishCarouselRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/api/meta/autopost-instagram': typeof ApiMetaAutopostInstagramRoute
   '/api/meta/debug-accounts': typeof ApiMetaDebugAccountsRoute
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
+  '/api/meta/publish-carousel': typeof ApiMetaPublishCarouselRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/api/meta/autopost-instagram'
     | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
+    | '/api/meta/publish-carousel'
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
     | '/api/meta/status'
@@ -481,6 +491,7 @@ export interface FileRouteTypes {
     | '/api/meta/autopost-instagram'
     | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
+    | '/api/meta/publish-carousel'
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
     | '/api/meta/status'
@@ -525,6 +536,7 @@ export interface FileRouteTypes {
     | '/api/meta/autopost-instagram'
     | '/api/meta/debug-accounts'
     | '/api/meta/disconnect'
+    | '/api/meta/publish-carousel'
     | '/api/meta/publish-facebook'
     | '/api/meta/publish-instagram'
     | '/api/meta/status'
@@ -570,6 +582,7 @@ export interface RootRouteChildren {
   ApiMetaAutopostInstagramRoute: typeof ApiMetaAutopostInstagramRoute
   ApiMetaDebugAccountsRoute: typeof ApiMetaDebugAccountsRoute
   ApiMetaDisconnectRoute: typeof ApiMetaDisconnectRoute
+  ApiMetaPublishCarouselRoute: typeof ApiMetaPublishCarouselRoute
   ApiMetaPublishFacebookRoute: typeof ApiMetaPublishFacebookRoute
   ApiMetaPublishInstagramRoute: typeof ApiMetaPublishInstagramRoute
   ApiMetaStatusRoute: typeof ApiMetaStatusRoute
@@ -839,6 +852,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetaPublishFacebookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meta/publish-carousel': {
+      id: '/api/meta/publish-carousel'
+      path: '/api/meta/publish-carousel'
+      fullPath: '/api/meta/publish-carousel'
+      preLoaderRoute: typeof ApiMetaPublishCarouselRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/disconnect': {
       id: '/api/meta/disconnect'
       path: '/api/meta/disconnect'
@@ -914,6 +934,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetaAutopostInstagramRoute: ApiMetaAutopostInstagramRoute,
   ApiMetaDebugAccountsRoute: ApiMetaDebugAccountsRoute,
   ApiMetaDisconnectRoute: ApiMetaDisconnectRoute,
+  ApiMetaPublishCarouselRoute: ApiMetaPublishCarouselRoute,
   ApiMetaPublishFacebookRoute: ApiMetaPublishFacebookRoute,
   ApiMetaPublishInstagramRoute: ApiMetaPublishInstagramRoute,
   ApiMetaStatusRoute: ApiMetaStatusRoute,

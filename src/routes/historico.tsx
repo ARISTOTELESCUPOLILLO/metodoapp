@@ -482,7 +482,14 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
           como foto estática no lugar do reels. */}
       {gen.assets.length > 0 && gen.formato !== "reels" && (
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f1f5f9" }}>
-          <MetaPublish imageDataUrl={gen.assets[0].url} caption={gen.legenda} />
+          {gen.formato === "carrossel" && gen.assets.length >= 2 ? (
+            <MetaPublish
+              imageDataUrls={[...gen.assets].sort((a, b) => a.ordem - b.ordem).map((a) => a.url)}
+              caption={gen.legenda}
+            />
+          ) : (
+            <MetaPublish imageDataUrl={gen.assets[0].url} caption={gen.legenda} />
+          )}
         </div>
       )}
     </article>
