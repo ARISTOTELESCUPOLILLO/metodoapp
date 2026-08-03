@@ -122,30 +122,43 @@ function logoZoneDescription(
   regraFinal: string;
 } {
   const pos = position || "bottom-right";
-  // IMPORTANTE: a "área da logo" deve ser PEQUENA (~10% da largura, ~6% da altura)
-  // e parte natural da composição — NÃO um retângulo branco/vazio enorme.
+  // GEOMETRIA REAL DA LOGO (canvasComposer.ts): canvas 1080x1350, PAD = 110,
+  // LOGO_MAX_W = 288, LOGO_MAX_H = 108 → em bottom-right a logo ocupa
+  // x 682..970 (63%..90% da largura) e y 1132..1240 (84%..92% da altura).
+  // Achado real (03/08/2026): a reserva antiga ("~18% × ~10%") descrevia um
+  // retângulo de 196x136 px COLADO na borda (x 884..1080, y 1214..1350) — quase
+  // disjunto da caixa que a logo de fato ocupa. A IA obedecia a reserva ao pé da
+  // letra e mesmo assim o carimbo da logo caía em cima da última linha de texto.
+  // A reserva agora descreve a caixa real MAIS respiro, e diz explicitamente que
+  // a zona NÃO está colada na borda — era essa a informação que faltava.
   // Pode haver fundo, textura, fotografia ou cor de marca atrás; só evitamos
-  // texto, rosto, objeto-foco e lettering exatamente sobre o ponto da logo,
-  // mantendo contraste local suficiente para a marca ser legível.
+  // texto, rosto, objeto-foco e lettering dentro da zona, mantendo contraste
+  // local suficiente para a marca ser legível.
   const base =
-    "Área reservada inviolável (~18% × ~10%): PROIBIDO ABSOLUTO ali: texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO PELA LOGO — ela será SOBREPOSTA DEPOIS, por composição, fora da IA; a área é apenas espaço reservado e deve ser entregue VAZIA. PROIBIDO ABSOLUTO desenhar, inventar, imitar, reproduzir ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma, assinatura gráfica ou nome da empresa ali — mesmo que a marca apareça em alguma imagem de referência enviada. Esta regra VENCE o 'detalhe criativo' do mood: nenhum traço de assinatura, linha fina, ponto de cor ou gesto autoral pedido pela direção visual pode ser desenhado nessa área nem encostando nela. Área deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — em volta da zona e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível. NEGATIVE: solid color block behind logo area, colored badge, colored panel, banner shape.";
+    'Área reservada inviolável — RETÂNGULO GRANDE, NÃO COLADO NA BORDA: começa a 60% da LARGURA e a 80% da ALTURA do canvas e se estende até as bordas direita e inferior (≈ 430 × 270 px num canvas 1080x1350). ATENÇÃO À GEOMETRIA — a logomarca é aplicada DEPOIS, recuada 110 px das bordas: ela ocupa o MIOLO desse retângulo (aprox. de 63% a 90% da largura e de 84% a 92% da altura), NÃO a beirada do canvas. Por isso a proibição vale no retângulo INTEIRO, principalmente na parte mais interna e mais alta dele — deixar texto "logo acima do canto" ou "logo à esquerda do canto" é exatamente onde a logo cai. TRAVA DE LINHA: nenhuma linha de título, tópico ou texto de apoio pode descer abaixo de 80% da altura do canvas na metade direita — a última linha do bloco de texto termina ANTES disso; se não couber, reduza o corpo do texto ou suba o bloco inteiro. PROIBIDO ABSOLUTO ali: texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO PELA LOGO — ela será SOBREPOSTA DEPOIS, por composição, fora da IA; a área é apenas espaço reservado e deve ser entregue VAZIA. PROIBIDO ABSOLUTO desenhar, inventar, imitar, reproduzir ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma, assinatura gráfica ou nome da empresa ali — mesmo que a marca apareça em alguma imagem de referência enviada. Esta regra VENCE o \'detalhe criativo\' do mood: nenhum traço de assinatura, linha fina, ponto de cor ou gesto autoral pedido pela direção visual pode ser desenhado nessa área nem encostando nela. Área deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — em volta da zona e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível. NEGATIVE: solid color block behind logo area, colored badge, colored panel, banner shape.';
   // Para logo centralizada (topo/base), o ponto da logo fica no MEIO de uma linha
   // que normalmente atravessa o canvas de ponta a ponta. Um "retângulo pequeno"
   // não basta: título/texto de apoio que ocupem essa linha colidem com a logo no
   // centro. Por isso a zona aqui é uma FAIXA HORIZONTAL COMPLETA — nenhuma linha
   // de texto pode cruzá-la, mesmo parcialmente.
-  // IMPACTO (OP-02) + tópicos + logo topo-central: comprime a faixa (~14% → ~10%)
-  // para sobrar espaço vertical ao título dominante do terço superior. Guardado a
-  // top-center para não encolher a faixa da base em bottom-center.
+  // GEOMETRIA REAL DA FAIXA (canvasComposer.ts): canvas 1080x1350, PAD = 110,
+  // LOGO_MAX_H = 108 → top-center ocupa y 110..218 (8%..16,1% da altura) e
+  // bottom-center ocupa y 1132..1240 (83,9%..91,9%). Em reels (1080x1920,
+  // PAD 150, LOGO_MAX_H 132): 7,8%..14,7% no topo, 85,3%..92,2% na base.
+  // Achado real (03/08/2026): as alturas antigas (~14% padrão, ~10% comprimida)
+  // eram MENORES que a caixa da logo nos dois casos — a faixa do topo acabava
+  // antes da logo terminar, e a da base começava 57 px DEPOIS de a logo começar.
+  // Faixa de 20% cobre a logo com ~52 px de respiro nos dois formatos; a versão
+  // comprimida do IMPACTO desce a 18% (limite geométrico, não menos que isso).
   const bandCompact = !!opts?.compactTopBand && pos === "top-center";
-  const alturaFaixa = bandCompact ? "~10%" : "~14%";
+  const alturaFaixa = bandCompact ? "~18%" : "~20%";
   // A FAIXA precisa dizer, como a variante do canto (base), que a logo vem DEPOIS
   // e de fora da IA. Sem essa frase, "garanta contraste para a logo ser legível
   // dentro da faixa" lê como ordem de DESENHAR a logo ali — foi o que aconteceu
   // em 27/07/2026 (PU, mood SILÊNCIO, logo BASE CENTRAL): a IA reproduziu a
   // logomarca oficial dentro da imagem e o app aplicou a real por cima,
   // resultando em duas logos empilhadas.
-  const faixa = `A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ${alturaFaixa} da altura. A LOGOMARCA NÃO É DESENHADA PELA IA: ela será SOBREPOSTA DEPOIS, por composição, fora da IA — a faixa é apenas espaço reservado e deve ser entregue VAZIA. PROIBIDO ABSOLUTO desenhar, inventar, imitar, reproduzir ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma, assinatura gráfica ou nome da empresa dentro dessa faixa ou na área adjacente a ela — mesmo que a marca apareça em alguma imagem de referência enviada. Esta regra VENCE o "detalhe criativo" do mood: nenhum traço de assinatura, linha fina, ponto de cor, sombra isolada ou gesto autoral pedido pela direção visual pode ser desenhado dentro da faixa nem encostando nela — se o mood pedir esse detalhe, ele fica em outra região do quadro. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.`;
+  const faixa = `A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ${alturaFaixa} da altura, medidos a partir da borda (superior ou inferior, conforme o ponto da logo). ATENÇÃO À GEOMETRIA: a logomarca é aplicada DEPOIS, recuada da borda — ela fica no MIOLO da faixa, não encostada na borda do canvas. Portanto a proibição vale na faixa INTEIRA, inclusive na parte dela mais distante da borda: texto que pare "logo antes da borda" ainda cai em cima da logo. A LOGOMARCA NÃO É DESENHADA PELA IA: ela será SOBREPOSTA DEPOIS, por composição, fora da IA — a faixa é apenas espaço reservado e deve ser entregue VAZIA. PROIBIDO ABSOLUTO desenhar, inventar, imitar, reproduzir ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma, assinatura gráfica ou nome da empresa dentro dessa faixa ou na área adjacente a ela — mesmo que a marca apareça em alguma imagem de referência enviada. Esta regra VENCE o "detalhe criativo" do mood: nenhum traço de assinatura, linha fina, ponto de cor, sombra isolada ou gesto autoral pedido pela direção visual pode ser desenhado dentro da faixa nem encostando nela — se o mood pedir esse detalhe, ele fica em outra região do quadro. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.`;
   if (pos === "top-center") {
     return {
       reservaTopo: `Ponto da logo: TOPO CENTRAL. ${faixa}`,
@@ -394,7 +407,7 @@ export function buildPostUnicoPrompt(params: {
   // zona da logo (que só proíbe SOBREPOSIÇÃO, nunca exigiu distância) e
   // deixar o topo da metade direita vazio — composição desequilibrada.
   const LOGO_RESPIRO_CLAUSE =
-    " SE a variação escolhida for encostada na base: mantenha respiro generoso entre o último elemento do bloco e a zona da logomarca — NUNCA encoste o bloco imediatamente acima dela. PROIBIDO concentrar todo o bloco espremido embaixo enquanto o topo da metade direita fica vazio — distribua o peso vertical de forma equilibrada mesmo quando ancorado na base.";
+    " SE a variação escolhida for encostada na base: o último elemento do bloco (última linha de texto ou último ícone) deve terminar ACIMA de 80% da altura do canvas — NUNCA encoste o bloco imediatamente acima da zona da logomarca, e nunca desça abaixo dessa linha de 80%. PROIBIDO concentrar todo o bloco espremido embaixo enquanto o topo da metade direita fica vazio — distribua o peso vertical de forma equilibrada mesmo quando ancorado na base.";
   const topicosPosicaoClause = isSilencioMood
     ? "POSIÇÃO do bloco título+tópicos: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (encostado no topo, centralizado verticalmente, ou na base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente." +
       LOGO_RESPIRO_CLAUSE

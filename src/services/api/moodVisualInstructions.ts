@@ -49,7 +49,7 @@ export const moodVisualInstructions: Record<MoodCode, string> = {
   "OP-06": `ESTILO VISUAL (raiz: Minimalista):
 - Fundo de paleta suave (areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido) — evitar branco puro dominante; espaço vazio como elemento principal
 - Título alinhado à DIREITA, ocupando a metade direita do quadro, fonte tipográfica como protagonista, com muito respiro ao redor. A metade DIREITA permanece livre de outros elementos — nenhuma pessoa, produto ou equipamento aparece sob ou atrás do título
-- PROIBIDO concentrar o título espremido na base do quadro, colado imediatamente acima da zona da logomarca (canto inferior direito) — mantenha respiro generoso entre o título e essa zona, e distribua o peso vertical da composição de forma equilibrada (nunca tudo embaixo com o topo da metade direita vazio)
+- PROIBIDO concentrar o título espremido na base do quadro, colado imediatamente acima da zona da logomarca (canto inferior direito) — a última linha do título deve terminar ACIMA de 80% da altura do canvas, e o peso vertical da composição fica distribuído de forma equilibrada (nunca tudo embaixo com o topo da metade direita vazio)
 - Detalhe mínimo de cor como assinatura
 - Composição com muito respiro, elementos reduzidos ao essencial
 - Sensação de premium, contenção e autoridade`,
