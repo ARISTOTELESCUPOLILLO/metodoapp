@@ -140,7 +140,11 @@ export function buildImagePrompt(params: {
   // ("~18% × ~10%") descrevia um retângulo colado na borda, quase disjunto da
   // caixa que a logo de fato ocupa — a IA obedecia e o carimbo da logo caía em
   // cima da última linha de texto. Ver comentário gêmeo em buildPuPrompt.ts.
-  const reservaBase = `Área reservada inviolável — RETÂNGULO GRANDE, NÃO COLADO NA BORDA: começa a ${isCover ? "50%" : "60%"} da LARGURA e a 80% da ALTURA do canvas e se estende até as bordas direita e inferior. ATENÇÃO À GEOMETRIA — a logomarca é aplicada DEPOIS, recuada ${safeMargin} das bordas: ela ocupa o MIOLO desse retângulo (aprox. de ${isCover ? "55% a 86%" : "63% a 90%"} da largura e de 84% a 92% da altura), NÃO a beirada do canvas. Por isso a proibição vale no retângulo INTEIRO, principalmente na parte mais interna e mais alta dele — deixar texto "logo acima do canto" ou "logo à esquerda do canto" é exatamente onde a logo cai. TRAVA DE LINHA: nenhuma linha de título ou texto pode descer abaixo de 80% da altura do canvas na metade direita — a última linha termina ANTES disso; se não couber, reduza o corpo do texto ou suba o bloco inteiro. PROIBIDO ali: texto, lettering, rosto, mão, objeto-foco, gráfico, ícone, símbolo, produto, moldura, caixa, painel, badge, fundo de cor sólida (inclusive cor da marca), círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — inclusive em volta da zona da logo e na área imediatamente adjacente a ela. A área deve ser continuação natural da imagem ao redor. Apenas garanta contraste local suficiente para a logo ser legível. NEGATIVE: solid color block behind logo area, colored badge, colored panel, banner shape.`;
+  // 04/08/2026: a "TRAVA DE LINHA" (proibir a última linha de descer abaixo de
+  // 80%) foi removida — falhou na prática duas vezes. O que abre espaço para a
+  // logo é a ÂNCORA DE TOPO do bloco de texto (blocoTopAnchorClause, abaixo);
+  // a reserva volta a dizer só o essencial. Ver buildPuPrompt.ts.
+  const reservaBase = `Área reservada — canto inferior direito: começa a ${isCover ? "50%" : "60%"} da LARGURA e a 80% da ALTURA do canvas e vai até as bordas direita e inferior. A logomarca é aplicada DEPOIS, por composição, FORA da IA, e fica no MIOLO dessa área (recuada ${safeMargin} das bordas, não na beirada) — entregue a área INTEIRA vazia e limpa, continuação natural da imagem ao redor. PROIBIDO ali: qualquer texto ou lettering; rosto, mão, objeto-foco ou produto; e qualquer traço, linha, forma geométrica, moldura, caixa, painel, badge, bloco de cor sólida (inclusive cor da marca), círculo, elipse, anel, halo, pontilhado, ornamento, rabisco ou swoosh — dentro da zona e na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível. NEGATIVE: solid color block behind logo area, colored badge, colored panel, banner shape.`;
   // Para logo centralizada (topo/base), o ponto da logo fica no MEIO de uma linha
   // que normalmente atravessa o canvas de ponta a ponta. Um "retângulo pequeno"
   // não basta: título/texto que ocupem essa linha colidem com a logo no centro.
@@ -150,7 +154,7 @@ export function buildImagePrompt(params: {
   // feed (PAD 110 + LOGO_MAX_H 108 em 1350) — a faixa antiga terminava ANTES da
   // logo no topo e começava DEPOIS dela na base. Ver buildPuPrompt.ts.
   const reservaFaixa =
-    'A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ~20% da altura, medidos a partir da borda (superior ou inferior, conforme o ponto da logo). ATENÇÃO À GEOMETRIA: a logomarca é aplicada DEPOIS, recuada da borda — ela fica no MIOLO da faixa, não encostada na borda do canvas. Portanto a proibição vale na faixa INTEIRA, inclusive na parte dela mais distante da borda: texto que pare "logo antes da borda" ainda cai em cima da logo. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. Título e texto/legenda (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.';
+    "A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ~20% da altura, medidos a partir da borda (superior ou inferior, conforme o ponto da logo). A logomarca é aplicada DEPOIS, por composição, FORA da IA, e fica no MIOLO da faixa (recuada da borda, não encostada nela) — entregue a faixa INTEIRA vazia e limpa, continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO cruzar essa faixa, mesmo parcialmente, mesmo com uma única palavra ou linha: texto, título, lettering, hashtag, número, rosto, mão, objeto-foco ou produto — título e texto de apoio (todas as linhas) terminam ANTES dela ou começam DEPOIS dela, nunca divididos ao redor. PROIBIDO também qualquer traço, linha, forma geométrica, moldura, caixa, painel, badge, bloco ou barra de cor sólida, círculo, elipse, anel, halo, pontilhado, ornamento, rabisco ou swoosh — dentro da faixa e na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.";
   const reservaInstrucao =
     pos === "top-center"
       ? `A FAIXA SUPERIOR CENTRAL é a zona da logomarca. ${reservaFaixa}`
@@ -274,6 +278,15 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
   // Título com 5+ palavras (2-3 linhas) precisa de um teto de altura menor —
   // um piso fixo de "35-45%" pra qualquer contagem de palavra fazia títulos
   // longos dominarem a peça, brigando com produto/personagem.
+  // Âncora vertical do bloco de texto — gêmea de blocoTopAnchorClause na PU
+  // (ver comentário lá: travar o FIM do bloco falhou duas vezes; o que abre
+  // espaço para a logomarca é declarar onde o bloco COMEÇA). Com a logo no topo
+  // central, a âncora desce para depois da faixa reservada (~20% da altura).
+  const topAnchorClause =
+    pos === "top-center"
+      ? "ÂNCORA VERTICAL — O BLOCO COMEÇA PELO ALTO: o topo da primeira linha do título fica entre 24% e 30% da altura do canvas (a faixa da logomarca ocupa os 20% superiores — o bloco começa abaixo dela) e o bloco INTEIRO cresce PARA BAIXO a partir dali: título em cima, texto de apoio imediatamente abaixo dele. PROIBIDO centralizar o bloco verticalmente, ancorá-lo na base ou empurrá-lo para a metade inferior do quadro. Se não couber, reduza o corpo do texto — nunca desça a âncora."
+      : `ÂNCORA VERTICAL — O BLOCO COMEÇA PELO ALTO: o topo da primeira linha do título fica entre 10% e 16% da altura do canvas (logo abaixo do recuo de segurança de ${safeMargin} da borda superior) e o bloco INTEIRO cresce PARA BAIXO a partir dali: título em cima, texto de apoio imediatamente abaixo dele. O espaço que sobra na parte de baixo é o espaço da LOGOMARCA, aplicada depois — é ele que não pode ser ocupado. PROIBIDO centralizar o bloco verticalmente, ancorá-lo na base ou empurrá-lo para a metade inferior do quadro. Se não couber, reduza o corpo do texto — nunca desça a âncora.`;
+
   const tituloWordCount = titulo.trim().split(/\s+/).filter(Boolean).length;
   const tituloSizeClause =
     tituloWordCount >= 5
@@ -291,6 +304,7 @@ ${papelBlock}${variationBlock}
 CONTEÚDO TEXTUAL:
 - Título principal em CAIXA ALTA (bold, ${tituloSizeClause}): "${tituloUpper}"
 - Texto de apoio — SUBTÍTULO DE REVISTA (corpo entre 55% e 70% do título, legível sem zoom no celular, caixa normal, peso regular — nunca tamanho de legenda): "${texto}"
+- ${topAnchorClause}
 - ${marcaInstruction}
 
 COR PRIMÁRIA: ${primaryColor}

@@ -14,6 +14,14 @@ import type { BrandKit, LogoPosition, PostUnicoFormData } from "../types";
 // ("~18% × ~10%" colada na borda; faixa de "~14%") não continha: a IA obedecia
 // a reserva e o carimbo da logo caía em cima da última linha de texto.
 // Estes testes falham se alguém reduzir a reserva abaixo da caixa real.
+//
+// Achado real (04/08/2026): reserva correta NÃO bastou. Mesmo com a caixa real
+// declarada e uma trava numérica no FIM do bloco ("nenhuma linha abaixo de 80%
+// da altura"), o modelo desceu o texto de apoio até 92% e a logo caiu em cima
+// (PU Barbosa Lubrificantes, logo bottom-right, já com o fix de 03/08 no ar).
+// A trava passou para o COMEÇO do bloco — âncora de topo declarada, bloco
+// crescendo para baixo. Os testes abaixo travam as duas coisas: a reserva
+// (que continua descrevendo a caixa real) e a âncora de topo por posição.
 
 beforeEach(() => {
   vi.spyOn(Math, "random").mockReturnValue(0);
@@ -60,17 +68,43 @@ describe("zona da logomarca — canto inferior direito", () => {
   });
 
   it("avisa que a zona NÃO está colada na borda — a logo fica no miolo", () => {
-    expect(p).toContain("NÃO COLADO NA BORDA");
-    expect(p).toContain("recuada 110 px das bordas");
-  });
-
-  it("trava a última linha de texto acima de 80% da altura", () => {
-    expect(p).toContain("TRAVA DE LINHA");
-    expect(p).toContain("abaixo de 80% da altura do canvas");
+    expect(p).toContain("fica no MIOLO dessa área (recuada 110 px das bordas");
   });
 
   it("não volta à reserva antiga, que não cobria a logo", () => {
     expect(p).not.toContain("~18% × ~10%");
+  });
+});
+
+describe("âncora de topo do bloco de texto — o que abre espaço para a logo", () => {
+  it("logo no canto inferior direito: bloco começa entre 10% e 16% da altura", () => {
+    const p = prompt("bottom-right");
+    expect(p).toContain("O BLOCO COMEÇA PELO ALTO");
+    expect(p).toContain("entre 10% e 16% da altura do canvas");
+    expect(p).toContain("cresce PARA BAIXO");
+  });
+
+  it("logo na base central: mesma âncora de topo", () => {
+    expect(prompt("bottom-center")).toContain("entre 10% e 16% da altura do canvas");
+  });
+
+  it("logo no topo central: âncora desce para depois da faixa (24% a 30%)", () => {
+    const p = prompt("top-center");
+    expect(p).toContain("entre 24% e 30% da altura do canvas");
+    expect(p).not.toContain("entre 10% e 16% da altura do canvas");
+  });
+
+  it("vale também no mood SILÊNCIO, que antes variava topo/meio/base", () => {
+    const p = prompt("bottom-right", "OP-06");
+    expect(p).toContain("METADE DIREITA");
+    expect(p).toContain("entre 10% e 16% da altura do canvas");
+    expect(p).not.toContain("Explore variações verticais");
+  });
+
+  it("não sobrou a trava de fim de bloco, que falhou duas vezes", () => {
+    const p = prompt("bottom-right", "OP-06");
+    expect(p).not.toContain("TRAVA DE LINHA");
+    expect(p).not.toContain("terminar ACIMA de 80% da altura");
   });
 });
 
@@ -110,6 +144,6 @@ describe("zona da logomarca — faixas centrais (topo e base)", () => {
 
   it("avisa que a logo fica no miolo da faixa, não encostada na borda", () => {
     const p = prompt("bottom-center");
-    expect(p).toContain("ela fica no MIOLO da faixa");
+    expect(p).toContain("fica no MIOLO da faixa (recuada da borda");
   });
 });

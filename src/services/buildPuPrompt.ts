@@ -134,8 +134,15 @@ function logoZoneDescription(
   // Pode haver fundo, textura, fotografia ou cor de marca atrás; só evitamos
   // texto, rosto, objeto-foco e lettering dentro da zona, mantendo contraste
   // local suficiente para a marca ser legível.
+  // Achado real (04/08/2026): mesmo com a caixa real declarada e uma "TRAVA DE
+  // LINHA" numérica ("nenhuma linha abaixo de 80% da altura"), o modelo desceu o
+  // texto de apoio até 92% e a logo caiu em cima (PU Barbosa Lubrificantes,
+  // logo bottom-right, gerada 04/08 já com o fix de 03/08 em produção). Proibir
+  // o FIM do bloco não funciona — o que funciona é fixar o COMEÇO dele no alto
+  // (ver blocoTopAnchorClause). A reserva, aqui, volta a dizer só o essencial:
+  // área entregue vazia, sem texto, sem traço, sem forma, sem logo desenhada.
   const base =
-    'Área reservada inviolável — RETÂNGULO GRANDE, NÃO COLADO NA BORDA: começa a 60% da LARGURA e a 80% da ALTURA do canvas e se estende até as bordas direita e inferior (≈ 430 × 270 px num canvas 1080x1350). ATENÇÃO À GEOMETRIA — a logomarca é aplicada DEPOIS, recuada 110 px das bordas: ela ocupa o MIOLO desse retângulo (aprox. de 63% a 90% da largura e de 84% a 92% da altura), NÃO a beirada do canvas. Por isso a proibição vale no retângulo INTEIRO, principalmente na parte mais interna e mais alta dele — deixar texto "logo acima do canto" ou "logo à esquerda do canto" é exatamente onde a logo cai. TRAVA DE LINHA: nenhuma linha de título, tópico ou texto de apoio pode descer abaixo de 80% da altura do canvas na metade direita — a última linha do bloco de texto termina ANTES disso; se não couber, reduza o corpo do texto ou suba o bloco inteiro. PROIBIDO ABSOLUTO ali: texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto. NENHUM ELEMENTO IMPORTANTE PODE SER COBERTO PELA LOGO — ela será SOBREPOSTA DEPOIS, por composição, fora da IA; a área é apenas espaço reservado e deve ser entregue VAZIA. PROIBIDO ABSOLUTO desenhar, inventar, imitar, reproduzir ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma, assinatura gráfica ou nome da empresa ali — mesmo que a marca apareça em alguma imagem de referência enviada. Esta regra VENCE o \'detalhe criativo\' do mood: nenhum traço de assinatura, linha fina, ponto de cor ou gesto autoral pedido pela direção visual pode ser desenhado nessa área nem encostando nela. Área deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — em volta da zona e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível. NEGATIVE: solid color block behind logo area, colored badge, colored panel, banner shape.';
+    "Área reservada — canto inferior direito: começa a 60% da LARGURA e a 80% da ALTURA do canvas e vai até as bordas direita e inferior. A logomarca é aplicada DEPOIS, por composição, FORA da IA, e fica no MIOLO dessa área (recuada 110 px das bordas, não na beirada) — entregue a área INTEIRA vazia e limpa, como continuação natural da cena (fundo, textura, céu, parede). PROIBIDO ali: qualquer texto, lettering, número ou hashtag; rosto, mão, objeto-foco ou produto; e qualquer traço, linha, forma geométrica, moldura, caixa, painel, badge, bloco de cor sólida, círculo, elipse, anel, halo, pontilhado, ornamento, rabisco ou swoosh — dentro da zona e na área imediatamente adjacente a ela. PROIBIDO desenhar, imitar ou reproduzir qualquer logomarca, emblema, monograma ou o nome da empresa — mesmo que a marca apareça em imagem de referência. Esta regra VENCE o 'detalhe criativo' do mood. Apenas garanta contraste local suficiente para a logo ser legível. NEGATIVE: solid color block behind logo area, colored badge, colored panel, banner shape.";
   // Para logo centralizada (topo/base), o ponto da logo fica no MEIO de uma linha
   // que normalmente atravessa o canvas de ponta a ponta. Um "retângulo pequeno"
   // não basta: título/texto de apoio que ocupem essa linha colidem com a logo no
@@ -158,7 +165,7 @@ function logoZoneDescription(
   // em 27/07/2026 (PU, mood SILÊNCIO, logo BASE CENTRAL): a IA reproduziu a
   // logomarca oficial dentro da imagem e o app aplicou a real por cima,
   // resultando em duas logos empilhadas.
-  const faixa = `A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ${alturaFaixa} da altura, medidos a partir da borda (superior ou inferior, conforme o ponto da logo). ATENÇÃO À GEOMETRIA: a logomarca é aplicada DEPOIS, recuada da borda — ela fica no MIOLO da faixa, não encostada na borda do canvas. Portanto a proibição vale na faixa INTEIRA, inclusive na parte dela mais distante da borda: texto que pare "logo antes da borda" ainda cai em cima da logo. A LOGOMARCA NÃO É DESENHADA PELA IA: ela será SOBREPOSTA DEPOIS, por composição, fora da IA — a faixa é apenas espaço reservado e deve ser entregue VAZIA. PROIBIDO ABSOLUTO desenhar, inventar, imitar, reproduzir ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma, assinatura gráfica ou nome da empresa dentro dessa faixa ou na área adjacente a ela — mesmo que a marca apareça em alguma imagem de referência enviada. Esta regra VENCE o "detalhe criativo" do mood: nenhum traço de assinatura, linha fina, ponto de cor, sombra isolada ou gesto autoral pedido pela direção visual pode ser desenhado dentro da faixa nem encostando nela — se o mood pedir esse detalhe, ele fica em outra região do quadro. PROIBIDO ABSOLUTO: qualquer texto, título, lettering, slogan, hashtag, número, rosto humano, mão, objeto-foco, gráfico, ícone, símbolo ou recorte de produto que cruze essa faixa — mesmo parcialmente, mesmo apenas uma palavra ou linha. TÍTULO e TEXTO DE APOIO (incluindo TODAS as linhas) devem terminar ANTES dessa faixa começar, ou começar DEPOIS dela terminar — NUNCA divididos ao redor dela, NUNCA com uma linha cruzando-a. A faixa deve ser continuação natural da imagem (fundo, textura, céu, parede). PROIBIDO TAMBÉM: moldura, caixa, painel, badge, fundo de cor sólida, círculo, elipse, anel, halo, linha decorativa, pontilhado, tracejado, ornamento, vírgula, aspas, rabisco, swoosh, símbolo gráfico solto ou forma orgânica decorativa — dentro da faixa e também na área imediatamente adjacente a ela. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.`;
+  const faixa = `A logo ocupa uma FAIXA HORIZONTAL COMPLETA (de borda a borda do canvas), com ${alturaFaixa} da altura, medidos a partir da borda (superior ou inferior, conforme o ponto da logo). A logomarca é aplicada DEPOIS, por composição, FORA da IA, e fica no MIOLO da faixa (recuada da borda, não encostada nela) — entregue a faixa INTEIRA vazia e limpa, como continuação natural da cena (fundo, textura, céu, parede). PROIBIDO cruzar essa faixa, mesmo parcialmente, mesmo com uma única palavra ou linha: texto, título, lettering, hashtag, número, rosto, mão, objeto-foco ou produto — TÍTULO e TEXTO DE APOIO (todas as linhas) terminam ANTES dela ou começam DEPOIS dela, nunca divididos ao redor. PROIBIDO também qualquer traço, linha, forma geométrica, moldura, caixa, painel, badge, bloco ou barra de cor sólida, círculo, elipse, anel, halo, pontilhado, ornamento, rabisco ou swoosh — dentro da faixa e na área imediatamente adjacente a ela. PROIBIDO desenhar, imitar ou reproduzir qualquer logomarca, emblema, monograma ou o nome da empresa ali — mesmo que a marca apareça em imagem de referência. Esta regra VENCE o "detalhe criativo" do mood: se o mood pedir um traço autoral, ele fica em outra região do quadro. Apenas garanta contraste local suficiente para a logo ser legível dentro da faixa. NEGATIVE: solid color bar, bottom banner stripe, top banner stripe, flat color footer band, colored panel behind logo, navy or brand-color block at canvas edge.`;
   if (pos === "top-center") {
     return {
       reservaTopo: `Ponto da logo: TOPO CENTRAL. ${faixa}`,
@@ -178,6 +185,33 @@ function logoZoneDescription(
     regraFinal:
       "Canto inferior direito é continuação natural da cena — SEM badge, painel ou bloco de cor sólida atrás da logo, legível, sem dead space.",
   };
+}
+
+// Âncora vertical do bloco de texto — a regra que de fato abre espaço para a
+// logomarca (achado real de 04/08/2026, ver comentário em logoZoneDescription).
+//
+// Duas tentativas anteriores travaram o FIM do bloco ("última linha acima de 80%
+// da altura") e as duas falharam: o modelo compõe de cima para baixo e trata o
+// limite inferior como sugestão. Aqui a trava passa para o COMEÇO — o topo da
+// primeira linha do título tem posição declarada, e como o texto de apoio (ou os
+// tópicos) vem logo abaixo do título, o bloco inteiro termina naturalmente bem
+// acima da zona da logo. É a mesma lógica de diagramação de anúncio: define-se
+// onde a manchete começa, não onde o rodapé não pode chegar.
+//
+// GEOMETRIA (canvasComposer.ts): o recuo de segurança das bordas é de 110 px num
+// canvas 1080x1350 (8,1% da altura) — a âncora começa logo abaixo dele. Com a
+// logo em top-center a faixa reservada come os 20% superiores, então a âncora
+// desce para depois dela.
+function blocoTopAnchorClause(position: LogoPosition | undefined): string {
+  const logoNoTopo = (position || "bottom-right") === "top-center";
+  const faixaAncora = logoNoTopo ? "entre 24% e 30%" : "entre 10% e 16%";
+  const motivo = logoNoTopo
+    ? "a faixa da logomarca ocupa os 20% superiores do canvas — o bloco começa abaixo dela"
+    : "logo abaixo do recuo de segurança de 8% da borda superior";
+  const folga = logoNoTopo
+    ? "A parte de baixo do quadro permanece livre para a cena."
+    : "O espaço que sobra na parte de baixo é o espaço da LOGOMARCA, aplicada depois — é ele que não pode ser ocupado.";
+  return ` ÂNCORA VERTICAL — O BLOCO COMEÇA PELO ALTO: o topo da primeira linha do título fica ${faixaAncora} da altura do canvas (${motivo}), e o bloco INTEIRO cresce PARA BAIXO a partir dali — título em cima, texto de apoio (ou tópicos) imediatamente abaixo dele, nessa ordem. ${folga} PROIBIDO centralizar o bloco verticalmente, ancorá-lo na base ou empurrá-lo para a metade inferior do quadro. Se o bloco não couber, reduza o corpo do texto — nunca desça a âncora.`;
 }
 
 function buildColorBlock(
@@ -406,14 +440,17 @@ export function buildPostUnicoPrompt(params: {
   // resguardo de respiro fez o modelo colar o bloco imediatamente acima da
   // zona da logo (que só proíbe SOBREPOSIÇÃO, nunca exigiu distância) e
   // deixar o topo da metade direita vazio — composição desequilibrada.
-  const LOGO_RESPIRO_CLAUSE =
-    " SE a variação escolhida for encostada na base: o último elemento do bloco (última linha de texto ou último ícone) deve terminar ACIMA de 80% da altura do canvas — NUNCA encoste o bloco imediatamente acima da zona da logomarca, e nunca desça abaixo dessa linha de 80%. PROIBIDO concentrar todo o bloco espremido embaixo enquanto o topo da metade direita fica vazio — distribua o peso vertical de forma equilibrada mesmo quando ancorado na base.";
-  const topicosPosicaoClause = isSilencioMood
-    ? "POSIÇÃO do bloco título+tópicos: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (encostado no topo, centralizado verticalmente, ou na base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente." +
-      LOGO_RESPIRO_CLAUSE
-    : moodTitleAnchor(data.mood)
-      ? `POSIÇÃO do bloco título+tópicos: ${moodTitleAnchor(data.mood)}.`
-      : "POSIÇÃO do bloco título+tópicos é livre — explore ancoragens (topo, lateral, base).";
+  // 04/08/2026: a variação vertical acabou. Todo bloco de texto ancora pelo
+  // alto (blocoTopAnchorClause) — a liberdade que sobra é horizontal e de
+  // estilo. Foi a única forma de a base do quadro chegar limpa à logomarca.
+  const TOP_ANCHOR_CLAUSE = blocoTopAnchorClause(kit.logoPosition);
+  const topicosPosicaoClause =
+    (isSilencioMood
+      ? "POSIÇÃO do bloco título+tópicos: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO, nunca à esquerda nem centralizado horizontalmente."
+      : moodTitleAnchor(data.mood)
+        ? `POSIÇÃO do bloco título+tópicos: ${moodTitleAnchor(data.mood)}.`
+        : "POSIÇÃO HORIZONTAL do bloco título+tópicos é livre — explore ancoragens laterais (esquerda, direita, largura cheia).") +
+    TOP_ANCHOR_CLAUSE;
   const topicosBlock =
     hasTopicos && copy?.topicos
       ? `TÍTULO E TÓPICOS OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
@@ -429,12 +466,13 @@ ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da 
       : "";
   // Mesma reserva de direita do mood SILÊNCIO (ver isSilencioMood acima),
   // aplicada aqui ao formato título+texto corrido.
-  const textoPosicaoClause = isSilencioMood
-    ? "POSIÇÃO do bloco: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. Explore variações verticais dentro dela (topo, meio, base), mas sempre na metade direita, nunca à esquerda nem centralizado horizontalmente." +
-      LOGO_RESPIRO_CLAUSE
-    : moodTitleAnchor(data.mood)
-      ? `POSIÇÃO do bloco: ${moodTitleAnchor(data.mood)}.`
-      : "POSIÇÃO do bloco é livre — explore ancoragens (topo, lateral, base, barra inferior, dividido em zonas).";
+  const textoPosicaoClause =
+    (isSilencioMood
+      ? "POSIÇÃO do bloco: ancore na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO, nunca à esquerda nem centralizado horizontalmente."
+      : moodTitleAnchor(data.mood)
+        ? `POSIÇÃO do bloco: ${moodTitleAnchor(data.mood)}.`
+        : "POSIÇÃO HORIZONTAL do bloco é livre — explore ancoragens laterais (esquerda, direita, largura cheia).") +
+    TOP_ANCHOR_CLAUSE;
   const copyBlock = hasTopicos
     ? topicosBlock
     : hasCopy
@@ -452,12 +490,12 @@ Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, 3 a 6 palavras)
 NÃO copie a informação-chave literalmente — interprete-a criativamente com tom publicitário.
 PROIBIDO usar o nome da empresa ou da marca como título ou texto — inspire-se na mensagem, na atividade e na informação-chave, nunca no nome da empresa. O nome da marca é representado pela logomarca, não pelo texto da arte.
 ${
-  isSilencioMood
-    ? "O bloco de texto deve ancorar na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. A liberdade é de ESTILO e de variação vertical dentro dessa metade (topo, meio, base), nunca de posição horizontal: nunca à esquerda nem centralizado. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto." +
-      LOGO_RESPIRO_CLAUSE
+  (isSilencioMood
+    ? "O bloco de texto deve ancorar na METADE DIREITA do quadro — é a zona reservada para o título no mood SILÊNCIO. A liberdade é de ESTILO, nunca de posição horizontal: nunca à esquerda nem centralizado. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto."
     : moodTitleAnchor(data.mood)
-      ? `O bloco de texto deve ancorar ${moodTitleAnchor(data.mood)}. A liberdade é de ESTILO tipográfico e de variação dentro dessa ancoragem, não de posição horizontal. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.`
-      : 'A IA tem TOTAL LIBERDADE de posição, estilo tipográfico e ancoragem do bloco de texto — pode estar em qualquer região da peça, EXCETO na zona reservada da logomarca. Explore ancoragens além do "bloco encostado na borda esquerda". A liberdade é de POSIÇÃO e ESTILO, não de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.'
+      ? `O bloco de texto deve ancorar ${moodTitleAnchor(data.mood)}. A liberdade é de ESTILO tipográfico dentro dessa ancoragem, não de posição horizontal. A liberdade de estilo não é de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.`
+      : 'A IA tem LIBERDADE de ancoragem HORIZONTAL e de estilo tipográfico do bloco de texto — explore ancoragens além do "bloco encostado na borda esquerda". A liberdade é de posição horizontal e ESTILO, não de ESCALA: o título não deve invadir nem dominar visualmente a peça inteira — deve sobrar respiro e espaço para a cena/imagem ao redor do bloco de texto.') +
+  TOP_ANCHOR_CLAUSE
 }
 Hierarquia tipográfica obrigatória:
 • TÍTULO: DOMINANTE — renderizado em tamanho grande e impactante (pense em outdoor), ocupando entre 30% e 45% da altura útil do canvas (nunca mais que isso). A âncora é o CORPO da fonte permanecer grande e legível, não preencher área a qualquer custo: se o título tiver 4 ou mais palavras, quebre em 2-3 linhas para manter o corpo grande; se tiver 1-3 palavras, mantenha em 1-2 linhas — não infle artificialmente o corpo nem espalhe poucas palavras em muitas linhas só para preencher altura. Título curto ocupa naturalmente menos área, e isso é correto.

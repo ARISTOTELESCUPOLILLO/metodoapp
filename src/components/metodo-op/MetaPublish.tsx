@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useImpersonation } from "@/hooks/useImpersonation";
 import { isMetaAllowed } from "@/lib/metaAllowlist";
 
 interface Props {
@@ -40,6 +41,13 @@ const fbIcon = (
 
 export function MetaPublish({ imageDataUrl, imageDataUrls, caption }: Props) {
   const { user } = useAuth();
+  // Em "Atuar como", a peça na tela é do CLIENTE, mas a publicação sai sempre
+  // pelo System User da BM — ou seja, cairia no Instagram/Facebook da
+  // OPropaganda. Publicar conteúdo de cliente no perfil da agência por engano é
+  // irreversível, então quem manda na liberação é o dono da peça (o usuário
+  // atuado), não o admin logado. Atuando sobre uma conta da própria allowlist
+  // (ex.: o admin atuando na conta de usuário dele) os botões continuam.
+  const impersonation = useImpersonation();
   const [status, setStatus] = useState<MetaStatus | null>(null);
 
   // Estados OAuth (modo normal)
@@ -87,7 +95,7 @@ export function MetaPublish({ imageDataUrl, imageDataUrls, caption }: Props) {
   const mediaBody = isCarousel ? { imageDataUrls: carouselUrls } : { imageDataUrl };
   const sufixo = isCarousel ? " carrossel" : "";
 
-  if (!isMetaAllowed(user?.email)) return null;
+  if (!isMetaAllowed(impersonation ? impersonation.email : user?.email)) return null;
   if (!status) return null;
   if (!imageDataUrl && !isCarousel && !status.devMode) return null;
 
