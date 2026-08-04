@@ -1,0 +1,22 @@
+-- Remove duas tabelas órfãs do esquema original do projeto (maio/2026), que o
+-- Security Advisor do Supabase apontou em 04/08/2026 como "RLS desativado em
+-- público": content_configs e generations.
+--
+-- Diagnóstico antes de apagar:
+--   • 0 linhas nas duas;
+--   • nenhuma referência no código (só apareciam em src/integrations/supabase/
+--     types.ts, que é gerado a partir do banco) — a geração real mora em
+--     user_generations / user_sequences / brand_kits, todas com RLS e policies;
+--   • nenhuma chave estrangeira entrando ou saindo delas;
+--   • criadas fora do versionamento — nenhuma das 86 migrations as menciona.
+--
+-- O risco não era leitura (estavam vazias e desligadas do resto), e sim
+-- ESCRITA: o papel `anon` — a chave pública embutida no bundle do front, ou
+-- seja, qualquer visitante — tinha INSERT/UPDATE/DELETE/TRUNCATE nas duas, sem
+-- RLS para barrar. Qualquer pessoa podia despejar dado no banco do projeto.
+--
+-- Ligar RLS sem policies também fecharia a porta, mas deixaria duas tabelas
+-- mortas poluindo o types.ts e reaparecendo em toda auditoria futura. Como não
+-- há dado nem dependência, o corte é limpo.
+DROP TABLE IF EXISTS public.content_configs;
+DROP TABLE IF EXISTS public.generations;
