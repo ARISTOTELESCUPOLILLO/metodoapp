@@ -19,6 +19,7 @@
 
 import { pickRandom } from "./visualDirection.lexicon";
 import type { TipoPecaVestuario } from "../domain/visualSelection";
+import type { LogoPosition } from "../types";
 
 /** Rótulos de UI — fonte única, para o seletor e para o texto do prompt. */
 export const TIPO_PECA_LABEL: Record<TipoPecaVestuario, string> = {
@@ -62,24 +63,70 @@ const ENQUADRAMENTO_POR_TIPO: Record<TipoPecaVestuario, string> = {
 // mesma pose. Todas servem a qualquer tipo de peça: o enquadramento acima é que
 // muda por tipo, a pose é livre dentro dele. Nenhuma delas vira a pessoa de
 // costas nem esconde o rosto — o contrato do mix exige rosto visível.
-const POSE_MODELO_VARIATIONS: readonly string[] = [
-  "em pé, de frente para a câmera, peso apoiado numa perna e a outra levemente à frente, ombros relaxados, olhar direto para a câmera — postura de campanha, natural, sem rigidez de foto 3x4",
-  "em pé, corpo em três-quartos para a câmera e rosto voltado para ela, uma mão no bolso ou apoiada na cintura, queixo levemente erguido",
-  "caminhando na direção da câmera em passo curto, peso em transição, movimento leve no tecido e no cabelo — flagrante de passarela, não pose estática",
-  "em pé de perfil ou quase, com o rosto girado para a câmera por cima do ombro, mostrando o caimento lateral da peça",
-  "encostada de lado numa parede ou superfície do próprio cenário, uma perna cruzada à frente da outra, braços soltos, olhar para a câmera",
-  "em pé, leve giro de tronco com o tecido em movimento, mãos em gesto natural (ajustando a manga, a gola ou o bolso), sorriso contido ou expressão neutra confiante",
+//
+// `catalogo: false` marca as poses que funcionam numa campanha editorial mas
+// atrapalham no modo CATÁLOGO: elas jogam a modelo para um dos lados do quadro
+// ou mostram a peça de perfil. Achado real do Ari (06/08/2026), na primeira
+// peça gerada com o modo: "o personagem ficou encostado numa parede" — pose
+// legítima de moda, errada para quem está escolhendo uma roupa e precisa vê-la
+// de frente, inteira e no centro.
+const POSE_MODELO_VARIATIONS: readonly { texto: string; catalogo: boolean }[] = [
+  {
+    texto:
+      "em pé, de frente para a câmera, peso apoiado numa perna e a outra levemente à frente, ombros relaxados, olhar direto para a câmera — postura de campanha, natural, sem rigidez de foto 3x4",
+    catalogo: true,
+  },
+  {
+    texto:
+      "em pé, corpo em três-quartos para a câmera e rosto voltado para ela, uma mão no bolso ou apoiada na cintura, queixo levemente erguido",
+    catalogo: true,
+  },
+  {
+    texto:
+      "caminhando na direção da câmera em passo curto, peso em transição, movimento leve no tecido e no cabelo — flagrante de passarela, não pose estática",
+    catalogo: true,
+  },
+  {
+    texto:
+      "em pé de perfil ou quase, com o rosto girado para a câmera por cima do ombro, mostrando o caimento lateral da peça",
+    catalogo: false,
+  },
+  {
+    texto:
+      "encostada de lado numa parede ou superfície do próprio cenário, uma perna cruzada à frente da outra, braços soltos, olhar para a câmera",
+    catalogo: false,
+  },
+  {
+    texto:
+      "em pé, leve giro de tronco com o tecido em movimento, mãos em gesto natural (ajustando a manga, a gola ou o bolso), sorriso contido ou expressão neutra confiante",
+    catalogo: true,
+  },
 ];
+
+// Centralização — só no modo catálogo. A frase precisa dizer POR QUE não há
+// espaço a reservar: numa peça normal o bloco de título ancora no alto e a cena
+// se organiza em volta dele, então o modelo de imagem aprendeu a deixar uma
+// metade do quadro respirando. Sem texto e sem essa explicação, ele mantém o
+// vazio e empurra a modelo para o canto do mesmo jeito.
+const CENTRALIZACAO_CATALOGO =
+  "COMPOSIÇÃO CENTRADA: a modelo ocupa o EIXO CENTRAL do quadro — corpo alinhado ao centro horizontal, com espaço equilibrado à esquerda e à direita dela. " +
+  "Nesta peça NÃO existe título nem bloco de texto para ocupar metade do quadro: o espaço todo é da modelo e da peça. " +
+  "PROIBIDO empurrar a figura para uma das laterais, encostá-la numa parede, quina ou batente, ou deixar metade do quadro vazia esperando um texto que não vem. ";
 
 /** Bloco de POSE + CÂMERA + ENQUADRAMENTO do look book.
  *  Substitui a estrutura de cena sorteada pelo mood (que fala de "gesto do
- *  ofício", atendimento e bancada — vocabulário que não descreve um look book). */
-export function buildLookVariationBlock(tipo: TipoPecaVestuario): string {
-  const pose = pickRandom([...POSE_MODELO_VARIATIONS]);
+ *  ofício", atendimento e bancada — vocabulário que não descreve um look book).
+ *
+ *  `catalogo` restringe o sorteio às poses frontais e acrescenta a
+ *  centralização — ver CENTRALIZACAO_CATALOGO e buildCatalogoSemTextoBlock. */
+export function buildLookVariationBlock(tipo: TipoPecaVestuario, catalogo = false): string {
+  const pool = POSE_MODELO_VARIATIONS.filter((p) => !catalogo || p.catalogo);
+  const pose = pickRandom(pool.map((p) => p.texto));
   return (
     `\n⚠ VARIAÇÃO — PEÇA DE MODA COM MODELO: esta peça é um LOOK BOOK. A pessoa em cena é a MODELO que veste o produto: ela existe para mostrar a peça vestida, e a composição inteira é organizada em torno disso. ` +
     `POSE DESTA GERAÇÃO: ${pose}. ` +
     `CÂMERA: lente 50mm a 85mm, altura entre o peito e o quadril da modelo, ponto de vista frontal ou três-quartos, sem distorção de grande-angular e sem ângulo dramático. ` +
+    `${catalogo ? CENTRALIZACAO_CATALOGO : ""}` +
     `${ENQUADRAMENTO_POR_TIPO[tipo]} ` +
     `A pose e o enquadramento acima SUBSTITUEM qualquer estrutura de cena, gesto de ofício ou pose de trabalho descrita em outro ponto deste prompt (atendimento, bancada, mesa, documento, operação) — nesta peça a modelo não está trabalhando, está vestindo. ` +
     `O que NÃO muda: luz, paleta, clima e detalhe criativo continuam sendo os do mood definido na DIREÇÃO — o look book governa pose, câmera e enquadramento, nunca a gramática visual do mood.`
@@ -136,3 +183,54 @@ export function lookContratoItem(tipo: TipoPecaVestuario, plural: boolean): stri
     `Não existe uma segunda unidade da peça exposta em cena: ela aparece uma única vez, no corpo de quem a veste`
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODO CATÁLOGO — peça sem nenhum texto na imagem
+//
+// Pedido do Ari em 06/08/2026, ao ver a primeira geração do look book: o uso
+// real que ele tem em mente é a loja mandar para o cliente as peças que tem
+// disponíveis, vestidas, para despertar vontade de comprar. Nesse uso o título
+// e o texto de apoio atrapalham — quem fala é a roupa no corpo. Fica só a
+// logomarca, que já é aplicada por composição fora da IA.
+//
+// É um modo dentro do look book, nunca solto: sem peça vestida não existe
+// catálogo. O Post Único comum continua com texto obrigatório.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Onde o enquadramento não pode invadir, por posição de logo. É o conflito que
+// aparece assim que a peça perde o texto: sem bloco tipográfico ocupando o
+// quadro, a modelo cresce e vai parar em cima da área reservada da logomarca —
+// e nos tipos "look" e "calcado" o enquadramento é corpo inteiro, com pés
+// obrigatórios dentro do quadro, exatamente onde costuma ficar a faixa de baixo.
+const RESPIRO_LOGO_POR_POSICAO: Record<LogoPosition, string> = {
+  "top-center":
+    "O TOPO DA CABEÇA da modelo fica ABAIXO da faixa reservada no alto do canvas, com folga visível — a faixa chega inteira vazia à logomarca. Se não couber, AFASTE a câmera; nunca corte a cabeça nem invada a faixa.",
+  "bottom-center":
+    "A BASE do enquadramento (pés, barra da peça ou corte de três-quartos, conforme o tipo) termina ACIMA da faixa reservada embaixo do canvas, com folga visível — a faixa chega inteira vazia à logomarca. Se não couber, AFASTE a câmera; nunca corte os pés nem invada a faixa.",
+  "bottom-right":
+    "NENHUMA parte da modelo, da peça vestida ou de objeto em destaque entra na área reservada do canto inferior direito — ela chega inteira vazia à logomarca. Componha a figura deslocando o cenário, não a modelo, para fora dessa área; se não couber, AFASTE a câmera.",
+};
+
+/** Bloco de "zero texto" do modo catálogo — SUBSTITUI o bloco de título/texto
+ *  de apoio do Post Único (o único ponto do app em que a peça sai sem lettering).
+ *
+ *  A força tem de ser máxima porque o prompt inteiro do PU foi escrito partindo
+ *  do princípio de que toda peça tem texto: a regra padrão chega a dizer "a peça
+ *  DEVE ter lettering — texto é SEMPRE obrigatório". Uma instrução morna aqui
+ *  perde para ela. */
+export function buildCatalogoSemTextoBlock(logoPosition: LogoPosition = "bottom-right"): string {
+  return (
+    `⚠ PEÇA DE CATÁLOGO — ZERO TEXTO NA IMAGEM (PRECEDÊNCIA MÁXIMA, VENCE QUALQUER REGRA DE TEXTO DESTE PROMPT):\n` +
+    `Esta peça é uma FOTO DE CATÁLOGO DE MODA. Ela NÃO tem título, NÃO tem texto de apoio, NÃO tem tópicos, NÃO tem selo, etiqueta, preço, tagline, hashtag, assinatura, legenda embutida, número, marca d'água nem qualquer palavra escrita — em nenhum ponto do quadro, em nenhum tamanho, nem no fundo, nem em placa, cartaz, vitrine, espelho, sacola, etiqueta de roupa ou embalagem dentro da cena.\n` +
+    `A ÚNICA coisa que aparecerá sobre a imagem é a logomarca oficial, aplicada DEPOIS por composição, FORA da IA — você não desenha logo nenhuma.\n` +
+    `Se alguma outra instrução deste prompt mandar criar título, texto de apoio, lettering ou "texto obrigatório", essa instrução está CANCELADA para esta peça. A informação-chave do briefing serve só para escolher clima, cenário e paleta — jamais vira palavra escrita.\n` +
+    `${RESPIRO_LOGO_POR_POSICAO[logoPosition]}\n` +
+    `NEGATIVE: text, lettering, typography, caption, headline, watermark, signature, price tag, label with text, poster with text, sign with letters, written words anywhere in the image.`
+  );
+}
+
+/** Reforço final do modo catálogo — repetido na ÚLTIMA linha do prompt.
+ *  Mesma tática de SEM_PERSONAGEM_REFORCO_FINAL e do contrato do mix: em prompt
+ *  longo, a última instrução pesa mais que a do meio. */
+export const CATALOGO_REFORCO_FINAL =
+  "⚠ ÚLTIMA VERIFICAÇÃO — PEÇA DE CATÁLOGO: antes de fechar a imagem, confira que NÃO existe nenhuma palavra, letra, número ou símbolo tipográfico em lugar nenhum do quadro, e que a modelo está CENTRADA, de frente, com a peça inteira e nítida. Se houver qualquer texto, remova-o e refaça a composição sem ele.";

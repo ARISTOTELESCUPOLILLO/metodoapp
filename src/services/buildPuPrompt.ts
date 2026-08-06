@@ -47,7 +47,11 @@ import {
   buildSemPersonagemVariationBlock,
   SEM_PERSONAGEM_REFORCO_FINAL,
 } from "../core/semPersonagem";
-import { buildLookVariationBlock } from "../core/lookBook";
+import {
+  buildLookVariationBlock,
+  buildCatalogoSemTextoBlock,
+  CATALOGO_REFORCO_FINAL,
+} from "../core/lookBook";
 
 function direcaoBlock(
   direcao: PostUnicoDirecao,
@@ -309,6 +313,11 @@ export function buildPostUnicoPrompt(params: {
   // AFIRMAM pessoa (gênero obrigatório, pose sorteada, personagem-padrão da
   // cena) e injeta a regra de precedência máxima + o reforço final.
   const semPersonagem = !!references?.semPersonagemAtivo;
+  // Peça de CATÁLOGO (ver core/lookBook.ts): look book sem nenhum texto na
+  // imagem. Desliga o bloco de copy, a tipografia e as regras que pressupõem
+  // título/texto de apoio no quadro. buildReferences só marca isto junto com
+  // produtoVestido, então aqui já vem coerente com o look book.
+  const lookCatalogo = !!references?.lookCatalogo;
   const isNenhum = data.objetivo === "nenhum";
   const objetivo = isNenhum ? null : OBJETIVO_LABEL[data.objetivo];
   const tom = isNenhum ? null : OBJETIVO_TONE[data.objetivo];
@@ -365,7 +374,7 @@ export function buildPostUnicoPrompt(params: {
   const variationBlock = semPersonagem
     ? buildSemPersonagemVariationBlock(data.direcao === "mood" ? data.mood : undefined)
     : references?.produtoVestido
-      ? buildLookVariationBlock(references.produtoVestido)
+      ? buildLookVariationBlock(references.produtoVestido, lookCatalogo)
       : data.direcao === "mood"
         ? pickImageVariationBlock(
             data.mood,
@@ -407,8 +416,12 @@ export function buildPostUnicoPrompt(params: {
   // "Gerar outra imagem": mantém o MESMO título/texto, mas exige uma execução
   // visual claramente diferente da anterior (enquadramento, ângulo, composição,
   // cor de fundo, cena) — evita a peça sair idêntica na regeneração.
+  // No catálogo não há título nem texto para manter — repetir a frase padrão
+  // reintroduziria, na regeneração, a ideia de que existe texto na peça.
   const regenVariationBlock = variationHint
-    ? `\n\n♻ NOVA VERSÃO: gere uma execução visual CLARAMENTE DIFERENTE da anterior — mude enquadramento, ângulo de câmera, composição, paleta de fundo e cena, mantendo o MESMO título e o MESMO texto de apoio. Não repita a imagem anterior.`
+    ? lookCatalogo
+      ? `\n\n♻ NOVA VERSÃO: gere uma execução visual CLARAMENTE DIFERENTE da anterior — mude pose, ângulo de câmera, composição, cenário e paleta de fundo, mantendo a MESMA peça de roupa vestida pela mesma modelo e a peça igualmente sem texto. Não repita a imagem anterior.`
+      : `\n\n♻ NOVA VERSÃO: gere uma execução visual CLARAMENTE DIFERENTE da anterior — mude enquadramento, ângulo de câmera, composição, paleta de fundo e cena, mantendo o MESMO título e o MESMO texto de apoio. Não repita a imagem anterior.`
     : "";
   // Detecta se a variação sorteada (CLAREZA "DETALHE CONTEXTUAL", IMPACTO
   // "SUJEITO SEM PERSONAGEM DOMINANTE") já retira o rosto do centro da cena —
@@ -423,11 +436,15 @@ export function buildPostUnicoPrompt(params: {
     compactTopBand: data.mood === "OP-02" && hasTopicos,
   });
 
-  const typographyBlock = buildTypographyBlock(kit.fontPair);
+  // No catálogo não há uma única letra na peça: instruir fonte, hierarquia
+  // tipográfica ou acento em palavra do título seria afirmar que existe texto,
+  // logo depois de proibi-lo. Blocos vazios.
+  const typographyBlock = lookCatalogo ? "" : buildTypographyBlock(kit.fontPair);
   const typographyShort = buildTypographyShortRule(kit.fontPair);
-  const scriptAccentBlock = kit.secondaryFont
-    ? `\n${buildScriptAccentBlock(kit.secondaryFont, copy?.titulo || data.keyInfo || "")}\n`
-    : "";
+  const scriptAccentBlock =
+    kit.secondaryFont && !lookCatalogo
+      ? `\n${buildScriptAccentBlock(kit.secondaryFont, copy?.titulo || data.keyInfo || "")}\n`
+      : "";
 
   const hasCopy = copy && (copy.titulo || copy.texto || hasTopicos);
   // Tamanho do título escalona pela contagem de palavras — um piso fixo de
@@ -495,17 +512,22 @@ ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da 
         ? `POSIÇÃO do bloco: ${moodTitleAnchor(data.mood)}.`
         : "POSIÇÃO HORIZONTAL do bloco é livre — explore ancoragens laterais (esquerda, direita, largura cheia).") +
     TOP_ANCHOR_CLAUSE;
-  const copyBlock = hasTopicos
-    ? topicosBlock
-    : hasCopy
-      ? `TÍTULO E TEXTO OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
+  // Modo CATÁLOGO (look book sem texto) — o ÚNICO caso do Post Único em que a
+  // peça sai sem lettering. Entra como primeiro ramo porque tem de vencer os
+  // dois seguintes, inclusive o "texto é SEMPRE obrigatório" do ramo sem copy.
+  const copyBlock = lookCatalogo
+    ? buildCatalogoSemTextoBlock(kit.logoPosition)
+    : hasTopicos
+      ? topicosBlock
+      : hasCopy
+        ? `TÍTULO E TEXTO OBRIGATÓRIOS (use EXATAMENTE estas palavras como tipografia da peça — NÃO invente outros, NÃO traduza, NÃO reescreva):
 TÍTULO: "${copy.titulo.toUpperCase()}"
 TEXTO DE APOIO: "${copy.texto}"
 
 Hierarquia tipográfica: título DOMINANTE em CAIXA ALTA — renderizado em tamanho grande e impactante (pense em outdoor, não em editorial compacto), ${tituloSizeClause}. Texto de apoio como SUBTÍTULO DE REVISTA com corpo entre 55% e 70% do título — claramente legível a distância normal de celular, nunca tamanho de legenda ou rodapé. ${textoPosicaoClause}
 ACENTO DE COR NO TÍTULO: aplique a cor de acento da paleta (ou tom vibrante da paleta desta peça) em 1 palavra-chave ou na linha mais impactante do título — o restante fica em branco ou neutro. Este contraste de cor cria hierarquia visual e personalidade. Não obrigatório se a composição já tiver energia cromática suficiente, mas fortemente recomendado.
 ⚠ TÍTULO FIXO — ANTI-TRADUÇÃO LITERAL: o título acima é texto tipográfico a renderizar. "Conceito do título" = INTENÇÃO EMOCIONAL da mensagem (urgência, decisão, transformação, conquista), NÃO tradução de cada palavra em objeto visual. A CENA nasce do PAPEL DA EMPRESA e da ATIVIDADE REAL — nunca de palavras abstratas do título. Proibições diretas: "novo"/"novidade" ≠ caderno limpo, página em branco, objeto novo genérico; "ação"/"agir" ≠ seta, figura em movimento, objeto cinético; "rumo"/"caminho"/"direção" ≠ corredor, estrada, passagem, bússola, mapa, GPS, placa de sinalização; "hoje"/"agora" ≠ relógio, ampulheta, pôr do sol; "escolha"/"decisão" ≠ encruzilhada, bifurcação; "novo" ≠ porta se abrindo. A imagem APOIA a mensagem do título sem ILUSTRÁ-LA objeto por objeto.`
-      : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
+        : `TEXTO — CRIADO PELA IA A PARTIR DA INFORMAÇÃO-CHAVE (obrigatório em todas as peças):
 A peça DEVE ter lettering — texto é SEMPRE obrigatório na composição visual.
 Crie livremente: um TÍTULO curto em CAIXA ALTA (impacto direto, 3 a 6 palavras) + TEXTO DE APOIO breve (1-2 frases), inspirados na informação-chave${data.keyInfo.trim() ? ` "${data.keyInfo.trim()}"` : " fornecida"} e na atividade da empresa${objetivo ? ` com objetivo: ${objetivo}` : ""}.
 ⚠ REGRA ABSOLUTA DE TEXTO NA IMAGEM: a imagem contém EXATAMENTE 2 elementos de texto — (1) o TÍTULO em caixa alta e (2) o TEXTO DE APOIO. NENHUM outro texto, frase, citação ou trecho deve aparecer na imagem. A informação-chave é contexto criativo para INSPIRAR o título e o texto — JAMAIS deve aparecer escrita, citada ou resumida como terceiro elemento tipográfico na peça.
@@ -610,7 +632,7 @@ ${objetivo ? `OBJETIVO: ${objetivo}\nTOM: ${tom}` : ""}
 
 ${
   data.keyInfo.trim()
-    ? `INFORMAÇÃO-CHAVE (contexto criativo — USE APENAS para gerar o conceito e o texto da peça, PROIBIDO renderizar esta informação como texto, lettering, citação ou qualquer tipografia na imagem):\n"${data.keyInfo.trim()}"`
+    ? `INFORMAÇÃO-CHAVE (contexto criativo — USE APENAS para ${lookCatalogo ? "escolher clima, cenário e paleta desta foto de catálogo" : "gerar o conceito e o texto da peça"}, PROIBIDO renderizar esta informação como texto, lettering, citação ou qualquer tipografia na imagem):\n"${data.keyInfo.trim()}"`
     : `INFORMAÇÃO-CHAVE: não fornecida. Crie a peça com base apenas na empresa, atividade, objetivo e kit visual — a IA tem TOTAL LIBERDADE para inventar o tema e a mensagem mais pertinente para esta marca e este objetivo.`
 }
 
@@ -625,15 +647,19 @@ ${typographyBlock}
 ${scriptAccentBlock}
 REGRAS:
 - Esta peça é STANDALONE — não precisa parecer parte de uma série. Evite a fórmula visual mais óbvia para o briefing; escolha uma execução com personalidade própria dentro da direção definida.
-- Todo texto em PORTUGUÊS, sem inglês
-- ⚠ MARGEM DE 110 PX para título e texto de apoio (zona segura definida no topo do prompt) — texto que não caiba dentro da margem deve ser reduzido ou reposicionado, nunca cortado
+${
+  lookCatalogo
+    ? "- Esta peça NÃO tem texto nenhum (ver bloco PEÇA DE CATÁLOGO acima) — as regras de idioma, margem e hierarquia de título/texto de apoio não se aplicam aqui"
+    : `- Todo texto em PORTUGUÊS, sem inglês
+- ⚠ MARGEM DE 110 PX para título e texto de apoio (zona segura definida no topo do prompt) — texto que não caiba dentro da margem deve ser reduzido ou reposicionado, nunca cortado`
+}
 - Alta resolução, estética editorial/publicitária brasileira
 - Direção de arte humana, nunca arte automática
 - Sem watermarks, sem logo fictícia, sem assinatura textual — a logomarca oficial da marca é aplicada SEPARADAMENTE (por composição, fora da IA); PROIBIDO desenhar, inventar, imitar, reproduzir ou renderizar qualquer logomarca, emblema, símbolo de marca, monograma ou nome da empresa como texto na arte, em qualquer ponto do quadro. ÚNICA exceção: a logomarca já impressa no tecido do uniforme de referência, que continua sendo reproduzida na roupa do personagem — em nenhum outro lugar.
 - PROIBIDO ABSOLUTO: renderizar o nome da empresa, nome da marca ou razão social como texto, lettering, título ou qualquer elemento tipográfico na imagem — o nome da marca é representado exclusivamente pela logomarca aplicada separadamente. Nunca escreva o nome da empresa na arte.
-- PROIBIDO ABSOLUTO: escrever, citar ou transcrever a INFORMAÇÃO-CHAVE do briefing como texto na imagem — ela é contexto de criação, não conteúdo tipográfico. A imagem contém apenas o TÍTULO e o TEXTO DE APOIO definidos acima; qualquer texto adicional (terceiro bloco, rodapé, tagline extra, citação) é PROIBIDO.
+- PROIBIDO ABSOLUTO: escrever, citar ou transcrever a INFORMAÇÃO-CHAVE do briefing como texto na imagem — ela é contexto de criação, não conteúdo tipográfico. ${lookCatalogo ? "Esta peça é um CATÁLOGO e não contém texto algum — nenhuma palavra, em nenhum ponto do quadro." : "A imagem contém apenas o TÍTULO e o TEXTO DE APOIO definidos acima; qualquer texto adicional (terceiro bloco, rodapé, tagline extra, citação) é PROIBIDO."}
 - Regras absolutas (dispositivos digitais, ambientes, humanização): ver início deste prompt
 - ${zona.regraFinal}
 
-${FORBIDDEN_MOOD_WORDS}${semPersonagem ? `\n\n${SEM_PERSONAGEM_REFORCO_FINAL}` : ""}`;
+${FORBIDDEN_MOOD_WORDS}${semPersonagem ? `\n\n${SEM_PERSONAGEM_REFORCO_FINAL}` : ""}${lookCatalogo ? `\n\n${CATALOGO_REFORCO_FINAL}` : ""}`;
 }

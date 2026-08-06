@@ -298,4 +298,10 @@ export interface PostUnicoVisualSelection {
   // undefined = modo padrão (peça exposta ao lado, figurino próprio do
   // personagem). Só tem efeito com produto selecionado E pessoa em cena.
   produtoVestido?: TipoPecaVestuario;
+  // Modo CATÁLOGO do look book: peça SEM texto na imagem (só a logomarca) e
+  // modelo centrada — o formato que a loja manda para o cliente ver a roupa
+  // vestida. Só tem efeito com produtoVestido ativo (ver core/lookBook.ts).
+  lookCatalogo?: boolean;
+  // No catálogo, dispensa também a legenda sugerida do post.
+  catalogoSemLegenda?: boolean;
 }

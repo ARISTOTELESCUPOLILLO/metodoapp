@@ -150,7 +150,14 @@ export default function PostUnicoComposicaoVisual({
     (selection.useAvatar || !!selection.personagemSemAvatar?.ativo);
   useEffect(() => {
     if (selection.produtoVestido && !podeVestir) {
-      onChange({ ...selection, produtoVestido: undefined });
+      // O catálogo é um modo DENTRO do look book — cai junto, pelo mesmo motivo
+      // (senão sobra um flag órfão que geraria uma peça muda no futuro).
+      onChange({
+        ...selection,
+        produtoVestido: undefined,
+        lookCatalogo: undefined,
+        catalogoSemLegenda: undefined,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage à condição; `selection`/`onChange` são lidos, não devem re-disparar o efeito
   }, [podeVestir, selection.produtoVestido]);
@@ -374,6 +381,11 @@ export default function PostUnicoComposicaoVisual({
                       produtoVestido: e.target.checked ? "cima" : undefined,
                       // Uniforme e peça vestida disputam o corpo do personagem.
                       useUniforme: e.target.checked ? false : selection.useUniforme,
+                      // Desmarcar o look book desmarca o catálogo junto.
+                      lookCatalogo: e.target.checked ? selection.lookCatalogo : undefined,
+                      catalogoSemLegenda: e.target.checked
+                        ? selection.catalogoSemLegenda
+                        : undefined,
                     })
                   }
                 />
@@ -418,6 +430,53 @@ export default function PostUnicoComposicaoVisual({
                     A peça vestida sai parecida com a foto, não idêntica — para estampa ou logo que
                     o cliente precisa reconhecer, desmarque e deixe a peça exposta ao lado.
                   </p>
+
+                  {/* Catálogo — o uso que o Ari descreveu em 06/08: mandar para o
+                      cliente as peças disponíveis, vestidas, para dar vontade de
+                      comprar. Sem título e sem texto, só a logomarca. */}
+                  <label
+                    className="checkRow"
+                    style={{ marginTop: 8, fontSize: 12, fontWeight: 600 }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!selection.lookCatalogo}
+                      onChange={(e) =>
+                        onChange({
+                          ...selection,
+                          lookCatalogo: e.target.checked ? true : undefined,
+                          catalogoSemLegenda: e.target.checked
+                            ? selection.catalogoSemLegenda
+                            : undefined,
+                        })
+                      }
+                    />
+                    Peça de catálogo — sem título e sem texto na imagem
+                  </label>
+                  {selection.lookCatalogo && (
+                    <>
+                      <p style={{ margin: "4px 0 0", fontSize: 11, color: "#94a3b8" }}>
+                        Só a peça vestida, a modelo centrada e a sua logomarca. É o formato para
+                        mandar ao cliente o que está disponível na loja.
+                      </p>
+                      <label
+                        className="checkRow"
+                        style={{ marginTop: 6, fontSize: 12, color: "#94a3b8" }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!selection.catalogoSemLegenda}
+                          onChange={(e) =>
+                            onChange({
+                              ...selection,
+                              catalogoSemLegenda: e.target.checked ? true : undefined,
+                            })
+                          }
+                        />
+                        Sem legenda também — só a imagem
+                      </label>
+                    </>
+                  )}
                 </>
               )}
             </>

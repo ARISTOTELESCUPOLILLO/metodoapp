@@ -113,6 +113,12 @@ export function buildReferences(
   const temPessoa = !!refs.avatar || !!selecaoDireta?.personagemSemAvatar?.ativo;
   if (selecaoDireta?.produtoVestido && refs.produtos?.length && !semPersonagem && temPessoa) {
     refs.produtoVestido = selecaoDireta.produtoVestido;
+    // Catálogo (peça sem texto na imagem) só existe DENTRO do look book, e só
+    // depois que ele de fato ligou — se a peça vestida caiu por falta de
+    // produto ou de pessoa, o catálogo cai junto. Sem essa dependência, uma
+    // seleção antiga em localStorage poderia gerar um Post Único mudo, sem
+    // título e sem peça vestida, que não é nada.
+    if (selecaoDireta.lookCatalogo) refs.lookCatalogo = true;
   }
   if (semPersonagem) {
     refs.semPersonagemAtivo = true;

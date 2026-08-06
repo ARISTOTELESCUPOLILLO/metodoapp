@@ -366,3 +366,195 @@ describe("PU — prompt no modo look book", () => {
     expect(p).not.toContain("PEÇA DE MODA COM MODELO");
   });
 });
+
+// ── Modo CATÁLOGO: look book sem nenhum texto na imagem ─────────────────────
+// Pedido do Ari em 06/08/2026, ao ver a primeira peça do look book: o uso real
+// é a loja mandar ao cliente as roupas disponíveis, vestidas, para dar vontade
+// de comprar. Nesse uso título e texto atrapalham — fica só a logomarca.
+
+describe("buildReferences — catálogo depende do look book", () => {
+  it("liga junto com a peça vestida", () => {
+    const refs = buildReferences("avatar", imageKit, undefined, undefined, {
+      usarAvatar: true,
+      produtosNums: [1],
+      produtoVestido: "look",
+      lookCatalogo: true,
+    });
+    expect(refs.produtoVestido).toBe("look");
+    expect(refs.lookCatalogo).toBe(true);
+  });
+
+  it("cai junto quando o look book não se aplica — nunca gera peça muda sozinho", () => {
+    const semNinguem = buildReferences("avatar", imageKit, undefined, undefined, {
+      usarAvatar: false,
+      produtosNums: [1],
+      produtoVestido: "cima",
+      lookCatalogo: true,
+    });
+    expect(semNinguem.lookCatalogo).toBeUndefined();
+
+    const semProduto = buildReferences("avatar", imageKit, undefined, undefined, {
+      usarAvatar: true,
+      produtosNums: [],
+      produtoVestido: "cima",
+      lookCatalogo: true,
+    });
+    expect(semProduto.lookCatalogo).toBeUndefined();
+  });
+
+  it("look book sem catálogo continua com texto — o catálogo é opcional", () => {
+    const refs = buildReferences("avatar", imageKit, undefined, undefined, {
+      usarAvatar: true,
+      produtosNums: [1],
+      produtoVestido: "cima",
+    });
+    expect(refs.produtoVestido).toBe("cima");
+    expect(refs.lookCatalogo).toBeUndefined();
+  });
+});
+
+describe("buildLookVariationBlock — pose de catálogo", () => {
+  it("nunca encosta a modelo numa parede (a reclamação que originou o modo)", () => {
+    const blocos = Array.from({ length: 200 }, () => buildLookVariationBlock("cima", true));
+    expect(blocos.some((b) => b.includes("encostada de lado numa parede"))).toBe(false);
+    expect(blocos.some((b) => b.includes("de perfil ou quase"))).toBe(false);
+  });
+
+  it("sem catálogo, o repertório completo de campanha continua disponível", () => {
+    const blocos = Array.from({ length: 200 }, () => buildLookVariationBlock("cima"));
+    expect(blocos.some((b) => b.includes("encostada de lado numa parede"))).toBe(true);
+  });
+
+  it("ainda varia a pose entre gerações, mesmo com o pool reduzido", () => {
+    const poses = new Set(Array.from({ length: 80 }, () => buildLookVariationBlock("look", true)));
+    expect(poses.size).toBeGreaterThan(1);
+  });
+
+  it("centraliza a modelo e explica que não há texto ocupando o quadro", () => {
+    const b = buildLookVariationBlock("look", true);
+    expect(b).toContain("COMPOSIÇÃO CENTRADA");
+    expect(b).toContain("NÃO existe título nem bloco de texto");
+    expect(b).toContain("PROIBIDO empurrar a figura para uma das laterais");
+  });
+
+  it("sem catálogo não centraliza — campanha editorial pode ser assimétrica", () => {
+    const b = buildLookVariationBlock("look");
+    expect(b).not.toContain("COMPOSIÇÃO CENTRADA");
+  });
+
+  it("o enquadramento por tipo continua valendo dentro do catálogo", () => {
+    expect(buildLookVariationBlock("calcado", true)).toContain("PÉS EM EVIDÊNCIA");
+    expect(buildLookVariationBlock("look", true)).toContain("CORPO INTEIRO, DOS PÉS AO TOPO");
+  });
+});
+
+describe("PU — prompt no modo catálogo", () => {
+  beforeEach(() => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const refsCatalogo: PostUnicoReferences = { ...refsLook, lookCatalogo: true };
+
+  it("proíbe qualquer texto e não manda escrever título nem texto de apoio", () => {
+    const p = prompt(refsCatalogo);
+    expect(p).toContain("PEÇA DE CATÁLOGO — ZERO TEXTO NA IMAGEM");
+    expect(p).not.toContain("TÍTULO E TEXTO OBRIGATÓRIOS");
+    expect(p).not.toContain("A peça DEVE ter lettering");
+    expect(p).not.toContain("texto é SEMPRE obrigatório");
+  });
+
+  it("não vaza o título/texto gerados — a copy existe no app, não na imagem", () => {
+    const p = prompt(refsCatalogo);
+    expect(p).not.toContain("CAMISETAS COLCCI");
+    expect(p).not.toContain("Estilo marcante de manhã à noite.");
+  });
+
+  it("desliga a tipografia — instruir fonte afirmaria que existe texto", () => {
+    const p = prompt(refsCatalogo);
+    expect(p).not.toContain("Hierarquia tipográfica");
+    expect(p).not.toContain("MARGEM DE 110 PX para título e texto de apoio");
+    expect(p).not.toContain("A imagem contém apenas o TÍTULO e o TEXTO DE APOIO");
+  });
+
+  it("repete a proibição na ÚLTIMA linha do prompt (onde ela pesa mais)", () => {
+    const p = prompt(refsCatalogo);
+    expect(p.trimEnd().endsWith("refaça a composição sem ele.")).toBe(true);
+    expect(p).toContain("ÚLTIMA VERIFICAÇÃO — PEÇA DE CATÁLOGO");
+  });
+
+  it("protege a área da logomarca conforme a posição escolhida no Kit", () => {
+    const baixo = buildPostUnicoPrompt({
+      data: dataModa,
+      kit: { ...kitModa, logoPosition: "bottom-center" },
+      references: { ...refsCatalogo, produtoVestido: "look" },
+      forcedGender: "mulher",
+    });
+    expect(baixo).toContain("termina ACIMA da faixa reservada embaixo");
+
+    const topo = buildPostUnicoPrompt({
+      data: dataModa,
+      kit: { ...kitModa, logoPosition: "top-center" },
+      references: { ...refsCatalogo, produtoVestido: "look" },
+      forcedGender: "mulher",
+    });
+    expect(topo).toContain("TOPO DA CABEÇA da modelo fica ABAIXO da faixa reservada");
+
+    const canto = buildPostUnicoPrompt({
+      data: dataModa,
+      kit: { ...kitModa, logoPosition: "bottom-right" },
+      references: { ...refsCatalogo, produtoVestido: "look" },
+      forcedGender: "mulher",
+    });
+    expect(canto).toContain("canto inferior direito");
+  });
+
+  it("continua sendo look book: peça vestida, fiel, sem segunda unidade exposta", () => {
+    const p = prompt(refsCatalogo);
+    expect(p).toContain("PRODUTO VESTIDO PELA MODELO");
+    expect(p).toContain("FIDELIDADE À FOTO DE REFERÊNCIA");
+    expect(p).toContain("Não existe uma segunda unidade da peça exposta em cena");
+  });
+
+  it("na regeneração não promete manter um título que não existe", () => {
+    const p = buildPostUnicoPrompt({
+      data: dataModa,
+      kit: kitModa,
+      references: refsCatalogo,
+      forcedGender: "mulher",
+      variationHint: true,
+    });
+    expect(p).toContain("NOVA VERSÃO");
+    expect(p).not.toContain("mantendo o MESMO título");
+    expect(p).toContain("igualmente sem texto");
+  });
+
+  it("vale nos 6 moods e na Direção Livre", () => {
+    (["OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06"] as const).forEach((m) => {
+      const p = buildPostUnicoPrompt({
+        data: { ...dataModa, mood: m },
+        kit: kitModa,
+        references: refsCatalogo,
+        forcedGender: "mulher",
+      });
+      expect(p, `mood ${m}`).toContain("ZERO TEXTO NA IMAGEM");
+      expect(p, `mood ${m}`).toContain("COMPOSIÇÃO CENTRADA");
+    });
+    const livre = buildPostUnicoPrompt({
+      data: { ...dataModa, direcao: "livre", mood: undefined },
+      kit: kitModa,
+      references: refsCatalogo,
+      forcedGender: "mulher",
+    });
+    expect(livre).toContain("ZERO TEXTO NA IMAGEM");
+  });
+
+  it("look book SEM catálogo mantém o texto obrigatório de sempre", () => {
+    const p = prompt(refsLook);
+    expect(p).not.toContain("ZERO TEXTO NA IMAGEM");
+    expect(p).toContain("TÍTULO E TEXTO OBRIGATÓRIOS");
+    expect(p).toContain("CAMISETAS COLCCI");
+  });
+});

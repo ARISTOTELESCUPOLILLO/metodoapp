@@ -267,8 +267,16 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
     typeof imgsRestantes === "number" && imgsRestantes <= 0 && (imgsTotal || 0) > 0;
   const semRecursos = semGeracoes || semImagens;
   const semPlanoPost = !isAdmin && hasPostPlano === false;
+  // Peça de CATÁLOGO (look book sem texto na imagem — ver core/lookBook.ts):
+  // não há título nem texto de apoio para escrever antes de gerar, então o
+  // passo de copy sai da tela e a peça pode ser gerada direto. A
+  // informação-chave também deixa de ser exigida: nesta peça ela só ajudaria a
+  // escolher clima e cenário, e cobrar um briefing para fotografar uma roupa
+  // travaria justamente o uso que o modo existe para servir.
+  const catalogoSemTexto = !!(visualSelection.produtoVestido && visualSelection.lookCatalogo);
   const canGenerateCopy =
     !isNenhum &&
+    !catalogoSemTexto &&
     !!data.keyInfo.trim() &&
     !loading &&
     !suggesting &&
@@ -278,24 +286,32 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
     !semPlanoPost;
   const moodPendente = data.direcao === "mood" && !data.mood;
   const livreSemCopy = data.direcao === "livre" && !copy;
-  const canGenerate = isNenhum
-    ? !copy &&
-      data.direcao === "livre" &&
-      !loading &&
-      !suggesting &&
-      !copyLoading &&
-      !semRecursos &&
-      !(!isAdmin && semPlano) &&
-      !semPlanoPost
-    : (!!copy || data.direcao === "livre") &&
-      !loading &&
+  const canGenerate = catalogoSemTexto
+    ? !loading &&
       !suggesting &&
       !copyLoading &&
       !semRecursos &&
       !(!isAdmin && semPlano) &&
       !moodPendente &&
-      !semPlanoPost &&
-      (data.direcao === "livre" || !!data.keyInfo.trim());
+      !semPlanoPost
+    : isNenhum
+      ? !copy &&
+        data.direcao === "livre" &&
+        !loading &&
+        !suggesting &&
+        !copyLoading &&
+        !semRecursos &&
+        !(!isAdmin && semPlano) &&
+        !semPlanoPost
+      : (!!copy || data.direcao === "livre") &&
+        !loading &&
+        !suggesting &&
+        !copyLoading &&
+        !semRecursos &&
+        !(!isAdmin && semPlano) &&
+        !moodPendente &&
+        !semPlanoPost &&
+        (data.direcao === "livre" || !!data.keyInfo.trim());
   const hasLogo = !!kit.logoDataUrl;
 
   return (
@@ -427,35 +443,45 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         setSelectedProducts={setSelectedProducts}
       />
 
-      <CopySection
-        copy={copy}
-        setCopy={setCopy}
-        copyOriginal={copyOriginal}
-        copyLoading={copyLoading}
-        copyError={copyError}
-        copyTBusy={copyTBusy}
-        copyXBusy={copyXBusy}
-        copyTError={copyTError}
-        copyXError={copyXError}
-        copyTSuggs={copyTSuggs}
-        setCopyTSuggs={setCopyTSuggs}
-        copyXSuggs={copyXSuggs}
-        setCopyXSuggs={setCopyXSuggs}
-        fetchCopy={fetchCopy}
-        regenField={regenField}
-        regenTopicos={regenTopicos}
-        clearCopy={clearCopy}
-        isNenhum={isNenhum}
-        direcao={data.direcao}
-        canGenerateCopy={canGenerateCopy}
-        isAdmin={isAdmin}
-        copyTRegenCount={copyTRegenCount}
-        copyXRegenCount={copyXRegenCount}
-        objetivo={data.objetivo}
-        keyInfo={data.keyInfo}
-        formatoTexto={data.formatoTexto}
-        onFormatoTextoChange={(v) => update("formatoTexto", v)}
-      />
+      {catalogoSemTexto && (
+        <p className="trackNote" style={{ marginBottom: 12 }}>
+          <strong>Peça de catálogo:</strong> esta peça sai sem título e sem texto na imagem — só a
+          roupa vestida e a sua logomarca. Por isso o passo de escrever título e texto não aparece.
+          Escolha o mood e clique em gerar.
+        </p>
+      )}
+
+      {!catalogoSemTexto && (
+        <CopySection
+          copy={copy}
+          setCopy={setCopy}
+          copyOriginal={copyOriginal}
+          copyLoading={copyLoading}
+          copyError={copyError}
+          copyTBusy={copyTBusy}
+          copyXBusy={copyXBusy}
+          copyTError={copyTError}
+          copyXError={copyXError}
+          copyTSuggs={copyTSuggs}
+          setCopyTSuggs={setCopyTSuggs}
+          copyXSuggs={copyXSuggs}
+          setCopyXSuggs={setCopyXSuggs}
+          fetchCopy={fetchCopy}
+          regenField={regenField}
+          regenTopicos={regenTopicos}
+          clearCopy={clearCopy}
+          isNenhum={isNenhum}
+          direcao={data.direcao}
+          canGenerateCopy={canGenerateCopy}
+          isAdmin={isAdmin}
+          copyTRegenCount={copyTRegenCount}
+          copyXRegenCount={copyXRegenCount}
+          objetivo={data.objetivo}
+          keyInfo={data.keyInfo}
+          formatoTexto={data.formatoTexto}
+          onFormatoTextoChange={(v) => update("formatoTexto", v)}
+        />
+      )}
 
       <DirecaoVisualSection
         direcao={data.direcao}

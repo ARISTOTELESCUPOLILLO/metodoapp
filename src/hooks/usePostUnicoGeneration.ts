@@ -109,22 +109,32 @@ export function usePostUnicoGeneration({
       companyName: postUnico.companyName || kit.companyName,
       mainActivity: postUnico.mainActivity || kit.mainActivity || "",
     };
-    setCaptionLoading(true);
-    generatePostUnicoCaption(data, {
-      debit: true,
-      brandVoice: kit.brandVoice,
-      preferredSlot: selectedSlot,
-      // `copy` é o título/texto confirmado deste clique (inclui edição manual);
-      // puCopy cobre o caso em que a geração não recebeu copy explícito.
-      titulo: copy?.titulo || puCopy?.titulo,
-      topicos: puCopy?.topicos?.map((t) => t.texto),
-    })
-      .then((c) => {
-        setCaption(c);
-        refreshProfile();
+    // Peça de catálogo com "sem legenda também": a loja quer só a imagem para
+    // mandar ao cliente e escreve o que quiser por fora. Pular aqui é o que de
+    // fato economiza — a legenda é uma chamada de texto paga.
+    const catalogo = !!(visualSelection.produtoVestido && visualSelection.lookCatalogo);
+    const catalogoSemLegenda = catalogo && !!visualSelection.catalogoSemLegenda;
+    if (!catalogoSemLegenda) {
+      setCaptionLoading(true);
+      generatePostUnicoCaption(data, {
+        debit: true,
+        brandVoice: kit.brandVoice,
+        preferredSlot: selectedSlot,
+        // `copy` é o título/texto confirmado deste clique (inclui edição manual);
+        // puCopy cobre o caso em que a geração não recebeu copy explícito.
+        // No catálogo a imagem não tem título nenhum: ancorar a legenda num
+        // título que sobrou no estado de uma peça anterior faria a legenda
+        // "continuar" um texto que o cliente nunca vai ver.
+        titulo: catalogo ? undefined : copy?.titulo || puCopy?.titulo,
+        topicos: catalogo ? undefined : puCopy?.topicos?.map((t) => t.texto),
       })
-      .catch((e) => setCaptionError(String((e as Error).message || e)))
-      .finally(() => setCaptionLoading(false));
+        .then((c) => {
+          setCaption(c);
+          refreshProfile();
+        })
+        .catch((e) => setCaptionError(String((e as Error).message || e)))
+        .finally(() => setCaptionLoading(false));
+    }
     try {
       const freshImageKit = await loadImageKitAsync(effectiveUserId).catch(() => imageKit);
       setImageKit(freshImageKit);
@@ -161,6 +171,7 @@ export function usePostUnicoGeneration({
           semPersonagem,
           produtoTelaInformativa: visualSelection.produtoTelaInformativa,
           produtoVestido: visualSelection.produtoVestido,
+          lookCatalogo: visualSelection.lookCatalogo,
         },
         kit.uniformeDataUrl,
       );

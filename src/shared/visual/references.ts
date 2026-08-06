@@ -52,6 +52,10 @@ export interface PostUnicoReferences {
   // Só é preenchido quando há produto E pessoa em cena — sem alguém para vestir
   // a peça, o modo não faz sentido e volta ao padrão (produto exposto).
   produtoVestido?: TipoPecaVestuario;
+  // Modo CATÁLOGO: peça de look book SEM nenhum texto na imagem, com a modelo
+  // centrada — só a logomarca, aplicada depois. Só é preenchido junto com
+  // produtoVestido (ver buildReferences e core/lookBook.ts).
+  lookCatalogo?: boolean;
 }
 
 // Ordem fixa das imagens de referência enviadas ao modelo: avatar -> uniforme

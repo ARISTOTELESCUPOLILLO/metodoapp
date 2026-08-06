@@ -61,4 +61,13 @@ export interface SelecaoDireta {
   // em que a peça aparece exposta ao lado e o personagem mantém o próprio
   // figurino. Exige pessoa em cena (avatar ou personagem sem avatar).
   produtoVestido?: TipoPecaVestuario;
+  // Modo CATÁLOGO, dentro do look book: a peça sai SEM nenhum texto na imagem
+  // (nem título, nem texto de apoio) e a modelo fica centrada no quadro — só a
+  // logomarca, aplicada depois por composição. É o formato que a loja manda
+  // para o cliente ver o que tem disponível, vestido. Só tem efeito com
+  // produtoVestido ativo (ver core/lookBook.ts).
+  lookCatalogo?: boolean;
+  // Dentro do catálogo, dispensa também a legenda sugerida do post — a peça
+  // sai só como imagem e a loja escreve o que quiser por fora.
+  catalogoSemLegenda?: boolean;
 }
