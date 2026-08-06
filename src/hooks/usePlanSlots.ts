@@ -27,19 +27,46 @@ export interface UsePlanSlotsResult {
   setExhaustedHint: Dispatch<SetStateAction<"mop" | "pu" | "bonus" | null>>;
 }
 
+const isPuPlan = (s: SlotInfo) => /^PU\d+$/i.test(s.plan.codigo);
+
+/** Slot PU utilizável: não expirado e com imagem sobrando.
+ *  Limite 0 = ilimitado, mesma convenção do backend (fits, usage.server.ts) e
+ *  do puExhausted. Slot expirado não serve: o servidor o rejeitaria depois
+ *  (checkBalance → notExpired), com o clique do usuário já gasto. */
+function slotUtilizavel(s: SlotInfo): boolean {
+  if (s.expiraEm && new Date(s.expiraEm) <= new Date()) return false;
+  const limite = s.imgsLimite ?? 0;
+  return limite === 0 || (s.imgsUsadas ?? 0) < limite;
+}
+
+/** Escolhe o slot que o Post Único deve usar: o primeiro slot PU COM SALDO —
+ *  e não simplesmente o primeiro slot PU da lista.
+ *
+ *  Achado real 06/08/2026 (conta Atrevidinha, relatado pelo Ari): plano1 = PU4
+ *  esgotado (6/6 imagens) + bônus = PU2 novo (0/3). O `find` antigo parava no
+ *  PU4 esgotado, então puImgsRestantes vinha 0, o PostUnicoForm calculava
+ *  `semImagens` e desabilitava o botão "Gerar título e texto" — com o bônus PU2
+ *  intacto ao lado. O auto-switch de slot tinha o mesmo problema: só caía no
+ *  bônus quando NÃO existia nenhum outro slot PU, ou seja, o bônus nunca era
+ *  usado justamente no caso em que ele existe para socorrer.
+ *
+ *  Sem nenhum slot com saldo, devolve o primeiro: a UI precisa continuar
+ *  mostrando o plano esgotado (régua, aviso) em vez de ficar sem slot nenhum e
+ *  parecer que o cliente não tem plano de Post Único. */
+export function pickPuSlot(slots: SlotInfo[]): SlotInfo | undefined {
+  const puSlots = slots.filter(isPuPlan);
+  return puSlots.find(slotUtilizavel) ?? puSlots[0];
+}
+
 export function usePlanSlots(
   slots: SlotInfo[],
   planAccess: PlanAccess,
   modo: Modo,
   effectiveUserId: string | null,
 ): UsePlanSlotsResult {
-  // Slot com plano PU explícito
-  const puSlotKey = slots.find((s) => /^PU\d+/i.test(s.plan.codigo))?.key as
-    | "plano1"
-    | "plano2"
-    | "bonus"
-    | undefined;
-  const puSlotInfoObj = slots.find((s) => /^PU\d+$/i.test(s.plan.codigo));
+  // Slot do Post Único — o primeiro PU com saldo (ver pickPuSlot).
+  const puSlotInfoObj = pickPuSlot(slots);
+  const puSlotKey = puSlotInfoObj?.key as "plano1" | "plano2" | "bonus" | undefined;
   const puImgsTotal = puSlotInfoObj
     ? puSlotInfoObj.imgsLimiteDisplay || puSlotInfoObj.imgsLimite || 0
     : 0;
