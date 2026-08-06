@@ -50,7 +50,8 @@ export function PlansTab() {
           tipo: editing.tipo,
           limite_imagens: Number(editing.limite_imagens),
           limite_renders: Number(editing.limite_renders),
-          limite_geracoes: Number(editing.limite_geracoes),
+          // limite_geracoes não é mais enviado — o servidor força 0 (campo morto,
+          // ver plans.functions.ts e PlanEditModal).
           limite_regen_texto: Number(editing.limite_regen_texto || 0),
           limite_sugestoes: Number(editing.limite_sugestoes || 0),
           limite_primeira_geracao: Number(editing.limite_primeira_geracao || 0),

@@ -61,12 +61,12 @@ export function PlanEditModal({
             value={String(editing.limite_renders)}
             onChange={(v) => onChange({ ...editing, limite_renders: Number(v) })}
           />
-          <Inp
-            label="Limite gerações (real / estendido)"
-            type="number"
-            value={String(editing.limite_geracoes)}
-            onChange={(v) => onChange({ ...editing, limite_geracoes: Number(v) })}
-          />
+          {/* "Limite gerações" saiu daqui (2026-08-06). O contador foi aposentado do
+              bloqueio em 2026-07-03 (migration retire-geracoes-gate-fix-cron) e vale 0
+              (= ilimitado) em todos os planos. Enquanto o campo era editável, digitar
+              um número aqui religava um gate morto que soma MOP + PU no mesmo saldo e
+              travaria o botão do Post Único pelo consumo do Método OP. Quem limita
+              texto hoje são os três campos abaixo; imagem/render continuam acima. */}
           <Inp
             label={'Limite "Gerar outro" de bloco (0 = ilimitado)'}
             type="number"

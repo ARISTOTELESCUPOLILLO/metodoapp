@@ -46,7 +46,6 @@ const planPayloadSchema = z.object({
   tipo: z.string().min(1),
   limite_imagens: z.number(),
   limite_renders: z.number(),
-  limite_geracoes: z.number(),
   limite_regen_texto: z.number(),
   limite_sugestoes: z.number(),
   limite_primeira_geracao: z.number(),
@@ -67,7 +66,12 @@ export const savePlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { id, ...rest } = data;
-    const payload = { ...rest, limite_geracoes_display: null };
+    // limite_geracoes é forçado a 0 (= ilimitado) e não vem mais do formulário.
+    // O contador "Gerações" foi aposentado do bloqueio em 2026-07-03 (migration
+    // retire-geracoes-gate-fix-cron) e sobrevive só como carimbo de log e base do
+    // rate limit por hora. Gravar qualquer valor > 0 aqui religaria um gate que
+    // soma MOP + PU no mesmo saldo — travaria o Post Único pelo consumo do MOP.
+    const payload = { ...rest, limite_geracoes: 0, limite_geracoes_display: null };
     const { error } = id
       ? await supabaseAdmin.from("plans").update(payload).eq("id", id)
       : await supabaseAdmin.from("plans").insert(payload);
