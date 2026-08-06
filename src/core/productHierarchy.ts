@@ -55,6 +55,27 @@ const AVATAR_VS_PRODUTO_PLURAL =
   "Se algum produto é algo que se usa sentado ou apoiado (cadeira, poltrona, mesa), prefira a pessoa AO LADO ou ATRÁS dele, apresentando-o — ou um ângulo de câmera em que os produtos apareçam inteiros e reconhecíveis mesmo em uso. " +
   "Na dúvida entre valorizar a pessoa ou os produtos, valorize SEMPRE os produtos.";
 
+// LOOK BOOK (produto vestido pela modelo) — a hierarquia produto×personagem
+// deste arquivo pressupõe que os dois são objetos distintos disputando o quadro:
+// "PROIBIDO o corpo da pessoa cobrir a maior parte do produto", "a pessoa existe
+// PARA APRESENTAR o produto". Vestida, a peça está literalmente sobre o corpo —
+// as duas frases passam a se contradizer e o modelo tende a resolver duplicando
+// a peça (uma vestida, outra exposta ao lado) ou empurrando a pessoa para fora
+// do quadro. Estes dois blocos substituem a dupla protagonismo/apresentação
+// nesse modo. Ver core/lookBook.ts.
+const PRODUTO_PROTAGONISMO_VESTIDO =
+  "REGRA DE PROTAGONISMO DO PRODUTO — MODO LOOK BOOK: o PRODUTO referenciado é o herói desta composição, e nesta peça ele está VESTIDO no corpo da modelo (ver bloco PRODUTO VESTIDO PELA MODELO). " +
+  "O protagonismo do produto NÃO se expressa aqui por ele ser um objeto grande e separado no primeiro plano, e sim por ser o elemento mais nítido, mais bem iluminado e mais legível da imagem — a primeira coisa que o olho identifica ao olhar a peça por 1 segundo é a roupa que a pessoa veste, não o rosto dela, não o ambiente. " +
+  "A peça vestida deve aparecer INTEIRA e sem obstrução, no enquadramento definido no bloco de variação. " +
+  "PROIBIDO um enquadramento em que a peça fique cortada, encoberta por braços, cabelo, bolsa ou móvel, ou pequena demais para que cor, estampa e corte sejam lidos. " +
+  "PROIBIDO também duplicar a peça: ela aparece UMA vez, vestida — nunca vestida E exposta em cabide/manequim na mesma imagem.";
+
+const AVATAR_VESTE_PRODUTO =
+  "MODELO vs PRODUTO — MODO LOOK BOOK: a pessoa e o produto NÃO competem nesta peça, porque a peça está vestida nela. " +
+  "A modelo é o SUPORTE do produto: corpo, postura e movimento existem para mostrar como a peça cai, veste e se comporta. " +
+  "Isso SUSPENDE, só nesta geração, qualquer instrução deste prompt que mande a pessoa se posicionar ao lado do produto, gesticular na direção dele, exibi-lo com as mãos ou não cobri-lo com o corpo — não há como apresentar de fora uma roupa que se está usando. " +
+  "O rosto continua visível e reconhecível, com expressão coerente com o mood; a atenção principal, porém, é da peça vestida.";
+
 // SERVIÇOS inverte a hierarquia: o produto referenciado (ex.: item usado no
 // ofício, material de apoio) NÃO é o que se vende — quem vende é o serviço,
 // representado pelo personagem. O produto vira apoio de cena, adaptado ao
@@ -279,6 +300,9 @@ export function buildProductHierarchyBlock(opts: {
   /** Peça sem nenhuma pessoa (PU — ver core/semPersonagem.ts): substitui, em
    * SERVIÇOS e MARCA, as regras que dão o protagonismo ao personagem. */
   semPersonagem?: boolean;
+  /** Modo look book: a peça está vestida no corpo da pessoa, e não é um objeto
+   * separado disputando o quadro com ela (ver core/lookBook.ts). */
+  produtoVestido?: boolean;
 }): string {
   const {
     produtosCount,
@@ -290,9 +314,24 @@ export function buildProductHierarchyBlock(opts: {
     mood,
     produtoTelaIdentidade,
     semPersonagem,
+    produtoVestido,
   } = opts;
   if (produtosCount <= 0) return "";
   const multi = produtosCount > 1;
+
+  // Look book atravessa os três segmentos: quem marcou "o produto veste o
+  // personagem" já decidiu o papel de cada elemento, e essa decisão explícita
+  // do usuário vence a hierarquia padrão do segmento (produto-herói em VAREJO,
+  // produto-apoio em SERVIÇOS, equilíbrio em MARCA).
+  if (produtoVestido && !semPersonagem) {
+    const lines: string[] = [PRODUTO_PROTAGONISMO_VESTIDO];
+    if (hasCenario) lines.push(multi ? CENARIO_VS_PRODUTO_PLURAL : CENARIO_VS_PRODUTO_SINGULAR);
+    // Sem condicionar a hasAvatar: quem veste a peça pode ser o avatar do Kit
+    // ou o personagem criado sem foto — o flag só chega aqui quando existe
+    // pessoa em cena (garantido em buildReferences).
+    lines.push(AVATAR_VESTE_PRODUTO);
+    return lines.join("\n");
+  }
 
   // Sem personagem: SERVIÇOS e MARCA (institucional ou pessoal) trocam a regra
   // de protagonismo humano pelo produto como sujeito. VAREJO segue adiante

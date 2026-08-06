@@ -172,9 +172,17 @@ export interface ValidationFlag {
   motivo: string;
 }
 
-import type { PersonagemSemAvatar as _PersonagemSemAvatar } from "./domain/visualSelection";
-export type { PersonagemSemAvatar, SelecaoDireta } from "./domain/visualSelection";
+import type {
+  PersonagemSemAvatar as _PersonagemSemAvatar,
+  TipoPecaVestuario as _TipoPecaVestuario,
+} from "./domain/visualSelection";
+export type {
+  PersonagemSemAvatar,
+  SelecaoDireta,
+  TipoPecaVestuario,
+} from "./domain/visualSelection";
 type PersonagemSemAvatar = _PersonagemSemAvatar;
+type TipoPecaVestuario = _TipoPecaVestuario;
 
 export type PostUnicoObjetivo =
   | "promocao"
@@ -284,4 +292,10 @@ export interface PostUnicoVisualSelection {
   // "desfoque de tela" só para esta geração e instrui a IA a preservar o
   // conteúdo da tela com nitidez, em vez de borrá-lo.
   produtoTelaInformativa?: boolean;
+  // Modo look book — o personagem VESTE o produto (peça de roupa ou calçado),
+  // em pose e enquadramento de modelo. O valor diz o tipo da peça, que define o
+  // enquadramento obrigatório (ver TipoPecaVestuario em domain/visualSelection).
+  // undefined = modo padrão (peça exposta ao lado, figurino próprio do
+  // personagem). Só tem efeito com produto selecionado E pessoa em cena.
+  produtoVestido?: TipoPecaVestuario;
 }

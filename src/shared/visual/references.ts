@@ -3,6 +3,8 @@
 // viviam em postUnico.ts e regenerateWithKit.ts importava de lá, criando
 // uma dependência MOP → PU conceitualmente invertida.
 
+import type { TipoPecaVestuario } from "../../domain/visualSelection";
+
 export interface PostUnicoReferences {
   avatar?: string;
   // Foto da fachada/frente do estabelecimento — slot próprio no Kit Imagem,
@@ -44,6 +46,12 @@ export interface PostUnicoReferences {
   // toma o ramo "produto físico → proibir todo dispositivo" e transforma o
   // tablet num objeto genérico (pasta, placa) — bug real 2026-07-08.
   produtoEhDispositivo?: boolean;
+  // Modo look book: o personagem VESTE o produto referenciado, em pose e
+  // enquadramento de modelo. O valor é o tipo da peça e determina o
+  // enquadramento obrigatório (ver TipoPecaVestuario e core/lookBook.ts).
+  // Só é preenchido quando há produto E pessoa em cena — sem alguém para vestir
+  // a peça, o modo não faz sentido e volta ao padrão (produto exposto).
+  produtoVestido?: TipoPecaVestuario;
 }
 
 // Ordem fixa das imagens de referência enviadas ao modelo: avatar -> uniforme

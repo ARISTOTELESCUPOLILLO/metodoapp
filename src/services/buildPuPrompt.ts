@@ -47,6 +47,7 @@ import {
   buildSemPersonagemVariationBlock,
   SEM_PERSONAGEM_REFORCO_FINAL,
 } from "../core/semPersonagem";
+import { buildLookVariationBlock } from "../core/lookBook";
 
 function direcaoBlock(
   direcao: PostUnicoDirecao,
@@ -327,7 +328,11 @@ export function buildPostUnicoPrompt(params: {
   // Só VAREJO tem regra de produto-herói (buildProductHierarchyBlock); em
   // SERVIÇOS/MARCA o produto é apoio ou equilíbrio, e a trava de plano médio do
   // CLAREZA não conflita com nada.
-  const produtoHero = kit.segment === "VAREJO" && !!references?.produtos?.length;
+  // No look book o enquadramento é ditado pelo tipo da peça (corpo inteiro para
+  // vestido/terno/calçado) — a mesma trava de plano médio precisa ceder em
+  // qualquer segmento, não só em VAREJO.
+  const produtoHero =
+    (kit.segment === "VAREJO" && !!references?.produtos?.length) || !!references?.produtoVestido;
   const direcao = direcaoBlock(
     data.direcao,
     data.mood,
@@ -348,18 +353,27 @@ export function buildPostUnicoPrompt(params: {
     semPersonagemRef && !semPersonagem ? mapFaixaToAnchorAge(data.faixaEtaria) : undefined;
   // pickImageVariationBlock sorteia pose de personagem e declara gênero em
   // todos os moods — substituído pelo bloco de variação sem pessoa.
+  //
+  // O look book entra como um terceiro ramo, antes do sorteio do mood: a pose e
+  // o enquadramento passam a ser os de uma modelo vestindo a peça, decididos
+  // pelo TIPO do produto (ver core/lookBook.ts). Vale em qualquer direção,
+  // inclusive na Livre — quem marcou o modo já disse o que quer ver, e deixar a
+  // Livre sem enquadramento definido devolveria a imprevisibilidade que o modo
+  // existe para eliminar.
   const variationBlock = semPersonagem
     ? buildSemPersonagemVariationBlock(data.direcao === "mood" ? data.mood : undefined)
-    : data.direcao === "mood"
-      ? pickImageVariationBlock(
-          data.mood,
-          !!references?.avatar,
-          copy?.titulo,
-          copy?.texto,
-          forcedGender,
-          faixaLabelImagem,
-        )
-      : "";
+    : references?.produtoVestido
+      ? buildLookVariationBlock(references.produtoVestido)
+      : data.direcao === "mood"
+        ? pickImageVariationBlock(
+            data.mood,
+            !!references?.avatar,
+            copy?.titulo,
+            copy?.texto,
+            forcedGender,
+            faixaLabelImagem,
+          )
+        : "";
   // Rede de segurança de gênero/idade — vale em QUALQUER direção, não só na Livre.
   // A diretiva de gênero vinha por dois ramos mutuamente exclusivos: o bloco de
   // variação do mood (pickImageVariationBlock) e este bloco. Os dois podiam ser

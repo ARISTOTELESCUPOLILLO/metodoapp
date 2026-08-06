@@ -1,6 +1,9 @@
 // Blocos de texto de referência visual compartilhados entre MOP (buildAnchorPrefix)
 // e PU (referencesBlock). Extraídos para eliminar duplicação literal nos dois motores.
 
+import { lookContratoItem } from "../../core/lookBook";
+import type { TipoPecaVestuario } from "../../domain/visualSelection";
+
 // Última verificação de contagem de produtos — IDÊNTICA nos dois motores.
 // Posicionada como última linha do bloco de referências porque modelos de imagem
 // tendem a dar mais peso à instrução mais recente em prompts longos.
@@ -32,6 +35,10 @@ export function buildMixContratoBlock(opts: {
   fachada?: boolean;
   cenario?: boolean;
   produtosCount?: number;
+  /** Modo look book: o produto está vestido no corpo da pessoa, e não é um
+   *  objeto separado no quadro — o item da lista muda de redação para não
+   *  sugerir uma segunda unidade da peça exposta em cena (ver core/lookBook.ts). */
+  produtoVestido?: TipoPecaVestuario;
 }): string {
   const produtosCount = opts.produtosCount ?? 0;
   const itens: string[] = [];
@@ -46,7 +53,9 @@ export function buildMixContratoBlock(opts: {
   if (opts.cenario) {
     itens.push("O AMBIENTE DO CENÁRIO — reconhecível na imagem como o mesmo local da referência");
   }
-  if (produtosCount === 1) {
+  if (produtosCount > 0 && opts.produtoVestido) {
+    itens.push(lookContratoItem(opts.produtoVestido, produtosCount > 1));
+  } else if (produtosCount === 1) {
     itens.push(
       "O PRODUTO referenciado — inteiro, nítido e identificável, sem estar cortado, encoberto nem perdido ao fundo",
     );

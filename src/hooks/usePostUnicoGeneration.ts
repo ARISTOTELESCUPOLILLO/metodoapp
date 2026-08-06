@@ -160,6 +160,7 @@ export function usePostUnicoGeneration({
           personagemSemAvatar,
           semPersonagem,
           produtoTelaInformativa: visualSelection.produtoTelaInformativa,
+          produtoVestido: visualSelection.produtoVestido,
         },
         kit.uniformeDataUrl,
       );

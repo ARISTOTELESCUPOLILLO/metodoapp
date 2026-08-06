@@ -4,6 +4,19 @@
 //
 // Regra: nenhum outro arquivo declara esses shapes inline.
 
+/** Tipo da peça de vestuário que o personagem VESTE na peça (modo look book).
+ *  Define o enquadramento obrigatório — é a diferença entre a peça aparecer
+ *  inteira ou ficar cortada fora do quadro:
+ *    cima    → camiseta, blusa, camisa, jaqueta: plano médio, torso + rosto
+ *    baixo   → calça, bermuda, saia: da cabeça aos pés ou do peito aos pés
+ *    look    → vestido, terno, conjunto: CORPO INTEIRO obrigatório
+ *    calcado → sapato, tênis, bota: corpo inteiro com os pés dentro do quadro
+ *  Escolhido pelo usuário (e não deduzido da foto) de propósito: a foto do
+ *  produto chega ao motor sem nome nem categoria, e adivinhar devolveria à
+ *  geração a imprevisibilidade que o modo existe para eliminar.
+ */
+export type TipoPecaVestuario = "cima" | "baixo" | "look" | "calcado";
+
 /** Personagem criado sem foto de avatar — representa público-alvo ou emissor. */
 export interface PersonagemSemAvatar {
   ativo: boolean;
@@ -42,4 +55,10 @@ export interface SelecaoDireta {
   // Os produtos selecionados são telas/dispositivos cujo conteúdo exibido é a
   // identidade do produto — suspende a regra global de desfoque de tela.
   produtoTelaInformativa?: boolean;
+  // Modo look book: o produto é uma peça de roupa/calçado e o personagem a
+  // VESTE, em pose e enquadramento de modelo. O valor diz o tipo da peça, que
+  // determina o enquadramento (ver TipoPecaVestuario). undefined = modo padrão,
+  // em que a peça aparece exposta ao lado e o personagem mantém o próprio
+  // figurino. Exige pessoa em cena (avatar ou personagem sem avatar).
+  produtoVestido?: TipoPecaVestuario;
 }

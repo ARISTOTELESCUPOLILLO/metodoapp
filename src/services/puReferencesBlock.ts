@@ -8,6 +8,7 @@ import {
   buildPersonagemMoodReconciliation,
 } from "../core/visualDirection";
 import { buildClothingPool } from "../core/clothingPool";
+import { buildProdutoVestidoBlock } from "../core/lookBook";
 import { isApparelActivity } from "../utils/promptRules";
 import type { PostUnicoReferences } from "../shared/visual/references";
 import {
@@ -58,14 +59,21 @@ export function referencesBlock(
   // Peça sem personagem — lido direto das refs (não é parâmetro novo: o flag
   // já viaja em PostUnicoReferences). Ver core/semPersonagem.ts.
   const semPersonagem = !!refs.semPersonagemAtivo;
-  // Produto referenciado é peça de vestuário (loja de moda/calçados): decisão de
-  // produto do Ari em 06/08/2026 — a peça fica EXPOSTA na cena (cabide, arara,
-  // manequim, dobrada, apresentada nas mãos) e o avatar continua com figurino
-  // neutro. Vestir o personagem com o produto daria mais integração, mas custa
-  // fidelidade: a IA reinterpreta cor, corte e estampa quando a peça vai para o
-  // corpo, e o cliente precisa reconhecer a camiseta que está à venda.
+  // Dois modos para produto de moda, mutuamente exclusivos:
+  //
+  //  · produtoVestido (LOOK BOOK) — o usuário marcou "o produto veste o
+  //    personagem" e escolheu o tipo da peça, que define o enquadramento. É
+  //    escolha explícita, por isso tem precedência sobre a inferência abaixo.
+  //
+  //  · produtoEhVestuario (PADRÃO) — inferido da atividade cadastrada quando o
+  //    usuário não pediu nada: a peça fica EXPOSTA na cena (cabide, arara,
+  //    manequim, dobrada, nas mãos) e o personagem mantém o próprio figurino.
+  //    Decisão de produto do Ari em 06/08/2026 — vestir integra melhor, mas
+  //    custa fidelidade (a IA reinterpreta cor, corte e estampa no corpo), e no
+  //    padrão o cliente precisa reconhecer a peça que está à venda.
+  const produtoVestido = refs.produtoVestido;
   const produtoEhVestuario =
-    !!(refs.produtos && refs.produtos.length) && isApparelActivity(mainActivity);
+    !produtoVestido && !!(refs.produtos && refs.produtos.length) && isApparelActivity(mainActivity);
   const parts: string[] = [];
   const elementos: string[] = [];
   if (refs.avatar) elementos.push("AVATAR");
@@ -84,24 +92,37 @@ export function referencesBlock(
   parts.push(segmentRules(segment, !!refs.cenario, semPersonagem));
 
   if (refs.avatar) {
-    const clothingHint = refs.uniforme
-      ? " VESTUÁRIO: vista o avatar com o uniforme obrigatório da próxima imagem de referência — não escolha figurino livre."
-      : kitColors
-        ? (() => {
-            const pool = buildClothingPool(kitColors.primary, kitColors.accent);
-            const cor = pool[Math.floor(Math.random() * pool.length)];
-            // Em loja de moda o produto referenciado É uma peça de roupa, e a
-            // cor sorteada aqui passa a competir com ele: sem esta ressalva, o
-            // modelo veste o personagem com a cor sorteada e entende que a peça
-            // real já "foi usada", jogando o produto para o fundo (ver
-            // isApparelActivity em promptRules.ts).
-            return produtoEhVestuario
-              ? ` VESTUÁRIO DO AVATAR: ${cor} Esta cor é do FIGURINO da pessoa, NUNCA do produto referenciado: o produto é uma peça de vestuário exposta separadamente na cena (ver regra própria abaixo) e NÃO deve ser vestida pelo personagem nem ter sua cor/estampa alterada para a cor deste figurino. Escolha um figurino visivelmente diferente do produto, para que os dois não se confundam.`
-              : ` VESTUÁRIO: ${cor}`;
-          })()
-        : "";
+    const clothingHint = produtoVestido
+      ? // No look book quem define a roupa é o produto: sortear uma cor aqui
+        // colocaria duas instruções de figurino no mesmo prompt, que foi
+        // exatamente o que fez a peça real sumir na geração de 06/08.
+        " VESTUÁRIO: definido pelo PRODUTO — o avatar veste a peça referenciada (ver bloco PRODUTO VESTIDO PELA MODELO abaixo). NÃO escolha figurino por conta própria para a região do corpo que a peça ocupa."
+      : refs.uniforme
+        ? " VESTUÁRIO: vista o avatar com o uniforme obrigatório da próxima imagem de referência — não escolha figurino livre."
+        : kitColors
+          ? (() => {
+              const pool = buildClothingPool(kitColors.primary, kitColors.accent);
+              const cor = pool[Math.floor(Math.random() * pool.length)];
+              // Em loja de moda o produto referenciado É uma peça de roupa, e a
+              // cor sorteada aqui passa a competir com ele: sem esta ressalva, o
+              // modelo veste o personagem com a cor sorteada e entende que a peça
+              // real já "foi usada", jogando o produto para o fundo (ver
+              // isApparelActivity em promptRules.ts).
+              return produtoEhVestuario
+                ? ` VESTUÁRIO DO AVATAR: ${cor} Esta cor é do FIGURINO da pessoa, NUNCA do produto referenciado: o produto é uma peça de vestuário exposta separadamente na cena (ver regra própria abaixo) e NÃO deve ser vestida pelo personagem nem ter sua cor/estampa alterada para a cor deste figurino. Escolha um figurino visivelmente diferente do produto, para que os dois não se confundam.`
+                : ` VESTUÁRIO: ${cor}`;
+            })()
+          : "";
+    // No look book a pose, a câmera e o enquadramento já vêm decididos pelo tipo
+    // da peça (core/lookBook.ts). O repertório padrão — construído para cenas de
+    // ofício ("com material/produto em mãos", "em conversa com alguém fora de
+    // quadro") — contradiria aquele bloco e reabriria a porta do enquadramento
+    // livre, que é justamente o que corta a peça fora do quadro.
+    const poseHint = produtoVestido
+      ? ` POSE E ENQUADRAMENTO: NÃO escolha livremente — esta peça é um LOOK BOOK, e pose, câmera e enquadramento obrigatórios estão definidos no bloco "VARIAÇÃO — PEÇA DE MODA COM MODELO". Deste bloco vale apenas a semelhança facial e física do avatar; a postura vem de lá. O ROSTO SEMPRE APARECE.`
+      : ` REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, em três-quartos, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro ou três-quartos — mas o ROSTO SEMPRE APARECE: a foto de avatar foi enviada justamente para que esta pessoa seja reconhecida na peça. PROIBIDO resolver o enquadramento sem rosto visível (só mãos trabalhando, só detalhe de gesto, silhueta, pessoa de costas ou "presença implícita" no ambiente). Escolha a combinação que melhor serve à mensagem desta peça específica, entre as que mostram o rosto.`;
     parts.push(
-      `AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, em três-quartos, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro ou três-quartos — mas o ROSTO SEMPRE APARECE: a foto de avatar foi enviada justamente para que esta pessoa seja reconhecida na peça. PROIBIDO resolver o enquadramento sem rosto visível (só mãos trabalhando, só detalhe de gesto, silhueta, pessoa de costas ou "presença implícita" no ambiente). Escolha a combinação que melhor serve à mensagem desta peça específica, entre as que mostram o rosto.`,
+      `AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint}${poseHint}`,
     );
     // Reconciliação personagem × mood — entra DENTRO do bloco de referência,
     // que é o de PRIORIDADE MÁXIMA no prompt. Colocada fora dele, perderia para
@@ -240,6 +261,9 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
     parts.push(
       `PRODUTOS SELECIONADOS (${lista}): elementos principais da composição. Preservar embalagem, formato, cores principais e características físicas. Apresentar de forma integrada à cena, evitando aparência de catálogo técnico ou montagem artificial.${telaClause}`,
     );
+    if (produtoVestido) {
+      parts.push(buildProdutoVestidoBlock(produtoVestido, refs.produtos.length > 1));
+    }
     if (produtoEhVestuario) {
       const plural = refs.produtos.length > 1;
       parts.push(
@@ -260,6 +284,7 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         mood,
         produtoTelaIdentidade: !!refs.produtoTelaInformativa && !!refs.produtoEhDispositivo,
         semPersonagem,
+        produtoVestido: !!produtoVestido,
       }),
     );
     if (refs.produtos.length >= 2) {
@@ -306,6 +331,7 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
       fachada: !!refs.fachada,
       cenario: !!refs.cenario,
       produtosCount: refs.produtos?.length ?? 0,
+      produtoVestido,
     });
     if (contrato) parts.push(contrato);
   }

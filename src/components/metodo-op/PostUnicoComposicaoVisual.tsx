@@ -6,7 +6,9 @@ import {
   MoodCode,
   PostUnicoObjetivo,
   PostUnicoVisualSelection,
+  TipoPecaVestuario,
 } from "../../types";
+import { TIPO_PECA_LABEL } from "../../core/lookBook";
 import {
   produtosDisponiveis,
   cenariosDisponiveis,
@@ -137,7 +139,29 @@ export default function PostUnicoComposicaoVisual({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a hasDocFoto; `selection`/`onChange` são lidos, não devem re-disparar o efeito
   }, [hasDocFoto]);
 
+  // Look book só existe com produto E pessoa. Quando o usuário desmarca um dos
+  // dois depois de ter ligado o modo, o flag é limpo aqui — senão ele fica
+  // órfão no localStorage e volta a valer sozinho numa peça futura em que a
+  // combinação se repita, sem o usuário ter pedido.
+  const temProdutoSelecionado = selection.useProdutos && selection.produtosSelecionados.length > 0;
+  const podeVestir =
+    temProdutoSelecionado &&
+    !selection.semPersonagem &&
+    (selection.useAvatar || !!selection.personagemSemAvatar?.ativo);
+  useEffect(() => {
+    if (selection.produtoVestido && !podeVestir) {
+      onChange({ ...selection, produtoVestido: undefined });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage à condição; `selection`/`onChange` são lidos, não devem re-disparar o efeito
+  }, [podeVestir, selection.produtoVestido]);
+
   const effectiveCenario = selection.cenarioSelecionado ?? null;
+
+  // Quem veste a peça no modo look book: o avatar do Kit ou o personagem criado
+  // sem foto. Sem nenhum dos dois (ou com "peça sem personagem" marcado), o modo
+  // não tem em quem vestir e nem aparece na tela.
+  const temPessoaEmCena =
+    !selection.semPersonagem && (selection.useAvatar || !!selection.personagemSemAvatar?.ativo);
 
   const refsAtivas =
     (selection.useAvatar ? 1 : 0) +
@@ -334,6 +358,70 @@ export default function PostUnicoComposicaoVisual({
               evita conteúdo de tela vazando pra fora do retângulo.
             </p>
           )}
+
+          {/* Look book — só faz sentido com alguém em cena para vestir a peça. */}
+          {temPessoaEmCena && (
+            <>
+              <label className="checkRow" style={{ marginTop: 8, fontSize: 12, fontWeight: 600 }}>
+                <input
+                  type="checkbox"
+                  checked={!!selection.produtoVestido}
+                  onChange={(e) =>
+                    onChange({
+                      ...selection,
+                      // "cima" é o default por ser o caso mais comum (camiseta,
+                      // blusa) — o usuário troca no seletor logo abaixo.
+                      produtoVestido: e.target.checked ? "cima" : undefined,
+                      // Uniforme e peça vestida disputam o corpo do personagem.
+                      useUniforme: e.target.checked ? false : selection.useUniforme,
+                    })
+                  }
+                />
+                O produto veste o personagem (look de modelo)
+              </label>
+              {selection.produtoVestido && (
+                <>
+                  <label
+                    style={{
+                      display: "block",
+                      margin: "6px 0 0",
+                      fontSize: 11,
+                      color: "#94a3b8",
+                    }}
+                  >
+                    Tipo da peça — define o enquadramento da foto
+                    <select
+                      value={selection.produtoVestido}
+                      onChange={(e) =>
+                        onChange({
+                          ...selection,
+                          produtoVestido: e.target.value as TipoPecaVestuario,
+                        })
+                      }
+                      style={{ display: "block", marginTop: 4, width: "100%", padding: "6px 8px" }}
+                    >
+                      {(Object.keys(TIPO_PECA_LABEL) as TipoPecaVestuario[]).map((t) => (
+                        <option key={t} value={t}>
+                          {TIPO_PECA_LABEL[t]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p style={{ margin: "4px 0 0", fontSize: 11, color: "#94a3b8" }}>
+                    {selection.produtoVestido === "cima"
+                      ? "Plano médio: torso e rosto no quadro."
+                      : selection.produtoVestido === "baixo"
+                        ? "Corpo inteiro ou três-quartos baixo — a peça aparece até a barra."
+                        : selection.produtoVestido === "look"
+                          ? "Corpo inteiro, dos pés à cabeça."
+                          : "Corpo inteiro com os dois pés no quadro."}{" "}
+                    A peça vestida sai parecida com a foto, não idêntica — para estampa ou logo que
+                    o cliente precisa reconhecer, desmarque e deixe a peça exposta ao lado.
+                  </p>
+                </>
+              )}
+            </>
+          )}
         </>
       )}
 
@@ -350,7 +438,16 @@ export default function PostUnicoComposicaoVisual({
           <input
             type="checkbox"
             checked={selection.useUniforme}
-            onChange={(e) => onChange({ ...selection, useUniforme: e.target.checked })}
+            onChange={(e) =>
+              onChange({
+                ...selection,
+                useUniforme: e.target.checked,
+                // Uniforme e look book vestem a mesma pessoa — marcar um
+                // desmarca o outro (a exclusão também é reforçada no motor,
+                // em buildReferences).
+                produtoVestido: e.target.checked ? undefined : selection.produtoVestido,
+              })
+            }
           />
           Gerar com uniforme da empresa
         </label>

@@ -105,14 +105,27 @@ export function buildReferences(
   // representa o público-alvo por padrão; o uniforme só entra quando o
   // usuário escolhe explicitamente que esse personagem é o EMISSOR
   // (comUniforme=true) e há uma foto de uniforme cadastrada.
+  // Look book — o personagem veste a peça. Ligado por último porque depende de
+  // duas condições já resolvidas acima: existir produto e existir pessoa. Sem
+  // alguém para vestir (peça sem personagem, ou nenhum personagem marcado), o
+  // modo simplesmente não se aplica e a geração volta ao padrão (peça exposta),
+  // em vez de emitir uma instrução que aponta para ninguém.
+  const temPessoa = !!refs.avatar || !!selecaoDireta?.personagemSemAvatar?.ativo;
+  if (selecaoDireta?.produtoVestido && refs.produtos?.length && !semPersonagem && temPessoa) {
+    refs.produtoVestido = selecaoDireta.produtoVestido;
+  }
   if (semPersonagem) {
     refs.semPersonagemAtivo = true;
-  } else if (selecaoDireta?.useUniforme && refs.avatar && uniformeDataUrl) {
+  } else if (selecaoDireta?.useUniforme && refs.avatar && uniformeDataUrl && !refs.produtoVestido) {
+    // Uniforme e look book disputam a mesma coisa — o corpo do personagem. No
+    // look book quem veste é o produto; mandar as duas roupas no mesmo prompt
+    // faria a IA escolher uma por conta própria. A UI já impede marcar os dois,
+    // e aqui a exclusão é reforçada no motor.
     refs.uniforme = uniformeDataUrl;
   } else if (!refs.avatar && selecaoDireta?.personagemSemAvatar?.ativo) {
     refs.personagemSemAvatarAtivo = true;
     refs.personagemIdade = selecaoDireta.personagemSemAvatar.idade;
-    if (selecaoDireta.personagemSemAvatar.comUniforme && uniformeDataUrl) {
+    if (selecaoDireta.personagemSemAvatar.comUniforme && uniformeDataUrl && !refs.produtoVestido) {
       refs.uniforme = uniformeDataUrl;
     }
   }

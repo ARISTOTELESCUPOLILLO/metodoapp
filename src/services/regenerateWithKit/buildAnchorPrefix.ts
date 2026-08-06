@@ -277,6 +277,7 @@ export function buildAnchorPrefix(
       fachada: !!refs.fachada,
       cenario: !!refs.cenario,
       produtosCount: refs.produtos?.length ?? 0,
+      produtoVestido: refs.produtoVestido,
     });
     if (contrato) lines.push(contrato);
   }
