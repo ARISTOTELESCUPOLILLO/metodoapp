@@ -58,9 +58,10 @@ function direcaoBlock(
   tonalidadeSeed?: number,
   accentHex?: string,
   produtoHero?: boolean,
+  lookBook?: boolean,
 ): string {
   if (direcao === "mood" && mood) {
-    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood, { noDeviceThisScene, tonalidadeSeed, accentHex, produtoHero })}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
+    return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood, { noDeviceThisScene, tonalidadeSeed, accentHex, produtoHero, lookBook })}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
   }
   const obj = objetivo ?? "nenhum";
 
@@ -342,6 +343,7 @@ export function buildPostUnicoPrompt(params: {
     tonalidadeSeed,
     accent,
     produtoHero,
+    !!references?.produtoVestido,
   );
   // Quando não há personagem de referência (sem avatar e sem checkbox "personagem
   // sem avatar"), a faixaEtaria do form chega ao prompt de imagem como âncora de

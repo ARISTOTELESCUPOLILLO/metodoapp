@@ -38,6 +38,18 @@ import {
   CLAREZA_PLANO_MEDIO_PRODUTO_HERO,
   FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE,
   FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED,
+  IMPACTO_CAMERA_SENTENCE,
+  IMPACTO_CAMERA_LOOKBOOK,
+  INSTANTE_POSE_SENTENCE,
+  INSTANTE_POSE_LOOKBOOK,
+  FRAGMENTO_BLOCOS_SENTENCE,
+  FRAGMENTO_BLOCOS_LOOKBOOK,
+  DESVIO_CAMERA_SENTENCE,
+  DESVIO_CAMERA_LOOKBOOK,
+  SILENCIO_ESCALA_SENTENCE,
+  SILENCIO_ESCALA_LOOKBOOK,
+  SILENCIO_PESSOA_SENTENCE,
+  SILENCIO_PESSOA_LOOKBOOK,
 } from "./visualDirection.lexicon";
 import {
   buildProductHierarchyBlock,
@@ -93,9 +105,25 @@ function resolveMoodRuleText(
   mood: MoodCode,
   noDeviceThisScene: boolean,
   produtoHero?: boolean,
+  lookBook?: boolean,
 ): string | undefined {
   let base = MOOD_RULES[mood];
   if (!base) return base;
+  // Look book × mood: cada mood tem uma sentença de câmera/pose/escala que
+  // contradiz a pose de modelo e o enquadramento por tipo de peça. Trocadas por
+  // versões que cedem só a parte conflitante e preservam o resto do mood — ver
+  // o bloco LOOK BOOK × MOOD no léxico.
+  if (lookBook) {
+    if (mood === "OP-02") base = base.replace(IMPACTO_CAMERA_SENTENCE, IMPACTO_CAMERA_LOOKBOOK);
+    if (mood === "OP-03") base = base.replace(INSTANTE_POSE_SENTENCE, INSTANTE_POSE_LOOKBOOK);
+    if (mood === "OP-04") base = base.replace(FRAGMENTO_BLOCOS_SENTENCE, FRAGMENTO_BLOCOS_LOOKBOOK);
+    if (mood === "OP-05") base = base.replace(DESVIO_CAMERA_SENTENCE, DESVIO_CAMERA_LOOKBOOK);
+    if (mood === "OP-06") {
+      base = base
+        .replace(SILENCIO_ESCALA_SENTENCE, SILENCIO_ESCALA_LOOKBOOK)
+        .replace(SILENCIO_PESSOA_SENTENCE, SILENCIO_PESSOA_LOOKBOOK);
+    }
+  }
   // Produto-herói (VAREJO com produto referenciado): solta a trava de plano
   // médio do CLAREZA, que impedia a câmera de aproximar do produto — ver
   // CLAREZA_PLANO_MEDIO_PRODUTO_HERO no léxico.
@@ -179,6 +207,10 @@ export function buildMoodGrammarBlock(
     /** VAREJO com produto referenciado: o produto é o herói do quadro e a
      * câmera precisa poder aproximar dele (ver resolveMoodRuleText). */
     produtoHero?: boolean;
+    /** Modo look book: pose de modelo e enquadramento por tipo de peça vêm do
+     * bloco de variação — a linha de câmera do mood e as sentenças que exigem
+     * outro ângulo/pose cedem lugar (ver core/lookBook.ts). */
+    lookBook?: boolean;
   },
 ): string {
   const v = getVisualDirection(mood);
@@ -189,9 +221,21 @@ export function buildMoodGrammarBlock(
     mood === "OP-06"
       ? pickTonalidade(SILENCIO_TONALIDADES, opts?.tonalidadeSeed ?? 0, opts?.accentHex).bloco
       : v.paleta;
-  const ruleText = resolveMoodRuleText(mood, !!opts?.noDeviceThisScene, !!opts?.produtoHero);
+  const ruleText = resolveMoodRuleText(
+    mood,
+    !!opts?.noDeviceThisScene,
+    !!opts?.produtoHero,
+    !!opts?.lookBook,
+  );
   const ruleBlock = ruleText ? `\n\nREGRA INEGOCIÁVEL DO MOOD ${v.nome}:\n${ruleText}` : "";
-  return `TENSÃO VISUAL CANÔNICA (técnicas Dondis, vocabulário inegociável): ${v.tensaoDondis}.\n\nGRAMÁTICA VISUAL DO MOOD ${v.nome}:\n- Luz: ${v.luz}\n- Paleta: ${paleta}\n- Composição: ${v.composicao}\n- Atitude da câmera: ${v.camera}\n- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${ruleBlock}`;
+  // A linha de câmera da gramática descreve lente, altura e ângulo — os três
+  // campos que o look book já fixou pelo tipo da peça. Deixar as duas no mesmo
+  // prompt é pedir 35mm em contra-plongée (IMPACTO) e 50-85mm frontal
+  // (look book) ao mesmo tempo.
+  const cameraLine = opts?.lookBook
+    ? "definida pelo LOOK BOOK (ver bloco de variação): 50-85mm, altura entre peito e quadril, frontal ou três-quartos, sem distorção. A lente e o ângulo típicos deste mood cedem lugar nesta peça; luz, paleta e clima do mood permanecem integralmente"
+    : v.camera;
+  return `TENSÃO VISUAL CANÔNICA (técnicas Dondis, vocabulário inegociável): ${v.tensaoDondis}.\n\nGRAMÁTICA VISUAL DO MOOD ${v.nome}:\n- Luz: ${v.luz}\n- Paleta: ${paleta}\n- Composição: ${v.composicao}\n- Atitude da câmera: ${cameraLine}\n- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${ruleBlock}`;
 }
 
 // Bloco pronto para injeção no prompt do motor.

@@ -8,6 +8,7 @@ import { buildReferences } from "../services/regenerateWithKit";
 import { buildPostUnicoPrompt } from "../services/buildPuPrompt";
 import { buildLookVariationBlock, TIPO_PECA_LABEL } from "../core/lookBook";
 import { buildProductHierarchyBlock } from "../core/productHierarchy";
+import { buildMoodGrammarBlock } from "../core/visualDirection";
 import type { BrandKit, ImageKit, PostUnicoFormData, TipoPecaVestuario } from "../types";
 import type { PostUnicoReferences } from "../shared/visual/references";
 
@@ -198,6 +199,80 @@ const refsLook: PostUnicoReferences = {
   produtoVestido: "cima",
 };
 
+// ── Reconciliação com a gramática de cada mood ──────────────────────────────
+// Cada mood traz na REGRA INEGOCIÁVEL uma instrução de câmera, pose ou escala
+// que contradiz a pose de modelo. Contradição no mesmo prompt é a classe de bug
+// que fez o avatar sumir em 06/08 — o modelo escolhe um lado por conta própria.
+
+describe("buildMoodGrammarBlock — look book × mood", () => {
+  it("IMPACTO: solta a exigência de contra-plongée, mantém luz e paleta do mood", () => {
+    const semLook = buildMoodGrammarBlock("OP-02");
+    expect(semLook).toContain("OBRIGATÓRIO contra-plongée leve");
+
+    const comLook = buildMoodGrammarBlock("OP-02", { lookBook: true });
+    expect(comLook).not.toContain("CÂMERA EM IMPACTO: OBRIGATÓRIO contra-plongée leve");
+    expect(comLook).toContain("LOOK BOOK NESTA PEÇA");
+    expect(comLook).toContain("luz focal direcional");
+  });
+
+  it("INSTANTE: permite a pose, exigindo pose em movimento em vez de rigidez", () => {
+    const semLook = buildMoodGrammarBlock("OP-03");
+    expect(semLook).toContain("NUNCA olha para câmera com pose intencional");
+
+    const comLook = buildMoodGrammarBlock("OP-03", { lookBook: true });
+    expect(comLook).not.toContain("NUNCA olha para câmera com pose intencional");
+    expect(comLook).toContain("a modelo POSA");
+    expect(comLook).toContain("pose em movimento");
+  });
+
+  it("FRAGMENTO: mantém os blocos, com a modelo no bloco principal", () => {
+    const comLook = buildMoodGrammarBlock("OP-04", { lookBook: true });
+    expect(comLook).toContain("BLOCO PRINCIPAL");
+    expect(comLook).toContain("DETALHES DA MESMA PEÇA");
+    expect(comLook).toContain("PROIBIDO fragmentar a modelo em blocos que a cortem");
+  });
+
+  it("DESVIO: tira a distorção de perspectiva, mantém a ruptura simbólica", () => {
+    const semLook = buildMoodGrammarBlock("OP-05");
+    expect(semLook).toContain("PROIBIDO câmera frontal neutra em qualquer hipótese");
+
+    const comLook = buildMoodGrammarBlock("OP-05", { lookBook: true });
+    expect(comLook).not.toContain("PROIBIDO câmera frontal neutra em qualquer hipótese");
+    expect(comLook).toContain("RUPTURA SIMBÓLICA");
+    expect(comLook).toContain("nunca por deformar a modelo");
+  });
+
+  it("SILÊNCIO: suspende o limite de 30% e o fragmento parcial, mantém a chave clara", () => {
+    const semLook = buildMoodGrammarBlock("OP-06");
+    expect(semLook).toContain("NO MÁXIMO 30% da área total");
+    expect(semLook).toContain("fragmento parcial APENAS");
+
+    const comLook = buildMoodGrammarBlock("OP-06", { lookBook: true });
+    expect(comLook).not.toContain("NO MÁXIMO 30% da área total");
+    expect(comLook).not.toContain("fragmento parcial APENAS");
+    expect(comLook).toContain("a modelo aparece INTEIRA");
+    expect(comLook).toContain("luz alta-chave");
+  });
+
+  it("a linha de câmera da gramática cede ao look book em todos os moods", () => {
+    (["OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06"] as const).forEach((m) => {
+      const b = buildMoodGrammarBlock(m, { lookBook: true });
+      expect(b, `mood ${m}`).toContain("Atitude da câmera: definida pelo LOOK BOOK");
+      // Luz e paleta do mood continuam inteiras — o look book não sequestra a
+      // fotografia, só pose/câmera/enquadramento.
+      expect(b, `mood ${m}`).toContain("- Luz:");
+      expect(b, `mood ${m}`).toContain("- Paleta:");
+    });
+  });
+
+  it("sem look book, a gramática de todos os moods fica intacta", () => {
+    (["OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06"] as const).forEach((m) => {
+      const b = buildMoodGrammarBlock(m);
+      expect(b, `mood ${m}`).not.toContain("LOOK BOOK");
+    });
+  });
+});
+
 describe("PU — prompt no modo look book", () => {
   beforeEach(() => {
     vi.spyOn(Math, "random").mockReturnValue(0);
@@ -254,6 +329,33 @@ describe("PU — prompt no modo look book", () => {
   it("look inteiro pede corpo inteiro", () => {
     const p = prompt({ ...refsLook, produtoVestido: "look" });
     expect(p).toContain("CORPO INTEIRO, DOS PÉS AO TOPO DA CABEÇA");
+  });
+
+  it("vale em todos os 6 moods, não só em CLAREZA", () => {
+    (["OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06"] as const).forEach((m) => {
+      const p = buildPostUnicoPrompt({
+        data: { ...dataModa, mood: m },
+        kit: kitModa,
+        copy: { titulo: "CAMISETAS COLCCI", texto: "Estilo marcante." },
+        references: refsLook,
+        forcedGender: "mulher",
+      });
+      expect(p, `mood ${m}`).toContain("PEÇA DE MODA COM MODELO");
+      expect(p, `mood ${m}`).toContain("PRODUTO VESTIDO PELA MODELO");
+      expect(p, `mood ${m}`).toContain("PLANO MÉDIO/AMERICANO");
+    });
+  });
+
+  it("vale também na Direção Livre", () => {
+    const p = buildPostUnicoPrompt({
+      data: { ...dataModa, direcao: "livre", mood: undefined },
+      kit: kitModa,
+      copy: { titulo: "CAMISETAS COLCCI", texto: "Estilo marcante." },
+      references: refsLook,
+      forcedGender: "mulher",
+    });
+    expect(p).toContain("PEÇA DE MODA COM MODELO");
+    expect(p).toContain("PRODUTO VESTIDO PELA MODELO");
   });
 
   it("sem o modo, o padrão de peça exposta continua valendo", () => {

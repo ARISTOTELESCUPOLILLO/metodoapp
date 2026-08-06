@@ -419,6 +419,53 @@ export const CLAREZA_PLANO_MEDIO_SENTENCE =
 export const CLAREZA_PLANO_MEDIO_PRODUTO_HERO =
   "ENQUADRAMENTO EM CLAREZA COM PRODUTO-HERÓI — REGRA DESTA PEÇA: existe produto referenciado que deve ocupar 30-40% do quadro (ver REGRA DE PROTAGONISMO DO PRODUTO). Por isso o enquadramento NÃO fica preso ao plano médio da pessoa: a câmera pode aproximar do produto, e a pessoa pode aparecer em plano americano, três-quartos, de corpo inteiro, mais recuada ou ocupando uma faixa lateral do quadro — o que for preciso para o produto crescer. O que permanece INEGOCIÁVEL é que o ROSTO e a CABEÇA da pessoa apareçam INTEIRAMENTE dentro do quadro, nunca cortados no pescoço, queixo, testa ou em qualquer ponto acima dos ombros: aproximar do produto JAMAIS significa decapitar ou cortar fora do quadro a pessoa. Se produto grande e rosto inteiro não couberem no mesmo enquadramento, recue a câmera e componha os dois lado a lado — nunca sacrifique nenhum dos dois. ";
 
+// ── LOOK BOOK × MOOD ────────────────────────────────────────────────────────
+// O modo look book (core/lookBook.ts) fixa pose de modelo, câmera 50-85mm na
+// altura do peito/quadril e enquadramento ditado pelo tipo da peça. Cinco dos
+// seis moods trazem, na própria REGRA INEGOCIÁVEL, uma instrução de câmera ou
+// de pose que contradiz isso — e contradição dentro do mesmo prompt é
+// exatamente a classe de bug que fez o avatar sumir em 06/08: o modelo escolhe
+// um dos lados por conta própria.
+//
+// A divisão adotada: o look book governa POSE, CÂMERA e ENQUADRAMENTO; o mood
+// mantém LUZ, PALETA, CLIMA, composição do entorno e detalhe criativo. Cada par
+// abaixo é a sentença original do mood e o que ela vira no modo look book.
+export const IMPACTO_CAMERA_SENTENCE =
+  "CÂMERA EM IMPACTO: OBRIGATÓRIO contra-plongée leve ou ângulo 3/4 dinâmico. PROIBIDO câmera frontal reta na altura dos olhos. PROIBIDO plongée de cima para baixo — câmera de cima para baixo enfraquece o impacto e diminui o personagem/produto. ";
+
+export const IMPACTO_CAMERA_LOOKBOOK =
+  "CÂMERA EM IMPACTO — LOOK BOOK NESTA PEÇA: a câmera é a definida no bloco de variação (50-85mm, altura entre peito e quadril, frontal ou três-quartos), porque contra-plongée deforma o caimento da peça e é justamente o caimento que esta peça precisa mostrar. Fica SUSPENSA, só aqui, a exigência de contra-plongée e a proibição de enquadramento frontal. O IMPACTO continua inteiro no resto: luz focal direcional recortando a modelo sobre fundo escuro médio, paleta low-key com UMA cor quente saturada de acento, vazios escuros generosos e foco único concentrado na peça vestida. PROIBIDO plongée de cima para baixo. ";
+
+export const INSTANTE_POSE_SENTENCE =
+  "INSTANTE exige captura documental genuína — personagem NUNCA olha para câmera com pose intencional, NUNCA sorri institucionalmente, NUNCA está estático esperando o clique. A cena deve parecer flagrada. ";
+
+export const INSTANTE_POSE_LOOKBOOK =
+  "INSTANTE COM MODELO — LOOK BOOK NESTA PEÇA: a modelo POSA (é um look book, ver bloco de variação), então fica suspensa a proibição de pose intencional e de olhar para a câmera. O que o mood exige aqui é o JEITO da pose: nada de rigidez de estúdio nem sorriso institucional — prefira a pose em movimento (passo, giro, gesto em transição, peso mudando de perna), como se a foto tivesse sido feita entre uma pose e outra. A captura continua parecendo real: luz ambiente quente, paleta terrosa, grão sutil, detalhe de bastidor no quadro. ";
+
+export const FRAGMENTO_BLOCOS_SENTENCE =
+  "FRAGMENTO exige EXATAMENTE 3 a 5 blocos visuais distintos costurados pela mesma paleta de 3 tons máximos. Menos de 3 blocos não é FRAGMENTO — vira CLAREZA ou SILÊNCIO. Mais de 5 blocos vira ruído visual sem ritmo. ";
+
+export const FRAGMENTO_BLOCOS_LOOKBOOK =
+  "FRAGMENTO COM LOOK BOOK NESTA PEÇA: a composição modular permanece, com 3 a 5 blocos costurados pela mesma paleta de 3 tons — mas o BLOCO PRINCIPAL, o de maior área, é a modelo vestindo a peça no enquadramento obrigatório definido no bloco de variação, e é ele que precisa ser lido primeiro. Os demais blocos trazem DETALHES DA MESMA PEÇA (textura do tecido, costura, etiqueta, caimento da barra, acabamento da gola, movimento do tecido) — nunca um segundo produto, nunca objeto de escritório, nunca fragmento sem relação com a peça. PROIBIDO fragmentar a modelo em blocos que a cortem (um bloco com a cabeça, outro com o tronco): a figura aparece inteira dentro do seu bloco. ";
+
+export const DESVIO_CAMERA_SENTENCE =
+  'CÂMERA DESVIO: a variação de ângulo e distância desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir exatamente, sem alterar. Em qualquer variação sorteada, a câmera NUNCA pode estar na altura dos olhos em enquadramento neutro — PROIBIDO câmera frontal neutra em qualquer hipótese, essa é a assinatura inegociável do mood. ';
+
+export const DESVIO_CAMERA_LOOKBOOK =
+  "CÂMERA DESVIO — LOOK BOOK NESTA PEÇA: a câmera é a definida no bloco de variação (50-85mm, altura entre peito e quadril, frontal ou três-quartos), sem distorção de perspectiva — lente angular deforma corpo e caimento, e a peça precisa ser lida como ela é. Fica suspensa, só aqui, a proibição de enquadramento frontal neutro. O DESVIO não desaparece: ele se expressa pela RUPTURA SIMBÓLICA em cena, pela paleta incomum e pela luz teatral em direção inesperada — nunca por deformar a modelo ou a peça. ";
+
+export const SILENCIO_ESCALA_SENTENCE =
+  "ESPAÇO NEGATIVO OBRIGATÓRIO: o objeto ou fragmento humano deve ocupar NO MÁXIMO 30% da área total da composição. O restante é fundo neutro, vasto e respirado — esse espaço vazio É a mensagem. ";
+
+export const SILENCIO_ESCALA_LOOKBOOK =
+  "ESPAÇO NEGATIVO EM LOOK BOOK: o limite de 30% NÃO se aplica à modelo nesta peça — a peça vestida precisa ser lida em cor, corte e caimento, e isso exige presença no quadro. O silêncio se expressa pelo ENTORNO: fundo vasto, liso e vazio, sem nenhum outro elemento além da modelo, com amplo espaço respirando ao redor da figura e composição estática e contemplativa. Nada de props, mobiliário, texturas concorrentes ou segundo ponto de interesse. ";
+
+export const SILENCIO_PESSOA_SENTENCE =
+  "Se aparecer pessoa: fragmento parcial APENAS (mão, sombra, nuca, silhueta pequena) — NUNCA rosto inteiro posado, NUNCA corpo completo. ";
+
+export const SILENCIO_PESSOA_LOOKBOOK =
+  "PESSOA EM LOOK BOOK: a modelo aparece INTEIRA e com o rosto visível, no enquadramento definido pelo tipo da peça — fica suspensa, só nesta peça, a exigência de fragmento parcial. Em troca ela obedece o resto da gramática do mood sem exceção: luz alta-chave suave e difusa, sombras quase ausentes, paleta de baixa saturação, expressão contida e serena, postura calma e estática. PROIBIDO luz dramática, fundo escuro ou pose de energia alta. ";
+
 // Regras inegociáveis específicas por mood — corrigem desvios observados em
 // geração real e expandem aplicação para múltiplos segmentos. Fonte canônica
 // única da gramática de cada mood: tanto o motor MOP (buildVisualDirectionBlock)
@@ -435,14 +482,14 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     "CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.",
   "OP-02":
     "IMPACTO exige EXATAMENTE 1 cor quente saturada (amarelo, laranja, vermelho) recortada sobre fundo escuro médio (preto/grafite). Sem essa única explosão cromática, a peça não para o scroll. " +
-    "CÂMERA EM IMPACTO: OBRIGATÓRIO contra-plongée leve ou ângulo 3/4 dinâmico. PROIBIDO câmera frontal reta na altura dos olhos. PROIBIDO plongée de cima para baixo — câmera de cima para baixo enfraquece o impacto e diminui o personagem/produto. " +
+    IMPACTO_CAMERA_SENTENCE +
     "VÍCIOS VISUAIS A EVITAR EM IMPACTO: personagem sempre segurando papel ou prancheta, executivo genérico de terno como padrão automático, olhar lateral repetido em todas as imagens, mesma postura rígida de autoridade, mesa escura com objetos decorativos, plantas e vasos como recurso visual recorrente, luz quente lateral repetida sempre do mesmo jeito, fundo corporativo genérico, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. " +
     'Quando a variação sorteada for "SUJEITO SEM PERSONAGEM DOMINANTE", construir a cena a partir do produto, objeto ou detalhe de operação como protagonista — sem forçar presença humana central. ' +
     'A variação desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
     "DISPOSITIVOS EM IMPACTO: o contra-plongée coloca a câmera de frente para o personagem, do lado OPOSTO à tela (ver FÍSICA DA TELA na regra de dispositivos) — a câmera vê o VERSO LISO do aparelho, sem nenhum conteúdo, enquanto o personagem olha para baixo, para a própria tela. Essa geometria é correta e natural; NÃO torça o aparelho para a tela 'aparecer' neste ângulo — isso violaria a física da cena. Preferir variações sem dispositivo digital nas mãos quando ele não tiver papel narrativo na peça. " +
     "IMPACTO se aplica a qualquer segmento. O ambiente e o gesto pertencem ao espaço e ofício reais. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.",
   "OP-03":
-    "INSTANTE exige captura documental genuína — personagem NUNCA olha para câmera com pose intencional, NUNCA sorri institucionalmente, NUNCA está estático esperando o clique. A cena deve parecer flagrada. " +
+    INSTANTE_POSE_SENTENCE +
     "VÍCIOS VISUAIS A EVITAR EM INSTANTE: personagem sempre olhando papel, personagem sempre segurando caderno ou documento, personagem sempre caminhando com bolsa como solução automática, executivo genérico em escritório ou corredor, cena com aparência de pose publicitária, olhar direto para câmera, sorriso institucional, composição limpa demais, fundo cenográfico perfeito, luz dourada exageradamente dramática, plantas e vasos como recurso decorativo recorrente, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. " +
     'PROIBIDO ESPECÍFICO — METÁFORA DO TÍTULO NÃO VIRA CENA LITERAL: palavras do título com sentido estratégico ou metafórico ("rumo", "caminho", "direção", "passo", "virada", "sentido", "movimento") NUNCA devem ser traduzidas como cena física de deslocamento — pessoa andando, saindo pela porta, caminhando com pasta, personagem de costas indo embora, corredor ou porta como elemento principal. O que define a cena é o que a empresa CONCRETAMENTE FAZ, derivado do texto de apoio, da atividade real e da informação-chave, não da leitura literal de uma palavra do título. Para empresas de serviço: quando o texto mencionar campanha, estratégia, orientação, decisão, clientes ou melhoria de ações, ancorar a cena no ofício real — para consultoria, gestão, RH ou financeiro: análise de relatório ou planilha impressa com o cliente, apresentação de diagnóstico em material físico, reunião de alinhamento com pauta visível, sessão de orientação 1:1; para jurídico ou contábil: revisão de documento, contrato ou processo sobre a mesa, entrega de documento assinado, conversa de aconselhamento; para agência, comunicação, marketing ou consultoria de marketing: a cena pode ser QUALQUER UMA destas — e deve VARIAR entre as peças da sequência, nunca repetir a mesma ação entre Estático 1, Carrossel e Estático Final: direcionar uma produção de conteúdo ou sessão de fotos (apontando referência, ajustando enquadramento, orientando quem produz); apresentar um plano, calendário ou resultado a um interlocutor presente, com material físico sobre a mesa ou afixado na parede; organizar ou comparar referências e provas afixadas em mural, parede ou quadro, em pé; brainstorm em pé diante de quadro branco ou painel com anotações e recortes; momento de chegada ou recepção do cliente — cumprimento, condução à sala, início de conversa; ou revisão de peças e provas de arte com o cliente (no máximo UMA peça da sequência pode usar esta última opção — é a cena já saturada em gerações anteriores). Nunca movimentação genérica. PROIBIDO cena de produção manual, artesanato, cozinha ou bancada de fabricação quando o ofício real da empresa for consultivo, analítico, jurídico ou administrativo. ' +
     "AMBIENTES PERMITIDOS EM INSTANTE: loja, balcão, corredor de atendimento, recepção, bastidor, estoque organizado, oficina, clínica, escola, restaurante, área de preparo, área de serviço, mesa de trabalho real, ponto de venda, rua, entrada ou fachada quando fizer sentido — ambiente como bastidor vivo, não cenário montado. " +
@@ -453,7 +500,7 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
   // (promptRules.ts) — propositalmente, só para o mood FRAGMENTO, que tende a
   // recorrer a montagens de escritório genéricas. Ver comentário lá antes de mesclar.
   "OP-04":
-    "FRAGMENTO exige EXATAMENTE 3 a 5 blocos visuais distintos costurados pela mesma paleta de 3 tons máximos. Menos de 3 blocos não é FRAGMENTO — vira CLAREZA ou SILÊNCIO. Mais de 5 blocos vira ruído visual sem ritmo. " +
+    FRAGMENTO_BLOCOS_SENTENCE +
     "OPERAÇÃO CUBISTA OBRIGATÓRIA: cada bloco decompõe o tema do título em um ângulo/faceta distinta — perspectivas simultâneas de um mesmo conceito, não flat lay de catálogo nem grade de fotos de banco de imagens. Os blocos coexistem como se múltiplas câmeras registrassem o mesmo momento de ângulos diferentes. PROIBIDO: kit papelaria genérico (cartões, caneta, clipe, bloco de notas) como conteúdo principal dos fragmentos — os objetos nascem do tema do título e do ofício real. " +
     "FRAGMENTO se aplica a qualquer segmento. Os fragmentos pertencem ao universo real do negócio (objetos do ofício, ambiente, gesto, textura de material). A leituraCenica determina o conteúdo de cada bloco; a direção visual determina COMO os blocos são fotografados e costurados. " +
     "OBJETO CONDICIONAL NESTE MOOD: notebook ou laptop FECHADO, de lado, de costas ou com tela apagada/escura PODE aparecer como UM dos blocos — mas SOMENTE se o ofício real do negócio (definido pela leituraCenica e pelo kit de marca) genuinamente envolve trabalho de escritório, computador ou tela no dia a dia (ex.: consultoria, agência, administrativo, design, programação, atendimento remoto). Em segmentos cujo ofício real é manual, físico, presencial ou de produção (ex.: salão de beleza, gastronomia, oficina, obra, estética, comércio de balcão, saúde, bem-estar), o notebook NÃO PERTENCE ao universo real da cena e NÃO deve ser incluído — nesses casos, o bloco deve trazer um objeto do ofício real, não um item de escritório genérico. Quando aparecer, seguir sempre a regra geral de dispositivos digitais (sem tela visível, sem conteúdo, máximo 1 por cena). " +
@@ -463,7 +510,7 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
   // (objetivoConfig.ts) — propositalmente, só para o mood DESVIO. Ver
   // comentário em CONCEITO_FIRST_RULE antes de mesclar.
   "OP-05":
-    'CÂMERA DESVIO: a variação de ângulo e distância desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir exatamente, sem alterar. Em qualquer variação sorteada, a câmera NUNCA pode estar na altura dos olhos em enquadramento neutro — PROIBIDO câmera frontal neutra em qualquer hipótese, essa é a assinatura inegociável do mood. ' +
+    DESVIO_CAMERA_SENTENCE +
     "PALETA DESVIO — INEGOCIÁVEL: a combinação de cores DEVE ser claramente INCOMUM e imediatamente diferente dos outros moods. Combinações obrigatórias (escolher uma): verde frio com acento magenta; azul-royal profundo com ferrugem oxidada; lilás seco com mostarda; petróleo com coral queimado; vinho escuro com azul elétrico suave. PROIBIDO paleta corporativa azul+cinza, paleta escura+laranja (que é IMPACTO), paleta azul+branco (que é CLAREZA). Se a paleta puder ser confundida com outro mood, refazer. " +
     "AMBIENTE DESVIO — PROIBIÇÃO ABSOLUTA: NUNCA escritório corporativo genérico, sala de reunião padrão ou ambiente de trabalho convencional como cenário principal. O ambiente deve ser incomum, fora do contexto esperado ou ter elemento deslocado que amplifique o estranhamento. Exemplos válidos: área de produção com objeto fora de lugar, espaço externo com ruptura visual, ambiente doméstico com elemento profissional deslocado, galeria, espaço industrial, rua com detalhe simbólico. O ambiente AMPLIFICA o desvio — nunca o neutraliza. " +
     'RUPTURA SIMBÓLICA: usar EXATAMENTE o tipo sorteado no bloco "VARIAÇÕES SORTEADAS". Uma ruptura por cena. PROIBIDO recorrer a clichês visuais de "estratégia/ideia/decisão" (proibições completas na regra CONCEITO-FIRST, acima) — o objeto da ruptura precisa ser derivado do título e do texto desta geração, nunca símbolo genérico de banco de imagens. ' +
@@ -471,9 +518,9 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
   "OP-06":
     'SILÊNCIO — CÂMERA DESTA GERAÇÃO: a câmera está definida no bloco "VARIAÇÕES SORTEADAS" — seguir exatamente a distância e o ângulo. ' +
     "OBJETO DESTA GERAÇÃO — DERIVAR DO OFÍCIO REAL: o objeto ou sujeito isolado nasce da leituraCenica, da atividade real e do tema da peça — um único instrumento, ferramenta, material ou produto que pertença genuinamente ao negócio. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto). PROIBIDO laptop, notebook aberto, smartphone ou qualquer dispositivo digital como elemento principal — esta proibição vale apenas para o objeto isolado que o mood escolhe autonomamente; NUNCA se aplica a um produto de referência selecionado pelo usuário, que sempre aparece normalmente (ver regra de dispositivos digitais no início do prompt). " +
-    "ESPAÇO NEGATIVO OBRIGATÓRIO: o objeto ou fragmento humano deve ocupar NO MÁXIMO 30% da área total da composição. O restante é fundo neutro, vasto e respirado — esse espaço vazio É a mensagem. " +
+    SILENCIO_ESCALA_SENTENCE +
     "POSIÇÃO DO OBJETO — FORA DA ZONA DO TÍTULO: o objeto, produto, equipamento ou fragmento humano pode ocupar qualquer posição da composição — centralizada, à esquerda, em regra dos terços — DESDE QUE não fique sob nem atrás da metade DIREITA do quadro, reservada para o título. Se a variação sorteada abaixo indicar posição centralizada ou que invadiria essa zona, desloque a composição para a esquerda mantendo o mesmo espírito da variação. " +
     "AMBIENTE: pode ser INTERNO ou EXTERNO — campo aberto com horizonte limpo, superfície de água calma, caminho desaparecendo na névoa, arquitetura minimalista ao ar livre são todos válidos e incentivados para quebrar a repetição de mesa+interior. O critério é: fundo vasto, neutro e respirado. " +
-    "Se aparecer pessoa: fragmento parcial APENAS (mão, sombra, nuca, silhueta pequena) — NUNCA rosto inteiro posado, NUNCA corpo completo. " +
+    SILENCIO_PESSOA_SENTENCE +
     "SILÊNCIO se aplica a qualquer segmento. A leituraCenica determina O QUE aparece na cena; a direção visual determina COMO é fotografado.",
 };
