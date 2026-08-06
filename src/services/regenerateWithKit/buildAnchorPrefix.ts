@@ -5,7 +5,10 @@
 // (MOODS_CLAROS, CENARIO_FRAMING_POOL, PRODUTO_DETALHE_POOL).
 import type { MoodCode, Segment } from "../../types";
 import type { PostUnicoReferences } from "../../shared/visual/references";
-import { buildUltimaVerificacaoBlock } from "../../shared/visual/referenceBlocks";
+import {
+  buildUltimaVerificacaoBlock,
+  buildMixContratoBlock,
+} from "../../shared/visual/referenceBlocks";
 import { buildClothingPool } from "../../core/clothingPool";
 import {
   buildProductHierarchyBlock,
@@ -263,6 +266,19 @@ export function buildAnchorPrefix(
   // com cenário + 2 produtos, o modelo às vezes renderiza só 1 produto.
   if (refs.produtos?.length && refs.produtos.length >= 2) {
     lines.push(buildUltimaVerificacaoBlock(refs.produtos.length));
+  }
+  // Contrato do MIX — mesmo bloco do PU (ver referenceBlocks.ts): tudo o que o
+  // usuário selecionou no Kit Imagem tem de aparecer na peça, e esse contrato
+  // vence qualquer pose/enquadramento descrito na leitura de cena que venha
+  // logo abaixo neste mesmo prompt.
+  if (!refs.semPersonagemAtivo && !refs.fato && !refs.venda) {
+    const contrato = buildMixContratoBlock({
+      avatar: !!refs.avatar,
+      fachada: !!refs.fachada,
+      cenario: !!refs.cenario,
+      produtosCount: refs.produtos?.length ?? 0,
+    });
+    if (contrato) lines.push(contrato);
   }
   if (!lines.length) return "";
   return `${lines.join("\n")}\n\n`;

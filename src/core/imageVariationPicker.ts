@@ -3,6 +3,9 @@
 
 import { MoodCode, Segment } from "../types";
 import { detectForcedGenderFromCopy, PersonagemGender } from "./visualDirection";
+// Importado direto de productHierarchy (e não do re-export em visualDirection)
+// para não criar ciclo de import entre este módulo e visualDirection.
+import { variationHasFaceNotDominant } from "./productHierarchy";
 import {
   pickRandom,
   CLAREZA_CAMERA_VARIATIONS,
@@ -87,7 +90,7 @@ export function pickImageVariationBlock(
   const variations = characterMap[mood];
   if (!variations) return "";
 
-  const pool =
+  const poolBase =
     mood === "OP-03" && segment && segment !== "VAREJO"
       ? [
           INSTANTE_CHARACTER_VARIATIONS[2],
@@ -95,6 +98,24 @@ export function pickImageVariationBlock(
           INSTANTE_CHARACTER_VARIATIONS[6],
         ]
       : variations;
+  // Avatar selecionado no Kit Imagem é um CONTRATO, não uma sugestão: o usuário
+  // escolheu um rosto para aparecer na peça. As variações que retiram o rosto da
+  // cena (CLAREZA "DETALHE CONTEXTUAL", IMPACTO "SUJEITO SEM PERSONAGEM
+  // DOMINANTE") mandam o contrário — "o personagem existe pela presença parcial
+  // (mão, braço, silhueta)" — e saem do sorteio quando há avatar. Achado real
+  // 06/08/2026 (PU, Atrevidinha Modas, CLAREZA, VAREJO, mix avatar+cenário+
+  // produto): a 1ª geração sorteou EM PÉ e o avatar apareceu; o "gerar
+  // novamente" sorteou DETALHE CONTEXTUAL e a pessoa sumiu da peça — sem que
+  // nada tivesse mudado na seleção do usuário. hasAvatarRef já chegava aqui,
+  // mas só era usado para suprimir a declaração de gênero.
+  const pool = hasAvatarRef
+    ? (() => {
+        const comRosto = poolBase.filter((v) => !variationHasFaceNotDominant(v));
+        // Fallback defensivo: se algum mood futuro tiver TODAS as variações sem
+        // rosto, é melhor sortear normalmente do que devolver pool vazio.
+        return comRosto.length ? comRosto : poolBase;
+      })()
+    : poolBase;
   const variation = pickRandom(pool);
   const cameraStr = (() => {
     // OP-01: a câmera já é sorteada e escrita na composição pela etapa de

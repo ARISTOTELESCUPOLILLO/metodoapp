@@ -34,6 +34,8 @@ import {
   CLAREZA_DEVICE_WELCOME_SENTENCE,
   CLAREZA_DEVICE_COEXIST_SENTENCE,
   CLAREZA_DEVICE_CLAUSE_SUPPRESSED,
+  CLAREZA_PLANO_MEDIO_SENTENCE,
+  CLAREZA_PLANO_MEDIO_PRODUTO_HERO,
   FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE,
   FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED,
 } from "./visualDirection.lexicon";
@@ -81,13 +83,26 @@ export function detectForcedGenderFromCopy(
   return FEMININE_COPY_RE.test(copyText) ? "mulher" : null;
 }
 
-// Quando noDeviceThisScene é true, a regra global já proibiu qualquer
-// dispositivo digital nesta peça — substitui as sentenças de CLAREZA/FRAGMENTO
-// que dão boas-vindas ou permitem dispositivo condicionalmente, evitando que
-// a gramática do mood contradiga a regra global no mesmo prompt.
-function resolveMoodRuleText(mood: MoodCode, noDeviceThisScene: boolean): string | undefined {
-  const base = MOOD_RULES[mood];
-  if (!base || !noDeviceThisScene) return base;
+// Reconcilia a gramática do mood com o que já foi decidido em outros pontos do
+// MESMO prompt, substituindo sentenças pontuais em vez de acumular proibições:
+//  · noDeviceThisScene — a regra global já baniu dispositivo digital nesta peça,
+//    então as sentenças de CLAREZA/FRAGMENTO que os recebem bem saem de cena;
+//  · produtoHero — há produto referenciado que deve ocupar 30-40% do quadro, e a
+//    trava de plano médio do CLAREZA impediria a câmera de chegar perto dele.
+function resolveMoodRuleText(
+  mood: MoodCode,
+  noDeviceThisScene: boolean,
+  produtoHero?: boolean,
+): string | undefined {
+  let base = MOOD_RULES[mood];
+  if (!base) return base;
+  // Produto-herói (VAREJO com produto referenciado): solta a trava de plano
+  // médio do CLAREZA, que impedia a câmera de aproximar do produto — ver
+  // CLAREZA_PLANO_MEDIO_PRODUTO_HERO no léxico.
+  if (mood === "OP-01" && produtoHero) {
+    base = base.replace(CLAREZA_PLANO_MEDIO_SENTENCE, CLAREZA_PLANO_MEDIO_PRODUTO_HERO);
+  }
+  if (!noDeviceThisScene) return base;
   if (mood === "OP-01") {
     return base
       .replace(CLAREZA_DEVICE_WELCOME_SENTENCE, CLAREZA_DEVICE_CLAUSE_SUPPRESSED)
@@ -157,7 +172,14 @@ export function buildSceneRoleRule(opts?: { includeConcreteAction?: boolean }): 
 // VISUAL_DIRECTIONS e MOOD_RULES: evita duas descrições do mesmo mood divergindo.
 export function buildMoodGrammarBlock(
   mood: MoodCode,
-  opts?: { noDeviceThisScene?: boolean; tonalidadeSeed?: number; accentHex?: string },
+  opts?: {
+    noDeviceThisScene?: boolean;
+    tonalidadeSeed?: number;
+    accentHex?: string;
+    /** VAREJO com produto referenciado: o produto é o herói do quadro e a
+     * câmera precisa poder aproximar dele (ver resolveMoodRuleText). */
+    produtoHero?: boolean;
+  },
 ): string {
   const v = getVisualDirection(mood);
   // SILÊNCIO (OP-06): rodízio determinístico de tonalidade (ver
@@ -167,7 +189,7 @@ export function buildMoodGrammarBlock(
     mood === "OP-06"
       ? pickTonalidade(SILENCIO_TONALIDADES, opts?.tonalidadeSeed ?? 0, opts?.accentHex).bloco
       : v.paleta;
-  const ruleText = resolveMoodRuleText(mood, !!opts?.noDeviceThisScene);
+  const ruleText = resolveMoodRuleText(mood, !!opts?.noDeviceThisScene, !!opts?.produtoHero);
   const ruleBlock = ruleText ? `\n\nREGRA INEGOCIÁVEL DO MOOD ${v.nome}:\n${ruleText}` : "";
   return `TENSÃO VISUAL CANÔNICA (técnicas Dondis, vocabulário inegociável): ${v.tensaoDondis}.\n\nGRAMÁTICA VISUAL DO MOOD ${v.nome}:\n- Luz: ${v.luz}\n- Paleta: ${paleta}\n- Composição: ${v.composicao}\n- Atitude da câmera: ${v.camera}\n- Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${ruleBlock}`;
 }

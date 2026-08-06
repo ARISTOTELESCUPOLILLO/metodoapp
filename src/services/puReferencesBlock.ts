@@ -8,8 +8,12 @@ import {
   buildPersonagemMoodReconciliation,
 } from "../core/visualDirection";
 import { buildClothingPool } from "../core/clothingPool";
+import { isApparelActivity } from "../utils/promptRules";
 import type { PostUnicoReferences } from "../shared/visual/references";
-import { buildUltimaVerificacaoBlock } from "../shared/visual/referenceBlocks";
+import {
+  buildUltimaVerificacaoBlock,
+  buildMixContratoBlock,
+} from "../shared/visual/referenceBlocks";
 
 function segmentRules(segment?: string, hasCenarioRef?: boolean, semPersonagem?: boolean): string {
   if (segment === "VAREJO") {
@@ -54,6 +58,14 @@ export function referencesBlock(
   // Peça sem personagem — lido direto das refs (não é parâmetro novo: o flag
   // já viaja em PostUnicoReferences). Ver core/semPersonagem.ts.
   const semPersonagem = !!refs.semPersonagemAtivo;
+  // Produto referenciado é peça de vestuário (loja de moda/calçados): decisão de
+  // produto do Ari em 06/08/2026 — a peça fica EXPOSTA na cena (cabide, arara,
+  // manequim, dobrada, apresentada nas mãos) e o avatar continua com figurino
+  // neutro. Vestir o personagem com o produto daria mais integração, mas custa
+  // fidelidade: a IA reinterpreta cor, corte e estampa quando a peça vai para o
+  // corpo, e o cliente precisa reconhecer a camiseta que está à venda.
+  const produtoEhVestuario =
+    !!(refs.produtos && refs.produtos.length) && isApparelActivity(mainActivity);
   const parts: string[] = [];
   const elementos: string[] = [];
   if (refs.avatar) elementos.push("AVATAR");
@@ -77,11 +89,19 @@ export function referencesBlock(
       : kitColors
         ? (() => {
             const pool = buildClothingPool(kitColors.primary, kitColors.accent);
-            return ` VESTUÁRIO: ${pool[Math.floor(Math.random() * pool.length)]}`;
+            const cor = pool[Math.floor(Math.random() * pool.length)];
+            // Em loja de moda o produto referenciado É uma peça de roupa, e a
+            // cor sorteada aqui passa a competir com ele: sem esta ressalva, o
+            // modelo veste o personagem com a cor sorteada e entende que a peça
+            // real já "foi usada", jogando o produto para o fundo (ver
+            // isApparelActivity em promptRules.ts).
+            return produtoEhVestuario
+              ? ` VESTUÁRIO DO AVATAR: ${cor} Esta cor é do FIGURINO da pessoa, NUNCA do produto referenciado: o produto é uma peça de vestuário exposta separadamente na cena (ver regra própria abaixo) e NÃO deve ser vestida pelo personagem nem ter sua cor/estampa alterada para a cor deste figurino. Escolha um figurino visivelmente diferente do produto, para que os dois não se confundam.`
+              : ` VESTUÁRIO: ${cor}`;
           })()
         : "";
     parts.push(
-      `AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, de costas parcial, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro, três-quartos, OU peça sem rosto visível (mãos trabalhando, detalhe de gesto, ambiente com presença implícita). Escolha a combinação que melhor serve à mensagem desta peça específica.`,
+      `AVATAR: a primeira imagem de referência é o avatar. Use como personagem da peça mantendo semelhança visual (rosto, perfil físico, faixa etária, gênero, expressão e características predominantes). Adapte postura e linguagem corporal ao contexto da atividade da empresa e ao mood. Aparência publicitária e realista — sem caricatura, sem distorção facial, sem clonagem exata da foto original.${clothingHint} REPERTÓRIO DE POSE/ENQUADRAMENTO (escolha conscientemente — NÃO caia automaticamente em "sentado à mesa com notebook olhando para a câmera"): pode estar em pé, andando, de perfil, em três-quartos, em meio gesto, em conversa com alguém fora de quadro, com material/produto em mãos, encostado em parede, em ambiente externo. NÃO é obrigatório olhar para a câmera. NÃO é obrigatório estar atrás de mesa com notebook. Enquadramento pode variar: close de rosto, meio corpo, corpo inteiro ou três-quartos — mas o ROSTO SEMPRE APARECE: a foto de avatar foi enviada justamente para que esta pessoa seja reconhecida na peça. PROIBIDO resolver o enquadramento sem rosto visível (só mãos trabalhando, só detalhe de gesto, silhueta, pessoa de costas ou "presença implícita" no ambiente). Escolha a combinação que melhor serve à mensagem desta peça específica, entre as que mostram o rosto.`,
     );
     // Reconciliação personagem × mood — entra DENTRO do bloco de referência,
     // que é o de PRIORIDADE MÁXIMA no prompt. Colocada fora dele, perderia para
@@ -220,6 +240,15 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
     parts.push(
       `PRODUTOS SELECIONADOS (${lista}): elementos principais da composição. Preservar embalagem, formato, cores principais e características físicas. Apresentar de forma integrada à cena, evitando aparência de catálogo técnico ou montagem artificial.${telaClause}`,
     );
+    if (produtoEhVestuario) {
+      const plural = refs.produtos.length > 1;
+      parts.push(
+        `PRODUTO DE VESTUÁRIO — EXPOSTO, NÃO VESTIDO: ${plural ? "os produtos referenciados são peças de vestuário/calçado" : "o produto referenciado é uma peça de vestuário/calçado"} — ${plural ? "eles aparecem" : "ele aparece"} na cena de forma EXPOSTA e inteiramente ${plural ? "visíveis" : "visível"}: em cabide ou arara, sobre manequim/busto, ${plural ? "dobrados" : "dobrado"} sobre superfície, ou ${plural ? "apresentados" : "apresentado"} nas mãos do personagem — de frente para a câmera, com a frente da peça, a cor real, a estampa e o caimento reconhecíveis. ` +
+          `PROIBIDO vestir o personagem com ${plural ? "os produtos referenciados" : "o produto referenciado"}: quando a peça vai para o corpo em uso, a forma e a estampa deixam de ser fielmente reproduzíveis e o cliente não reconhece o que está à venda. O personagem usa o próprio figurino, visivelmente diferente ${plural ? "das peças expostas" : "da peça exposta"}. ` +
+          `PROIBIDO TAMBÉM: ${plural ? "peças amassadas, penduradas de costas, vistas de lado" : "peça amassada, pendurada de costas, vista de lado"}, ${plural ? "cortadas" : "cortada"} pela borda do quadro, ou ${plural ? "misturadas" : "misturada"} a outras roupas do cenário a ponto de não se distinguir qual é ${plural ? "as peças anunciadas" : "a peça anunciada"}. ` +
+          `NEGATIVE: product worn by the model, garment on the person's body, referenced garment used as the character's outfit, crumpled garment, garment shown from the back, garment blending into background clothes.`,
+      );
+    }
     parts.push(
       buildProductHierarchyBlock({
         produtosCount: refs.produtos.length,
@@ -265,6 +294,20 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
   // de imagem tendem a dar mais peso à instrução mais recente em prompts longos.
   if (refs.produtos && refs.produtos.length >= 2) {
     parts.push(buildUltimaVerificacaoBlock(refs.produtos.length));
+  }
+  // Contrato do MIX — fecha o bloco de referências (o de PRIORIDADE MÁXIMA no
+  // prompt) exigindo a presença simultânea de tudo o que o usuário selecionou.
+  // Não entra quando a peça é sem personagem (o avatar não existe) nem nos
+  // objetivos Fato/Venda, onde a foto documental É a cena inteira e o contrato
+  // de "todos os elementos" não se aplica.
+  if (!semPersonagem && !refs.fato && !refs.venda) {
+    const contrato = buildMixContratoBlock({
+      avatar: !!refs.avatar,
+      fachada: !!refs.fachada,
+      cenario: !!refs.cenario,
+      produtosCount: refs.produtos?.length ?? 0,
+    });
+    if (contrato) parts.push(contrato);
   }
   return parts.join("\n\n");
 }

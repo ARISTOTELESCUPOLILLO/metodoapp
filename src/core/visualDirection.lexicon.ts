@@ -405,6 +405,20 @@ export const FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE =
 export const FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED =
   "OBJETO CONDICIONAL NESTE MOOD — SUSPENSO NESTA PEÇA: há um produto físico referenciado (ou o ofício real não passa por tela) que já é o elemento concreto e o foco da composição — ver regra de dispositivos digitais no início deste prompt. Por isso NENHUM bloco desta peça inclui notebook, laptop ou qualquer dispositivo digital, mesmo que FRAGMENTO normalmente permita um bloco condicional de escritório. ";
 
+// Trecho do MOOD_RULES["OP-01"] que trava o enquadramento no corpo da pessoa
+// (cintura ao topo da cabeça). Quando existe produto referenciado com regra de
+// protagonismo (VAREJO), essa trava impede a câmera de chegar perto do produto:
+// para caber a pessoa inteira da cintura para cima, o produto fica pequeno e
+// distante — o oposto dos "30-40% do quadro" exigidos pela hierarquia de
+// produto no mesmo prompt (achado real 06/08/2026, PU Atrevidinha Modas).
+// Extraído como constante para poder ser substituído em resolveMoodRuleText,
+// no mesmo padrão já usado para as sentenças de dispositivo acima.
+export const CLAREZA_PLANO_MEDIO_SENTENCE =
+  "PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO: nas variações EM PÉ e SENTADO, o enquadramento vai da cintura ou quadril ao TOPO DA CABEÇA. Rosto e cabeça devem estar INTEIRAMENTE dentro do quadro. PROIBIDO cortar no pescoço, queixo, testa ou qualquer ponto acima dos ombros. A variação DETALHE CONTEXTUAL é a única exceção permitida (mãos/fragmento sem rosto). ";
+
+export const CLAREZA_PLANO_MEDIO_PRODUTO_HERO =
+  "ENQUADRAMENTO EM CLAREZA COM PRODUTO-HERÓI — REGRA DESTA PEÇA: existe produto referenciado que deve ocupar 30-40% do quadro (ver REGRA DE PROTAGONISMO DO PRODUTO). Por isso o enquadramento NÃO fica preso ao plano médio da pessoa: a câmera pode aproximar do produto, e a pessoa pode aparecer em plano americano, três-quartos, de corpo inteiro, mais recuada ou ocupando uma faixa lateral do quadro — o que for preciso para o produto crescer. O que permanece INEGOCIÁVEL é que o ROSTO e a CABEÇA da pessoa apareçam INTEIRAMENTE dentro do quadro, nunca cortados no pescoço, queixo, testa ou em qualquer ponto acima dos ombros: aproximar do produto JAMAIS significa decapitar ou cortar fora do quadro a pessoa. Se produto grande e rosto inteiro não couberem no mesmo enquadramento, recue a câmera e componha os dois lado a lado — nunca sacrifique nenhum dos dois. ";
+
 // Regras inegociáveis específicas por mood — corrigem desvios observados em
 // geração real e expandem aplicação para múltiplos segmentos. Fonte canônica
 // única da gramática de cada mood: tanto o motor MOP (buildVisualDirectionBlock)
@@ -416,7 +430,7 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     "DISPOSITIVOS EM CLAREZA — REGRA DO SÉCULO DIGITAL: notebook, laptop e tablet SÃO BEM-VINDOS e representam trabalho real. PROIBIDO APENAS: mostrar imagem, conteúdo, interface ou qualquer elemento visual NA TELA FRONTAL, NA TAMPA ou NA CARCAÇA do dispositivo — tela deve estar neutra/escura ou com brilho difuso sem conteúdo legível; tampa e carcaça lisas. O dispositivo pode estar em qualquer ângulo (aberto sobre a mesa em plongée, lateral, em mãos, de lado) — a restrição é o CONTEÚDO visível, não a posição nem o ângulo. NEGATIVE: image on laptop screen, visible screen content, image on laptop lid or casing. " +
     "VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. " +
     "MATERIAL DE TRABALHO EM CLAREZA — REGRA DO SÉCULO DIGITAL: estamos no século da internet — papel ou documento físico NUNCA pode ser o ÚNICO elemento de trabalho visível na cena. Quando houver material físico (folhas, documentos, cartões organizados), DEVE coexistir com pelo menos 1 dispositivo digital presente na cena (notebook aberto lateralmente sobre a mesa, tablet em stand, celular ao lado). Cor abstrata, ícone ou imagem decorativa no lugar de objetos reais são igualmente inadequados — a cena deve ter objetos reconhecíveis do ofício real, não elementos gráficos flutuantes. " +
-    "PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO: nas variações EM PÉ e SENTADO, o enquadramento vai da cintura ou quadril ao TOPO DA CABEÇA. Rosto e cabeça devem estar INTEIRAMENTE dentro do quadro. PROIBIDO cortar no pescoço, queixo, testa ou qualquer ponto acima dos ombros. A variação DETALHE CONTEXTUAL é a única exceção permitida (mãos/fragmento sem rosto). " +
+    CLAREZA_PLANO_MEDIO_SENTENCE +
     'A variação de câmera e posição desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
     "CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.",
   "OP-02":

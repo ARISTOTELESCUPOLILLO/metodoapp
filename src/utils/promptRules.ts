@@ -136,6 +136,42 @@ export function isNonDigitalActivity(mainActivity?: string): boolean {
   return NON_DIGITAL_ACTIVITY_KEYWORDS.some((kw) => normalized.includes(kw));
 }
 
+// Negócios cujo PRODUTO é, ele mesmo, vestuário/calçado — moda, boutique,
+// confecção, loja de roupas, sapataria. Nesses casos o produto referenciado
+// entra em rota de colisão com o figurino do avatar: o prompt sorteia uma cor
+// neutra de roupa para o personagem (buildClothingPool) e, no parágrafo
+// seguinte, exige que o produto — uma camiseta — seja o herói do quadro. A IA
+// resolve o conflito vestindo a cor sorteada e jogando a peça real para o
+// fundo (achado real 06/08/2026, PU Atrevidinha Modas: "VESTUÁRIO: Roupa
+// preta" + camiseta Colcci como produto-herói).
+// Regex (e não `includes` como a lista acima) porque os termos curtos deste
+// campo são ambíguos por dentro de outras palavras: "moda" aparece em
+// "modalidade" e "acomodação"; "tenis" em "tenista". A âncora \b evita esses
+// falsos positivos.
+const APPAREL_ACTIVITY_PATTERNS: RegExp[] = [
+  /\bmodas?\b/, // "moda feminina", "Atrevidinha Modas"
+  /\broupas?\b/,
+  /\bvestuari/,
+  /\bconfec[cs]/, // confecção, confecções
+  /\bboutique/,
+  /\bmalhari/,
+  /\bcamisari/,
+  /\bjeans\b/,
+  /\blingerie/,
+  /\bcalcad/, // calçados
+  /\bsapat/, // sapataria, sapatos
+  /\btenis\b/,
+  /\bbrecho/,
+  /\bfashion/,
+  /\benxoval/,
+];
+
+export function isApparelActivity(mainActivity?: string): boolean {
+  if (!mainActivity) return false;
+  const normalized = mainActivity.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return APPAREL_ACTIVITY_PATTERNS.some((re) => re.test(normalized));
+}
+
 export function buildNoDeviceRule(): string {
   return `⚠ DISPOSITIVOS DIGITAIS — PROIBIDOS NESTA CENA: o ofício real da empresa/profissional é manual, físico ou artístico e NÃO passa por tela. PROIBIDO incluir notebook, laptop, tablet, celular, monitor, computador ou qualquer dispositivo digital na composição, mesmo como elemento de apoio. A cena mostra o trabalho real com as mãos, ferramentas, materiais ou instrumentos do próprio ofício.
 NEGATIVE: laptop, notebook, tablet, smartphone, computer monitor, desktop computer, screen, digital device, phone in hand.`;
