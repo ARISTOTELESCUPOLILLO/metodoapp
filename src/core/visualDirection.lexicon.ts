@@ -80,7 +80,7 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     composicao:
       "composição assimétrica capturada, sem pose, enquadramento de bastidor, elementos cotidianos no quadro, sensação de flagrante",
     camera:
-      "câmera 35mm levemente alta, distância natural, leve grão filme, autofoco em movimento, textura visível",
+      'câmera 35mm com leve grão de filme, autofoco em movimento, textura visível — altura e distância exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS")',
     detalheCriativo:
       "um detalhe de bastidor verdadeiro deixado em cena (xícara desfocada em primeiro plano, mão cortada pela borda, anotação manuscrita parcial, fio de cabelo solto, lens flare orgânico) que comprova captura real",
     assinatura:
@@ -281,12 +281,67 @@ export const INSTANTE_CHARACTER_VARIATIONS: string[] = [
   "PAUSA REAL NO MEIO DA TAREFA, plano próximo ou médio: pessoa interrompida por algo fora de quadro — vira a cabeça ao ouvir um som, pausa segurando um objeto a meio gesto, olha de relance para o lado, suspende um movimento por um instante. Expressão de interrupção genuína e breve, não de pose para retrato. AMBIENTE: balcão, mesa de trabalho, prateleira, vitrine, bancada — qualquer ponto do cotidiano real do negócio onde a pausa faça sentido.",
   'PAUSA SENTADA NO MEIO DA REVISÃO, plano próximo ou médio: pessoa sentada à mesa, bancada, estação de trabalho ou balcão, momentaneamente interrompida enquanto revisa, organiza ou confere algo — pausa breve e genuína, corpo relaxado mas atento, olhar desviado para algo fora de quadro. Sem pose de retrato corporativo. PROIBIDO papel, caderno, bloco de notas, documento, caneta, celular, tablet ou notebook como elemento obrigatório — o gesto e o ambiente pertencem ao ofício real do negócio, não à representação genérica de "quem escreve ou anota". AMBIENTE: mesa de trabalho, sala compartilhada, balcão de atendimento ou estação real do ofício — qualquer lugar onde sentar para revisar faça sentido no cotidiano do negócio.',
   "DIREÇÃO OU ALINHAMENTO EM PÉ, plano médio ou aberto: pessoa (ou duas) flagrada num momento de orientação ou decisão em pé — diante de mural com referências afixadas, quadro branco com anotações, parede com provas de arte ou impressões organizadas, OU conduzindo/apresentando algo a um interlocutor presente. Gesto de apontar, comparar, afixar ou explicar, capturado no meio da ação, sem pose. Olhar nunca para câmera. APLICAR PREFERENCIALMENTE quando o negócio é consultivo, criativo, de marketing, comunicação ou agência, sem ofício físico nem ponto de venda. PROIBIDO: dispositivo digital com tela visível, executivo de blazer posado, gesto teatral de apresentação publicitária — o material é físico (impresso, post-it, recorte, prova de arte), a parede ou mural é o ambiente. AMBIENTE: parede de referências, sala de criação, mural, espaço de agência real com material visível — vivo, não cenográfico.",
+  // Índice 8 — acrescentada em 11/08/2026 no FIM do array de propósito: o pool
+  // reduzido de SERVIÇOS/MARCA seleciona por índice ([2], [5], [6]), então
+  // inserir no meio trocaria silenciosamente qual pose cada índice aponta.
+  // Preenche a lacuna relacional do pool reduzido: das 3 opções que
+  // SERVIÇOS/MARCA tinham, nenhuma garantia dois sujeitos em cena, enquanto o
+  // TEMA_DERIVATION_RULE exige que a cena não negue um título relacional.
+  "CONVERSA DE TRABALHO A DOIS, plano médio ou aberto: duas pessoas numa troca real de orientação, alinhamento ou explicação — de pé, ou apoiadas em superfície alta (peitoril, bancada, aparador, quina de mesa), NUNCA as duas sentadas frente a frente numa mesa de reunião. Uma conduz a conversa com gesto pequeno e a outra escuta e reage; a troca está no meio, não no começo nem no fim. Olhar entre as duas, nunca para a câmera. APLICAR quando o título ou o texto for relacional (menciona cliente, equipe, interação, escuta, orientação ou decisão conjunta) — a cena precisa ter dois sujeitos para não negar o que a peça diz. PROIBIDO aperto de mãos, sorriso institucional para a câmera, crachá, e material físico obrigatório nas mãos — a conversa se sustenta sozinha. AMBIENTE: qualquer ponto do espaço real de trabalho onde duas pessoas parariam para conversar — corredor, copa, canto de sala, junto a uma parede de referências, recepção.",
 ];
 
 // Variação de câmera sorteada exclusivamente para CLAREZA (frontal vs. lateral).
 export const CLAREZA_CAMERA_VARIATIONS: string[] = [
   "CÂMERA FRONTAL: lente 50mm, plano médio ou americano, ponto de vista na altura dos olhos — personagem enquadrado da cintura ou quadril ao TOPO DA CABEÇA (rosto e cabeça INTEIRAMENTE dentro do quadro — NUNCA cortar no pescoço, queixo ou testa), composição simétrica e respirada",
   "CÂMERA LATERAL 3/4: lente 50mm, plano médio ou americano, ponto de vista na altura dos olhos — personagem da cintura ou quadril ao TOPO DA CABEÇA (rosto e cabeça INTEIRAMENTE dentro do quadro — NUNCA cortar no pescoço, queixo ou testa), levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional",
+];
+
+// Pool reduzido de INSTANTE para MARCA e SERVIÇOS — segmentos sem ponto de
+// venda físico. As variações 0, 1, 3 e 4 carregam léxico de PDV/loja/prateleira
+// que vazava para títulos e cenas mesmo com guardas textuais, então ficam de
+// fora. VAREJO continua usando o pool completo.
+//
+// Centralizado aqui em 11/08/2026: os mesmos índices estavam escritos à mão em
+// visualDirection.ts E em imageVariationPicker.ts, e qualquer inserção no meio
+// do array trocaria silenciosamente a pose de um dos lados sem erro de
+// compilação. Agora há uma definição só.
+export const INSTANTE_POOL_SEM_PDV: string[] = [
+  INSTANTE_CHARACTER_VARIATIONS[2], // reação espontânea em transição
+  INSTANTE_CHARACTER_VARIATIONS[5], // pausa sentada na revisão
+  INSTANTE_CHARACTER_VARIATIONS[6], // direção/alinhamento em pé
+  INSTANTE_CHARACTER_VARIATIONS[8], // conversa de trabalho a dois
+];
+
+// Variação de câmera sorteada para INSTANTE. Até 11/08/2026 a câmera deste mood
+// era UMA string fixa ("35mm levemente alta, distância natural, grão sutil") —
+// sem sorteio nenhum. Combinada com o corte de pool em SERVIÇOS/MARCA (ver
+// INSTANTE_CHARACTER_VARIATIONS), isso deixava o INSTANTE de uma empresa de
+// serviço com 3 resultados possíveis no total, e o enquadramento era sempre o
+// mesmo. Todas as variações mantêm 35mm e o grão sutil de propósito: a
+// `assinatura` do mood, anexada ao fim de cada imagePrompt, declara "lente 35mm
+// com grão sutil" — variar a lente aqui contradiria o fecho do próprio prompt.
+// O que varia é ALTURA e DISTÂNCIA, que é o que estava travado.
+export const INSTANTE_CAMERA_VARIATIONS: string[] = [
+  "35mm levemente alta, distância natural, grão sutil — ponto de vista de quem passa pelo local e registra sem preparar a cena",
+  "35mm na altura dos olhos, distância curta — enquadramento próximo, ombro e rosto ocupando boa parte do quadro, grão sutil, sensação de estar dentro da conversa",
+  "35mm levemente baixa, distância natural — câmera um pouco abaixo da linha dos olhos, como quem registra sentado enquanto a ação acontece em pé, grão sutil",
+  "35mm afastada, plano aberto — a pessoa ocupa parte menor do quadro e o ambiente de trabalho entra inteiro ao redor dela, grão sutil, flagrante visto de longe",
+  "35mm na altura do peito, distância média com leve desvio lateral — enquadramento imperfeito de quem levantou a câmera sem mirar direito, grão sutil",
+];
+
+// FRAGMENTO: até 11/08/2026 este mood não entrava em NENHUM sorteio — nem
+// personagem, nem câmera —, então a grade dos 3-5 blocos saía sempre com o
+// mesmo arranjo e o mesmo ponto de vista. Sorteia-se aqui o ARRANJO da grade e
+// o ponto de vista dominante, que é o que o olho lê como "outra peça". O
+// conteúdo de cada bloco continua vindo do tema e do ofício real (MOOD_RULES).
+// Todas as opções respeitam as duas leis do mood: 3 a 5 blocos
+// (FRAGMENTO_BLOCOS_SENTENCE) e nenhum bloco encostando nas bordas do canvas.
+export const FRAGMENTO_GRID_VARIATIONS: string[] = [
+  "GRADE DE 3 BLOCOS ASSIMÉTRICA: um bloco dominante ocupando cerca de metade do quadro e 2 blocos menores empilhados ao lado. O bloco dominante traz o plano mais aberto (ambiente ou ação); os menores, detalhe e textura. Ponto de vista alternando frontal direto no maior e macro nos menores.",
+  "GRADE DE 4 BLOCOS EM QUADRANTES: quatro blocos de área semelhante, com uma linha divisória visível ou implícita cruzando o quadro. Cada quadrante em uma distância diferente — um macro, um detalhe próximo, um plano médio, um de ambiente —, mantendo a mesma luz neutra uniforme entre eles.",
+  "GRADE DE 5 BLOCOS EM RITMO EDITORIAL: uma faixa horizontal larga no topo, com o plano mais aberto, e 4 blocos menores em fileira abaixo, com detalhes e materiais. Ponto de vista predominante zenital nos blocos pequenos, criando ritmo de catálogo de estúdio.",
+  "TRÍPTICO VERTICAL: 3 blocos verticais de larguras diferentes, lado a lado, como colunas de página de revista. O bloco mais largo carrega a cena principal em plano médio; os estreitos, recortes verticais de textura, material ou fragmento de gesto. Ponto de vista frontal direto nos três.",
+  "MOSAICO COM BLOCO CENTRAL: um bloco central menor e destacado, cercado por 3 ou 4 blocos periféricos maiores. O centro traz o detalhe macro mais específico do ofício; a periferia, ambiente e contexto em plano médio. Ponto de vista misto, com o centro em macro frontal e a periferia em ângulos variados.",
 ];
 
 // Variação de câmera sorteada para IMPACTO (contra-plongée vs. 3/4 dinâmico).
@@ -328,6 +383,21 @@ export const IMPACTO_CHARACTER_VARIATIONS: string[] = [
 // SILÊNCIO: sorteia o tipo de sujeito/objeto isolado no espaço negativo.
 // PROIBIDO: laptop ou notebook aberto como objeto principal, rosto inteiro posado,
 // dispositivos digitais com tela visível, cenas com múltiplos elementos.
+//
+// ⚠️ Esta lista ficou DECLARADA E NUNCA IMPORTADA desde que foi escrita: o
+// SILÊNCIO sorteava só a câmera e deixava o objeto por conta do modelo, que
+// converge sempre para os mesmos dois ou três. Ligada em 11/08/2026.
+//
+// Três variações foram retiradas na religação por contradizerem, dentro do
+// MESMO prompt, a regra vigente de MOOD_RULES["OP-06"] — "PROIBIDO objeto
+// genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos
+// soltos, caneta sem contexto)" —, a mesma proibição repetida em
+// ESTRUTURA_SEM_PERSONAGEM["OP-06"] (semPersonagem.ts). Eram: livro/material de
+// leitura em repouso, óculos ou objeto pessoal sobre superfície, e equipamento
+// analógico atemporal (toca-discos, rádio antigo). Prompt que manda e proíbe a
+// mesma coisa deixa o modelo escolher um dos lados — é a classe de bug que fez
+// o avatar sumir em 06/08. Religá-las exige antes decidir se a regra do mood
+// abre exceção para objeto atemporal fora do ofício: é decisão de produto.
 export const SILENCIO_OBJECT_VARIATIONS: string[] = [
   "OBJETO DO OFÍCIO ISOLADO, plano próximo: um único instrumento, ferramenta, material ou peça representativa do ofício REAL da empresa — definido pela leituraCenica e pelo kit de marca, nunca um item de outro ofício ou segmento (não inventar tesoura, pincel ou ferramenta de ofício alheio ao negócio descrito). Pode ser embalagem única centralizada, frasco de produto, peça de papelaria, objeto de papelaria de marca ou ferramenta manual coerente com a atividade real. Sem tecnologia, sem laptop, sem notebook. Vasto espaço negativo ao redor. Luz de janela natural, sombra suave e curta.",
   "FRAGMENTO HUMANO COM OBJETO, plano próximo: mão ou fragmento de braço tocando delicadamente um objeto do ofício real da empresa — mão aberta sobre superfície, ponta do dedo próxima a produto, palma em material de trabalho, dedos segurando objeto simples e coerente com o negócio. Sem rosto, sem corpo completo. Vasto espaço negativo acima e ao redor. Composição centralizada. Luz alta-chave suave de janela lateral.",
@@ -335,9 +405,6 @@ export const SILENCIO_OBJECT_VARIATIONS: string[] = [
   "SILHUETA OU NUCA CONTEMPLATIVA, plano médio: personagem de costas ou de perfil extremo, ocupando menos de 25% da área total da imagem — o espaço vazio é o protagonista. Pessoa pequena diante de janela grande, parede ampla ou fundo neutro. Sem gesto significativo, sem ação — apenas presença silenciosa. Luz traseira ou lateral de janela. Sem rosto visível.",
   "DETALHE MÍNIMO EM MACRO, plano muito próximo: textura ou detalhe de material, produto ou ambiente do negócio — grão de café, fibra de tecido, superfície de embalagem, detalhe de ferramenta, textura de material de trabalho. Sem rosto, sem texto, sem logo. Fundo desfocado em paleta suave. A beleza está no detalhe ampliado. Composição centralizada ou em regra dos terços.",
   "QUADRO OU MOLDURA NA PAREDE, plano médio ou aberto: uma única peça emoldurada — quadro, fotografia, certificado, ilustração simples — pendurada em parede neutra e ampla, ocupando proporção pequena da composição e cercada de vasto espaço de parede vazia. Pode haver fragmento humano discreto por perto (mão, ombro, nuca), fora de foco ou de costas — nunca rosto em destaque. Sem texto legível na peça emoldurada. Luz lateral suave de janela revelando a textura da parede. Composição assimétrica e respirada — o quadro humaniza o ambiente sem se tornar o centro literal da mensagem.",
-  "LIVRO OU MATERIAL DE LEITURA EM REPOUSO, plano próximo: um único livro fechado, caderno encadernado ou material de leitura pousado sobre mesa, banco ou prateleira — capa simples e neutra, sem texto legível em destaque, sem pilha excessiva. Pode estar ao lado de um objeto pessoal mínimo (xícara, óculos), desde que o conjunto permaneça enxuto. Vasto espaço negativo ao redor. Luz difusa de janela, sombra suave e curta. Sem presença humana — o objeto sugere a pausa de alguém que esteve ali.",
-  "ÓCULOS OU OBJETO PESSOAL DELICADO SOBRE SUPERFÍCIE, plano próximo ou macro: um par de óculos, um relógio de pulso ou uma caneta pousados sozinhos sobre mesa, livro ou tecido — a presença humana é sugerida pelo objeto pessoal, nunca por uma pessoa em quadro. Composição centralizada ou em regra dos terços, fundo desfocado em paleta suave, luz alta-chave lateral. Um único objeto — nunca uma composição de vários itens pessoais espalhados.",
-  "EQUIPAMENTO ANALÓGICO ATEMPORAL, plano próximo ou médio: um único equipamento não digital de caráter atemporal — câmera fotográfica analógica, rádio antigo, toca-discos, luminária de mesa clássica, relógio de parede, instrumento musical — pousado em repouso, desligado, sem tela e sem indicador luminoso. Comprova humanidade e história sem recorrer a tecnologia digital ou dispositivos com tela. Vasto espaço negativo ao redor, luz suave lateral de janela, sombra curta e natural.",
 ];
 
 // Variação de câmera sorteada exclusivamente para SILÊNCIO — extraída dos

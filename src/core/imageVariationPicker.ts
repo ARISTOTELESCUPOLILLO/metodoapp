@@ -12,10 +12,14 @@ import {
   CLAREZA_CHARACTER_VARIATIONS,
   IMPACTO_CAMERA_VARIATIONS,
   IMPACTO_CHARACTER_VARIATIONS,
+  INSTANTE_CAMERA_VARIATIONS,
   INSTANTE_CHARACTER_VARIATIONS,
+  INSTANTE_POOL_SEM_PDV,
+  FRAGMENTO_GRID_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
   SILENCIO_CAMERA_VARIATIONS,
+  SILENCIO_OBJECT_VARIATIONS,
   PERSONAGEM_GENDER_VARIATIONS,
 } from "./visualDirection.lexicon";
 
@@ -78,7 +82,23 @@ export function pickImageVariationBlock(
     // foram decididos pela etapa de conteúdo quando composicao existe.
     if (composicao) return "";
     const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
+    // O tipo de sujeito isolado passou a ser sorteado em 11/08/2026. Antes só a
+    // câmera variava e o objeto ficava por conta do modelo, que convergia
+    // sempre para os mesmos poucos — com o agravante de a câmera mudar em volta
+    // do mesmo objeto, o que lê como a mesma peça refotografada.
+    const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
+    return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. Sujeito isolado desta geração: ${objeto} O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
+  }
+
+  if (mood === "OP-04") {
+    // FRAGMENTO não entrava em nenhum sorteio até 11/08/2026: a grade dos 3-5
+    // blocos saía sempre com o mesmo arranjo e o mesmo ponto de vista. Mesma
+    // supressão dos outros moods — se a etapa de conteúdo já escreveu a
+    // composição, sortear outra grade aqui produziria duas grades diferentes no
+    // mesmo prompt.
+    if (composicao) return "";
+    const grade = pickRandom(FRAGMENTO_GRID_VARIATIONS);
+    return `\n⚠ VARIAÇÃO: ${genderBlock}Arranjo da grade desta geração: ${grade} Manter a paleta unificada de 3 tons costurando todos os blocos e a margem de respiro das bordas — nenhum bloco encosta no limite do canvas. ${TEMA_DERIVATION_RULE}`;
   }
 
   const characterMap: Partial<Record<MoodCode, string[]>> = {
@@ -91,13 +111,7 @@ export function pickImageVariationBlock(
   if (!variations) return "";
 
   const poolBase =
-    mood === "OP-03" && segment && segment !== "VAREJO"
-      ? [
-          INSTANTE_CHARACTER_VARIATIONS[2],
-          INSTANTE_CHARACTER_VARIATIONS[5],
-          INSTANTE_CHARACTER_VARIATIONS[6],
-        ]
-      : variations;
+    mood === "OP-03" && segment && segment !== "VAREJO" ? INSTANTE_POOL_SEM_PDV : variations;
   // Avatar selecionado no Kit Imagem é um CONTRATO, não uma sugestão: o usuário
   // escolheu um rosto para aparecer na peça. As variações que retiram o rosto da
   // cena (CLAREZA "DETALHE CONTEXTUAL", IMPACTO "SUJEITO SEM PERSONAGEM
@@ -118,18 +132,23 @@ export function pickImageVariationBlock(
     : poolBase;
   const variation = pickRandom(pool);
   const cameraStr = (() => {
-    // OP-01: a câmera já é sorteada e escrita na composição pela etapa de
-    // conteúdo (visualDirection.ts, mesmo bloco "VARIAÇÕES SORTEADAS") quando
-    // leituraCenica.composicao existe — sortear de novo aqui pode contradizer
-    // o ângulo que o GPT já registrou (ex.: "frontal" no texto vs. "lateral
-    // 3/4" aqui). OP-02 nunca recebe câmera no lado do conteúdo (só
-    // estrutura/gênero) e OP-03 usa câmera fixa sem sorteio — nenhum dos dois
-    // tem esse conflito, então continuam decidindo a câmera aqui sempre.
+    // OP-01 e OP-03: a câmera também é sorteada e escrita na composição pela
+    // etapa de conteúdo (visualDirection.ts, mesmo bloco "VARIAÇÕES SORTEADAS")
+    // quando leituraCenica.composicao existe — sortear de novo aqui pode
+    // contradizer o ângulo que o GPT já registrou (ex.: "frontal" no texto vs.
+    // "lateral 3/4" aqui). OP-02 nunca recebe câmera no lado do conteúdo (só
+    // estrutura/gênero), então continua decidindo a câmera aqui sempre.
+    //
+    // OP-03 entrou nessa regra em 11/08/2026: até então a câmera dele era uma
+    // string fixa, o que dispensava a reconciliação porque nunca havia dois
+    // valores diferentes para conflitar.
     if (mood === "OP-01") {
       return composicao ? "" : `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. `;
     }
+    if (mood === "OP-03") {
+      return composicao ? "" : `Câmera: ${pickRandom(INSTANTE_CAMERA_VARIATIONS)}. `;
+    }
     if (mood === "OP-02") return `Câmera: ${pickRandom(IMPACTO_CAMERA_VARIATIONS)}. `;
-    if (mood === "OP-03") return "Câmera: 35mm levemente alta, distância natural, grão sutil. ";
     return "";
   })();
 

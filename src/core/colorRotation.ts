@@ -72,6 +72,27 @@ export const SILENCIO_TONALIDADES: TonalidadeCandidata[] = [
   },
 ];
 
+/**
+ * Rodízio determinístico genérico — mesma ideia do pickTonalidade, sem o
+ * observador de matiz (que só faz sentido para cor).
+ *
+ * Existe porque o arquétipo visual da Direção Livre era sorteado com
+ * `Math.random()` no MESMO arquivo em que a paleta já rodava por seed: a cor
+ * nunca repetia e o conceito repetia, inclusive duas gerações seguidas. Sorteio
+ * com reposição num pool de 5 dá ~20% de chance de repetir a cada regeração —
+ * alto o bastante para o usuário notar.
+ *
+ * `step` deve ser co-primo com o tamanho do pool para o ciclo passar por todos
+ * os itens antes de voltar ao começo, e diferente do passo usado pela paleta:
+ * se os dois andarem juntos, conceito e cor ficam amarrados e o número real de
+ * combinações desaba para o tamanho de um pool só.
+ */
+export function pickRotating<T>(pool: T[], baseIndex: number, step = 1): T {
+  const n = pool.length;
+  const i = (((baseIndex * step) % n) + n) % n;
+  return pool[i];
+}
+
 export function pickTonalidade(
   pool: TonalidadeCandidata[],
   baseIndex: number,

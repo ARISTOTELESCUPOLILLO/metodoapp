@@ -40,7 +40,7 @@ import {
   LIVRE_TONALIDADES,
   AVATAR_ROLE_BY_SEGMENT_OBJETIVO,
 } from "./objetivoConfig";
-import { pickTonalidade } from "../core/colorRotation";
+import { pickTonalidade, pickRotating } from "../core/colorRotation";
 import { countTituloWords } from "../core/textWordUtils";
 import {
   buildSemPersonagemBlock,
@@ -80,9 +80,14 @@ function direcaoBlock(
   // Tratada à parte: os mapas OBJETIVO_* pressupõem conexão obrigatória com o negócio,
   // o que contradiz e neutraliza a "liberdade total" — daí a falta de ousadia observada.
   if (obj === "nenhum") {
+    // Rodízio determinístico em vez de sorteio: com pool de 5 e Math.random(),
+    // o mesmo conceito repetia em gerações seguidas com frequência alta — no
+    // mesmo arquivo em que a PALETA já rodava por seed e nunca repetia. Passo 2
+    // (co-primo com 5) para não andar sincronizado com a tonalidade, que usa o
+    // mesmo seed com passo 1.
     const archetypeHint = hasProdutos
       ? PRODUTOS_CONCEITO_NOTE
-      : `\n\n${LIVRE_TOTAL_ARCHETYPES[Math.floor(Math.random() * LIVRE_TOTAL_ARCHETYPES.length)]}`;
+      : `\n\n${pickRotating(LIVRE_TOTAL_ARCHETYPES, tonalidadeSeed ?? 0, 2)}`;
     return `DIREÇÃO LIVRE — SEM TEMA OU OBJETIVO PRÉ-DEFINIDO: a IA tem liberdade total e real de direção de arte — não há mood, não há objetivo, não há obrigação de literalidade com o negócio.${archetypeHint}\n\nVarie ATIVAMENTE entre abordagens possíveis: luz natural OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU conceitual. Escolha uma direção com personalidade própria, ouse e vá fundo nela — o critério é qualidade editorial e impacto visual, não utilidade comercial. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
   }
 
@@ -95,7 +100,7 @@ function direcaoBlock(
   const archetypeHint = hasProdutos
     ? PRODUTOS_CONCEITO_NOTE
     : archetypes && archetypes.length
-      ? `\n\n${archetypes[Math.floor(Math.random() * archetypes.length)]}`
+      ? `\n\n${pickRotating(archetypes, tonalidadeSeed ?? 0, 2)}`
       : "";
   const derivacaoBlock = hasProdutos
     ? ""

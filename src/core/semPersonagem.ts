@@ -90,8 +90,19 @@ const CAMERAS_SEM_PERSONAGEM: Partial<Record<MoodCode, string[]>> = {
     "CONTRA-PLONGÉE APLICADO AO OBJETO: câmera abaixo da base do sujeito, lente 35mm, distância média — ângulo ascendente que faz o objeto crescer no quadro e dominar o enquadramento",
     "ÂNGULO 3/4 DINÂMICO: lente 35mm, distância média, câmera levemente lateral e inclinada — perspectiva cinematográfica sobre o objeto, sem ser extrema",
   ],
+  // Mesmas alturas e distâncias do pool com personagem (INSTANTE_CAMERA_VARIATIONS),
+  // reescritas para cena sem gente. Até 11/08/2026 havia uma única opção aqui.
   "OP-03": [
     "CÂMERA 35mm levemente alta, distância natural, grão sutil — ponto de vista de quem passa pelo local e registra sem preparar a cena",
+    "CÂMERA 35mm na altura da superfície, distância curta — enquadramento próximo do material deixado em uso, grão sutil, como quem se debruça sobre a bancada",
+    "CÂMERA 35mm afastada, plano aberto — o ambiente inteiro no quadro com o sinal de trabalho em andamento em algum ponto dele, grão sutil",
+    "CÂMERA 35mm levemente baixa, distância média — ponto de vista de quem está sentado no local e olha o espaço à sua volta, grão sutil",
+  ],
+  // FRAGMENTO não tinha câmera aqui: os blocos saíam sempre no mesmo ponto de vista.
+  "OP-04": [
+    "PONTO DE VISTA ZENITAL DOMINANTE: maioria dos blocos vista de cima, lente 50mm, sombras curtas e uniformes — ritmo de catálogo organizado sobre superfície",
+    "PONTO DE VISTA FRONTAL DIRETO: blocos fotografados de frente, lente 50mm, sem perspectiva dramática — leitura de ficha técnica, geometria evidente",
+    "ALTERNÂNCIA MACRO E MÉDIO: blocos de detalhe extremo intercalados com blocos de ambiente, lentes 50mm e macro — a mudança de escala entre blocos vizinhos é o ritmo da peça",
   ],
   "OP-05": [
     "PLONGÉE ACENTUADA: câmera nitidamente acima do objeto, lente 28-35mm, enquadramento médio — o olhar de cima revela o deslocamento",
