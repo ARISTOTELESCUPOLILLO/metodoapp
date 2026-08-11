@@ -33,8 +33,7 @@ import {
   PERSONAGEM_GENDER_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
-  SILENCIO_OBJECT_VARIATIONS,
-  silencioCamerasCompativeis,
+  SILENCIO_CAMERA_VARIATIONS,
   INSTANTE_PRECEDENCIA_PLANO,
   CLAREZA_DEVICE_WELCOME_SENTENCE,
   CLAREZA_DEVICE_COEXIST_SENTENCE,
@@ -287,12 +286,12 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     const grade = pickRandom(FRAGMENTO_GRID_VARIATIONS);
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Arranjo da grade: ${grade}\n${TEMA_DERIVATION_RULE} Aqui, o CONTEÚDO de cada bloco é o que deriva do tema — o arranjo acima é só a moldura que organiza os blocos. Manter a paleta unificada de 3 tons costurando o conjunto e a margem de respiro das bordas.`;
   } else if (mood === "OP-06") {
-    // Sujeito isolado passou a ser sorteado em 11/08/2026 — ver comentário em
-    // SILENCIO_OBJECT_VARIATIONS (o pool existia e nunca era importado).
-    // Objeto primeiro: a câmera é sorteada só entre as compatíveis com ele.
-    const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
-    const camera = pickRandom(silencioCamerasCompativeis(objeto));
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Sujeito isolado: ${objeto}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
+    // ⚠ SÓ CÂMERA — ver o comentário do OP-06 em imageVariationPicker.ts: o
+    // sorteio de sujeito isolado foi religado em 11/08/2026 e revertido em
+    // 12/08/2026 por decisão do Aristóteles. A condição do SILÊNCIO (o que é o
+    // sujeito da cena) não se sorteia; o escopo da Fase 1 era câmera, luz e pose.
+    const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
   } else if (characterVariationMap[mood]) {
     // Para INSTANTE (OP-03), MARCA e SERVIÇOS usam o pool reduzido sem léxico de
     // PDV — ver INSTANTE_POOL_SEM_PDV no léxico, onde a seleção mora agora.

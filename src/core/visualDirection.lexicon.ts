@@ -393,30 +393,25 @@ export const IMPACTO_CHARACTER_VARIATIONS: string[] = [
 // PROIBIDO: laptop ou notebook aberto como objeto principal, rosto inteiro posado,
 // dispositivos digitais com tela visível, cenas com múltiplos elementos.
 //
-// ⚠️ Esta lista ficou DECLARADA E NUNCA IMPORTADA desde que foi escrita: o
-// SILÊNCIO sorteava só a câmera e deixava o objeto por conta do modelo, que
-// converge sempre para os mesmos dois ou três. Ligada em 11/08/2026.
-//
-// Três variações foram retiradas na religação por contradizerem, dentro do
-// MESMO prompt, a regra vigente de MOOD_RULES["OP-06"] — "PROIBIDO objeto
-// genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos
-// soltos, caneta sem contexto)" —, a mesma proibição repetida em
-// ESTRUTURA_SEM_PERSONAGEM["OP-06"] (semPersonagem.ts). Eram: livro/material de
-// leitura em repouso, óculos ou objeto pessoal sobre superfície, e equipamento
-// analógico atemporal (toca-discos, rádio antigo). Prompt que manda e proíbe a
-// mesma coisa deixa o modelo escolher um dos lados — é a classe de bug que fez
-// o avatar sumir em 06/08. Religá-las exige antes decidir se a regra do mood
-// abre exceção para objeto atemporal fora do ofício: é decisão de produto.
+// ⚠️ LISTA DESLIGADA DE PROPÓSITO — declarada e não importada. Ela chegou a ser
+// ligada em 11/08/2026 e foi DESLIGADA DE NOVO em 12/08/2026 por decisão do
+// Aristóteles: sortear o sujeito é decidir a condição do mood (fragmento humano
+// × objeto isolado × silhueta × macro), e o SILÊNCIO deve continuar como
+// sempre foi. O que a Fase 1 podia destravar era posição e distância de câmera,
+// luz e pose — a repetição que ela atacava era "pessoas sempre sentadas".
+// Some-se a isso que as seis variações mandam a peça sair sem rosto: com avatar
+// marcado, a de "mão ou fragmento de braço" apagou a pessoa numa peça real.
+// Não religar sem decisão de produto explícita.
 export const SILENCIO_OBJECT_VARIATIONS: string[] = [
   "OBJETO DO OFÍCIO ISOLADO, plano próximo: um único instrumento, ferramenta, material ou peça representativa do ofício REAL da empresa — definido pela leituraCenica e pelo kit de marca, nunca um item de outro ofício ou segmento (não inventar tesoura, pincel ou ferramenta de ofício alheio ao negócio descrito). Pode ser embalagem única centralizada, frasco de produto, peça de papelaria, objeto de papelaria de marca ou ferramenta manual coerente com a atividade real. Sem tecnologia, sem laptop, sem notebook. Vasto espaço negativo ao redor. Luz de janela natural, sombra suave e curta.",
   "FRAGMENTO HUMANO COM OBJETO, plano próximo: mão ou fragmento de braço tocando delicadamente um objeto do ofício real da empresa — mão aberta sobre superfície, ponta do dedo próxima a produto, palma em material de trabalho, dedos segurando objeto simples e coerente com o negócio. Sem rosto, sem corpo completo. Vasto espaço negativo acima e ao redor. Composição centralizada. Luz alta-chave suave de janela lateral.",
   "OBJETO EM SUPERFÍCIE TEXTURIZADA, plano próximo ou médio-próximo: um único objeto sobre superfície com textura visível e natural — mármore branco, madeira clara, tecido linho, papel artesanal, concreto suave. O contraste entre o objeto e a textura da superfície é a composição inteira. Sem presença humana, sem outros elementos. Luz difusa de janela.",
   "SILHUETA OU NUCA CONTEMPLATIVA, plano médio: personagem de costas ou de perfil extremo, ocupando menos de 25% da área total da imagem — o espaço vazio é o protagonista. Pessoa pequena diante de janela grande, parede ampla ou fundo neutro. Sem gesto significativo, sem ação — apenas presença silenciosa. Luz traseira ou lateral de janela. Sem rosto visível.",
-  // "sem texto, sem logo" saiu daqui em 11/08/2026: o mesmo prompt manda
-  // renderizar o título ocupando 45% da altura do canvas e reservar a zona da
-  // logomarca. A proibição vale para o OBJETO fotografado, não para a peça.
-  "DETALHE MÍNIMO EM MACRO, plano muito próximo: textura ou detalhe de material, produto ou ambiente do negócio — grão de café, fibra de tecido, superfície de embalagem, detalhe de ferramenta, textura de material de trabalho. Sem rosto e sem presença humana no quadro; a própria superfície fotografada não traz texto legível nem marca impressa. Fundo desfocado em paleta suave. A beleza está no detalhe ampliado. Composição centralizada ou em regra dos terços.",
+  "DETALHE MÍNIMO EM MACRO, plano muito próximo: textura ou detalhe de material, produto ou ambiente do negócio — grão de café, fibra de tecido, superfície de embalagem, detalhe de ferramenta, textura de material de trabalho. Sem rosto, sem texto, sem logo. Fundo desfocado em paleta suave. A beleza está no detalhe ampliado. Composição centralizada ou em regra dos terços.",
   "QUADRO OU MOLDURA NA PAREDE, plano médio ou aberto: uma única peça emoldurada — quadro, fotografia, certificado, ilustração simples — pendurada em parede neutra e ampla, ocupando proporção pequena da composição e cercada de vasto espaço de parede vazia. Pode haver fragmento humano discreto por perto (mão, ombro, nuca), fora de foco ou de costas — nunca rosto em destaque. Sem texto legível na peça emoldurada. Luz lateral suave de janela revelando a textura da parede. Composição assimétrica e respirada — o quadro humaniza o ambiente sem se tornar o centro literal da mensagem.",
+  "LIVRO OU MATERIAL DE LEITURA EM REPOUSO, plano próximo: um único livro fechado, caderno encadernado ou material de leitura pousado sobre mesa, banco ou prateleira — capa simples e neutra, sem texto legível em destaque, sem pilha excessiva. Pode estar ao lado de um objeto pessoal mínimo (xícara, óculos), desde que o conjunto permaneça enxuto. Vasto espaço negativo ao redor. Luz difusa de janela, sombra suave e curta. Sem presença humana — o objeto sugere a pausa de alguém que esteve ali.",
+  "ÓCULOS OU OBJETO PESSOAL DELICADO SOBRE SUPERFÍCIE, plano próximo ou macro: um par de óculos, um relógio de pulso ou uma caneta pousados sozinhos sobre mesa, livro ou tecido — a presença humana é sugerida pelo objeto pessoal, nunca por uma pessoa em quadro. Composição centralizada ou em regra dos terços, fundo desfocado em paleta suave, luz alta-chave lateral. Um único objeto — nunca uma composição de vários itens pessoais espalhados.",
+  "EQUIPAMENTO ANALÓGICO ATEMPORAL, plano próximo ou médio: um único equipamento não digital de caráter atemporal — câmera fotográfica analógica, rádio antigo, toca-discos, luminária de mesa clássica, relógio de parede, instrumento musical — pousado em repouso, desligado, sem tela e sem indicador luminoso. Comprova humanidade e história sem recorrer a tecnologia digital ou dispositivos com tela. Vasto espaço negativo ao redor, luz suave lateral de janela, sombra curta e natural.",
 ];
 
 // Variação de câmera sorteada exclusivamente para SILÊNCIO — extraída dos
@@ -459,28 +454,6 @@ export const DESVIO_CAMERA_VARIATIONS: string[] = [
 
 export function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
-}
-
-// Câmera e objeto do SILÊNCIO são sorteados de forma independente, e nem toda
-// combinação existe fisicamente: a zenital olha de cima para uma superfície e
-// não alcança o que está pendurado na parede nem alguém de pé diante de uma
-// janela; a câmera aberta afasta e desfaz o macro, que é definido justamente
-// por estar muito próximo. Filtrar aqui é melhor do que deixar a contradição
-// chegar ao prompt e o modelo escolher um dos lados.
-//
-// Casa por marcador de texto, não por índice, para sobreviver a reordenação do
-// pool — ver o bug de índice de 11/08/2026 registrado em INSTANTE_POOL_SEM_PDV.
-export function silencioCamerasCompativeis(objeto: string): string[] {
-  const naParedeOuDePe = /NA PAREDE|SILHUETA/.test(objeto);
-  const macro = /MACRO|plano muito próximo/.test(objeto);
-  const compativeis = SILENCIO_CAMERA_VARIATIONS.filter((camera) => {
-    if (naParedeOuDePe && camera.startsWith("CÂMERA ZENITAL")) return false;
-    if (macro && camera.startsWith("CÂMERA ABERTA")) return false;
-    return true;
-  });
-  // Nunca devolver pool vazio: se um objeto futuro casar com as duas regras e
-  // sobrar nada, é melhor sortear entre todas do que travar a geração.
-  return compativeis.length ? compativeis : SILENCIO_CAMERA_VARIATIONS;
 }
 
 // Sentenças de dispositivo de CLAREZA e FRAGMENTO, extraídas para permitir

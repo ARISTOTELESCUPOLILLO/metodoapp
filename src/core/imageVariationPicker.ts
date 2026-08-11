@@ -18,8 +18,7 @@ import {
   FRAGMENTO_GRID_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
-  SILENCIO_OBJECT_VARIATIONS,
-  silencioCamerasCompativeis,
+  SILENCIO_CAMERA_VARIATIONS,
   INSTANTE_PRECEDENCIA_PLANO,
   PERSONAGEM_GENDER_VARIATIONS,
 } from "./visualDirection.lexicon";
@@ -82,16 +81,17 @@ export function pickImageVariationBlock(
     // Mesmo motivo do OP-05 acima — o objeto isolado e a câmera desta peça já
     // foram decididos pela etapa de conteúdo quando composicao existe.
     if (composicao) return "";
-    // O tipo de sujeito isolado passou a ser sorteado em 11/08/2026. Antes só a
-    // câmera variava e o objeto ficava por conta do modelo, que convergia
-    // sempre para os mesmos poucos — com o agravante de a câmera mudar em volta
-    // do mesmo objeto, o que lê como a mesma peça refotografada.
-    //
-    // Objeto primeiro, câmera depois: há combinações que não existem
-    // fisicamente (zenital × quadro na parede) — ver silencioCamerasCompativeis.
-    const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
-    const camera = pickRandom(silencioCamerasCompativeis(objeto));
-    return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. Sujeito isolado desta geração: ${objeto} O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
+    // ⚠ AQUI SÓ SE SORTEIA CÂMERA. O tipo de sujeito isolado chegou a ser
+    // sorteado em 11/08/2026 (religando SILENCIO_OBJECT_VARIATIONS) e foi
+    // REVERTIDO em 12/08/2026 por decisão do Aristóteles: o que a Fase 1 podia
+    // mexer era posição/distância de câmera, luz e pose — não a gramática do
+    // mood. Sortear o sujeito escolhia por ele entre fragmento humano, objeto
+    // isolado, silhueta e macro, que é justamente a condição do SILÊNCIO, e
+    // ainda atropelava o avatar: as seis variações do pool mandam a peça sair
+    // sem rosto, e uma delas pede "mão ou fragmento de braço" — foi o que saiu
+    // na peça real do Ari com avatar marcado. Não religar sem decisão dele.
+    const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
+    return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
   }
 
   if (mood === "OP-04") {
