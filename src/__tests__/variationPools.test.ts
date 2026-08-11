@@ -78,17 +78,14 @@ describe("blocos de variação nunca vazam 'undefined' para o prompt", () => {
     for (let i = 0; i < AMOSTRA; i++) {
       for (const segment of SEGMENTOS) {
         for (const avatar of [true, false]) {
-          const bloco = pickImageVariationBlock(
+          const bloco = pickImageVariationBlock({
             mood,
-            avatar,
-            "titulo de teste",
-            "texto de teste",
-            undefined,
-            undefined,
-            undefined,
-            false,
+            hasAvatarRef: avatar,
+            titulo: "titulo de teste",
+            texto: "texto de teste",
+            hasCenarioRef: false,
             segment,
-          );
+          });
           expect(bloco).not.toContain("undefined");
         }
       }
@@ -120,17 +117,14 @@ describe("contrato do avatar sobrevive ao sorteio", () => {
       for (const segment of SEGMENTOS) {
         for (let i = 0; i < 60; i++) {
           expect(() =>
-            pickImageVariationBlock(
+            pickImageVariationBlock({
               mood,
-              true,
-              "titulo",
-              "texto",
-              undefined,
-              undefined,
-              undefined,
-              false,
+              hasAvatarRef: true,
+              titulo: "titulo",
+              texto: "texto",
+              hasCenarioRef: false,
               segment,
-            ),
+            }),
           ).not.toThrow();
         }
       }

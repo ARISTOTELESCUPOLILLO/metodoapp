@@ -25,17 +25,28 @@ import {
 
 // Sorteia uma variação de personagem/ruptura para injetar no prompt de IMAGEM a cada geração.
 // Garante que "Gerar outra" nunca reuse a mesma pose — chame a cada vez que o prompt for construído.
-export function pickImageVariationBlock(
-  mood: MoodCode | undefined,
-  hasAvatarRef?: boolean,
-  titulo?: string,
-  texto?: string,
-  forcedGender?: PersonagemGender,
-  anchoraPersonagem?: string,
-  composicao?: string,
-  hasCenarioRef?: boolean,
-  segment?: Segment,
-): string {
+export function pickImageVariationBlock(opts: {
+  mood: MoodCode | undefined;
+  hasAvatarRef?: boolean;
+  titulo?: string;
+  texto?: string;
+  forcedGender?: PersonagemGender;
+  anchoraPersonagem?: string;
+  composicao?: string;
+  hasCenarioRef?: boolean;
+  segment?: Segment;
+}): string {
+  const {
+    mood,
+    hasAvatarRef,
+    titulo,
+    texto,
+    forcedGender,
+    anchoraPersonagem,
+    composicao,
+    hasCenarioRef,
+    segment,
+  } = opts;
   if (!mood) return "";
 
   // Calculado aqui (antes dos early-returns de OP-05/06) para que todos os

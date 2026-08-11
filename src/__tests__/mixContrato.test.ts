@@ -30,7 +30,7 @@ describe("pickImageVariationBlock — avatar é contrato, não sugestão", () =>
     // 200 sorteios: com 3 variações no pool, a chance de a variação sem rosto
     // (1 em 3) não sair nenhuma vez por acaso é desprezível.
     for (let i = 0; i < 200; i++) {
-      const bloco = pickImageVariationBlock("OP-01", true);
+      const bloco = pickImageVariationBlock({ mood: "OP-01", hasAvatarRef: true });
       expect(variationHasFaceNotDominant(bloco)).toBe(false);
       expect(bloco).not.toContain("DETALHE CONTEXTUAL");
     }
@@ -38,13 +38,15 @@ describe("pickImageVariationBlock — avatar é contrato, não sugestão", () =>
 
   it("IMPACTO: com avatar, não sorteia a variação sem personagem dominante", () => {
     for (let i = 0; i < 200; i++) {
-      const bloco = pickImageVariationBlock("OP-02", true);
+      const bloco = pickImageVariationBlock({ mood: "OP-02", hasAvatarRef: true });
       expect(variationHasFaceNotDominant(bloco)).toBe(false);
     }
   });
 
   it("sem avatar, a variação sem rosto continua no sorteio (diversidade preservada)", () => {
-    const blocos = Array.from({ length: 200 }, () => pickImageVariationBlock("OP-01", false));
+    const blocos = Array.from({ length: 200 }, () =>
+      pickImageVariationBlock({ mood: "OP-01", hasAvatarRef: false }),
+    );
     expect(blocos.some((b) => variationHasFaceNotDominant(b))).toBe(true);
   });
 

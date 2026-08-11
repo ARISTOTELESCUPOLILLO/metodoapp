@@ -381,14 +381,14 @@ export function buildPostUnicoPrompt(params: {
     : references?.produtoVestido
       ? buildLookVariationBlock(references.produtoVestido, lookCatalogo)
       : data.direcao === "mood"
-        ? pickImageVariationBlock(
-            data.mood,
-            !!references?.avatar,
-            copy?.titulo,
-            copy?.texto,
+        ? pickImageVariationBlock({
+            mood: data.mood,
+            hasAvatarRef: !!references?.avatar,
+            titulo: copy?.titulo,
+            texto: copy?.texto,
             forcedGender,
-            faixaLabelImagem,
-          )
+            anchoraPersonagem: faixaLabelImagem,
+          })
         : "";
   // Rede de segurança de gênero/idade — vale em QUALQUER direção, não só na Livre.
   // A diretiva de gênero vinha por dois ramos mutuamente exclusivos: o bloco de
