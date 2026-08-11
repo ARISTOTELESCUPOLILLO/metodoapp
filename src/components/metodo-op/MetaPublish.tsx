@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useImpersonation } from "@/hooks/useImpersonation";
-import { isMetaAllowed } from "@/lib/metaAllowlist";
+import { getMetaDestino } from "@/lib/metaAllowlist";
 
 interface Props {
   imageDataUrl?: string;
@@ -18,6 +18,8 @@ interface MetaStatus {
   expired?: boolean;
   has_instagram?: boolean;
   has_facebook?: boolean;
+  /** Nome da conta em que a peça vai sair — vem do destino cadastrado no servidor. */
+  destinoNome?: string;
 }
 
 async function authHeader(): Promise<Record<string, string>> {
@@ -41,13 +43,16 @@ const fbIcon = (
 
 export function MetaPublish({ imageDataUrl, imageDataUrls, caption }: Props) {
   const { user } = useAuth();
-  // Em "Atuar como", a peça na tela é do CLIENTE, mas a publicação sai sempre
-  // pelo System User da BM — ou seja, cairia no Instagram/Facebook da
-  // OPropaganda. Publicar conteúdo de cliente no perfil da agência por engano é
-  // irreversível, então quem manda na liberação é o dono da peça (o usuário
-  // atuado), não o admin logado. Atuando sobre uma conta da própria allowlist
-  // (ex.: o admin atuando na conta de usuário dele) os botões continuam.
+  // Em "Atuar como", a peça na tela é do CLIENTE, mas quem publica é o token de
+  // quem está LOGADO: o servidor resolve o destino pelo JWT do admin. Se o
+  // destino do dono da peça não for o mesmo de quem está logado, a peça sairia
+  // na conta errada — e publicação é irreversível. Nesse caso os botões somem.
+  // Atuando sobre uma conta do mesmo destino (o admin na conta de usuário dele)
+  // eles continuam.
   const impersonation = useImpersonation();
+  const destinoLogado = getMetaDestino(user?.email);
+  const destinoDono = impersonation ? getMetaDestino(impersonation.email) : destinoLogado;
+  const podePublicar = !!destinoLogado && destinoLogado.pageId === destinoDono?.pageId;
   const [status, setStatus] = useState<MetaStatus | null>(null);
 
   // Estados OAuth (modo normal)
@@ -95,7 +100,7 @@ export function MetaPublish({ imageDataUrl, imageDataUrls, caption }: Props) {
   const mediaBody = isCarousel ? { imageDataUrls: carouselUrls } : { imageDataUrl };
   const sufixo = isCarousel ? " carrossel" : "";
 
-  if (!isMetaAllowed(impersonation ? impersonation.email : user?.email)) return null;
+  if (!podePublicar) return null;
   if (!status) return null;
   if (!imageDataUrl && !isCarousel && !status.devMode) return null;
 
@@ -273,6 +278,9 @@ export function MetaPublish({ imageDataUrl, imageDataUrls, caption }: Props) {
             }}
           >
             Publicar diretamente
+            {status.destinoNome && (
+              <span style={{ color: "#475569" }}> · {status.destinoNome}</span>
+            )}
           </div>
 
           {/* Botão principal: ambos */}

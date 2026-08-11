@@ -3,8 +3,7 @@ import { getUserIdFromRequest } from "@/lib/usage.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   META_VERSION,
-  META_PUBLISH_ALLOWED_EMAILS,
-  getEmailFromJwt,
+  resolveMetaDestino,
   uploadImageToMetaBucket,
   pollContainerStatus,
 } from "@/lib/meta.server";
@@ -15,7 +14,7 @@ export const Route = createFileRoute("/api/meta/publish-instagram")({
       POST: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: "Não autenticado" }, { status: 401 });
-        if (!META_PUBLISH_ALLOWED_EMAILS.includes(getEmailFromJwt(request) ?? ""))
+        if (!resolveMetaDestino(request))
           return Response.json({ error: "Acesso não autorizado" }, { status: 403 });
 
         const { imageDataUrl, caption } = (await request.json()) as {

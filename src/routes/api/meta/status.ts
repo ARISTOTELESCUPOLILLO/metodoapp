@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getUserIdFromRequest } from "@/lib/usage.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { META_PUBLISH_ALLOWED_EMAILS, getEmailFromJwt } from "@/lib/meta.server";
+import { resolveMetaDestino } from "@/lib/meta.server";
 
 export const Route = createFileRoute("/api/meta/status")({
   server: {
@@ -9,8 +9,8 @@ export const Route = createFileRoute("/api/meta/status")({
       GET: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ connected: false, devMode: false }, { status: 401 });
-        if (!META_PUBLISH_ALLOWED_EMAILS.includes(getEmailFromJwt(request) ?? ""))
-          return Response.json({ connected: false, devMode: false }, { status: 403 });
+        const destino = resolveMetaDestino(request);
+        if (!destino) return Response.json({ connected: false, devMode: false }, { status: 403 });
 
         // devMode: basta META_ACCESS_TOKEN estar configurado no servidor
         // O token só publica na conta de quem o gerou — é a proteção real
@@ -34,7 +34,10 @@ export const Route = createFileRoute("/api/meta/status")({
           console.error("[meta/status] meta_connections throw:", (e as Error).message);
         }
 
-        if (!conn) return Response.json({ connected: false, devMode });
+        // destinoNome vai para a interface: o usuário lê em que conta a peça vai
+        // sair ANTES de clicar. Com vários clientes publicando pela mesma BM, a
+        // conferência a olho é a última barreira contra publicar no lugar errado.
+        if (!conn) return Response.json({ connected: false, devMode, destinoNome: destino.nome });
 
         const expired =
           conn.token_expires_at && new Date(conn.token_expires_at as string) < new Date();
@@ -42,6 +45,7 @@ export const Route = createFileRoute("/api/meta/status")({
           connected: true,
           expired: !!expired,
           devMode,
+          destinoNome: destino.nome,
           ig_username: conn.ig_username,
           fb_page_name: conn.fb_page_name,
           has_instagram: !!conn.ig_user_id,

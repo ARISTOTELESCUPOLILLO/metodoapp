@@ -2,28 +2,34 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getUserIdFromRequest } from "@/lib/usage.server";
 import {
   META_VERSION,
-  META_IG_USER_ID as IG_USER_ID,
-  META_PAGE_ID as PAGE_ID,
-  META_PUBLISH_ALLOWED_EMAILS,
-  getEmailFromJwt,
+  resolveMetaDestino,
   getPageAccessToken,
   uploadImageToMetaBucket,
   pollContainerStatus,
 } from "@/lib/meta.server";
+import type { MetaDestino } from "@/lib/metaAllowlist";
 
-async function postToInstagram(token: string, imageUrl: string, caption: string) {
-  const createRes = await fetch(`https://graph.facebook.com/${META_VERSION}/${IG_USER_ID}/media`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image_url: imageUrl, caption, access_token: token }),
-  });
+async function postToInstagram(
+  token: string,
+  destino: MetaDestino,
+  imageUrl: string,
+  caption: string,
+) {
+  const createRes = await fetch(
+    `https://graph.facebook.com/${META_VERSION}/${destino.igUserId}/media`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_url: imageUrl, caption, access_token: token }),
+    },
+  );
   const createData = (await createRes.json()) as { id?: string; error?: { message: string } };
   if (!createData.id) throw new Error(createData.error?.message || "Falha ao criar container IG");
 
   await pollContainerStatus(createData.id, token);
 
   const pubRes = await fetch(
-    `https://graph.facebook.com/${META_VERSION}/${IG_USER_ID}/media_publish`,
+    `https://graph.facebook.com/${META_VERSION}/${destino.igUserId}/media_publish`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -36,12 +42,17 @@ async function postToInstagram(token: string, imageUrl: string, caption: string)
   return { success: true as const, platform: "instagram" as const, post_id: pubData.id };
 }
 
-async function postToFacebook(token: string, imageUrl: string, caption: string) {
-  // 1. Troca System User token por Page Access Token
-  const pageToken = await getPageAccessToken(token);
+async function postToFacebook(
+  token: string,
+  destino: MetaDestino,
+  imageUrl: string,
+  caption: string,
+) {
+  // 1. Troca System User token por Page Access Token da Página do destino
+  const pageToken = await getPageAccessToken(token, destino.pageId);
 
   // 2. Posta foto usando Page Token
-  const res = await fetch(`https://graph.facebook.com/${META_VERSION}/${PAGE_ID}/photos`, {
+  const res = await fetch(`https://graph.facebook.com/${META_VERSION}/${destino.pageId}/photos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -69,8 +80,8 @@ export const Route = createFileRoute("/api/meta/test-publish")({
       POST: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: "Não autenticado" }, { status: 401 });
-        if (!META_PUBLISH_ALLOWED_EMAILS.includes(getEmailFromJwt(request) ?? ""))
-          return Response.json({ error: "Acesso não autorizado" }, { status: 403 });
+        const destino = resolveMetaDestino(request);
+        if (!destino) return Response.json({ error: "Acesso não autorizado" }, { status: 403 });
 
         const token = process.env.META_ACCESS_TOKEN;
         if (!token)
@@ -99,8 +110,8 @@ export const Route = createFileRoute("/api/meta/test-publish")({
 
           if (target === "both") {
             const [igResult, fbResult] = await Promise.allSettled([
-              postToInstagram(token, imageUrl, cap),
-              postToFacebook(token, imageUrl, cap),
+              postToInstagram(token, destino, imageUrl, cap),
+              postToFacebook(token, destino, imageUrl, cap),
             ]);
             const instagram =
               igResult.status === "fulfilled"
@@ -111,8 +122,9 @@ export const Route = createFileRoute("/api/meta/test-publish")({
                 ? fbResult.value
                 : { error: (fbResult.reason as Error)?.message };
             console.info(
-              "[meta/test-publish] both userId=%s ig=%s fb=%s",
+              "[meta/test-publish] both userId=%s destino=%s ig=%s fb=%s",
               userId,
+              destino.nome,
               igResult.status,
               fbResult.status,
             );
@@ -120,19 +132,21 @@ export const Route = createFileRoute("/api/meta/test-publish")({
           }
 
           if (target === "instagram") {
-            const result = await postToInstagram(token, imageUrl, cap);
+            const result = await postToInstagram(token, destino, imageUrl, cap);
             console.info(
-              "[meta/test-publish] Instagram ok userId=%s post_id=%s",
+              "[meta/test-publish] Instagram ok userId=%s destino=%s post_id=%s",
               userId,
+              destino.nome,
               result.post_id,
             );
             return Response.json(result);
           }
 
-          const result = await postToFacebook(token, imageUrl, cap);
+          const result = await postToFacebook(token, destino, imageUrl, cap);
           console.info(
-            "[meta/test-publish] Facebook ok userId=%s post_id=%s",
+            "[meta/test-publish] Facebook ok userId=%s destino=%s post_id=%s",
             userId,
+            destino.nome,
             result.post_id,
           );
           return Response.json(result);

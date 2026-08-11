@@ -1,19 +1,15 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { META_ALLOWED_EMAILS } from "@/lib/metaAllowlist";
+import { getMetaDestino, type MetaDestino } from "@/lib/metaAllowlist";
 
 export const META_VERSION = "v25.0";
 export const META_BUCKET = "meta-publish";
 
-// Conta de destino da publicação via System User da BM — IDs fixos da
-// OPropaganda. Não dependem de quem está logado: o token da BM só publica aqui.
-export const META_IG_USER_ID = "17841403020053112";
-export const META_PAGE_ID = "144773495865295";
-
 // O System User token não posta direto na página: primeiro troca por um Page
 // Access Token. Compartilhado entre test-publish (foto única) e publish-carousel.
-export async function getPageAccessToken(systemUserToken: string): Promise<string> {
+// O pageId vem do destino do usuário — cada cliente tem a Página dele.
+export async function getPageAccessToken(systemUserToken: string, pageId: string): Promise<string> {
   const res = await fetch(
-    `https://graph.facebook.com/${META_VERSION}/${META_PAGE_ID}?fields=access_token&access_token=${systemUserToken}`,
+    `https://graph.facebook.com/${META_VERSION}/${pageId}?fields=access_token&access_token=${systemUserToken}`,
   );
   const data = (await res.json()) as { access_token?: string; error?: { message: string } };
   if (!data.access_token) {
@@ -21,14 +17,13 @@ export async function getPageAccessToken(systemUserToken: string): Promise<strin
   }
   return data.access_token;
 }
-// Emails autorizados a publicar via Meta — separados por vírgula na env var META_PUBLISH_ALLOWED_EMAILS
-// Fallback para a allowlist compartilhada com o cliente (metaAllowlist.ts)
-export const META_PUBLISH_ALLOWED_EMAILS: string[] = (
-  process.env.META_PUBLISH_ALLOWED_EMAILS || META_ALLOWED_EMAILS.join(",")
-)
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+
+// Autorização e destino são a MESMA decisão: publica quem tem conta própria
+// cadastrada em metaAllowlist, e publica nela. Sem destino não há publicação —
+// não existe conta padrão para a qual cair.
+export function resolveMetaDestino(request: Request): MetaDestino | null {
+  return getMetaDestino(getEmailFromJwt(request));
+}
 
 export function getEmailFromJwt(request: Request): string | null {
   const auth = request.headers.get("authorization") || request.headers.get("Authorization");

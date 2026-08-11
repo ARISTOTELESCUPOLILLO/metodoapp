@@ -1,12 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getUserIdFromRequest } from "@/lib/usage.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  META_VERSION,
-  META_PUBLISH_ALLOWED_EMAILS,
-  getEmailFromJwt,
-  uploadImageToMetaBucket,
-} from "@/lib/meta.server";
+import { META_VERSION, resolveMetaDestino, uploadImageToMetaBucket } from "@/lib/meta.server";
 
 export const Route = createFileRoute("/api/meta/publish-facebook")({
   server: {
@@ -14,7 +9,7 @@ export const Route = createFileRoute("/api/meta/publish-facebook")({
       POST: async ({ request }) => {
         const userId = await getUserIdFromRequest(request);
         if (!userId) return Response.json({ error: "Não autenticado" }, { status: 401 });
-        if (!META_PUBLISH_ALLOWED_EMAILS.includes(getEmailFromJwt(request) ?? ""))
+        if (!resolveMetaDestino(request))
           return Response.json({ error: "Acesso não autorizado" }, { status: 403 });
 
         const { imageDataUrl, text } = (await request.json()) as {
