@@ -38,6 +38,7 @@ export function useReelsGeneration(params: {
   anchoraPersonagem?: string;
   ancoragePapel?: string;
   clothingSeed?: number;
+  variacaoSeed?: number;
   onImageGenerated?: () => void;
   guard: ReturnType<typeof useImageGenAlert>["guard"];
   hook: string;
@@ -55,6 +56,7 @@ export function useReelsGeneration(params: {
     anchoraPersonagem,
     ancoragePapel,
     clothingSeed,
+    variacaoSeed,
     onImageGenerated,
     guard,
     hook,
@@ -192,6 +194,7 @@ export function useReelsGeneration(params: {
         forcedGender,
         anchoraPersonagem,
         ancoragePapel,
+        variacaoSeed,
       });
       const final = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
       updatePreview(final);
@@ -251,6 +254,7 @@ export function useReelsGeneration(params: {
         anchoraPersonagem,
         ancoragePapel,
         clothingSeed,
+        variacaoSeed,
         forcedGender,
         userId,
         modelo,
@@ -382,6 +386,7 @@ export function useReelsGeneration(params: {
             logoDataUrl: kit.logoDataUrl,
             logoPosition: kit.logoPosition,
             referenceImages: coverRefImage ? [coverRefImage] : undefined,
+            variacaoSeed,
           }).then(async (url) => (kit.logoDataUrl ? composeReelsPng(kit, url) : url));
 
       const videoPromise = submitVideoRequest();
@@ -520,6 +525,7 @@ export function useReelsGeneration(params: {
         logoDataUrl: kit.logoDataUrl,
         logoPosition: kit.logoPosition,
         referenceImages: previewBase || preview ? [(previewBase || preview) as string] : undefined,
+        variacaoSeed,
       });
       const withLogo = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
       updateCoverPng(withLogo);

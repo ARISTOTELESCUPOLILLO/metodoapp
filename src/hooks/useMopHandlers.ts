@@ -48,6 +48,11 @@ export function useMopHandlers({
     setResult(undefined);
     clearSessionImages(effectiveUserId);
     clearCopyEdits(effectiveUserId);
+    // Uma posição de fila para a SEQUÊNCIA inteira: a mesma rege a câmera no
+    // prompt de conteúdo e a paleta de todas as peças na hora da imagem. Lida
+    // e avançada aqui, uma vez — se cada peça pedisse a sua, o carrossel sairia
+    // multicor e a unidade do mood iria embora.
+    const variacaoSeed = nextVariacaoSeed(effectiveUserId);
     try {
       let generated = await generateMethodContent(
         {
@@ -59,9 +64,7 @@ export function useMopHandlers({
           mood: mood ?? "OP-01",
         },
         selectedSlot,
-        // Fila de variação visual: consome a posição atual do usuário e já
-        // avança para a próxima sequência não repetir a câmera desta.
-        nextVariacaoSeed(effectiveUserId),
+        variacaoSeed,
       );
       try {
         const updated = await judgeAndRegenerateContent(generated, {
@@ -74,7 +77,9 @@ export function useMopHandlers({
       } catch {
         // best-effort — se o juiz falhar, segue com o resultado original.
       }
-      setResult(generated);
+      // Depois do juiz: ele pode devolver um objeto novo, e a seed precisa
+      // viajar com a sequência que de fato foi entregue.
+      setResult({ ...generated, variacaoSeed });
       refreshProfile();
     } catch (e) {
       setError(String((e as Error).message || e));

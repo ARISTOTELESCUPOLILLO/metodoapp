@@ -2,8 +2,7 @@ import { PersonagemGender } from "../core/visualDirection";
 import { LogoPosition, MoodCode, SecondaryFont } from "../types";
 import { generateImageAsync } from "./imageGeneration";
 import { buildImagePrompt } from "./api/buildImagePrompt";
-import { moodVisualInstructions } from "./api/moodVisualInstructions";
-import { pickTonalidade, SILENCIO_TONALIDADES } from "../core/colorRotation";
+import { buildMoodVisualInstructions } from "./api/moodVisualInstructions";
 import { pickDeviceTypeLine, isNonDigitalActivity, buildNoDeviceRule } from "../utils/promptRules";
 import { buildReferenceAnchorWrapper } from "../shared/visual/referenceBlocks";
 
@@ -75,6 +74,11 @@ export async function generatePostImage(params: {
   // dispositivo digital; impede que hasProdutoFisicoRef o banha da cena.
   produtoEhDispositivo?: boolean;
   segment?: import("../types").Segment;
+  /** Posição da SEQUÊNCIA na fila de variação do usuário (result.variacaoSeed
+   * no MOP; a seed de sessão na PU). Rege a paleta dos moods com rodízio de cor
+   * — uma por sequência, para o carrossel inteiro sair na mesma. Ver
+   * buildMoodVisualInstructions. */
+  variacaoSeed?: number;
 }): Promise<string> {
   const {
     imagePrompt,
@@ -102,29 +106,22 @@ export async function generatePostImage(params: {
     hasProdutoFisicoRef,
     produtoEhDispositivo,
     segment,
+    variacaoSeed,
   } = params;
 
   const isReels = vertical === "reels";
   const isCover = vertical === "reels_cover";
   const isFinal = vertical === "estatico_final";
-  // SILÊNCIO (OP-06): rodízio determinístico de tonalidade (ver
-  // core/colorRotation.ts), mesmo pool usado na PU — pedido do Aristóteles,
-  // 09/07/2026. Sem seed de sessão/tentativa disponível nesta chamada do MOP
-  // (ao contrário da PU), usa um hash simples e determinístico do título da
-  // peça como seed: a mesma peça sempre recebe a mesma tonalidade (estável em
-  // "gerar outra" quando o título não muda), peças diferentes tendem a variar.
-  // Os outros 5 moods continuam com a paleta fixa de sempre.
-  const moodInstructions = (() => {
-    const base = moodVisualInstructions[mood] || moodVisualInstructions["OP-01"];
-    if (mood !== "OP-06") return base;
-    let seed = 0;
-    for (let i = 0; i < titulo.length; i++) seed = (seed * 31 + titulo.charCodeAt(i)) | 0;
-    const paleta = pickTonalidade(SILENCIO_TONALIDADES, Math.abs(seed), accentColor).bloco;
-    return base.replace(
-      "areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido",
-      paleta,
-    );
-  })();
+  // Paleta dos moods com rodízio de cor (FRAGMENTO, DESVIO, SILÊNCIO) — ver
+  // buildMoodVisualInstructions e POOL_POR_MOOD em core/colorRotation.ts.
+  //
+  // A seed é a da SEQUÊNCIA (result.variacaoSeed, repassada por quem chama).
+  // Até 12/08/2026 a do SILÊNCIO era um hash do TÍTULO desta peça, o que tinha
+  // duas consequências que o Ari sentiu no uso: o mesmo título dava a mesma cor
+  // para sempre (nenhuma memória entre gerações), e cards diferentes do mesmo
+  // carrossel caíam em paletas diferentes — o oposto da unidade cromática que
+  // esses moods prometem.
+  const moodInstructions = buildMoodVisualInstructions(mood, variacaoSeed, accentColor);
   // Frame do reels: logo aplicada por canvas (composeReelsPng) no chamador — NÃO via IA.
   // Quando logoDataUrl é passado por paths legados (posts estáticos), entra como referência.
   // Capa do Reels: logo aplicada por canvas (composeReelsPng) no chamador.
@@ -233,6 +230,7 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
         hasProdutoFisicoRef,
         produtoEhDispositivo,
         segment,
+        variacaoSeed,
       });
 
   return generateImageAsync({

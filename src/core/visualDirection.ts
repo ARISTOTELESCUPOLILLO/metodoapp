@@ -17,7 +17,7 @@
 // - ./imageVariationPicker.ts: pickImageVariationBlock.
 
 import { MoodCode, Segment } from "../types";
-import { pickTonalidade, pickRotating, SILENCIO_TONALIDADES } from "./colorRotation";
+import { pickPaletaDoMood, pickRotating } from "./colorRotation";
 import {
   getVisualDirection,
   SEGMENT_LAYERS,
@@ -219,13 +219,12 @@ export function buildMoodGrammarBlock(
   },
 ): string {
   const v = getVisualDirection(mood);
-  // SILÊNCIO (OP-06): rodízio determinístico de tonalidade (ver
-  // core/colorRotation.ts) em vez da paleta fixa — pedido do Aristóteles,
-  // 09/07/2026. Os outros 5 moods continuam com a paleta estática de sempre.
-  const paleta =
-    mood === "OP-06"
-      ? pickTonalidade(SILENCIO_TONALIDADES, opts?.tonalidadeSeed ?? 0, opts?.accentHex).bloco
-      : v.paleta;
+  // FRAGMENTO, DESVIO e SILÊNCIO rodam a paleta em vez de usar a fixa do léxico
+  // (ver POOL_POR_MOOD em core/colorRotation.ts). Começou só no SILÊNCIO em
+  // 09/07/2026 e chegou aos outros dois em 12/08/2026, quando o Ari relatou que
+  // via a mesma cor se repetir justamente nos moods que usa pouco. CLAREZA,
+  // IMPACTO e INSTANTE seguem com paleta única, por decisão dele.
+  const paleta = pickPaletaDoMood(mood, opts?.tonalidadeSeed, opts?.accentHex)?.bloco ?? v.paleta;
   const ruleText = resolveMoodRuleText(
     mood,
     !!opts?.noDeviceThisScene,
@@ -264,6 +263,11 @@ export function buildVisualDirectionBlock(
   const PASSO_CAMERA = 1;
   const PASSO_ESTRUTURA = 2;
   const PASSO_CONCEITO = 3;
+  // A paleta da sequência entra aqui pela MESMA posição de fila que rege câmera
+  // e pose — uma decisão por sequência, para todas as peças saírem na mesma cor
+  // (ver pickPaletaDoMood). Nos três moods sem rodízio, devolve null e vale a
+  // paleta única do léxico.
+  const paletaSequencia = pickPaletaDoMood(mood, seed)?.bloco ?? v.paleta;
   const seg = segment ? SEGMENT_LAYERS[mood]?.[segment] : undefined;
 
   const segmentBlock = seg
@@ -352,7 +356,7 @@ Toda peça da sequência DEVE expressar essa tensão visual de forma reconhecív
 GRAMÁTICA VISUAL DO MOOD:
 Toda imagePrompt e toda leituraCenica de TODA peça (estáticos, cards de carrossel, estáticos finais e reels) DEVE ser fotografada conforme esta gramática única:
 - Luz: ${v.luz}
-- Paleta: ${v.paleta}
+- Paleta: ${paletaSequencia}
 - Composição: ${v.composicao}
 - Atitude da câmera: ${v.camera}
 - Detalhe criativo (obrigatório, sutil): ${v.detalheCriativo}${variacaoBlock}${moodRuleBlock}${segmentBlock}

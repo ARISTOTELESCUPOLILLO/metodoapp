@@ -41,6 +41,7 @@ interface Params {
   anchoraPersonagem?: string;
   ancoragePapel?: string;
   clothingSeed?: number;
+  variacaoSeed?: number;
 }
 
 export function useUsoReferenciasState(params: Params) {
@@ -65,6 +66,7 @@ export function useUsoReferenciasState(params: Params) {
     anchoraPersonagem,
     ancoragePapel,
     clothingSeed,
+    variacaoSeed,
   } = params;
 
   const policy: RefPolicy = useMemo(
@@ -216,6 +218,7 @@ export function useUsoReferenciasState(params: Params) {
         anchoraPersonagem,
         ancoragePapel,
         clothingSeed,
+        variacaoSeed,
         formato: formatoOverride,
         selecaoDireta: {
           usarAvatar: avatarNum != null,

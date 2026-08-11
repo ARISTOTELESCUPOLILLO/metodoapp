@@ -43,6 +43,7 @@ export function FeedCard({
   anchoraPersonagem,
   ancoragePapel,
   clothingSeed,
+  variacaoSeed,
 }: {
   item: FeedItem;
   kit: BrandKit;
@@ -56,6 +57,7 @@ export function FeedCard({
   anchoraPersonagem?: string;
   ancoragePapel?: string;
   clothingSeed?: number;
+  variacaoSeed?: number;
 } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -110,6 +112,7 @@ export function FeedCard({
         anchoraPersonagem,
         ancoragePapel,
         segment: segmento,
+        variacaoSeed,
       });
       const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);
       updatePreview(final);
@@ -152,6 +155,7 @@ export function FeedCard({
         anchoraPersonagem,
         ancoragePapel,
         clothingSeed,
+        variacaoSeed,
         forcedGender,
         userId,
         modelo,
@@ -211,6 +215,7 @@ export function FeedCard({
             anchoraPersonagem={anchoraPersonagem}
             ancoragePapel={ancoragePapel}
             clothingSeed={clothingSeed}
+            variacaoSeed={variacaoSeed}
             onGerou={async (url) => {
               try {
                 const final = await composeFeedPng(kit, { ...item, titulo, texto, legenda }, url);

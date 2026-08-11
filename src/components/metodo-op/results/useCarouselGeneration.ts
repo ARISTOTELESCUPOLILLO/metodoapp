@@ -61,6 +61,7 @@ export function useCarouselGeneration(params: {
   anchoraPersonagem?: string;
   ancoragePapel?: string;
   clothingSeed?: number;
+  variacaoSeed?: number;
   onImageGenerated?: () => void;
   guard: ReturnType<typeof useImageGenAlert>["guard"];
   titulos: string[];
@@ -80,6 +81,7 @@ export function useCarouselGeneration(params: {
     anchoraPersonagem,
     ancoragePapel,
     clothingSeed,
+    variacaoSeed,
     onImageGenerated,
     guard,
     titulos,
@@ -126,6 +128,7 @@ export function useCarouselGeneration(params: {
         forcedGender: forcedGenders[index],
         anchoraPersonagem,
         ancoragePapel,
+        variacaoSeed,
       });
       const item: FeedItem = {
         dia: dayNumber,
@@ -273,6 +276,7 @@ export function useCarouselGeneration(params: {
         anchoraPersonagem,
         ancoragePapel,
         clothingSeed,
+        variacaoSeed,
         forcedGender: forcedGenders[index],
         userId,
         modelo,
@@ -324,6 +328,7 @@ export function useCarouselGeneration(params: {
             forcedGender: forcedGenders[i],
             anchoraPersonagem,
             ancoragePapel,
+            variacaoSeed,
           });
           const item: FeedItem = {
             dia: dayNumber,
@@ -396,6 +401,7 @@ export function useCarouselGeneration(params: {
             anchoraPersonagem,
             ancoragePapel,
             clothingSeed,
+            variacaoSeed,
             forcedGender: forcedGenders[i],
             userId,
             modelo,

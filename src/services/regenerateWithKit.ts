@@ -86,6 +86,11 @@ export interface RegenerateInput {
   // Seed estável por sequência (ver useAnchorControl) — mantém a MESMA cor de
   // roupa prevista em todas as peças quando o avatar é usado sem uniforme real.
   clothingSeed?: number;
+  // Posição da sequência na fila de variação (result.variacaoSeed) — rege a
+  // paleta dos moods com rodízio de cor e a câmera. Também é por sequência,
+  // pelo mesmo motivo do clothingSeed acima: regenerar UM card com o Kit não
+  // pode trocar a paleta só dele e desamarrar o carrossel.
+  variacaoSeed?: number;
 }
 
 // Ordenação de referências (avatar -> uniforme -> cenário -> produtos) agora
@@ -175,6 +180,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
     userId,
     modelo,
     clothingSeed,
+    variacaoSeed,
   } = input;
 
   // Recarrega o Kit do servidor (autoritativo) antes de montar as
@@ -268,6 +274,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
         anchoraPersonagem,
         ancoragePapel,
         segment: kit.segment,
+        variacaoSeed,
       },
       hasUniformeRef ? kit.logoDataUrl : undefined,
     );
@@ -302,6 +309,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
         anchoraPersonagem,
         ancoragePapel,
         segment: kit.segment,
+        variacaoSeed,
       },
       hasUniformeRef ? kit.logoDataUrl : undefined,
     );
@@ -338,6 +346,7 @@ export async function regenerateWithKit(input: RegenerateInput): Promise<string>
       anchoraPersonagem,
       ancoragePapel,
       segment: kit.segment,
+      variacaoSeed,
     },
     hasUniformeRef ? kit.logoDataUrl : undefined,
   );

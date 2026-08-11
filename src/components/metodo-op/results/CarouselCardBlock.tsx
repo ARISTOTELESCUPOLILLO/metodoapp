@@ -35,6 +35,7 @@ export function CarouselCardBlock({
   anchoraPersonagem,
   ancoragePapel,
   clothingSeed,
+  variacaoSeed,
 }: {
   cards: CarouselCard[];
   kit: BrandKit;
@@ -48,6 +49,7 @@ export function CarouselCardBlock({
   anchoraPersonagem?: string;
   ancoragePapel?: string;
   clothingSeed?: number;
+  variacaoSeed?: number;
 } & RefSelectorProps) {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -98,6 +100,7 @@ export function CarouselCardBlock({
     anchoraPersonagem,
     ancoragePapel,
     clothingSeed,
+    variacaoSeed,
     onImageGenerated,
     guard,
     titulos,

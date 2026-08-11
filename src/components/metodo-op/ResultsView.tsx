@@ -76,6 +76,14 @@ export default function ResultsView({
     clothingSeed,
   } = useAnchorControl(result, faixaEtariaForm, generoPrefForm);
 
+  // Posição da sequência na fila de variação — decidida na geração e guardada
+  // com o resultado (ver useMopHandlers). Viaja para todas as peças pelo mesmo
+  // caminho do clothingSeed, que também é uma decisão por sequência: é o que
+  // faz o carrossel inteiro sair na mesma paleta. Sequências antigas, geradas
+  // antes de 12/08/2026, não têm o campo — aí o comportamento de sorteio
+  // anterior continua valendo, sem quebrar nada.
+  const variacaoSeed = result?.variacaoSeed;
+
   // `track` não consta em MethodOpResult e o motor não o popula hoje (o valor é
   // inferido por trackResolved abaixo); leitura defensiva p/ compat — mantido
   // como any pois tipar exigiria afirmar que o campo nunca existe.
@@ -249,6 +257,7 @@ export default function ResultsView({
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
                   clothingSeed={clothingSeed}
+                  variacaoSeed={variacaoSeed}
                 />
               );
             }
@@ -271,6 +280,7 @@ export default function ResultsView({
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
                   clothingSeed={clothingSeed}
+                  variacaoSeed={variacaoSeed}
                 />
               );
             }
@@ -293,6 +303,7 @@ export default function ResultsView({
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
                   clothingSeed={clothingSeed}
+                  variacaoSeed={variacaoSeed}
                 />
               );
             }
@@ -316,6 +327,7 @@ export default function ResultsView({
                   anchoraPersonagem={anchoraPersonagem}
                   ancoragePapel={ancoragePapel}
                   clothingSeed={clothingSeed}
+                  variacaoSeed={variacaoSeed}
                 />
               );
             }

@@ -92,6 +92,9 @@ export function buildImagePrompt(params: {
   // tablet vira objeto genérico (bug real 2026-07-08). Ver buildDeviceRule.
   produtoEhDispositivo?: boolean;
   segment?: import("../../types").Segment;
+  /** Posição da sequência na fila de variação — rege câmera/pose aqui e a
+   * paleta em buildMoodVisualInstructions. Ver generatePostImage. */
+  variacaoSeed?: number;
 }): string {
   const {
     titulo,
@@ -120,6 +123,7 @@ export function buildImagePrompt(params: {
     hasProdutoFisicoRef,
     produtoEhDispositivo,
     segment,
+    variacaoSeed,
   } = params;
   const isCover = format === "reels_cover";
   const canvasSize = isCover ? "1080x1920" : "1080x1350";
@@ -257,6 +261,7 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
     composicao: leituraCenica?.composicao,
     hasCenarioRef,
     segment,
+    seed: variacaoSeed,
   });
 
   // Regra compositiva de produto-protagonista — só para segmento VAREJO quando

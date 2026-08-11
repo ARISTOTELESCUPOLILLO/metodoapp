@@ -165,6 +165,13 @@ export interface MethodOpResult {
   // pela orquestração de regeneração pontual no cliente, ver E3).
   flags?: ValidationFlag[];
   ancora_visual?: AnchoraVisual;
+  /** Posição desta sequência na fila de variação visual do usuário (ver
+   * nextVariacaoSeed em utils/storage.ts). Decidida UMA vez, quando a sequência
+   * é gerada, e usada por todas as peças dela — é o que garante que o carrossel
+   * inteiro saia na mesma paleta e sob a mesma câmera, e que a próxima
+   * sequência não repita as desta. Persistida junto com o resultado, então
+   * sobrevive a recarregar a página. Não vem do GPT: é nossa. */
+  variacaoSeed?: number;
 }
 
 export interface ValidationFlag {
