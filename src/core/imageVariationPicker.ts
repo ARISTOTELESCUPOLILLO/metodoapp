@@ -18,8 +18,9 @@ import {
   FRAGMENTO_GRID_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
-  SILENCIO_CAMERA_VARIATIONS,
   SILENCIO_OBJECT_VARIATIONS,
+  silencioCamerasCompativeis,
+  INSTANTE_PRECEDENCIA_PLANO,
   PERSONAGEM_GENDER_VARIATIONS,
 } from "./visualDirection.lexicon";
 
@@ -81,12 +82,15 @@ export function pickImageVariationBlock(
     // Mesmo motivo do OP-05 acima — o objeto isolado e a câmera desta peça já
     // foram decididos pela etapa de conteúdo quando composicao existe.
     if (composicao) return "";
-    const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
     // O tipo de sujeito isolado passou a ser sorteado em 11/08/2026. Antes só a
     // câmera variava e o objeto ficava por conta do modelo, que convergia
     // sempre para os mesmos poucos — com o agravante de a câmera mudar em volta
     // do mesmo objeto, o que lê como a mesma peça refotografada.
+    //
+    // Objeto primeiro, câmera depois: há combinações que não existem
+    // fisicamente (zenital × quadro na parede) — ver silencioCamerasCompativeis.
     const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
+    const camera = pickRandom(silencioCamerasCompativeis(objeto));
     return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. Sujeito isolado desta geração: ${objeto} O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
   }
 
@@ -157,7 +161,11 @@ export function pickImageVariationBlock(
   // Estrutura (todos os moods deste bloco) são suprimidas nesse caso; gênero
   // ainda se aplica.
   const estruturaBlock = composicao ? "" : `Estrutura: ${variation} `;
+  // Só o INSTANTE precisa: é o único mood em que câmera e estrutura de pose
+  // declaram plano de forma independente (ver INSTANTE_PRECEDENCIA_PLANO).
+  const precedencia =
+    mood === "OP-03" && cameraStr && estruturaBlock ? INSTANTE_PRECEDENCIA_PLANO : "";
   // Gênero vem primeiro no bloco — é a restrição mais importante e não pode
   // ficar enterrada depois da câmera/estrutura (ver comentário acima).
-  return `\n⚠ VARIAÇÃO: ${genderBlock}${cameraStr}${estruturaBlock}${TEMA_DERIVATION_RULE}`;
+  return `\n⚠ VARIAÇÃO: ${genderBlock}${cameraStr}${estruturaBlock}${precedencia}${TEMA_DERIVATION_RULE}`;
 }

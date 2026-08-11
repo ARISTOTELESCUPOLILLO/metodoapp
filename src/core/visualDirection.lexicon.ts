@@ -309,8 +309,8 @@ export const INSTANTE_POOL_SEM_PDV: string[] = [
   INSTANTE_CHARACTER_VARIATIONS[2], // reação espontânea em transição
   INSTANTE_CHARACTER_VARIATIONS[5], // pausa sentada na revisão
   INSTANTE_CHARACTER_VARIATIONS[6], // direção/alinhamento em pé
-  INSTANTE_CHARACTER_VARIATIONS[8], // conversa de trabalho a dois
-];
+  INSTANTE_CHARACTER_VARIATIONS[7], // conversa de trabalho a dois
+].filter(Boolean);
 
 // Variação de câmera sorteada para INSTANTE. Até 11/08/2026 a câmera deste mood
 // era UMA string fixa ("35mm levemente alta, distância natural, grão sutil") —
@@ -321,6 +321,15 @@ export const INSTANTE_POOL_SEM_PDV: string[] = [
 // `assinatura` do mood, anexada ao fim de cada imagePrompt, declara "lente 35mm
 // com grão sutil" — variar a lente aqui contradiria o fecho do próprio prompt.
 // O que varia é ALTURA e DISTÂNCIA, que é o que estava travado.
+// Câmera e estrutura de pose são sorteadas de forma independente e AMBAS citam
+// plano — a pose porque sempre citou ("plano próximo ou médio"), a câmera porque
+// variar distância era o objetivo da mudança. Em cerca de 1 de cada 4
+// combinações as duas discordam. O CLAREZA não tem esse problema porque
+// CLAREZA_PLANO_MEDIO_SENTENCE trava o plano no nível do mood; o INSTANTE não
+// tem trava equivalente, então a precedência precisa ser dita explicitamente.
+export const INSTANTE_PRECEDENCIA_PLANO =
+  "PRECEDÊNCIA DE ENQUADRAMENTO NESTA PEÇA: se a câmera sorteada e a estrutura de pose citarem planos diferentes, vale a DISTÂNCIA DA CÂMERA — a estrutura de pose entra com a ação, o gesto, a expressão e o ambiente, não com o enquadramento. A ALTURA da câmera é inegociável em qualquer hipótese. Exceção única: se a estrutura de pose exigir dois sujeitos em cena, recue o quanto for preciso para os dois caberem no quadro — aí a distância cede, a altura não. ";
+
 export const INSTANTE_CAMERA_VARIATIONS: string[] = [
   "35mm levemente alta, distância natural, grão sutil — ponto de vista de quem passa pelo local e registra sem preparar a cena",
   "35mm na altura dos olhos, distância curta — enquadramento próximo, ombro e rosto ocupando boa parte do quadro, grão sutil, sensação de estar dentro da conversa",
@@ -338,9 +347,9 @@ export const INSTANTE_CAMERA_VARIATIONS: string[] = [
 // (FRAGMENTO_BLOCOS_SENTENCE) e nenhum bloco encostando nas bordas do canvas.
 export const FRAGMENTO_GRID_VARIATIONS: string[] = [
   "GRADE DE 3 BLOCOS ASSIMÉTRICA: um bloco dominante ocupando cerca de metade do quadro e 2 blocos menores empilhados ao lado. O bloco dominante traz o plano mais aberto (ambiente ou ação); os menores, detalhe e textura. Ponto de vista alternando frontal direto no maior e macro nos menores.",
-  "GRADE DE 4 BLOCOS EM QUADRANTES: quatro blocos de área semelhante, com uma linha divisória visível ou implícita cruzando o quadro. Cada quadrante em uma distância diferente — um macro, um detalhe próximo, um plano médio, um de ambiente —, mantendo a mesma luz neutra uniforme entre eles.",
-  "GRADE DE 5 BLOCOS EM RITMO EDITORIAL: uma faixa horizontal larga no topo, com o plano mais aberto, e 4 blocos menores em fileira abaixo, com detalhes e materiais. Ponto de vista predominante zenital nos blocos pequenos, criando ritmo de catálogo de estúdio.",
-  "TRÍPTICO VERTICAL: 3 blocos verticais de larguras diferentes, lado a lado, como colunas de página de revista. O bloco mais largo carrega a cena principal em plano médio; os estreitos, recortes verticais de textura, material ou fragmento de gesto. Ponto de vista frontal direto nos três.",
+  "GRADE DE 4 BLOCOS EM QUADRANTES: quatro blocos de área semelhante, separados por linha divisória sutil — visível ou apenas sugerida pelo alinhamento. Cada quadrante em uma distância E um ângulo diferentes — um macro zenital, um detalhe próximo lateral, um plano médio frontal, um de ambiente em três-quartos —, mantendo a mesma luz neutra uniforme entre eles.",
+  "GRADE DE 5 BLOCOS EM RITMO EDITORIAL: uma faixa horizontal larga no topo, com o plano mais aberto, e 4 blocos menores em fileira abaixo, com detalhes e materiais. Os blocos pequenos alternam zenital e lateral rasante entre si — nunca todos no mesmo ângulo, porque o que costura a peça é a paleta, não a repetição do ponto de vista.",
+  "TRÍPTICO VERTICAL: 3 blocos verticais de larguras diferentes, lado a lado, como colunas de página de revista. O bloco mais largo carrega a cena principal em plano médio frontal; os estreitos, recortes verticais de textura, material ou fragmento de gesto, cada um de um ângulo próprio (um de cima, um rasante) — as três colunas registram o mesmo universo de pontos de vista distintos.",
   "MOSAICO COM BLOCO CENTRAL: um bloco central menor e destacado, cercado por 3 ou 4 blocos periféricos maiores. O centro traz o detalhe macro mais específico do ofício; a periferia, ambiente e contexto em plano médio. Ponto de vista misto, com o centro em macro frontal e a periferia em ângulos variados.",
 ];
 
@@ -403,7 +412,10 @@ export const SILENCIO_OBJECT_VARIATIONS: string[] = [
   "FRAGMENTO HUMANO COM OBJETO, plano próximo: mão ou fragmento de braço tocando delicadamente um objeto do ofício real da empresa — mão aberta sobre superfície, ponta do dedo próxima a produto, palma em material de trabalho, dedos segurando objeto simples e coerente com o negócio. Sem rosto, sem corpo completo. Vasto espaço negativo acima e ao redor. Composição centralizada. Luz alta-chave suave de janela lateral.",
   "OBJETO EM SUPERFÍCIE TEXTURIZADA, plano próximo ou médio-próximo: um único objeto sobre superfície com textura visível e natural — mármore branco, madeira clara, tecido linho, papel artesanal, concreto suave. O contraste entre o objeto e a textura da superfície é a composição inteira. Sem presença humana, sem outros elementos. Luz difusa de janela.",
   "SILHUETA OU NUCA CONTEMPLATIVA, plano médio: personagem de costas ou de perfil extremo, ocupando menos de 25% da área total da imagem — o espaço vazio é o protagonista. Pessoa pequena diante de janela grande, parede ampla ou fundo neutro. Sem gesto significativo, sem ação — apenas presença silenciosa. Luz traseira ou lateral de janela. Sem rosto visível.",
-  "DETALHE MÍNIMO EM MACRO, plano muito próximo: textura ou detalhe de material, produto ou ambiente do negócio — grão de café, fibra de tecido, superfície de embalagem, detalhe de ferramenta, textura de material de trabalho. Sem rosto, sem texto, sem logo. Fundo desfocado em paleta suave. A beleza está no detalhe ampliado. Composição centralizada ou em regra dos terços.",
+  // "sem texto, sem logo" saiu daqui em 11/08/2026: o mesmo prompt manda
+  // renderizar o título ocupando 45% da altura do canvas e reservar a zona da
+  // logomarca. A proibição vale para o OBJETO fotografado, não para a peça.
+  "DETALHE MÍNIMO EM MACRO, plano muito próximo: textura ou detalhe de material, produto ou ambiente do negócio — grão de café, fibra de tecido, superfície de embalagem, detalhe de ferramenta, textura de material de trabalho. Sem rosto e sem presença humana no quadro; a própria superfície fotografada não traz texto legível nem marca impressa. Fundo desfocado em paleta suave. A beleza está no detalhe ampliado. Composição centralizada ou em regra dos terços.",
   "QUADRO OU MOLDURA NA PAREDE, plano médio ou aberto: uma única peça emoldurada — quadro, fotografia, certificado, ilustração simples — pendurada em parede neutra e ampla, ocupando proporção pequena da composição e cercada de vasto espaço de parede vazia. Pode haver fragmento humano discreto por perto (mão, ombro, nuca), fora de foco ou de costas — nunca rosto em destaque. Sem texto legível na peça emoldurada. Luz lateral suave de janela revelando a textura da parede. Composição assimétrica e respirada — o quadro humaniza o ambiente sem se tornar o centro literal da mensagem.",
 ];
 
@@ -447,6 +459,28 @@ export const DESVIO_CAMERA_VARIATIONS: string[] = [
 
 export function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Câmera e objeto do SILÊNCIO são sorteados de forma independente, e nem toda
+// combinação existe fisicamente: a zenital olha de cima para uma superfície e
+// não alcança o que está pendurado na parede nem alguém de pé diante de uma
+// janela; a câmera aberta afasta e desfaz o macro, que é definido justamente
+// por estar muito próximo. Filtrar aqui é melhor do que deixar a contradição
+// chegar ao prompt e o modelo escolher um dos lados.
+//
+// Casa por marcador de texto, não por índice, para sobreviver a reordenação do
+// pool — ver o bug de índice de 11/08/2026 registrado em INSTANTE_POOL_SEM_PDV.
+export function silencioCamerasCompativeis(objeto: string): string[] {
+  const naParedeOuDePe = /NA PAREDE|SILHUETA/.test(objeto);
+  const macro = /MACRO|plano muito próximo/.test(objeto);
+  const compativeis = SILENCIO_CAMERA_VARIATIONS.filter((camera) => {
+    if (naParedeOuDePe && camera.startsWith("CÂMERA ZENITAL")) return false;
+    if (macro && camera.startsWith("CÂMERA ABERTA")) return false;
+    return true;
+  });
+  // Nunca devolver pool vazio: se um objeto futuro casar com as duas regras e
+  // sobrar nada, é melhor sortear entre todas do que travar a geração.
+  return compativeis.length ? compativeis : SILENCIO_CAMERA_VARIATIONS;
 }
 
 // Sentenças de dispositivo de CLAREZA e FRAGMENTO, extraídas para permitir

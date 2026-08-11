@@ -98,11 +98,14 @@ const CAMERAS_SEM_PERSONAGEM: Partial<Record<MoodCode, string[]>> = {
     "CÂMERA 35mm afastada, plano aberto — o ambiente inteiro no quadro com o sinal de trabalho em andamento em algum ponto dele, grão sutil",
     "CÂMERA 35mm levemente baixa, distância média — ponto de vista de quem está sentado no local e olha o espaço à sua volta, grão sutil",
   ],
-  // FRAGMENTO não tinha câmera aqui: os blocos saíam sempre no mesmo ponto de vista.
+  // FRAGMENTO não tinha câmera aqui: os blocos saíam sempre no mesmo ponto de
+  // vista. Nenhuma opção pode fixar UM ângulo para todos os blocos: MOOD_RULES
+  // do mood exige "perspectivas simultâneas, como se múltiplas câmeras
+  // registrassem de ângulos diferentes", e proíbe leitura de catálogo.
   "OP-04": [
-    "PONTO DE VISTA ZENITAL DOMINANTE: maioria dos blocos vista de cima, lente 50mm, sombras curtas e uniformes — ritmo de catálogo organizado sobre superfície",
-    "PONTO DE VISTA FRONTAL DIRETO: blocos fotografados de frente, lente 50mm, sem perspectiva dramática — leitura de ficha técnica, geometria evidente",
-    "ALTERNÂNCIA MACRO E MÉDIO: blocos de detalhe extremo intercalados com blocos de ambiente, lentes 50mm e macro — a mudança de escala entre blocos vizinhos é o ritmo da peça",
+    "ZENITAL PREDOMINANTE COM QUEBRA: a maioria dos blocos vista de cima, lente 50mm, sombras curtas e uniformes — mas ao menos UM bloco fotografado de frente ou rasante, quebrando o eixo e revelando a mesma cena por outro ponto de vista",
+    "FRONTAL PREDOMINANTE COM QUEBRA: a maioria dos blocos de frente, lente 50mm, geometria evidente — com ao menos UM bloco zenital ou em três-quartos, para os fragmentos não lerem como uma única fotografia recortada",
+    "ALTERNÂNCIA MACRO E MÉDIO: blocos de detalhe extremo intercalados com blocos de ambiente, lentes 50mm e macro, cada um em ângulo próprio — a mudança de escala E de eixo entre blocos vizinhos é o ritmo da peça",
   ],
   "OP-05": [
     "PLONGÉE ACENTUADA: câmera nitidamente acima do objeto, lente 28-35mm, enquadramento médio — o olhar de cima revela o deslocamento",

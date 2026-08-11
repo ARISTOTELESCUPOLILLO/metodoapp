@@ -33,8 +33,9 @@ import {
   PERSONAGEM_GENDER_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
-  SILENCIO_CAMERA_VARIATIONS,
   SILENCIO_OBJECT_VARIATIONS,
+  silencioCamerasCompativeis,
+  INSTANTE_PRECEDENCIA_PLANO,
   CLAREZA_DEVICE_WELCOME_SENTENCE,
   CLAREZA_DEVICE_COEXIST_SENTENCE,
   CLAREZA_DEVICE_CLAUSE_SUPPRESSED,
@@ -286,10 +287,11 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     const grade = pickRandom(FRAGMENTO_GRID_VARIATIONS);
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Arranjo da grade: ${grade}\n${TEMA_DERIVATION_RULE} Aqui, o CONTEÚDO de cada bloco é o que deriva do tema — o arranjo acima é só a moldura que organiza os blocos. Manter a paleta unificada de 3 tons costurando o conjunto e a margem de respiro das bordas.`;
   } else if (mood === "OP-06") {
-    const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
     // Sujeito isolado passou a ser sorteado em 11/08/2026 — ver comentário em
     // SILENCIO_OBJECT_VARIATIONS (o pool existia e nunca era importado).
+    // Objeto primeiro: a câmera é sorteada só entre as compatíveis com ele.
     const objeto = pickRandom(SILENCIO_OBJECT_VARIATIONS);
+    const camera = pickRandom(silencioCamerasCompativeis(objeto));
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Sujeito isolado: ${objeto}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
   } else if (characterVariationMap[mood]) {
     // Para INSTANTE (OP-03), MARCA e SERVIÇOS usam o pool reduzido sem léxico de
@@ -309,7 +311,10 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
           ? pickRandom(INSTANTE_CAMERA_VARIATIONS)
           : null;
     const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ""}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESCOPO EXCLUSIVO: aplica-se APENAS ao campo "personagem" da leituraCenica e à composição visual da imagem — NÃO deve alterar título, texto, legenda, hook nem qualquer campo textual da peça. Nos campos de texto, quando o usuário não especificou gênero, usar sempre termos neutros ("gestores", "profissionais", "decisores", "equipes", "pessoas") — nunca escolher gênero nos textos por conta própria. No campo "personagem": adapte para ${gender}, preservando a mesma ação, postura, papel e contexto — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
+    // Só o INSTANTE precisa da regra de precedência: é o único mood em que
+    // câmera e estrutura de pose declaram plano de forma independente.
+    const precedencia = mood === "OP-03" && camera ? `\n${INSTANTE_PRECEDENCIA_PLANO}` : "";
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ""}${precedencia}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESCOPO EXCLUSIVO: aplica-se APENAS ao campo "personagem" da leituraCenica e à composição visual da imagem — NÃO deve alterar título, texto, legenda, hook nem qualquer campo textual da peça. Nos campos de texto, quando o usuário não especificou gênero, usar sempre termos neutros ("gestores", "profissionais", "decisores", "equipes", "pessoas") — nunca escolher gênero nos textos por conta própria. No campo "personagem": adapte para ${gender}, preservando a mesma ação, postura, papel e contexto — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
   }
 
   const moodRuleBlock = MOOD_RULES[mood]
