@@ -330,6 +330,22 @@ export const INSTANTE_POOL_SEM_PDV: string[] = [
 export const INSTANTE_PRECEDENCIA_PLANO =
   "PRECEDÊNCIA DE ENQUADRAMENTO NESTA PEÇA: se a câmera sorteada e a estrutura de pose citarem planos diferentes, vale a DISTÂNCIA DA CÂMERA — a estrutura de pose entra com a ação, o gesto, a expressão e o ambiente, não com o enquadramento. A ALTURA da câmera é inegociável em qualquer hipótese. Exceção única: se a estrutura de pose exigir dois sujeitos em cena, recue o quanto for preciso para os dois caberem no quadro — aí a distância cede, a altura não. ";
 
+// O prompt do MOP declara DUAS regras sobre distância de câmera ao mesmo tempo:
+// o ARCO VISUAL DA SEQUÊNCIA e o ARCO VISUAL INTERNO DO CARROSSEL
+// (organizaMethodEngine.ts), que obrigam cada peça a mudar de enquadramento —
+// aberto na abertura, fechando até close no card 5, proibido repetir em cards
+// consecutivos —, e a câmera sorteada, que vale para a geração inteira e diz
+// "SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO". As duas citam plano; prompt que manda
+// duas coisas opostas deixa o modelo escolher um lado (achado 12/08/2026, a
+// mesma classe de bug do avatar que sumiu em 06/08).
+//
+// A distância fica com o ARCO: é narrativa da sequência e regra deliberada do
+// produto, anterior a qualquer sorteio. O sorteio entra com o que o arco NÃO
+// diz — altura, lente, luz e textura —, que é exatamente o eixo que não variava
+// e fazia as peças parecerem a mesma foto refotografada.
+export const ARCO_PRECEDENCIA_CAMERA =
+  "PRECEDÊNCIA ENTRE A CÂMERA SORTEADA E O ARCO VISUAL: a câmera acima governa ALTURA, LENTE, LUZ e TEXTURA — e essas quatro permanecem constantes em TODAS as peças desta geração, porque são o que dá unidade à sequência. A DISTÂNCIA não vem dela: o plano de cada peça (aberto, médio, médio-fechado, close) é o que o ARCO VISUAL DA SEQUÊNCIA e o ARCO VISUAL INTERNO DO CARROSSEL determinam, peça a peça. Onde a linha de câmera acima mencionar distância, plano ou enquadramento, essa parte específica CEDE ao arco — o resto dela continua valendo integralmente. Em resumo: altura, lente e luz não mudam ao longo da sequência; a distância muda a cada peça.";
+
 export const INSTANTE_CAMERA_VARIATIONS: string[] = [
   "35mm levemente alta, distância natural, grão sutil — ponto de vista de quem passa pelo local e registra sem preparar a cena",
   "35mm na altura dos olhos, distância curta — enquadramento próximo, ombro e rosto ocupando boa parte do quadro, grão sutil, sensação de estar dentro da conversa",

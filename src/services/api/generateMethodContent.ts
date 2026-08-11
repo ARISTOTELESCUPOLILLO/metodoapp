@@ -25,8 +25,12 @@ async function authHeader(): Promise<Record<string, string>> {
 export async function generateMethodContent(
   data: ContentFormData,
   preferredSlot?: string,
+  /** Posição na fila de variação visual do usuário — ver nextVariacaoSeed em
+   * utils/storage.ts. Quem chama é que lê e avança o contador, porque o motor
+   * é puro e não conhece localStorage. */
+  variacaoSeed?: number,
 ): Promise<MethodOpResult> {
-  const prompt = buildMetodoOpPrompt(data);
+  const prompt = buildMetodoOpPrompt(data, variacaoSeed);
   const auth = await authHeader();
   const res = await fetch("/api/generate-content", {
     method: "POST",

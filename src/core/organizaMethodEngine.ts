@@ -144,7 +144,14 @@ function buildCommunicativeFunctionMap(
 // keyInfo diferentes. Nenhuma regra/instrução foi reescrita aqui — só
 // reordenada (ver `emissorLine` e `ancoraDataLine` abaixo, que são texto
 // idêntico ao que já existia, só deslocado).
-export function buildMetodoOpPrompt(data: ContentFormData): string {
+export function buildMetodoOpPrompt(
+  data: ContentFormData,
+  /** Posição desta sequência na fila de variação do usuário — ver
+   * nextVariacaoSeed em utils/storage.ts. Repassada à direção visual para que
+   * câmera e pose andem de uma sequência para a próxima em vez de serem
+   * sorteadas do zero toda vez. Opcional: sem ela, sorteio de sempre. */
+  variacaoSeed?: number,
+): string {
   const isB2B = data.audience === "B2B";
   const seg = AUDIENCE_SEGMENT_CONFIG[isB2B ? "B2B" : "B2C"][data.segment];
   const moment = momentModulators[data.businessMoment] || momentModulators["consolidação"];
@@ -450,7 +457,7 @@ ${activityLine}
 ${keyInfoBlock}
 ${ancoraDataLine}
 ${emissorLine}
-${buildVisualDirectionBlock(data.mood, data.segment)}
+${buildVisualDirectionBlock(data.mood, data.segment, variacaoSeed)}
 
 DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
 ${buildSceneRoleRule()}

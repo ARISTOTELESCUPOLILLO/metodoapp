@@ -47,6 +47,18 @@ export const COPY_EDITS_KEY = "metodo-op-copyedits-v1";
  */
 export const SUGESTAO_HISTORY_KEY = "metodo-op-sugestao-history-v1";
 
+/**
+ * Posição atual do usuário na FILA de variação visual (câmera, pose, luz).
+ * Guarda um contador que só cresce, um por usuário — cada geração consome uma
+ * posição e a seguinte começa da próxima. É o que faz a variação ser fila e não
+ * sorteio: sorteio com reposição repete a mesma câmera com frequência alta (1
+ * em 5 num pool de 5) e o olho lê isso como "a mesma foto de novo".
+ *
+ * Mesma razão de existir do SUGESTAO_HISTORY_KEY acima — sem persistir, a
+ * memória morre no refresh e a fila reinicia sempre do mesmo ponto.
+ */
+export const VARIACAO_SEED_KEY = "metodo-op-variacao-seed-v1";
+
 // ── Prefixos para caches de sessão ────────────────────────────────────────────
 /** Prefixo de imagens geradas pelo MOP em sessão. Formato: `${PREFIX}:${userId}:${key}` */
 export const SESSION_IMG_PREFIX = "metodo-op-img-v1";

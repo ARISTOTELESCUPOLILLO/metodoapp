@@ -6,6 +6,7 @@ import { detectForcedGenderFromCopy, PersonagemGender } from "./visualDirection"
 // Importado direto de productHierarchy (e não do re-export em visualDirection)
 // para não criar ciclo de import entre este módulo e visualDirection.
 import { variationHasFaceNotDominant } from "./productHierarchy";
+import { pickRotating } from "./colorRotation";
 import {
   pickRandom,
   CLAREZA_CAMERA_VARIATIONS,
@@ -35,6 +36,12 @@ export function pickImageVariationBlock(opts: {
   composicao?: string;
   hasCenarioRef?: boolean;
   segment?: Segment;
+  /** Posição desta peça na fila de variação do usuário (ver nextVariacaoSeed em
+   * utils/storage.ts). Com ela, câmera e estrutura ANDAM em vez de serem
+   * sorteadas: a peça seguinte nunca cai na mesma que a anterior. Sem ela
+   * (undefined), o comportamento continua sendo o sorteio de sempre — é assim
+   * que os caminhos ainda não fiados seguem funcionando. */
+  seed?: number;
 }): string {
   const {
     mood,
@@ -46,8 +53,20 @@ export function pickImageVariationBlock(opts: {
     composicao,
     hasCenarioRef,
     segment,
+    seed,
   } = opts;
   if (!mood) return "";
+
+  // Eixos independentes da MESMA fila, cada um com seu passo: se os dois
+  // andassem juntos, câmera e pose ficariam amarradas uma à outra e o número
+  // real de combinações desabaria para o tamanho de um pool só (é o mesmo
+  // cuidado que a paleta e o arquétipo já tomam em colorRotation.ts). Passo
+  // não co-primo com o tamanho do pool é corrigido dentro de pickRotating.
+  const PASSO_CAMERA = 1;
+  const PASSO_ESTRUTURA = 2;
+  const PASSO_CONCEITO = 3;
+  const pickEixo = <T>(pool: T[], passo: number): T =>
+    seed === undefined ? pickRandom(pool) : pickRotating(pool, seed, passo);
 
   // Calculado aqui (antes dos early-returns de OP-05/06) para que todos os
   // moods recebam a restrição de gênero. Antes, OP-05/06 retornavam sem nenhum
@@ -82,9 +101,9 @@ export function pickImageVariationBlock(opts: {
     // "AMBIENTE: ..." fixa — quando há foto real de cenário de referência, essa
     // cláusula compete e contradiz o local registrado (ver hasCenarioRef em
     // buildImagePrompt). Removemos a cláusula, mantendo o resto da ruptura.
-    const rupturaRaw = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
+    const rupturaRaw = pickEixo(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS, PASSO_CONCEITO);
     const ruptura = hasCenarioRef ? rupturaRaw.replace(/\s*AMBIENTE:.*$/, "") : rupturaRaw;
-    const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
+    const camera = pickEixo(DESVIO_CAMERA_VARIATIONS, PASSO_CAMERA);
     return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} O elemento da ruptura deriva do tema — nunca clichê genérico (ver regra CONCEITO-FIRST). Uma ruptura por cena.`;
   }
 
@@ -101,7 +120,7 @@ export function pickImageVariationBlock(opts: {
     // ainda atropelava o avatar: as seis variações do pool mandam a peça sair
     // sem rosto, e uma delas pede "mão ou fragmento de braço" — foi o que saiu
     // na peça real do Ari com avatar marcado. Não religar sem decisão dele.
-    const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
+    const camera = pickEixo(SILENCIO_CAMERA_VARIATIONS, PASSO_CAMERA);
     return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
   }
 
@@ -112,7 +131,7 @@ export function pickImageVariationBlock(opts: {
     // composição, sortear outra grade aqui produziria duas grades diferentes no
     // mesmo prompt.
     if (composicao) return "";
-    const grade = pickRandom(FRAGMENTO_GRID_VARIATIONS);
+    const grade = pickEixo(FRAGMENTO_GRID_VARIATIONS, PASSO_CONCEITO);
     return `\n⚠ VARIAÇÃO: ${genderBlock}Arranjo da grade desta geração: ${grade} Manter a paleta unificada de 3 tons costurando todos os blocos e a margem de respiro das bordas — nenhum bloco encosta no limite do canvas. ${TEMA_DERIVATION_RULE}`;
   }
 
@@ -145,7 +164,7 @@ export function pickImageVariationBlock(opts: {
         return comRosto.length ? comRosto : poolBase;
       })()
     : poolBase;
-  const variation = pickRandom(pool);
+  const variation = pickEixo(pool, PASSO_ESTRUTURA);
   const cameraStr = (() => {
     // OP-01 e OP-03: a câmera também é sorteada e escrita na composição pela
     // etapa de conteúdo (visualDirection.ts, mesmo bloco "VARIAÇÕES SORTEADAS")
@@ -158,12 +177,12 @@ export function pickImageVariationBlock(opts: {
     // string fixa, o que dispensava a reconciliação porque nunca havia dois
     // valores diferentes para conflitar.
     if (mood === "OP-01") {
-      return composicao ? "" : `Câmera: ${pickRandom(CLAREZA_CAMERA_VARIATIONS)}. `;
+      return composicao ? "" : `Câmera: ${pickEixo(CLAREZA_CAMERA_VARIATIONS, PASSO_CAMERA)}. `;
     }
     if (mood === "OP-03") {
-      return composicao ? "" : `Câmera: ${pickRandom(INSTANTE_CAMERA_VARIATIONS)}. `;
+      return composicao ? "" : `Câmera: ${pickEixo(INSTANTE_CAMERA_VARIATIONS, PASSO_CAMERA)}. `;
     }
-    if (mood === "OP-02") return `Câmera: ${pickRandom(IMPACTO_CAMERA_VARIATIONS)}. `;
+    if (mood === "OP-02") return `Câmera: ${pickEixo(IMPACTO_CAMERA_VARIATIONS, PASSO_CAMERA)}. `;
     return "";
   })();
 

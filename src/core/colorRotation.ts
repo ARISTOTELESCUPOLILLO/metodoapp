@@ -86,11 +86,38 @@ export const SILENCIO_TONALIDADES: TonalidadeCandidata[] = [
  * os itens antes de voltar ao começo, e diferente do passo usado pela paleta:
  * se os dois andarem juntos, conceito e cor ficam amarrados e o número real de
  * combinações desaba para o tamanho de um pool só.
+ *
+ * A co-primalidade é CORRIGIDA aqui, não confiada ao chamador: passo 2 num pool
+ * de 4 visita só metade dos itens, sem erro, sem aviso e sem jeito de perceber
+ * olhando o resultado. Os pools de variação têm tamanhos diferentes por mood
+ * (2, 3, 4, 5, 8, 9 itens) e crescem com o tempo — exigir que quem chama saiba
+ * o tamanho de cada um é a mesma armadilha do índice fixo que já causou um P0
+ * em 11/08/2026. Ver `coprimeStep`.
  */
 export function pickRotating<T>(pool: T[], baseIndex: number, step = 1): T {
   const n = pool.length;
-  const i = (((baseIndex * step) % n) + n) % n;
+  const i = (((baseIndex * coprimeStep(n, step)) % n) + n) % n;
   return pool[i];
+}
+
+/** Maior divisor comum — só para verificar co-primalidade em `coprimeStep`. */
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+/**
+ * O passo desejado, se ele for co-primo com `n`; senão, o próximo passo acima
+ * dele que seja. Garante que a fila visite TODOS os itens do pool antes de
+ * repetir qualquer um. Devolve 1 (co-primo com tudo) quando nada serve — caso
+ * de pool com 0 ou 1 item, em que a pergunta não faz sentido.
+ */
+export function coprimeStep(n: number, desejado: number): number {
+  if (n <= 1) return 1;
+  const base = Math.max(1, Math.abs(Math.trunc(desejado)));
+  for (let s = base; s < base + n; s++) {
+    if (gcd(n, s) === 1) return s;
+  }
+  return 1;
 }
 
 export function pickTonalidade(

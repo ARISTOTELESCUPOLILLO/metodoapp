@@ -4,6 +4,7 @@ import { judgeAndRegenerateContent } from "../services/judgeContent";
 import { saveImageKit, saveImageKitAsync } from "../utils/imageKitStorage";
 import { clearSessionImages } from "../utils/sessionImageCache";
 import { clearCopyEdits } from "../utils/copyEditsStorage";
+import { nextVariacaoSeed } from "../utils/storage";
 import type { BrandKit, ContentFormData, ImageKit, MethodOpResult, MoodCode } from "../types";
 
 interface Params {
@@ -58,6 +59,9 @@ export function useMopHandlers({
           mood: mood ?? "OP-01",
         },
         selectedSlot,
+        // Fila de variação visual: consome a posição atual do usuário e já
+        // avança para a próxima sequência não repetir a câmera desta.
+        nextVariacaoSeed(effectiveUserId),
       );
       try {
         const updated = await judgeAndRegenerateContent(generated, {

@@ -388,6 +388,11 @@ export function buildPostUnicoPrompt(params: {
             texto: copy?.texto,
             forcedGender,
             anchoraPersonagem: faixaLabelImagem,
+            // Mesma posição de fila que já reges a paleta e o arquétipo desta
+            // peça (usePostUnicoGeneration incrementa a cada "gerar novamente"):
+            // reusar aqui é o que garante que a câmera também ande junto, em vez
+            // de ser sorteada de novo e cair na mesma.
+            seed: tonalidadeSeed,
           })
         : "";
   // Rede de segurança de gênero/idade — vale em QUALQUER direção, não só na Livre.

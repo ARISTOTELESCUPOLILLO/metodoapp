@@ -17,7 +17,7 @@
 // - ./imageVariationPicker.ts: pickImageVariationBlock.
 
 import { MoodCode, Segment } from "../types";
-import { pickTonalidade, SILENCIO_TONALIDADES } from "./colorRotation";
+import { pickTonalidade, pickRotating, SILENCIO_TONALIDADES } from "./colorRotation";
 import {
   getVisualDirection,
   SEGMENT_LAYERS,
@@ -35,6 +35,7 @@ import {
   DESVIO_CAMERA_VARIATIONS,
   SILENCIO_CAMERA_VARIATIONS,
   INSTANTE_PRECEDENCIA_PLANO,
+  ARCO_PRECEDENCIA_CAMERA,
   CLAREZA_DEVICE_WELCOME_SENTENCE,
   CLAREZA_DEVICE_COEXIST_SENTENCE,
   CLAREZA_DEVICE_CLAUSE_SUPPRESSED,
@@ -246,8 +247,23 @@ export function buildMoodGrammarBlock(
 // Reforça a regra inegociável: a gramática visual GOVERNA luz, paleta,
 // composição e câmera de TODA peça da sequência (estático, carrossel,
 // estático final e reels), sem alterar a Matriz psicológica.
-export function buildVisualDirectionBlock(mood: MoodCode, segment?: Segment): string {
+export function buildVisualDirectionBlock(
+  mood: MoodCode,
+  segment?: Segment,
+  /** Posição desta sequência na fila de variação do usuário (ver
+   * nextVariacaoSeed em utils/storage.ts). Com ela, câmera e pose ANDAM entre
+   * uma sequência e a próxima em vez de serem sorteadas de novo do zero. Sem
+   * ela, sorteio de sempre. */
+  seed?: number,
+): string {
   const v = getVisualDirection(mood);
+  // Mesmos eixos e passos do bloco de imagem — ver o comentário em
+  // imageVariationPicker.ts, que é a outra ponta desta mesma fila.
+  const pickEixo = <T>(pool: T[], passo: number): T =>
+    seed === undefined ? pickRandom(pool) : pickRotating(pool, seed, passo);
+  const PASSO_CAMERA = 1;
+  const PASSO_ESTRUTURA = 2;
+  const PASSO_CONCEITO = 3;
   const seg = segment ? SEGMENT_LAYERS[mood]?.[segment] : undefined;
 
   const segmentBlock = seg
@@ -277,21 +293,21 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     'ANTES de aplicar a estrutura sorteada abaixo, identifique em UMA palavra ou ação concreta o que o título e o texto desta peça comunicam (ex.: título sobre "atendimento ágil" → ação de responder/atender; título sobre "transparência" → ação de mostrar/revisar/explicar documento ou processo; título sobre "comunicação e design" → ação de revisar peças/material visual, OU direcionar uma produção/sessão de fotos, OU organizar referências em mural; título sobre "ignorar retorno do cliente" → símbolo ligado a voz, escuta ou feedback; título com metáfora estratégica como "rumo da campanha" → ação de apresentar plano a um interlocutor, organizar referências em mural ou revisar material — o que a empresa FAZ, NÃO pessoa andando). Essa ação ou símbolo concreto é o que preenche a estrutura sorteada — a estrutura é a moldura (pose/câmera/composição), o tema da peça é o que vai dentro dela. METÁFORAS/MODIFICADORES DO TÍTULO — ANCORAGEM NO OFÍCIO: palavras como "longe", "avançar", "subir", "crescimento", "rumo", "caminho" e adjetivos como "rápido", "forte", "claro", "sólido" ancoram-se no ofício real — NUNCA traduzir como cenário físico (escada, degraus, horizonte vazio) nem como propriedade física literal (velocidade, músculo, iluminação). Ex.: "avançar com método" em consultoria → reunião com pauta, não caminho; "atendimento rápido" → cliente atendido sem espera, não borrão de movimento. CRÍTICO — A CENA NUNCA PODE NEGAR O SUJEITO DO TÍTULO: se o título menciona interação ou equipe, a cena tem ao menos dois sujeitos ou troca visível; se menciona decisão, o personagem está no ato de decidir; se menciona escuta, há presença de interlocutor ou elemento de recepção — nunca personagem sozinho sem contexto relacional quando o título é relacional.';
 
   if (mood === "OP-05") {
-    const ruptura = pickRandom(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS);
-    const camera = pickRandom(DESVIO_CAMERA_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n• Estrutura da ruptura simbólica: ${ruptura}\n${TEMA_DERIVATION_RULE} Aqui, o objeto, gesto ou elemento deslocado que ENCARNA a ruptura deve ser esse símbolo derivado do tema da peça — não um conceito surreal genérico solto. Uma ruptura por cena, sem acumular.`;
+    const ruptura = pickEixo(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS, PASSO_CONCEITO);
+    const camera = pickEixo(DESVIO_CAMERA_VARIATIONS, PASSO_CAMERA);
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${ARCO_PRECEDENCIA_CAMERA}\n• Estrutura da ruptura simbólica: ${ruptura}\n${TEMA_DERIVATION_RULE} Aqui, o objeto, gesto ou elemento deslocado que ENCARNA a ruptura deve ser esse símbolo derivado do tema da peça — não um conceito surreal genérico solto. Uma ruptura por cena, sem acumular.`;
   } else if (mood === "OP-04") {
     // FRAGMENTO não recebia nenhuma variação sorteada até 11/08/2026 — a grade
     // saía sempre com o mesmo arranjo e ponto de vista.
-    const grade = pickRandom(FRAGMENTO_GRID_VARIATIONS);
+    const grade = pickEixo(FRAGMENTO_GRID_VARIATIONS, PASSO_CONCEITO);
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Arranjo da grade: ${grade}\n${TEMA_DERIVATION_RULE} Aqui, o CONTEÚDO de cada bloco é o que deriva do tema — o arranjo acima é só a moldura que organiza os blocos. Manter a paleta unificada de 3 tons costurando o conjunto e a margem de respiro das bordas.`;
   } else if (mood === "OP-06") {
     // ⚠ SÓ CÂMERA — ver o comentário do OP-06 em imageVariationPicker.ts: o
     // sorteio de sujeito isolado foi religado em 11/08/2026 e revertido em
     // 12/08/2026 por decisão do Aristóteles. A condição do SILÊNCIO (o que é o
     // sujeito da cena) não se sorteia; o escopo da Fase 1 era câmera, luz e pose.
-    const camera = pickRandom(SILENCIO_CAMERA_VARIATIONS);
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
+    const camera = pickEixo(SILENCIO_CAMERA_VARIATIONS, PASSO_CAMERA);
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${ARCO_PRECEDENCIA_CAMERA}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
   } else if (characterVariationMap[mood]) {
     // Para INSTANTE (OP-03), MARCA e SERVIÇOS usam o pool reduzido sem léxico de
     // PDV — ver INSTANTE_POOL_SEM_PDV no léxico, onde a seleção mora agora.
@@ -300,20 +316,26 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
       mood === "OP-03" && segment && segment !== "VAREJO"
         ? INSTANTE_POOL_SEM_PDV
         : characterVariationMap[mood]!;
-    const variation = pickRandom(pool);
+    const variation = pickEixo(pool, PASSO_ESTRUTURA);
     // OP-03 entrou aqui em 11/08/2026 — antes só o CLAREZA tinha câmera
     // sorteada no lado do conteúdo, e o INSTANTE usava uma string fixa.
     const camera =
       mood === "OP-01"
-        ? pickRandom(CLAREZA_CAMERA_VARIATIONS)
+        ? pickEixo(CLAREZA_CAMERA_VARIATIONS, PASSO_CAMERA)
         : mood === "OP-03"
-          ? pickRandom(INSTANTE_CAMERA_VARIATIONS)
+          ? pickEixo(INSTANTE_CAMERA_VARIATIONS, PASSO_CAMERA)
           : null;
+    // Gênero fica no sorteio de propósito: é 50/50 e não é eixo de repetição
+    // visual — pôr na fila faria homem e mulher alternarem em ordem fixa, o que
+    // é outra decisão (e um terreno com histórico de bug: ver o fallback de
+    // gênero da PU em 16/07/2026).
     const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-    // Só o INSTANTE precisa da regra de precedência: é o único mood em que
-    // câmera e estrutura de pose declaram plano de forma independente.
+    // Duas precedências diferentes, ambas sobre plano: a do INSTANTE resolve
+    // câmera × pose dentro da MESMA peça; a do arco resolve câmera × sequência
+    // entre as peças. Não se substituem.
     const precedencia = mood === "OP-03" && camera ? `\n${INSTANTE_PRECEDENCIA_PLANO}` : "";
-    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ""}${precedencia}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESCOPO EXCLUSIVO: aplica-se APENAS ao campo "personagem" da leituraCenica e à composição visual da imagem — NÃO deve alterar título, texto, legenda, hook nem qualquer campo textual da peça. Nos campos de texto, quando o usuário não especificou gênero, usar sempre termos neutros ("gestores", "profissionais", "decisores", "equipes", "pessoas") — nunca escolher gênero nos textos por conta própria. No campo "personagem": adapte para ${gender}, preservando a mesma ação, postura, papel e contexto — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
+    const arco = camera ? `\n${ARCO_PRECEDENCIA_CAMERA}` : "";
+    variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ""}${precedencia}${arco}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESCOPO EXCLUSIVO: aplica-se APENAS ao campo "personagem" da leituraCenica e à composição visual da imagem — NÃO deve alterar título, texto, legenda, hook nem qualquer campo textual da peça. Nos campos de texto, quando o usuário não especificou gênero, usar sempre termos neutros ("gestores", "profissionais", "decisores", "equipes", "pessoas") — nunca escolher gênero nos textos por conta própria. No campo "personagem": adapte para ${gender}, preservando a mesma ação, postura, papel e contexto — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
   }
 
   const moodRuleBlock = MOOD_RULES[mood]
