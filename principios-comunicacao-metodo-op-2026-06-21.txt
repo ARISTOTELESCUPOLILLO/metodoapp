@@ -495,6 +495,69 @@ Implementação: `src/utils/promptRules.ts` (`buildNoDeviceProdutoFisicoRule`),
 `src/core/visualDirection.lexicon.ts` (MOOD_RULES OP-06 e OP-05),
 `src/services/regenerateWithKit.ts` (paridade estático/carrossel).
 
+2.8 DISPOSITIVO DIGITAL NO CLAREZA — BEM-VINDO, NUNCA OBRIGATÓRIO
+------------------------------------------------------------
+[Decidido por Aristóteles em 12/08/2026 — queixa a partir das peças reais dele:
+notebook/tablet aparecia em quase toda peça de CLAREZA. Pedido literal: "tira o
+laptop obrigatório do CLAREZA, mas no caso de serviço como o da Oficina de
+Propaganda é preciso ter tecnologia, atentando para não retirar as orientações
+atuais que não deixam sair imagem na tampa e na carcaça dos equipamentos —
+levamos muito tempo para acertar isto".]
+
+Causa: a regra do mood tinha DUAS frases de dispositivo, com regimes opostos e
+funções diferentes, e só uma delas era o problema.
+
+  · CLAREZA_DEVICE_WELCOME_SENTENCE — PERMISSIVA ("notebook, laptop e tablet SÃO
+    BEM-VINDOS"). É ela que carrega a trava de "PROIBIDO mostrar imagem,
+    conteúdo ou interface NA TELA FRONTAL, NA TAMPA ou NA CARCAÇA" mais o
+    NEGATIVE de lid/casing. NÃO foi tocada.
+  · CLAREZA_DEVICE_COEXIST_SENTENCE — OBRIGATÓRIA ("quando houver material
+    físico, DEVE coexistir com pelo menos 1 dispositivo digital"), e ainda
+    listava "notebook aberto lateralmente sobre a mesa" como primeiro exemplo.
+    Era essa a origem do notebook em toda peça: obrigação positiva + exemplo
+    canônico = o modelo resolve sempre pelo mesmo móvel.
+
+Resolução: a obrigação sai; o dispositivo continua BEM-VINDO em QUALQUER
+segmento e qualquer negócio (decisão explícita do Aristóteles quando perguntado
+se valeria restringir ao ofício que passa por tela, como o FRAGMENTO faz — ele
+optou por manter aberto). O que muda é só o regime: OPÇÃO condicionada a ter
+função na ação, nunca preenchimento automático de mesa. A frase renasce como
+CLAREZA_MATERIAL_TRABALHO_SENTENCE, preservando as duas exigências que nada
+tinham a ver com dispositivo — papel não pode ser o único material de trabalho,
+e nada de grafismo flutuante no lugar de objeto real do ofício.
+
+Princípio que este caso confirma (o mesmo de 22/07, seção do PERSONAGEM ×
+OBSERVADOR): quando uma obrigação positiva e uma variedade desejada disputam o
+mesmo prompt, a obrigação vence sempre. Para tirar um elemento repetitivo de
+cena não basta pedir diversidade em outro ponto do prompt — é preciso rebaixar a
+obrigação a permissão no ponto onde ela está escrita.
+
+Dois efeitos colaterais corrigidos na mesma passagem:
+  · A supressão para peças com dispositivo banido apagava a frase INTEIRA
+    (replace por ""), levando junto a exigência de objeto real do ofício e a
+    proibição de grafismo flutuante. Agora troca por
+    CLAREZA_MATERIAL_TRABALHO_SUPPRESSED, que só remove a opção digital.
+  · O texto das duas sentenças estava duplicado à mão dentro de
+    MOOD_RULES["OP-01"] (constante + cópia literal idêntica). Como a supressão é
+    feita por String.replace da constante, qualquer reescrita de uma das cópias
+    viraria no-op silencioso — prompt válido, sem erro, com a frase errada.
+    MOOD_RULES passou a compor a partir das constantes.
+
+Gap conhecido, NÃO corrigido aqui (fica registrado): a reconciliação
+`resolveMoodRuleText` (supressão de dispositivo quando a regra global já baniu)
+só roda no caminho do PU (`buildMoodGrammarBlock`). O motor MOP
+(`buildVisualDirectionBlock`) lê `MOOD_RULES[mood]` cru e nem recebe o parâmetro
+`noDeviceThisScene` — ou seja, no MOP a supressão nunca acontece. É anterior a
+esta mudança e vale para CLAREZA e FRAGMENTO. Corrigir exige passar o flag pelo
+motor de sequência: tarefa própria, com mudança de comportamento declarada.
+
+Implementação: `src/core/visualDirection.lexicon.ts` (constantes e MOOD_RULES
+OP-01, incluindo "notebook em todas as peças" na lista de vícios visuais do
+mood), `src/core/visualDirection.ts` (`resolveMoodRuleText`).
+Regressão: `src/__tests__/clarezaDispositivo.test.ts` (10 testes) trava tanto a
+saída da obrigação quanto a permanência da trava de tela/tampa/carcaça nos dois
+motores, e a fonte única das sentenças.
+
 ============================================================
 PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO
 ============================================================

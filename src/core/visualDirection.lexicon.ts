@@ -483,11 +483,29 @@ export function pickRandom<T>(arr: T[]): T {
 export const CLAREZA_DEVICE_WELCOME_SENTENCE =
   "DISPOSITIVOS EM CLAREZA — REGRA DO SÉCULO DIGITAL: notebook, laptop e tablet SÃO BEM-VINDOS e representam trabalho real. PROIBIDO APENAS: mostrar imagem, conteúdo, interface ou qualquer elemento visual NA TELA FRONTAL, NA TAMPA ou NA CARCAÇA do dispositivo — tela deve estar neutra/escura ou com brilho difuso sem conteúdo legível; tampa e carcaça lisas. O dispositivo pode estar em qualquer ângulo (aberto sobre a mesa em plongée, lateral, em mãos, de lado) — a restrição é o CONTEÚDO visível, não a posição nem o ângulo. NEGATIVE: image on laptop screen, visible screen content, image on laptop lid or casing. ";
 
-export const CLAREZA_DEVICE_COEXIST_SENTENCE =
-  "MATERIAL DE TRABALHO EM CLAREZA — REGRA DO SÉCULO DIGITAL: estamos no século da internet — papel ou documento físico NUNCA pode ser o ÚNICO elemento de trabalho visível na cena. Quando houver material físico (folhas, documentos, cartões organizados), DEVE coexistir com pelo menos 1 dispositivo digital presente na cena (notebook aberto lateralmente sobre a mesa, tablet em stand, celular ao lado). Cor abstrata, ícone ou imagem decorativa no lugar de objetos reais são igualmente inadequados — a cena deve ter objetos reconhecíveis do ofício real, não elementos gráficos flutuantes. ";
+// A obrigação de "coexistir com pelo menos 1 dispositivo digital" saiu em
+// 12/08/2026, por decisão do Aristóteles: era ela que punha notebook/tablet em
+// quase toda peça de CLAREZA — o modelo lia a exigência positiva e resolvia
+// sempre pelo mesmo móvel, ainda mais porque a própria frase listava "notebook"
+// como primeiro exemplo. O dispositivo continua BEM-VINDO em qualquer negócio
+// (decisão dele: o ofício de agência/serviço passa por tela e precisa mostrar
+// tecnologia — ver CLAREZA_DEVICE_WELCOME_SENTENCE, intocada, que é onde mora a
+// proibição de conteúdo em tela/tampa/carcaça). O que muda é só o regime:
+// deixa de ser OBRIGAÇÃO e vira OPÇÃO condicionada a ter função na cena.
+// O resto da frase — papel não pode ser o único material, e nada de grafismo
+// flutuante no lugar de objeto real — permanece.
+export const CLAREZA_MATERIAL_TRABALHO_SENTENCE =
+  "MATERIAL DE TRABALHO EM CLAREZA: papel ou documento físico NUNCA pode ser o ÚNICO elemento de trabalho visível na cena — mesa coberta de folhas como único sinal de trabalho é clichê de banco de imagem. Ao lado do material físico deve haver OBJETO REAL DO OFÍCIO da empresa: ferramenta, equipamento, insumo, produto, instrumento, mostruário, superfície ou material do próprio negócio. Um dispositivo digital (celular, tablet, monitor de desktop, notebook) é UMA das opções válidas e continua bem-vindo sempre que tiver função na ação que está acontecendo — mas NÃO é obrigatório, NÃO precisa entrar só porque há papel na cena e NÃO é preenchimento automático de mesa. PROIBIDO tratar notebook ou laptop como mobiliário padrão que reaparece em toda peça: sem função na ação, ele fica fora do quadro. Cor abstrata, ícone ou imagem decorativa no lugar de objetos reais são igualmente inadequados — a cena deve ter objetos reconhecíveis do ofício real, não elementos gráficos flutuantes. ";
+
+// Versão para quando a regra global já baniu dispositivo digital nesta peça.
+// Antes, esse caso simplesmente APAGAVA a frase inteira (replace por ""), o que
+// levava junto a exigência de objeto real do ofício e a proibição de grafismo
+// flutuante — nada disso tem a ver com dispositivo. Agora só a opção digital sai.
+export const CLAREZA_MATERIAL_TRABALHO_SUPPRESSED =
+  "MATERIAL DE TRABALHO EM CLAREZA — SEM DISPOSITIVO NESTA PEÇA: papel ou documento físico NUNCA pode ser o ÚNICO elemento de trabalho visível na cena. Ao lado do material físico deve haver OBJETO REAL DO OFÍCIO da empresa: ferramenta, equipamento, insumo, produto, instrumento, mostruário, superfície ou material do próprio negócio — nunca um dispositivo digital, que está proibido nesta peça (ver regra de dispositivos digitais no início deste prompt). Cor abstrata, ícone ou imagem decorativa no lugar de objetos reais são igualmente inadequados — a cena deve ter objetos reconhecíveis do ofício real, não elementos gráficos flutuantes. ";
 
 export const CLAREZA_DEVICE_CLAUSE_SUPPRESSED =
-  'DISPOSITIVOS EM CLAREZA — EXCEÇÃO NESTA PEÇA: há um produto físico referenciado (ou o ofício real não passa por tela) que já é o elemento concreto e o foco da composição — ver regra de dispositivos digitais no início deste prompt. Por isso NENHUM dispositivo digital aparece nesta cena, mesmo que CLAREZA normalmente os receba bem. Se houver material físico de apoio (papel, documento), ele NÃO precisa coexistir com dispositivo digital neste caso — a regra do "século digital" cede à regra de protagonismo do produto. ';
+  "DISPOSITIVOS EM CLAREZA — EXCEÇÃO NESTA PEÇA: há um produto físico referenciado (ou o ofício real não passa por tela) que já é o elemento concreto e o foco da composição — ver regra de dispositivos digitais no início deste prompt. Por isso NENHUM dispositivo digital aparece nesta cena, mesmo que CLAREZA normalmente os receba bem. ";
 
 export const FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE =
   "OBJETO CONDICIONAL NESTE MOOD: notebook ou laptop FECHADO, de lado, de costas ou com tela apagada/escura PODE aparecer como UM dos blocos — mas SOMENTE se o ofício real do negócio (definido pela leituraCenica e pelo kit de marca) genuinamente envolve trabalho de escritório, computador ou tela no dia a dia (ex.: consultoria, agência, administrativo, design, programação, atendimento remoto). Em segmentos cujo ofício real é manual, físico, presencial ou de produção (ex.: salão de beleza, gastronomia, oficina, obra, estética, comércio de balcão, saúde, bem-estar), o notebook NÃO PERTENCE ao universo real da cena e NÃO deve ser incluído — nesses casos, o bloco deve trazer um objeto do ofício real, não um item de escritório genérico. Quando aparecer, seguir sempre a regra geral de dispositivos digitais (sem tela visível, sem conteúdo, máximo 1 por cena). ";
@@ -564,9 +582,9 @@ export const SILENCIO_PESSOA_LOOKBOOK =
 export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
   "OP-01":
     "CLAREZA exige EXATAMENTE 1 acento de cor saturada em 1 único elemento da cena. Não 0, não 2. A peça inteiramente monocromática NÃO é CLAREZA — vira SILÊNCIO. " +
-    "DISPOSITIVOS EM CLAREZA — REGRA DO SÉCULO DIGITAL: notebook, laptop e tablet SÃO BEM-VINDOS e representam trabalho real. PROIBIDO APENAS: mostrar imagem, conteúdo, interface ou qualquer elemento visual NA TELA FRONTAL, NA TAMPA ou NA CARCAÇA do dispositivo — tela deve estar neutra/escura ou com brilho difuso sem conteúdo legível; tampa e carcaça lisas. O dispositivo pode estar em qualquer ângulo (aberto sobre a mesa em plongée, lateral, em mãos, de lado) — a restrição é o CONTEÚDO visível, não a posição nem o ângulo. NEGATIVE: image on laptop screen, visible screen content, image on laptop lid or casing. " +
-    "VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. " +
-    "MATERIAL DE TRABALHO EM CLAREZA — REGRA DO SÉCULO DIGITAL: estamos no século da internet — papel ou documento físico NUNCA pode ser o ÚNICO elemento de trabalho visível na cena. Quando houver material físico (folhas, documentos, cartões organizados), DEVE coexistir com pelo menos 1 dispositivo digital presente na cena (notebook aberto lateralmente sobre a mesa, tablet em stand, celular ao lado). Cor abstrata, ícone ou imagem decorativa no lugar de objetos reais são igualmente inadequados — a cena deve ter objetos reconhecíveis do ofício real, não elementos gráficos flutuantes. " +
+    CLAREZA_DEVICE_WELCOME_SENTENCE +
+    "VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, notebook ou laptop presente em todas as peças como recurso automático, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. " +
+    CLAREZA_MATERIAL_TRABALHO_SENTENCE +
     CLAREZA_PLANO_MEDIO_SENTENCE +
     'A variação de câmera e posição desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
     "CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.",
