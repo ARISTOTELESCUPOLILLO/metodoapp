@@ -58,17 +58,17 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     nome: "IMPACTO",
     tensaoDondis:
       "Audácia + Ênfase + Acento + Instabilidade controlada — UM elemento gritando sobre o resto, tensão dramática que para o scroll",
-    luz: "luz focal direcional sobre fundo escuro médio, contraste pronunciado com alguma gradação, sombras recortadas sem extremismo — dramaticidade presente sem apagar completamente o fundo",
+    luz: 'luz focal direcional sobre fundo escuro médio, contraste pronunciado com alguma gradação, sombras recortadas sem extremismo — dramaticidade presente sem apagar completamente o fundo; a fonte exata (foco lateral, contraluz quente ou fonte dura alta) é sorteada a cada geração (ver bloco "VARIAÇÕES SORTEADAS")',
     paleta:
       "paleta low-key dominada por preto/grafete com UMA cor quente saturada (amarelo, laranja, vermelho) como acento dramático",
     composicao:
       "composição assimétrica com tensão, sujeito recortado pela luz, vazios escuros generosos, foco único concentrado",
     camera:
-      "câmera 35mm, ângulo baixo leve (contra-plongée) ou 3/4 dinâmico, perspectiva forte mas natural, sensação cinematográfica — PROIBIDO câmera frontal reta na altura dos olhos, PROIBIDO plongée de cima para baixo, dutch angle apenas se muito sutil; câmera de cima para baixo enfraquece o impacto e diminui o personagem/produto",
+      'lente 35-85mm, ângulo baixo (contra-plongée) ou 3/4 dinâmico, perspectiva forte mas natural, sensação cinematográfica — distância, altura, lente e profundidade de campo exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS"), sempre dentro do ângulo ascendente. PROIBIDO câmera frontal reta na altura dos olhos, PROIBIDO plongée de cima para baixo, dutch angle apenas se muito sutil; câmera de cima para baixo enfraquece o impacto e diminui o personagem/produto',
     detalheCriativo:
       "um sinal gráfico mínimo nascido da luz (haste de luz cortando o quadro, partícula de poeira no facho, reflexo metálico recortado, contorno luminoso em uma única borda do sujeito) — pequeno, mas inconfundivelmente autoral",
     assinatura:
-      "fotografia cinematográfica, luz focal direcional sobre fundo escuro médio, contraste pronunciado, paleta com acento quente saturado, lente 35mm, contra-plongée leve ou 3/4 dinâmico",
+      "fotografia cinematográfica, luz focal direcional sobre fundo escuro médio, contraste pronunciado, paleta com acento quente saturado, lente 35-85mm, contra-plongée ou 3/4 dinâmico",
   },
   "OP-03": {
     nome: "INSTANTE",
@@ -122,17 +122,17 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     nome: "SILÊNCIO",
     tensaoDondis:
       "Sutileza + Neutralidade + Economia + Estase — quase ausência, contemplação retida, mínimo absoluto de elementos com vasto espaço respirando",
-    luz: "luz suave alta-chave, vinda de fonte ampla e difusa, sombras quase ausentes, atmosfera serena",
+    luz: 'luz suave alta-chave, vinda de fonte ampla e difusa, sombras quase ausentes, atmosfera serena — a fonte exata (janela ampla lateral, alta-chave frontal envolvente ou difusa vinda de cima) é sorteada a cada geração (ver bloco "VARIAÇÕES SORTEADAS")',
     paleta:
       "paleta suave de baixa saturação e contraste contido: areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido — evitar branco puro dominante e excesso de luminosidade",
     composicao:
       "composição com vasto espaço negativo, sujeito pequeno dentro do quadro, equilíbrio estático, mínimo absoluto de elementos",
     camera:
-      'lente 50mm ou 70mm — ângulo e distância exatos sorteados a cada geração (ver bloco "VARIAÇÕES SORTEADAS"), composição sempre limpa, sem grão, acabamento suave e silencioso',
+      'lente 50-100mm — distância, altura, lente e profundidade de campo exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS"), composição sempre limpa, sem grão, acabamento suave e silencioso',
     detalheCriativo:
       "um único traço de assinatura premium (linha fina horizontal, ponto de cor minúsculo, sombra suave isolada, textura de papel sutil) flutuando no espaço negativo como gesto autoral mínimo",
     assinatura:
-      "fotografia premium minimalista alta-chave, luz suave difusa, paleta suave areia/cinza quente/sálvia, vasto espaço negativo, lente 50-70mm sem grão",
+      "fotografia premium minimalista alta-chave, luz suave difusa, paleta suave areia/cinza quente/sálvia, vasto espaço negativo, lente 50-100mm sem grão",
   },
 };
 
@@ -378,11 +378,12 @@ export const FRAGMENTO_GRID_VARIATIONS: string[] = [
   "MOSAICO COM BLOCO CENTRAL: um bloco central menor e destacado, cercado por 3 ou 4 blocos periféricos maiores. O centro traz o detalhe macro mais específico do ofício; a periferia, ambiente e contexto em plano médio. Ponto de vista misto, com o centro em macro frontal e a periferia em ângulos variados.",
 ];
 
-// Variação de câmera sorteada para IMPACTO (contra-plongée vs. 3/4 dinâmico).
-export const IMPACTO_CAMERA_VARIATIONS: string[] = [
-  "contra-plongée leve, lente 35mm, distância média — câmera ligeiramente abaixo da linha dos olhos, ângulo ascendente sutil que amplifica o impacto",
-  "ângulo 3/4 dinâmico, lente 35mm, distância média — câmera levemente lateral, perspectiva cinematográfica sem ser extrema",
-];
+// A câmera do IMPACTO saiu daqui em 12/08/2026, junto com a do CLAREZA. Eram 2
+// variações, ambas 35mm e distância média — variava só contra-plongée leve ×
+// 3/4 dinâmico. Agora a linha é COMPOSTA por cinco eixos independentes: ver
+// buildCameraLine em core/cameraAxes.ts. O contra-plongée obrigatório do mood
+// (IMPACTO_CAMERA_SENTENCE) continua intocado: é gramática, e o eixo de altura
+// varia DENTRO dele — três sabores de ângulo ascendente, nenhum frontal reto.
 
 // CLAREZA: 3 opções sorteáveis. Sem objeto obrigatório na mão.
 // A 3ª opção retira o rosto do centro — aumenta diversidade de enquadramento.
@@ -443,12 +444,13 @@ export const SILENCIO_OBJECT_VARIATIONS: string[] = [
 // objetos para evitar repetição: as menções de câmera embutidas em algumas
 // variações (zenital, frontal) faziam o enquadramento convergir sempre para
 // o mesmo padrão. Agora distância e ângulo são sorteados à parte, como no CLAREZA.
-export const SILENCIO_CAMERA_VARIATIONS: string[] = [
-  "CÂMERA PRÓXIMA: lente 50mm, enquadramento próximo, distância curta — o objeto ocupa proporção discreta do quadro com vasto entorno respirado",
-  "CÂMERA ABERTA: lente 70mm, enquadramento médio-aberto, distância maior — o objeto fica ainda menor no quadro, espaço negativo dominante e sereno",
-  "CÂMERA ZENITAL: vista de cima, lente 50mm, distância média — composição plana e geométrica, sombra curta projetada sobre a superfície",
-  "CÂMERA EM ÂNGULO BAIXO SUAVE: lente 50mm, leve inclinação a partir de baixo, distância curta — o objeto ganha presença discreta sem dramaticidade, mantendo a serenidade do mood",
-];
+// As 4 variações saíram em 12/08/2026: misturavam distância, altura e lente
+// numa frase só, e não tocavam profundidade nem luz — na prática eram 2
+// distâncias, 3 alturas e 2 lentes amarradas entre si. Agora os cinco eixos são
+// independentes: ver buildCameraLine em core/cameraAxes.ts. A trava de ESCALA
+// do mood (SILENCIO_ESCALA_SENTENCE, sujeito em no máximo 30% do quadro) segue
+// intocada — é a identidade do SILÊNCIO —, e cada distância do eixo repete que
+// o sujeito continua pequeno, para nenhuma competir com ela no mesmo prompt.
 
 // DESVIO: sorteia tipo de ruptura simbólica (não personagem).
 // 4 tipos distintos sem sobreposição — escala e posição/lugar são tipos separados.

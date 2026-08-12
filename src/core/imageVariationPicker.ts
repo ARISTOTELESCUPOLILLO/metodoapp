@@ -7,11 +7,10 @@ import { detectForcedGenderFromCopy, PersonagemGender } from "./visualDirection"
 // para não criar ciclo de import entre este módulo e visualDirection.
 import { variationHasFaceNotDominant } from "./productHierarchy";
 import { pickRotating } from "./colorRotation";
-import { buildClarezaCameraLine } from "./cameraAxes";
+import { buildCameraLine, moodTemEixosDeCamera } from "./cameraAxes";
 import {
   pickRandom,
   CLAREZA_CHARACTER_VARIATIONS,
-  IMPACTO_CAMERA_VARIATIONS,
   IMPACTO_CHARACTER_VARIATIONS,
   INSTANTE_CAMERA_VARIATIONS,
   INSTANTE_CHARACTER_VARIATIONS,
@@ -19,7 +18,6 @@ import {
   FRAGMENTO_GRID_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
-  SILENCIO_CAMERA_VARIATIONS,
   PRECEDENCIA_PLANO_SOBRE_POSE,
   PERSONAGEM_GENDER_VARIATIONS,
 } from "./visualDirection.lexicon";
@@ -120,7 +118,11 @@ export function pickImageVariationBlock(opts: {
     // ainda atropelava o avatar: as seis variações do pool mandam a peça sair
     // sem rosto, e uma delas pede "mão ou fragmento de braço" — foi o que saiu
     // na peça real do Ari com avatar marcado. Não religar sem decisão dele.
-    const camera = pickEixo(SILENCIO_CAMERA_VARIATIONS, PASSO_CAMERA);
+    // Cinco eixos desde 12/08/2026 — antes eram 4 frases prontas que
+    // amarravam distância, altura e lente entre si. A trava de escala do mood
+    // (sujeito em no máximo 30% do quadro) continua mandando: cada distância
+    // do eixo repete que o sujeito permanece pequeno.
+    const camera = buildCameraLine("OP-06", { seed });
     return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. O objeto isolado nasce do ofício real da empresa — instrumento, ferramenta, material ou produto específico do negócio (PROIBIDO: livro genérico, caderno, óculos soltos, dispositivo digital como elemento principal). ${TEMA_DERIVATION_RULE}`;
   }
 
@@ -176,18 +178,18 @@ export function pickImageVariationBlock(opts: {
     // OP-03 entrou nessa regra em 11/08/2026: até então a câmera dele era uma
     // string fixa, o que dispensava a reconciliação porque nunca havia dois
     // valores diferentes para conflitar.
+    // CLAREZA e IMPACTO não saem mais de um pool de frases prontas: a câmera é
+    // composta por cinco eixos independentes (ver core/cameraAxes.ts), cada um
+    // com fila própria. O seed é o mesmo da fila do usuário; hasAvatarRef tira
+    // a distância mais afastada da faixa, que reduziria o avatar contratado a
+    // uma figura pequena no quadro.
     if (mood === "OP-01") {
-      // A câmera do CLAREZA não sai mais de um pool de frases prontas: é
-      // composta por cinco eixos independentes (ver core/cameraAxes.ts), cada
-      // um com fila própria. O seed é o mesmo da fila do usuário; hasAvatarRef
-      // tira o plano geral da faixa, que reduziria o avatar contratado a uma
-      // figura pequena no quadro.
-      return composicao ? "" : `Câmera: ${buildClarezaCameraLine({ seed, hasAvatarRef })}. `;
+      return composicao ? "" : `Câmera: ${buildCameraLine(mood, { seed, hasAvatarRef })}. `;
     }
     if (mood === "OP-03") {
       return composicao ? "" : `Câmera: ${pickEixo(INSTANTE_CAMERA_VARIATIONS, PASSO_CAMERA)}. `;
     }
-    if (mood === "OP-02") return `Câmera: ${pickEixo(IMPACTO_CAMERA_VARIATIONS, PASSO_CAMERA)}. `;
+    if (mood === "OP-02") return `Câmera: ${buildCameraLine(mood, { seed, hasAvatarRef })}. `;
     return "";
   })();
 
@@ -196,13 +198,13 @@ export function pickImageVariationBlock(opts: {
   // Estrutura (todos os moods deste bloco) são suprimidas nesse caso; gênero
   // ainda se aplica.
   const estruturaBlock = composicao ? "" : `Estrutura: ${variation} `;
-  // CLAREZA e INSTANTE: os dois moods em que câmera e estrutura de pose
-  // declaram plano de forma independente e podem discordar (ver
-  // PRECEDENCIA_PLANO_SOBRE_POSE). O CLAREZA entrou nesta lista em 12/08/2026,
-  // quando a distância dele passou a variar pelos cinco eixos — antes o plano
-  // era travado pela regra do mood e não havia dois valores para conflitar.
+  // Vale para todo mood em que câmera e estrutura de pose declaram plano de
+  // forma independente e podem discordar (ver PRECEDENCIA_PLANO_SOBRE_POSE):
+  // o INSTANTE desde 11/08/2026, e CLAREZA e IMPACTO desde 12/08, quando a
+  // distância dos dois passou a variar pelos cinco eixos. Antes disso o plano
+  // era fixo e não havia dois valores para conflitar.
   const precedencia =
-    (mood === "OP-01" || mood === "OP-03") && cameraStr && estruturaBlock
+    (moodTemEixosDeCamera(mood) || mood === "OP-03") && cameraStr && estruturaBlock
       ? PRECEDENCIA_PLANO_SOBRE_POSE
       : "";
   // Gênero vem primeiro no bloco — é a restrição mais importante e não pode

@@ -634,14 +634,47 @@ Fora de escopo, declarado: as câmeras de "peça sem personagem"
 (core/semPersonagem.ts) não receberam os eixos — sem pessoa em cena, distância
 de busto e plano americano não têm sujeito a medir.
 
-Implementação: `src/core/cameraAxes.ts` (novo),
-`src/core/visualDirection.lexicon.ts` (campos do mood, assinatura, regra de
+EXTENSÃO A IMPACTO E SILÊNCIO (mesmo dia, a pedido de Aristóteles: "segue pro
+IMPACTO e SILÊNCIO também"). O ponto de partida dos dois era igualmente parado:
+IMPACTO tinha 2 opções, ambas 35mm e distância média, variando só contra-plongée
+leve × 3/4 dinâmico; SILÊNCIO tinha 4 frases que amarravam distância, altura e
+lente entre si, sem tocar profundidade nem luz. Os dois receberam os mesmos
+cinco eixos, cada um com a faixa da sua própria gramática:
+
+  · IMPACTO — a trava é de ÂNGULO. `IMPACTO_CAMERA_SENTENCE` declara
+    "OBRIGATÓRIO contra-plongée leve ou 3/4 dinâmico, PROIBIDO frontal reta na
+    altura dos olhos, PROIBIDO plongée de cima para baixo". Isso é gramática do
+    mood — a força dramática vem do ângulo ascendente — e NÃO foi tocada. O
+    eixo de altura varia DENTRO dela: três sabores de ângulo ascendente,
+    nenhum frontal reto, nenhum de cima para baixo. A luz permanece focal e
+    direcional sobre fundo escuro; alta-chave não entra na faixa.
+  · SILÊNCIO — a trava é de ESCALA. `SILENCIO_ESCALA_SENTENCE` exige o sujeito
+    em no máximo 30% do quadro, e "o espaço vazio É a mensagem" é a identidade
+    do mood. Não foi tocada: cada uma das quatro distâncias do eixo repete, no
+    próprio texto, que o sujeito permanece pequeno — senão as duas instruções
+    competiriam dentro do mesmo prompt. O SILÊNCIO também NÃO recebe o filtro
+    de avatar: a pessoa pequena e parcial é o que o mood determina, e filtrar
+    a distância ali seria decidir contra o mood em nome do avatar.
+
+As assinaturas dos dois passaram a declarar a faixa de lente (IMPACTO 35-85mm,
+SILÊNCIO 50-100mm) e o campo `luz` dos dois passou a delegar a fonte exata,
+pelo mesmo motivo do CLAREZA. As câmeras de "peça sem personagem" do SILÊNCIO,
+que reaproveitavam o pool antigo, passaram a compor pelos eixos — são de sujeito
+isolado por natureza, então servem à cena sem gente sem adaptação.
+
+Restam sem eixos: INSTANTE (recebeu 5 câmeras na Fase 1 e foi aprovado em peça
+real — não se mexe no que está funcionando), FRAGMENTO e DESVIO.
+
+Implementação: `src/core/cameraAxes.ts` (novo, com a tabela de faixas por mood),
+`src/core/visualDirection.lexicon.ts` (campos do mood, assinaturas, regra de
 rosto, precedência compartilhada, arco), `src/core/visualDirection.ts` (motor
-MOP), `src/core/imageVariationPicker.ts` (motor PU).
-Regressão: `src/__tests__/cameraAxesClareza.test.ts` (27 testes) — cada eixo
-percorre a faixa inteira, nada sai "undefined" em 200 posições de fila, dois
-consecutivos não repetem nenhum eixo, a faixa não invade o que o mood proíbe, o
-avatar tira o plano geral, e a regra de rosto sobrevive nos dois motores.
+MOP), `src/core/imageVariationPicker.ts` (motor PU), `src/core/semPersonagem.ts`
+(cena sem pessoa).
+Regressão: `src/__tests__/cameraAxes.test.ts` (63 testes, tabela dos três moods)
+— cada eixo percorre a faixa inteira, nada sai "undefined" em 200 posições de
+fila, dois consecutivos não repetem nenhum eixo, a faixa não invade o que cada
+mood proíbe, o avatar tira a distância afastada em CLAREZA e IMPACTO mas não no
+SILÊNCIO, e as travas de rosto, ângulo e escala sobrevivem nos dois motores.
 
 ============================================================
 PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO

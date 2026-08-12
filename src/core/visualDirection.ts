@@ -18,7 +18,7 @@
 
 import { MoodCode, Segment } from "../types";
 import { pickPaletaDoMood, pickRotating } from "./colorRotation";
-import { buildClarezaCameraLine } from "./cameraAxes";
+import { buildCameraLine } from "./cameraAxes";
 import {
   getVisualDirection,
   SEGMENT_LAYERS,
@@ -33,7 +33,6 @@ import {
   PERSONAGEM_GENDER_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
-  SILENCIO_CAMERA_VARIATIONS,
   PRECEDENCIA_PLANO_SOBRE_POSE,
   ARCO_PRECEDENCIA_CAMERA,
   CLAREZA_DEVICE_WELCOME_SENTENCE,
@@ -313,7 +312,10 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     // sorteio de sujeito isolado foi religado em 11/08/2026 e revertido em
     // 12/08/2026 por decisão do Aristóteles. A condição do SILÊNCIO (o que é o
     // sujeito da cena) não se sorteia; o escopo da Fase 1 era câmera, luz e pose.
-    const camera = pickEixo(SILENCIO_CAMERA_VARIATIONS, PASSO_CAMERA);
+    // Cinco eixos desde 12/08/2026 (ver core/cameraAxes.ts). A trava de escala
+    // do mood — sujeito em no máximo 30% do quadro — não foi tocada: é a
+    // identidade do SILÊNCIO, e cada distância do eixo a repete.
+    const camera = buildCameraLine("OP-06", { seed });
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${ARCO_PRECEDENCIA_CAMERA}\n${TEMA_DERIVATION_RULE} O OBJETO ou sujeito isolado nasce do ofício real da empresa — derive do título, do texto e da leituraCenica: um único instrumento, ferramenta, material, produto ou elemento que pertença genuinamente à atividade real do negócio descrito no kit de marca. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto), PROIBIDO laptop, notebook ou dispositivo digital como elemento principal. INEDITISMO: prefira o objeto menos óbvio do ofício real — evite a primeira associação mais previsível e busque algo específico do negócio.`;
   } else if (characterVariationMap[mood]) {
     // Para INSTANTE (OP-03), MARCA e SERVIÇOS usam o pool reduzido sem léxico de
@@ -333,7 +335,7 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     // avatar existe no picker de imagem, que é onde essa informação chega.
     const camera =
       mood === "OP-01"
-        ? buildClarezaCameraLine({ seed })
+        ? buildCameraLine(mood, { seed })
         : mood === "OP-03"
           ? pickEixo(INSTANTE_CAMERA_VARIATIONS, PASSO_CAMERA)
           : null;

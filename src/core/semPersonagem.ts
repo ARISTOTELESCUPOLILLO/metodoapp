@@ -25,7 +25,8 @@
 // padrão já usado para dispositivos digitais (resolveMoodRuleText).
 
 import { MoodCode } from "../types";
-import { pickRandom, SILENCIO_CAMERA_VARIATIONS } from "./visualDirection.lexicon";
+import { pickRandom } from "./visualDirection.lexicon";
+import { buildCameraLine } from "./cameraAxes";
 
 // Termos negativos repetidos na regra principal e no reforço final — modelos
 // de imagem respondem melhor à lista em inglês, como no restante do projeto.
@@ -116,7 +117,9 @@ const CAMERAS_SEM_PERSONAGEM: Partial<Record<MoodCode, string[]>> = {
     "DIAGONAL HOLANDESA (DUTCH ANGLE): câmera na altura do objeto, quadro inteiro rotacionado em diagonal (10-15°), lente 35mm — horizonte e verticais visivelmente tortos",
     "PLANO FECHADO ANGULADO: câmera próxima do objeto da ruptura, levemente angulada a partir de um lado (nunca frontal neutra), lente 50mm, profundidade de campo rasa",
   ],
-  "OP-06": SILENCIO_CAMERA_VARIATIONS,
+  // OP-06 não aparece aqui: as câmeras do SILÊNCIO viraram cinco eixos em
+  // 12/08/2026 (core/cameraAxes.ts) e continuam servindo a cena sem pessoa —
+  // são de sujeito isolado por natureza. Composta no builder abaixo.
 };
 
 // Estrutura da cena por mood, com a suspensão explícita do que a gramática
@@ -151,6 +154,13 @@ const TEMA_DERIVATION_SEM_PERSONAGEM =
 export function buildSemPersonagemVariationBlock(mood?: MoodCode): string {
   const estrutura = (mood && ESTRUTURA_SEM_PERSONAGEM[mood]) || ESTRUTURA_SEM_PERSONAGEM_LIVRE;
   const cameras = mood ? CAMERAS_SEM_PERSONAGEM[mood] : undefined;
-  const cameraStr = cameras?.length ? `Câmera: ${pickRandom(cameras)}. ` : "";
+  // SILÊNCIO compõe pelos cinco eixos; os demais seguem com as câmeras
+  // reescritas acima, que descrevem objeto e ambiente em vez de personagem.
+  const cameraStr =
+    mood === "OP-06"
+      ? `Câmera: ${buildCameraLine(mood, {})}. `
+      : cameras?.length
+        ? `Câmera: ${pickRandom(cameras)}. `
+        : "";
   return `\n⚠ VARIAÇÃO — SEM PERSONAGEM: ${cameraStr}${estrutura} ${TEMA_DERIVATION_SEM_PERSONAGEM}`;
 }
