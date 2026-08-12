@@ -315,9 +315,12 @@ describe("PU — prompt no modo look book", () => {
     expect(p).toContain("Não existe uma segunda unidade da peça exposta em cena");
   });
 
-  it("libera o enquadramento preso ao plano médio do CLAREZA", () => {
+  it("libera o enquadramento do CLAREZA para o produto vestido", () => {
     const p = prompt(refsLook);
-    expect(p).not.toContain("PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO");
+    // A regra de rosto inteiro do CLAREZA (era "trava de plano médio" até
+    // 12/08/2026) cede à do produto-herói, que também garante o rosto.
+    expect(p).not.toContain("ROSTO INTEIRO EM CLAREZA — INEGOCIÁVEL");
+    expect(p).toContain("ENQUADRAMENTO EM CLAREZA COM PRODUTO-HERÓI");
   });
 
   it("calçado leva o enquadramento aos pés, mantendo o rosto", () => {

@@ -42,17 +42,17 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     nome: "CLAREZA",
     tensaoDondis:
       "Equilíbrio + Simetria + Regularidade + Previsibilidade — ordem visual que comunica controle e confiança no primeiro olhar",
-    luz: "luz natural difusa, vinda de lateral única, sem sombras duras; sensação de manhã clara e estável",
+    luz: 'luz natural difusa e suave, sem sombras duras; sensação de manhã clara e estável — a fonte exata (janela lateral única, alta-chave envolvente ou natural somada a luminária em quadro) é sorteada a cada geração (ver bloco "VARIAÇÕES SORTEADAS")',
     paleta:
       "paleta fria controlada (azuis, cinzas, branco quente) com UM único acento de cor saturada no elemento-chave",
     composicao:
       "composição simétrica e organizada, espaço negativo amplo e equilibrado, hierarquia limpa, alinhamento ortogonal",
     camera:
-      "câmera 50mm, altura dos olhos, enquadramento frontal ou 3/4 lateral suave, composição limpa, leitura imediata, sem ângulos dramáticos",
+      'lente 35-85mm, enquadramento frontal ou 3/4 lateral suave, composição limpa e leitura imediata — distância, altura, lente e profundidade de campo exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS"); PROIBIDO ângulo dramático em qualquer hipótese: nada de dutch angle, plongée mergulhado nem contra-plongée forte',
     detalheCriativo:
       "um único elemento-assinatura sutil em cena (linha geométrica fina, sombra projetada limpa, reflexo controlado em superfície polida ou objeto cotidiano alinhado com precisão milimétrica) que marca autoria sem atrapalhar a leitura",
     assinatura:
-      "fotografia editorial luminosa, luz natural difusa lateral, paleta fria com acento pontual, composição simétrica e respirada, lente 50mm",
+      "fotografia editorial luminosa, luz natural difusa, paleta fria com acento pontual, composição simétrica e respirada, lente 35-85mm",
   },
   "OP-02": {
     nome: "IMPACTO",
@@ -290,11 +290,14 @@ export const INSTANTE_CHARACTER_VARIATIONS: string[] = [
   "CONVERSA DE TRABALHO A DOIS, plano médio ou aberto: duas pessoas numa troca real de orientação, alinhamento ou explicação — de pé, ou apoiadas em superfície alta (peitoril, bancada, aparador, quina de mesa), NUNCA as duas sentadas frente a frente numa mesa de reunião. Uma conduz a conversa com gesto pequeno e a outra escuta e reage; a troca está no meio, não no começo nem no fim. Olhar entre as duas, nunca para a câmera. APLICAR quando o título ou o texto for relacional (menciona cliente, equipe, interação, escuta, orientação ou decisão conjunta) — a cena precisa ter dois sujeitos para não negar o que a peça diz. PROIBIDO aperto de mãos, sorriso institucional para a câmera, crachá, e material físico obrigatório nas mãos — a conversa se sustenta sozinha. AMBIENTE: qualquer ponto do espaço real de trabalho onde duas pessoas parariam para conversar — corredor, copa, canto de sala, junto a uma parede de referências, recepção.",
 ];
 
-// Variação de câmera sorteada exclusivamente para CLAREZA (frontal vs. lateral).
-export const CLAREZA_CAMERA_VARIATIONS: string[] = [
-  "CÂMERA FRONTAL: lente 50mm, plano médio ou americano, ponto de vista na altura dos olhos — personagem enquadrado da cintura ou quadril ao TOPO DA CABEÇA (rosto e cabeça INTEIRAMENTE dentro do quadro — NUNCA cortar no pescoço, queixo ou testa), composição simétrica e respirada",
-  "CÂMERA LATERAL 3/4: lente 50mm, plano médio ou americano, ponto de vista na altura dos olhos — personagem da cintura ou quadril ao TOPO DA CABEÇA (rosto e cabeça INTEIRAMENTE dentro do quadro — NUNCA cortar no pescoço, queixo ou testa), levemente de perfil (3/4 para a câmera), espaço negativo generoso à frente do olhar, composição com respiração direcional",
-];
+// A câmera do CLAREZA saiu daqui em 12/08/2026. Eram 2 variações que diziam a
+// MESMA coisa em quase tudo — 50mm, plano médio ou americano, altura dos olhos —
+// variando só frontal × 3/4 lateral. Distância, altura, lente, profundidade e
+// luz ficavam congeladas, que é o conjunto que o olho lê como "de novo a mesma
+// foto". Agora a linha é COMPOSTA por cinco eixos independentes, cada um com
+// fila própria: ver buildClarezaCameraLine em core/cameraAxes.ts.
+// O eixo horizontal (frontal × 3/4 lateral), única coisa que variava antes,
+// continua declarado no campo `camera` de VISUAL_DIRECTIONS["OP-01"].
 
 // Pool reduzido de INSTANTE para MARCA e SERVIÇOS — segmentos sem ponto de
 // venda físico. As variações 0, 1, 3 e 4 carregam léxico de PDV/loja/prateleira
@@ -324,11 +327,17 @@ export const INSTANTE_POOL_SEM_PDV: string[] = [
 // Câmera e estrutura de pose são sorteadas de forma independente e AMBAS citam
 // plano — a pose porque sempre citou ("plano próximo ou médio"), a câmera porque
 // variar distância era o objetivo da mudança. Em cerca de 1 de cada 4
-// combinações as duas discordam. O CLAREZA não tem esse problema porque
-// CLAREZA_PLANO_MEDIO_SENTENCE trava o plano no nível do mood; o INSTANTE não
-// tem trava equivalente, então a precedência precisa ser dita explicitamente.
-export const INSTANTE_PRECEDENCIA_PLANO =
-  "PRECEDÊNCIA DE ENQUADRAMENTO NESTA PEÇA: se a câmera sorteada e a estrutura de pose citarem planos diferentes, vale a DISTÂNCIA DA CÂMERA — a estrutura de pose entra com a ação, o gesto, a expressão e o ambiente, não com o enquadramento. A ALTURA da câmera é inegociável em qualquer hipótese. Exceção única: se a estrutura de pose exigir dois sujeitos em cena, recue o quanto for preciso para os dois caberem no quadro — aí a distância cede, a altura não. ";
+// combinações as duas discordam.
+//
+// Valia só para o INSTANTE até 12/08/2026: o CLAREZA não precisava porque
+// CLAREZA_PLANO_MEDIO_SENTENCE travava o plano no nível do mood. Com a câmera
+// do CLAREZA passando a variar a distância (core/cameraAxes.ts) e a trava
+// virando regra de rosto inteiro, o CLAREZA caiu no MESMO conflito — e as três
+// poses dele também citam plano ("plano médio ou americano", "plano médio ou
+// médio próximo", "plano próximo ou plano-detalhe"). Por isso a constante
+// deixou de ter dono e passou a ser compartilhada pelos dois moods.
+export const PRECEDENCIA_PLANO_SOBRE_POSE =
+  "PRECEDÊNCIA DE ENQUADRAMENTO NESTA PEÇA: se a câmera sorteada e a estrutura de pose citarem planos diferentes, vale a DISTÂNCIA DA CÂMERA — a estrutura de pose entra com a ação, o gesto, a expressão e o ambiente, não com o enquadramento. A ALTURA da câmera é inegociável em qualquer hipótese. Exceção única: se a estrutura de pose exigir dois sujeitos em cena, recue o quanto for preciso para os dois caberem no quadro — aí a distância cede, a altura não. Quando esta peça pertencer a uma sequência que declare ARCO VISUAL, a ordem completa é: arco > câmera > pose. ";
 
 // O prompt do MOP declara DUAS regras sobre distância de câmera ao mesmo tempo:
 // o ARCO VISUAL DA SEQUÊNCIA e o ARCO VISUAL INTERNO DO CARROSSEL
@@ -344,7 +353,7 @@ export const INSTANTE_PRECEDENCIA_PLANO =
 // diz — altura, lente, luz e textura —, que é exatamente o eixo que não variava
 // e fazia as peças parecerem a mesma foto refotografada.
 export const ARCO_PRECEDENCIA_CAMERA =
-  "PRECEDÊNCIA ENTRE A CÂMERA SORTEADA E O ARCO VISUAL: a câmera acima governa ALTURA, LENTE, LUZ e TEXTURA — e essas quatro permanecem constantes em TODAS as peças desta geração, porque são o que dá unidade à sequência. A DISTÂNCIA não vem dela: o plano de cada peça (aberto, médio, médio-fechado, close) é o que o ARCO VISUAL DA SEQUÊNCIA e o ARCO VISUAL INTERNO DO CARROSSEL determinam, peça a peça. Onde a linha de câmera acima mencionar distância, plano ou enquadramento, essa parte específica CEDE ao arco — o resto dela continua valendo integralmente. Em resumo: altura, lente e luz não mudam ao longo da sequência; a distância muda a cada peça.";
+  "PRECEDÊNCIA ENTRE A CÂMERA SORTEADA E O ARCO VISUAL: a câmera acima governa ALTURA, LENTE, LUZ, PROFUNDIDADE DE CAMPO e TEXTURA — e todas permanecem constantes em TODAS as peças desta geração, porque são o que dá unidade à sequência. A DISTÂNCIA não vem dela: o plano de cada peça (aberto, médio, médio-fechado, close) é o que o ARCO VISUAL DA SEQUÊNCIA e o ARCO VISUAL INTERNO DO CARROSSEL determinam, peça a peça. Onde a linha de câmera acima mencionar distância, plano ou enquadramento, essa parte específica CEDE ao arco — o resto dela continua valendo integralmente. Em resumo: altura, lente, luz e profundidade de campo não mudam ao longo da sequência; a distância muda a cada peça.";
 
 export const INSTANTE_CAMERA_VARIATIONS: string[] = [
   "35mm levemente alta, distância natural, grão sutil — ponto de vista de quem passa pelo local e registra sem preparar a cena",
@@ -513,19 +522,27 @@ export const FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE =
 export const FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED =
   "OBJETO CONDICIONAL NESTE MOOD — SUSPENSO NESTA PEÇA: há um produto físico referenciado (ou o ofício real não passa por tela) que já é o elemento concreto e o foco da composição — ver regra de dispositivos digitais no início deste prompt. Por isso NENHUM bloco desta peça inclui notebook, laptop ou qualquer dispositivo digital, mesmo que FRAGMENTO normalmente permita um bloco condicional de escritório. ";
 
-// Trecho do MOOD_RULES["OP-01"] que trava o enquadramento no corpo da pessoa
-// (cintura ao topo da cabeça). Quando existe produto referenciado com regra de
-// protagonismo (VAREJO), essa trava impede a câmera de chegar perto do produto:
-// para caber a pessoa inteira da cintura para cima, o produto fica pequeno e
-// distante — o oposto dos "30-40% do quadro" exigidos pela hierarquia de
-// produto no mesmo prompt (achado real 06/08/2026, PU Atrevidinha Modas).
-// Extraído como constante para poder ser substituído em resolveMoodRuleText,
-// no mesmo padrão já usado para as sentenças de dispositivo acima.
-export const CLAREZA_PLANO_MEDIO_SENTENCE =
-  "PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO: nas variações EM PÉ e SENTADO, o enquadramento vai da cintura ou quadril ao TOPO DA CABEÇA. Rosto e cabeça devem estar INTEIRAMENTE dentro do quadro. PROIBIDO cortar no pescoço, queixo, testa ou qualquer ponto acima dos ombros. A variação DETALHE CONTEXTUAL é a única exceção permitida (mãos/fragmento sem rosto). ";
+// Trecho do MOOD_RULES["OP-01"] que garante a integridade do rosto, e que é
+// substituído em resolveMoodRuleText quando há produto-herói — no mesmo padrão
+// das sentenças de dispositivo acima. A troca nasceu de um achado real
+// (06/08/2026, PU Atrevidinha Modas): a versão antiga travava o enquadramento
+// no corpo da pessoa e impedia a câmera de chegar perto do produto, contra os
+// "30-40% do quadro" que a hierarquia de produto exige no MESMO prompt.
+//
+// Era CLAREZA_PLANO_MEDIO_SENTENCE, "PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO":
+// fixava o enquadramento "da cintura ou quadril ao TOPO DA CABEÇA". Ela existia
+// para proteger o ROSTO de ser decapitado (cortado no pescoço, queixo ou
+// testa), mas fazia isso travando a DISTÂNCIA — e com isso eliminava close e
+// plano geral do CLAREZA por definição, deixando o mood com uma distância só.
+// Reescrita em 12/08/2026 para proteger exatamente o que ela protegia, sem
+// congelar a câmera: a integridade da cabeça vira a regra, a distância passa a
+// ser dos cinco eixos (core/cameraAxes.ts). Mesmo movimento que
+// CLAREZA_ENQUADRAMENTO_PRODUTO_HERO abaixo já fazia no caso do produto-herói.
+export const CLAREZA_ROSTO_INTEIRO_SENTENCE =
+  'ROSTO INTEIRO EM CLAREZA — INEGOCIÁVEL: sempre que o rosto da pessoa estiver na cena, a CABEÇA aparece INTEIRAMENTE dentro do quadro. PROIBIDO cortar no pescoço, no queixo, na testa ou em qualquer ponto acima dos ombros — em QUALQUER distância de câmera, inclusive nos planos mais fechados: se o enquadramento fechado não couber a cabeça inteira, recue a câmera até caber. O que NÃO está travado é a DISTÂNCIA: o plano desta peça é o que a câmera sorteada determina (ver bloco "VARIAÇÕES SORTEADAS"), e pode ir do plano próximo ao plano geral. A variação DETALHE CONTEXTUAL é a única em que não há rosto em cena (mãos ou fragmento) — só nela esta regra não se aplica. ';
 
-export const CLAREZA_PLANO_MEDIO_PRODUTO_HERO =
-  "ENQUADRAMENTO EM CLAREZA COM PRODUTO-HERÓI — REGRA DESTA PEÇA: existe produto referenciado que deve ocupar 30-40% do quadro (ver REGRA DE PROTAGONISMO DO PRODUTO). Por isso o enquadramento NÃO fica preso ao plano médio da pessoa: a câmera pode aproximar do produto, e a pessoa pode aparecer em plano americano, três-quartos, de corpo inteiro, mais recuada ou ocupando uma faixa lateral do quadro — o que for preciso para o produto crescer. O que permanece INEGOCIÁVEL é que o ROSTO e a CABEÇA da pessoa apareçam INTEIRAMENTE dentro do quadro, nunca cortados no pescoço, queixo, testa ou em qualquer ponto acima dos ombros: aproximar do produto JAMAIS significa decapitar ou cortar fora do quadro a pessoa. Se produto grande e rosto inteiro não couberem no mesmo enquadramento, recue a câmera e componha os dois lado a lado — nunca sacrifique nenhum dos dois. ";
+export const CLAREZA_ENQUADRAMENTO_PRODUTO_HERO =
+  "ENQUADRAMENTO EM CLAREZA COM PRODUTO-HERÓI — REGRA DESTA PEÇA: existe produto referenciado que deve ocupar 30-40% do quadro (ver REGRA DE PROTAGONISMO DO PRODUTO). A distância da câmera cede a essa exigência: aproxime do produto e componha a pessoa como o quadro permitir — plano americano, três-quartos, de corpo inteiro, mais recuada ou ocupando uma faixa lateral —, o que for preciso para o produto crescer. O que permanece INEGOCIÁVEL é que o ROSTO e a CABEÇA da pessoa apareçam INTEIRAMENTE dentro do quadro, nunca cortados no pescoço, queixo, testa ou em qualquer ponto acima dos ombros: aproximar do produto JAMAIS significa decapitar ou cortar fora do quadro a pessoa. Se produto grande e rosto inteiro não couberem no mesmo enquadramento, recue a câmera e componha os dois lado a lado — nunca sacrifique nenhum dos dois. ";
 
 // ── LOOK BOOK × MOOD ────────────────────────────────────────────────────────
 // O modo look book (core/lookBook.ts) fixa pose de modelo, câmera 50-85mm na
@@ -585,7 +602,7 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     CLAREZA_DEVICE_WELCOME_SENTENCE +
     "VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, notebook ou laptop presente em todas as peças como recurso automático, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. " +
     CLAREZA_MATERIAL_TRABALHO_SENTENCE +
-    CLAREZA_PLANO_MEDIO_SENTENCE +
+    CLAREZA_ROSTO_INTEIRO_SENTENCE +
     'A variação de câmera e posição desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
     "CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.",
   "OP-02":

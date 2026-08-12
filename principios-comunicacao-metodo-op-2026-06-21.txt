@@ -558,6 +558,91 @@ Regressão: `src/__tests__/clarezaDispositivo.test.ts` (10 testes) trava tanto a
 saída da obrigação quanto a permanência da trava de tela/tampa/carcaça nos dois
 motores, e a fonte única das sentenças.
 
+2.9 CÂMERA DO CLAREZA EM CINCO EIXOS — E A TRAVA DE PLANO QUE VIROU REGRA DE ROSTO
+------------------------------------------------------------
+[Pedido de Aristóteles em 12/08/2026: "agora estende os cinco eixos de câmera
+pro CLAREZA". Fase 2 do levantamento de repetição visual dos moods, cuja
+hipótese central — a repetição vem da CÂMERA parada, não da falta de pose — ele
+já confirmou em peça real no INSTANTE ("o INSTANTE ficou bom").]
+
+Situação: o CLAREZA tinha 2 variações de câmera e as duas diziam a MESMA coisa
+em quase tudo — 50mm, plano médio ou americano, altura dos olhos. Variava só
+frontal × 3/4 lateral. Distância, altura, lente, profundidade de campo e
+qualidade de luz eram constantes, que é exatamente o conjunto que o olho lê
+como "de novo a mesma foto".
+
+Decisão: a câmera deixa de ser uma frase pronta escolhida de um pool e passa a
+ser COMPOSTA por cinco eixos independentes, cada um com fila própria —
+distância · altura · ótica · profundidade · luz (core/cameraAxes.ts). Cada eixo
+recebe uma FAIXA PERMITIDA pela gramática do mood: nada dramático entra (sem
+dutch angle, sem plongée mergulhado, sem contra-plongée forte, sem bokeh
+derretido, sem contraste recortado). O rodízio escolhe DENTRO da gramática.
+
+Enquadramento: isto é EXECUÇÃO, não gramática — câmera, altura, lente, luz e
+pose são execução; o que é o sujeito da cena é gramática e não se sorteia (ver
+a fronteira estabelecida em 12/08/2026, quando o sorteio de sujeito do SILÊNCIO
+foi revertido).
+
+Três reconciliações que a mudança EXIGIU, todas por contradição dentro do mesmo
+prompt (a classe de bug recorrente deste projeto):
+
+1. A TRAVA DE PLANO MÉDIO. `CLAREZA_PLANO_MEDIO_SENTENCE` fixava "da cintura ou
+   quadril ao TOPO DA CABEÇA" — e com isso eliminava close e plano geral do
+   CLAREZA por definição. Ela existia para proteger o ROSTO de ser decapitado,
+   mas protegia travando a DISTÂNCIA. Reescrita como
+   `CLAREZA_ROSTO_INTEIRO_SENTENCE`: a integridade da cabeça vira a regra
+   (válida em QUALQUER distância, inclusive nos planos fechados, com ordem
+   explícita de recuar a câmera se não couber), e a distância passa a ser dos
+   eixos. É o mesmo movimento que `CLAREZA_ENQUADRAMENTO_PRODUTO_HERO` já fazia
+   desde 06/08 no caso do produto-herói — agora vale sempre.
+2. A ASSINATURA E O CAMPO `luz` DO MOOD. A assinatura é colada no fim de todo
+   imagePrompt e declarava "lente 50mm" e "luz natural difusa lateral" — variar
+   lente e luz sem tocar nela contradiria o próprio fecho do prompt. Foi por
+   isso que o INSTANTE ficou preso em 35mm na Fase 1. A assinatura passou a
+   declarar a FAIXA ("lente 35-85mm", "luz natural difusa"), no padrão que o
+   SILÊNCIO já usava ("lente 50-70mm"), e os campos `camera` e `luz` do mood
+   passaram a delegar o valor exato ao bloco VARIAÇÕES SORTEADAS.
+3. A PRECEDÊNCIA DE PLANO. Com a distância variando, câmera e pose passam a
+   declarar plano de forma independente e podem discordar — o CLAREZA caiu no
+   mesmo conflito que o INSTANTE já tinha, e que a trava do mood resolvia
+   sozinha antes. `INSTANTE_PRECEDENCIA_PLANO` perdeu o dono e virou
+   `PRECEDENCIA_PLANO_SOBRE_POSE`, compartilhada pelos dois moods. Ganhou uma
+   frase que faltava: a ordem completa é ARCO > CÂMERA > POSE.
+
+Efeito por motor, que NÃO é o mesmo nos dois:
+  · PU — os cinco eixos valem integralmente; a peça é ilha e a câmera é a única
+    autoridade sobre o enquadramento.
+  · MOP — a DISTÂNCIA continua sendo do ARCO VISUAL DA SEQUÊNCIA (decisão de
+    12/08, `ARCO_PRECEDENCIA_CAMERA`): ela muda peça a peça e dá narrativa à
+    sequência. Os outros quatro eixos são da câmera e permanecem constantes ao
+    longo da sequência, que é o que dá unidade. `ARCO_PRECEDENCIA_CAMERA`
+    passou a listar PROFUNDIDADE DE CAMPO junto de altura, lente e luz.
+
+Contrato do avatar: plano geral não retira o rosto da cena, mas reduz a pessoa
+a uma figura pequena — que é como o usuário lê "o avatar sumiu" (achado real de
+06/08). Com avatar marcado no Kit Imagem, a distância mais afastada sai da
+faixa; as outras três continuam. O filtro é por MARCADOR DE TEXTO, nunca por
+índice — índice fixo é o que causou o P0 de 11/08.
+
+Números honestos: o espaço de combinações é 4·3·3·2·3 = 216 (162 com avatar).
+O CICLO da fila, porém, é o mmc dos tamanhos de pool = 12 — é quanto o usuário
+percorre antes de reencontrar a mesma combinação exata, e é o número que vale.
+Contra as 2 câmeras quase idênticas de antes, e com TODOS os cinco eixos
+mudando entre duas gerações consecutivas.
+
+Fora de escopo, declarado: as câmeras de "peça sem personagem"
+(core/semPersonagem.ts) não receberam os eixos — sem pessoa em cena, distância
+de busto e plano americano não têm sujeito a medir.
+
+Implementação: `src/core/cameraAxes.ts` (novo),
+`src/core/visualDirection.lexicon.ts` (campos do mood, assinatura, regra de
+rosto, precedência compartilhada, arco), `src/core/visualDirection.ts` (motor
+MOP), `src/core/imageVariationPicker.ts` (motor PU).
+Regressão: `src/__tests__/cameraAxesClareza.test.ts` (27 testes) — cada eixo
+percorre a faixa inteira, nada sai "undefined" em 200 posições de fila, dois
+consecutivos não repetem nenhum eixo, a faixa não invade o que o mood proíbe, o
+avatar tira o plano geral, e a regra de rosto sobrevive nos dois motores.
+
 ============================================================
 PARTE 3 — PROCESSO E MANUTENÇÃO DESTE DOCUMENTO
 ============================================================

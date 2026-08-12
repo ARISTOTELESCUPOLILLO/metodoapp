@@ -7,9 +7,9 @@ import { detectForcedGenderFromCopy, PersonagemGender } from "./visualDirection"
 // para não criar ciclo de import entre este módulo e visualDirection.
 import { variationHasFaceNotDominant } from "./productHierarchy";
 import { pickRotating } from "./colorRotation";
+import { buildClarezaCameraLine } from "./cameraAxes";
 import {
   pickRandom,
-  CLAREZA_CAMERA_VARIATIONS,
   CLAREZA_CHARACTER_VARIATIONS,
   IMPACTO_CAMERA_VARIATIONS,
   IMPACTO_CHARACTER_VARIATIONS,
@@ -20,7 +20,7 @@ import {
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
   SILENCIO_CAMERA_VARIATIONS,
-  INSTANTE_PRECEDENCIA_PLANO,
+  PRECEDENCIA_PLANO_SOBRE_POSE,
   PERSONAGEM_GENDER_VARIATIONS,
 } from "./visualDirection.lexicon";
 
@@ -177,7 +177,12 @@ export function pickImageVariationBlock(opts: {
     // string fixa, o que dispensava a reconciliação porque nunca havia dois
     // valores diferentes para conflitar.
     if (mood === "OP-01") {
-      return composicao ? "" : `Câmera: ${pickEixo(CLAREZA_CAMERA_VARIATIONS, PASSO_CAMERA)}. `;
+      // A câmera do CLAREZA não sai mais de um pool de frases prontas: é
+      // composta por cinco eixos independentes (ver core/cameraAxes.ts), cada
+      // um com fila própria. O seed é o mesmo da fila do usuário; hasAvatarRef
+      // tira o plano geral da faixa, que reduziria o avatar contratado a uma
+      // figura pequena no quadro.
+      return composicao ? "" : `Câmera: ${buildClarezaCameraLine({ seed, hasAvatarRef })}. `;
     }
     if (mood === "OP-03") {
       return composicao ? "" : `Câmera: ${pickEixo(INSTANTE_CAMERA_VARIATIONS, PASSO_CAMERA)}. `;
@@ -191,10 +196,15 @@ export function pickImageVariationBlock(opts: {
   // Estrutura (todos os moods deste bloco) são suprimidas nesse caso; gênero
   // ainda se aplica.
   const estruturaBlock = composicao ? "" : `Estrutura: ${variation} `;
-  // Só o INSTANTE precisa: é o único mood em que câmera e estrutura de pose
-  // declaram plano de forma independente (ver INSTANTE_PRECEDENCIA_PLANO).
+  // CLAREZA e INSTANTE: os dois moods em que câmera e estrutura de pose
+  // declaram plano de forma independente e podem discordar (ver
+  // PRECEDENCIA_PLANO_SOBRE_POSE). O CLAREZA entrou nesta lista em 12/08/2026,
+  // quando a distância dele passou a variar pelos cinco eixos — antes o plano
+  // era travado pela regra do mood e não havia dois valores para conflitar.
   const precedencia =
-    mood === "OP-03" && cameraStr && estruturaBlock ? INSTANTE_PRECEDENCIA_PLANO : "";
+    (mood === "OP-01" || mood === "OP-03") && cameraStr && estruturaBlock
+      ? PRECEDENCIA_PLANO_SOBRE_POSE
+      : "";
   // Gênero vem primeiro no bloco — é a restrição mais importante e não pode
   // ficar enterrada depois da câmera/estrutura (ver comentário acima).
   return `\n⚠ VARIAÇÃO: ${genderBlock}${cameraStr}${estruturaBlock}${precedencia}${TEMA_DERIVATION_RULE}`;

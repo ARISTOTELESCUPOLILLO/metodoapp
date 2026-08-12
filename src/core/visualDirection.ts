@@ -18,12 +18,12 @@
 
 import { MoodCode, Segment } from "../types";
 import { pickPaletaDoMood, pickRotating } from "./colorRotation";
+import { buildClarezaCameraLine } from "./cameraAxes";
 import {
   getVisualDirection,
   SEGMENT_LAYERS,
   MOOD_RULES,
   pickRandom,
-  CLAREZA_CAMERA_VARIATIONS,
   CLAREZA_CHARACTER_VARIATIONS,
   IMPACTO_CHARACTER_VARIATIONS,
   INSTANTE_CAMERA_VARIATIONS,
@@ -34,14 +34,14 @@ import {
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
   DESVIO_CAMERA_VARIATIONS,
   SILENCIO_CAMERA_VARIATIONS,
-  INSTANTE_PRECEDENCIA_PLANO,
+  PRECEDENCIA_PLANO_SOBRE_POSE,
   ARCO_PRECEDENCIA_CAMERA,
   CLAREZA_DEVICE_WELCOME_SENTENCE,
   CLAREZA_MATERIAL_TRABALHO_SENTENCE,
   CLAREZA_MATERIAL_TRABALHO_SUPPRESSED,
   CLAREZA_DEVICE_CLAUSE_SUPPRESSED,
-  CLAREZA_PLANO_MEDIO_SENTENCE,
-  CLAREZA_PLANO_MEDIO_PRODUTO_HERO,
+  CLAREZA_ROSTO_INTEIRO_SENTENCE,
+  CLAREZA_ENQUADRAMENTO_PRODUTO_HERO,
   FRAGMENTO_DEVICE_CONDITIONAL_SENTENCE,
   FRAGMENTO_DEVICE_CLAUSE_SUPPRESSED,
   IMPACTO_CAMERA_SENTENCE,
@@ -106,7 +106,8 @@ export function detectForcedGenderFromCopy(
 //  · noDeviceThisScene — a regra global já baniu dispositivo digital nesta peça,
 //    então as sentenças de CLAREZA/FRAGMENTO que os recebem bem saem de cena;
 //  · produtoHero — há produto referenciado que deve ocupar 30-40% do quadro, e a
-//    trava de plano médio do CLAREZA impediria a câmera de chegar perto dele.
+//    regra de rosto do CLAREZA ganha o parágrafo que declara que a distância
+//    cede a essa exigência sem nunca cortar a cabeça da pessoa.
 function resolveMoodRuleText(
   mood: MoodCode,
   noDeviceThisScene: boolean,
@@ -130,11 +131,12 @@ function resolveMoodRuleText(
         .replace(SILENCIO_PESSOA_SENTENCE, SILENCIO_PESSOA_LOOKBOOK);
     }
   }
-  // Produto-herói (VAREJO com produto referenciado): solta a trava de plano
-  // médio do CLAREZA, que impedia a câmera de aproximar do produto — ver
-  // CLAREZA_PLANO_MEDIO_PRODUTO_HERO no léxico.
+  // Produto-herói (VAREJO com produto referenciado): a regra de rosto inteiro
+  // ganha o parágrafo específico do produto, que declara que a distância cede
+  // aos 30-40% do quadro exigidos pela hierarquia — ver
+  // CLAREZA_ENQUADRAMENTO_PRODUTO_HERO no léxico.
   if (mood === "OP-01" && produtoHero) {
-    base = base.replace(CLAREZA_PLANO_MEDIO_SENTENCE, CLAREZA_PLANO_MEDIO_PRODUTO_HERO);
+    base = base.replace(CLAREZA_ROSTO_INTEIRO_SENTENCE, CLAREZA_ENQUADRAMENTO_PRODUTO_HERO);
   }
   if (!noDeviceThisScene) return base;
   if (mood === "OP-01") {
@@ -324,9 +326,14 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     const variation = pickEixo(pool, PASSO_ESTRUTURA);
     // OP-03 entrou aqui em 11/08/2026 — antes só o CLAREZA tinha câmera
     // sorteada no lado do conteúdo, e o INSTANTE usava uma string fixa.
+    // OP-01 deixou de sortear uma frase pronta em 12/08/2026: a câmera do
+    // CLAREZA passou a ser COMPOSTA por cinco eixos (ver core/cameraAxes.ts).
+    // Sem hasAvatarRef aqui de propósito — este é o lado do CONTEÚDO, que roda
+    // uma vez por sequência e não conhece a seleção do Kit Imagem; o filtro de
+    // avatar existe no picker de imagem, que é onde essa informação chega.
     const camera =
       mood === "OP-01"
-        ? pickEixo(CLAREZA_CAMERA_VARIATIONS, PASSO_CAMERA)
+        ? buildClarezaCameraLine({ seed })
         : mood === "OP-03"
           ? pickEixo(INSTANTE_CAMERA_VARIATIONS, PASSO_CAMERA)
           : null;
@@ -335,10 +342,12 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
     // é outra decisão (e um terreno com histórico de bug: ver o fallback de
     // gênero da PU em 16/07/2026).
     const gender = pickRandom(PERSONAGEM_GENDER_VARIATIONS);
-    // Duas precedências diferentes, ambas sobre plano: a do INSTANTE resolve
-    // câmera × pose dentro da MESMA peça; a do arco resolve câmera × sequência
-    // entre as peças. Não se substituem.
-    const precedencia = mood === "OP-03" && camera ? `\n${INSTANTE_PRECEDENCIA_PLANO}` : "";
+    // Duas precedências diferentes, ambas sobre plano: PRECEDENCIA_PLANO_SOBRE_POSE
+    // resolve câmera × pose dentro da MESMA peça; a do arco resolve câmera ×
+    // sequência entre as peças. Não se substituem — e a ordem completa
+    // (arco > câmera > pose) está dita na primeira.
+    const precedencia =
+      (mood === "OP-01" || mood === "OP-03") && camera ? `\n${PRECEDENCIA_PLANO_SOBRE_POSE}` : "";
     const arco = camera ? `\n${ARCO_PRECEDENCIA_CAMERA}` : "";
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:${camera ? `\n• Câmera: ${camera}` : ""}${precedencia}${arco}\n• Gênero do personagem NESTA GERAÇÃO: ${gender} — ESCOPO EXCLUSIVO: aplica-se APENAS ao campo "personagem" da leituraCenica e à composição visual da imagem — NÃO deve alterar título, texto, legenda, hook nem qualquer campo textual da peça. Nos campos de texto, quando o usuário não especificou gênero, usar sempre termos neutros ("gestores", "profissionais", "decisores", "equipes", "pessoas") — nunca escolher gênero nos textos por conta própria. No campo "personagem": adapte para ${gender}, preservando a mesma ação, postura, papel e contexto — troque só o gênero, sem estereótipo.\n• Estrutura de pose/enquadramento/ambiente: ${variation}\n${TEMA_DERIVATION_RULE} Aqui, o GESTO e A AÇÃO do personagem dentro dessa estrutura devem ser exatamente essa ação concreta derivada do tema — nunca uma pose dramática genérica de "executivo" sem relação com o que a peça comunica.`;
   }

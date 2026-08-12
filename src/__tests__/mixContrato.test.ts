@@ -86,17 +86,21 @@ describe("buildMixContratoBlock", () => {
   });
 });
 
-// ── Enquadramento: produto-herói solta a trava de plano médio do CLAREZA ─────
+// ── Enquadramento: produto-herói troca a regra de rosto pela do produto ──────
+// Era "trava de plano médio" até 12/08/2026, quando a distância do CLAREZA
+// passou a variar pelos cinco eixos (core/cameraAxes.ts) e a trava virou regra
+// de ROSTO INTEIRO. O que o produto-herói substitui mudou de nome; o que ele
+// precisa preservar — rosto nunca cortado — continua o mesmo.
 
 describe("buildMoodGrammarBlock — produtoHero em CLAREZA", () => {
-  it("sem produto, mantém a trava de plano médio", () => {
+  it("sem produto, mantém a regra de rosto inteiro", () => {
     const bloco = buildMoodGrammarBlock("OP-01");
-    expect(bloco).toContain("PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO");
+    expect(bloco).toContain("ROSTO INTEIRO EM CLAREZA — INEGOCIÁVEL");
   });
 
-  it("com produto-herói, troca a trava pela regra que libera a aproximação", () => {
+  it("com produto-herói, troca pela regra que libera a aproximação", () => {
     const bloco = buildMoodGrammarBlock("OP-01", { produtoHero: true });
-    expect(bloco).not.toContain("PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO");
+    expect(bloco).not.toContain("ROSTO INTEIRO EM CLAREZA — INEGOCIÁVEL");
     expect(bloco).toContain("ENQUADRAMENTO EM CLAREZA COM PRODUTO-HERÓI");
     // A parte que NÃO pode cair junto: rosto inteiro no quadro.
     expect(bloco).toContain("INTEIRAMENTE dentro do quadro");
@@ -216,7 +220,7 @@ describe("PU — mix avatar + cenário + produto em VAREJO de moda", () => {
   it("libera a câmera para aproximar do produto sem cortar o rosto", () => {
     const p = promptModa();
     expect(p).toContain("ENQUADRAMENTO EM CLAREZA COM PRODUTO-HERÓI");
-    expect(p).not.toContain("PLANO MÉDIO EM CLAREZA — OBRIGATÓRIO");
+    expect(p).not.toContain("ROSTO INTEIRO EM CLAREZA — INEGOCIÁVEL");
   });
 
   it("mantém a regra de protagonismo do produto (VAREJO)", () => {
