@@ -15,9 +15,15 @@
 // mesma foto" (ver project-moods-rodizio-fase1: as peças que destoavam não
 // eram mais criativas, só tinham outra câmera).
 //
-// Aqui a câmera passa a ser COMPOSTA por cinco eixos, cada um com fila própria:
-// distância · altura · ótica · profundidade · luz. É a decupagem que qualquer
-// direção de fotografia usa, e permite variar um eixo sem mexer nos outros.
+// Aqui a câmera passa a ser COMPOSTA por eixos independentes, cada um com fila
+// própria: distância · altura · ótica · profundidade · luz, mais corpo/textura
+// no CLAREZA desde 13/08/2026. É a decupagem que qualquer direção de fotografia
+// usa, e permite variar um eixo sem mexer nos outros.
+//
+// A FILA em si também mudou em 13/08/2026, e só no CLAREZA: o rodízio simples
+// dava a volta no pool a cada n peças, e eixos de mesmo tamanho voltavam ao
+// início juntos — quatro dos cinco eixos do CLAREZA repetiam de uma vez a cada
+// 3 peças. Ver pickEixoNaFila e `filaComCarry`.
 //
 // A gramática do mood continua mandando no que é LEGAL: cada mood recebe uma
 // FAIXA PERMITIDA por eixo, e nenhuma faixa contradiz a regra inegociável do
@@ -28,7 +34,7 @@
 // pose são EXECUÇÃO; o que é o sujeito da cena é gramática e não se sorteia).
 
 import { MoodCode } from "../types";
-import { pickRotating } from "./colorRotation";
+import { coprimeStep, pickRotating } from "./colorRotation";
 import { pickRandom } from "./visualDirection.lexicon";
 
 // ── CLAREZA (OP-01) ─────────────────────────────────────────────────────────
@@ -42,6 +48,12 @@ import { pickRandom } from "./visualDirection.lexicon";
 // decapitado, e protegia travando o enquadramento.
 export const EIXO_DISTANCIA_CLAREZA: string[] = [
   "PLANO PRÓXIMO: enquadramento fechado no busto — ombros, rosto e mãos (quando entram na ação) ocupando a maior parte do quadro, com a CABEÇA INTEIRA dentro do quadro, sem cortar testa, queixo nem o topo do cabelo",
+  // Acrescentado em 13/08/2026 para que a distância tenha 4 opções mesmo COM
+  // avatar marcado (o filtro tira só o PLANO GERAL). Sem ela, distância e
+  // altura ficavam com 3 opções cada e andavam coladas: na amostra real, PLANO
+  // PRÓXIMO saía sempre com "altura dos olhos", PLANO MÉDIO sempre com plongée
+  // suave. Tamanhos diferentes é o que desacopla os dois eixos.
+  "PLANO MÉDIO-FECHADO: do peito ao topo da cabeça, rosto e expressão dominando o quadro com uma faixa do ambiente de trabalho atrás",
   "PLANO MÉDIO: da cintura ou do quadril ao topo da cabeça, com a superfície de trabalho ou o entorno imediato entrando na base do quadro",
   "PLANO AMERICANO: do meio da coxa ao topo da cabeça — o gesto das mãos e a postura inteira cabem no quadro junto com parte do ambiente",
   "PLANO GERAL: a pessoa ocupa uma parte menor do quadro e o ambiente organizado de trabalho entra inteiro ao redor dela — a ordem do espaço é parte do que a peça comunica",
@@ -61,7 +73,43 @@ export const EIXO_ALTURA_CLAREZA: string[] = [
 export const EIXO_OTICA_CLAREZA: string[] = [
   "lente 35mm, que deixa entrar mais ar e contexto do ambiente ao redor da figura",
   "lente 50mm, perspectiva neutra e leitura imediata, sem nenhuma distorção",
+  // 70mm entrou em 13/08/2026 para desempatar o tamanho deste pool do de altura
+  // e luz, que também tinham 3 (ver pickEixoNaFila). Fica DENTRO da faixa que a
+  // assinatura do mood já declara (35-85mm): é um passo intermediário entre a
+  // neutralidade do 50 e a compressão do 85, não uma ótica nova de gramática.
+  "lente 70mm, compressão suave que assenta a figura no ambiente sem achatá-lo",
   "lente 85mm, que comprime o fundo e recorta a figura com suavidade, sem distorcer traços",
+];
+
+// ── CORPO E TEXTURA (CLAREZA) ───────────────────────────────────────────────
+// Camada nova, pedida pelo Aristóteles em 13/08/2026 para testar o acabamento
+// de imagem ("câmera Sony FX3, lente clara, textura de cinema").
+//
+// O que JÁ existia e o que é novo: a LENTE já era eixo próprio (EIXO_OTICA
+// acima) e a TEXTURA já existia — mas fixa e escondida dentro da assinatura de
+// cada mood, nunca sorteada: o INSTANTE declara "lente 35mm com grão sutil", o
+// SILÊNCIO declara "lente 50-100mm sem grão". CORPO DE CÂMERA não existia em
+// lugar nenhum do sistema. É isto que este eixo acrescenta: o corpo que captou
+// a cena e o acabamento que ele produz.
+//
+// Só o CLAREZA recebe a camada, de propósito. Estender aos outros exigiria
+// reconciliar cada assinatura: pedir "textura de cinema" ao SILÊNCIO, cuja
+// assinatura manda "sem grão", poria duas ordens opostas no mesmo prompt — a
+// classe de bug que já apareceu quatro vezes neste arquivo.
+//
+// As cinco opções são a MESMA família de acabamento (cinema digital de sensor
+// grande, lente clara, textura limpa e luminosa), variando o corpo. Isso é
+// deliberado: assim o Aristóteles vê o look que pediu em QUALQUER peça de
+// CLAREZA que gerar, em vez de uma em cinco. Nenhuma introduz contraste
+// dramático, virada de cor cinematográfica (teal-orange) nem grão pesado — tudo
+// isso é IMPACTO, e contradiria "luz natural difusa, sem sombras duras" e a
+// paleta fria controlada que o CLAREZA declara.
+export const EIXO_CORPO_CLAREZA: string[] = [
+  "captada em Sony FX3 full-frame com lente clara de abertura T1.5 — textura de cinema limpa, tons de pele naturais e altas luzes que rolam suavemente, sem grão pesado",
+  "captada em ARRI Alexa com lente esférica clara — latitude ampla, altas luzes que se apagam sem estourar, textura de cinema orgânica e discreta",
+  "captada em câmera full-frame de sensor grande com lente prime clara — nitidez editorial de revista, microcontraste alto, acabamento limpo e sem grão aparente",
+  "captada em corpo de cinema digital com lente prime clara e leve difusão ótica — halo macio nas altas luzes e textura de cinema suave, mantendo o rosto perfeitamente nítido",
+  "captada em mirrorless full-frame moderna com lente prime clara — imagem contemporânea de alta definição, cor neutra e textura de cinema discreta no acabamento",
 ];
 
 // Fundo derretido em bokeh forte fica FORA da faixa do CLAREZA: o ambiente
@@ -81,6 +129,15 @@ export const EIXO_LUZ_CLAREZA: string[] = [
   "luz natural difusa entrando por uma janela lateral única, sombras longas e macias",
   "luz alta-chave difusa e envolvente, sombras quase ausentes, ambiente claro e arejado",
   "luz natural difusa somada a uma luminária acesa dentro do quadro, temperatura levemente mista, ainda sem nenhuma sombra dura",
+  // Quarta opção acrescentada em 13/08/2026 pelo mesmo motivo do 70mm na ótica:
+  // desempatar o tamanho deste pool. Segue na família que o mood declara — luz
+  // natural suave, sem nenhuma direção dura.
+  "luz natural difusa rebatida por uma superfície clara próxima, parede ou tampo branco devolvendo preenchimento suave e abrindo as sombras",
+  // A quinta não é enfeite: leva este pool a 5, o único tamanho pequeno com
+  // mais de uma classe de passo utilizável. É o que permite luz e corpo
+  // andarem DESACOPLADOS um do outro (ver PASSO_LUZ/PASSO_CORPO) — com 4
+  // opções os dois seriam forçados ao mesmo passo e repetiriam juntos.
+  "luz de dia nublado entrando ampla e uniforme, sem direção marcada, sombras muito abertas e tonalidade estável",
 ];
 
 // ── IMPACTO (OP-02) ─────────────────────────────────────────────────────────
@@ -244,9 +301,29 @@ interface EixosDoMood {
   otica: string[];
   profundidade: string[];
   luz: string[];
+  /** Corpo de câmera + textura de acabamento. Opcional: só o CLAREZA tem, e
+   *  quem não tem simplesmente não recebe o trecho na linha de câmera — ver
+   *  EIXO_CORPO_CLAREZA para por que a camada não foi estendida aos outros. */
+  corpo?: string[];
   /** Se a distância mais afastada deve sair da faixa quando há avatar
    *  selecionado no Kit Imagem — ver distanciaPreservaOAvatar. */
   filtraDistanciaComAvatar: boolean;
+  /**
+   * Se a fila deste mood usa o carry entre voltas (pickEixoNaFila) ou o rodízio
+   * simples de sempre (pickRotating).
+   *
+   * Hoje só o CLAREZA. O carry exige pools de tamanhos variados para render:
+   * IMPACTO tem quatro eixos de 3 opções e um de 2, e nessa configuração ele
+   * fazia a câmera INTEIRA repetir entre a 2ª e a 4ª peça — pior que o defeito
+   * que veio corrigir. SILÊNCIO (4·4·3·2·3) e DESVIO (4·5·3·2·3) sofrem menos
+   * do defeito original justamente porque seus tamanhos já são variados.
+   *
+   * Para ligar o carry nos outros: crescer os pools de 3 primeiro, medir a
+   * repetição real com a telemetria (core/variacaoTelemetria.ts), e só então
+   * virar a chave. Não ligar antes — o teste que provou isso está em
+   * __tests__/cameraFilaCarry.test.ts.
+   */
+  filaComCarry?: boolean;
 }
 
 const EIXOS_POR_MOOD: Partial<Record<MoodCode, EixosDoMood>> = {
@@ -256,7 +333,9 @@ const EIXOS_POR_MOOD: Partial<Record<MoodCode, EixosDoMood>> = {
     otica: EIXO_OTICA_CLAREZA,
     profundidade: EIXO_PROFUNDIDADE_CLAREZA,
     luz: EIXO_LUZ_CLAREZA,
+    corpo: EIXO_CORPO_CLAREZA,
     filtraDistanciaComAvatar: true,
+    filaComCarry: true,
   },
   "OP-02": {
     distancia: EIXO_DISTANCIA_IMPACTO,
@@ -325,23 +404,105 @@ const PASSO_DISTANCIA = 1;
 const PASSO_ALTURA = 2;
 const PASSO_OTICA = 3;
 const PASSO_PROFUNDIDADE = 1;
+// Luz e corpo têm 5 opções no CLAREZA justamente para poderem usar passos de
+// CLASSES diferentes (2 e 3) e não andarem colados. Pool de 3 ou 4 não permite
+// isso: sobra uma classe só depois da regra do passo ≠ n-1.
 const PASSO_LUZ = 2;
+const PASSO_CORPO = 3;
 
 /**
- * Monta a linha de câmera do mood compondo os cinco eixos.
+ * Avança um eixo na fila do usuário — com CARRY entre voltas.
+ *
+ * O rodízio simples (`pickRotating`: índice = seed·passo % n) tem um limite que
+ * nenhum passo corrige: seu ciclo é o tamanho do pool. Um eixo de 3 opções
+ * volta ao início a cada 3 peças, sempre. Quando VÁRIOS eixos têm o mesmo
+ * tamanho de pool, todos dão a volta no mesmo momento — e é isso que o olho lê
+ * como "de novo a mesma foto".
+ *
+ * Achado real (13/08/2026, na primeira amostra da telemetria de variação): no
+ * CLAREZA, quatro dos cinco eixos têm 3 opções — altura, ótica, luz e, quando há
+ * avatar marcado, também a distância (o filtro a reduz de 4 para 3). As peças
+ * nas posições 0 e 3 da fila saíam com plano, altura, lente e luz IDÊNTICOS;
+ * só a profundidade, de pool 2, diferia. Isso não era do avatar: sem ele, três
+ * dos cinco ainda coincidiam.
+ *
+ * O termo `floor(seed / n)` é o carry: conta quantas voltas completas a fila já
+ * deu naquele pool e desloca a entrada da volta seguinte. O ciclo de cada eixo
+ * passa de n para n² — de 3 para 9 peças no CLAREZA — e a ordem de cada volta
+ * muda, em vez de reexibir a mesma sequência.
+ *
+ * O que o carry NÃO resolve, e é honesto registrar: dois eixos de mesmo tamanho
+ * e mesmo passo efetivo continuam correlacionados entre si (andam juntos, com
+ * valores diferentes porque os pools são outros). Com pool de 3 opções isso é
+ * inevitável em qualquer fórmula linear — só existem duas classes de passo
+ * co-primo com 3. Por isso os pools pequenos do CLAREZA também cresceram nesta
+ * mesma mudança: correlação entre eixos distintos é bem menos visível que um
+ * eixo repetindo o próprio valor, mas o remédio de fundo é pool maior.
+ *
+ * Dentro de cada volta a fila continua visitando TODAS as opções antes de
+ * repetir qualquer uma — o passo segue passando por `coprimeStep`, e o carry é
+ * constante ao longo da volta.
+ *
+ * DUAS REGRAS QUE O CÓDIGO PRECISA RESPEITAR, cada uma custou teste vermelho:
+ *
+ * 1. O passo tem de ser co-primo com n E diferente de n-1. Na virada de uma
+ *    volta o carry soma 1 ao deslocamento; num eixo de passo n-1 esse +1
+ *    completa a volta e devolve o índice da peça ANTERIOR. Sem essa regra, o
+ *    CLAREZA repetia 4 dos 6 eixos entre a 4ª e a 5ª peça — vizinhas.
+ * 2. Pool de 2 fica SEM carry. Ali o único passo co-primo é justamente n-1,
+ *    então as duas exigências são incompatíveis; alternar (e repetir a cada 2,
+ *    que é o teto de 2 opções) vale mais do que adiar a repetição ao custo de
+ *    duas vizinhas iguais.
+ *
+ * O PREÇO, aceito de olhos abertos: como a regra 1 costuma deixar um único
+ * passo válido nos pools pequenos, eixos de mesmo tamanho andam acoplados —
+ * valores diferentes, porque os pools são outros, mas voltando ao início
+ * juntos. Isso reduz o número de combinações distintas, e é bem menos visível
+ * que um eixo repetindo o próprio valor. O remédio de fundo é pool maior, não
+ * aritmética: com quatro eixos de 3 opções não existe fórmula linear que
+ * garanta ao mesmo tempo vizinhas distintas, sem repetição por volta e eixos
+ * desacoplados — só há duas classes de passo co-primo com 3.
+ *
+ * É exatamente por isso que a fila nova vale HOJE só para o CLAREZA, cujos
+ * pools cresceram junto (ver `filaComCarry` em EIXOS_POR_MOOD).
+ */
+function passoDaFila(n: number, desejado: number): number {
+  const base = coprimeStep(n, desejado);
+  if (base % n !== n - 1) return base;
+  for (let s = base + 1; s < base + 1 + n; s++) {
+    if (coprimeStep(n, s) === s && s % n !== n - 1) return s;
+  }
+  return 1;
+}
+
+export function pickEixoNaFila<T>(pool: T[], seed: number, passo: number): T {
+  const n = pool.length;
+  if (n <= 1) return pool[0];
+  const s = Math.trunc(seed);
+  // Regra 2: pool de 2 alterna, sem carry.
+  const voltas = n === 2 ? 0 : Math.floor(s / n);
+  const i = (((s * passoDaFila(n, passo) + voltas) % n) + n) % n;
+  return pool[i];
+}
+
+/**
+ * Monta a linha de câmera do mood compondo os eixos.
  *
  * Sem `seed`, cada eixo é sorteado (comportamento dos caminhos ainda não
  * fiados na fila). Com `seed`, cada eixo ANDA na fila do usuário — e como todos
- * os cinco andam a cada posição, duas gerações consecutivas nunca compartilham
- * a mesma câmera em nenhum eixo.
+ * andam a cada posição, duas gerações consecutivas nunca compartilham a mesma
+ * câmera em nenhum eixo.
  *
- * Espaço de combinações: CLAREZA e IMPACTO 4·3·3·2·3 = 216 (162 com avatar
- * marcado, que tira a distância mais afastada); SILÊNCIO 4·4·3·2·3 = 288;
- * DESVIO 4·5·3·2·3 = 360 (270 com avatar marcado).
- * O CICLO da fila, porém, é o mmc dos tamanhos de pool — 12 nos três primeiros
- * e 60 no DESVIO, que tem o eixo de altura com 5 opções.
- * É quanto o usuário percorre antes de reencontrar a mesma combinação exata, e
- * é o número honesto, não o tamanho do espaço.
+ * Espaço de combinações: CLAREZA 4·3·4·2·4·4 = 1536 (1152 com avatar marcado,
+ * que tira a distância mais afastada) — os pools de ótica e luz cresceram e o
+ * eixo de corpo/textura entrou em 13/08/2026; IMPACTO 4·3·3·2·3 = 216 (162 com
+ * avatar); SILÊNCIO 4·4·3·2·3 = 288; DESVIO 4·5·3·2·3 = 360 (270 com avatar).
+ *
+ * O CICLO da fila é o que o usuário percorre antes de reencontrar a mesma
+ * combinação exata — o número honesto, não o tamanho do espaço. Cada eixo
+ * agora fecha em n² posições, não n (ver pickEixoNaFila), então o ciclo é o mmc
+ * dos QUADRADOS dos tamanhos: no CLAREZA com avatar, mmc(9,9,16,4,16,16) = 144;
+ * antes desta mudança eram 12 posições, com quatro eixos repetindo já na 4ª.
  *
  * Devolve "" para mood sem eixos — quem chama mantém o pool antigo.
  */
@@ -356,13 +517,19 @@ export function buildCameraLine(
     hasAvatarRef && eixos.filtraDistanciaComAvatar
       ? eixos.distancia.filter(distanciaPreservaOAvatar)
       : eixos.distancia;
-  const pick = <T>(pool: T[], passo: number): T =>
-    seed === undefined ? pickRandom(pool) : pickRotating(pool, seed, passo);
+  const pick = <T>(pool: T[], passo: number): T => {
+    if (seed === undefined) return pickRandom(pool);
+    return eixos.filaComCarry ? pickEixoNaFila(pool, seed, passo) : pickRotating(pool, seed, passo);
+  };
   return [
     pick(distancias, PASSO_DISTANCIA),
     pick(eixos.altura, PASSO_ALTURA),
     pick(eixos.otica, PASSO_OTICA),
     pick(eixos.profundidade, PASSO_PROFUNDIDADE),
     pick(eixos.luz, PASSO_LUZ),
+    // Corpo/textura entra por último: é o acabamento sobre a cena já enquadrada
+    // e iluminada pelos eixos anteriores. Mood sem a camada não recebe o
+    // trecho, em vez de receber um placeholder vazio.
+    ...(eixos.corpo?.length ? [pick(eixos.corpo, PASSO_CORPO)] : []),
   ].join(" · ");
 }

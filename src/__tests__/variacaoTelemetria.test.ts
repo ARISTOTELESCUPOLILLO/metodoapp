@@ -112,12 +112,15 @@ describe("rotuloDoEixo", () => {
 describe("extrairEixosDeCamera", () => {
   const MOODS_COM_EIXOS: MoodCode[] = ["OP-01", "OP-02", "OP-05", "OP-06"];
 
-  it("lê os cinco eixos do prompt real de cada mood, em qualquer posição da fila", () => {
+  it("lê todos os eixos do prompt real de cada mood, em qualquer posição da fila", () => {
     for (const mood of MOODS_COM_EIXOS) {
+      // O CLAREZA ganhou um sexto eixo (corpo de câmera e textura) em
+      // 13/08/2026; os demais seguem com cinco.
+      const esperado = mood === "OP-01" ? 6 : 5;
       for (let seed = 0; seed < 12; seed++) {
         const bloco = pickImageVariationBlock({ mood, seed });
         const eixos = extrairEixosDeCamera(bloco);
-        expect(eixos.length, `${mood} seed ${seed}: ${bloco.slice(0, 120)}`).toBe(5);
+        expect(eixos.length, `${mood} seed ${seed}: ${bloco.slice(0, 120)}`).toBe(esperado);
         for (const e of eixos) {
           expect(e.length).toBeGreaterThan(0);
           expect(e.length).toBeLessThanOrEqual(48);

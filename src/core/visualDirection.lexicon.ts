@@ -48,11 +48,18 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     composicao:
       "composição simétrica e organizada, espaço negativo amplo e equilibrado, hierarquia limpa, alinhamento ortogonal",
     camera:
-      'lente 35-85mm, enquadramento frontal ou 3/4 lateral suave, composição limpa e leitura imediata — distância, altura, lente e profundidade de campo exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS"); PROIBIDO ângulo dramático em qualquer hipótese: nada de dutch angle, plongée mergulhado nem contra-plongée forte',
+      'captação em cinema digital de sensor grande com lente clara, lente 35-85mm, enquadramento frontal ou 3/4 lateral suave, composição limpa e leitura imediata — distância, altura, lente, profundidade de campo, corpo de câmera e textura de acabamento exatos sorteados a cada geração (ver bloco "VARIAÇÕES SORTEADAS"); PROIBIDO ângulo dramático em qualquer hipótese: nada de dutch angle, plongée mergulhado nem contra-plongée forte',
     detalheCriativo:
       "um único elemento-assinatura sutil em cena (linha geométrica fina, sombra projetada limpa, reflexo controlado em superfície polida ou objeto cotidiano alinhado com precisão milimétrica) que marca autoria sem atrapalhar a leitura",
+    // A assinatura fecha todo imagePrompt e é o trecho de maior peso para o
+    // modelo — por isso ela precisa DECLARAR a família de acabamento que o eixo
+    // de corpo/textura sorteia (ver EIXO_CORPO_CLAREZA em core/cameraAxes.ts).
+    // Sem isso, "fotografia editorial" no fecho competiria com "textura de
+    // cinema" no bloco de variação, e o fecho venceria. É a quinta vez que a
+    // assinatura precisa acompanhar um eixo novo: ótica (12/08), DESVIO
+    // (13/08), e agora corpo/textura.
     assinatura:
-      "fotografia editorial luminosa, luz natural difusa, paleta fria com acento pontual, composição simétrica e respirada, lente 35-85mm",
+      "fotografia editorial luminosa captada em cinema digital com lente clara, luz natural difusa, paleta fria com acento pontual, composição simétrica e respirada, lente 35-85mm, textura de cinema limpa sem grão pesado",
   },
   "OP-02": {
     nome: "IMPACTO",

@@ -8,6 +8,7 @@ import {
   EIXO_OTICA_CLAREZA,
   EIXO_PROFUNDIDADE_CLAREZA,
   EIXO_LUZ_CLAREZA,
+  EIXO_CORPO_CLAREZA,
   EIXO_DISTANCIA_IMPACTO,
   EIXO_ALTURA_IMPACTO,
   EIXO_OTICA_IMPACTO,
@@ -59,6 +60,9 @@ const MOODS: CasoDeMood[] = [
       EIXO_OTICA_CLAREZA,
       EIXO_PROFUNDIDADE_CLAREZA,
       EIXO_LUZ_CLAREZA,
+      // Sexto eixo, só do CLAREZA — corpo de câmera e textura de acabamento,
+      // acrescentado em 13/08/2026 a pedido do Aristóteles.
+      EIXO_CORPO_CLAREZA,
     ],
     filtraAvatar: true,
   },
@@ -123,10 +127,10 @@ describe("eixos de câmera — quais moods já foram decupados", () => {
 });
 
 MOODS.forEach(({ mood, nome, eixos, filtraAvatar }) => {
-  describe(`${nome} — a câmera é composta pelos cinco eixos`, () => {
-    it("toda linha traz os cinco eixos, na ordem", () => {
+  describe(`${nome} — a câmera é composta pelos seus eixos`, () => {
+    it("toda linha traz todos os eixos do mood, na ordem", () => {
       const partes = buildCameraLine(mood, { seed: 0 }).split(" · ");
-      expect(partes).toHaveLength(5);
+      expect(partes).toHaveLength(eixos.length);
       partes.forEach((parte, i) => expect(eixos[i]).toContain(parte));
     });
 
@@ -143,7 +147,7 @@ MOODS.forEach(({ mood, nome, eixos, filtraAvatar }) => {
       for (let i = 0; i < 200; i++) {
         const linha = buildCameraLine(mood, {});
         expect(linha).not.toContain("undefined");
-        expect(linha.split(" · ")).toHaveLength(5);
+        expect(linha.split(" · ")).toHaveLength(eixos.length);
       }
     });
   });
@@ -286,7 +290,9 @@ describe("CLAREZA — a faixa respeita a gramática do mood", () => {
   });
 
   it("a luz continua na família difusa e suave, sem contraste dramático", () => {
-    EIXO_LUZ_CLAREZA.forEach((l) => expect(l).toMatch(/difusa|alta-chave/i));
+    // "dia nublado" entrou em 13/08/2026: é a mesma família (fonte ampla,
+    // sem direção marcada), sem a palavra "difusa" no texto.
+    EIXO_LUZ_CLAREZA.forEach((l) => expect(l).toMatch(/difusa|alta-chave|nublado/i));
     expect(EIXO_LUZ_CLAREZA.join(" ")).not.toMatch(/contraste pronunciado|low-key|recortada/i);
     EIXO_LUZ_CLAREZA.filter((l) => /sombra dura/i.test(l)).forEach((l) =>
       expect(l).toMatch(/sem nenhuma sombra dura/i),
@@ -294,7 +300,14 @@ describe("CLAREZA — a faixa respeita a gramática do mood", () => {
   });
 
   it("a lente fica dentro da faixa 35-85mm declarada na assinatura do mood", () => {
-    EIXO_OTICA_CLAREZA.forEach((o) => expect(o).toMatch(/\b(35|50|85)mm\b/));
+    // 70mm entrou em 13/08/2026 — dentro da faixa, entre a neutralidade do 50 e
+    // a compressão do 85. A checagem virou numérica para não precisar crescer a
+    // lista literal a cada focal nova.
+    EIXO_OTICA_CLAREZA.forEach((o) => {
+      const mm = Number(o.match(/\b(\d+)mm\b/)?.[1]);
+      expect(mm, o).toBeGreaterThanOrEqual(35);
+      expect(mm, o).toBeLessThanOrEqual(85);
+    });
   });
 });
 
