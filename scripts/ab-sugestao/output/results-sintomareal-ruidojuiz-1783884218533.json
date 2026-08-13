@@ -1,0 +1,64 @@
+[
+  {
+    "label": "Criação de sites — passou espec na rodada original",
+    "concreteItem": "Criação de sites",
+    "relacaoReal": "Cliente percebe que o site antigo não é responsivo e perde visitas, então busca a criação de um site novo para melhorar a experiência mobile.",
+    "frase": "Criação de sites para melhorar experiência mobile",
+    "julgamentos": [
+      {
+        "plausibilidadeOk": true,
+        "realidadeReconhecivelOk": true,
+        "especificidadeCategoriaOk": true,
+        "naturalidadeConectorOk": true,
+        "motivo": ""
+      },
+      {
+        "plausibilidadeOk": true,
+        "realidadeReconhecivelOk": true,
+        "especificidadeCategoriaOk": true,
+        "naturalidadeConectorOk": true,
+        "motivo": ""
+      },
+      {
+        "plausibilidadeOk": true,
+        "realidadeReconhecivelOk": true,
+        "especificidadeCategoriaOk": true,
+        "naturalidadeConectorOk": true,
+        "motivo": ""
+      }
+    ],
+    "especificidadeCategoriaOkCount": 3,
+    "estavel": true
+  },
+  {
+    "label": "Ternos Slim — reprovou espec na rodada original",
+    "concreteItem": "Ternos Slim",
+    "relacaoReal": "Cliente que já comprou terno slim sabe que precisa provar várias vezes para garantir o caimento perfeito no corpo.",
+    "frase": "Ternos Slim para garantir o caimento perfeito",
+    "julgamentos": [
+      {
+        "plausibilidadeOk": true,
+        "realidadeReconhecivelOk": false,
+        "especificidadeCategoriaOk": false,
+        "naturalidadeConectorOk": true,
+        "motivo": "A frase é genérica e não remete à experiência real de provar várias vezes para ajustar o caimento."
+      },
+      {
+        "plausibilidadeOk": true,
+        "realidadeReconhecivelOk": false,
+        "especificidadeCategoriaOk": false,
+        "naturalidadeConectorOk": true,
+        "motivo": "A frase não expressa a experiência real de provar várias vezes; poderia ser usada para qualquer produto de vestuário."
+      },
+      {
+        "plausibilidadeOk": true,
+        "realidadeReconhecivelOk": false,
+        "especificidadeCategoriaOk": false,
+        "naturalidadeConectorOk": true,
+        "motivo": "A frase é genérica e poderia ser usada para outros produtos de moda; não remete à experiência real de provar várias vezes."
+      }
+    ],
+    "especificidadeCategoriaOkCount": 0,
+    "estavel": true
+  }
+]

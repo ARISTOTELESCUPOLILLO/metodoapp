@@ -1,0 +1,122 @@
+[
+  {
+    "item": "Planejamento de Comunicação",
+    "repeticoes": [
+      {
+        "relacaoReal": "Cliente percebe que sem um Planejamento de Comunicação claro, suas campanhas digitais ficam desconexas e não geram engajamento consistente.",
+        "frase": "Planejamento de comunicação para evitar campanhas digitais desconexas",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que sem um Planejamento de Comunicação claro, suas ações digitais ficam desconexas e não geram engajamento consistente.",
+        "frase": "Planejamento de Comunicação para ações digitais desconexas",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "O 'para' soa forçado e a frase funcionaria igual com outros serviços, como 'consultoria financeira para ações desconexas'."
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que sem um Planejamento de Comunicação estruturado, suas campanhas digitais ficam desconexas e não atingem o público-alvo desejado.",
+        "frase": "Planejamento de Comunicação para campanhas digitais desconexas",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria com outros serviços, não é exclusiva de Planejamento de Comunicação."
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 1,
+    "estavel": false
+  },
+  {
+    "item": "Gestão de redes sociais",
+    "repeticoes": [
+      {
+        "relacaoReal": "Cliente percebe que a frequência irregular e falta de interação nas redes sociais prejudica o engajamento e alcance orgânico da marca.",
+        "frase": "Gestão de redes sociais para frequência irregular e falta de interação",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "O 'para' não soa natural e a frase poderia ser usada para outros serviços, como 'Gestão de projetos para frequência irregular e falta de interação'."
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que sem gestão profissional das redes sociais suas postagens não geram engajamento nem atraem seguidores qualificados.",
+        "frase": "Gestão de redes sociais para postagens sem engajamento",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria para outros serviços, como 'Gestão de anúncios para campanhas sem engajamento'."
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebeu que, apesar de postar com frequência, suas redes sociais não geravam engajamento nem atraíam seguidores qualificados até contratar a gestão profissional.",
+        "frase": "Gestão de redes sociais para gerar engajamento qualificado",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria para outros serviços, como 'Gestão de tráfego para gerar engajamento qualificado', então não é específica de redes sociais."
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 0,
+    "estavel": true
+  },
+  {
+    "item": "Estratégia de Marketing Digital",
+    "repeticoes": [
+      {
+        "relacaoReal": "Cliente percebe que sem uma estratégia de marketing digital clara, seus esforços online são dispersos e não geram resultados consistentes.",
+        "frase": "Estratégia de marketing digital para evitar esforços online dispersos",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que sem uma estratégia de marketing digital clara, seus esforços online são dispersos e não geram resultados consistentes.",
+        "frase": "Estratégia de Marketing Digital para evitar esforços online dispersos",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que sem uma estratégia de marketing digital clara, seus esforços online são dispersos e não geram resultados consistentes.",
+        "frase": "Estratégia de Marketing Digital para evitar esforços online dispersos",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 3,
+    "estavel": true
+  }
+]

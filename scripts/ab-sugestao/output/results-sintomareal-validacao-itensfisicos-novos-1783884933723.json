@@ -1,0 +1,286 @@
+[
+  {
+    "item": "Cadeiras para escritório",
+    "companyName": "FERRIMAQ",
+    "pipelineNovo": {
+      "especificidadeCategoriaOkCount": 2,
+      "detalhes": [
+        {
+          "relacaoReal": "Cadeiras para escritório desconfortáveis causam dores nas costas e reduzem a produtividade dos colaboradores.",
+          "frase": "Cadeiras para escritório para evitar dores e queda de produtividade",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "relacaoReal": "Cadeiras para escritório desconfortáveis causam dores nas costas e reduzem a produtividade dos colaboradores.",
+          "frase": "Cadeiras para escritório para evitar dores e improdutividade",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "relacaoReal": "Cadeiras para escritório desconfortáveis causam dores nas costas e reduzem a produtividade dos funcionários.",
+          "frase": "Cadeiras para escritório para evitar dores e baixa produtividade",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": false,
+            "motivo": "A frase funcionaria para outros itens como mesas, poltronas ou até colchões, pois evitar dores e baixa produtividade é argumento genérico."
+          }
+        }
+      ]
+    },
+    "variantA": {
+      "especificidadeCategoriaOkCount": 3,
+      "detalhes": [
+        {
+          "sugestao": "Cadeiras para escritório em longas reuniões",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "sugestao": "Cadeiras para escritório em longas reuniões",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "sugestao": "Cadeira para escritório em reuniões longas",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "item": "Correias industriais",
+    "companyName": "Barbosa Lubrificantes",
+    "pipelineNovo": {
+      "especificidadeCategoriaOkCount": 2,
+      "detalhes": [
+        {
+          "relacaoReal": "Cliente que teve uma correia industrial rompida durante a produção precisou de reposição imediata para evitar parada da linha de montagem.",
+          "frase": "Correias industriais para reposição imediata na produção",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "relacaoReal": "Parada inesperada na produção causada pela quebra da correia industrial que exige substituição imediata para evitar prejuízos.",
+          "frase": "Correias industriais para evitar prejuízos na produção",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": false,
+            "motivo": "Evitar prejuízos na produção serve para vários itens industriais, não só correias."
+          }
+        },
+        {
+          "relacaoReal": "Cliente precisou substituir correias industriais desgastadas para evitar paralisação da produção causada por falha mecânica.",
+          "frase": "Correias industriais para evitar paradas na produção",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        }
+      ]
+    },
+    "variantA": {
+      "especificidadeCategoriaOkCount": 1,
+      "detalhes": [
+        {
+          "sugestao": "Correias industriais ajudam produção sem travar",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": false,
+            "motivo": "A frase poderia ser usada para outros itens como ferramentas ou mangueiras, pois 'ajudam produção sem travar' é genérico."
+          }
+        },
+        {
+          "sugestao": "Correias industriais garantem produção sem paradas",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": false,
+            "motivo": "A frase funcionaria para outros itens como mangueiras ou ferramentas, pois todos podem evitar paradas na produção."
+          }
+        },
+        {
+          "sugestao": "Correias industriais em troca urgente na fábrica",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "item": "Capacete de moto",
+    "companyName": "Moto Vale",
+    "pipelineNovo": {
+      "especificidadeCategoriaOkCount": 2,
+      "detalhes": [
+        {
+          "relacaoReal": "Cliente que quebrou o capacete antigo na queda busca um novo capacete resistente para garantir segurança e conforto nas próximas viagens.",
+          "frase": "Capacete de moto para quem busca mais segurança",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": false,
+            "motivo": "A frase funcionaria para qualquer produto de segurança em outros segmentos de varejo."
+          }
+        },
+        {
+          "relacaoReal": "Cliente que quebrou o capacete em uma queda busca substituição imediata para continuar pilotando com segurança e dentro da lei",
+          "frase": "Capacete de moto para substituir após queda",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "relacaoReal": "Cliente que quebrou o capacete antigo na queda busca substituição imediata para garantir segurança nas próximas viagens.",
+          "frase": "Capacete de moto para substituir após queda",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        }
+      ]
+    },
+    "variantA": {
+      "especificidadeCategoriaOkCount": 3,
+      "detalhes": [
+        {
+          "sugestao": "Capacete de moto em viagens longas protegidas",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": false,
+            "especificidadeCategoriaOk": true,
+            "motivo": "A frase não reflete uma experiência real reconhecível; soa artificial e pouco natural para o público-alvo."
+          }
+        },
+        {
+          "sugestao": "Capacete de moto em dias de chuva",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "sugestao": "Capacete de moto em viagem sob chuva",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "item": "Tênis",
+    "companyName": "Malhação Sports",
+    "pipelineNovo": {
+      "especificidadeCategoriaOkCount": 2,
+      "detalhes": [
+        {
+          "relacaoReal": "Cliente que compra tênis na Malhação Sports busca conforto e durabilidade para treinos e corridas diárias.",
+          "frase": "Tênis para conforto e durabilidade nos treinos",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "relacaoReal": "Cliente que compra tênis na Malhação Sports já viveu a necessidade de encontrar um modelo confortável e adequado para treinos ou jogos específicos.",
+          "frase": "Tênis para treinos e jogos confortáveis",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "relacaoReal": "Cliente percebe que um tênis novo melhora o conforto e a performance durante treinos ou jogos esportivos.",
+          "frase": "Tênis para melhorar conforto e performance",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": false,
+            "motivo": "A frase funcionaria para outros itens como camisas ou perfumes, pois conforto e performance são atributos genéricos."
+          }
+        }
+      ]
+    },
+    "variantA": {
+      "especificidadeCategoriaOkCount": 3,
+      "detalhes": [
+        {
+          "sugestao": "Tênis certo ajuda no exercício diário",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "sugestao": "Tênis novo para aquele treino leve",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        },
+        {
+          "sugestao": "Tênis novo para treinos mais leves",
+          "julgamento": {
+            "plausibilidadeOk": true,
+            "realidadeReconhecivelOk": true,
+            "especificidadeCategoriaOk": true,
+            "motivo": ""
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,166 @@
+[
+  {
+    "item": "Criação de sites",
+    "companyName": "Oficina de Propaganda",
+    "repeticoes": [
+      {
+        "relacaoReal": "Cliente percebeu que seu site antigo não carregava direito no celular e perdeu vendas, então procurou a criação de sites para ter um site responsivo.",
+        "frase": "Criação de sites para ter site responsivo",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria para outros serviços, como 'consultoria de TI para ter site responsivo', então não é específica da categoria 'criação de sites'."
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que o site antigo não é responsivo e perde visitas, então busca a criação de um site novo para melhorar a experiência mobile.",
+        "frase": "Criação de sites para melhorar experiência mobile",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que seu site antigo não é responsivo e perde visitantes, gerando a necessidade urgente de uma criação de site moderna e funcional.",
+        "frase": "Criação de sites para substituir site não responsivo",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 2,
+    "estavel": false
+  },
+  {
+    "item": "Criação de logomarca",
+    "companyName": "Oficina de Propaganda",
+    "repeticoes": [
+      {
+        "relacaoReal": "Cliente percebe que a falta de uma logomarca profissional dificulta o reconhecimento e a credibilidade da sua marca no mercado digital.",
+        "frase": "Criação de logomarca para fortalecer reconhecimento digital",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria para vários outros serviços, como 'Criação de site para fortalecer reconhecimento digital'."
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que a falta de uma logomarca profissional dificulta o reconhecimento imediato da sua marca nas redes sociais e materiais digitais.",
+        "frase": "Criação de logomarca para reconhecimento imediato online",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que a logomarca atual não transmite a identidade digital desejada e precisa de uma criação que funcione bem em redes sociais e sites.",
+        "frase": "Criação de logomarca para identidade digital eficiente",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria para outros serviços, como 'Criação de site para identidade digital eficiente'."
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 1,
+    "estavel": false
+  },
+  {
+    "item": "Ternos Slim",
+    "companyName": "Loja Rocha",
+    "repeticoes": [
+      {
+        "relacaoReal": "Cliente que já comprou terno slim sabe que precisa provar várias vezes para garantir o caimento perfeito no corpo.",
+        "frase": "Ternos Slim para garantir o caimento perfeito",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase é genérica e não remete à experiência real de provar várias vezes para ajustar o caimento."
+        }
+      },
+      {
+        "relacaoReal": "Cliente que já teve dificuldade em encontrar terno slim que vista bem e valorize o corpo ao mesmo tempo.",
+        "frase": "Ternos Slim para quem busca caimento perfeito",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria para outros itens de vestuário, não só ternos slim."
+        }
+      },
+      {
+        "relacaoReal": "Cliente que já comprou terno slim sabe que precisa provar várias vezes para garantir o caimento perfeito no corpo.",
+        "frase": "Ternos Slim para experimentar até encaixar",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 1,
+    "estavel": false
+  },
+  {
+    "item": "kit relação",
+    "companyName": "Moto Vale",
+    "repeticoes": [
+      {
+        "relacaoReal": "Trocar o kit relação é essencial quando a corrente da moto está esticada ou desgastada, para evitar falhas e garantir segurança na pilotagem.",
+        "frase": "Kit relação para pilotar com segurança",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase funcionaria para vários itens, como 'pneu para pilotar com segurança', então não é específica do kit relação."
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que precisa trocar o kit relação após ouvir ruídos estranhos ou notar dificuldade na troca de marchas da moto.",
+        "frase": "Kit relação para ruídos ou dificuldade nas marchas",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "relacaoReal": "Cliente percebe que precisa trocar o kit relação após notar barulho estranho ou perda de desempenho na transmissão da moto.",
+        "frase": "Kit relação para eliminar barulhos na moto",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 2,
+    "estavel": false
+  }
+]

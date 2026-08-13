@@ -1,0 +1,708 @@
+[
+  {
+    "id": "oficina-propaganda-planejamento-mop-b2b",
+    "label": "Oficina de Propaganda (SERVIÇOS/B2B) — MOP — institucional — Planejamento de Comunicação (item do print ruim)",
+    "input": {
+      "companyName": "Oficina de Propaganda",
+      "mainActivity": "Consultoria de Marketing Digital",
+      "segment": "SERVIÇOS",
+      "mode": "metodo",
+      "objetivo": "institucional",
+      "audience": "B2B",
+      "selectedProducts": [
+        "Planejamento de Comunicação"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Planejamento de comunicação em campanhas de vendas"
+    },
+    "sintomaReal": {
+      "concreteItem": "Planejamento de Comunicação",
+      "relacaoReal": "Cliente percebe que sem um Planejamento de Comunicação estruturado suas mensagens digitais ficam desconexas e não geram engajamento consistente.",
+      "frases": {
+        "E": "Planejamento de Comunicação e mensagens digitais conectadas.",
+        "COM": "Planejamento de Comunicação com engajamento consistente.",
+        "EM": "Planejamento de Comunicação em canais digitais alinhados.",
+        "NO": "Planejamento de Comunicação no fortalecimento das mensagens.",
+        "NA": "Planejamento de Comunicação na construção de coerência digital.",
+        "PARA": "Planejamento de Comunicação para engajamento contínuo.",
+        "À": "Planejamento de Comunicação à medida de mensagens eficazes."
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase é plausível, mas soa genérica e pouco reconhecível para o cliente real. O uso do 'E' não é natural, parece apenas uma justaposição de termos sem ligação clara."
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase é plausível, mas soa genérica e pouco reconhecível para o cliente real. O uso do 'com' é forçado, não conecta naturalmente os conceitos."
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase é plausível, mas não é algo que o cliente reconheceria como experiência própria. O uso do 'em' é pouco natural e genérico."
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase é plausível, mas não é reconhecível para o cliente real. O uso do 'no' é pouco natural e genérico, não conecta bem os conceitos."
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase é plausível, mas não é reconhecível para o cliente real. O uso do 'na' é pouco natural e genérico, não conecta bem os conceitos."
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase é plausível e reconhecível, pois clientes buscam planejamento para engajamento. Porém, ainda é genérica e poderia ser usada para outros serviços."
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": false,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase não é plausível, pois 'à medida de mensagens eficazes' não faz sentido claro. Não é reconhecível, nem específica, e o conector é artificial."
+        }
+      ]
+    }
+  },
+  {
+    "id": "oficina-propaganda-site-pu-b2b",
+    "label": "Oficina de Propaganda (SERVIÇOS/B2B) — PU — promoção — Criação de sites",
+    "input": {
+      "companyName": "Oficina de Propaganda",
+      "mainActivity": "Consultoria de Marketing e Marketing Digital",
+      "segment": "SERVIÇOS",
+      "mode": "postunico",
+      "objetivo": "promocao",
+      "audience": "B2B",
+      "selectedProducts": [
+        "Criação de sites"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Criação de sites para captar clientes online"
+    },
+    "sintomaReal": {
+      "concreteItem": "Criação de sites",
+      "relacaoReal": "Cliente percebe que seu site antigo não é responsivo e perde visitantes, sentindo a necessidade urgente de uma criação de site moderna e funcional.",
+      "frases": {
+        "E": "Criação de sites e retenção de visitantes.",
+        "COM": "Criação de sites com design responsivo moderno.",
+        "EM": "Criação de sites em ambientes digitais atuais.",
+        "NO": "Criação de sites no contexto de atualização.",
+        "NA": "Criação de sites na necessidade do cliente.",
+        "PARA": "Criação de sites para experiência funcional.",
+        "À": "Criação de sites à medida das tendências."
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso do 'E' conecta dois conceitos, mas a frase soa truncada e pouco natural, como se fossem dois tópicos soltos."
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase soa genérica e pouco específica para criação de sites; o conector 'em' fica artificial e não é natural nesse contexto."
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase é vaga e poderia ser usada para qualquer serviço; o conector 'no contexto de' soa forçado e pouco natural."
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase é genérica e o conector 'na necessidade do cliente' não é uma construção comum em português."
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase soa artificial e pouco clara; 'à medida das tendências' não é uma expressão comum e não remete diretamente à experiência do cliente."
+        }
+      ]
+    }
+  },
+  {
+    "id": "infopoint-erp-mop-b2b-sem-produtos",
+    "label": "InfoPoint (SERVIÇOS/B2B) — MOP — oportunidade — sem produtos cadastrados (decompõe atividade)",
+    "input": {
+      "companyName": "InfoPoint",
+      "mainActivity": "Sistema de Gestão Empresarial - ERP",
+      "segment": "SERVIÇOS",
+      "mode": "metodo",
+      "objetivo": "oportunidade",
+      "audience": "B2B",
+      "selectedProducts": []
+    },
+    "variantA": {
+      "sugestao": "Módulo ERP para controle do fluxo mensal"
+    },
+    "sintomaReal": {
+      "concreteItem": "Módulo ERP para Controle Financeiro",
+      "relacaoReal": "Quando o fluxo de caixa fica desorganizado e o cliente precisa consolidar entradas e saídas para evitar erros em pagamentos e recebimentos.",
+      "frases": {
+        "E": "Módulo ERP para Controle Financeiro e consolidação de caixa.",
+        "COM": "Módulo ERP para Controle Financeiro com entradas e saídas centralizadas.",
+        "EM": "Módulo ERP para Controle Financeiro em fluxo de caixa desorganizado.",
+        "NO": "Módulo ERP para Controle Financeiro no controle de pagamentos e recebimentos.",
+        "NA": "Módulo ERP para Controle Financeiro na necessidade de evitar erros financeiros.",
+        "PARA": "Módulo ERP para Controle Financeiro para consolidar movimentações financeiras.",
+        "À": "Módulo ERP para Controle Financeiro à medida da organização do caixa."
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso do 'e' soa truncado, como se fossem dois títulos colados, não uma frase natural."
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'em' soa estranho, como se o módulo estivesse 'dentro' do fluxo desorganizado, não faz sentido natural."
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'no' aqui soa forçado, como se o módulo estivesse 'no controle', não é natural para o contexto."
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'na necessidade' é pouco natural, parece frase montada e não flui bem."
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase soa artificial e pouco clara, o uso de 'à medida da organização do caixa' não é reconhecível nem natural."
+        }
+      ]
+    }
+  },
+  {
+    "id": "clinica-saude-total-mop-b2c-sem-produtos",
+    "label": "Clínica Saúde Total (SERVIÇOS/B2C) — MOP — institucional — sem produtos cadastrados (decompõe atividade)",
+    "input": {
+      "companyName": "Clínica Saúde Total",
+      "mainActivity": "Clínica médica com foco em saúde preventiva",
+      "segment": "SERVIÇOS",
+      "mode": "metodo",
+      "objetivo": "institucional",
+      "audience": "B2C",
+      "selectedProducts": []
+    },
+    "variantA": {
+      "sugestao": "Vacinação preventiva em campanhas"
+    },
+    "sintomaReal": {
+      "concreteItem": "Vacinação preventiva",
+      "relacaoReal": "Cliente que busca vacinação preventiva reconhece a necessidade de se proteger contra doenças sazonais antes do inverno.",
+      "frases": {
+        "E": "Vacinação preventiva e proteção no inverno",
+        "COM": "Vacinação preventiva com foco em doenças sazonais",
+        "EM": "Vacinação preventiva em preparação para o inverno",
+        "NO": "Vacinação preventiva no período pré-inverno",
+        "NA": "Vacinação preventiva na prevenção de doenças sazonais",
+        "PARA": "Vacinação preventiva para evitar doenças do inverno",
+        "À": "Vacinação preventiva à medida para se proteger antes do inverno"
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso do 'e' conecta dois conceitos, mas a frase soa truncada e pouco natural, como se fossem dois títulos colados."
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase soa artificial e repetitiva ('na prevenção de...'), e não é algo que um cliente reconheceria como linguagem natural."
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'à medida para se proteger' é gramaticalmente estranho e não soa natural; além disso, não é uma expressão reconhecida pelo público."
+        }
+      ]
+    }
+  },
+  {
+    "id": "sabor-de-casa-pu-b2c-sem-produtos",
+    "label": "Sabor de Casa (SERVIÇOS/B2C) — PU — promoção — sem produtos cadastrados (decompõe atividade)",
+    "input": {
+      "companyName": "Sabor de Casa",
+      "mainActivity": "Restaurante de comida a quilo e marmitex",
+      "segment": "SERVIÇOS",
+      "mode": "postunico",
+      "objetivo": "promocao",
+      "audience": "B2C",
+      "selectedProducts": []
+    },
+    "variantA": {
+      "sugestao": "Almoço por peso resolve fome rápido"
+    },
+    "sintomaReal": {
+      "concreteItem": "almoço por peso",
+      "relacaoReal": "Cliente que quer controlar o valor da refeição ajusta a quantidade no almoço por peso para não ultrapassar seu orçamento diário.",
+      "frases": {
+        "E": "Almoço por peso e controle de gastos.",
+        "COM": "Almoço por peso com ajuste no valor.",
+        "EM": "Almoço por peso em dias de orçamento.",
+        "NO": "Almoço por peso no limite diário.",
+        "NA": "Almoço por peso na rotina econômica.",
+        "PARA": "Almoço por peso para não exceder gastos.",
+        "À": "Almoço por peso à medida do bolso."
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "A frase soa pouco natural e não é algo que um cliente reconheceria como experiência real ('em dias de orçamento' é pouco usual)."
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "A expressão 'no limite diário' não é comum na fala de clientes e o conector soa forçado."
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "'Na rotina econômica' é pouco natural e não reflete fala ou pensamento real de clientes."
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        }
+      ]
+    }
+  },
+  {
+    "id": "prontovet-consulta-mop-b2c-servico",
+    "label": "Pronto Vet (SERVIÇOS/B2C) — MOP — promoção — item de SERVIÇO (não produto físico)",
+    "input": {
+      "companyName": "Pronto Vet",
+      "mainActivity": "Clínica veterinária, ração, remédios e acessórios",
+      "segment": "SERVIÇOS",
+      "mode": "metodo",
+      "objetivo": "promocao",
+      "audience": "B2C",
+      "selectedProducts": [
+        "Consultas veterinárias"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Consultas veterinárias em época de coceira constante"
+    },
+    "sintomaReal": {
+      "concreteItem": "Consultas veterinárias",
+      "relacaoReal": "Levar o pet para consulta veterinária ao perceber sintomas incomuns para diagnosticar e tratar rapidamente.",
+      "frases": {
+        "E": "Consultas veterinárias e diagnóstico rápido do pet",
+        "COM": "Consultas veterinárias com sintomas incomuns observados",
+        "EM": "Consultas veterinárias em caso de sintomas",
+        "NO": "Consultas veterinárias no surgimento de sinais diferentes",
+        "NA": "Consultas veterinárias na percepção de sintomas",
+        "PARA": "Consultas veterinárias para tratar sintomas rapidamente",
+        "À": "Consultas veterinárias à detecção de sintomas novos"
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso do 'E' conecta dois conceitos, mas não é natural para expressar a relação de causa e consequência entre sintomas e consulta veterinária."
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'à detecção' não é natural em português para esse contexto; soa forçado e pouco usual."
+        }
+      ]
+    }
+  },
+  {
+    "id": "loja-rocha-terno-mop-b2c-controle",
+    "label": "Loja Rocha (VAREJO/B2C) — MOP — promoção — Ternos Slim (CONTROLE: item físico)",
+    "input": {
+      "companyName": "Loja Rocha",
+      "mainActivity": "Loja de Ternos e Moda Social Masculina",
+      "segment": "VAREJO",
+      "mode": "metodo",
+      "objetivo": "promocao",
+      "audience": "B2C",
+      "selectedProducts": [
+        "Ternos Slim"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Ternos Slim em casamentos"
+    },
+    "sintomaReal": {
+      "concreteItem": "Ternos Slim",
+      "relacaoReal": "Cliente que já comprou ternos slim na Loja Rocha reconhece a dificuldade de encontrar peças que valorizem o corpo sem perder o conforto.",
+      "frases": {
+        "E": "Ternos Slim e a busca pelo conforto.",
+        "COM": "Ternos Slim com caimento valorizando o corpo.",
+        "EM": "Ternos Slim em quem prioriza conforto e ajuste.",
+        "NO": "Ternos Slim no desafio de vestir bem.",
+        "NA": "Ternos Slim na escolha de peças confortáveis.",
+        "PARA": "Ternos Slim para valorizar sem perder conforto.",
+        "À": "Ternos Slim à medida de quem procura ajuste."
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'em' soa pouco natural nesse contexto, parece forçado e não é comum em frases desse tipo."
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O conector 'no' não é usual para esse tipo de construção, soa estranho e pouco fluido."
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase poderia ser usada para qualquer peça de roupa ou produto de moda, não é exclusiva de ternos slim."
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'à medida de' é pouco natural e soa rebuscado/forçado nesse contexto."
+        }
+      ]
+    }
+  },
+  {
+    "id": "moto-vale-kit-relacao-pu-b2c-controle",
+    "label": "Moto Vale (VAREJO/B2C) — PU — aviso — kit relação (CONTROLE: item físico)",
+    "input": {
+      "companyName": "Moto Vale",
+      "mainActivity": "Loja de peças e acessórios para motocicletas",
+      "segment": "VAREJO",
+      "mode": "postunico",
+      "objetivo": "aviso",
+      "audience": "B2C",
+      "selectedProducts": [
+        "kit relação"
+      ]
+    },
+    "variantA": {
+      "sugestao": "Kit relação novo para rotação sem tranco"
+    },
+    "sintomaReal": {
+      "concreteItem": "kit relação",
+      "relacaoReal": "Trocar o kit relação é essencial quando a corrente da moto está desgastada e começa a estalar ou escapar, evitando falhas na transmissão.",
+      "frases": {
+        "E": "Kit relação e transmissão sem falhas.",
+        "COM": "Kit relação com corrente desgastada estalando.",
+        "EM": "Kit relação em situação de corrente escapando.",
+        "NO": "Kit relação no momento de troca necessária.",
+        "NA": "Kit relação na prevenção de falhas mecânicas.",
+        "PARA": "Kit relação para evitar problemas de transmissão.",
+        "À": "Kit relação à medida que a corrente estala."
+      },
+      "avaliacoes": [
+        {
+          "conector": "E",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso do 'e' conecta dois substantivos, mas a frase soa truncada e pouco natural, como se fossem duas listas desconexas."
+        },
+        {
+          "conector": "COM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "EM",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": true,
+          "motivo": ""
+        },
+        {
+          "conector": "NO",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "A frase poderia ser usada para qualquer produto de troca periódica, como óleo, pneu, etc."
+        },
+        {
+          "conector": "NA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "Prevenção de falhas mecânicas é genérico e pode ser aplicado a vários itens automotivos."
+        },
+        {
+          "conector": "PARA",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "naturalidadeConectorOk": true,
+          "motivo": "Evitar problemas de transmissão é um benefício amplo, aplicável a outros itens além do kit relação."
+        },
+        {
+          "conector": "À",
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "naturalidadeConectorOk": false,
+          "motivo": "O uso de 'à medida que' soa forçado e pouco natural nesse contexto, apesar de gramaticalmente possível."
+        }
+      ]
+    }
+  }
+]

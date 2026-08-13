@@ -1,0 +1,104 @@
+[
+  {
+    "label": "Criação de sites (SERVIÇOS/B2B)",
+    "repeticoes": [
+      {
+        "sugestao": "Criação de sites para captar contatos novos",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "motivo": "A frase poderia ser usada para vários serviços além de criação de sites, como gestão de redes sociais ou anúncios."
+        }
+      },
+      {
+        "sugestao": "Criação de sites para captar novos clientes",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "motivo": "A frase funcionaria para vários serviços ('consultoria para captar novos clientes', 'treinamento para captar novos clientes'), não é exclusiva de criação de sites."
+        }
+      },
+      {
+        "sugestao": "Criação de sites que atraem contatos novos",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "motivo": "A frase poderia ser usada para outros serviços que atraem contatos, como consultoria ou gestão de redes sociais."
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 0,
+    "estavel": true
+  },
+  {
+    "label": "Ternos Slim (VAREJO/B2C)",
+    "repeticoes": [
+      {
+        "sugestao": "Ternos slim em festas de casamento",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "sugestao": "Ternos slim em eventos de verão refrescam",
+        "julgamento": {
+          "plausibilidadeOk": false,
+          "realidadeReconhecivelOk": false,
+          "especificidadeCategoriaOk": true,
+          "motivo": "Ternos slim não refrescam de fato em eventos de verão; clientes não reconhecem isso como experiência real."
+        }
+      },
+      {
+        "sugestao": "Ternos slim em festas de verão leveza",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "motivo": ""
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 3,
+    "estavel": true
+  },
+  {
+    "label": "Estratégia de Marketing Digital (SERVIÇOS/B2B, meta-processo)",
+    "repeticoes": [
+      {
+        "sugestao": "Estratégia de marketing digital em reuniões",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "motivo": "A frase funcionaria para qualquer serviço discutido em reuniões, não é exclusiva de marketing digital."
+        }
+      },
+      {
+        "sugestao": "Estratégia de marketing digital para lançamentos mensais",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": true,
+          "motivo": ""
+        }
+      },
+      {
+        "sugestao": "Estratégia de marketing digital antes de campanhas",
+        "julgamento": {
+          "plausibilidadeOk": true,
+          "realidadeReconhecivelOk": true,
+          "especificidadeCategoriaOk": false,
+          "motivo": "Serve para qualquer serviço que envolva planejamento antes de execução."
+        }
+      }
+    ],
+    "especificidadeCategoriaOkCount": 1,
+    "estavel": false
+  }
+]

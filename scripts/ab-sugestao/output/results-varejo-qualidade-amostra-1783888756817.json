@@ -1,0 +1,107 @@
+[
+  {
+    "companyName": "FERRIMAQ",
+    "item": "Poltrona de trabalho",
+    "geracoes": [
+      {
+        "sugestao": "Poltrona de trabalho escolhida para rotina puxada",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Poltrona de trabalho para turnos puxados",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Poltrona de trabalho para reunião sem incômodo",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      }
+    ]
+  },
+  {
+    "companyName": "Barbosa Lubrificantes",
+    "item": "Lubrificantes agrícolas",
+    "geracoes": [
+      {
+        "sugestao": "Lubrificantes agrícolas evitando parada no campo",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Lubrificantes agrícolas em pronto-atendimento para tratores",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Lubrificantes agrícolas no trato diário do maquinário",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      }
+    ]
+  },
+  {
+    "companyName": "Loja Rocha",
+    "item": "Ternos Slim",
+    "geracoes": [
+      {
+        "sugestao": "Ternos slim para encontros inesperados no dia",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Ternos Slim prontos para entrevistas decisivas",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Ternos Slim na troca de estação pedida",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      }
+    ]
+  },
+  {
+    "companyName": "Moto Vale",
+    "item": "Capacete de moto",
+    "geracoes": [
+      {
+        "sugestao": "Capacete de moto para viagens longas agora",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Capacete de moto para quem decide hoje",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Capacete de moto novo para viagem longa",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      }
+    ]
+  },
+  {
+    "companyName": "Malhação Sports",
+    "item": "Tênis",
+    "geracoes": [
+      {
+        "sugestao": "Tênis novo evita incômodo no treino",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Tênis leve evita cansaço rápido",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      },
+      {
+        "sugestao": "Tênis ganham destaque em liquidações inesperadas",
+        "registroInformalSuspeito": false,
+        "promessaInfladaSuspeita": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "item": "Criação de sites",
+    "fraseVariantAOriginal": "Criação de sites para orçamentos recebidos online",
+    "relacaoReal": "Cliente percebe que o site antigo não reflete mais a identidade da marca e precisa de uma criação de site atualizada para melhorar a imagem online.",
+    "fraseNova": "Criação de sites para atualizar a imagem",
+    "julgamento": {
+      "plausibilidadeOk": true,
+      "realidadeReconhecivelOk": true,
+      "especificidadeCategoriaOk": true,
+      "naturalidadeConectorOk": true,
+      "resolveuOQueixaOriginalOk": true,
+      "motivo": "A frase nova é claramente mais ancorada em uma situação real, pois reflete a necessidade comum de atualizar a imagem online, enquanto a original inventa um uso específico (orçamentos online) que não é típico da demanda por criação de sites."
+    }
+  },
+  {
+    "item": "Planejamento de Comunicação",
+    "fraseVariantAOriginal": "Planejamento de comunicação em campanhas pontuais",
+    "relacaoReal": "Cliente percebe que sem um Planejamento de Comunicação claro, suas mensagens digitais ficam desconexas e não geram engajamento consistente.",
+    "fraseNova": "Planejamento de Comunicação para engajamento digital consistente",
+    "julgamento": {
+      "plausibilidadeOk": true,
+      "realidadeReconhecivelOk": true,
+      "especificidadeCategoriaOk": true,
+      "naturalidadeConectorOk": true,
+      "resolveuOQueixaOriginalOk": true,
+      "motivo": "A frase nova foca em engajamento digital consistente, um problema real e reconhecível para clientes de marketing digital, enquanto a original trata apenas de campanhas pontuais, soando genérica e menos conectada à dor do cliente."
+    }
+  },
+  {
+    "item": "Criação de logomarca",
+    "fraseVariantAOriginal": "Criação de logomarca para abrir filiais",
+    "relacaoReal": "Cliente percebe que a falta de uma logomarca profissional dificulta o reconhecimento imediato da sua marca pelo público-alvo.",
+    "fraseNova": "Criação de logomarca para reconhecimento imediato da marca",
+    "julgamento": {
+      "plausibilidadeOk": true,
+      "realidadeReconhecivelOk": true,
+      "especificidadeCategoriaOk": true,
+      "naturalidadeConectorOk": true,
+      "resolveuOQueixaOriginalOk": true,
+      "motivo": "A frase nova está claramente mais alinhada com uma necessidade real e comum dos clientes (reconhecimento imediato da marca), enquanto a original ('abrir filiais') é uma situação muito específica e pouco relacionada ao serviço de criação de logomarca. A nova frase é mais plausível, reconhecível e específica para o contexto de marketing."
+    }
+  }
+]
