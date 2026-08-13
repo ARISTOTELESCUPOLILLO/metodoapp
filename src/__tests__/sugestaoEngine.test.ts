@@ -18,6 +18,7 @@ import {
   pickConcreteItem,
   type SugestaoEngineInput,
 } from "@/core/sugestaoEngine";
+import { checkAmputatedPredicate } from "@/core/sugestaoValidation";
 
 function jsonContent(obj: unknown) {
   return { choices: [{ message: { content: JSON.stringify(obj) } }] };
@@ -172,6 +173,50 @@ describe("generateSugestao — snapshot do prompt final (golden, sem IA real)", 
     expect(promptText).toContain("SÓ VALE QUANDO A FRASE USA CONECTOR");
     expect(promptText).toContain("TÃO BOA QUANTO");
     expect(promptText).toContain("As duas formas precisam conviver");
+  });
+});
+
+// 13/08/2026 — 4 das 30 frases do teste de repertório saíram amputadas, todas
+// com 6-7 palavras (o teto). O limite faz o modelo cortar em vez de escolher
+// ideia menor. checkDanglingEnding já pegava preposição solta; faltava o verbo
+// transitivo sem objeto.
+describe("checkAmputatedPredicate — frase cortada para caber no limite", () => {
+  // Casos REAIS, colhidos em results-fato-vs-avaliacao-1786623747535.json.
+  it.each([
+    "Planejamento de comunicação em época promocional evita",
+    "Consultas veterinárias para apatia ou falta",
+  ])("reprova a frase amputada real: %s", (frase) => {
+    const motivos = checkAmputatedPredicate(frase);
+    expect(motivos).toHaveLength(1);
+    expect(motivos[0]).toContain("frase amputada");
+  });
+
+  it.each([
+    "Lubrificantes agrícolas evitam paradas no campo",
+    "Capacete de moto para chuva repentina",
+    "Poltrona de trabalho tira a dor lombar",
+    "Tênis novo renova passeios pela cidade",
+  ])("aprova a frase completa: %s", (frase) => {
+    expect(checkAmputatedPredicate(frase)).toEqual([]);
+  });
+
+  // Os falsos positivos que a lista evita de propósito: formas que também são
+  // substantivo comum. Se alguém adicionar "tira"/"conta"/"cria" à lista, estes
+  // testes quebram e explicam por quê.
+  it.each([
+    "Tênis com tira refletiva na lateral",
+    "Poltrona de trabalho para quem faz conta",
+    "Ração premium para cadela com cria",
+  ])("não reprova substantivo homônimo de verbo: %s", (frase) => {
+    expect(checkAmputatedPredicate(frase)).toEqual([]);
+  });
+
+  it("pega a forma no plural e ignora pontuação final", () => {
+    expect(checkAmputatedPredicate("Correias industriais boas evitam.")).toHaveLength(1);
+  });
+
+  it("não quebra com entrada vazia", () => {
+    expect(checkAmputatedPredicate("   ")).toEqual([]);
   });
 });
 

@@ -471,6 +471,97 @@ export function checkItemNameDrift(sugestao: string, concreteItem?: string | nul
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Sugestão — predicado amputado (13/08/2026)
+// ─────────────────────────────────────────────────────────────────────────
+// Achado do teste de repertório (run.fato-vs-avaliacao, 30 gerações reais):
+// 4 saíram gramaticalmente quebradas, e TODAS tinham 6 ou 7 palavras — no
+// teto ou a uma palavra dele:
+//   "Planejamento de comunicação em época promocional evita"  (7 — sem objeto)
+//   "Poltrona de trabalho ajuda reunião correr melhor"        (7 — sem a prep.)
+//   "Consultas veterinárias para apatia ou falta"             (6 — "falta" de quê)
+//   "Capacete de moto escolhendo novo visual"                 (6)
+// O limite de 7 palavras faz o modelo AMPUTAR em vez de escolher uma ideia
+// menor. É o mesmo defeito que o usuário viu em 12/07 ("para trator render
+// jornada longa").
+//
+// checkDanglingEnding (textWordUtils) já pega preposição/conjunção/artigo
+// solto no fim ("...a confiança na"), mas não pega VERBO TRANSITIVO sem
+// objeto — "evita" é palavra completa, só que exige complemento.
+//
+// Lista fechada e curta, de propósito: só verbos transitivos frequentes cuja
+// forma NÃO é também um substantivo comum em português. Ficaram de fora, por
+// gerarem falso positivo real: "tira" (tira de pano), "conta" (conta a pagar),
+// "cria" (cria de animal), "dá"/"da" (já coberto como preposição). O custo de
+// um falso positivo aqui é baixo — vira motivo de retry, não erro fatal.
+const AMPUTATED_PREDICATE_WORDS = new Set([
+  "evita",
+  "evitam",
+  "ajuda",
+  "ajudam",
+  "garante",
+  "garantem",
+  "facilita",
+  "facilitam",
+  "protege",
+  "protegem",
+  "resolve",
+  "resolvem",
+  "organiza",
+  "organizam",
+  "economiza",
+  "economizam",
+  "controla",
+  "controlam",
+  "renova",
+  "renovam",
+  "melhora",
+  "melhoram",
+  "aumenta",
+  "aumentam",
+  "reduz",
+  "reduzem",
+  "traz",
+  "trazem",
+  "gera",
+  "geram",
+  "faz",
+  "fazem",
+  "leva",
+  "levam",
+  "deixa",
+  "deixam",
+  "torna",
+  "tornam",
+  "oferece",
+  "oferecem",
+  "permite",
+  "permitem",
+  "impede",
+  "impedem",
+  "mantem",
+  "une",
+  "unem",
+  "usa",
+  "usam",
+  // Substantivos que, terminando a frase, quase sempre são corte de "falta
+  // de X" / "excesso de X" — o complemento é que carregava a informação.
+  "falta",
+  "faltam",
+]);
+
+export function checkAmputatedPredicate(sugestao: string): string[] {
+  const trimmed = sugestao.trim();
+  if (!trimmed) return [];
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  const last = tokens[tokens.length - 1] ?? "";
+  const lastNorm = normalizeForCompare(last).replace(/[^\p{L}\p{N}]/gu, "");
+  if (!lastNorm || !AMPUTATED_PREDICATE_WORDS.has(lastNorm)) return [];
+  return [
+    `frase amputada: termina em "${last}", que exige complemento — a frase ficou sem o que vinha depois. NÃO corte palavras para caber no limite: escolha uma ideia menor que caiba inteira`,
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Sugestão (PU/MOP) — poda determinística do fecho fraco (E2, sem custo de
 // API — auditoria 2026-07-05, PRINCÍPIO DO FECHO DA FRASE, doc mestre 1.6):
 // quando as tentativas de regeneração se esgotam e a sugestão AINDA reprova

@@ -69,6 +69,7 @@ export {
   checkItemNameDrift,
   checkInformalRegister,
   checkB2CAudienceVocabulary,
+  checkAmputatedPredicate,
   pruneWeakEnding,
 } from "./sugestaoValidation";
 
