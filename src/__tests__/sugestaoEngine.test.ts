@@ -160,6 +160,19 @@ describe("generateSugestao — snapshot do prompt final (golden, sem IA real)", 
     expect(promptText).toContain("devem ser a escolha padrão");
     expect(promptText).toContain("TESTE DO CONECTOR");
   });
+
+  // 13/08/2026 — as 15 gerações reais mostraram que a hierarquia com/para
+  // zerou as frases com verbo de ação (4 de 15 antes, 0 depois). A preferência
+  // de CONECTOR não pode virar preferência de FORMA: o prompt precisa declarar
+  // o escopo dela junto, senão o molde locução engole a construção com verbo.
+  it("limita a hierarquia de conector à frase que usa conector, preservando o verbo de ação", async () => {
+    mockAnswer = "Correias industriais evitam parada da linha";
+    await generateSugestao("fake-api-key", mopInput);
+    const promptText = JSON.stringify(capturedMainMessages);
+    expect(promptText).toContain("SÓ VALE QUANDO A FRASE USA CONECTOR");
+    expect(promptText).toContain("TÃO BOA QUANTO");
+    expect(promptText).toContain("As duas formas precisam conviver");
+  });
 });
 
 describe("pickConcreteItem — guarda de família semântica (achado real AJUSTE_CONFLITO 07/2026)", () => {

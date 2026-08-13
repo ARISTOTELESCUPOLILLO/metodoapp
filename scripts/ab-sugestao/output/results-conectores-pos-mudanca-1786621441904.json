@@ -1,0 +1,117 @@
+{
+  "totalGeracoes": 15,
+  "fortes": 8,
+  "porConector": {
+    "para": 8,
+    "em": 2,
+    "no": 3,
+    "(sem conector)": 2
+  },
+  "results": [
+    {
+      "companyName": "FERRIMAQ",
+      "item": "Poltrona de trabalho",
+      "geracoes": [
+        {
+          "sugestao": "Poltrona de trabalho para troca rápida",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Poltrona de trabalho para longas reuniões",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Poltrona de trabalho em reunião decisiva",
+          "conector": "em",
+          "forte": false
+        }
+      ]
+    },
+    {
+      "companyName": "Barbosa Lubrificantes",
+      "item": "Lubrificantes agrícolas",
+      "geracoes": [
+        {
+          "sugestao": "Lubrificantes agrícolas evitam paradas no campo",
+          "conector": "no",
+          "forte": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam parada no campo",
+          "conector": "no",
+          "forte": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas no preparo da safra",
+          "conector": "no",
+          "forte": false
+        }
+      ]
+    },
+    {
+      "companyName": "Loja Rocha",
+      "item": "Ternos Slim",
+      "geracoes": [
+        {
+          "sugestao": "Ternos Slim para cerimônia inesquecível hoje",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Ternos Slim para primeira reunião marcante",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Ternos slim para festas marcantes agora",
+          "conector": "para",
+          "forte": true
+        }
+      ]
+    },
+    {
+      "companyName": "Moto Vale",
+      "item": "Capacete de moto",
+      "geracoes": [
+        {
+          "sugestao": "Capacete de moto novo para viagem",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Capacete de moto para vento forte",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Capacete de moto em troca urgente",
+          "conector": "em",
+          "forte": false
+        }
+      ]
+    },
+    {
+      "companyName": "Malhação Sports",
+      "item": "Tênis",
+      "geracoes": [
+        {
+          "sugestao": "Tênis novo renova passeios pela cidade",
+          "conector": null,
+          "forte": false
+        },
+        {
+          "sugestao": "Tênis novo para treino sem tropeço",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Tênis limpo depois do treino puxado",
+          "conector": null,
+          "forte": false
+        }
+      ]
+    }
+  ]
+}
