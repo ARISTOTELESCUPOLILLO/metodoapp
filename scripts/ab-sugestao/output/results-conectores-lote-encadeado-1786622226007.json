@@ -1,0 +1,160 @@
+{
+  "totalGeracoes": 15,
+  "comVerboSinal": 1,
+  "aberturasRepetidas": 2,
+  "porConectorEstrutural": {
+    "para": 5,
+    "(sem conector)": 2,
+    "na": 3,
+    "com": 2,
+    "em": 2,
+    "e": 1
+  },
+  "results": [
+    {
+      "companyName": "FERRIMAQ",
+      "item": "Poltrona de trabalho",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Poltrona de trabalho para maratona de reuniões",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Poltrona de trabalho tira a dor lombar",
+          "conectorEstrutural": null,
+          "verboSinal": false,
+          "aberturaRepetida": true
+        },
+        {
+          "clique": 3,
+          "sugestao": "Poltrona de trabalho entrega foco na virada",
+          "conectorEstrutural": "na",
+          "verboSinal": false,
+          "aberturaRepetida": true
+        }
+      ],
+      "conectoresDistintos": 2,
+      "aberturasDistintas": 1
+    },
+    {
+      "companyName": "Barbosa Lubrificantes",
+      "item": "Lubrificantes agrícolas",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Lubrificantes agrícolas evitam paradas na colheita",
+          "conectorEstrutural": "na",
+          "verboSinal": true,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Lubrificantes agrícolas com entrega para fazenda",
+          "conectorEstrutural": "com",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Escolha lubrificantes agrícolas em período de safra",
+          "conectorEstrutural": "em",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        }
+      ],
+      "conectoresDistintos": 3,
+      "aberturasDistintas": 3
+    },
+    {
+      "companyName": "Loja Rocha",
+      "item": "Ternos Slim",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Ternos Slim para reuniões de última hora",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Ternos Slim com caimento que surpreende fácil",
+          "conectorEstrutural": "com",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Provei Terno Slim novo para formatura",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        }
+      ],
+      "conectoresDistintos": 2,
+      "aberturasDistintas": 3
+    },
+    {
+      "companyName": "Moto Vale",
+      "item": "Capacete de moto",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Capacete de moto novo para viagem longa",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Será que esse capacete serve pra mim",
+          "conectorEstrutural": null,
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Coloco o capacete e saio rápido",
+          "conectorEstrutural": "e",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        }
+      ],
+      "conectoresDistintos": 2,
+      "aberturasDistintas": 3
+    },
+    {
+      "companyName": "Malhação Sports",
+      "item": "Tênis",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Tênis novo para treino na academia",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Tênis certo faz diferença na corrida",
+          "conectorEstrutural": "na",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Tênis em liquidação durante troca de estação",
+          "conectorEstrutural": "em",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        }
+      ],
+      "conectoresDistintos": 3,
+      "aberturasDistintas": 3
+    }
+  ]
+}

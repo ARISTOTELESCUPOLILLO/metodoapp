@@ -1,0 +1,159 @@
+{
+  "totalGeracoes": 15,
+  "comVerboSinal": 4,
+  "aberturasRepetidas": 3,
+  "porConectorEstrutural": {
+    "(sem conector)": 5,
+    "em": 2,
+    "para": 4,
+    "na": 3,
+    "no": 1
+  },
+  "results": [
+    {
+      "companyName": "FERRIMAQ",
+      "item": "Poltrona de trabalho",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Poltrona de trabalho ajuda decisões rápidas hoje",
+          "conectorEstrutural": null,
+          "verboSinal": true,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Sentar naquela cadeira já muda reuniões",
+          "conectorEstrutural": null,
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Poltrona de trabalho renova energia em reuniões",
+          "conectorEstrutural": "em",
+          "verboSinal": true,
+          "aberturaRepetida": true
+        }
+      ],
+      "conectoresDistintos": 1,
+      "aberturasDistintas": 2
+    },
+    {
+      "companyName": "Barbosa Lubrificantes",
+      "item": "Lubrificantes agrícolas",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Lubrificantes agrícolas para evitar paradas no campo",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Lubrificantes agrícolas diminuem paradas inesperadas",
+          "conectorEstrutural": null,
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Lubrificantes agrícolas durante safra evitam travamento",
+          "conectorEstrutural": null,
+          "verboSinal": true,
+          "aberturaRepetida": false
+        }
+      ],
+      "conectoresDistintos": 1,
+      "aberturasDistintas": 3
+    },
+    {
+      "companyName": "Loja Rocha",
+      "item": "Ternos Slim",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Ternos Slim para eventos de última hora",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Prova de Ternos Slim em minutos",
+          "conectorEstrutural": "em",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Escolha Ternos Slim agora, evento marcado",
+          "conectorEstrutural": null,
+          "verboSinal": false,
+          "aberturaRepetida": false
+        }
+      ],
+      "conectoresDistintos": 2,
+      "aberturasDistintas": 3
+    },
+    {
+      "companyName": "Moto Vale",
+      "item": "Capacete de moto",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Capacete de moto pronto para passeio agora",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Capacete de moto ajustado na loja",
+          "conectorEstrutural": "na",
+          "verboSinal": false,
+          "aberturaRepetida": true
+        },
+        {
+          "clique": 3,
+          "sugestao": "Capacete de moto novo para viagens longas",
+          "conectorEstrutural": "para",
+          "verboSinal": false,
+          "aberturaRepetida": true
+        }
+      ],
+      "conectoresDistintos": 2,
+      "aberturasDistintas": 1
+    },
+    {
+      "companyName": "Malhação Sports",
+      "item": "Tênis",
+      "lote": [
+        {
+          "clique": 1,
+          "sugestao": "Tênis novo faz diferença na corrida",
+          "conectorEstrutural": "na",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 2,
+          "sugestao": "Tênis leve ajuda no treino puxado",
+          "conectorEstrutural": "no",
+          "verboSinal": true,
+          "aberturaRepetida": false
+        },
+        {
+          "clique": 3,
+          "sugestao": "Tênis limpo na volta de treino forte",
+          "conectorEstrutural": "na",
+          "verboSinal": false,
+          "aberturaRepetida": false
+        }
+      ],
+      "conectoresDistintos": 2,
+      "aberturasDistintas": 3
+    }
+  ]
+}
