@@ -106,17 +106,17 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     nome: "DESVIO",
     tensaoDondis:
       "Instabilidade + Distorção + Acaso + Audácia — composição sem centro óbvio, escala ou perspectiva alteradas, ruptura simbólica que se descobre no segundo olhar",
-    luz: "luz teatral em direção inesperada (de baixo, atrás, lateral extrema), iluminação que cria estranhamento controlado sem encobrir o sujeito",
+    luz: 'luz teatral em direção inesperada, que cria estranhamento controlado sem encobrir o sujeito — a direção exata (de baixo, contraluz por trás ou lateral extrema rasante) é sorteada a cada geração (ver bloco "VARIAÇÕES SORTEADAS")',
     paleta:
       "paleta incomum mas legível, com combinações inesperadas e controladas: verde frio + magenta, azul profundo + ferrugem, lilás seco + mostarda, petróleo + coral queimado, vinho + azul elétrico suave — evitar excesso carnavalesco",
     composicao:
       "composição com elemento metafórico fora de lugar como ponto focal, escala alterada, sujeito principal sempre nítido e legível",
     camera:
-      'ângulo e distância exatos sorteados a cada geração (ver bloco "VARIAÇÕES SORTEADAS") — sempre não-neutro, lente 28-35mm, distorção de perspectiva visível, foco no sujeito mantido',
+      'ângulo, distância, lente, profundidade e luz exatos sorteados a cada geração (ver bloco "VARIAÇÕES SORTEADAS") — sempre não-neutro, lente na faixa 28-50mm, distorção de perspectiva vinda do ângulo e da composição, foco no sujeito mantido',
     detalheCriativo:
       "UMA pequena ruptura simbólica embutida na cena (objeto flutuando levemente, sombra de algo que não está no quadro, escala trocada de um elemento, cor inesperada num único item cotidiano) — discreta, descoberta no segundo olhar",
     assinatura:
-      "fotografia conceitual com luz teatral em direção inesperada, paleta incomum mas legível, elemento metafórico deslocado, perspectiva angulada lente 28-35mm",
+      "fotografia conceitual com luz teatral em direção inesperada, paleta incomum mas legível, elemento metafórico deslocado, perspectiva angulada lente 28-50mm",
   },
   "OP-06": {
     nome: "SILÊNCIO",
@@ -466,18 +466,13 @@ export const DESVIO_SYMBOLIC_RUPTURE_VARIATIONS: string[] = [
   "COR INESPERADA: um único item cotidiano presente fisicamente na cena recebe cor incomum dentro da paleta do mood — objeto está na mão do personagem, sobre superfície ou integrado ao ambiente, não flutuante. Luz teatral lateral ou de baixo salienta o contraste cromático. Apenas esse elemento tem a cor conceitual; o restante da cena segue a paleta fria/escura do mood. AMBIENTE: galeria, vitrine, espaço expositivo ou fundo neutro de tom escuro controlado — onde o item de cor inesperada se isola visualmente sem concorrência de outros elementos.",
 ];
 
-// Variação de câmera sorteada exclusivamente para DESVIO — extraída das rupturas
-// para evitar repetição: antes, quase toda ruptura forçava o mesmo eixo
-// contra-plongée/abaixo da cintura, fazendo o ângulo e a distância da câmera
-// se repetirem entre gerações (inclusive em "Gerar outra"). Agora ângulo e
-// distância são sorteados de forma independente da ruptura, como no CLAREZA.
-export const DESVIO_CAMERA_VARIATIONS: string[] = [
-  "CONTRA-PLONGÉE SUAVE: câmera ligeiramente abaixo da linha dos olhos do personagem ou objeto — inclinação discreta, NUNCA extrema ou caricata —, lente 35mm, distância média. O leve ângulo ascendente sugere o estranhamento de forma sutil, percebida no segundo olhar, sem dramatizar a perspectiva.",
-  "PLONGÉE ACENTUADA: câmera nitidamente acima da cabeça do personagem ou do objeto, lente 28-35mm, enquadramento médio — observador olha de cima, sensação de distanciamento que revela o estranhamento",
-  "LATERAL RASANTE AO CHÃO: câmera quase ao nível do piso, ângulo lateral extremo, lente 28mm, distância curta — composição diagonal que distorce a perspectiva sem recorrer ao eixo vertical",
-  "DIAGONAL HOLANDESA (DUTCH ANGLE): câmera na altura dos olhos, porém o quadro inteiro rotacionado em diagonal (10-15°), lente 35mm, distância média — o desequilíbrio nasce da inclinação do enquadramento (horizonte e linhas verticais visivelmente tortos), não da posição vertical da câmera — uma forma de estranhamento sem recorrer a contra-plongée ou plongée",
-  "PLANO FECHADO ANGULADO: câmera próxima — enquadramento de rosto, mãos ou detalhe do personagem com o objeto da ruptura no entorno imediato —, levemente angulada a partir de um lado (nunca frontal neutra), lente 50mm, profundidade de campo rasa. A proximidade aumenta a tensão e a leitura íntima do estranhamento, rompendo o padrão de planos médios/abertos das demais variações.",
-];
+// DESVIO_CAMERA_VARIATIONS viveu aqui até 13/08/2026, quando a câmera do DESVIO
+// passou a ser COMPOSTA por cinco eixos independentes em core/cameraAxes.ts.
+// Eram 5 frases prontas que amarravam ângulo, lente, distância e às vezes
+// profundidade entre si: quatro pediam distância média ou curta e três fixavam
+// 28-35mm, então variar o ângulo obrigava a variar a lente junto. Nada se
+// perdeu — as cinco alturas do EIXO_ALTURA_DESVIO preservam os cinco ângulos,
+// inclusive a diagonal holandesa.
 
 export function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];

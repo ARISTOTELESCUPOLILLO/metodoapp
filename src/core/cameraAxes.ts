@@ -164,6 +164,78 @@ export const EIXO_LUZ_SILENCIO: string[] = [
   "luz difusa vinda de cima, como de claraboia ou teto translúcido, com sombra curta e suave sob o sujeito",
 ];
 
+// ── DESVIO (OP-05) ──────────────────────────────────────────────────────────
+// Quarto mood a receber eixos (13/08/2026). Era o mais variado dos seis — 5
+// câmeras próprias, contra 2 do CLAREZA — mas cada uma amarrava ângulo, lente,
+// distância e às vezes profundidade numa frase só, então os eixos não podiam se
+// combinar: das 5, quatro pediam distância média ou curta, e três fixavam
+// 28-35mm. Variar o ângulo obrigava a variar a lente junto.
+//
+// A TRAVA AQUI É A NÃO-NEUTRALIDADE, e é a mais delicada dos quatro moods:
+// DESVIO_CAMERA_SENTENCE declara "a câmera NUNCA pode estar na altura dos olhos
+// em enquadramento neutro — PROIBIDO câmera frontal neutra em qualquer
+// hipótese, essa é a assinatura inegociável do mood".
+//
+// Isso cria um risco que os outros três não tinham: com eixos INDEPENDENTES, a
+// fila pode compor "altura dos olhos" + "plano médio" + "50mm" + "profundidade
+// ampla" — que é exatamente a frontal neutra proibida. Nenhum eixo sozinho erra;
+// a COMBINAÇÃO erra. Por isso a não-neutralidade vive dentro do eixo de altura:
+// TODA opção abaixo carrega o próprio desvio (ângulo, rasância ou rotação de
+// quadro) e repete que a frontal neutra não vale — do mesmo modo que cada
+// distância do SILÊNCIO repete que o sujeito permanece pequeno. É a classe de
+// bug recorrente aqui: dois trechos do mesmo prompt mandando coisas opostas.
+export const EIXO_DISTANCIA_DESVIO: string[] = [
+  "PLANO PRÓXIMO: enquadramento fechado em rosto, mãos ou detalhe, com o objeto da ruptura no entorno imediato e legível dentro do quadro — a proximidade aumenta a tensão e a leitura íntima do estranhamento",
+  "PLANO MÉDIO: da cintura ao topo da cabeça, com o elemento deslocado da ruptura visível no mesmo quadro que o personagem",
+  "PLANO AMERICANO: do meio da coxa ao topo da cabeça — postura inteira e objeto da ruptura convivendo no quadro, a relação entre os dois legível de imediato",
+  "PLANO ABERTO: a figura ocupa parte menor do quadro e o ambiente entra inteiro — a ruptura permanece identificável, e é a relação de escala entre pessoa, espaço e elemento deslocado que produz o estranhamento",
+];
+
+// Cada opção é NÃO-NEUTRA por si — nenhuma pode compor uma frontal reta com os
+// outros eixos. A diagonal holandesa é a única na altura dos olhos, e só entra
+// porque a rotação do quadro é o que quebra a neutralidade ali (era assim na 4ª
+// das 5 câmeras antigas, que este eixo preserva).
+export const EIXO_ALTURA_DESVIO: string[] = [
+  "CONTRA-PLONGÉE SUAVE: câmera ligeiramente abaixo da linha dos olhos do personagem ou do objeto — inclinação discreta, NUNCA extrema ou caricata. O leve ângulo ascendente sugere o estranhamento no segundo olhar, e já basta para que o enquadramento não seja frontal neutro",
+  "PLONGÉE ACENTUADA: câmera nitidamente acima da cabeça do personagem ou do objeto — o observador olha de cima, e o distanciamento revela o estranhamento; enquadramento claramente não-neutro",
+  "LATERAL RASANTE AO CHÃO: câmera quase ao nível do piso, ângulo lateral extremo — composição diagonal que distorce a perspectiva sem recorrer ao eixo vertical; jamais confundível com frontal neutra",
+  "DIAGONAL HOLANDESA (DUTCH ANGLE): câmera na altura dos olhos, porém o quadro inteiro rotacionado em diagonal (10-15°) — horizonte e linhas verticais visivelmente tortos. É a ROTAÇÃO que quebra a neutralidade aqui: sem ela, esta altura seria a frontal neutra proibida pelo mood, então a inclinação do quadro é obrigatória nesta variação",
+  "ANGULAÇÃO LATERAL MARCADA: câmera deslocada para um dos lados do sujeito, três-quartos acentuado que nunca se alinha de frente — a assimetria do ponto de vista é o que afasta o enquadramento do neutro",
+];
+
+// O mood declara "distorção de perspectiva visível" e a assinatura fixava
+// 28-35mm. A faixa abre até 50mm — que a 5ª câmera antiga já usava, ou seja, tem
+// precedente dentro do próprio mood — e PARA AÍ de propósito: 85mm comprime os
+// planos e elimina a distorção de perspectiva, que é gramática declarada do
+// DESVIO ("Instabilidade + Distorção... perspectiva alteradas"), não execução.
+// Ampliar até a teleobjetiva seria decidir contra o mood — o tipo de extrapolação
+// revertida em feedback-escopo-camera-nao-gramatica-do-mood.
+// O campo `camera` e a `assinatura` de VISUAL_DIRECTIONS["OP-05"] passaram a
+// declarar a faixa 28-50mm no mesmo movimento: é a QUARTA vez que a assinatura
+// precisa acompanhar o eixo de ótica.
+export const EIXO_OTICA_DESVIO: string[] = [
+  "lente 28mm, angular que exagera a perspectiva e faz as linhas do ambiente convergirem de forma incomum",
+  "lente 35mm, angular suave com distorção de perspectiva perceptível sem caricatura",
+  "lente 50mm, perspectiva neutra na ótica — aqui a distorção vem do ÂNGULO da câmera e da composição, não da lente",
+];
+
+// "sujeito principal sempre nítido e legível" é o que o mood declara em
+// `composicao` — as duas opções preservam isso, e a ruptura nunca se dissolve.
+export const EIXO_PROFUNDIDADE_DESVIO: string[] = [
+  "profundidade ampla: ambiente inteiro legível e nítido, a ruptura lida dentro do contexto que a torna estranha",
+  "profundidade rasa: sujeito e elemento da ruptura nítidos, fundo dissolvido — o estranhamento isolado, sem detalhe competindo",
+];
+
+// As três direções que o próprio mood nomeia em `luz`: "luz teatral em direção
+// inesperada (de baixo, atrás, lateral extrema)". Nenhuma é invenção nova — o
+// campo `luz` passou a delegar a fonte exata a este eixo, como já faziam CLAREZA
+// e SILÊNCIO, para os dois textos não se contradizerem no mesmo prompt.
+export const EIXO_LUZ_DESVIO: string[] = [
+  "luz teatral vinda de baixo, iluminando o sujeito em direção invertida à esperada, sombras subindo pelas superfícies",
+  "contraluz teatral vinda de trás do sujeito, recortando o contorno e deixando a frente em penumbra legível",
+  "luz lateral extrema e rasante, quase paralela à parede, alongando sombras e revelando texturas que a luz frontal esconderia",
+];
+
 // ── Composição dos eixos ────────────────────────────────────────────────────
 
 interface EixosDoMood {
@@ -192,6 +264,19 @@ const EIXOS_POR_MOOD: Partial<Record<MoodCode, EixosDoMood>> = {
     otica: EIXO_OTICA_IMPACTO,
     profundidade: EIXO_PROFUNDIDADE_IMPACTO,
     luz: EIXO_LUZ_IMPACTO,
+    filtraDistanciaComAvatar: true,
+  },
+  // DESVIO entra COM filtro de avatar, ao contrário do SILÊNCIO: aqui a pessoa
+  // é personagem inteiro e presente (as rupturas falam em "o personagem percebe,
+  // observa, toca, segura"), não fragmento parcial — então reduzir o avatar
+  // contratado a figura pequena é o mesmo problema do CLAREZA e do IMPACTO, não
+  // uma exigência do mood.
+  "OP-05": {
+    distancia: EIXO_DISTANCIA_DESVIO,
+    altura: EIXO_ALTURA_DESVIO,
+    otica: EIXO_OTICA_DESVIO,
+    profundidade: EIXO_PROFUNDIDADE_DESVIO,
+    luz: EIXO_LUZ_DESVIO,
     filtraDistanciaComAvatar: true,
   },
   // SILÊNCIO fica de fora do filtro de avatar de propósito: a gramática do mood
@@ -223,8 +308,10 @@ export function distanciaPreservaOAvatar(distancia: string): boolean {
   return !DISTANCIA_REDUZ_O_ROSTO.test(distancia);
 }
 
-/** Moods cuja câmera já foi decupada em eixos. Os demais (INSTANTE, FRAGMENTO,
- *  DESVIO) seguem com os pools de frase pronta no léxico. */
+/** Moods cuja câmera já foi decupada em eixos. Os demais (INSTANTE e FRAGMENTO)
+ *  seguem com os pools de frase pronta no léxico — o INSTANTE por decisão do
+ *  Aristóteles (aprovado em peça real, não se mexe no que funciona) e o
+ *  FRAGMENTO porque roda por bloco dentro da mesma peça, caso diferente. */
 export function moodTemEixosDeCamera(mood?: MoodCode): boolean {
   return !!mood && !!EIXOS_POR_MOOD[mood];
 }
@@ -249,8 +336,10 @@ const PASSO_LUZ = 2;
  * a mesma câmera em nenhum eixo.
  *
  * Espaço de combinações: CLAREZA e IMPACTO 4·3·3·2·3 = 216 (162 com avatar
- * marcado, que tira a distância mais afastada); SILÊNCIO 4·4·3·2·3 = 288.
- * O CICLO da fila, porém, é o mmc dos tamanhos de pool — 12 nos três moods.
+ * marcado, que tira a distância mais afastada); SILÊNCIO 4·4·3·2·3 = 288;
+ * DESVIO 4·5·3·2·3 = 360 (270 com avatar marcado).
+ * O CICLO da fila, porém, é o mmc dos tamanhos de pool — 12 nos três primeiros
+ * e 60 no DESVIO, que tem o eixo de altura com 5 opções.
  * É quanto o usuário percorre antes de reencontrar a mesma combinação exata, e
  * é o número honesto, não o tamanho do espaço.
  *

@@ -17,7 +17,6 @@ import {
   INSTANTE_POOL_SEM_PDV,
   FRAGMENTO_GRID_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
-  DESVIO_CAMERA_VARIATIONS,
   PRECEDENCIA_PLANO_SOBRE_POSE,
   PERSONAGEM_GENDER_VARIATIONS,
 } from "./visualDirection.lexicon";
@@ -101,7 +100,12 @@ export function pickImageVariationBlock(opts: {
     // buildImagePrompt). Removemos a cláusula, mantendo o resto da ruptura.
     const rupturaRaw = pickEixo(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS, PASSO_CONCEITO);
     const ruptura = hasCenarioRef ? rupturaRaw.replace(/\s*AMBIENTE:.*$/, "") : rupturaRaw;
-    const camera = pickEixo(DESVIO_CAMERA_VARIATIONS, PASSO_CAMERA);
+    // Cinco eixos desde 13/08/2026 (ver core/cameraAxes.ts). hasAvatarRef tira a
+    // distância mais afastada da faixa: o DESVIO tem personagem inteiro e
+    // presente — as rupturas dizem "o personagem percebe, observa, toca" —, então
+    // reduzi-lo a figura pequena é o mesmo problema do CLAREZA e do IMPACTO.
+    // A trava do mood (nunca frontal neutra) vive dentro do eixo de altura.
+    const camera = buildCameraLine("OP-05", { seed, hasAvatarRef });
     return `\n⚠ VARIAÇÃO: ${genderBlock}Câmera: ${camera}. Estrutura da ruptura: ${ruptura}. ${TEMA_DERIVATION_RULE} O elemento da ruptura deriva do tema — nunca clichê genérico (ver regra CONCEITO-FIRST). Uma ruptura por cena.`;
   }
 

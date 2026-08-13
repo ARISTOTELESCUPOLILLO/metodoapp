@@ -18,6 +18,11 @@ import {
   EIXO_OTICA_SILENCIO,
   EIXO_PROFUNDIDADE_SILENCIO,
   EIXO_LUZ_SILENCIO,
+  EIXO_DISTANCIA_DESVIO,
+  EIXO_ALTURA_DESVIO,
+  EIXO_OTICA_DESVIO,
+  EIXO_PROFUNDIDADE_DESVIO,
+  EIXO_LUZ_DESVIO,
 } from "../core/cameraAxes";
 import { buildVisualDirectionBlock, buildMoodGrammarBlock } from "../core/visualDirection";
 import { pickImageVariationBlock } from "../core/imageVariationPicker";
@@ -81,19 +86,33 @@ const MOODS: CasoDeMood[] = [
     ],
     filtraAvatar: false,
   },
+  {
+    mood: "OP-05",
+    nome: "DESVIO",
+    eixos: [
+      EIXO_DISTANCIA_DESVIO,
+      EIXO_ALTURA_DESVIO,
+      EIXO_OTICA_DESVIO,
+      EIXO_PROFUNDIDADE_DESVIO,
+      EIXO_LUZ_DESVIO,
+    ],
+    filtraAvatar: true,
+  },
 ];
 
 const linhasDoCiclo = (mood: MoodCode, hasAvatarRef = false) =>
   Array.from({ length: CICLO }, (_, seed) => buildCameraLine(mood, { seed, hasAvatarRef }));
 
 describe("eixos de câmera — quais moods já foram decupados", () => {
-  it("CLAREZA, IMPACTO e SILÊNCIO têm eixos; os outros três seguem com pool de frase", () => {
+  it("CLAREZA, IMPACTO, SILÊNCIO e DESVIO têm eixos; INSTANTE e FRAGMENTO seguem com pool de frase", () => {
     expect(moodTemEixosDeCamera("OP-01")).toBe(true);
     expect(moodTemEixosDeCamera("OP-02")).toBe(true);
+    expect(moodTemEixosDeCamera("OP-05")).toBe(true);
     expect(moodTemEixosDeCamera("OP-06")).toBe(true);
+    // INSTANTE fica fora por decisão do Aristóteles (aprovado em peça real);
+    // FRAGMENTO porque roda por bloco dentro da mesma peça, caso diferente.
     expect(moodTemEixosDeCamera("OP-03")).toBe(false);
     expect(moodTemEixosDeCamera("OP-04")).toBe(false);
-    expect(moodTemEixosDeCamera("OP-05")).toBe(false);
     expect(moodTemEixosDeCamera(undefined)).toBe(false);
   });
 
@@ -181,6 +200,70 @@ describe("o filtro de avatar é por marcador de texto, nunca por índice", () =>
     expect(EIXO_DISTANCIA_IMPACTO.filter(distanciaPreservaOAvatar)).toHaveLength(
       EIXO_DISTANCIA_IMPACTO.length - 1,
     );
+  });
+});
+
+// A trava do DESVIO é a mais delicada dos quatro moods decupados: as outras
+// travas são violáveis por UM eixo (basta uma altura não-ascendente no IMPACTO,
+// uma distância que aproxime demais no SILÊNCIO), mas a frontal neutra do DESVIO
+// nasceria da COMBINAÇÃO — altura dos olhos + plano médio + 50mm + profundidade
+// ampla, cada parte inocente sozinha. Por isso a não-neutralidade vive dentro do
+// eixo de altura, e é isso que estes testes travam.
+describe("DESVIO — a trava de não-neutralidade sobrevive a qualquer combinação", () => {
+  it("TODA opção de altura é não-neutra por si — nenhuma frontal reta possível", () => {
+    EIXO_ALTURA_DESVIO.forEach((altura) => {
+      const naoNeutra =
+        /contra-plong|plong|rasante|holandesa|dutch|rotacionado|lateral marcada|três-quartos|tres-quartos/i.test(
+          altura,
+        );
+      expect(naoNeutra, `altura sem desvio próprio: ${altura}`).toBe(true);
+    });
+  });
+
+  it("a única altura na linha dos olhos é a holandesa, e ela obriga a rotação do quadro", () => {
+    const naLinhaDosOlhos = EIXO_ALTURA_DESVIO.filter((a) => /altura dos olhos/i.test(a));
+    expect(naLinhaDosOlhos).toHaveLength(1);
+    expect(naLinhaDosOlhos[0]).toMatch(/rotacionado/i);
+    expect(naLinhaDosOlhos[0]).toMatch(/obrigat/i);
+  });
+
+  it("nenhuma linha do ciclo pode ser lida como enquadramento frontal neutro", () => {
+    for (let seed = 0; seed < 120; seed++) {
+      const linha = buildCameraLine("OP-05", { seed });
+      const altura = linha.split(" · ")[1];
+      expect(altura).toBeTruthy();
+      // Se a altura é a da linha dos olhos, a rotação precisa vir junto na mesma
+      // parte — é ela que quebra a neutralidade.
+      if (/altura dos olhos/i.test(altura)) expect(altura).toMatch(/rotacionado/i);
+    }
+  });
+
+  it("a ótica para em 50mm — teleobjetiva apagaria a distorção, que é gramática do mood", () => {
+    EIXO_OTICA_DESVIO.forEach((o) => {
+      expect(o).not.toMatch(/85mm|100mm|135mm/);
+    });
+    expect(EIXO_OTICA_DESVIO.join(" ")).toMatch(/28mm/);
+    expect(EIXO_OTICA_DESVIO.join(" ")).toMatch(/50mm/);
+  });
+
+  it("a luz fica nas três direções que o próprio mood nomeia", () => {
+    const tudo = EIXO_LUZ_DESVIO.join(" ").toLowerCase();
+    expect(tudo).toMatch(/de baixo/);
+    expect(tudo).toMatch(/contraluz|por trás|de trás/);
+    expect(tudo).toMatch(/lateral extrema/);
+    // Nada de alta-chave serena, que é SILÊNCIO, nem difusa neutra, que é CLAREZA.
+    expect(tudo).not.toContain("alta-chave");
+  });
+
+  it("a distância mais afastada mantém a ruptura legível — ela é o ponto da peça", () => {
+    const aberto = EIXO_DISTANCIA_DESVIO.filter((d) => /^PLANO ABERTO/.test(d));
+    expect(aberto).toHaveLength(1);
+    expect(aberto[0]).toMatch(/ruptura/i);
+  });
+
+  it("o ciclo do DESVIO é 60, não 12 — o eixo de altura tem 5 opções", () => {
+    const linhas = Array.from({ length: 60 }, (_, seed) => buildCameraLine("OP-05", { seed }));
+    expect(new Set(linhas).size).toBe(60);
   });
 });
 

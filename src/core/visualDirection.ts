@@ -32,7 +32,6 @@ import {
   FRAGMENTO_GRID_VARIATIONS,
   PERSONAGEM_GENDER_VARIATIONS,
   DESVIO_SYMBOLIC_RUPTURE_VARIATIONS,
-  DESVIO_CAMERA_VARIATIONS,
   PRECEDENCIA_PLANO_SOBRE_POSE,
   ARCO_PRECEDENCIA_CAMERA,
   CLAREZA_DEVICE_WELCOME_SENTENCE,
@@ -300,7 +299,15 @@ Permitir apenas quando estiver explicitamente ligado à informação-chave, ao s
 
   if (mood === "OP-05") {
     const ruptura = pickEixo(DESVIO_SYMBOLIC_RUPTURE_VARIATIONS, PASSO_CONCEITO);
-    const camera = pickEixo(DESVIO_CAMERA_VARIATIONS, PASSO_CAMERA);
+    // Cinco eixos desde 13/08/2026 (ver core/cameraAxes.ts). Antes eram 5 frases
+    // prontas que amarravam ângulo, lente e distância entre si — quatro delas
+    // pediam distância média ou curta e três fixavam 28-35mm. A trava do mood
+    // (nunca frontal neutra) não foi tocada: ela vive dentro do eixo de altura,
+    // onde toda opção é não-neutra por si.
+    // Sem hasAvatarRef aqui de propósito — este é o lado do CONTEÚDO, que roda
+    // uma vez por sequência e não conhece a seleção do Kit Imagem; o filtro de
+    // avatar existe no picker de imagem, que é onde essa informação chega.
+    const camera = buildCameraLine("OP-05", { seed });
     variacaoBlock = `\n\nVARIAÇÕES SORTEADAS PARA ESTA GERAÇÃO — SEGUIR EXATAMENTE, SEM SUBSTITUIÇÃO:\n• Câmera: ${camera}\n${ARCO_PRECEDENCIA_CAMERA}\n• Estrutura da ruptura simbólica: ${ruptura}\n${TEMA_DERIVATION_RULE} Aqui, o objeto, gesto ou elemento deslocado que ENCARNA a ruptura deve ser esse símbolo derivado do tema da peça — não um conceito surreal genérico solto. Uma ruptura por cena, sem acumular.`;
   } else if (mood === "OP-04") {
     // FRAGMENTO não recebia nenhuma variação sorteada até 11/08/2026 — a grade

@@ -76,8 +76,8 @@ ${SEM_PERSONAGEM_NEGATIVE}`;
 export const SEM_PERSONAGEM_REFORCO_FINAL = `⚠ VERIFICAÇÃO FINAL — SEM PESSOAS: confirme, antes de finalizar, que NENHUMA pessoa ou parte de pessoa (rosto, mão, braço, silhueta, sombra, reflexo, figura ao fundo, pessoa cortada na borda) aparece na imagem. Se apareceu, refaça a composição sem ela. ${SEM_PERSONAGEM_NEGATIVE}`;
 
 // Câmeras escritas para cena sem pessoa. As câmeras com personagem
-// (IMPACTO_CAMERA_VARIATIONS, DESVIO_CAMERA_VARIATIONS no léxico, e os cinco
-// eixos do CLAREZA em core/cameraAxes.ts) descrevem o enquadramento DE UM
+// (IMPACTO_CAMERA_VARIATIONS no léxico, e os cinco eixos de CLAREZA, IMPACTO e
+// DESVIO em core/cameraAxes.ts) descrevem o enquadramento DE UM
 // PERSONAGEM ("da cintura ao topo da cabeça", "abaixo da linha dos olhos",
 // "acima da cabeça do personagem") e não servem aqui — reescritas em vez de
 // filtradas/substituídas por regex. SILÊNCIO é a exceção: as câmeras dele já
