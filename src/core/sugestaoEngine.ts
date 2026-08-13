@@ -821,7 +821,19 @@ TESTE: se a frase serviria igual para qualquer outra marca do segmento, reescrev
   // no-na/para/à) SEM listá-los como menu — listar as 6 formas recriaria o
   // "molde forçado" da fórmula PRODUTO+CONECTOR+RECORTE já testada e
   // rejeitada (scripts/ab-sugestao/variantB.ts).
-  const contextoFormaBlock = `O CONTEXTO REAL DE USO pode ser um resultado/efeito, um momento/ocasião, uma finalidade ou uma característica — NENHUMA forma é preferida sobre outra. O único requisito é QUEM VIVE essa situação: precisa ser o CLIENTE/COMPRADOR/USUÁRIO de "${concreteItem}" (ele se imagina usando, recebendo, escolhendo, precisando) — nunca uma etapa de bastidor de quem VENDE (estoque, armazenamento, preparo, organização interna, escolha de insumos)${isB2C ? "" : `, exceto quando essa etapa É a própria rotina de trabalho do cliente comprador — em B2B, "o fechamento dos pedidos" é rotina de quem compra o ERP, não bastidor de quem vende`}. Os conectores (e, com, em, no/na, para, à) não escolhem o assunto — eles só aproximam o produto de uma situação real vivida pelo cliente. TESTE: o cliente consegue imaginar essa situação acontecendo de verdade com ele? Bons exemplos: "Café em manhãs frias", "Vacinas para filhotes", "ERP no fechamento dos pedidos". Maus exemplos (bastidor de quem vende, não do cliente): "Café na escolha dos grãos", "Vacinas no armazenamento", "ERP na organização interna". VARIE A CONSTRUÇÃO: alterne entre essas formas e entre locução sem verbo ou frase com sujeito e predicado (ver SINTAXE — NÚCLEO DA FRASE), conforme o que soar mais natural para este item; repetir sempre a mesma estrutura entre sugestões é o que faz a Sugestão soar montada por fórmula. PROIBIDO colar um adjetivo ou particípio de recheio na última palavra só para o fecho "parecer" mais específico (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "sustos inesperados", "internações longas") quando essa palavra não muda nem especifica o efeito central — TESTE: apague a última palavra; se a frase continua dizendo exatamente a mesma coisa, ela é recheio e deve ser cortada ou trocada por um efeito que dependa dela para fazer sentido.`;
+  // HIERARQUIA ENTRE CONECTORES (13/08/2026) — medição de 12/07 commitada em
+  // 91308b5: a mesma relação real escrita com os 7 conectores, julgada em 8
+  // casos (56 frases). Plausibilidade passou em 63 de 64 — a IDEIA quase nunca
+  // é o problema; o que reprova é a NATURALIDADE do conector. Frases 100%
+  // aprovadas: com 7/8, para 6/8, em 3/8, e 2/8, no 2/8, à 1/8, na 1/8. Os
+  // cinco fracos produzem construção encaixada à força ("à medida de mensagens
+  // eficazes", "na necessidade do cliente", "no contexto de atualização"). Por
+  // isso "com"/"para" viram PADRÃO e os outros passam a exigir naturalidade
+  // genuína — preferência, não proibição: banir os cinco recriaria o menu
+  // fechado que o parágrafo acima descarta. RESSALVA do dado: o experimento
+  // FORÇOU um conector por frase; em produção o modelo escolhe livre, então
+  // parte do lixo do "à" pode ser artefato da coerção, não do uso real.
+  const contextoFormaBlock = `O CONTEXTO REAL DE USO pode ser um resultado/efeito, um momento/ocasião, uma finalidade ou uma característica — NENHUMA forma é preferida sobre outra. O único requisito é QUEM VIVE essa situação: precisa ser o CLIENTE/COMPRADOR/USUÁRIO de "${concreteItem}" (ele se imagina usando, recebendo, escolhendo, precisando) — nunca uma etapa de bastidor de quem VENDE (estoque, armazenamento, preparo, organização interna, escolha de insumos)${isB2C ? "" : `, exceto quando essa etapa É a própria rotina de trabalho do cliente comprador — em B2B, "o fechamento dos pedidos" é rotina de quem compra o ERP, não bastidor de quem vende`}. Os conectores não escolhem o assunto — eles só aproximam o produto de uma situação real vivida pelo cliente. "com" e "para" são os que sustentam a frase em português falado e devem ser a escolha padrão; "e", "em", "no/na" e "à" só entram quando soarem genuinamente naturais para este item. TESTE DO CONECTOR: se ele precisou ser encaixado à força ("à medida de...", "na necessidade do...", "no contexto de...", "em situação de..."), a construção está errada — reescreva com "com"/"para" ou com um verbo de ação direto, sem mudar a situação que a frase descreve. TESTE: o cliente consegue imaginar essa situação acontecendo de verdade com ele? Bons exemplos: "Café em manhãs frias", "Vacinas para filhotes", "ERP no fechamento dos pedidos". Maus exemplos (bastidor de quem vende, não do cliente): "Café na escolha dos grãos", "Vacinas no armazenamento", "ERP na organização interna". VARIE A CONSTRUÇÃO: alterne entre essas formas e entre locução sem verbo ou frase com sujeito e predicado (ver SINTAXE — NÚCLEO DA FRASE), conforme o que soar mais natural para este item; repetir sempre a mesma estrutura entre sugestões é o que faz a Sugestão soar montada por fórmula. PROIBIDO colar um adjetivo ou particípio de recheio na última palavra só para o fecho "parecer" mais específico (ex.: "negociações digitais", "contatos ativos", "demandas híbridas", "sustos inesperados", "internações longas") quando essa palavra não muda nem especifica o efeito central — TESTE: apague a última palavra; se a frase continua dizendo exatamente a mesma coisa, ela é recheio e deve ser cortada ou trocada por um efeito que dependa dela para fazer sentido.`;
 
   // Elemento concreto — substitui a antiga "COBERTURA DA ATIVIDADE"
   // (rodízio mental por grupos da atividade) por um dado real e
@@ -968,6 +980,14 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
   // sugestão anterior por regex (lista fechada e pequena, sem NLP) e avisa —
   // não bane (só repita "para" se nenhuma alternativa soar natural), pra não
   // recriar o molde forçado da fórmula PRODUTO+CONECTOR+RECORTE já rejeitada.
+  // REDIRECIONADO em 13/08/2026: o aviso mandava trocar de CONECTOR, o que
+  // empurrava justamente para os cinco que a medição de 12/07 reprova (ver
+  // hierarquia no comentário de contextoFormaBlock) — pedir variedade aqui e
+  // qualidade lá era o prompt mandando e proibindo a mesma coisa. Agora a
+  // variação é cobrada na CONSTRUÇÃO (locução sem verbo × frase com sujeito e
+  // predicado × verbo de ação) e no VERBO, não no conector: repetir "com"/
+  // "para" no lote passa a ser aceitável, encaixar "à"/"na" à força não.
+  // A detecção por regex continua servindo para nomear o que já saiu.
   const CONECTOR_PATTERNS: { nome: string; re: RegExp }[] = [
     { nome: "para", re: /\bpara\b/ },
     { nome: "com", re: /\bcom\b/ },
@@ -987,7 +1007,7 @@ NÚCLEO DA FRASE (B2B): siga a hierarquia de SINTAXE — NÚCLEO DA FRASE abaixo
     new Set(previousSugs.map(detectConector).filter((c): c is string => !!c)),
   );
   const conectorWarning = conectoresUsados.length
-    ? ` CONECTOR/VERBO JÁ USADO NESTE LOTE: as sugestões acima já usaram o conector ${conectoresUsados.map((c) => `"${c}"`).join(", ")}. Se o mesmo conector também for o mais natural pra este item, prefira variar (outro conector, ou uma construção com verbo de ação direto) — só repita se nenhuma alternativa soar natural. O VERBO DE AÇÃO principal desta frase (se houver) também precisa ser diferente do das sugestões acima (ex.: não use "agiliza"/"agilizam" de novo se já apareceu).`
+    ? ` CONSTRUÇÃO/VERBO JÁ USADO NESTE LOTE: as sugestões acima já usaram o conector ${conectoresUsados.map((c) => `"${c}"`).join(", ")}. Repetir "com" ou "para" aqui é ACEITÁVEL — eles são os conectores que sustentam a frase, e trocar por um conector forçado só para não repetir piora a sugestão. O que NÃO pode repetir é a CONSTRUÇÃO: se as anteriores são locuções sem verbo ("[item] para [situação]"), esta deve ser uma frase com sujeito e predicado, ou trazer um verbo de ação direto — e vice-versa. O VERBO DE AÇÃO principal desta frase (se houver) também precisa ser diferente do das sugestões acima (ex.: não use "agiliza"/"agilizam" de novo se já apareceu).`
     : "";
 
   const previousBlock = previousSugs.length

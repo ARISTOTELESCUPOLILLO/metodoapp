@@ -125,16 +125,40 @@ describe("generateSugestao — snapshot do prompt final (golden, sem IA real)", 
     expect(fetchOpenAIChatMock).toHaveBeenCalledTimes(2);
   });
 
-  it("avisa sobre conector já usado no lote quando há sugestões anteriores com 'para'", async () => {
+  it("avisa sobre construção já usada no lote quando há sugestões anteriores com 'para'", async () => {
     mockAnswer = "Correias industriais em revisão evitam parada";
     await generateSugestao("fake-api-key", {
       ...mopInput,
       previousSuggestions: ["Correias industriais para evitar paradas"],
     });
     const promptText = JSON.stringify(capturedMainMessages);
-    expect(promptText).toContain("CONECTOR/VERBO JÁ USADO NESTE LOTE");
+    expect(promptText).toContain("CONSTRUÇÃO/VERBO JÁ USADO NESTE LOTE");
     expect(promptText).toContain("usaram o conector");
     expect(promptText).toContain("para");
+  });
+
+  // 13/08/2026 — o aviso de lote NÃO pode voltar a mandar trocar de conector:
+  // era ele que empurrava para "à"/"na"/"no", os piores da medição de 12/07.
+  it("manda variar a construção, não o conector, e libera repetir com/para", async () => {
+    mockAnswer = "Correias industriais em revisão evitam parada";
+    await generateSugestao("fake-api-key", {
+      ...mopInput,
+      previousSuggestions: ["Correias industriais para evitar paradas"],
+    });
+    const promptText = JSON.stringify(capturedMainMessages);
+    expect(promptText).toContain('Repetir \\"com\\" ou \\"para\\" aqui é ACEITÁVEL');
+    expect(promptText).toContain("O que NÃO pode repetir é a CONSTRUÇÃO");
+    expect(promptText).not.toContain("prefira variar (outro conector");
+  });
+
+  // A hierarquia com/para precisa chegar ao prompt SEMPRE, não só quando há
+  // sugestões anteriores no lote — o bloco de contexto entra em toda geração.
+  it("declara com/para como conectores padrão em toda geração", async () => {
+    mockAnswer = "Correias industriais evitam parada da linha";
+    await generateSugestao("fake-api-key", mopInput);
+    const promptText = JSON.stringify(capturedMainMessages);
+    expect(promptText).toContain("devem ser a escolha padrão");
+    expect(promptText).toContain("TESTE DO CONECTOR");
   });
 });
 
