@@ -1,0 +1,401 @@
+{
+  "porClasse": {
+    "fisico": {
+      "fato": 11,
+      "misto": 2,
+      "avaliacao": 2
+    },
+    "servico-visivel": {
+      "fato": 5,
+      "misto": 1,
+      "avaliacao": 0
+    },
+    "meta-processo": {
+      "fato": 7,
+      "misto": 0,
+      "avaliacao": 2
+    }
+  },
+  "results": [
+    {
+      "label": "Capacete de moto",
+      "item": "Capacete de moto",
+      "classeEsperada": "fisico",
+      "geracoes": [
+        {
+          "sugestao": "Capacete de moto para trajeto diário tranquilo",
+          "veredito": {
+            "complemento": "para trajeto diário tranquilo",
+            "classe": "MISTO",
+            "fatoNomeado": "trajeto diário",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Capacete de moto escolhendo novo visual",
+          "veredito": {
+            "complemento": "escolhendo novo visual",
+            "classe": "FATO",
+            "fatoNomeado": "escolha de novo visual",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Capacete de moto para viagens sem pressa",
+          "veredito": {
+            "complemento": "para viagens sem pressa",
+            "classe": "FATO",
+            "fatoNomeado": "viagens sem pressa",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 2
+    },
+    {
+      "label": "Tênis",
+      "item": "Tênis",
+      "classeEsperada": "fisico",
+      "geracoes": [
+        {
+          "sugestao": "Tênis novo para corrida amanhã cedo",
+          "veredito": {
+            "complemento": "novo para corrida amanhã cedo",
+            "classe": "FATO",
+            "fatoNomeado": "corrida amanhã cedo",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Tênis para treino sem dor nos pés",
+          "veredito": {
+            "complemento": "para treino sem dor nos pés",
+            "classe": "FATO",
+            "fatoNomeado": "dor nos pés",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Tênis novo para treino que começa amanhã",
+          "veredito": {
+            "complemento": "novo para treino que começa amanhã",
+            "classe": "FATO",
+            "fatoNomeado": "treino que começa amanhã",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 3
+    },
+    {
+      "label": "Ternos Slim",
+      "item": "Ternos Slim",
+      "classeEsperada": "fisico",
+      "geracoes": [
+        {
+          "sugestao": "Ternos slim para caminho até a reunião",
+          "veredito": {
+            "complemento": "para caminho até a reunião",
+            "classe": "FATO",
+            "fatoNomeado": "caminho até a reunião",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Ternos Slim para casamentos marcantes e únicos",
+          "veredito": {
+            "complemento": "para casamentos marcantes e únicos",
+            "classe": "AVALIACAO",
+            "fatoNomeado": "",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Ternos Slim em casamentos garantem visual alinhado",
+          "veredito": {
+            "complemento": "em casamentos garantem visual alinhado",
+            "classe": "AVALIACAO",
+            "fatoNomeado": "",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 1
+    },
+    {
+      "label": "Poltrona de trabalho",
+      "item": "Poltrona de trabalho",
+      "classeEsperada": "fisico",
+      "geracoes": [
+        {
+          "sugestao": "Poltrona de trabalho para reuniões longas produtivas",
+          "veredito": {
+            "complemento": "para reuniões longas produtivas",
+            "classe": "MISTO",
+            "fatoNomeado": "reuniões longas",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Poltrona de trabalho ajuda reunião correr melhor",
+          "veredito": {
+            "complemento": "ajuda reunião correr melhor",
+            "classe": "FATO",
+            "fatoNomeado": "reunião correr melhor",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Poltrona de trabalho em época de contratações",
+          "veredito": {
+            "complemento": "em época de contratações",
+            "classe": "FATO",
+            "fatoNomeado": "época de contratações",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 2
+    },
+    {
+      "label": "Lubrificantes agrícolas",
+      "item": "Lubrificantes agrícolas",
+      "classeEsperada": "fisico",
+      "geracoes": [
+        {
+          "sugestao": "Lubrificantes agrícolas evitam paradas no campo",
+          "veredito": {
+            "complemento": "evitam paradas no campo",
+            "classe": "FATO",
+            "fatoNomeado": "paradas no campo",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam paradas nas máquinas",
+          "veredito": {
+            "complemento": "evitam paradas nas máquinas",
+            "classe": "FATO",
+            "fatoNomeado": "paradas nas máquinas",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam parada no campo",
+          "veredito": {
+            "complemento": "evitam parada no campo",
+            "classe": "FATO",
+            "fatoNomeado": "parada no campo",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 3
+    },
+    {
+      "label": "Consultas veterinárias",
+      "item": "Consultas veterinárias",
+      "classeEsperada": "servico-visivel",
+      "geracoes": [
+        {
+          "sugestao": "Consultas veterinárias para sintomas sem explicação",
+          "veredito": {
+            "complemento": "para sintomas sem explicação",
+            "classe": "FATO",
+            "fatoNomeado": "sintomas sem explicação",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Consultas veterinárias para apatia ou falta",
+          "veredito": {
+            "complemento": "apatia ou falta",
+            "classe": "FATO",
+            "fatoNomeado": "apatia ou falta",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Consultas veterinárias em dias com sintomas novos",
+          "veredito": {
+            "complemento": "em dias com sintomas novos",
+            "classe": "FATO",
+            "fatoNomeado": "dias com sintomas novos",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 3
+    },
+    {
+      "label": "Criação de sites",
+      "item": "Criação de sites",
+      "classeEsperada": "servico-visivel",
+      "geracoes": [
+        {
+          "sugestao": "Criação de sites com navegação simples",
+          "veredito": {
+            "complemento": "com navegação simples",
+            "classe": "MISTO",
+            "fatoNomeado": "navegação",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Criação de sites para captar contatos novos",
+          "veredito": {
+            "complemento": "para captar contatos novos",
+            "classe": "FATO",
+            "fatoNomeado": "captação de contatos novos",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Criação de sites para receber mais contatos",
+          "veredito": {
+            "complemento": "para receber mais contatos",
+            "classe": "FATO",
+            "fatoNomeado": "receber mais contatos",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 2
+    },
+    {
+      "label": "Planejamento de Comunicação",
+      "item": "Planejamento de Comunicação",
+      "classeEsperada": "meta-processo",
+      "geracoes": [
+        {
+          "sugestao": "Planejamento de comunicação para mensagens alinhadas sempre",
+          "veredito": {
+            "complemento": "mensagens alinhadas sempre",
+            "classe": "AVALIACAO",
+            "fatoNomeado": "",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita mensagens desencontradas",
+          "veredito": {
+            "complemento": "evita mensagens desencontradas",
+            "classe": "FATO",
+            "fatoNomeado": "mensagens desencontradas",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Planejamento de comunicação em época promocional evita",
+          "veredito": {
+            "complemento": "em época promocional",
+            "classe": "FATO",
+            "fatoNomeado": "época promocional",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 2
+    },
+    {
+      "label": "Gestão de redes sociais",
+      "item": "Gestão de redes sociais",
+      "classeEsperada": "meta-processo",
+      "geracoes": [
+        {
+          "sugestao": "Gestão de redes sociais com mais comentários",
+          "veredito": {
+            "complemento": "com mais comentários",
+            "classe": "FATO",
+            "fatoNomeado": "mais comentários",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Gestão de redes sociais impede sumiço online",
+          "veredito": {
+            "complemento": "impede sumiço online",
+            "classe": "FATO",
+            "fatoNomeado": "sumiço online",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Gestão de redes sociais com engajamento constante",
+          "veredito": {
+            "complemento": "com engajamento constante",
+            "classe": "FATO",
+            "fatoNomeado": "engajamento constante",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 3
+    },
+    {
+      "label": "Estratégia de Marketing Digital",
+      "item": "Estratégia de Marketing Digital",
+      "classeEsperada": "meta-processo",
+      "geracoes": [
+        {
+          "sugestao": "Estratégia de marketing digital une esforços online",
+          "veredito": {
+            "complemento": "une esforços online",
+            "classe": "FATO",
+            "fatoNomeado": "esforços online unidos",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Estratégia de marketing digital evita verba desperdiçada",
+          "veredito": {
+            "complemento": "evita verba desperdiçada",
+            "classe": "FATO",
+            "fatoNomeado": "verba desperdiçada",
+            "construcao": "VERBO",
+            "motivo": "1 frase curta"
+          }
+        },
+        {
+          "sugestao": "Estratégia de marketing digital com foco certeiro",
+          "veredito": {
+            "complemento": "com foco certeiro",
+            "classe": "AVALIACAO",
+            "fatoNomeado": "",
+            "construcao": "LOCUCAO",
+            "motivo": "1 frase curta"
+          }
+        }
+      ],
+      "fatoCount": 2
+    }
+  ]
+}
