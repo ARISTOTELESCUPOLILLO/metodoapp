@@ -7,6 +7,7 @@ import {
   balanceFailMessage,
 } from "@/lib/usage.server";
 import { COST_USD } from "@/lib/costs";
+import { sanitizarVariacaoTelemetria } from "@/core/variacaoTelemetria";
 
 // Provedor: FAL (queue API).
 // Modelos:
@@ -71,6 +72,10 @@ type StatusBody = {
   modelPath?: string;
   modulo?: string;
   preferredSlot?: string;
+  /** Telemetria da variação visual desta peça — mood, posição na fila, avatar e
+   *  os eixos de câmera sorteados. Montada no cliente, SANEADA aqui antes de
+   *  virar linha no banco (ver sanitizarVariacaoTelemetria). */
+  variacao?: unknown;
 };
 
 type AnyBody = StartBody | StatusBody;
@@ -192,10 +197,18 @@ export const Route = createFileRoute("/api/generate-image")({
               const slotPref =
                 (statusBody.preferredSlot as "plano1" | "plano2" | "bonus" | undefined) ??
                 undefined;
+              // O que o rodízio sorteou nesta imagem — mood, posição na fila,
+              // avatar e eixos de câmera. Sem isso, "as peças estão repetitivas"
+              // é impressão sobre um punhado de imagens vistas, e nenhuma
+              // correção de rodízio pode ser confirmada no uso real. Vai no
+              // `payload` de usage_logs, que já existe e recebe uma linha por
+              // imagem gerada (ver core/variacaoTelemetria.ts para por que aqui
+              // e não em user_generations).
+              const variacao = sanitizarVariacaoTelemetria(statusBody.variacao);
               await debitUsage(effective.userId, 1, 0, {
                 evento: "image.generate",
                 modulo: moduloReq,
-                payload: { provider: "fal" },
+                payload: { provider: "fal", ...(variacao ? { variacao } : {}) },
                 custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
                 impersonatedBy: effective.impersonatedBy,
                 preferredSlot: slotPref,

@@ -196,6 +196,16 @@ export async function generatePostUnico(params: {
 
   const referenceImages = buildRefs(true);
 
+  // Contexto da variação para o log (ver core/variacaoTelemetria.ts). O mood só
+  // existe quando a direção é "mood" — em Direção Livre a peça não tem um, e o
+  // campo fica ausente em vez de mentir um valor. Na PU a fila de variação é a
+  // mesma seed que rege a tonalidade (nextVariacaoSeed em usePostUnicoGeneration).
+  const variacao = {
+    mood: data.direcao === "mood" ? data.mood : undefined,
+    seed: tonalidadeSeed,
+    avatar: !!references?.avatar,
+  };
+
   let dataUrl: string;
   try {
     dataUrl = await generateImageAsync({
@@ -204,6 +214,7 @@ export async function generatePostUnico(params: {
       referenceImages: referenceImages.length ? referenceImages : undefined,
       modulo: "pu",
       preferredSlot,
+      variacao,
     });
   } catch (e) {
     // Se falhou com avatar + downstream_service_error (GPT Image 2 recusa rostos),
@@ -219,6 +230,9 @@ export async function generatePostUnico(params: {
         referenceImages: refsWithoutAvatar.length ? refsWithoutAvatar : undefined,
         modulo: "pu",
         preferredSlot,
+        // O avatar caiu nesta segunda tentativa — o log registra a imagem que
+        // de fato saiu, não a que foi pedida na primeira.
+        variacao: { ...variacao, avatar: false },
       });
     } else {
       throw e;

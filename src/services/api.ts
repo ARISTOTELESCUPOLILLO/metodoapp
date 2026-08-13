@@ -235,6 +235,10 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
 
   return generateImageAsync({
     prompt,
+    // Mood, posição na fila e avatar são o contexto que o prompt sozinho não
+    // identifica com segurança — o código do mood aparece no prompt só dentro
+    // da lista de palavras proibidas, onde TODOS os moods estão citados.
+    variacao: { mood, seed: variacaoSeed, avatar: !!hasAvatarRef },
     format: isReels || isCover ? "reels" : "post",
     // Capa: sem logo via IA (canvas aplica). Callers de capa não passam referenceImages
     // (edit model ignorava o título com frame de referência).

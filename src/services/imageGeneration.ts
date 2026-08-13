@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getImpersonation } from "@/hooks/useImpersonation";
 import { prepareReferenceImage, prepareReferenceImages } from "@/utils/prepareReference";
+import { montarVariacaoTelemetria, type VariacaoTelemetria } from "@/core/variacaoTelemetria";
 
 // Slot de débito ativo — atualizado via setCurrentDebitSlot() pelo MetodoOpApp
 // quando o usuário seleciona um card de plano. Usado como fallback quando
@@ -82,6 +83,7 @@ async function pollAndFetchResult(opts: {
   responseUrl?: string;
   modulo?: string;
   preferredSlot?: string;
+  variacao?: VariacaoTelemetria;
   maxMs: number;
   pollMs: number;
   onProgress?: (status: string) => void;
@@ -93,6 +95,7 @@ async function pollAndFetchResult(opts: {
     responseUrl,
     modulo,
     preferredSlot,
+    variacao,
     maxMs,
     pollMs,
     onProgress,
@@ -144,6 +147,11 @@ async function pollAndFetchResult(opts: {
     modelPath,
     modulo: modulo || "metodo-op",
     ...(preferredSlot ? { preferredSlot } : {}),
+    // Vai junto do RESULT, não do START, porque é no RESULT que o servidor
+    // debita a imagem e grava a linha em usage_logs — o START não escreve log.
+    // Efeito colateral desejado: a telemetria só existe para imagem que ficou
+    // pronta de verdade, na mesma linha que registrou o custo dela.
+    ...(variacao ? { variacao } : {}),
   });
   const rawUrl = rr.data.dataUrl || rr.data.imageUrl;
   if (!rr.ok || !rawUrl) {
@@ -178,6 +186,11 @@ export async function generateImageAsync(params: {
   referenceImages?: string[];
   modulo?: string;
   preferredSlot?: string;
+  /** O que se sabe da variação desta peça no ponto de chamada — mood, posição
+   *  na fila e presença de avatar. Os eixos sorteados NÃO entram aqui: são
+   *  lidos do próprio prompt logo abaixo (ver core/variacaoTelemetria.ts).
+   *  Opcional: caminho que não informa nada simplesmente não gera telemetria. */
+  variacao?: { mood?: string; seed?: number; avatar?: boolean };
   maxMs?: number;
   pollMs?: number;
   onProgress?: (status: string) => void;
@@ -192,10 +205,17 @@ export async function generateImageAsync(params: {
     referenceImages,
     modulo,
     preferredSlot,
+    variacao,
     maxMs = hasRefs ? 360_000 : 240_000,
     pollMs = 1500,
     onProgress,
   } = params;
+
+  // Lê do prompt já montado os eixos que o sorteio escolheu e junta ao que o
+  // chamador informou. É calculado uma vez, fora do laço de retry: uma
+  // resubmissão por falha de downstream reenvia o MESMO prompt, então a
+  // variação é a mesma.
+  const variacaoMeta = montarVariacaoTelemetria({ prompt, ...(variacao || {}) });
 
   // Compacta refs + logo (lado <=1024, JPEG q=0.85) antes do POST.
   // Reduz drasticamente o payload base64 enviado ao /api/generate-image
@@ -255,6 +275,7 @@ export async function generateImageAsync(params: {
         responseUrl: start.data.responseUrl,
         modulo,
         preferredSlot: slotToDebit,
+        variacao: variacaoMeta,
         maxMs,
         pollMs,
         onProgress,
