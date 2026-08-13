@@ -957,12 +957,20 @@ PROIBIDO (ou variações próximas): "indicada por"/"indicado por", "ajustado co
   // deslize em um cenário MOP ("valoriza reuniões produtivas").
   const verboBeneficioBlock = `VERBO DE BENEFÍCIO: quando a frase usar um verbo de ação sobre o produto/serviço, prefira um verbo que descreva um BENEFÍCIO VERIFICÁVEL e concreto (ex.: "organiza", "protege", "facilita", "controla", "economiza", "renova", "resolve") em vez de um verbo de PROMESSA INFLADA que soa exagerado e vazio (ex.: "transforma", "revoluciona", "muda sua vida", "valoriza"). TESTE: o verbo descreve algo que o produto/serviço realmente FAZ, ou é um exagero de propaganda que qualquer produto poderia prometer? Se for exagero, troque por um verbo mais concreto e crível.\n`;
 
+  // Faixa de palavras da Sugestão — fonte ÚNICA. Estava hardcoded em 4 pontos
+  // do prompt (critérios de qualidade + os 2 contratos de JSON de saída) e
+  // repetida na constante do loop de validação, 200 linhas abaixo; mexer no
+  // limite exigia achar os 5 e acertar todos. Subida para cá em 13/08/2026
+  // para que o prompt e a validação leiam o MESMO número.
+  const SUGESTAO_MIN_WORDS = 4;
+  const SUGESTAO_MAX_WORDS = 9;
+
   const criteriosQualidadeSugestao = `CRITÉRIOS DE QUALIDADE:
 ${
   mode === "metodo"
     ? "Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade — sem tensão emocional, sem promessa e sem linguagem de campanha."
     : "Construa 1 frase direta, objetiva e concreta: assunto + situação real e específica da atividade."
-} Entre 4 e 7 palavras (máximo absoluto 7).
+} Entre ${SUGESTAO_MIN_WORDS} e ${SUGESTAO_MAX_WORDS} palavras (máximo absoluto ${SUGESTAO_MAX_WORDS}).
 FRASE INTEIRA (esta regra vem ANTES do limite de palavras): a frase precisa estar gramaticalmente COMPLETA — todo verbo com seu complemento, toda preposição no lugar, nada faltando no fim. Se a ideia não couber em 7 palavras, ESCOLHA UMA IDEIA MENOR que caiba inteira; NUNCA corte palavras da ideia grande para fazê-la caber. Cortar produz frase quebrada: "Planejamento de comunicação em época promocional evita" (evita o quê?), "Consultas veterinárias para apatia ou falta" (falta de quê?), "Poltrona de trabalho ajuda reunião correr melhor" (falta "a"). Prefira sempre a frase curta e inteira à frase longa e amputada — antes de responder, releia sua frase e pergunte: ela termina? falta alguma palavra para ela fazer sentido sozinha?
 SINTAXE — NÚCLEO DA FRASE: o núcleo (sujeito da frase ou centro da locução) segue esta ordem de prioridade: (1) o ELEMENTO CONCRETO desta sugestão (produto/serviço ou variação direta dele), quando houver; (2) categoria, procedimento, ferramenta, equipamento, recurso ou solução real da atividade; (3) a própria ATIVIDADE da empresa, quando não houver elemento concreto. A frase pode ser uma locução sem verbo (ex.: "[item] para [situação/uso]") ou uma frase com sujeito e predicado — ambas válidas, desde que o núcleo siga essa ordem. NÃO use como núcleo principal: termos abstratos ("confiança", "qualidade", "segurança", "clareza", "crescimento", "inovação", "autoridade", "relacionamento", "resultado", "presença", "organização"), verbos no infinitivo nominalizados ("crescer", "confiar", "melhorar", "transformar", "organizar") ou locuções genéricas ("o cuidado", "o diferencial", "a escolha certa") — esses termos só valem como consequência, predicado ou qualificador, nunca como núcleo.
 COMPLEMENTO ÚNICO: depois do núcleo, a frase carrega só UM traço — um resultado, uma situação ou uma característica. PROIBIDO empilhar mais de um traço (núcleo + traço + outro traço/qualificação/cenário) e PROIBIDO mais de uma oração subordinada ("que"); havendo uma relativa, ela é a única adição depois do núcleo e fecha a frase ali — sem encadear mais nada. Isso vale também DENTRO do traço único: um adjetivo ou particípio colado ao substantivo do complemento (ex.: "negociações digitais", "contatos ativos") conta como um SEGUNDO traço enfeitando o primeiro, não como parte do mesmo traço — só mantenha esse adjetivo se ele for a própria característica que define o resultado (sem ele a frase perde informação real).
@@ -1113,7 +1121,7 @@ PROIBIDO: linguagem de campanha ("não perca", "aproveite agora", "garanta já")
 ${sementeLembrete}
 ${verboBeneficioBlock}
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 linha, entre 4 e 7 palavras (máximo absoluto 7), sem hashtag, sem emoji, sem aspas, concreta, objetiva e específica, ligada à atividade" }`;
+{ "sugestao": "1 linha, entre ${SUGESTAO_MIN_WORDS} e ${SUGESTAO_MAX_WORDS} palavras (máximo absoluto ${SUGESTAO_MAX_WORDS}), sem hashtag, sem emoji, sem aspas, concreta, objetiva e específica, ligada à atividade" }`;
 
   const OBJETIVO_RULES: Record<string, string> = {
     promocao:
@@ -1163,7 +1171,7 @@ ${criteriosQualidadeSugestao}
 
 ${verboBeneficioBlock}
 Retorne JSON EXATAMENTE assim:
-{ "sugestao": "1 frase, entre 4 e 7 palavras (máximo absoluto 7), em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
+{ "sugestao": "1 frase, entre ${SUGESTAO_MIN_WORDS} e ${SUGESTAO_MAX_WORDS} palavras (máximo absoluto ${SUGESTAO_MAX_WORDS}), em português, sem hashtag, sem emoji, sem aspas, concreta e de fácil compreensão" }`;
 
   const userPrompt = mode === "metodo" ? metodoPrompt : postUnicoPrompt;
   const systemMsg =
@@ -1176,14 +1184,15 @@ Retorne JSON EXATAMENTE assim:
   // fraco — ver checkWeakEnding e o juiz estrutural abaixo), pede uma
   // nova versão reforçando o motivo. Nunca retorna erro ao usuário por
   // causa disso — devolve a melhor tentativa, sempre truncada a
-  // SUGESTAO_MAX_WORDS (7 palavras, MOP e PU).
+  // SUGESTAO_MAX_WORDS (MOP e PU) — declarada junto do prompt, lá em cima,
+  // para que a instrução dada ao modelo e o limite cobrado na validação sejam
+  // o mesmo número.
   // Subido de 2 para 3 tentativas (auditoria 2026-07-05, buraco 3a):
   // com só 2, casos de jargão/truncamento residual esgotavam antes de
   // corrigir — 1 tentativa extra reduz isso sem custo desproporcional
   // (a maioria das sugestões já acerta na 1ª tentativa; o custo extra
   // só incide no subconjunto que precisava de retry mesmo).
   const MAX_SUGGEST_ATTEMPTS = 3;
-  const SUGESTAO_MAX_WORDS = 7;
   let sugestao = "";
   let motivos: string[] = [];
   // Melhor tentativa vista até agora (menos motivos de reprovação) — achado

@@ -211,6 +211,14 @@ describe("checkAmputatedPredicate — frase cortada para caber no limite", () =>
     expect(checkAmputatedPredicate(frase)).toEqual([]);
   });
 
+  // Colhidas nas 120 gerações de 13/08 — passaram pela 1ª versão da lista.
+  it.each([
+    "Poltrona de trabalho em dia puxado rende",
+    "Gestão de redes sociais em lançamento atrai",
+  ])("reprova o verbo que escapou na medição de 60: %s", (frase) => {
+    expect(checkAmputatedPredicate(frase)).toHaveLength(1);
+  });
+
   it("pega a forma no plural e ignora pontuação final", () => {
     expect(checkAmputatedPredicate("Correias industriais boas evitam.")).toHaveLength(1);
   });

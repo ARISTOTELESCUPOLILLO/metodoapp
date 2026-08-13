@@ -1,0 +1,489 @@
+{
+  "label": "max7",
+  "total": 60,
+  "quebradas": 5,
+  "mediaPalavras": 6.68,
+  "comSeteOuMais": 43,
+  "results": [
+    {
+      "label": "Capacete de moto",
+      "item": "Capacete de moto",
+      "geracoes": [
+        {
+          "sugestao": "Capacete de moto para passeio sem pressa",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto para trajetos urbanos rápidos",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto em troca urgente esquecida",
+          "palavras": 7,
+          "completa": false,
+          "problema": "Falta um verbo ou preposição para ligar 'troca urgente' e 'esquecida', tornando a frase sem sentido completo.",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto para viagem nova",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto novo para viagens longas",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto com viseira limpa agora",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Tênis",
+      "item": "Tênis",
+      "geracoes": [
+        {
+          "sugestao": "Tênis com peso leve para treino longo",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis com ajuste fácil para exercícios longos",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis novos para treino de última hora",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis novo deixa treino mais leve",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis seco evita bolha depois do treino",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis para experimentar sem sair da loja",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Ternos Slim",
+      "item": "Ternos Slim",
+      "geracoes": [
+        {
+          "sugestao": "Ternos Slim para festas mais descontraídas",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim para compromisso importante sem erro",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim em casamentos pedem decisão rápida",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim elevam confiança",
+          "palavras": 4,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos slim destacam postura firme em fotos",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim deixam o caimento atual",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Poltrona de trabalho",
+      "item": "Poltrona de trabalho",
+      "geracoes": [
+        {
+          "sugestao": "Poltrona de trabalho para longas videoconferências seguidas",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho para reuniões sem pausa",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho em dia puxado rende",
+          "palavras": 7,
+          "completa": false,
+          "problema": "O verbo 'rende' é transitivo e falta o complemento do que a poltrona rende.",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho vira pausa sem dor",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho facilita rotina corrida",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho para virar reuniões produtivas",
+          "palavras": 7,
+          "completa": false,
+          "problema": "Falta um complemento após 'virar', pois o verbo pede um objeto direto (virar o quê?).",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Lubrificantes agrícolas",
+      "item": "Lubrificantes agrícolas",
+      "geracoes": [
+        {
+          "sugestao": "Lubrificantes agrícolas evitam dor de cabeça",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam parada na lavoura",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam panes em safra",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam prejuízo por máquina travada",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam parada em safra",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam parado no campo",
+          "palavras": 6,
+          "completa": false,
+          "problema": "Falta o complemento do verbo 'evitam', pois 'evitam parado' está incorreto; deveria ser 'evitam parada' ou 'evitam ficar parado'.",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Consultas veterinárias",
+      "item": "Consultas veterinárias",
+      "geracoes": [
+        {
+          "sugestao": "Consultas veterinárias para identificar chiado no peito",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias para apatia ou desânimo repentino",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias após apatia do pet",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias para falta de apetite animal",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias quando o animal perde ânimo",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias para pets sem apetite",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Criação de sites",
+      "item": "Criação de sites",
+      "geracoes": [
+        {
+          "sugestao": "Criação de sites que abrem no celular",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites atrai visitas por celular",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites atualiza contatos que chegam",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites para captar novos contatos",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites para visitas por celular",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites com navegação fácil mobile",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Planejamento de Comunicação",
+      "item": "Planejamento de Comunicação",
+      "geracoes": [
+        {
+          "sugestao": "Planejamento de comunicação evita mensagem solta",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita fala desconexa",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação durante lançamento evita ruído",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita mensagem solta",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação para engajamento firme",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita mensagem dispersa agora",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Gestão de redes sociais",
+      "item": "Gestão de redes sociais",
+      "geracoes": [
+        {
+          "sugestao": "Gestão de redes sociais evita sumiço online",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais salva postagens paradas",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais em lançamento atrai",
+          "palavras": 7,
+          "completa": false,
+          "problema": "O verbo 'atrai' é transitivo e exige um objeto direto para completar o sentido.",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais evita página esquecida",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais evita sumiço online",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais para reações rápidas",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Estratégia de Marketing Digital",
+      "item": "Estratégia de Marketing Digital",
+      "geracoes": [
+        {
+          "sugestao": "Estratégia de marketing digital para anúncios certeiros",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital acaba com anúncios",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital para verba render",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital traz foco online",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital evita gasto errado",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital evita ações espalhadas",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    }
+  ]
+}

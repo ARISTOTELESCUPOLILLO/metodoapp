@@ -1,0 +1,489 @@
+{
+  "label": "max9",
+  "total": 60,
+  "quebradas": 4,
+  "mediaPalavras": 7.28,
+  "comSeteOuMais": 51,
+  "results": [
+    {
+      "label": "Capacete de moto",
+      "item": "Capacete de moto",
+      "geracoes": [
+        {
+          "sugestao": "Capacete de moto pronto para a próxima volta",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto com viseira clara para chuva",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto para rodar sem vento forte",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto para sua próxima volta urgente",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto ajusta bem na cabeça",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Capacete de moto com visor limpo todo dia",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Tênis",
+      "item": "Tênis",
+      "geracoes": [
+        {
+          "sugestao": "Tênis novo deixa caminhada mais leve hoje",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis novo evita pisada desconfortável no treino",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis leve fazendo diferença no treino",
+          "palavras": 6,
+          "completa": false,
+          "problema": "O gerúndio 'fazendo' está solto, faltando um sujeito claro que o sustente.",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis novo traz impulso em cada passo",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis leve poupa energia no treino",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Tênis novo deixa treino mais leve",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Ternos Slim",
+      "item": "Ternos Slim",
+      "geracoes": [
+        {
+          "sugestao": "Ternos slim para marcar presença sem esforço",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim caem bem em eventos importantes",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim em evento marcam presença distinta",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos slim caem melhor em reuniões rápidas",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim para entrevista que não aceita erro",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Ternos Slim para visual marcante",
+          "palavras": 5,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Poltrona de trabalho",
+      "item": "Poltrona de trabalho",
+      "geracoes": [
+        {
+          "sugestao": "Poltrona de trabalho ajuda foco nas tarefas",
+          "palavras": 7,
+          "completa": false,
+          "problema": "Falta a preposição 'no' antes de 'foco' para a frase fazer sentido.",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho rende reuniões sem incômodo",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho em fechamento melhora atenção",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho para maratona de reuniões longas",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho evita dor nas costas hoje",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Poltrona de trabalho deixa reunião seguir tranquila",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Lubrificantes agrícolas",
+      "item": "Lubrificantes agrícolas",
+      "geracoes": [
+        {
+          "sugestao": "Lubrificantes agrícolas evitam paradas no plantio",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam parada no plantio",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas em época de safra evitam parada",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas para trator pronto no campo",
+          "palavras": 7,
+          "completa": false,
+          "problema": "Falta um complemento para 'pronto', pois não está claro o que está pronto: o trator ou o lubrificante.",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam paradas no campo",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas evitam parada no plantio",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Consultas veterinárias",
+      "item": "Consultas veterinárias",
+      "geracoes": [
+        {
+          "sugestao": "Consultas veterinárias para tosse ou espirro frequente",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias para sintomas inesperados no pet",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias quando o pet perde apetite",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias para apatia do pet",
+          "palavras": 6,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias para descobrir causa do desânimo",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Consultas veterinárias para apatia ou falta de apetite",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Criação de sites",
+      "item": "Criação de sites",
+      "geracoes": [
+        {
+          "sugestao": "Criação de sites com navegação clara para visitantes",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites que retém mais visitas",
+          "palavras": 7,
+          "completa": false,
+          "problema": "O verbo 'retém' exige um objeto direto, mas está sendo usado de forma intransitiva.",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites que carregam rápido no celular",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites que funcionam para celulares",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites que funcionam bem no celular",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Criação de sites resolve imagem ruim online",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Planejamento de Comunicação",
+      "item": "Planejamento de Comunicação",
+      "geracoes": [
+        {
+          "sugestao": "Planejamento de comunicação evita campanha sem sentido real",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita mensagem bagunçada no marketing",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação em lançamento traz atenção",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita mensagem solta nas campanhas",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita mensagem solta no digital",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Planejamento de comunicação evita mensagem perdida no mercado",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Gestão de redes sociais",
+      "item": "Gestão de redes sociais",
+      "geracoes": [
+        {
+          "sugestao": "Gestão de redes sociais para atrair seguidores novos",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais para subir engajamento rápido",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais ganha força em lançamento",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais evita marca sumir online",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais dobra pedidos recebidos",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Gestão de redes sociais vence silêncio inesperado",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    },
+    {
+      "label": "Estratégia de Marketing Digital",
+      "item": "Estratégia de Marketing Digital",
+      "geracoes": [
+        {
+          "sugestao": "Estratégia de marketing digital evita caminho sem volta",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital evita anúncio perdido",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital evita esforço perdido online",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital para atrair pedidos de orçamento",
+          "palavras": 9,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital cria pedidos frequentes",
+          "palavras": 7,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        },
+        {
+          "sugestao": "Estratégia de marketing digital evita gasto sem retorno",
+          "palavras": 8,
+          "completa": true,
+          "problema": "",
+          "pegaPelaRede": false
+        }
+      ]
+    }
+  ]
+}

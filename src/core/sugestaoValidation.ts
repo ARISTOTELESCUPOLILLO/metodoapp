@@ -543,6 +543,14 @@ const AMPUTATED_PREDICATE_WORDS = new Set([
   "unem",
   "usa",
   "usam",
+  // Colhidos nas 120 gerações de 13/08 (run.agramaticalidade-60): terminaram
+  // a frase sem objeto e passaram pela primeira versão da lista.
+  // "Poltrona de trabalho em dia puxado rende" · "Gestão de redes sociais em
+  // lançamento atrai"
+  "rende",
+  "rendem",
+  "atrai",
+  "atraem",
   // Substantivos que, terminando a frase, quase sempre são corte de "falta
   // de X" / "excesso de X" — o complemento é que carregava a informação.
   "falta",
