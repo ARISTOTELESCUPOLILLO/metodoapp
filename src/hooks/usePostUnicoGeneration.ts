@@ -10,6 +10,7 @@ import { buildReferences } from "../services/regenerateWithKit";
 import { detectForcedGenderFromCopy, PersonagemGender } from "../core/visualDirection";
 import { loadImageKitAsync } from "../utils/imageKitStorage";
 import { lsSetQuotaSafe } from "../lib/storage/store";
+import { nextVariacaoSeed } from "../utils/storage";
 import { PU_IMG_KEY, PU_STARTED_KEY } from "../lib/storage/keys";
 
 interface Params {
@@ -48,13 +49,6 @@ export function usePostUnicoGeneration({
   const [puCopy, setPuCopy] = useState<PostUnicoCopy | null>(null);
   const [puCopyOriginal, setPuCopyOriginal] = useState<PostUnicoCopy | null>(null);
   const postUnicoGenderRef = useRef<PersonagemGender | undefined>(undefined);
-  // Rodízio de tonalidade (Direção Livre + Objetivo "nenhum" — ver
-  // core/colorRotation.ts): seed sorteado uma vez por sessão, tentativa
-  // avança a cada geração (inclusive regeneração), garantindo que as 5
-  // tonalidades do pool sejam percorridas em sequência antes de repetir —
-  // em vez da escolha 100% livre que convergia sempre em verde→azul.
-  const postUnicoTonalidadeSeedRef = useRef<number | undefined>(undefined);
-  const postUnicoTonalidadeAttemptRef = useRef<number>(0);
   const lastPuCopyRef = useRef<{ titulo: string; texto: string } | undefined>(undefined);
 
   useEffect(() => {
@@ -204,13 +198,24 @@ export function usePostUnicoGeneration({
         : ((personagemSemAvatar?.genero as PersonagemGender | undefined) ??
           formGender ??
           postUnicoGenderRef.current);
-      if (postUnicoTonalidadeSeedRef.current === undefined) {
-        postUnicoTonalidadeSeedRef.current = Math.floor(Math.random() * 5);
-      } else {
-        postUnicoTonalidadeAttemptRef.current += 1;
-      }
-      const tonalidadeSeed =
-        postUnicoTonalidadeSeedRef.current + postUnicoTonalidadeAttemptRef.current;
+      // Posição desta peça na fila de variação visual do usuário — a MESMA fila
+      // que o MOP já usa (useMopHandlers). Ela rege paleta, arquétipo e os cinco
+      // eixos de câmera desta peça.
+      //
+      // Até 13/08/2026 a PU tinha fila PRÓPRIA e mais pobre: um seed sorteado
+      // por sessão com Math.floor(Math.random() * 5) guardado em useRef, mais um
+      // contador de tentativas. Três defeitos vinham disso, e todos batiam
+      // exatamente no que o "arco visual na PU" queria resolver:
+      //   1. só 5 posições iniciais possíveis — o ciclo dos eixos de câmera é 12
+      //      (CLAREZA, IMPACTO, SILÊNCIO) e 60 (DESVIO), então a cauda da fila
+      //      NUNCA era visitada na primeira peça de uma sessão;
+      //   2. sem memória entre peças — cada peça nova resorteava, com 1 em 5 de
+      //      chance de cair na MESMA posição da anterior, ou seja, mesma câmera,
+      //      mesma paleta e mesmo arquétipo em peças seguidas;
+      //   3. sem persistência — recarregar a página zerava tudo.
+      // nextVariacaoSeed resolve os três: contador inteiro em localStorage,
+      // escopado por usuário, que só anda para a frente.
+      const tonalidadeSeed = nextVariacaoSeed(effectiveUserId);
       const dataUrl = await generatePostUnico({
         data,
         kit,
@@ -239,8 +244,9 @@ export function usePostUnicoGeneration({
     setCaption(undefined);
     setCaptionError("");
     postUnicoGenderRef.current = undefined;
-    postUnicoTonalidadeSeedRef.current = undefined;
-    postUnicoTonalidadeAttemptRef.current = 0;
+    // A fila de variação NÃO se reseta aqui: ela é do usuário, não da peça, e é
+    // justamente a memória entre peças que faz a próxima não repetir a câmera da
+    // anterior. Zerá-la aqui era o defeito nº 2 descrito em handleGeneratePostUnico.
     lastPuCopyRef.current = undefined;
     setPuTituloRegen(0);
     setPuTextoRegen(0);
