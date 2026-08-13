@@ -1,0 +1,116 @@
+{
+  "totalGeracoes": 15,
+  "fortes": 12,
+  "porConector": {
+    "para": 12,
+    "na": 1,
+    "em": 2
+  },
+  "results": [
+    {
+      "companyName": "FERRIMAQ",
+      "item": "Poltrona de trabalho",
+      "geracoes": [
+        {
+          "sugestao": "Poltrona de trabalho para renovar salas agora",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Poltrona de trabalho para reuniões longas tranquilas",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Poltrona de trabalho para atender reuniões longas",
+          "conector": "para",
+          "forte": true
+        }
+      ]
+    },
+    {
+      "companyName": "Barbosa Lubrificantes",
+      "item": "Lubrificantes agrícolas",
+      "geracoes": [
+        {
+          "sugestao": "Lubrificantes agrícolas para máquina pronta no campo",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas na troca do maquinário parado",
+          "conector": "na",
+          "forte": false
+        },
+        {
+          "sugestao": "Lubrificantes agrícolas em dias de safra cheia",
+          "conector": "em",
+          "forte": false
+        }
+      ]
+    },
+    {
+      "companyName": "Loja Rocha",
+      "item": "Ternos Slim",
+      "geracoes": [
+        {
+          "sugestao": "Ternos Slim para reuniões sem roupa sobrando",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Ternos Slim para reuniões de impacto",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Ternos Slim em eventos quando desejo marcar",
+          "conector": "em",
+          "forte": false
+        }
+      ]
+    },
+    {
+      "companyName": "Moto Vale",
+      "item": "Capacete de moto",
+      "geracoes": [
+        {
+          "sugestao": "Capacete de moto novo para viagem agora",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Capacete de moto para chuva repentina",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Capacete de moto novo para viagens longas",
+          "conector": "para",
+          "forte": true
+        }
+      ]
+    },
+    {
+      "companyName": "Malhação Sports",
+      "item": "Tênis",
+      "geracoes": [
+        {
+          "sugestao": "Tênis para treino antes do jogo",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Tênis com sola macia para caminhadas longas",
+          "conector": "para",
+          "forte": true
+        },
+        {
+          "sugestao": "Tênis novo para treino mais leve",
+          "conector": "para",
+          "forte": true
+        }
+      ]
+    }
+  ]
+}
