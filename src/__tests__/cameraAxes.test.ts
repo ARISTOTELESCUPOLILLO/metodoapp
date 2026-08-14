@@ -373,11 +373,20 @@ describe("SILÊNCIO — a trava de escala do mood continua valendo", () => {
     expect(tudo).not.toContain("dutch");
     expect(tudo).not.toContain("contraste pronunciado");
     expect(tudo).not.toContain("sombra dura");
-    EIXO_LUZ_SILENCIO.forEach((l) => expect(l).toMatch(/difusa|alta-chave/i));
+    // As luzes deixaram de ser descritas por "difusa/alta-chave" em 14/08/2026:
+    // eram exatamente as palavras que o CLAREZA também usava, e nomear a mesma
+    // família de luz nos dois moods era parte do que fazia as peças saírem
+    // iguais. O que se exige aqui é a SUAVIDADE, que é a gramática do mood —
+    // não o vocabulário antigo. Ver EIXO_LUZ_SILENCIO e o teste de
+    // exclusividade em cameraAxesExclusividade.test.ts.
+    EIXO_LUZ_SILENCIO.forEach((l) => expect(l).toMatch(/difusa|suave|rasante|penumbra clara/i));
   });
 
-  it("a lente fica dentro da faixa 50-100mm declarada na assinatura do mood", () => {
-    EIXO_OTICA_SILENCIO.forEach((o) => expect(o).toMatch(/\b(50|70|100)mm\b/));
+  // Faixa aberta para a teleobjetiva em 14/08/2026, junto com a exclusividade de
+  // repertório: 50mm existia nos quatro moods e 70mm também era do CLAREZA. A
+  // compressão longa é o que sobrou de exclusivo — e é gramática de silêncio.
+  it("a lente fica dentro da faixa 100-200mm declarada na assinatura do mood", () => {
+    EIXO_OTICA_SILENCIO.forEach((o) => expect(o).toMatch(/\b(100|135|200)mm\b/));
   });
 });
 

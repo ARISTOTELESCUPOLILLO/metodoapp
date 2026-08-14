@@ -3,6 +3,7 @@ import { FAIXA_ETARIA_REGISTRO } from "./audienceAge";
 import { AUDIENCE_SEGMENT_CONFIG } from "../domain/audienceSegment.config";
 import { getVoiceProfile } from "../data/brandVoice";
 import { buildVisualDirectionBlock, getMoodSignature, buildSceneRoleRule } from "./visualDirection";
+import { densidadeDaCena } from "./visualDirection.lexicon";
 import {
   LEGENDA_CORPO_MAX_WORDS,
   LEGENDA_CTA_MAX_WORDS,
@@ -187,6 +188,29 @@ export function buildMetodoOpPrompt(
   // ── Bloco de fechamento da sequência ──
   // Cinemática: REELS (movimento, retenção, expansão emocional)
   // Visual / Experimentação: ESTÁTICO FINAL (resolução, fechamento, imagem fixa)
+  // ── Régua de densidade e exceção do arco visual (14/08/2026) ──
+  // Duas correções nascidas do mesmo achado real: uma peça de SILÊNCIO saiu
+  // indistinguível de uma de CLAREZA.
+  //
+  // 1. A densidade da cena nunca foi governada por mood. O campo 'ambiente' era
+  //    pedido como "com detalhes físicos" para todos igualmente, e foi por aí
+  //    que entraram parede de quadros, prateleira cheia e papéis em primeiro
+  //    plano num mood que vive de ausência. A régua vem do léxico, fonte única.
+  // 2. O ARCO VISUAL manda a sequência fechar em "plano médio-fechado ou CLOSE,
+  //    personagem em destaque" — regra escrita para TODOS os moods. No SILÊNCIO
+  //    isso é a negação literal da assinatura (sujeito em no máximo 30% do
+  //    quadro), e o arco vencia por ser ordem positiva e específica. Aqui o
+  //    fechamento passa a aproximar o OBJETO, mantendo a pessoa pequena — a
+  //    progressão narrativa continua existindo, sem inflar o sujeito.
+  const densidadeCena = densidadeDaCena(data.mood);
+  const densidadeLine = densidadeCena
+    ? `\n- OBRIGATÓRIO, vale para o campo 'ambiente' de TODA leituraCenica desta sequência — ${densidadeCena}`
+    : "";
+  const arcoExcecaoSilencio =
+    data.mood === "OP-06"
+      ? " EXCEÇÃO DESTE MOOD (SILÊNCIO): o fechamento NÃO aproxima a pessoa. A progressão se faz aproximando o OBJETO isolado, enquanto o sujeito humano permanece pequeno e deslocado dentro do vazio — em nenhuma peça da sequência ele ultrapassa 30% do quadro. Registrar em 'composicao' a aproximação do objeto, nunca \"close no personagem\"."
+      : "";
+
   const composicaoLine = isVisualOrExperimentacao
     ? `${size} peças no total: ${comp.estatico} estático${comp.estatico > 1 ? "s" : ""} + ${comp.carrossel} carrossel${comp.carrossel > 1 ? "is" : ""} + ${comp.fechamento} estático${comp.fechamento > 1 ? "s" : ""} final${comp.fechamento > 1 ? "is" : ""}`
     : `${size} peças no total: ${comp.estatico} estático${comp.estatico > 1 ? "s" : ""} + ${comp.carrossel} carrossel${comp.carrossel > 1 ? "is" : ""} + ${comp.fechamento} reels`;
@@ -249,7 +273,7 @@ ESTÁTICOS (${comp.estatico} peça${comp.estatico > 1 ? "s" : ""}):
 - ANCORAGEM CONCRETA — ANTI-SÍMBOLO: o título deve poder virar uma FOTO de pessoa(s) real(is) em ação observável (decidir, alinhar, atender, revisar, entregar, fechar, apresentar). Teste antes de retornar: "dá para fotografar isso sem recorrer a objeto-metáfora ou cenário espacial genérico?" Se a única imagem possível for engrenagem, peão de madeira, seta, xadrez, escada, degraus, horizonte vazio ou aperto de mãos → título conceitual demais; reescreva com verbo de ação + agente humano. Exemplo: prefira "Time decide junto e fecha" a "Equipe forte traz bom ganho". Metáforas de jornada ("longe", "avançar", "crescer", "subir") e adjetivos de qualidade ("rápido", "forte", "claro", "sólido") SÃO PERMITIDOS nos títulos — a imagePrompt e leituraCenica os traduzirão pelo contexto real do negócio, não por cenário físico nem propriedade literal.
 - TEXTO DE APOIO — PADRÕES PROIBIDOS: "vendas aumentadas", "resultados mais consistentes", "crescimento constante e", "para seu negócio", "para a sua empresa", "para a sua marca". Proibido o padrão "[abstrato] gera [resultado]", "[abstrato] faz [resultado]", "[abstrato] traz [resultado]" ou "[abstrato] é [abstrato]" como estrutura dominante — preferir construções diretas: sujeito + verbo de ação + complemento específico.
 - Progressão dos estáticos: ${buildPostProgression(comp.estatico, seg.entrada, isB2BOperational)}
-- ARCO VISUAL DA SEQUÊNCIA — OBRIGATÓRIO: as leituraCenicas devem criar progressão de câmera ao longo da sequência completa. Estático 1 (abertura): plano ABERTO — personagem integrado ao ambiente, espaço e contexto visíveis, câmera mais afastada; registrar "plano aberto" no campo 'composicao'. Estático Final/Reels (fechamento): plano MÉDIO-FECHADO ou CLOSE — personagem em destaque, composição mais centralizada, menos elementos de ambiente; registrar "plano médio-fechado" ou "close-up" no campo 'composicao'. Nunca dois estáticos consecutivos com o mesmo enquadramento.
+- ARCO VISUAL DA SEQUÊNCIA — OBRIGATÓRIO: as leituraCenicas devem criar progressão de câmera ao longo da sequência completa. Estático 1 (abertura): plano ABERTO — personagem integrado ao ambiente, espaço e contexto visíveis, câmera mais afastada; registrar "plano aberto" no campo 'composicao'. Estático Final/Reels (fechamento): plano MÉDIO-FECHADO ou CLOSE — personagem em destaque, composição mais centralizada, menos elementos de ambiente; registrar "plano médio-fechado" ou "close-up" no campo 'composicao'. Nunca dois estáticos consecutivos com o mesmo enquadramento.${arcoExcecaoSilencio}${densidadeLine}
 - Retornar em "feed": [{ "dia", "formato":"Estático", "titulo", "texto", "legenda", "imagem", "leituraCenica": { "intencao": "o que este post ativa emocionalmente", "personagem": "quem aparece na cena e o que faz", "ambiente": "onde a cena acontece com detalhes físicos", "expressao": "expressão facial e corporal do personagem", "clima": "luz, hora do dia, atmosfera", "composicao": "enquadramento e distância de câmera (plano aberto / plano médio / plano médio-fechado / close-up) + como os elementos se organizam no quadro" } }]
 
 CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? "s" : ""} de 5 cards cada):
@@ -257,7 +281,7 @@ CARROSSEL (${comp.carrossel} sequência${comp.carrossel > 1 ? "s" : ""} de 5 car
 - Card 1 deve acolher o problema ou aspiração do público sem mencionar a empresa — funciona como espelho empático: nomeia a realidade do receptor, não critica nem julga. PROIBIDO ironia, negatividade ou ambiguidade sobre o tema central da marca no título do card 1; a abertura deve soar como "eu entendo você", não como acusação ou problema criado pela empresa. ${comp.carrossel > 1 ? `Card 5 SÓ pode citar o que a empresa entrega e ter CTA comercial na legenda no carrossel ${comp.carrossel} (o último da sequência) — nos carrosséis anteriores, Card 5 fecha em síntese/direção, sem citar a empresa.` : "Card 5 pode citar o que a empresa entrega e tem CTA na legenda."}
 - Cada card: titulo até 6 palavras, ${SILABA_EXCECAO_RULE}, sem ponto final (EXCETO se for pergunta: "?" é obrigatório); texto até 12 palavras terminando com PONTO FINAL (13ª palavra em diante é cortada); imagePrompt próprio. ANCORAGEM CONCRETA nos títulos dos cards: mesmo critério dos estáticos acima (teste "dá para fotografar isso?").
 - FORMA DO TÍTULO nos Cards 2-3 (desenvolvimento) — EVIDÊNCIA CONCRETA, NÃO METÁFORA: este é o estágio de evidência da sequência (Dia 2). O TÍTULO dos cards 2 e 3 deve trazer EVIDÊNCIA CONCRETA — um fato, número, situação real ou comparação observável — e NÃO metáfora nem adjetivo de qualidade solto ("redondo", "certo", "sólido", "ideal", "perfeito"). Isto é DIFERENTE da ANCORAGEM CONCRETA — ANTI-SÍMBOLO acima (que trata da tradução VISUAL): aqui é sobre o CONTEÚDO do título em si — evidência vs. metáfora. Ex.: prefira "Folga errada gasta o rolamento" a "Motor redondo pede cuidado certo". OPÇÃO (não obrigação): pode usar formato de lista numerada quando fizer sentido (ex.: "N sinais de que...", "N motivos para..."), mas NÃO é obrigatório nem deve se repetir como fórmula fixa entre gerações — é UMA opção entre várias formas de evidência concreta (dado real, comparação, situação observável, etc.).
-- ARCO VISUAL INTERNO DO CARROSSEL — OBRIGATÓRIO: os 5 cards devem ter enquadramento progressivo de câmera, criando narrativa visual de abertura a fechamento. Card 1 (abertura): PLANO ABERTO — personagem e ambiente visíveis, câmera afastada; 'composicao' = "plano aberto". Cards 2-3 (desenvolvimento): PLANO MÉDIO — ação ou objeto em destaque, ângulo engajado; 'composicao' = "plano médio". Card 4 (direção): PLANO MÉDIO-FECHADO — detalhe do trabalho, produto ou gesto; 'composicao' = "plano médio-fechado". Card 5 (ação): CLOSE-UP ou enquadramento íntimo — expressão ou gesto de resolução, câmera mais próxima; 'composicao' = "close-up". PROIBIDO repetir o mesmo enquadramento em cards consecutivos — cada card deve ter distância de câmera diferente do anterior.
+- ARCO VISUAL INTERNO DO CARROSSEL — OBRIGATÓRIO: os 5 cards devem ter enquadramento progressivo de câmera, criando narrativa visual de abertura a fechamento. Card 1 (abertura): PLANO ABERTO — personagem e ambiente visíveis, câmera afastada; 'composicao' = "plano aberto". Cards 2-3 (desenvolvimento): PLANO MÉDIO — ação ou objeto em destaque, ângulo engajado; 'composicao' = "plano médio". Card 4 (direção): PLANO MÉDIO-FECHADO — detalhe do trabalho, produto ou gesto; 'composicao' = "plano médio-fechado". Card 5 (ação): CLOSE-UP ou enquadramento íntimo — expressão ou gesto de resolução, câmera mais próxima; 'composicao' = "close-up". PROIBIDO repetir o mesmo enquadramento em cards consecutivos — cada card deve ter distância de câmera diferente do anterior.${arcoExcecaoSilencio}${densidadeLine}
 - Retornar em "carousel": [{ "sequencia": 1, "legenda": "corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras + CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)", "cards": [{ "card":1, "titulo", "texto", "imagePrompt", "leituraCenica": { "intencao": "o que este card ativa", "personagem": "quem aparece e o que faz", "ambiente": "onde acontece com detalhes físicos", "expressao": "expressão do personagem", "clima": "luz e atmosfera", "composicao": "enquadramento e distância de câmera (plano aberto / plano médio / plano médio-fechado / close-up) + organização dos elementos" } }, ...] }]
 ${comp.carrossel > 1 ? `- Gerar ${comp.carrossel} sequências de carrossel com temas complementares, não repetidos.` : ""}
 ${closingBlock}

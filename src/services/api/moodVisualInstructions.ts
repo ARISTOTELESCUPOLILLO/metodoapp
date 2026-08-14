@@ -63,6 +63,17 @@ export function buildMoodVisualInstructions(
   return base.replace(linha, template(paleta.bloco));
 }
 
+// A trava de escala do SILÊNCIO (SILENCIO_ESCALA_SENTENCE, no léxico) vivia
+// APENAS em MOOD_RULES — que é lido no estágio de CONTEÚDO do MOP e no PU, mas
+// nunca no estágio de IMAGEM do MOP. Ou seja: o bloco que vai ao modelo de
+// imagem falava de paleta, título à direita e "muito respiro", e a regra que
+// define o mood — a escala do sujeito — só chegava lá se o GPT a tivesse
+// preservado por conta própria no imagePrompt que ele mesmo escreveu.
+// Acrescentada aqui em 14/08/2026. É a mesma regra, no lugar onde faltava.
+const SILENCIO_ESCALA_IMAGEM =
+  "- ESPAÇO NEGATIVO — REGRA QUE DEFINE ESTE MOOD: o sujeito (objeto, produto ou pessoa) ocupa NO MÁXIMO 30% da área da imagem; os outros 70% são fundo vazio, liso e respirado. A cena inteira contém no máximo 1 objeto mais a superfície em que ele repousa — paredes NUAS, superfícies VAZIAS, sem quadros, prateleiras, papéis, plantas ou objetos ao fundo\n" +
+  "- PROIBIDO nesta peça: pessoa sentada à mesa de trabalho em plano de busto na altura dos olhos com luz de janela — essa é a foto do mood CLAREZA e não pode sair aqui. A câmera fica em eixo geométrico (zenital a pino, frontal ortogonal, rasante à superfície ou alta e distante), em teleobjetiva longa";
+
 export const moodVisualInstructions: Record<MoodCode, string> = {
   "OP-01": `ESTILO VISUAL (raiz: Renascentista):
 - Composição organizada por alinhamento ortogonal (grid invisível) — fundo contínuo de borda a borda, SEM dividir a peça em blocos, faixas ou painéis de cor
@@ -113,5 +124,6 @@ ${PALETA_LINE_OP06}
 - O bloco de título ancora pelo ALTO da metade direita e cresce PARA BAIXO — PROIBIDO centralizá-lo verticalmente ou espremê-lo na base do quadro, colado acima da zona da logomarca; a parte de baixo fica livre para a logo, aplicada depois
 - Detalhe mínimo de cor como assinatura
 - Composição com muito respiro, elementos reduzidos ao essencial
-- Sensação de premium, contenção e autoridade`,
+- Sensação de premium, contenção e autoridade
+${SILENCIO_ESCALA_IMAGEM}`,
 };

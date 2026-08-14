@@ -129,17 +129,25 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
     nome: "SILÊNCIO",
     tensaoDondis:
       "Sutileza + Neutralidade + Economia + Estase — quase ausência, contemplação retida, mínimo absoluto de elementos com vasto espaço respirando",
-    luz: 'luz suave alta-chave, vinda de fonte ampla e difusa, sombras quase ausentes, atmosfera serena — a fonte exata (janela ampla lateral, alta-chave frontal envolvente ou difusa vinda de cima) é sorteada a cada geração (ver bloco "VARIAÇÕES SORTEADAS")',
+    // A fonte exata deixou de ser listada aqui em 14/08/2026: as três luzes do
+    // eixo mudaram (ver EIXO_LUZ_SILENCIO) e manter a lista antiga neste campo
+    // poria duas ordens diferentes no mesmo prompt — a classe de bug mais
+    // recorrente do sistema. Este campo declara a FAMÍLIA e delega a fonte.
+    luz: 'luz suave alta-chave, vinda de fonte ampla e difusa, sombras quase ausentes, atmosfera serena — a luz aqui não ilumina uma cena, ela É o acontecimento gráfico do quadro; a fonte exata é sorteada a cada geração (ver bloco "VARIAÇÕES SORTEADAS")',
     paleta:
       "paleta suave de baixa saturação e contraste contido: areia, off-white, cinza quente, bege rosado, verde sálvia claro, azul névoa, taupe, marfim envelhecido — evitar branco puro dominante e excesso de luminosidade",
     composicao:
       "composição com vasto espaço negativo, sujeito pequeno dentro do quadro, equilíbrio estático, mínimo absoluto de elementos",
+    // Faixa de lente aberta para a teleobjetiva em 14/08/2026, junto com
+    // EIXO_OTICA_SILENCIO: 50mm e 70mm saíram porque existiam também no CLAREZA
+    // e eram parte do que fazia os dois moods saírem iguais. A compressão longa
+    // é gramática de silêncio — planos achatados, imagem parada.
     camera:
-      'lente 50-100mm — distância, altura, lente e profundidade de campo exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS"), composição sempre limpa, sem grão, acabamento suave e silencioso',
+      'lente 100-200mm, teleobjetiva de compressão longa — distância, altura, lente e profundidade de campo exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS"), com a câmera sempre em eixo GEOMÉTRICO (zenital a pino, frontal ortogonal, rasante à superfície ou alta e distante), NUNCA o ponto de vista naturalista de três-quartos na altura dos olhos, que é do CLAREZA. Composição sempre limpa, sem grão, acabamento suave e silencioso',
     detalheCriativo:
       "um único traço de assinatura premium (linha fina horizontal, ponto de cor minúsculo, sombra suave isolada, textura de papel sutil) flutuando no espaço negativo como gesto autoral mínimo",
     assinatura:
-      "fotografia premium minimalista alta-chave, luz suave difusa, paleta suave areia/cinza quente/sálvia, vasto espaço negativo, lente 50-100mm sem grão",
+      "fotografia premium minimalista alta-chave, luz suave difusa, paleta suave areia/cinza quente/sálvia, vasto espaço negativo, teleobjetiva 100-200mm sem grão, eixo de câmera geométrico",
   },
 };
 
@@ -589,11 +597,54 @@ export const SILENCIO_ESCALA_SENTENCE =
 export const SILENCIO_ESCALA_LOOKBOOK =
   "ESPAÇO NEGATIVO EM LOOK BOOK: o limite de 30% NÃO se aplica à modelo nesta peça — a peça vestida precisa ser lida em cor, corte e caimento, e isso exige presença no quadro. O silêncio se expressa pelo ENTORNO: fundo vasto, liso e vazio, sem nenhum outro elemento além da modelo, com amplo espaço respirando ao redor da figura e composição estática e contemplativa. Nada de props, mobiliário, texturas concorrentes ou segundo ponto de interesse. ";
 
+// A "peça-ímã": quando um mood colapsa, ele colapsa numa direção específica, e
+// nomear essa direção vale mais do que proibir genericamente. Achado real em
+// 14/08/2026: a peça de SILÊNCIO que saiu igual a uma de CLAREZA era pessoa
+// sentada à mesa de trabalho, plano de busto, olho nivelado, luz de janela.
+// Esse é O atrator — a foto que o modelo produz quando nenhuma trava segura.
+// Proibir a COMBINAÇÃO por nome é o que a experiência deste projeto mostra que
+// funciona: proibição vaga perde para obrigação positiva, proibição concreta não.
+export const SILENCIO_NAO_E_CLAREZA_SENTENCE =
+  "SILÊNCIO NÃO É CLAREZA — PROIBIÇÃO DE COMBINAÇÃO: esta peça JAMAIS pode sair como uma pessoa sentada a uma mesa de trabalho, em plano de busto ou meio corpo, fotografada na altura dos olhos com luz de janela lateral, em escritório com objetos ao fundo. Essa combinação exata é a assinatura do mood CLAREZA e, aplicada aqui, apaga o SILÊNCIO por completo. Se a leituraCenica sugerir mesa de escritório com pessoa trabalhando, RECOMPONHA: afaste a câmera para um eixo geométrico (zenital, frontal ortogonal, rasante ou alto e distante), esvazie a superfície e transforme a cena em objeto isolado no vazio. O que identifica esta peça como SILÊNCIO é a ESCALA do sujeito e a EXTENSÃO do vazio — não a expressão, não o olhar, não o clima. ";
+
 export const SILENCIO_PESSOA_SENTENCE =
   "Se aparecer pessoa: fragmento parcial APENAS (mão, sombra, nuca, silhueta pequena) — NUNCA rosto inteiro posado, NUNCA corpo completo. ";
 
 export const SILENCIO_PESSOA_LOOKBOOK =
   "PESSOA EM LOOK BOOK: a modelo aparece INTEIRA e com o rosto visível, no enquadramento definido pelo tipo da peça — fica suspensa, só nesta peça, a exigência de fragmento parcial. Em troca ela obedece o resto da gramática do mood sem exceção: luz alta-chave suave e difusa, sombras quase ausentes, paleta de baixa saturação, expressão contida e serena, postura calma e estática. PROIBIDO luz dramática, fundo escuro ou pose de energia alta. ";
+
+// ── DENSIDADE DE CENA POR MOOD ──────────────────────────────────────────────
+// Buraco confirmado em 14/08/2026: o sistema governava câmera, luz, paleta e
+// pose por mood, mas NUNCA governou quantos elementos entram no quadro. O campo
+// 'ambiente' da leituraCenica é pedido como "onde a cena acontece COM DETALHES
+// FÍSICOS" para todos os moods igualmente, e a direção visual declara que o
+// ambiente vem da Matriz, não do mood. Foi por essa porta que uma peça de
+// SILÊNCIO saiu com parede de quadros, prateleira de objetos e pilha de papéis
+// em primeiro plano — acúmulo, no mood que vive de ausência.
+//
+// A régua é a quantidade, não o estilo: cada mood declara QUANTOS elementos
+// distintos a cena pode conter. Consumida em dois pontos, para não haver duas
+// descrições paralelas divergindo: MOOD_RULES (gramática do mood, nos dois
+// motores) e a instrução do campo 'ambiente' no MOP (organizaMethodEngine).
+export const DENSIDADE_CENA_POR_MOOD: Partial<Record<MoodCode, string>> = {
+  "OP-01":
+    "DENSIDADE DA CENA EM CLAREZA: ambiente de trabalho real e ORGANIZADO, visível e legível — a ordem do espaço é parte do que o mood comunica. De 3 a 6 elementos distintos, todos pertencentes ao ofício real, dispostos com alinhamento e respiro. PROIBIDO acúmulo: mesa coberta de papéis, parede tomada por quadros, prateleira abarrotada, objetos decorativos sem função. Organizado não é cheio.",
+  "OP-02":
+    "DENSIDADE DA CENA EM IMPACTO: pouquíssimos elementos legíveis — o sujeito recortado pela luz e, no máximo, 1 ou 2 objetos do ofício. Todo o resto é vazio escuro. O ambiente não se descreve em detalhe: ele se dissolve na sombra.",
+  "OP-03":
+    "DENSIDADE DA CENA EM INSTANTE: ambiente vivo e cheio de sinais reais de uso — bastidor genuíno, com objetos do ofício em atividade, marcas de trabalho em andamento e algum desalinho verdadeiro. Aqui o acúmulo é BEM-VINDO, desde que seja acúmulo real de quem trabalha, nunca cenário montado.",
+  "OP-04":
+    "DENSIDADE DA CENA EM FRAGMENTO: de 3 a 5 blocos, e dentro de CADA bloco um único elemento ou textura dominante. A profusão do mood está no número de blocos, não no número de objetos por bloco.",
+  "OP-05":
+    "DENSIDADE DA CENA EM DESVIO: ambiente legível o bastante para que a ruptura seja lida COMO ruptura — de 2 a 4 elementos, mais o objeto deslocado. Cena cheia demais esconde o desvio; cena vazia demais tira o contexto que o torna estranho.",
+  "OP-06":
+    "DENSIDADE DA CENA EM SILÊNCIO — RÉGUA ABSOLUTA: a cena inteira contém NO MÁXIMO 1 objeto (ou 1 fragmento humano) mais a superfície ou o fundo em que ele repousa. Isso é um TETO, não uma sugestão. PROIBIDO em qualquer hipótese: segundo objeto de apoio, parede com quadros, certificados, molduras ou pôsteres, prateleira ou estante com objetos, papéis ou pastas em primeiro plano, plantas decorativas, canecas, luminárias, livros, material de escritório espalhado, qualquer profundidade de cenário com objetos reconhecíveis ao fundo. As paredes são NUAS e as superfícies estão VAZIAS. Se a descrição do ambiente citar mais de um objeto, mantenha apenas o mais essencial ao ofício e apague todo o resto do quadro.",
+};
+
+/** A régua de densidade do mood, ou "" para mood sem régua declarada. */
+export function densidadeDaCena(mood?: MoodCode): string {
+  return (mood && DENSIDADE_CENA_POR_MOOD[mood]) || "";
+}
 
 // Regras inegociáveis específicas por mood — corrigem desvios observados em
 // geração real e expandem aplicação para múltiplos segmentos. Fonte canônica
@@ -606,6 +657,8 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     CLAREZA_DEVICE_WELCOME_SENTENCE +
     "VÍCIOS VISUAIS A EVITAR EM CLAREZA: personagem sempre olhando papel, personagem sempre escrevendo, personagem sempre segurando documento, executivo genérico em escritório, mesa cheia de papéis, cenário corporativo de banco de imagem, plantas e vasos como recurso decorativo recorrente, notebook ou laptop presente em todas as peças como recurso automático, cena fria demais a ponto de parecer outro mood, repetição visual entre gerações, representação literal demais do segmento quando não for necessária. " +
     CLAREZA_MATERIAL_TRABALHO_SENTENCE +
+    densidadeDaCena("OP-01") +
+    " " +
     CLAREZA_ROSTO_INTEIRO_SENTENCE +
     'A variação de câmera e posição desta geração está no bloco "VARIAÇÕES SORTEADAS" — seguir sem alterar. ' +
     "CLAREZA se aplica a qualquer segmento (veterinária, padaria, advocacia, ferramentas, consultório, pet shop). O ambiente pertence ao espaço real da empresa, o objeto ao ofício real, o gesto ao trabalho real. A leituraCenica determina o conteúdo; a direção visual determina COMO é fotografado.",
@@ -646,6 +699,9 @@ export const MOOD_RULES: Partial<Record<MoodCode, string>> = {
     "PROIBIDO: executivo de blazer em escritório, personagem sentado atrás de mesa em pose neutra, notebook como centro da cena, dashboard, livro voando, megafone, porta luminosa, mini pessoas sobre objetos, surrealismo carnavalesco. Esta proibição de 'notebook como centro da cena' vale para composições clichê inventadas pelo mood — NUNCA se aplica a um produto de referência selecionado pelo usuário, que sempre aparece normalmente (ver regra de dispositivos digitais no início do prompt).",
   "OP-06":
     'SILÊNCIO — CÂMERA DESTA GERAÇÃO: a câmera está definida no bloco "VARIAÇÕES SORTEADAS" — seguir exatamente a distância e o ângulo. ' +
+    SILENCIO_NAO_E_CLAREZA_SENTENCE +
+    densidadeDaCena("OP-06") +
+    " " +
     "OBJETO DESTA GERAÇÃO — DERIVAR DO OFÍCIO REAL: o objeto ou sujeito isolado nasce da leituraCenica, da atividade real e do tema da peça — um único instrumento, ferramenta, material ou produto que pertença genuinamente ao negócio. PROIBIDO objeto genérico desconectado do ofício (livro de leitura, caderno de escrita, óculos soltos, caneta sem contexto). PROIBIDO laptop, notebook aberto, smartphone ou qualquer dispositivo digital como elemento principal — esta proibição vale apenas para o objeto isolado que o mood escolhe autonomamente; NUNCA se aplica a um produto de referência selecionado pelo usuário, que sempre aparece normalmente (ver regra de dispositivos digitais no início do prompt). " +
     SILENCIO_ESCALA_SENTENCE +
     "POSIÇÃO DO OBJETO — FORA DA ZONA DO TÍTULO: o objeto, produto, equipamento ou fragmento humano pode ocupar qualquer posição da composição — centralizada, à esquerda, em regra dos terços — DESDE QUE não fique sob nem atrás da metade DIREITA do quadro, reservada para o título. Se a variação sorteada abaixo indicar posição centralizada ou que invadiria essa zona, desloque a composição para a esquerda mantendo o mesmo espírito da variação. " +

@@ -79,7 +79,8 @@
       "Bash(NODE_OPTIONS=--use-system-ca npx wrangler deployments list --name metodo-op)",
       "Bash(powershell -NoProfile -Command \"Get-ChildItem -Path 'E:\\\\','D:\\\\' -Filter 'AJUSTE_CONFLITO' -Recurse -Directory -ErrorAction SilentlyContinue -Depth 6 | Select-Object FullName\")",
       "Bash(npx eslint *)",
-      "Bash(node -e \"const d=require\\('/tmp/eslint.json'\\); for\\(const f of d\\){const a=f.messages.filter\\(m=>m.ruleId==='@typescript-eslint/no-explicit-any'\\); if\\(a.length\\){console.log\\(f.filePath.replace\\(/.*dev-server./,''\\)\\); for\\(const m of a\\) console.log\\('   L'+m.line+':'+m.column\\);}}\")"
+      "Bash(node -e \"const d=require\\('/tmp/eslint.json'\\); for\\(const f of d\\){const a=f.messages.filter\\(m=>m.ruleId==='@typescript-eslint/no-explicit-any'\\); if\\(a.length\\){console.log\\(f.filePath.replace\\(/.*dev-server./,''\\)\\); for\\(const m of a\\) console.log\\('   L'+m.line+':'+m.column\\);}}\")",
+      "WebFetch(domain:developers.openai.com)"
     ]
   }
 }

@@ -195,30 +195,59 @@ export const EIXO_DISTANCIA_SILENCIO: string[] = [
   "CÂMERA MUITO ABERTA: o sujeito quase perdido na amplitude do ambiente — parede, janela ou superfície vazia dominando quase todo o quadro",
 ];
 
+// REESCRITO EM 14/08/2026 — o motivo está em NAO_COMPARTILHAVEL_COM_CLAREZA, no
+// fim deste arquivo. Resumo: as três alturas antigas ("nivelada sem inclinação",
+// "plongée suave", "ângulo ascendente mínimo") eram gêmeas textuais das três do
+// CLAREZA, e o mesmo valia para 2 de 3 lentes, 2 de 3 luzes e a profundidade. Em
+// ~33% dos sorteios o SILÊNCIO compunha uma câmera 100% legal em CLAREZA — e foi
+// exatamente isso que o Aristóteles flagrou em peça real (14/08/2026): uma peça
+// de SILÊNCIO indistinguível de uma de CLAREZA, olho nivelado, 50mm, janela
+// difusa, pessoa em plano de busto.
+//
+// Toda opção abaixo é EXCLUSIVA do mood: nenhuma pode ser sorteada em nenhum
+// outro. É a assimetria de repertório pedida pelo Aristóteles — moods não têm as
+// mesmas possibilidades. O SILÊNCIO é o mood da economia e da estase, e um
+// repertório estreito de câmera é coerência, não defeito (o INSTANTE vive de uma
+// lente só e é reconhecível por isso). A variedade dele migra para o OBJETO do
+// ofício, a SUPERFÍCIE e a PALETA — que já têm rodízio próprio.
+//
+// A geometria comum às quatro é a FRONTALIDADE ABSOLUTA ou a VERTICAL PURA:
+// eixos perpendiculares, planos paralelos, nada de três-quartos naturalista. É a
+// gramática do minimalismo — e é o oposto da câmera "com jeito de fotógrafo
+// dentro da sala" que o CLAREZA usa.
 export const EIXO_ALTURA_SILENCIO: string[] = [
-  "câmera nivelada com o sujeito, sem inclinação nenhuma",
-  "câmera zenital, vista de cima a pino — composição plana e geométrica, sombra curta projetada na superfície",
-  "câmera levemente acima do sujeito, plongée suave que abre a superfície vazia atrás dele",
-  "câmera levemente abaixo do sujeito, ângulo ascendente mínimo que lhe dá presença discreta sem nenhuma dramaticidade",
+  "CÂMERA ZENITAL: vista de cima a pino, eixo perfeitamente vertical — composição plana e geométrica, sombra curta projetada na superfície, nenhuma perspectiva de profundidade",
+  "CÂMERA FRONTAL ORTOGONAL: eixo rigorosamente perpendicular ao fundo, sem nenhuma fuga de perspectiva nem ponto de vista de três-quartos — o quadro lido como um plano chapado e simétrico, quase um desenho técnico, com o sujeito alinhado ao eixo central ou a um terço exato. A frontalidade aqui é geométrica e deliberada, JAMAIS o ponto de vista naturalista de quem está de pé dentro da sala",
+  "CÂMERA RASANTE À SUPERFÍCIE: lente baixada até o nível do tampo, do piso ou do plano onde o sujeito repousa, olhando reto para a frente — a superfície vazia corta a base do quadro como uma linha horizontal limpa. Eixo paralelo ao plano, SEM diagonal, sem rotação e sem angulação lateral",
+  "CÂMERA ALTA E DISTANTE: ponto de vista muito acima e afastado, o sujeito visto de longe e de cima como um elemento pequeno sobre uma superfície ampla — o olhar é sereno e cartográfico, contemplativo, NUNCA dramático nem de tensão",
 ];
 
+// A ótica sai da faixa neutra (50mm existe nos quatro moods; 70mm é do CLAREZA
+// desde 13/08) e vai para a TELEOBJETIVA, que é gramática de silêncio: quanto
+// maior a compressão, mais os planos se achatam um contra o outro e mais parada
+// a imagem fica. O campo `camera` e a `assinatura` de VISUAL_DIRECTIONS["OP-06"]
+// passaram a declarar 100-200mm no mesmo movimento — é a SEXTA vez que a
+// assinatura precisa acompanhar o eixo de ótica, e continua sendo a classe de
+// bug mais recorrente deste arquivo.
 export const EIXO_OTICA_SILENCIO: string[] = [
-  "lente 50mm, perspectiva neutra e limpa",
-  "lente 70mm, leve compressão que assenta o sujeito no vazio",
-  "lente 100mm, compressão maior que achata os planos e aumenta a sensação de quietude",
+  "lente 100mm, compressão que achata os planos e aumenta a sensação de quietude",
+  "lente 135mm, compressão marcada — o fundo sobe para junto do sujeito e a cena perde qualquer sensação de profundidade agitada",
+  "lente 200mm, teleobjetiva longa que empilha os planos num único plano gráfico, imóvel e distante",
 ];
 
 export const EIXO_PROFUNDIDADE_SILENCIO: string[] = [
   "tudo nítido: fundo liso e limpo, sem desfoque, a nitidez uniforme reforçando a quietude",
-  "separação suave: sujeito nítido sobre fundo levemente fora de foco — NUNCA bokeh forte, que traria drama a um mood que não o tem",
+  "compressão telefoto: planos achatados um contra o outro, o fundo liso empurrado para junto do sujeito — NUNCA bokeh forte nem fundo derretido, que trariam drama a um mood que não o tem",
 ];
 
-// Dentro da luz que o mood declara: "suave alta-chave, de fonte ampla e difusa,
-// sombras quase ausentes, atmosfera serena". Nenhuma introduz direção dura.
+// A luz do SILÊNCIO é da mesma FAMÍLIA da do CLAREZA (natural, suave, sem
+// direção dura) — e é por isso que nenhuma redação de "janela difusa" separava
+// os dois. O que separa é o PAPEL da luz: aqui ela não ilumina uma cena, ela É
+// o acontecimento gráfico do quadro. Nenhuma das três existe no pool do CLAREZA.
 export const EIXO_LUZ_SILENCIO: string[] = [
-  "luz difusa entrando por uma janela ampla lateral, sombra longa e quase imperceptível",
-  "luz alta-chave frontal e envolvente, praticamente sem sombra, superfícies uniformemente claras",
   "luz difusa vinda de cima, como de claraboia ou teto translúcido, com sombra curta e suave sob o sujeito",
+  "faixa de luz desenhada sobre a parede ou superfície vazia, com o sujeito à MARGEM dela — a mancha de luz é o próprio acontecimento gráfico do quadro, e o resto fica em penumbra clara e uniforme, nunca escura",
+  "luz muito suave e rasante correndo pelo fundo liso, revelando apenas a textura da superfície vazia e quase nenhum volume no sujeito — a cena parece iluminada por reflexo, sem fonte identificável",
 ];
 
 // ── DESVIO (OP-05) ──────────────────────────────────────────────────────────
@@ -533,3 +562,47 @@ export function buildCameraLine(
     ...(eixos.corpo?.length ? [pick(eixos.corpo, PASSO_CORPO)] : []),
   ].join(" · ");
 }
+
+// ── Assimetria de repertório entre moods ────────────────────────────────────
+// Princípio adotado em 14/08/2026, a partir de um achado em peça real: uma peça
+// de SILÊNCIO saiu indistinguível de uma de CLAREZA. A causa não era o sorteio —
+// era GEOMETRIA DE CONJUNTO. Os dois moods compartilhavam 3 de 4 alturas, 2 de 3
+// lentes, 2 de 3 luzes e as duas profundidades. Enquanto existe interseção, ela
+// vai ser sorteada; nenhuma redação, fila ou passo conserta isso.
+//
+// A REGRA, que vale para qualquer pool novo daqui em diante: cada mood precisa
+// de PELO MENOS UM eixo em que nenhum valor é compartilhável com nenhum outro
+// mood. Não é preciso que todos os eixos sejam exclusivos — a lente 50mm sozinha
+// não carrega mood nenhum. É preciso que exista um eixo onde a identidade seja
+// consequência do CONJUNTO, e não esperança do sorteio.
+//
+// Por que isso é diferente de "faixas diferentes dentro dos mesmos eixos":
+// faixa só preserva identidade quando as faixas NÃO SE TOCAM. A altura do
+// IMPACTO (toda ascendente) nunca encosta na do CLAREZA, e por isso ninguém
+// confunde os dois. CLAREZA×SILÊNCIO era o único par construído como "mesmos
+// valores, frases diferentes" — e foi o único que colapsou.
+//
+// CONSEQUÊNCIA ACEITA: pool exclusivo costuma ser pool menor, e pool menor
+// repete mais rápido. Isso é aceitável quando o que repete é a ASSINATURA do
+// mood e não a peça — e a variedade migra para os eixos que o mood tem de sobra
+// (objeto do ofício, superfície, paleta). O contrário — crescer o pool na
+// direção do vizinho — compra variedade pagando com identidade, que foi
+// exatamente o erro do 70mm acrescentado ao CLAREZA em 13/08/2026.
+//
+// Consumido por __tests__/cameraAxesExclusividade.test.ts, que trava a regra
+// para o crescimento de pool de amanhã não recriar o problema de hoje.
+export const NAO_COMPARTILHAVEL_COM_CLAREZA: Record<string, string[]> = {
+  altura: EIXO_ALTURA_SILENCIO,
+  otica: EIXO_OTICA_SILENCIO,
+  luz: EIXO_LUZ_SILENCIO,
+  profundidade: EIXO_PROFUNDIDADE_SILENCIO,
+};
+
+/** Os eixos do CLAREZA na mesma ordem, para o teste de exclusividade comparar
+ *  par a par. Ver NAO_COMPARTILHAVEL_COM_CLAREZA. */
+export const EIXOS_CLAREZA_PARA_COMPARACAO: Record<string, string[]> = {
+  altura: EIXO_ALTURA_CLAREZA,
+  otica: EIXO_OTICA_CLAREZA,
+  luz: EIXO_LUZ_CLAREZA,
+  profundidade: EIXO_PROFUNDIDADE_CLAREZA,
+};
