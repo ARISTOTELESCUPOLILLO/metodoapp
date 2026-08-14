@@ -246,18 +246,34 @@ export function pickPaletaDoMood(
   return pickTonalidade(pool, seed ?? 0, accentHex);
 }
 
+/**
+ * FILTRA e só então roda — mudou em 14/08/2026, e a diferença é visível na peça.
+ *
+ * Antes, o índice andava sobre o pool INTEIRO e, quando caía numa tonalidade que
+ * conflitava com o acento da marca, caminhava para a frente até achar uma
+ * compatível. O efeito colateral: duas posições vizinhas da fila desembocavam na
+ * MESMA tonalidade. Com o acento laranja da OPropaganda, duas das seis do
+ * SILÊNCIO são incompatíveis (areia e taupe, ambas na faixa do laranja), e a
+ * fila saía 1,1,2,4,4,5 — ou seja, em 2 de 6 gerações a cor repetia a da
+ * geração anterior, e o Ari lia isso como "só sai esta".
+ *
+ * Filtrando primeiro, a fila percorre só as compatíveis e visita todas antes de
+ * repetir qualquer uma: 1,2,4,5,1,2,4,5. Mesmo repertório, sem vizinhas iguais.
+ *
+ * Se TODAS conflitarem (pool inteiro na faixa do acento), vale o pool cheio — é
+ * heurística textual de prompt, não medição de contraste em pixels.
+ */
 export function pickTonalidade(
   pool: TonalidadeCandidata[],
   baseIndex: number,
   accentHex?: string,
 ): TonalidadeCandidata {
-  const n = pool.length;
-  const normalizedBase = ((baseIndex % n) + n) % n;
   const accentHue = accentHex ? hexToHue(accentHex) : null;
-  if (accentHue === null) return pool[normalizedBase];
-  for (let i = 0; i < n; i++) {
-    const candidate = pool[(normalizedBase + i) % n];
-    if (hueDistance(candidate.hue, accentHue) >= CONFLITO_HUE_THRESHOLD) return candidate;
-  }
-  return pool[normalizedBase];
+  const compativeis =
+    accentHue === null
+      ? pool
+      : pool.filter((c) => hueDistance(c.hue, accentHue) >= CONFLITO_HUE_THRESHOLD);
+  const efetivo = compativeis.length ? compativeis : pool;
+  const n = efetivo.length;
+  return efetivo[((baseIndex % n) + n) % n];
 }

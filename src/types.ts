@@ -77,6 +77,13 @@ export interface ContentFormData {
   // Gênero preferido para a âncora visual (pré-preenchimento do painel de
   // imagem). null = automático (sorteio/balanceamento existente).
   generoPref?: "M" | "F" | null;
+  /** Cor de destaque do Kit de Marca. Só serve ao rodízio de paleta dos moods
+   *  que o têm: uma tonalidade cuja matiz encosta na do acento é pulada, para a
+   *  palavra de destaque do título não sumir contra o fundo. Precisa chegar ao
+   *  estágio de CONTEÚDO porque o de IMAGEM já a usava (api.ts) — sem ela aqui,
+   *  os dois estágios sorteavam paletas DIFERENTES para a mesma peça e o prompt
+   *  ia ao modelo com duas cores brigando (achado 14/08/2026). */
+  accentColor?: string;
 }
 
 // Leitura cênica produzida pela IA por peça — orienta a geração de imagem

@@ -25,7 +25,11 @@ import {
   buildMoodVisualInstructions,
   moodVisualInstructions,
 } from "../services/api/moodVisualInstructions";
-import { buildVisualDirectionBlock, buildMoodGrammarBlock } from "../core/visualDirection";
+import {
+  buildVisualDirectionBlock,
+  buildMoodGrammarBlock,
+  getMoodSignature,
+} from "../core/visualDirection";
 import { MoodCode } from "../types";
 
 const COM_RODIZIO: MoodCode[] = ["OP-04", "OP-05", "OP-06"];
@@ -94,6 +98,59 @@ describe("a paleta anda em fila e é uma por sequência", () => {
     const tamanho = { "OP-04": 4, "OP-05": 5, "OP-06": 6 }[mood as "OP-04" | "OP-05" | "OP-06"];
     for (let seed = 0; seed < tamanho; seed++) vistos.add(pickPaletaDoMood(mood, seed)!.bloco);
     expect(vistos.size).toBe(tamanho);
+  });
+});
+
+// Segundo relato do Ari (14/08/2026): "me parece que só sai esta". Duas causas
+// somadas, as duas travadas abaixo.
+describe("com acento de marca, a fila continua sem repetir vizinhas", () => {
+  // Laranja da OPropaganda. Duas das seis do SILÊNCIO (areia, hue 40; taupe,
+  // hue 25) encostam nessa matiz e são puladas. Antes de 14/08/2026 o índice
+  // andava sobre o pool inteiro e CAMINHAVA para a frente ao achar uma
+  // incompatível — o que fazia duas posições vizinhas caírem na mesma cor.
+  const ACENTO_LARANJA = "#E8730C";
+
+  it.each(COM_RODIZIO)("%s: nenhuma posição repete a paleta da posição anterior", (mood) => {
+    for (let seed = 0; seed < 24; seed++) {
+      expect(pickPaletaDoMood(mood, seed, ACENTO_LARANJA)?.bloco).not.toBe(
+        pickPaletaDoMood(mood, seed + 1, ACENTO_LARANJA)?.bloco,
+      );
+    }
+  });
+
+  it("SILÊNCIO com acento laranja usa as 4 tonalidades que sobram, todas", () => {
+    const vistas = new Set<string>();
+    for (let seed = 0; seed < 12; seed++)
+      vistas.add(pickPaletaDoMood("OP-06", seed, ACENTO_LARANJA)!.bloco);
+    expect(vistas.size).toBe(4);
+  });
+
+  it("conteúdo e imagem sorteiam a MESMA paleta quando recebem o mesmo acento", () => {
+    // Os dois estágios chamam pickPaletaDoMood por caminhos diferentes
+    // (buildVisualDirectionBlock × buildMoodVisualInstructions). Até 14/08/2026
+    // só o de imagem recebia o acento — os dois divergiam e o prompt saía com
+    // duas paletas brigando.
+    for (let seed = 0; seed < 8; seed++) {
+      const esperada = pickPaletaDoMood("OP-06", seed, ACENTO_LARANJA)!.bloco;
+      expect(buildVisualDirectionBlock("OP-06", "SERVIÇOS", seed, ACENTO_LARANJA)).toContain(
+        esperada,
+      );
+      expect(buildMoodVisualInstructions("OP-06", seed, ACENTO_LARANJA)).toContain(esperada);
+    }
+  });
+});
+
+// A assinatura técnica é colada no FIM de todo imagePrompt com "não traduzir,
+// não parafrasear" — o último a falar. Se ela nomear cor, carimba a peça e
+// anula o rodízio inteiro, que roda lá no começo do prompt. Era o caso do
+// SILÊNCIO ("paleta suave areia/cinza quente/sálvia") e é por isso que o Ari
+// via sempre a mesma peça bege.
+describe("nenhuma assinatura de mood carimba cor concreta", () => {
+  const NOMES_DE_COR =
+    /\b(areia|off-white|bege|taupe|marfim|s[áa]lvia|magenta|ferrugem|mostarda|coral|vinho|petr[óo]leo|terracota|musgo|creme)\b/i;
+
+  it.each(COM_RODIZIO)("%s: a assinatura delega a cor ao rodízio", (mood) => {
+    expect(NOMES_DE_COR.test(getMoodSignature(mood))).toBe(false);
   });
 });
 

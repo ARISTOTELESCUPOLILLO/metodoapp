@@ -481,7 +481,7 @@ ${activityLine}
 ${keyInfoBlock}
 ${ancoraDataLine}
 ${emissorLine}
-${buildVisualDirectionBlock(data.mood, data.segment, variacaoSeed)}
+${buildVisualDirectionBlock(data.mood, data.segment, variacaoSeed, data.accentColor)}
 
 DIRETRIZES VISUAIS PARA CAMPOS DE IMAGEM:
 ${buildSceneRoleRule()}

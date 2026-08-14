@@ -146,8 +146,16 @@ export const VISUAL_DIRECTIONS: Record<MoodCode, VisualDirection> = {
       'lente 100-200mm, teleobjetiva de compressão longa — distância, altura, lente e profundidade de campo exatas sorteadas a cada geração (ver bloco "VARIAÇÕES SORTEADAS"), com a câmera sempre em eixo GEOMÉTRICO (zenital a pino, frontal ortogonal, rasante à superfície ou alta e distante), NUNCA o ponto de vista naturalista de três-quartos na altura dos olhos, que é do CLAREZA. Composição sempre limpa, sem grão, acabamento suave e silencioso',
     detalheCriativo:
       "um único traço de assinatura premium (linha fina horizontal, ponto de cor minúsculo, sombra suave isolada, textura de papel sutil) flutuando no espaço negativo como gesto autoral mínimo",
+    // A assinatura NÃO pode nomear cores. Achado real 14/08/2026: ela declarava
+    // "paleta suave areia/cinza quente/sálvia" e é colada, verbatim e sem
+    // paráfrase, no FIM de todo imagePrompt. O rodízio de 6 tonalidades sorteava
+    // uma paleta no começo do prompt e esta linha carimbava areia/cinza quente
+    // no fim — e o fim vence. Resultado: o Ari via sempre a mesma peça bege,
+    // por mais que a cor rodasse. Nenhuma das outras assinaturas nomeia cor
+    // (DESVIO diz "paleta incomum mas legível", FRAGMENTO diz "3 tons
+    // unificados"): era o único mood com o carimbo, e o único que não variava.
     assinatura:
-      "fotografia premium minimalista alta-chave, luz suave difusa, paleta suave areia/cinza quente/sálvia, vasto espaço negativo, teleobjetiva 100-200mm sem grão, eixo de câmera geométrico",
+      "fotografia premium minimalista alta-chave, luz suave difusa, paleta suave e de baixa saturação conforme a definida NESTA PEÇA, vasto espaço negativo, teleobjetiva 100-200mm sem grão, eixo de câmera geométrico",
   },
 };
 

@@ -62,6 +62,10 @@ export function useMopHandlers({
           brandVoice: kit.brandVoice,
           mainActivity: kit.mainActivity || "",
           mood: mood ?? "OP-01",
+          // Ver ContentFormData.accentColor: o estágio de imagem já recebia o
+          // acento; sem ele aqui, conteúdo e imagem sorteavam paletas
+          // diferentes para a mesma peça.
+          accentColor: kit.accentColor,
         },
         selectedSlot,
         variacaoSeed,

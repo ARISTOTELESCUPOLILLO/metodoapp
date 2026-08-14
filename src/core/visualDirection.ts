@@ -255,6 +255,11 @@ export function buildVisualDirectionBlock(
    * uma sequência e a próxima em vez de serem sorteadas de novo do zero. Sem
    * ela, sorteio de sempre. */
   seed?: number,
+  /** Cor de destaque do Kit de Marca — pula a tonalidade cuja matiz encosta na
+   *  dela. Precisa ser a MESMA que o estágio de imagem usa (api.ts), senão os
+   *  dois sorteiam paletas diferentes para a mesma peça. Ver
+   *  ContentFormData.accentColor. */
+  accentHex?: string,
 ): string {
   const v = getVisualDirection(mood);
   // Mesmos eixos e passos do bloco de imagem — ver o comentário em
@@ -268,7 +273,7 @@ export function buildVisualDirectionBlock(
   // e pose — uma decisão por sequência, para todas as peças saírem na mesma cor
   // (ver pickPaletaDoMood). Nos três moods sem rodízio, devolve null e vale a
   // paleta única do léxico.
-  const paletaSequencia = pickPaletaDoMood(mood, seed)?.bloco ?? v.paleta;
+  const paletaSequencia = pickPaletaDoMood(mood, seed, accentHex)?.bloco ?? v.paleta;
   const seg = segment ? SEGMENT_LAYERS[mood]?.[segment] : undefined;
 
   const segmentBlock = seg
