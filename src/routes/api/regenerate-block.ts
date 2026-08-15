@@ -22,6 +22,8 @@ import {
   debitUsage,
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
+import { hasBetaIntencao } from "@/repository/betaFlags";
+import { buildIntencaoBlock, parseIntencao, parseTransformacao } from "@/core/intencao";
 import { COST_USD } from "@/lib/costs";
 import { isOfertaConcreta } from "@/core/ofertaDetection";
 
@@ -148,6 +150,23 @@ export const Route = createFileRoute("/api/regenerate-block")({
           const ajustePromocional =
             kind === "titulo" && objetivo === "promocao" && isOfertaConcreta(keyInfo);
 
+          // Intenção declarada — terceiro endpoint de texto. Sem isto, "Gerar
+          // outro título" devolvia uma alternativa que ignorava o alvo
+          // perceptual da peça, e o campo virava letra morta no primeiro clique
+          // de regeneração. O MOP também usa esta rota e nunca manda `intencao`,
+          // então cai no retorno antecipado do builder e gera igual a hoje.
+          const intencao =
+            body.intencao && (await hasBetaIntencao(effective.userId))
+              ? parseIntencao(body.intencao)
+              : null;
+          const intencaoBlock = buildIntencaoBlock({
+            intencao,
+            transformacaoPrincipal: intencao
+              ? parseTransformacao(body.transformacaoPrincipal)
+              : null,
+            segment: intencao ? String(body.segment || "").slice(0, 30) : "",
+          });
+
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
             return Response.json(
@@ -175,7 +194,7 @@ export const Route = createFileRoute("/api/regenerate-block")({
 EMPRESA: ${companyName || "(não informada)"}
 ATIVIDADE: ${mainActivity || "(não informada)"}
 FORMATO DA PEÇA: ${formato || "feed"}
-INFORMAÇÃO-CHAVE: ${keyInfo || "(não informada)"}
+${intencaoBlock}INFORMAÇÃO-CHAVE: ${keyInfo || "(não informada)"}
 
 VERSÃO ATUAL:
 - Título: ${tituloAtual || "(vazio)"}

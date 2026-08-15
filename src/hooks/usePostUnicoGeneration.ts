@@ -7,6 +7,7 @@ import {
   type PostUnicoCopy,
 } from "../services/postUnico";
 import { buildReferences } from "../services/regenerateWithKit";
+import { checkCoerencia } from "../core/intencao";
 import { detectForcedGenderFromCopy, PersonagemGender } from "../core/visualDirection";
 import { loadImageKitAsync } from "../utils/imageKitStorage";
 import { lsSetQuotaSafe } from "../lib/storage/store";
@@ -72,6 +73,9 @@ export function usePostUnicoGeneration({
           // precisa continuar o que está escrito na arte, não o keyInfo antigo.
           titulo: puCopy?.titulo,
           topicos: puCopy?.topicos?.map((t) => t.texto),
+          // Natureza do negócio — só é lida no servidor quando há intenção
+          // declarada (piloto). Ver buildIntencaoBlockLegenda.
+          segment: kit.segment,
         },
       );
       setCaption(c);
@@ -121,6 +125,15 @@ export function usePostUnicoGeneration({
         // "continuar" um texto que o cliente nunca vai ver.
         titulo: catalogo ? undefined : copy?.titulo || puCopy?.titulo,
         topicos: catalogo ? undefined : puCopy?.topicos?.map((t) => t.texto),
+        // Natureza do negócio — só é lida no servidor quando há intenção
+        // declarada (piloto). Este é o clique final: é o evento
+        // "gerar_post_unico" daqui que registra a intenção em usage_logs.
+        segment: kit.segment,
+        avisoCoerenciaIgnorado: !!checkCoerencia(
+          postUnico.intencao ?? null,
+          postUnico.transformacaoPrincipal ?? null,
+          kit.segment,
+        ),
       })
         .then((c) => {
           setCaption(c);

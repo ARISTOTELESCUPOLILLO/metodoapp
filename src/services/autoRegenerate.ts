@@ -10,6 +10,7 @@ import { MethodOpResult, ValidationFlag } from "../types";
 import { regenerateBlockWithFlags } from "./regenerateBlock";
 import { applyDeterministicFallback } from "../core/textValidation";
 import { isOfertaConcreta } from "../core/ofertaDetection";
+import type { IntencaoDeclarada, TransformacaoPretendida } from "../domain/intencao";
 
 type FieldKind = "titulo" | "texto" | "legenda";
 
@@ -20,6 +21,13 @@ interface AutoRegenContext {
   // Objetivo do PU — ver RegenContext.objetivo em regenerateBlock.ts.
   // Ausente/irrelevante para MOP (autoRegenerateFlaggedFields).
   objetivo?: string;
+  // Intenção declarada (piloto PU) — a correção automática de um campo flagado
+  // reescreve o título/texto pelo mesmo endpoint dos botões manuais; sem estes
+  // campos a peça corrigida perderia o alvo perceptual que a original tinha.
+  // Ausentes no MOP.
+  intencao?: IntencaoDeclarada | null;
+  transformacaoPrincipal?: TransformacaoPretendida | null;
+  segment?: string;
 }
 
 const MAX_ATTEMPTS = 2;
@@ -126,6 +134,9 @@ export async function autoRegenerateFlaggedPostUnico(
             tituloAtual: field === "titulo" ? value : titulo,
             textoAtual: field === "texto" ? value : texto,
             motivoReprovacao,
+            intencao: ctx.intencao ?? null,
+            transformacaoPrincipal: ctx.transformacaoPrincipal ?? null,
+            segment: ctx.segment,
           });
           value = regen.value;
           if (!regen.flags || regen.flags.length === 0) {

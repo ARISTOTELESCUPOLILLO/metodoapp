@@ -4,6 +4,7 @@ import { generatePostUnicoCopy, type PostUnicoCopy } from "../services/postUnico
 import { regenerateBlockClean } from "../services/regenerateBlock";
 import { autoRegenerateFlaggedPostUnico } from "../services/autoRegenerate";
 import { judgeAndRegeneratePostUnico } from "../services/judgeContent";
+import { checkCoerencia } from "../core/intencao";
 
 interface Params {
   data: PostUnicoFormData;
@@ -56,11 +57,22 @@ export function usePostUnicoCopy({
     try {
       const companyName = data.companyName || kit.companyName;
       const mainActivity = data.mainActivity || kit.mainActivity || "";
+      // O aviso de coerência nunca bloqueia — mas gerar apesar dele é o dado
+      // mais revelador do piloto (item 2 dos critérios da Etapa 2). Registrado
+      // em usage_logs.payload, não usado no prompt.
+      const avisoIgnorado = !!checkCoerencia(
+        data.intencao ?? null,
+        data.transformacaoPrincipal ?? null,
+        kit.segment,
+      );
       const generated = await generatePostUnicoCopy(
         { ...data, companyName, mainActivity },
         kit.brandVoice,
         kit.segment,
         puSlot,
+        undefined,
+        undefined,
+        avisoIgnorado,
       );
       // Modo "tópicos" usa schema próprio ({titulo, topicos}), incompatível
       // com autoRegenerateFlaggedPostUnico/judgeAndRegeneratePostUnico (feitos
@@ -87,6 +99,9 @@ export function usePostUnicoCopy({
                 ?.filter((f) => f.campo === "copy.titulo")
                 .map((f) => f.motivo)
                 .join("; "),
+              intencao: data.intencao ?? null,
+              transformacaoPrincipal: data.transformacaoPrincipal ?? null,
+              segment: kit.segment,
             });
             if (regenerado.trim()) titulo = regenerado;
           } catch {
@@ -102,7 +117,15 @@ export function usePostUnicoCopy({
       let result = await autoRegenerateFlaggedPostUnico(
         { titulo: generated.titulo, texto: generated.texto },
         generated.flags,
-        { companyName, mainActivity, keyInfo: data.keyInfo, objetivo: data.objetivo },
+        {
+          companyName,
+          mainActivity,
+          keyInfo: data.keyInfo,
+          objetivo: data.objetivo,
+          intencao: data.intencao ?? null,
+          transformacaoPrincipal: data.transformacaoPrincipal ?? null,
+          segment: kit.segment,
+        },
       );
       try {
         const updated = await judgeAndRegeneratePostUnico(result, {
@@ -188,6 +211,9 @@ export function usePostUnicoCopy({
         formato: "PostUnico",
         tituloAtual: copy.titulo,
         textoAtual: copy.texto,
+        intencao: data.intencao ?? null,
+        transformacaoPrincipal: data.transformacaoPrincipal ?? null,
+        segment: kit.segment,
       });
       const trimmed = next.trim();
       if (trimmed) {

@@ -25,6 +25,9 @@ import {
   OBJETIVO_CTA_FALLBACK,
   OBJETIVO_HASHTAG_FALLBACK,
 } from "@/domain/objetivo.config";
+import { hasBetaIntencao } from "@/repository/betaFlags";
+import { buildIntencaoBlockLegenda, parseIntencao, parseTransformacao } from "@/core/intencao";
+import type { TransformacaoPretendida } from "@/types";
 
 const HASHTAG_FALLBACK_STOPWORDS = new Set([
   "de",
@@ -207,6 +210,29 @@ export const Route = createFileRoute("/api/generate-caption")({
           const impersonatedBy = effective.impersonatedBy;
           let isAdmin = false;
 
+          // GATE DE BACKEND da intenção declarada — mesmo motivo e mesmo padrão
+          // de generate-pu-copy.ts: o gate de interface não basta. A flag só é
+          // consultada quando o cliente realmente mandou o campo.
+          const intencao =
+            body.intencao && (await hasBetaIntencao(userId)) ? parseIntencao(body.intencao) : null;
+          const transformacaoPrincipal = intencao
+            ? parseTransformacao(body.transformacaoPrincipal)
+            : null;
+          // Natureza do negócio = segmento do Kit de Marca. Só chega aqui junto
+          // com a intenção — a legenda nunca recebeu segmento antes, e mandá-lo
+          // fora do piloto mudaria o corpo da requisição sem necessidade.
+          const segment = intencao ? String(body.segment || "").slice(0, 30) : "";
+          const secundariasRaw: unknown[] = Array.isArray(body.transformacoesSecundarias)
+            ? body.transformacoesSecundarias
+            : [];
+          const transformacoesSecundarias: TransformacaoPretendida[] = intencao
+            ? secundariasRaw
+                .map(parseTransformacao)
+                .filter((t): t is TransformacaoPretendida => !!t)
+                .slice(0, 2)
+            : [];
+          const avisoCoerenciaIgnorado = intencao ? body.avisoCoerenciaIgnorado === true : false;
+
           // Legenda inicial (debit=true, junto com "Gerar Post Único") usa o
           // teto de gerações completas; regeneração avulsa de legenda
           // (debit=false, "Gerar outra legenda" numa peça já pronta) usa o
@@ -301,12 +327,20 @@ ${topicos.length ? `TÓPICOS ESCRITOS NA PEÇA:\n${topicos.map((t, i) => `${i + 
 `
             : "";
 
+          // String VAZIA quando não há intenção (retorno antecipado dentro do
+          // builder) — legenda de quem está fora do beta sai idêntica à de hoje.
+          const intencaoBlock = buildIntencaoBlockLegenda({
+            intencao,
+            transformacaoPrincipal,
+            segment,
+          });
+
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
 
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
 ${voiceBlock}${previousBlock}OBJETIVO: ${objetivo} (tom: ${tom})
-INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
+${intencaoBlock}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 ${tituloAncoraBlock}
 Retorne JSON com EXATAMENTE este formato:
 {
@@ -448,6 +482,22 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
                 custoUsd: isAdmin ? 0 : COST_USD.content_pu,
                 preferredSlot,
                 impersonatedBy,
+                // Registro do piloto de intenção declarada — este é o evento
+                // que cobre TODA peça finalizada (roda também para admin, ao
+                // contrário do debitUsage de generate-pu-copy.ts). É a fonte de
+                // verdade para medir o piloto. Ver queries na memória do projeto.
+                ...(intencao
+                  ? {
+                      payload: {
+                        intencao,
+                        transformacao_principal: transformacaoPrincipal,
+                        transformacao_secundaria: transformacoesSecundarias,
+                        intencao_origem: "usuario" as const,
+                        aviso_coerencia_ignorado: avisoCoerenciaIgnorado,
+                        natureza: segment || null,
+                      },
+                    }
+                  : {}),
               });
             } catch (e) {
               console.warn("[generate-caption] debit failed", e);

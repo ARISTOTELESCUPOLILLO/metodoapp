@@ -1,6 +1,7 @@
 import { applyDeterministicFallback } from "../core/textValidation";
 import { isOfertaConcreta } from "../core/ofertaDetection";
 import { getAuthHeaders } from "./authHeaders";
+import type { IntencaoDeclarada, TransformacaoPretendida } from "../domain/intencao";
 
 export type RegenKind = "titulo" | "texto" | "legenda";
 
@@ -21,6 +22,13 @@ export interface RegenContext {
   // Slot do plano a debitar o contador regen_texto no servidor. Quando ausente,
   // o servidor cai no slot preferido padrão (plano1) — ver debit_usage.
   preferredSlot?: "plano1" | "plano2" | "bonus";
+  // Intenção declarada (piloto PU) — sem ela, "Gerar outro título" devolveria
+  // uma alternativa cega ao alvo perceptual da peça. Ausente no MOP e para quem
+  // está fora do beta: o servidor cai no retorno antecipado e gera igual a hoje.
+  intencao?: IntencaoDeclarada | null;
+  transformacaoPrincipal?: TransformacaoPretendida | null;
+  // Natureza do negócio = segmento do Kit de Marca (não há campo novo).
+  segment?: string;
 }
 
 export interface RegenResult {

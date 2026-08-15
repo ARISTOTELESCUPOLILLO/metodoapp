@@ -45,6 +45,9 @@ export async function generatePostUnicoCopy(
   // Tópicos já na tela — enviados só no "Gerar outros tópicos" para o motor
   // saber o que NÃO repetir (ver naoRepetirBlock em generate-pu-copy.ts).
   topicosAtuais?: string[],
+  // Instrumentação do piloto de intenção: o usuário viu um aviso de coerência e
+  // gerou assim mesmo. Não entra no prompt — só em usage_logs.payload.
+  avisoCoerenciaIgnorado?: boolean,
 ): Promise<PostUnicoCopy> {
   const auth = await getAuthHeaders();
   const res = await fetch("/api/generate-pu-copy", {
@@ -63,6 +66,17 @@ export async function generatePostUnicoCopy(
       ...(preferredSlot ? { preferredSlot } : {}),
       ...(tituloFixo ? { tituloFixo } : {}),
       ...(topicosAtuais?.length ? { topicosAtuais } : {}),
+      // Intenção declarada (piloto). Só viaja quando o usuário está no beta e
+      // preencheu o campo — fora disso a requisição é a mesma de sempre e o
+      // servidor gera o prompt de hoje, byte a byte.
+      ...(data.intencao
+        ? {
+            intencao: data.intencao,
+            transformacaoPrincipal: data.transformacaoPrincipal ?? null,
+            transformacoesSecundarias: data.transformacoesSecundarias ?? [],
+            avisoCoerenciaIgnorado: avisoCoerenciaIgnorado === true,
+          }
+        : {}),
     }),
   });
   if (!res.ok) {
@@ -111,6 +125,10 @@ export async function generatePostUnicoCaption(
     // generate-caption.ts (achado real 22/07/2026).
     titulo?: string;
     topicos?: string[];
+    // Natureza do negócio (segmento do Kit de Marca) — a legenda nunca recebeu
+    // segmento antes; só passa a receber junto com a intenção declarada.
+    segment?: string;
+    avisoCoerenciaIgnorado?: boolean;
   },
 ): Promise<PostUnicoCaption> {
   // Headers pelo getAuthHeaders, como as demais chamadas deste arquivo e dos outros
@@ -139,6 +157,17 @@ export async function generatePostUnicoCaption(
       ...(opts?.previousCaption ? { previousCaption: opts.previousCaption } : {}),
       ...(opts?.titulo ? { titulo: opts.titulo } : {}),
       ...(opts?.topicos?.length ? { topicos: opts.topicos } : {}),
+      // Intenção declarada (piloto) — mesma regra do copy: só viaja quando há
+      // intenção preenchida, senão a legenda sai idêntica à de hoje.
+      ...(data.intencao
+        ? {
+            intencao: data.intencao,
+            transformacaoPrincipal: data.transformacaoPrincipal ?? null,
+            transformacoesSecundarias: data.transformacoesSecundarias ?? [],
+            segment: opts?.segment || "",
+            avisoCoerenciaIgnorado: opts?.avisoCoerenciaIgnorado === true,
+          }
+        : {}),
     }),
   });
   if (!res.ok) {

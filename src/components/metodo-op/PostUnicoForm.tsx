@@ -14,6 +14,7 @@ import { usePostUnicoState } from "../../contexts/PostUnicoStateContext";
 import { CopySection, TOPICOS_OBJETIVOS } from "./postUnicoForm/CopySection";
 import { PostUnicoKeyInfoSection } from "./postUnicoForm/PostUnicoKeyInfoSection";
 import { DirecaoVisualSection } from "./postUnicoForm/DirecaoVisualSection";
+import { IntencaoSection } from "./postUnicoForm/IntencaoSection";
 import { IdeiasSheet } from "./contentForm/IdeiasSheet";
 import { useAuth } from "../../hooks/useAuth";
 import { useImpersonation } from "../../hooks/useImpersonation";
@@ -41,7 +42,13 @@ const OBJETIVOS: { code: PostUnicoObjetivo; label: string; desc: string }[] = [
 export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loading }: Props) {
   const { kit } = useBrandKit();
   const { imageKit } = useImageKit();
-  const { geracoesRestantes, geracoesTotal, semPlano, effectiveAdmin: isAdmin } = useAppProfile();
+  const {
+    geracoesRestantes,
+    geracoesTotal,
+    semPlano,
+    effectiveAdmin: isAdmin,
+    profile,
+  } = useAppProfile();
   const {
     puImgsRestantes: imgsRestantes,
     puImgsTotal: imgsTotal,
@@ -248,6 +255,21 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   }
 
   const isNenhum = data.objetivo === "nenhum";
+  // Campo de intenção declarada — piloto. Gate de INTERFACE: quem está fora não
+  // vê o bloco (esconder, não desabilitar — campo bloqueado gera pergunta de
+  // usuário que não deveria saber que o recurso existe). O gate que vale de
+  // verdade é o do backend, que reconfere a flag antes de usar o valor.
+  //
+  // Fora em "Nenhum" de propósito: ali a peça é a combinação mais aberta do
+  // sistema (a IA decide o tom e o fluxo nem gera copy) — pedir alvo perceptual
+  // para uma peça que a máquina decide sozinha inverte o sentido do campo. É
+  // também o que mantém o bloco fechado por padrão, já que "Nenhum" segue
+  // pré-selecionado (a troca do default ficou fora desta tarefa, decisão do Ari
+  // em 15/08/2026: ela mudaria o comportamento de quem está fora do piloto).
+  const intencaoVisivel = profile?.beta_intencao === true && !isNenhum;
+  // Seleção única e OBRIGATÓRIA (seção 4 da spec): peça que tenta provocar três
+  // percepções não provoca nenhuma. Só trava quem está no piloto.
+  const intencaoPendente = intencaoVisivel && (!data.intencao || !data.transformacaoPrincipal);
   // Formato "tópicos com ícone" ativo — bloqueia o mood FRAGMENTO (OP-04) na
   // Direção visual (a colagem fragmentada do FRAGMENTO conflita com a grade de
   // 3 tópicos+ícone).
@@ -277,6 +299,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   const canGenerateCopy =
     !isNenhum &&
     !catalogoSemTexto &&
+    !intencaoPendente &&
     !!data.keyInfo.trim() &&
     !loading &&
     !suggesting &&
@@ -310,6 +333,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         !semRecursos &&
         !(!isAdmin && semPlano) &&
         !moodPendente &&
+        !intencaoPendente &&
         !semPlanoPost &&
         (data.direcao === "livre" || !!data.keyInfo.trim());
   const hasLogo = !!kit.logoDataUrl;
@@ -413,6 +437,18 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
             </button>
           ))}
         </div>
+        {intencaoVisivel && (
+          <IntencaoSection
+            objetivoLabel={OBJETIVOS.find((o) => o.code === data.objetivo)?.label ?? "O objetivo"}
+            intencao={data.intencao ?? null}
+            transformacaoPrincipal={data.transformacaoPrincipal ?? null}
+            transformacoesSecundarias={data.transformacoesSecundarias ?? []}
+            segment={kit.segment}
+            onIntencaoChange={(v) => update("intencao", v)}
+            onPrincipalChange={(v) => update("transformacaoPrincipal", v)}
+            onSecundariasChange={(v) => update("transformacoesSecundarias", v)}
+          />
+        )}
       </div>
 
       <PostUnicoKeyInfoSection

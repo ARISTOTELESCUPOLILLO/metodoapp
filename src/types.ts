@@ -198,6 +198,19 @@ export type {
 type PersonagemSemAvatar = _PersonagemSemAvatar;
 type TipoPecaVestuario = _TipoPecaVestuario;
 
+import type {
+  IntencaoDeclarada as _IntencaoDeclarada,
+  TransformacaoPretendida as _TransformacaoPretendida,
+} from "./domain/intencao";
+export type {
+  CamadaTransformacao,
+  IntencaoDeclarada,
+  IntencaoOrigem,
+  TransformacaoPretendida,
+} from "./domain/intencao";
+type IntencaoDeclarada = _IntencaoDeclarada;
+type TransformacaoPretendida = _TransformacaoPretendida;
+
 export type PostUnicoObjetivo =
   | "promocao"
   | "homenagem"
@@ -227,6 +240,17 @@ export interface PostUnicoFormData {
   // Formato do texto de apoio — "corrido" (padrão) ou "topicos" (3 tópicos
   // com ícone, só nos objetivos institucional/oportunidade/promocao/venda).
   formatoTexto?: PostUnicoFormatoTexto;
+  // ── Intenção declarada (piloto, atrás da flag profiles.beta_intencao) ──
+  // O que a peça pretende PROVOCAR no receptor — separado do que ela É
+  // (objetivo/formato) e do que ela DIZ (informação-chave). Ver
+  // domain/intencao.config.ts e core/intencao.ts. Ausente para quem está fora
+  // do piloto: nesse caso o prompt é idêntico ao de sempre.
+  intencao?: IntencaoDeclarada | null;
+  // Uma principal (obrigatória quando há intenção) — é a única que alimentará a
+  // medição futura. As secundárias (até 2) existem para não amputar o cliente
+  // sem estragar o denominador do índice.
+  transformacaoPrincipal?: TransformacaoPretendida | null;
+  transformacoesSecundarias?: TransformacaoPretendida[];
 }
 
 export interface TemplateMood {

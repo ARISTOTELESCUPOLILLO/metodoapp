@@ -455,6 +455,7 @@ export type Database = {
       };
       profiles: {
         Row: {
+          beta_intencao: boolean;
           bonus_assigned_by: string | null;
           bonus_contrato_fim: string | null;
           bonus_expira_em: string | null;
@@ -547,6 +548,7 @@ export type Database = {
           voice_avatar2_enabled: boolean;
         };
         Insert: {
+          beta_intencao?: boolean;
           bonus_assigned_by?: string | null;
           bonus_contrato_fim?: string | null;
           bonus_expira_em?: string | null;
@@ -639,6 +641,7 @@ export type Database = {
           voice_avatar2_enabled?: boolean;
         };
         Update: {
+          beta_intencao?: boolean;
           bonus_assigned_by?: string | null;
           bonus_contrato_fim?: string | null;
           bonus_expira_em?: string | null;

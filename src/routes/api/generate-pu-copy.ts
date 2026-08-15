@@ -14,10 +14,12 @@ import {
   debitUsage,
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
+import { hasBetaIntencao } from "@/repository/betaFlags";
+import { buildIntencaoBlock, parseIntencao, parseTransformacao } from "@/core/intencao";
 import { COST_USD } from "@/lib/costs";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
-import type { FaixaEtaria } from "@/types";
+import type { FaixaEtaria, TransformacaoPretendida } from "@/types";
 import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 import { isOfertaConcreta } from "@/core/ofertaDetection";
 import {
@@ -133,6 +135,49 @@ export const Route = createFileRoute("/api/generate-pu-copy")({
             : undefined;
           const isAdminUser = await checkIsAdmin(userId);
 
+          // GATE DE BACKEND da intenção declarada — obrigatório. O gate de
+          // interface não basta: sem esta reconferência, um usuário fora do
+          // beta pode gerar com um campo que não vê (cache antigo, aba aberta
+          // há dois dias, deploy no meio do uso) e a saída dele muda sem
+          // explicação possível. A flag só é consultada quando o cliente
+          // realmente mandou o campo — quem está fora não paga query nenhuma.
+          const intencao =
+            body.intencao && (await hasBetaIntencao(userId)) ? parseIntencao(body.intencao) : null;
+          const transformacaoPrincipal = intencao
+            ? parseTransformacao(body.transformacaoPrincipal)
+            : null;
+          // Secundárias e aviso ignorado NÃO entram no prompt — são só
+          // instrumentação do piloto (ver payload do debitUsage no fim). Apenas
+          // a transformação PRINCIPAL alimenta a medição futura; as secundárias
+          // existem para não amputar o cliente sem estragar o denominador.
+          const secundariasRaw: unknown[] = Array.isArray(body.transformacoesSecundarias)
+            ? body.transformacoesSecundarias
+            : [];
+          const transformacoesSecundarias: TransformacaoPretendida[] = intencao
+            ? secundariasRaw
+                .map(parseTransformacao)
+                .filter((t): t is TransformacaoPretendida => !!t)
+                .slice(0, 2)
+            : [];
+          const avisoCoerenciaIgnorado = intencao ? body.avisoCoerenciaIgnorado === true : false;
+          // Bloco de instrumentação — só existe quando há intenção, para não
+          // sujar o payload de toda geração fora do piloto.
+          const intencaoPayload = intencao
+            ? {
+                intencao,
+                transformacao_principal: transformacaoPrincipal,
+                transformacao_secundaria: transformacoesSecundarias,
+                // Na Fase 1 não existe sugestão de intenção por IA — o campo é
+                // sempre preenchido pelo usuário. O valor já é gravado para não
+                // migrar dado quando a sugestão existir.
+                intencao_origem: "usuario" as const,
+                aviso_coerencia_ignorado: avisoCoerenciaIgnorado,
+                // Natureza do negócio = segmento do Kit de Marca (não há coluna
+                // nova). Guardado junto porque o kit pode mudar depois.
+                natureza: segment || null,
+              }
+            : null;
+
           if (tituloFixo) {
             // "Gerar outros tópicos" é uma REGENERAÇÃO (título já existe, só
             // troca os tópicos) — mesmo tratamento de billing do "Gerar outro
@@ -205,6 +250,16 @@ Proibido mencionar literalmente o nome da voz no texto final.
               : 'PÚBLICO-ALVO: CONSUMIDOR FINAL (B2C). Fale com a pessoa que usa o produto/serviço na própria vida. PROIBIDO usar "gestor", "empresa", "equipe" como interlocutor.\n';
 
           const faixaBlock = faixaEtaria ? `${FAIXA_ETARIA_REGISTRO[faixaEtaria]}\n` : "";
+
+          // String VAZIA quando não há intenção (retorno antecipado dentro do
+          // builder) — o prompt de quem está fora do beta fica idêntico ao de
+          // hoje, byte a byte. A "natureza do negócio" que decide COMO a
+          // percepção se constrói é o `segment` que o Kit de Marca já grava.
+          const intencaoBlock = buildIntencaoBlock({
+            intencao,
+            transformacaoPrincipal,
+            segment,
+          });
 
           const topicIconList = TOPICO_ICON_VOCAB.join(", ");
           const topicosSchemaLines = `  "topicos": [
@@ -281,7 +336,7 @@ ${topicosAtuais.map((t, i) => `${i + 1}. ${t}`).join("\n")}
 EMPRESA: ${companyName}
 ATIVIDADE: ${mainActivity}
 ${segmentBlock}${audienceBlock}${faixaBlock}${voiceBlock}OBJETIVO: ${objetivo} (tom: ${tom})
-${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` : ""}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
+${OBJETIVO_INTENCAO[objetivo] ? `INTENÇÃO: ${OBJETIVO_INTENCAO[objetivo]}\n` : ""}${intencaoBlock}INFORMAÇÃO-CHAVE: "${keyInfo.trim()}"
 ${tituloAncoraContexto}${naoRepetirBlock}
 ${schemaBlock}
 
@@ -431,6 +486,12 @@ ${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só p
                   primeiraGeracao: 1,
                   impersonatedBy: effective.impersonatedBy,
                   preferredSlot,
+                  // Registro do piloto de intenção declarada. Cobertura parcial
+                  // de propósito: este debitUsage inteiro só roda para NÃO-admin.
+                  // O registro que cobre toda peça finalizada (inclusive as do
+                  // Ari, que é admin) é o evento "gerar_post_unico" em
+                  // generate-caption.ts, disparado no clique final.
+                  ...(intencaoPayload ? { payload: intencaoPayload } : {}),
                 });
               }
             } catch (e) {
