@@ -8,7 +8,11 @@ import {
   parseIntencao,
   parseTransformacao,
 } from "../core/intencao";
-import { TRANSFORMACOES } from "../domain/intencao.config";
+import {
+  INTENCAO_MANIFESTACAO,
+  TRANSFORMACAO_CAMADA,
+  TRANSFORMACOES,
+} from "../domain/intencao.config";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // O CAMINHO NULO — a regra crítica da seção 12.1 da spec.
@@ -87,9 +91,10 @@ describe("intenção — bloco de prompt", () => {
       transformacaoPrincipal: null,
       segment: "MARCA",
     });
-    expect(servicos).toContain("Explica o que resolve");
-    expect(varejo).toContain("sortimento");
-    expect(marca).toContain("território que ocupa");
+    // Sem transformação, cai na camada silenciosa (CAMADA_PADRAO).
+    expect(servicos).toContain("Fixa qual problema aquele profissional resolve");
+    expect(varejo).toContain("Fixa a loja como o lugar daquele tipo de produto");
+    expect(marca).toContain("Fixa o assunto que é dela");
     expect(servicos).not.toBe(varejo);
     expect(varejo).not.toBe(marca);
   });
@@ -200,7 +205,7 @@ describe("intenção — regra do modo AJUSTADO (oferta concreta)", () => {
       apoio: "texto",
     });
     expect(varejo).toContain("Autoridade");
-    expect(varejo).toContain("Curadoria");
+    expect(varejo).toContain("Mostra o repertório de quem vive daquilo");
   });
 
   it("segmento desconhecido não inventa manifestação", () => {
@@ -243,6 +248,93 @@ describe("intenção — regra do modo AJUSTADO (oferta concreta)", () => {
       apoio: null,
     });
     expect(soTitulo).not.toContain("Ir à loja");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MANIFESTAÇÃO POR CAMADA (17/08/2026).
+//
+// Até aqui cada casa intenção × segmento tinha UMA frase, então o mesmo cliente
+// recebia sempre a mesma manifestação — variável constante, a mesma causa de
+// repetição já provada nos moods. A camada da transformação passou a escolher a
+// frase: a prova que faz alguém atravessar a cidade não é a que faz alguém
+// compartilhar um post.
+// ─────────────────────────────────────────────────────────────────────────────
+describe("intenção — manifestação por camada", () => {
+  const base = { intencao: "confianca" as const, segment: "VAREJO" };
+
+  it("a camada da transformação escolhe a manifestação — mesma intenção, mesmo segmento", () => {
+    const externa = buildIntencaoBlock({ ...base, transformacaoPrincipal: "loja" });
+    const interna = buildIntencaoBlock({ ...base, transformacaoPrincipal: "compartilhar" });
+    const silenciosa = buildIntencaoBlock({ ...base, transformacaoPrincipal: "preferencia" });
+
+    expect(externa).toContain("O que está na peça está na loja");
+    expect(interna).toContain("Mostra o movimento real do dia a dia");
+    expect(silenciosa).toContain("O que foi anunciado se sustenta depois");
+    expect(new Set([externa, interna, silenciosa]).size).toBe(3);
+  });
+
+  it("transformações da MESMA camada dão a MESMA manifestação — a camada é a variável, não o verbo", () => {
+    const loja = buildIntencaoBlock({ ...base, transformacaoPrincipal: "loja" });
+    const whatsapp = buildIntencaoBlock({ ...base, transformacaoPrincipal: "whatsapp" });
+    // Só a linha da TRANSFORMAÇÃO difere; a da MANIFESTAÇÃO é a mesma.
+    expect(whatsapp).toContain("O que está na peça está na loja");
+    expect(loja).not.toBe(whatsapp);
+  });
+
+  it("sem transformação cai na camada silenciosa — a única que não pressupõe ação do leitor", () => {
+    const semTransformacao = buildIntencaoBlock({ ...base, transformacaoPrincipal: null });
+    const comPreferencia = buildIntencaoBlock({ ...base, transformacaoPrincipal: "preferencia" });
+    expect(semTransformacao).toContain("O que foi anunciado se sustenta depois");
+    // Só a linha da transformação separa os dois.
+    expect(semTransformacao).not.toBe(comPreferencia);
+  });
+
+  it("as 36 casas estão preenchidas e nenhuma se repete dentro do mesmo segmento", () => {
+    const intencoes = ["compreensao", "seguranca", "confianca", "autoridade"] as const;
+    const segmentos = ["SERVIÇOS", "VAREJO", "MARCA"] as const;
+    const camadas = {
+      externa: "loja",
+      interna: "salvar",
+      silenciosa: "preferencia",
+    } as const;
+
+    for (const segmento of segmentos) {
+      const vistas = new Set<string>();
+      for (const intencao of intencoes) {
+        for (const transformacao of Object.values(camadas)) {
+          const manifestacao =
+            INTENCAO_MANIFESTACAO[intencao][segmento][TRANSFORMACAO_CAMADA[transformacao]];
+          expect(manifestacao.length).toBeGreaterThan(0);
+          vistas.add(manifestacao);
+        }
+      }
+      expect(vistas.size).toBe(12);
+    }
+  });
+
+  // Régua declarada pelo Ari: cliente pequeno não quer prometer política
+  // comercial nem lembrar o consumidor dos direitos dele; profissão
+  // regulamentada não pode prometer resultado. Três frases foram aposentadas
+  // por isso e nenhuma frase nova pode reintroduzir o problema.
+  it("nenhuma manifestação obriga a prometer política comercial ou resultado", () => {
+    const PROIBIDAS = /\btroca\b|\bdevolu|\bgarantia\b|\bentrega\b|\bprazo\b|\bresultado\b/i;
+    for (const porSegmento of Object.values(INTENCAO_MANIFESTACAO)) {
+      for (const porCamada of Object.values(porSegmento)) {
+        for (const manifestacao of Object.values(porCamada)) {
+          expect(manifestacao).not.toMatch(PROIBIDAS);
+        }
+      }
+    }
+  });
+
+  it("toda transformação tem camada, e as três camadas existem", () => {
+    for (const t of TRANSFORMACOES) {
+      expect(TRANSFORMACAO_CAMADA[t.valor]).toBe(t.camada);
+    }
+    expect(new Set(TRANSFORMACOES.map((t) => t.camada))).toEqual(
+      new Set(["externa", "interna", "silenciosa"]),
+    );
   });
 });
 

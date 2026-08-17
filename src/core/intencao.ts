@@ -10,12 +10,14 @@
 import type { Segment } from "../types";
 import {
   AVISO_URGENCIA,
+  CAMADA_PADRAO,
   INTENCAO_MANIFESTACAO,
   INTENCAO_ROTULO,
   INTENCOES,
   INTENCOES_SEM_URGENCIA,
   INTENCOES_SEM_URGENCIA_VAREJO,
   PARES_INCOERENTES,
+  TRANSFORMACAO_CAMADA,
   TRANSFORMACAO_PRIORIDADE_POR_SEGMENTO,
   TRANSFORMACAO_ROTULO,
   TRANSFORMACOES,
@@ -42,6 +44,22 @@ export function parseTransformacao(raw: unknown): TransformacaoPretendida | null
 function parseSegment(raw: unknown): Segment | null {
   const v = typeof raw === "string" ? raw : "";
   return SEGMENTOS_VALIDOS.has(v) ? (v as Segment) : null;
+}
+
+/**
+ * A manifestação da casa (intenção × segmento × camada). A camada vem da
+ * transformação escolhida — é o palco onde a peça precisa provar o que afirma.
+ * Sem segmento não há manifestação nenhuma: a matriz é indexada por natureza do
+ * negócio, e inventar uma frase genérica ali seria pior que omitir.
+ */
+function resolveManifestacao(
+  intencao: IntencaoDeclarada,
+  segment: Segment | null,
+  transformacao: TransformacaoPretendida | null,
+): string | null {
+  if (!segment) return null;
+  const camada = transformacao ? TRANSFORMACAO_CAMADA[transformacao] : CAMADA_PADRAO;
+  return INTENCAO_MANIFESTACAO[intencao][segment][camada];
 }
 
 export interface IntencaoPrompt {
@@ -73,8 +91,8 @@ export function buildIntencaoBlock(params: IntencaoPrompt): string {
   if (!intencao) return "";
 
   const segment = parseSegment(params.segment);
-  const manifestacao = segment ? INTENCAO_MANIFESTACAO[intencao][segment] : null;
   const transformacao = params.transformacaoPrincipal;
+  const manifestacao = resolveManifestacao(intencao, segment, transformacao);
 
   const linhas = [
     `ALVO PERCEPTUAL DESTA PEÇA (o que ela deve provocar em quem vê): ${INTENCAO_ROTULO[intencao]} — ${
@@ -132,8 +150,8 @@ export function buildIntencaoRegraOferta(params: IntencaoRegraOferta): string {
   if (!intencao) return "";
 
   const segment = parseSegment(params.segment);
-  const manifestacao = segment ? INTENCAO_MANIFESTACAO[intencao][segment] : null;
   const transformacao = params.transformacaoPrincipal;
+  const manifestacao = resolveManifestacao(intencao, segment, transformacao);
   const rotulo = INTENCAO_ROTULO[intencao];
 
   const linhas = [
@@ -170,8 +188,8 @@ export function buildIntencaoBlockLegenda(params: IntencaoPrompt): string {
   if (!intencao) return "";
 
   const segment = parseSegment(params.segment);
-  const manifestacao = segment ? INTENCAO_MANIFESTACAO[intencao][segment] : null;
   const transformacao = params.transformacaoPrincipal;
+  const manifestacao = resolveManifestacao(intencao, segment, transformacao);
 
   const linhas = [
     `ALVO PERCEPTUAL DESTA PEÇA (a legenda serve ao mesmo alvo da arte): ${INTENCAO_ROTULO[intencao]} — ${

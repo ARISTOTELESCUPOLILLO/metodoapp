@@ -37,18 +37,32 @@ export const TRANSFORMACOES: {
   {
     valor: "preferencia",
     rotulo: "Preferência — passa a me querer, e não o concorrente",
-    camada: "interna",
+    camada: "silenciosa",
   },
-  { valor: "urgencia", rotulo: "Urgência — passa a sentir custo em adiar", camada: "interna" },
-  { valor: "comentar", rotulo: "Comentar ou perguntar", camada: "no_post" },
-  { valor: "salvar", rotulo: "Salvar", camada: "no_post" },
-  { valor: "compartilhar", rotulo: "Compartilhar ou marcar alguém", camada: "no_post" },
-  { valor: "seguir", rotulo: "Seguir o perfil", camada: "no_post" },
-  { valor: "whatsapp", rotulo: "Chamar no WhatsApp", camada: "fora_do_post" },
-  { valor: "orcamento", rotulo: "Pedir orçamento", camada: "fora_do_post" },
-  { valor: "loja", rotulo: "Ir à loja", camada: "fora_do_post" },
-  { valor: "ligar", rotulo: "Ligar", camada: "fora_do_post" },
+  { valor: "urgencia", rotulo: "Urgência — passa a sentir custo em adiar", camada: "silenciosa" },
+  { valor: "comentar", rotulo: "Comentar ou perguntar", camada: "interna" },
+  { valor: "salvar", rotulo: "Salvar", camada: "interna" },
+  { valor: "compartilhar", rotulo: "Compartilhar ou marcar alguém", camada: "interna" },
+  { valor: "seguir", rotulo: "Seguir o perfil", camada: "interna" },
+  { valor: "whatsapp", rotulo: "Chamar no WhatsApp", camada: "externa" },
+  { valor: "orcamento", rotulo: "Pedir orçamento", camada: "externa" },
+  { valor: "loja", rotulo: "Ir à loja", camada: "externa" },
+  { valor: "ligar", rotulo: "Ligar", camada: "externa" },
 ];
+
+export const TRANSFORMACAO_CAMADA: Record<TransformacaoPretendida, CamadaTransformacao> =
+  Object.fromEntries(TRANSFORMACOES.map((t) => [t.valor, t.camada])) as Record<
+    TransformacaoPretendida,
+    CamadaTransformacao
+  >;
+
+// Camada usada quando não há transformação declarada. A interface do piloto
+// exige a principal (PostUnicoForm: `intencaoPendente` trava a geração sem
+// ela), mas o backend não pode depender disso — valor inválido no corpo da
+// requisição vira null, e o MOP usa o mesmo endpoint de regeneração sem mandar
+// transformação nenhuma. A silenciosa é o denominador comum: é a única que não
+// pressupõe ação do leitor, então nunca pede à peça algo que ninguém escolheu.
+export const CAMADA_PADRAO: CamadaTransformacao = "silenciosa";
 
 // Curtida NÃO entra em TRANSFORMACOES de propósito: é a ação de menor custo do
 // Instagram, acontece por hábito e reciprocidade independentemente de a peça ter
@@ -69,33 +83,114 @@ export const TRANSFORMACAO_ROTULO: Record<TransformacaoPretendida, string> = Obj
 // denominador do índice.
 export const MAX_TRANSFORMACOES_SECUNDARIAS = 2;
 
-// Como cada natureza de negócio CONSTRÓI cada intenção (seção 5.1 da spec).
-// Entra no prompt como diretriz de MANIFESTAÇÃO — nunca como instrução de tom,
-// que pertence ao Kit de Marca (direção de voz).
+// Como cada natureza de negócio CONSTRÓI cada intenção (seção 5.1 da spec),
+// AGORA TAMBÉM POR CAMADA (17/08/2026). Entra no prompt como diretriz de
+// MANIFESTAÇÃO — nunca como instrução de tom, que pertence ao Kit de Marca
+// (direção de voz).
 //
 // "Natureza do negócio" NÃO é coluna nova: é o `segment` que o Kit de Marca já
 // grava (SERVIÇOS/VAREJO/MARCA) — decisão do Ari em 15/08/2026, para não criar
 // a terceira cópia da mesma variável (brand_kits.segment + profiles.segmento).
-export const INTENCAO_MANIFESTACAO: Record<IntencaoDeclarada, Record<Segment, string>> = {
+//
+// POR QUE A CAMADA ENTROU: até 17/08 cada casa tinha UMA frase, então o mesmo
+// cliente recebia a mesma manifestação em toda peça — a variável era constante,
+// que é a mesma causa de repetição já provada nos moods. A camada foi a
+// dimensão escolhida (em vez do objetivo da peça) porque tem ligação semântica
+// direta: a prova que faz alguém atravessar a cidade não é a que faz alguém
+// compartilhar um post, e "Promoção" ou "Aviso" não dizem nada sobre onde a
+// prova acontece. São 3 valores e não 7, o que também mantém o repertório
+// escrevível à mão.
+//
+// ⚠ RÉGUA DE ESCRITA (Ari, 17/08/2026 — vale para toda frase nova aqui):
+// a manifestação descreve o TIPO de prova, nunca a prova específica. NÃO PODE
+// obrigar o cliente a prometer política comercial (troca, devolução, garantia,
+// prazo, entrega) nem lembrar o consumidor dos direitos dele — "cliente pequeno
+// tem manias". Em SERVIÇOS soma-se a profissão regulamentada (advogado,
+// dentista, médico, contador), que não pode prometer resultado nem exibir
+// antes/depois. Três frases foram aposentadas por essa régua: "Preço justo,
+// TROCA, procedência" e "Cumpre o anunciado — tem, ENTREGA" no varejo, e
+// "Prova — RESULTADO, bastidor, gente" em serviços.
+//
+// E a manifestação diz COMO a percepção se constrói, não o efeito que produz —
+// o efeito já está no rótulo da intenção. Por isso "Mostra procedência do que
+// vende" e não "Tira o receio de errar".
+export const INTENCAO_MANIFESTACAO: Record<
+  IntencaoDeclarada,
+  Record<Segment, Record<CamadaTransformacao, string>>
+> = {
   compreensao: {
-    SERVIÇOS: "Explica o que resolve",
-    VAREJO: "Mostra o que tem — sortimento",
-    MARCA: "Mostra o território que ocupa",
+    SERVIÇOS: {
+      externa: "Nomeia o problema que resolve na palavra do cliente",
+      interna: "Mostra o que o serviço cobre",
+      silenciosa: "Fixa qual problema aquele profissional resolve",
+    },
+    VAREJO: {
+      externa: "Mostra o que a loja vende e onde ela fica",
+      interna: "Explica para que serve o que está na prateleira",
+      silenciosa: "Fixa a loja como o lugar daquele tipo de produto",
+    },
+    MARCA: {
+      externa: "Diz o que a marca faz sem rodeio",
+      interna: "Mostra o território que ocupa",
+      silenciosa: "Fixa o assunto que é dela",
+    },
   },
   seguranca: {
-    SERVIÇOS: "Processo e método visíveis",
-    VAREJO: "Preço justo, troca, procedência",
-    MARCA: "Consistência e previsibilidade",
+    SERVIÇOS: {
+      // "Mostra como começa o trabalho" e não o trabalho inteiro: o que faz
+      // alguém chamar no WhatsApp é enxergar o primeiro passo, que é barato.
+      // Ninguém pede orçamento para o passo cinco.
+      externa: "Mostra como começa o trabalho",
+      interna: "Antecipa a dúvida que trava a decisão",
+      silenciosa: "Torna o método visível",
+    },
+    VAREJO: {
+      externa: "Mostra que tem quem oriente na hora da escolha",
+      interna: "Antecipa a dúvida mais comum da categoria",
+      silenciosa: "Mostra procedência do que vende",
+    },
+    MARCA: {
+      externa: "Mostra que há gente por trás, acessível",
+      interna: "Mantém o mesmo jeito de aparecer",
+      silenciosa: "Sustenta consistência ao longo do tempo",
+    },
   },
   confianca: {
-    SERVIÇOS: "Prova — resultado, bastidor, gente",
-    VAREJO: "Cumpre o anunciado — tem, entrega",
-    MARCA: "Coerência de mundo, presença",
+    // A linha inteira de SERVIÇOS fica em gente, bastidor e constância — é o
+    // que sobra quando se tira a promessa de resultado, e é justamente o que
+    // serve a qualquer prestador, regulamentado ou não.
+    SERVIÇOS: {
+      externa: "Mostra quem faz o trabalho",
+      interna: "Mostra o trabalho acontecendo",
+      silenciosa: "Mostra constância no jeito de trabalhar",
+    },
+    VAREJO: {
+      externa: "O que está na peça está na loja",
+      interna: "Mostra o movimento real do dia a dia",
+      silenciosa: "O que foi anunciado se sustenta depois",
+    },
+    MARCA: {
+      externa: "Mostra a marca no mundo real",
+      interna: "Mostra coerência entre o que diz e o que faz",
+      silenciosa: "Marca presença de forma constante",
+    },
   },
   autoridade: {
-    SERVIÇOS: "Domínio técnico demonstrado",
-    VAREJO: "Curadoria — aqui tem o certo",
-    MARCA: "Referência estética e cultural",
+    SERVIÇOS: {
+      externa: "Responde o que o cliente não sabe a quem perguntar",
+      interna: "Mostra o critério técnico por trás da decisão",
+      silenciosa: "Demonstra domínio do ofício",
+    },
+    VAREJO: {
+      externa: "Indica o item certo para cada uso",
+      interna: "Mostra a diferença entre opções parecidas",
+      silenciosa: "Mostra o repertório de quem vive daquilo",
+    },
+    MARCA: {
+      externa: "Toma posição sobre o que importa no setor",
+      interna: "Indica o que merece atenção no setor",
+      silenciosa: "Mostra repertório estético próprio",
+    },
   },
 };
 

@@ -29,11 +29,25 @@ export type TransformacaoPretendida =
   | "ligar";
 
 /**
- * Camada A = mudança interna (medição futura por proxy, no comentário);
- * B = comportamento no post (via Graph API); C = comportamento fora do post
- * (declarado pelo cliente). Não muda o prompt — existe para a medição da Fase 5.
+ * ONDE a transformação acontece — o palco em que a peça precisa provar o que
+ * afirma:
+ * - `externa`: o leitor sai do post (vai à loja, chama no WhatsApp, liga, pede
+ *   orçamento). Prova cara: a peça tem de justificar um deslocamento.
+ * - `interna`: o leitor age ali mesmo (comenta, salva, compartilha, segue).
+ *   Medível pela Graph API.
+ * - `silenciosa`: nada acontece do lado de fora — muda o que ele pensa
+ *   (preferência, urgência). Medição futura só por proxy.
+ *
+ * Vocabulário fixado com o Ari em 17/08/2026. Os nomes anteriores
+ * (`interna`/`no_post`/`fora_do_post`) foram trocados porque "interna"
+ * significava a camada silenciosa e ele usa a mesma palavra para "age dentro do
+ * post" — duas coisas opostas com o mesmo nome é armadilha garantida.
+ *
+ * DEIXOU DE SER METADADO MORTO na mesma data: a camada agora escolhe a
+ * MANIFESTAÇÃO (ver INTENCAO_MANIFESTACAO), porque a prova que faz alguém
+ * atravessar a cidade não é a mesma que faz alguém compartilhar um post.
  */
-export type CamadaTransformacao = "interna" | "no_post" | "fora_do_post";
+export type CamadaTransformacao = "externa" | "interna" | "silenciosa";
 
 /**
  * Distingue, na medição futura, alinhamento alto de cliente que PENSOU de
