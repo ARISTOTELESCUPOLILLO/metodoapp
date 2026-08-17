@@ -120,6 +120,11 @@ const ECO_STOPWORDS = new Set([
 
 const ECO_MIN_TOKENS = 3;
 
+// Quantas palavras de conteúdo PRÓPRIAS o título precisa trazer para deixar de
+// ser um rearranjo da informação-chave. Uma só (um adjetivo, um "novo") não
+// compõe nada: continua uma etiqueta de vitrine.
+const ECO_MAX_PALAVRAS_PROPRIAS = 1;
+
 function ecoContentTokens(texto: string): string[] {
   return stripAccents(texto.toLowerCase())
     .replace(/[^a-z0-9]+/g, " ")
@@ -130,19 +135,34 @@ function ecoContentTokens(texto: string): string[] {
 export function checkEcoKeyInfo(titulo: string, keyInfo: string): string | null {
   const chave = ecoContentTokens(keyInfo || "");
   if (chave.length < ECO_MIN_TOKENS) return null;
-
   const alvo = ecoContentTokens(titulo || "");
-  // Subsequência gulosa: todos os tokens da informação-chave reaparecem no
-  // título na mesma ordem relativa (não precisam ser contíguos — "Capacete
-  // para motociclista AGORA por R$ 129,00" é a mesma transcrição).
+
+  // (A) TRANSCRIÇÃO — todos os tokens da informação-chave reaparecem na mesma
+  // ordem relativa (não precisam ser contíguos: "Capacete para motociclista
+  // AGORA por R$ 129,00" é a mesma cópia). O título é a frase do usuário com
+  // palavras coladas no começo ou no fim.
   let i = 0;
   for (const token of alvo) {
     if (token === chave[i]) i++;
     if (i === chave.length) break;
   }
-  if (i < chave.length) return null;
+  if (i === chave.length) {
+    return "título é a informação-chave transcrita, com palavras apenas acrescentadas no começo ou no fim — preservar item, preço, prazo e condição continua obrigatório, mas a manchete precisa ser COMPOSTA: mude a ordem, o sujeito ou a construção da frase em vez de colar um fecho na frase escrita pelo usuário";
+  }
 
-  return "título é a informação-chave transcrita, com palavras apenas acrescentadas no começo ou no fim — preservar item, preço, prazo e condição continua obrigatório, mas a manchete precisa ser COMPOSTA: mude a ordem, o sujeito ou a construção da frase em vez de colar um fecho na frase escrita pelo usuário";
+  // (B) REARRANJO — os mesmos elementos, trocados de lugar, sem material
+  // próprio. Achado de 17/08 (2ª rodada): a informação-chave "Capacete para
+  // motociclista por R$ 129,00" devolveu "Seu capacete novo por R$ 129,00 para
+  // motociclista" — passou em (A) por ter mudado a ordem, mas continua uma
+  // etiqueta de produto com preço: nenhum verbo, nenhuma afirmação, e por isso
+  // nenhuma percepção se constrói.
+  const chaveSet = new Set(chave);
+  const todosPresentes = chave.every((t) => alvo.includes(t));
+  if (!todosPresentes) return null;
+  const proprias = alvo.filter((t) => !chaveSet.has(t)).length;
+  if (proprias > ECO_MAX_PALAVRAS_PROPRIAS) return null;
+
+  return "título só reordena a informação-chave — os mesmos elementos trocados de lugar, sem nada de próprio: é etiqueta de vitrine, não manchete. O título precisa AFIRMAR algo sobre a oferta (frase com verbo), e não apenas nomear o produto com o preço ao lado";
 }
 
 // ─────────────────────────────────────────────────────────────────────────

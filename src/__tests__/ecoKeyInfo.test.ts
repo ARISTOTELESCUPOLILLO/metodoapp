@@ -53,8 +53,27 @@ describe("eco da informação-chave", () => {
     expect(checkEcoKeyInfo("Sua cabeça vale mais que R$ 129,00", CAPACETE)).toBeNull();
   });
 
-  it("APROVA quando o título deixa um elemento de fora — reordenar já é compor", () => {
+  it("APROVA quando o título deixa um elemento de fora e traz material próprio", () => {
     expect(checkEcoKeyInfo("Capacete por R$ 129,00 na loja", CAPACETE)).toBeNull();
+  });
+
+  // 2ª rodada de 17/08: reordenar sozinho NÃO é compor. O título abaixo passou
+  // no critério (A) por ter mudado a ordem, mas continua uma etiqueta de
+  // vitrine — nenhum verbo, nenhuma afirmação sobre a oferta.
+  it("reprova o rearranjo — mesmos elementos trocados de lugar, sem nada de próprio", () => {
+    expect(checkEcoKeyInfo("Seu capacete novo por R$129,00 para motociclista", CAPACETE)).toMatch(
+      /etiqueta de vitrine/,
+    );
+  });
+
+  it("reprova o rearranjo mesmo com um adjetivo a mais — um adjetivo não compõe", () => {
+    expect(checkEcoKeyInfo("Capacete R$ 129,00 motociclista bom", CAPACETE)).toBeTruthy();
+  });
+
+  it("APROVA o rearranjo que traz material próprio de verdade", () => {
+    expect(
+      checkEcoKeyInfo("Motociclista protege a cabeça com capacete de R$ 129,00", CAPACETE),
+    ).toBeNull();
   });
 
   it("informação-chave curta demais não dispara — preservar 2 dados é obrigação, não cópia", () => {
