@@ -177,15 +177,19 @@ describe("intenção — regra do modo AJUSTADO (oferta concreta)", () => {
     expect(regra).toContain("preço");
   });
 
-  it("proíbe a transcrição com fecho colado — o defeito real do par do capacete", () => {
+  // A proibição de transcrever mora na regra BASE do modo AJUSTADO (vale com
+  // ou sem intenção — o defeito não tem nada a ver com o piloto). Aqui a regra
+  // do alvo só faz referência a ela, para não haver duas ordens concorrentes
+  // sobre a mesma coisa.
+  it("aponta para a regra base de composição em vez de repetir a proibição", () => {
     const regra = buildIntencaoRegraOferta({
       intencao: "confianca",
       transformacaoPrincipal: null,
       segment: "VAREJO",
       apoio: "texto",
     });
-    expect(regra).toContain("aproveite hoje");
-    expect(regra).toContain("transcrita");
+    expect(regra).toContain("COMPOR, NÃO TRANSCREVER");
+    expect(regra).toContain("Componha");
   });
 
   it("nomeia o alvo e a manifestação da natureza do negócio", () => {

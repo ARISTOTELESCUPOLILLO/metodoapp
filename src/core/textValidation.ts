@@ -48,11 +48,13 @@ import {
   checkAbstractPredicate,
   checkAbstractClosing,
   checkTituloUrgency,
+  checkEcoKeyInfo,
 } from "./titleValidation";
 export {
   checkAbstractPredicate,
   checkAbstractClosing,
   checkTituloUrgency,
+  checkEcoKeyInfo,
   checkObserverSubject,
   checkCrossPieceLabelRepeat,
   checkCrossPieceTitleRepeat,
@@ -90,10 +92,19 @@ export const TITULO_MAX_WORDS = 6;
 // nesse modo, o prazo/condição vem literalmente da informação-chave escrita
 // pelo usuário, não é clichê de copy. Default preserva o comportamento de
 // sempre (6 palavras, urgência barrada) para MOP e PU fora desse caminho.
-export function validateTitulo(
-  titulo: string,
-  opts?: { maxWords?: number; skipUrgencyCheck?: boolean },
-): string[] {
+//
+// `ecoKeyInfo` liga a trava de transcrição (checkEcoKeyInfo) passando a
+// informação-chave da peça. Só é passada no modo AJUSTADO, onde a obrigação de
+// preservar os dados torna a transcrição atraente demais para o modelo — no
+// caminho normal a VIRADA OBRIGATÓRIA do prompt já cobre, e ligar a checagem
+// ali mudaria o comportamento do MOP sem evidência que o justifique.
+export type TituloValidationOpts = {
+  maxWords?: number;
+  skipUrgencyCheck?: boolean;
+  ecoKeyInfo?: string;
+};
+
+export function validateTitulo(titulo: string, opts?: TituloValidationOpts): string[] {
   const motivos: string[] = [];
   const maxWords = opts?.maxWords ?? TITULO_MAX_WORDS;
   const words = countTituloWords(titulo);
@@ -112,6 +123,10 @@ export function validateTitulo(
   if (!opts?.skipUrgencyCheck) {
     const urgency = checkTituloUrgency(titulo);
     if (urgency) motivos.push(urgency);
+  }
+  if (opts?.ecoKeyInfo) {
+    const eco = checkEcoKeyInfo(titulo, opts.ecoKeyInfo);
+    if (eco) motivos.push(eco);
   }
   return motivos;
 }
@@ -264,7 +279,7 @@ export function validatePieceFields(
   prefix: string,
   fields: { titulo?: string; texto?: string; legenda?: string },
   keyInfo?: string,
-  titleOpts?: { maxWords?: number; skipUrgencyCheck?: boolean },
+  titleOpts?: TituloValidationOpts,
 ): ValidationFlag[] {
   const flags: ValidationFlag[] = [];
 

@@ -65,6 +65,87 @@ export function checkTituloUrgency(titulo: string): string | null {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// ECO DA INFORMAÇÃO-CHAVE — o título é a frase escrita pelo usuário com
+// palavras coladas no começo ou no fim.
+//
+// Achado real 17/08/2026 (Ari, PU Promoção com preço): a informação-chave
+// "Capacete para motociclista por R$ 129,00" devolveu o título "Capacete para
+// motociclista por R$129,00 chegou agora". No modo AJUSTADO os dados são
+// OBRIGATÓRIOS — e é justamente por isso que nenhuma regra de prompt sozinha
+// resolve: "preserve o preço e a condição" convive bem demais com transcrever
+// a frase inteira. Trocar o fecho proibido por outro ("aproveite hoje" →
+// "chegou agora") custa nada ao modelo. Esta checagem é a trava
+// determinística, e o motivo volta ao prompt de regeneração como MOTIVO DA
+// REJEIÇÃO (ver autoRegenerate.ts).
+//
+// Conservadora de propósito: compara só tokens de CONTEÚDO (preposição e
+// artigo fora, para o eco não escapar trocando "por" por "a"), exige no mínimo
+// 3 deles e ordem preservada. Reordenar OU deixar um elemento de fora já
+// caracteriza composição e passa — que é exatamente o que se quer permitir.
+// ─────────────────────────────────────────────────────────────────────────
+
+const ECO_STOPWORDS = new Set([
+  "de",
+  "da",
+  "do",
+  "das",
+  "dos",
+  "em",
+  "no",
+  "na",
+  "nos",
+  "nas",
+  "por",
+  "para",
+  "pra",
+  "pro",
+  "com",
+  "sem",
+  "ao",
+  "aos",
+  "as",
+  "os",
+  "um",
+  "uma",
+  "uns",
+  "umas",
+  "ou",
+  "que",
+  "seu",
+  "sua",
+  "seus",
+  "suas",
+  "the",
+]);
+
+const ECO_MIN_TOKENS = 3;
+
+function ecoContentTokens(texto: string): string[] {
+  return stripAccents(texto.toLowerCase())
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 1 && !ECO_STOPWORDS.has(t));
+}
+
+export function checkEcoKeyInfo(titulo: string, keyInfo: string): string | null {
+  const chave = ecoContentTokens(keyInfo || "");
+  if (chave.length < ECO_MIN_TOKENS) return null;
+
+  const alvo = ecoContentTokens(titulo || "");
+  // Subsequência gulosa: todos os tokens da informação-chave reaparecem no
+  // título na mesma ordem relativa (não precisam ser contíguos — "Capacete
+  // para motociclista AGORA por R$ 129,00" é a mesma transcrição).
+  let i = 0;
+  for (const token of alvo) {
+    if (token === chave[i]) i++;
+    if (i === chave.length) break;
+  }
+  if (i < chave.length) return null;
+
+  return "título é a informação-chave transcrita, com palavras apenas acrescentadas no começo ou no fim — preservar item, preço, prazo e condição continua obrigatório, mas a manchete precisa ser COMPOSTA: mude a ordem, o sujeito ou a construção da frase em vez de colar um fecho na frase escrita pelo usuário";
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Medida C (sequência MOP) — "rótulo do leitor" como sujeito do título
 // substitui a FORMA do estágio que o título deveria entregar (ver item 11 /
 // FUNÇÕES COMUNICATIVAS POR PEÇA em organizaMethodEngine.ts): em vez de

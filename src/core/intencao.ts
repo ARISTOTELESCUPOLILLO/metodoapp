@@ -139,8 +139,7 @@ export function buildIntencaoRegraOferta(params: IntencaoRegraOferta): string {
   const linhas = [
     `- ⚠ A OFERTA NÃO CANCELA O ALVO PERCEPTUAL — REGRA DE DESEMPATE DESTA GERAÇÃO: item, preço, prazo e condição continuam intocáveis e vêm na frente, exatamente como as regras acima determinam. O que eles NÃO decidem é todo o resto: qual face da oferta vira manchete, quais palavras acompanham os dados e o que fica de fora. Isso quem decide é o ALVO PERCEPTUAL declarado no contexto — ${rotulo}${
       manifestacao ? `, que neste negócio se constrói assim: ${manifestacao}` : ""
-    }. A mesma oferta pode ser anunciada de vários modos; anuncie do modo que produz essa percepção.`,
-    `- PROIBIDO devolver a informação-chave transcrita com um fecho colado no fim (ex.: "...aproveite hoje", "...corra", "...confira"): isso não é manchete publicitária, é cópia, e não constrói percepção nenhuma. Preservar os dados citados é obrigatório; repetir a frase inteira do usuário não é.`,
+    }. A mesma oferta pode ser anunciada de vários modos — e a regra COMPOR, NÃO TRANSCREVER acima existe justamente para abrir esse espaço. Componha do modo que produz essa percepção.`,
   ];
   if (params.apoio) {
     const apoioFrase =

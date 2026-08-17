@@ -69,7 +69,8 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: não repita a a
       const max = TITULO_MAX_WORDS_AJUSTADO;
       return {
         label: "título",
-        rule: `MÁXIMO ${max} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de responder). Esta é uma peça de OFERTA/PROMOÇÃO concreta: NÃO busque um ângulo diferente da informação-chave — reescreva como manchete publicitária, com clareza e fôlego de anúncio, preservando item, preço, prazo e condição de pagamento citados literalmente (troque por sinônimo só se estritamente necessário para caber no limite). PROIBIDO inventar valor, prazo, parcelamento ou condição que não estejam na informação-chave. Sem emoji, sem hashtag, sem aspas. Sem ponto final — EXCETO se for pergunta (raro nesse caso).
+        rule: `MÁXIMO ${max} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de responder). Esta é uma peça de OFERTA/PROMOÇÃO concreta: item, preço, prazo e condição de pagamento citados na informação-chave são OBRIGATÓRIOS e vêm literais (troque por sinônimo só se estritamente necessário para caber no limite). Não é hora de buscar um ângulo que fuja da oferta. PROIBIDO inventar valor, prazo, parcelamento ou condição que não estejam na informação-chave. Sem emoji, sem hashtag, sem aspas. Sem ponto final — EXCETO se for pergunta (raro nesse caso).
+⚠ COMPOR, NÃO TRANSCREVER: os dados são o MATERIAL da manchete, nunca a frase pronta. PROIBIDO devolver a informação-chave na mesma ordem e com as mesmas palavras acrescentando um fecho no fim ou uma chamada no começo — trocar o fecho por outro ("aproveite hoje", "chegou agora", "confira já") não resolve: o defeito é a transcrição, não a palavra colada. Escreva uma frase SUA que CARREGUE os dados obrigatórios: mude a ordem dos elementos, o sujeito ou a construção.
 A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: mude a ordem, a pontuação ou a construção da frase — mantendo os mesmos dados concretos (item, preço, prazo, condição).`,
         max,
       };
@@ -282,7 +283,14 @@ Retorne JSON EXATAMENTE assim:
               ? validateTitulo(
                   value,
                   ajustePromocional
-                    ? { maxWords: TITULO_MAX_WORDS_AJUSTADO, skipUrgencyCheck: true }
+                    ? {
+                        maxWords: TITULO_MAX_WORDS_AJUSTADO,
+                        skipUrgencyCheck: true,
+                        // Sem isto, a regeneração devolveria outra transcrição e
+                        // ela passaria — a tentativa seguinte nunca saberia que
+                        // o defeito continuou (ver checkEcoKeyInfo).
+                        ecoKeyInfo: keyInfo,
+                      }
                     : undefined,
                 )
               : kind === "texto"
