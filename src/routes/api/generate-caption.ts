@@ -26,7 +26,12 @@ import {
   OBJETIVO_HASHTAG_FALLBACK,
 } from "@/domain/objetivo.config";
 import { hasBetaIntencao } from "@/repository/betaFlags";
-import { buildIntencaoBlockLegenda, parseIntencao, parseTransformacao } from "@/core/intencao";
+import {
+  buildIntencaoBlockLegenda,
+  buildIntencaoRegraLegenda,
+  parseIntencao,
+  parseTransformacao,
+} from "@/core/intencao";
 import type { TransformacaoPretendida } from "@/types";
 
 const HASHTAG_FALLBACK_STOPWORDS = new Set([
@@ -334,6 +339,14 @@ ${topicos.length ? `TÓPICOS ESCRITOS NA PEÇA:\n${topicos.map((t, i) => `${i + 
             transformacaoPrincipal,
             segment,
           });
+          // A manifestação também precisa ser ORDEM na legenda — no teste de
+          // 17/08 as três legendas saíram parafraseando a informação-chave, com
+          // o CTA como única diferença real. Vazia sem intenção.
+          const intencaoRegraLegenda = buildIntencaoRegraLegenda({
+            intencao,
+            transformacaoPrincipal,
+            segment,
+          });
 
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
 
@@ -349,7 +362,7 @@ Retorne JSON com EXATAMENTE este formato:
   "hashtags": ["tag1", "tag2", "tag3"]
 }
 
-Regras:
+Regras:${intencaoRegraLegenda}
 - Português brasileiro, sem inglês, sem markdown.
 - "hashtags" relevantes ao segmento e à informação-chave.
 - PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."

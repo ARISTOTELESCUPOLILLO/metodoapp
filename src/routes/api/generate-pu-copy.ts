@@ -17,6 +17,7 @@ import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { hasBetaIntencao } from "@/repository/betaFlags";
 import {
   buildIntencaoBlock,
+  buildIntencaoRegraApoio,
   buildIntencaoRegraOferta,
   parseIntencao,
   parseTransformacao,
@@ -280,6 +281,17 @@ Proibido mencionar literalmente o nome da voz no texto final.
                 apoio: wantsTopicos ? "topicos" : "texto",
               })
             : "";
+          // A MANIFESTAÇÃO precisa ser ORDEM, não contexto — teste ao vivo de
+          // 17/08: três peças com a mesma intenção e camadas diferentes saíram
+          // idênticas em conteúdo, todas parafraseando a informação-chave. Vai
+          // no bloco de regras do APOIO (nunca do título, que já tem a virada
+          // obrigatória e o elemento concreto a preservar). Vazia sem intenção.
+          const intencaoRegraApoio = buildIntencaoRegraApoio({
+            intencao,
+            transformacaoPrincipal,
+            segment,
+            apoio: wantsTopicos ? "topicos" : "texto",
+          });
 
           const topicIconList = TOPICO_ICON_VOCAB.join(", ");
           const topicosSchemaLines = `  "topicos": [
@@ -346,6 +358,7 @@ ${topicosAtuais.map((t, i) => `${i + 1}. ${t}`).join("\n")}
             ? `- Cada "texto" dos ${TOPICOS_COUNT} tópicos: no máximo ${TOPICO_MAX_WORDS} palavras (CONTE antes de retornar), frase direta e concreta — um ângulo, benefício ou ponto DIFERENTE em cada tópico, sem repetir a mesma ideia com palavras trocadas entre eles, sem hashtag, sem emoji, sem numeração própria (não escreva "1.", "Tópico 1" etc.).
 - Cada "icone" DEVE ser EXATAMENTE um destes termos, copiado literalmente (não traduza, não invente outro): ${topicIconList}. Escolha o mais coerente com o conteúdo de cada tópico; varie entre os ${TOPICOS_COUNT} quando fizer sentido, sem repetir o mesmo ícone à toa.`
             : `- "texto" no máximo 14 palavras (CONTE antes de retornar — 15ª palavra em diante é cortada), frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji`;
+          const textoOuTopicosRules = `${textoOuTopicosRulesBlock}${intencaoRegraApoio}`;
 
           const userPrompt = `${
             tituloFixo
@@ -362,7 +375,7 @@ ${schemaBlock}
 
 Regras:
 ${tituloRulesBlock}
-${textoOuTopicosRulesBlock}
+${textoOuTopicosRules}
 - Português brasileiro, sem inglês, sem markdown
 ${TECNICISMO_RULE}
 - Linguagem simples, natural e profissional. Ensino médio deve entender sem esforço. Evite "maximizar", "estratégias eficazes", "impacto real", "soluções digitais", "transformar seu negócio". Prefira: "melhorar", "vender", "organizar", "atender", "crescer", "mostrar".

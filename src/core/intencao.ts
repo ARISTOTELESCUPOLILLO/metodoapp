@@ -114,6 +114,48 @@ export function buildIntencaoBlock(params: IntencaoPrompt): string {
   return `${linhas.join("\n")}\n`;
 }
 
+/**
+ * Regra de MANIFESTAÇÃO para o bloco de REGRAS — o que o texto de apoio (ou os
+ * tópicos, ou o corpo da legenda) precisa mostrar para a percepção acontecer.
+ *
+ * POR QUE ELA EXISTE (teste ao vivo de 17/08/2026, Ari): com a manifestação só
+ * no bloco de contexto, três peças geradas com a MESMA intenção e camadas
+ * diferentes saíram idênticas em conteúdo — "atrair visitantes com rapidez",
+ * "alcançar visitantes em pouco tempo", "atrair visitantes de forma ágil". Nem
+ * uma vez apareceu "mostra quem faz o trabalho", "mostra o trabalho
+ * acontecendo" ou "mostra constância no jeito de trabalhar". A tabela estava no
+ * ar e chegava ao prompt; o que faltava era FORÇA DE ORDEM. Terceira vez que o
+ * mesmo mecanismo de posição aparece no mesmo dia (ver buildIntencaoRegraOferta
+ * e o achado do título editado à mão de 22/07): informação de contexto perde
+ * para as ordens concretas do bloco de regras, ainda mais quando a
+ * informação-chave — o ponto de maior saliência — já traz a afirmação fechada.
+ *
+ * NÃO entra no título de propósito: o título carrega o elemento concreto da
+ * informação-chave e tem a virada obrigatória a cumprir. Quem tem espaço para
+ * construir percepção é o apoio, e é dele que esta regra trata.
+ */
+export function buildIntencaoRegraApoio(params: IntencaoRegraOferta): string {
+  const intencao = params.intencao;
+  // RETORNO ANTECIPADO — ver nota de topo do arquivo.
+  if (!intencao) return "";
+
+  const manifestacao = resolveManifestacao(
+    intencao,
+    parseSegment(params.segment),
+    params.transformacaoPrincipal,
+  );
+  // Sem segmento não há manifestação, e sem manifestação não há ordem a dar —
+  // o alvo perceptual sozinho continua no contexto, como sempre esteve.
+  if (!manifestacao || !params.apoio) return "";
+
+  const cabecalho =
+    params.apoio === "topicos"
+      ? "O QUE OS TÓPICOS PRECISAM MOSTRAR — REGRA QUE DECIDE ESTE BLOCO"
+      : "O QUE O TEXTO DE APOIO PRECISA MOSTRAR — REGRA QUE DECIDE ESTE TEXTO";
+  const sujeito = params.apoio === "topicos" ? "pelo menos um dos tópicos" : "o texto de apoio";
+  return `\n- ⚠ ${cabecalho}: ${manifestacao}. O título já carrega a informação-chave; ${sujeito} existe para isso — não para reafirmar a mesma ideia do título com outras palavras. CONFIRA ANTES DE RESPONDER: dá para apontar o trecho que faz isso? Se não dá, reescreva.`;
+}
+
 export interface IntencaoRegraOferta extends IntencaoPrompt {
   /**
    * Bloco de apoio que acompanha o título NESTA geração — decide se a regra
@@ -207,6 +249,27 @@ export function buildIntencaoBlockLegenda(params: IntencaoPrompt): string {
   linhas.push(REGRA_NAO_NOMEAR);
 
   return `${linhas.join("\n")}\n`;
+}
+
+/**
+ * Regra de MANIFESTAÇÃO para o bloco de REGRAS da LEGENDA. Mesmo motivo e mesmo
+ * mecanismo de buildIntencaoRegraApoio — no teste de 17/08 as três legendas
+ * saíram parafraseando a informação-chave, com o CTA como única diferença real.
+ * Fala do CORPO, não do CTA: o CTA já é governado pela transformação.
+ */
+export function buildIntencaoRegraLegenda(params: IntencaoPrompt): string {
+  const intencao = params.intencao;
+  // RETORNO ANTECIPADO — ver nota de topo do arquivo.
+  if (!intencao) return "";
+
+  const manifestacao = resolveManifestacao(
+    intencao,
+    parseSegment(params.segment),
+    params.transformacaoPrincipal,
+  );
+  if (!manifestacao) return "";
+
+  return `\n- ⚠ O QUE O CORPO DA LEGENDA PRECISA MOSTRAR — REGRA QUE DECIDE ESTE TEXTO: ${manifestacao}. A legenda não repete o título com outras palavras nem parafraseia a informação-chave: ela é o espaço onde isso acima aparece. CONFIRA ANTES DE RESPONDER: dá para apontar o trecho que faz isso? Se não dá, reescreva. (Vale para o CORPO — o CTA continua governado pela transformação pretendida.)`;
 }
 
 /**

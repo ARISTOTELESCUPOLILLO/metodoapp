@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildIntencaoBlock,
   buildIntencaoBlockLegenda,
+  buildIntencaoRegraApoio,
+  buildIntencaoRegraLegenda,
   buildIntencaoRegraOferta,
   checkCoerencia,
   ordenarTransformacoes,
@@ -335,6 +337,80 @@ describe("intenção — manifestação por camada", () => {
     expect(new Set(TRANSFORMACOES.map((t) => t.camada))).toEqual(
       new Set(["externa", "interna", "silenciosa"]),
     );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MANIFESTAÇÃO COMO ORDEM (teste ao vivo de 17/08 — Confiança × SERVIÇOS).
+//
+// Com a manifestação só no contexto, três peças com a mesma intenção e camadas
+// diferentes saíram idênticas em conteúdo: "atrair visitantes com rapidez",
+// "alcançar visitantes em pouco tempo", "atrair visitantes de forma ágil".
+// Nenhuma mostrou quem faz o trabalho, o trabalho acontecendo ou constância. A
+// tabela chegava ao prompt; faltava força de ORDEM.
+// ─────────────────────────────────────────────────────────────────────────────
+describe("intenção — manifestação como ordem no bloco de regras", () => {
+  const base = {
+    intencao: "confianca" as const,
+    transformacaoPrincipal: "orcamento" as const,
+    segment: "SERVIÇOS",
+  };
+
+  it("caminho nulo — sem intenção não há regra, nem no apoio nem na legenda", () => {
+    const vazio = {
+      intencao: null,
+      transformacaoPrincipal: "orcamento" as const,
+      segment: "SERVIÇOS",
+    };
+    expect(buildIntencaoRegraApoio({ ...vazio, apoio: "texto" })).toBe("");
+    expect(buildIntencaoRegraLegenda(vazio)).toBe("");
+  });
+
+  it("leva a manifestação da camada para dentro das regras do apoio", () => {
+    const regra = buildIntencaoRegraApoio({ ...base, apoio: "texto" });
+    expect(regra).toContain("Mostra quem faz o trabalho");
+    expect(regra).toContain("REGRA QUE DECIDE ESTE TEXTO");
+    expect(regra.startsWith("\n- ")).toBe(true);
+  });
+
+  it("a camada muda a ordem dada ao apoio — é o que o teste ao vivo não produziu", () => {
+    const externa = buildIntencaoRegraApoio({ ...base, apoio: "texto" });
+    const interna = buildIntencaoRegraApoio({
+      ...base,
+      transformacaoPrincipal: "salvar",
+      apoio: "texto",
+    });
+    const silenciosa = buildIntencaoRegraApoio({
+      ...base,
+      transformacaoPrincipal: "preferencia",
+      apoio: "texto",
+    });
+    expect(externa).toContain("Mostra quem faz o trabalho");
+    expect(interna).toContain("Mostra o trabalho acontecendo");
+    expect(silenciosa).toContain("Mostra constância no jeito de trabalhar");
+    expect(new Set([externa, interna, silenciosa]).size).toBe(3);
+  });
+
+  it("fala de tópicos quando o formato é tópicos", () => {
+    const topicos = buildIntencaoRegraApoio({ ...base, apoio: "topicos" });
+    expect(topicos).toContain("pelo menos um dos tópicos");
+    expect(topicos).not.toContain("o texto de apoio existe");
+  });
+
+  it("sem apoio nesta geração não há ordem a dar", () => {
+    expect(buildIntencaoRegraApoio({ ...base, apoio: null })).toBe("");
+  });
+
+  it("sem segmento não há manifestação — e sem manifestação não há regra", () => {
+    expect(buildIntencaoRegraApoio({ ...base, segment: "AGRO", apoio: "texto" })).toBe("");
+    expect(buildIntencaoRegraLegenda({ ...base, segment: null })).toBe("");
+  });
+
+  it("na legenda a regra governa o CORPO e declara que o CTA é da transformação", () => {
+    const regra = buildIntencaoRegraLegenda(base);
+    expect(regra).toContain("CORPO DA LEGENDA");
+    expect(regra).toContain("Mostra quem faz o trabalho");
+    expect(regra).toContain("CTA continua governado pela transformação");
   });
 });
 
