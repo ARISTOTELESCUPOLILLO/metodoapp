@@ -96,6 +96,71 @@ export function buildIntencaoBlock(params: IntencaoPrompt): string {
   return `${linhas.join("\n")}\n`;
 }
 
+export interface IntencaoRegraOferta extends IntencaoPrompt {
+  /**
+   * Bloco de apoio que acompanha o título NESTA geração — decide se a regra
+   * fala sobre ele. `null` quando o prompt regenera só o título
+   * (regenerate-block), onde não há apoio sobre o que instruir.
+   */
+  apoio: "texto" | "topicos" | null;
+}
+
+/**
+ * Regra de alvo perceptual para o modo AJUSTADO (PU promoção + oferta concreta
+ * na informação-chave — ver core/ofertaDetection.ts). Entra no BLOCO DE REGRAS,
+ * ao contrário de buildIntencaoBlock, que entra no contexto.
+ *
+ * POR QUE ELA EXISTE (achado do teste cego de 16/08/2026): no modo AJUSTADO o
+ * bloco de regras do título é SUBSTITUÍDO por "NÃO busque um ângulo diferente
+ * do que a informação-chave já diz / PROIBIDO omitir o preço", que é o oposto
+ * do que o alvo perceptual pede. Com o alvo só no contexto, a ordem concreta e
+ * mais próxima do fim vencia, e a intenção sumia inteira: dos 9 pares do teste,
+ * o único empate absoluto foi justamente o único cuja informação-chave tinha
+ * preço (capacete R$ 129,00 — título gerado: a informação-chave transcrita com
+ * "APROVEITE HOJE" colado no fim). Mesmo mecanismo de posição já provado no
+ * título editado à mão (22/07) e na assinatura de paleta (14/08).
+ *
+ * O que ela NÃO faz: afrouxar a preservação dos dados concretos. No título de
+ * oferta o preço manda mesmo — a decisão de 15/07 continua de pé. O que a regra
+ * recupera é tudo o que os dados não decidem: o recorte da oferta, as palavras
+ * que não são dado e o conteúdo do bloco de apoio.
+ */
+export function buildIntencaoRegraOferta(params: IntencaoRegraOferta): string {
+  const intencao = params.intencao;
+  // RETORNO ANTECIPADO — ver nota de topo do arquivo. Vale igual aqui: fora do
+  // piloto, o bloco de regras do modo AJUSTADO fica idêntico ao de hoje.
+  if (!intencao) return "";
+
+  const segment = parseSegment(params.segment);
+  const manifestacao = segment ? INTENCAO_MANIFESTACAO[intencao][segment] : null;
+  const transformacao = params.transformacaoPrincipal;
+  const rotulo = INTENCAO_ROTULO[intencao];
+
+  const linhas = [
+    `- ⚠ A OFERTA NÃO CANCELA O ALVO PERCEPTUAL — REGRA DE DESEMPATE DESTA GERAÇÃO: item, preço, prazo e condição continuam intocáveis e vêm na frente, exatamente como as regras acima determinam. O que eles NÃO decidem é todo o resto: qual face da oferta vira manchete, quais palavras acompanham os dados e o que fica de fora. Isso quem decide é o ALVO PERCEPTUAL declarado no contexto — ${rotulo}${
+      manifestacao ? `, que neste negócio se constrói assim: ${manifestacao}` : ""
+    }. A mesma oferta pode ser anunciada de vários modos; anuncie do modo que produz essa percepção.`,
+    `- PROIBIDO devolver a informação-chave transcrita com um fecho colado no fim (ex.: "...aproveite hoje", "...corra", "...confira"): isso não é manchete publicitária, é cópia, e não constrói percepção nenhuma. Preservar os dados citados é obrigatório; repetir a frase inteira do usuário não é.`,
+  ];
+  if (params.apoio) {
+    const apoioFrase =
+      params.apoio === "topicos"
+        ? "Os tópicos são onde a percepção se constrói: sustentam"
+        : "O texto de apoio é onde a percepção se constrói: sustenta";
+    linhas.push(
+      `- ${apoioFrase} a MESMA oferta do título, mas SEM repetir os dados já anunciados nele — esse espaço serve ao alvo perceptual (sem nomeá-lo)${
+        transformacao
+          ? ` e prepara a transformação pretendida (${TRANSFORMACAO_ROTULO[transformacao]}), sem exigi-la nem mencioná-la como pedido`
+          : ""
+      }.`,
+    );
+  }
+
+  // Começa com quebra de linha e NÃO termina com uma: cola no fim da última
+  // regra do ramo AJUSTADO, que já é o fim do bloco.
+  return `\n${linhas.join("\n")}`;
+}
+
 /**
  * Bloco de alvo perceptual para o motor de LEGENDA (generate-caption). Mais
  * enxuto que o do título: a legenda continua a peça, não a redefine.

@@ -15,7 +15,12 @@ import {
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { hasBetaIntencao } from "@/repository/betaFlags";
-import { buildIntencaoBlock, parseIntencao, parseTransformacao } from "@/core/intencao";
+import {
+  buildIntencaoBlock,
+  buildIntencaoRegraOferta,
+  parseIntencao,
+  parseTransformacao,
+} from "@/core/intencao";
 import { COST_USD } from "@/lib/costs";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
@@ -260,6 +265,21 @@ Proibido mencionar literalmente o nome da voz no texto final.
             transformacaoPrincipal,
             segment,
           });
+          // O alvo perceptual precisa ser dito DE NOVO dentro do bloco de regras
+          // quando o modo AJUSTADO está ligado — lá o bloco de regras do título é
+          // trocado por "não busque ângulo diferente / preserve o preço", e a
+          // ordem mais concreta e mais próxima do fim vencia o alvo que ficou no
+          // contexto. Ver a nota de buildIntencaoRegraOferta para a prova (teste
+          // cego de 16/08, par do capacete). Vazia fora do modo AJUSTADO e vazia
+          // sem intenção — nos dois casos o prompt fica idêntico ao de hoje.
+          const intencaoRegraOferta = ajustePromocional
+            ? buildIntencaoRegraOferta({
+                intencao,
+                transformacaoPrincipal,
+                segment,
+                apoio: wantsTopicos ? "topicos" : "texto",
+              })
+            : "";
 
           const topicIconList = TOPICO_ICON_VOCAB.join(", ");
           const topicosSchemaLines = `  "topicos": [
@@ -361,7 +381,7 @@ ${
 - PRESERVAÇÃO DOS DADOS CONCRETOS: quando a informação-chave traz preço, desconto, prazo ou condição, mantenha-os fiéis nos tópicos — sem inventar valor, prazo, parcelamento ou condição que não estejam lá, e sem omitir os que sustentam o que o título promete.`
     : ajustePromocional
       ? `- Este título é uma OFERTA/PROMOÇÃO concreta: NÃO busque um ângulo diferente do que a informação-chave já diz. Reescreva-a como manchete publicitária — com clareza, pontuação e fôlego de anúncio — preservando literalmente item, preço, prazo e condição de pagamento citados (troque por sinônimo direto só se for estritamente necessário para caber no limite de palavras). PROIBIDO inventar valor, prazo, parcelamento ou condição que não estejam na informação-chave. PROIBIDO omitir o preço/condição citados só para "soar mais criativo".
-- Título e texto/tópicos reforçam a MESMA oferta — não abra um ângulo paralelo que fuja da promoção anunciada no título.`
+- Título e texto/tópicos reforçam a MESMA oferta — não abra um ângulo paralelo que fuja da promoção anunciada no título.${intencaoRegraOferta}`
       : `- O título deve soar natural — evite sintaxe artificial, metáfora confusa ou promessa exagerada.
 - SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL: qualquer classe gramatical pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, pronome ou locução (ex.: "Cuidar bem...", "Quem decide...", "Pronto para..."). O título NÃO precisa repetir a estrutura "[item] + [complemento]" da informação-chave — pode assumir outra construção, desde que a ANCORAGEM CONCRETA — PRESERVAÇÃO DO ELEMENTO abaixo seja respeitada. PROIBIDA construção passiva sem agente (ex.: "Entrega sem atraso garantida"). ATENÇÃO — sujeito abstrato + predicado abstrato vira frase vazia: se o sujeito escolhido for abstrato ou um verbo no infinitivo substantivado (ex.: "Responder...", "Cuidar..."), o predicado NÃO pode ser "faz/traz/gera/vira/se torna/transforma [outro abstrato]" (ex.: "Responder faz diferença de verdade" ✗ — nada para fotografar). Troque por ação, agente ou elemento concreto observável (ex.: "Responder rápido resolve o dia do cliente" ✓). PROIBIDO TAMBÉM terminar o título em fechamento abstrato/intercambiável entre qualquer empresa — "decisão certa", "escolha certa", "caminho certo", "confiança", "tranquilidade", "paz de espírito", "rotina resolvida" (e variações). Troque por um ganho de negócio ESPECÍFICO da atividade descrita (ex.: em vez de "...a escolha certa", "...mais clientes voltando").
 - ANCORAGEM CONCRETA — ANTI-SÍMBOLO: o título deve poder virar uma FOTO de pessoa(s) real(is) em ação observável (decidir, atender, revisar, fechar, apresentar, entregar). Teste: "dá para fotografar isso sem recorrer a objeto-metáfora ou cenário espacial genérico?" Se a única imagem possível for engrenagem, peão, seta, xadrez, escada, degraus, horizonte vazio, mosquetão ou aperto de mãos → título conceitual demais; reescreva com verbo de ação + agente. Prefira "Time alinhado fecha mais" a "Equipe forte traz bom ganho". PADRÕES PROIBIDOS DE ESTRUTURA: "[abstrato] traz/gera/faz/vira/se torna/transforma [resultado]", "[abstrato] é [abstrato]". Metáforas de jornada ("longe", "avançar", "crescer", "subir") e adjetivos de qualidade ("rápido", "forte", "claro", "sólido") SÃO PERMITIDOS nos títulos — a cena os traduzirá pelo ofício real, não por cenário físico nem propriedade literal.

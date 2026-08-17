@@ -23,7 +23,12 @@ import {
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { hasBetaIntencao } from "@/repository/betaFlags";
-import { buildIntencaoBlock, parseIntencao, parseTransformacao } from "@/core/intencao";
+import {
+  buildIntencaoBlock,
+  buildIntencaoRegraOferta,
+  parseIntencao,
+  parseTransformacao,
+} from "@/core/intencao";
 import { COST_USD } from "@/lib/costs";
 import { isOfertaConcreta } from "@/core/ofertaDetection";
 
@@ -159,13 +164,28 @@ export const Route = createFileRoute("/api/regenerate-block")({
             body.intencao && (await hasBetaIntencao(effective.userId))
               ? parseIntencao(body.intencao)
               : null;
+          const transformacaoPrincipal = intencao
+            ? parseTransformacao(body.transformacaoPrincipal)
+            : null;
+          const segmentIntencao = intencao ? String(body.segment || "").slice(0, 30) : "";
           const intencaoBlock = buildIntencaoBlock({
             intencao,
-            transformacaoPrincipal: intencao
-              ? parseTransformacao(body.transformacaoPrincipal)
-              : null,
-            segment: intencao ? String(body.segment || "").slice(0, 30) : "",
+            transformacaoPrincipal,
+            segment: segmentIntencao,
           });
+          // Mesmo conserto de generate-pu-copy.ts: no modo AJUSTADO a regra do
+          // título manda preservar os dados e não buscar ângulo, e isso apagava
+          // o alvo perceptual que ficou lá em cima no contexto. Aqui o prompt
+          // regenera UM bloco só, então não há apoio sobre o que instruir
+          // (apoio: null). Vazia fora do modo AJUSTADO e vazia sem intenção.
+          const intencaoRegraOferta = ajustePromocional
+            ? buildIntencaoRegraOferta({
+                intencao,
+                transformacaoPrincipal,
+                segment: segmentIntencao,
+                apoio: null,
+              })
+            : "";
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
@@ -201,7 +221,7 @@ VERSÃO ATUAL:
 - Texto: ${textoAtual || "(vazio)"}
 - Legenda: ${legendaAtual || "(vazia)"}
 ${motivoReprovacao ? `\nMOTIVO DA REJEIÇÃO DA VERSÃO ATUAL: ${motivoReprovacao}\nA nova versão NÃO PODE repetir esse defeito específico.\n` : ""}${tituloAncoraBlock}
-REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}
+REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}${intencaoRegraOferta}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.
 PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."

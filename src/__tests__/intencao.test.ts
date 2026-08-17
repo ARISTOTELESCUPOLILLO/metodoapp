@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildIntencaoBlock,
   buildIntencaoBlockLegenda,
+  buildIntencaoRegraOferta,
   checkCoerencia,
   ordenarTransformacoes,
   parseIntencao,
@@ -120,6 +121,124 @@ describe("intenção — bloco de prompt", () => {
     });
     expect(bloco.endsWith("\n")).toBe(true);
     expect(bloco.endsWith("\n\n")).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REGRA DE OFERTA — o conserto do modo AJUSTADO (achado do teste cego 16/08).
+//
+// No modo AJUSTADO o bloco de regras do título é trocado por "não busque ângulo
+// diferente / preserve o preço", e o alvo perceptual — que estava só no contexto
+// — sumia. Esta regra devolve o alvo ao FIM do bloco de regras, sem afrouxar a
+// preservação dos dados concretos.
+// ─────────────────────────────────────────────────────────────────────────────
+describe("intenção — regra do modo AJUSTADO (oferta concreta)", () => {
+  it("devolve string vazia quando não há intenção — prompt de oferta idêntico ao de hoje", () => {
+    expect(
+      buildIntencaoRegraOferta({
+        intencao: null,
+        transformacaoPrincipal: "loja",
+        segment: "VAREJO",
+        apoio: "texto",
+      }),
+    ).toBe("");
+  });
+
+  it("interpolar a regra vazia não altera o bloco de regras em volta", () => {
+    const regra = buildIntencaoRegraOferta({
+      intencao: null,
+      transformacaoPrincipal: null,
+      segment: "VAREJO",
+      apoio: "topicos",
+    });
+    const comCampo = `- Título e texto reforçam a MESMA oferta.${regra}`;
+    expect(comCampo).toBe("- Título e texto reforçam a MESMA oferta.");
+  });
+
+  it("abre em quebra de linha e não fecha em outra — cola no fim da última regra", () => {
+    const regra = buildIntencaoRegraOferta({
+      intencao: "confianca",
+      transformacaoPrincipal: "loja",
+      segment: "VAREJO",
+      apoio: "texto",
+    });
+    expect(regra.startsWith("\n- ")).toBe(true);
+    expect(regra.endsWith("\n")).toBe(false);
+  });
+
+  it("não afrouxa a preservação dos dados — preço/prazo/condição seguem intocáveis", () => {
+    const regra = buildIntencaoRegraOferta({
+      intencao: "seguranca",
+      transformacaoPrincipal: "loja",
+      segment: "VAREJO",
+      apoio: "texto",
+    });
+    expect(regra).toContain("intocáveis");
+    expect(regra).toContain("preço");
+  });
+
+  it("proíbe a transcrição com fecho colado — o defeito real do par do capacete", () => {
+    const regra = buildIntencaoRegraOferta({
+      intencao: "confianca",
+      transformacaoPrincipal: null,
+      segment: "VAREJO",
+      apoio: "texto",
+    });
+    expect(regra).toContain("aproveite hoje");
+    expect(regra).toContain("transcrita");
+  });
+
+  it("nomeia o alvo e a manifestação da natureza do negócio", () => {
+    const varejo = buildIntencaoRegraOferta({
+      intencao: "autoridade",
+      transformacaoPrincipal: null,
+      segment: "VAREJO",
+      apoio: "texto",
+    });
+    expect(varejo).toContain("Autoridade");
+    expect(varejo).toContain("Curadoria");
+  });
+
+  it("segmento desconhecido não inventa manifestação", () => {
+    const regra = buildIntencaoRegraOferta({
+      intencao: "autoridade",
+      transformacaoPrincipal: null,
+      segment: "AGRO",
+      apoio: "texto",
+    });
+    expect(regra).toContain("Autoridade");
+    expect(regra).not.toContain("se constrói assim");
+  });
+
+  it("fala do apoio só quando ele existe nesta geração", () => {
+    const base = {
+      intencao: "confianca" as const,
+      transformacaoPrincipal: null,
+      segment: "VAREJO",
+    };
+    expect(buildIntencaoRegraOferta({ ...base, apoio: "texto" })).toContain("O texto de apoio");
+    expect(buildIntencaoRegraOferta({ ...base, apoio: "topicos" })).toContain("Os tópicos");
+    const soTitulo = buildIntencaoRegraOferta({ ...base, apoio: null });
+    expect(soTitulo).not.toContain("texto de apoio");
+    expect(soTitulo).not.toContain("tópicos");
+  });
+
+  it("a transformação pretendida só entra pela via do apoio, nunca como pedido no título", () => {
+    const comApoio = buildIntencaoRegraOferta({
+      intencao: "confianca",
+      transformacaoPrincipal: "loja",
+      segment: "VAREJO",
+      apoio: "texto",
+    });
+    expect(comApoio).toContain("Ir à loja");
+    expect(comApoio).toContain("sem exigi-la");
+    const soTitulo = buildIntencaoRegraOferta({
+      intencao: "confianca",
+      transformacaoPrincipal: "loja",
+      segment: "VAREJO",
+      apoio: null,
+    });
+    expect(soTitulo).not.toContain("Ir à loja");
   });
 });
 
