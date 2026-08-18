@@ -24,6 +24,7 @@ import {
   type IntencaoDeclarada,
   type TransformacaoPretendida,
 } from "../domain/intencao.config";
+import { buildRegraRecorrenciaApoio } from "./marcadorTemporal";
 
 const INTENCOES_VALIDAS = new Set<string>(INTENCOES.map((i) => i.valor));
 const TRANSFORMACOES_VALIDAS = new Set<string>(TRANSFORMACOES.map((t) => t.valor));
@@ -161,10 +162,21 @@ export function buildIntencaoRegraApoio(params: IntencaoRegraOferta): string {
       ? "O QUE OS TÓPICOS PRECISAM MOSTRAR — REGRA QUE DECIDE ESTE BLOCO"
       : "O QUE O TEXTO DE APOIO PRECISA MOSTRAR — REGRA QUE DECIDE ESTE TEXTO";
   const sujeito = params.apoio === "topicos" ? "pelo menos um dos tópicos" : "o texto de apoio";
-  return `\n- ⚠ ${cabecalho}: ${manifestacao}. O título já carrega a informação-chave; ${sujeito} existe para isso — não para reafirmar a mesma ideia do título com outras palavras. CONFIRA ANTES DE RESPONDER: dá para apontar o trecho que faz isso? Se não dá, reescreva.`;
+  // Cláusula de TEMPO — vazia em 32 das 36 casas e vazia quando a
+  // informação-chave já resolve sozinha. Vem COLADA à manifestação porque
+  // qualifica como cumpri-la, e antes do CONFIRA, que fecha a regra. Ver
+  // core/marcadorTemporal.ts para as três ocorrências que a motivaram.
+  const regraTempo = buildRegraRecorrenciaApoio(manifestacao, params.keyInfo);
+  return `\n- ⚠ ${cabecalho}: ${manifestacao}.${regraTempo} O título já carrega a informação-chave; ${sujeito} existe para isso — não para reafirmar a mesma ideia do título com outras palavras. CONFIRA ANTES DE RESPONDER: dá para apontar o trecho que faz isso? Se não dá, reescreva.`;
 }
 
 export interface IntencaoRegraOferta extends IntencaoPrompt {
+  /**
+   * Informação-chave escrita pelo cliente. Opcional: sem ela a cláusula de
+   * tempo simplesmente não entra (mesmo contrato de retorno vazio do resto do
+   * módulo), e o prompt fica igual ao de antes de 18/08.
+   */
+  keyInfo?: string | null;
   /**
    * Bloco de apoio que acompanha o título NESTA geração — decide se a regra
    * fala sobre ele. `null` quando o prompt regenera só o título

@@ -297,6 +297,11 @@ Proibido mencionar literalmente o nome da voz no texto final.
             intencao,
             transformacaoPrincipal,
             segment,
+            // A informação-chave decide a cláusula de TEMPO da regra (ver
+            // core/marcadorTemporal.ts): nas quatro casas que pedem repetição,
+            // ela diz se há recorrência a preservar, dois marcadores a arbitrar
+            // ou nenhum, e o que fazer em cada caso.
+            keyInfo,
             apoio: wantsTopicos ? "topicos" : "texto",
           });
 

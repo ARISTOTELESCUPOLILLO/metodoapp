@@ -123,3 +123,31 @@ describe("buildRegraPolaridadeKeyInfo — o PAR COMPLETO (achado do teste R6)", 
     expect(regra).toContain("COM OS TERMOS DA INFORMAÇÃO-CHAVE");
   });
 });
+
+// Ver a nota "TERCEIRA RODADA" no docblock de buildRegraPolaridadeKeyInfo: a
+// saída declarada do ramo AUSÊNCIA mandava falar do lado do CLIENTE e derrubava
+// a manifestação da camada silenciosa, que pede sujeito no anunciante. Três
+// peças seguidas (R6, R7, T3) foram para o lado do cliente.
+describe("a saída do ramo AUSÊNCIA não pode roubar o sujeito do apoio", () => {
+  const ausencia = buildRegraPolaridadeKeyInfo("Atendemos sem hora marcada");
+  const contraste = buildRegraPolaridadeKeyInfo("Quem escreve o texto não é quem faz a arte");
+
+  it("a saída da ausência é endereçada ao TÍTULO, onde foi validada no R7", () => {
+    expect(ausencia).toContain("NO TÍTULO");
+    expect(ausencia).toContain("o que isso libera na prática");
+  });
+
+  it("a ausência devolve o texto de apoio para a regra própria dele", () => {
+    expect(ausencia).toContain("quem decide o TEXTO DE APOIO é a regra própria dele");
+  });
+
+  it("nenhum dos dois ramos manda escrever para quem contrata", () => {
+    expect(ausencia).not.toContain("para quem contrata");
+    expect(contraste).not.toContain("para quem contrata");
+  });
+
+  it("o ramo contraste segue intocado — foi ele que funcionou no T2", () => {
+    expect(contraste).toContain("vantagem observável");
+    expect(contraste).toContain("nunca apagando-a");
+  });
+});
