@@ -123,7 +123,8 @@ export function buildIntencaoBlock(params: IntencaoPrompt): string {
  * diferentes saíram idênticas em conteúdo — "atrair visitantes com rapidez",
  * "alcançar visitantes em pouco tempo", "atrair visitantes de forma ágil". Nem
  * uma vez apareceu "mostra quem faz o trabalho", "mostra o trabalho
- * acontecendo" ou "mostra constância no jeito de trabalhar". A tabela estava no
+ * acontecendo" ou "mostra constância no jeito de trabalhar" (esta última já
+ * trocada depois — ver a nota da casa em intencao.config.ts). A tabela estava no
  * ar e chegava ao prompt; o que faltava era FORÇA DE ORDEM. Terceira vez que o
  * mesmo mecanismo de posição aparece no mesmo dia (ver buildIntencaoRegraOferta
  * e o achado do título editado à mão de 22/07): informação de contexto perde

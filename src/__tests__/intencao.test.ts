@@ -391,7 +391,7 @@ describe("intenção — manifestação como ordem no bloco de regras", () => {
     });
     expect(externa).toContain("Mostra quem faz o trabalho");
     expect(interna).toContain("Mostra o trabalho acontecendo");
-    expect(silenciosa).toContain("Mostra constância no jeito de trabalhar");
+    expect(silenciosa).toContain("Mostra a rotina que se repete");
     expect(new Set([externa, interna, silenciosa]).size).toBe(3);
   });
 
