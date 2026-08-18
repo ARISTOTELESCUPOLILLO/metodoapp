@@ -169,13 +169,21 @@ export const INTENCAO_MANIFESTACAO: Record<
       // OBJETO — quem faz (uma pessoa), o trabalho acontecendo (uma ação). Sem
       // objeto, e sob o teto de 14 palavras do apoio, o modelo teria de
       // inventar um fato que não está na informação-chave; volta a parafraseá-la.
-      // "A rotina que se repete" é o mesmo tipo de prova com objeto nomeado.
-      // TESTE EM CURSO: se duas peças de Preferência trouxerem a rotina no
-      // apoio, o mesmo critério vale para as outras cinco silenciosas sem
-      // objeto (segurança×MARCA, confiança×VAREJO, confiança×MARCA,
-      // autoridade×SERVIÇOS, autoridade×MARCA). Se não, a hipótese morre e o
-      // caminho passa a ser o rodízio de 2+ frases por casa.
-      silenciosa: "Mostra a rotina que se repete",
+      //
+      // CRITÉRIO PROVADO (peças 3E e 3F, mesma informação-chave de 3A/3B, só a
+      // frase mudou): com objeto, a recorrência apareceu 2/2 — "Todo dia você
+      // pode receber visitas", "A cada campanha, você vê mais pessoas
+      // chegando". Sem objeto era 0/2.
+      //
+      // O "de trabalho" é o segundo ajuste, e não é cosmético: em 3E e 3F a
+      // rotina saiu do CLIENTE recebendo resultado ("todo dia VOCÊ PODE
+      // RECEBER visitas"), não do prestador trabalhando. Esta linha inteira
+      // existe para ficar em gente, bastidor e constância justamente porque
+      // profissão regulamentada não pode prometer resultado — e a régua
+      // automatizada não pega esse caso, porque a palavra ali é "visitas", não
+      // "resultado". A frase velha tinha o SUJEITO certo e nenhum objeto; a
+      // primeira troca deu OBJETO e perdeu o sujeito; esta junta os dois.
+      silenciosa: "Mostra a rotina de trabalho que se repete",
     },
     VAREJO: {
       externa: "O que está na peça está na loja",
