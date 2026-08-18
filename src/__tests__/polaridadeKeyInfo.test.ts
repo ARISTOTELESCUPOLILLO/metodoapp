@@ -105,3 +105,21 @@ describe("buildRegraPolaridadeKeyInfo — contrato com o prompt", () => {
     }
   });
 });
+
+describe("buildRegraPolaridadeKeyInfo — o PAR COMPLETO (achado do teste R6)", () => {
+  it("a regra de ausência cobra o termo negado, não só o 'sem'", () => {
+    // "Atendemos sem hora marcada" saiu como "Sem fila, seu plano corre junto":
+    // operador preservado, termo trocado por um fato que o cliente não disse.
+    const regra = buildRegraPolaridadeKeyInfo("Atendemos sem hora marcada");
+    expect(regra).toContain("PAR COMPLETO");
+    expect(regra).toContain("O TERMO NEGADO");
+    expect(regra).toContain("sem fila");
+    expect(regra).toContain("TESTE ANTES DE RESPONDER");
+  });
+
+  it("a regra de contraste também proíbe trocar um dos lados", () => {
+    const regra = buildRegraPolaridadeKeyInfo("Quem escreve o texto não é quem faz a arte");
+    expect(regra).toContain("trocar um dos lados");
+    expect(regra).toContain("COM OS TERMOS DA INFORMAÇÃO-CHAVE");
+  });
+});

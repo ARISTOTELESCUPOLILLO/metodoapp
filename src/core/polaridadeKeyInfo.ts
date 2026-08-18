@@ -32,6 +32,19 @@
 // negação não cobra nada das outras gerações — o prompt de quem escreveu um
 // fato positivo continua idêntico, byte a byte.
 
+// SEGUNDA RODADA (teste R6, mesmo dia): a primeira versão da regra consertou o
+// contraste (R5 preservou "texto e arte não são iguais") e FALHOU na ausência.
+// "Atendemos sem hora marcada" saiu como título "SEM FILA, seu plano corre
+// junto": a regra preservou o OPERADOR de negação e deixou o TERMO NEGADO solto,
+// e o modelo trocou por outro que o cliente nunca disse — e que é provavelmente
+// falso, porque quem atende sem agendamento atende por ordem de chegada, que é
+// onde a fila se forma. Trocar "hora marcada" por "fila" passa por qualquer
+// filtro de FORMA: continua sendo "sem X", continua concreto, continua curto.
+// Por isso as duas variantes agora cobram o PAR COMPLETO (operador + termo, tal
+// como escrito), com teste explícito antes de responder. O mesmo buraco existia
+// no contraste — trocar um dos lados mantém a oposição e inventa o fato — e foi
+// fechado junto, antes de aparecer numa peça.
+
 /** Que tipo de polaridade a informação-chave declara. */
 export type PolaridadeKeyInfo = "contraste" | "ausencia" | null;
 
@@ -110,7 +123,7 @@ export function buildRegraPolaridadeKeyInfo(keyInfo?: string): string {
   const tipo = detectarPolaridadeKeyInfo(keyInfo);
   if (!tipo) return "";
   if (tipo === "contraste") {
-    return `- ⚠ A INFORMAÇÃO-CHAVE CONTRAPÕE DUAS COISAS — A DIFERENÇA É O DADO (regra que vence a VIRADA e a CENA quando houver conflito): ela afirma que uma coisa NÃO é, NÃO faz ou NÃO substitui a outra, e é essa distinção que o anunciante escolheu mostrar. O título OU o texto precisa manter os DOIS lados e a separação entre eles. PROIBIDO fundir os dois numa pessoa só, numa etapa só ou num movimento contínuo, e PROIBIDO reescrever a frase como afirmação única que apague a oposição — isso faz a peça dizer o CONTRÁRIO do que o cliente informou. Ex. com "quem escreve o texto não é quem faz a arte": ✗ "Traduzo sua ideia em imagem e palavra" (uma pessoa só — inverte o fato), ✗ "Texto ganha vida na criação visual" (funde as duas etapas), ✓ "Dois profissionais, duas etapas", ✓ "Quem escreve não é quem desenha". O QUE FAZER: nomeie os dois lados e deixe a diferença visível como vantagem observável — o ângulo novo se constrói SOBRE a distinção, nunca apagando-a.`;
+    return `- ⚠ A INFORMAÇÃO-CHAVE CONTRAPÕE DUAS COISAS — A DIFERENÇA É O DADO (regra que vence a VIRADA e a CENA quando houver conflito): ela afirma que uma coisa NÃO é, NÃO faz ou NÃO substitui a outra, e é essa distinção que o anunciante escolheu mostrar. O título OU o texto precisa manter os DOIS lados e a separação entre eles. PROIBIDO fundir os dois numa pessoa só, numa etapa só ou num movimento contínuo, e PROIBIDO reescrever a frase como afirmação única que apague a oposição — isso faz a peça dizer o CONTRÁRIO do que o cliente informou. Ex. com "quem escreve o texto não é quem faz a arte": ✗ "Traduzo sua ideia em imagem e palavra" (uma pessoa só — inverte o fato), ✗ "Texto ganha vida na criação visual" (funde as duas etapas), ✓ "Dois profissionais, duas etapas", ✓ "Quem escreve não é quem desenha". PROIBIDO TAMBÉM trocar um dos lados por outro termo: manter a oposição e substituir o que se opõe continua sendo um fato que o anunciante não disse. O QUE FAZER: nomeie os dois lados COM OS TERMOS DA INFORMAÇÃO-CHAVE (ou sinônimo direto deles) e deixe a diferença visível como vantagem observável — o ângulo novo se constrói SOBRE a distinção, nunca apagando-a.`;
   }
-  return `- ⚠ A INFORMAÇÃO-CHAVE AFIRMA UMA AUSÊNCIA — A AUSÊNCIA É O DADO (regra que vence a VIRADA quando houver conflito): "sem X", "não precisa de Y", "nunca Z" é justamente o que o anunciante tem a dizer, e ele desaparece quando o texto troca a ausência pela presença do contrário. O título OU o texto precisa preservar a ausência declarada — literal ou em sinônimo direto ("sem taxa" pode virar "taxa zero", nunca "condições especiais"). PROIBIDO converter a ausência em promessa genérica de facilidade, conforto ou benefício, que serve a qualquer anunciante e apaga o dado. O QUE FAZER: mantenha o que NÃO existe como o centro da frase e diga o que isso libera na prática para quem contrata.`;
+  return `- ⚠ A INFORMAÇÃO-CHAVE AFIRMA UMA AUSÊNCIA — A AUSÊNCIA É O DADO (regra que vence a VIRADA quando houver conflito): "sem X", "não precisa de Y", "nunca Z" é justamente o que o anunciante tem a dizer, e ele desaparece quando o texto troca a ausência pela presença do contrário. O título OU o texto precisa preservar o PAR COMPLETO — o "sem/não/nunca" E O TERMO NEGADO, exatamente o que o anunciante escreveu. Sinônimo direto do termo é permitido ("sem taxa" pode virar "taxa zero"); TROCAR O TERMO POR OUTRO É PROIBIDO, mesmo que a frase continue começando com "sem" e mesmo que o outro termo pareça próximo — "sem hora marcada" NÃO vira "sem fila", "sem espera" nem "sem burocracia": são fatos DIFERENTES, e o anunciante não disse nenhum deles. PROIBIDO também converter a ausência em promessa genérica de facilidade, conforto ou benefício, que serve a qualquer anunciante e apaga o dado. TESTE ANTES DE RESPONDER: o que vem depois do "sem" é a MESMA palavra (ou sinônimo direto dela) que está na informação-chave? Se for outra, você inventou um fato — reescreva. O QUE FAZER: mantenha o que NÃO existe como o centro da frase e diga o que isso libera na prática para quem contrata.`;
 }
