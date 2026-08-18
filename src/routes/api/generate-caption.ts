@@ -34,6 +34,7 @@ import {
 } from "@/core/intencao";
 import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
 import { buildRegraPolaridadeKeyInfo } from "@/core/polaridadeKeyInfo";
+import { FECHO_GENERICO_RULE, checkFechoGenerico } from "@/core/fechoGenerico";
 import type { TransformacaoPretendida } from "@/types";
 
 const HASHTAG_FALLBACK_STOPWORDS = new Set([
@@ -381,7 +382,8 @@ Regras:${intencaoRegraLegenda}
 ${TECNICISMO_RULE}
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ""}
-${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}`;
+${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}
+${FECHO_GENERICO_RULE}`;
 
           const sanitizeTag = (t: string) =>
             t
@@ -456,6 +458,18 @@ ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO UR
 
             if (checkCorpoOpeningAntes(rawTexto)) {
               retryInstruction = `ATENÇÃO: o "texto" da resposta anterior começou com "Antes" — proibido, é a saída mais previsível e repetitiva pra essa legenda. Reescreva o "texto" com outra abertura (afirmação direta, observação concreta, cena ou pergunta), sem contraste antes/depois.`;
+              continue;
+            }
+
+            // FECHO GENÉRICO — a legenda é o campo onde o defeito mais apareceu
+            // no corpus de 17-18/08 ("de forma consistente", "com rapidez",
+            // "para garantir precisão e qualidade"), e é o único campo escrito
+            // pelo gpt-4.1-mini. Aqui a segunda tentativa é interna e NÃO
+            // consome regeneração do plano do usuário — ao contrário do apoio,
+            // que só tem a rede do E3 (autoRegenerate → regenerate-block).
+            const fechoVazio = checkFechoGenerico(rawTexto);
+            if (fechoVazio) {
+              retryInstruction = `ATENÇÃO: o "texto" da resposta anterior fechou em qualificador vazio — ${fechoVazio}. Reescreva o "texto" sem esse trecho: no lugar dele, um segundo fato concreto da atividade (o que se faz, quem faz, quando, onde, quanto) ou simplesmente termine a frase antes.`;
               continue;
             }
 

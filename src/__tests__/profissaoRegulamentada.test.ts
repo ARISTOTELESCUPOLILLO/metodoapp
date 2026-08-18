@@ -4,6 +4,7 @@ import {
   buildRegraProfissaoRegulamentada,
 } from "@/core/profissaoRegulamentada";
 import { buildMetodoOpPrompt } from "@/core/organizaMethodEngine";
+import { FECHO_GENERICO_RULE } from "@/core/fechoGenerico";
 import type { ContentFormData } from "@/types";
 
 describe("isProfissaoRegulamentada — quem tem conselho em cima", () => {
@@ -167,10 +168,14 @@ describe("fiação no MOP — a regra chega ao prompt da sequência", () => {
   // Contrato de retorno antecipado: o prompt de quem não é regulamentado tem de
   // ficar idêntico byte a byte — inclusive nas quebras de linha, que é onde a
   // concatenação condicional costuma vazar sem ninguém reportar.
+  // FECHO_GENERICO_RULE entrou entre os dois em 18/08 — é INCONDICIONAL (o
+  // defeito que ela combate só existe na saída, ver core/fechoGenerico.ts), por
+  // isso aparece aqui também. O que este teste continua travando é o mesmo de
+  // antes: nenhuma linha em branco a mais para quem não é regulamentado.
   it("o prompt de quem não é regulamentado não ganha linha em branco extra", () => {
     const prompt = buildMetodoOpPrompt({ ...base, mainActivity: "Padaria e confeitaria" });
     expect(prompt).toContain(
-      "- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.\n\nFORMATO DE SAÍDA:",
+      `- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.\n${FECHO_GENERICO_RULE}\n\nFORMATO DE SAÍDA:`,
     );
   });
 

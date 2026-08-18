@@ -24,6 +24,7 @@ import {
 } from "@/core/intencao";
 import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
 import { buildRegraPolaridadeKeyInfo } from "@/core/polaridadeKeyInfo";
+import { FECHO_GENERICO_RULE } from "@/core/fechoGenerico";
 import { COST_USD } from "@/lib/costs";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
@@ -311,6 +312,18 @@ Proibido mencionar literalmente o nome da voz no texto final.
           // fazendo as duas coisas. A peça afirmou o OPOSTO do informado. Vazia
           // quando a informação-chave não tem negação — o prompt fica idêntico.
           const regraPolaridade = buildRegraPolaridadeKeyInfo(keyInfo);
+          // FECHO GENÉRICO — não tem const aqui de propósito: é a constante
+          // FECHO_GENERICO_RULE, colada direto no bloco de regras abaixo.
+          // Achado do teste R1-R7 (18/08): quatro das sete
+          // peças do dia desaguaram em "com atenção" / "para chegar ao melhor
+          // resultado" / "para garantir precisão e qualidade". A proibição de
+          // fechamento vazio EXISTIA e funcionava, mas só para o título (ver a
+          // regra SUJEITO DO TÍTULO abaixo e checkAbstractClosing): 0 em 12
+          // títulos, 5 em 8 apoios e legendas. Entra como CONSTANTE (não
+          // builder condicional como as duas acima) porque o defeito só existe
+          // na saída — não há dado de entrada que preveja quem vai cometê-lo.
+          // Fica imediatamente antes de intencaoRegraApoio, que tem contrato de
+          // posição próprio (fecha o prompt, travado por teste).
 
           const topicIconList = TOPICO_ICON_VOCAB.join(", ");
           const topicosSchemaLines = `  "topicos": [
@@ -440,7 +453,8 @@ ${
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ""}
 ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ""}
-${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}${intencaoRegraApoio}`;
+${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}
+${FECHO_GENERICO_RULE}${intencaoRegraApoio}`;
 
           const result = await fetchOpenAIChat(apiKey, {
             model: "gpt-4.1",

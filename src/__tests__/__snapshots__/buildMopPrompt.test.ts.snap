@@ -210,6 +210,7 @@ INEDITISMO CONTROLADO:
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento, mantendo clareza, naturalidade e impacto. Ex.: "expertise" → "experiência", "briefing" → "orientação", "saúde laboral" → "saúde do trabalho", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho", "branding" → "identidade de marca", "networking" → "contatos", "feedback" → "retorno", "ROI" → "retorno do investimento".
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
+- ⚠ FECHO DO TEXTO — PROIBIDO QUALIFICADOR VAZIO: não feche (nem encha) a frase com modo — "com atenção", "com cuidado", "com qualidade", "com precisão", "com profissionalismo", "de forma consistente", "de forma ágil" — nem com finalidade genérica — "para garantir qualidade", "para chegar ao melhor resultado", "buscando excelência", "com máxima segurança". TESTE ANTES DE RESPONDER: apague as últimas 2 a 4 palavras; se nada de concreto se perder, elas não deviam estar ali. NO LUGAR, escolha uma das duas: um SEGUNDO FATO da atividade (o que se faz, quem faz, quando, onde, quanto, com o quê) ou NADA — a frase pode terminar antes do limite de palavras, que é TETO e não meta.
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: "ancora_visual", "feed", "carousel", "reels".
@@ -431,6 +432,7 @@ INEDITISMO CONTROLADO:
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento, mantendo clareza, naturalidade e impacto. Ex.: "expertise" → "experiência", "briefing" → "orientação", "saúde laboral" → "saúde do trabalho", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho", "branding" → "identidade de marca", "networking" → "contatos", "feedback" → "retorno", "ROI" → "retorno do investimento".
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
+- ⚠ FECHO DO TEXTO — PROIBIDO QUALIFICADOR VAZIO: não feche (nem encha) a frase com modo — "com atenção", "com cuidado", "com qualidade", "com precisão", "com profissionalismo", "de forma consistente", "de forma ágil" — nem com finalidade genérica — "para garantir qualidade", "para chegar ao melhor resultado", "buscando excelência", "com máxima segurança". TESTE ANTES DE RESPONDER: apague as últimas 2 a 4 palavras; se nada de concreto se perder, elas não deviam estar ali. NO LUGAR, escolha uma das duas: um SEGUNDO FATO da atividade (o que se faz, quem faz, quando, onde, quanto, com o quê) ou NADA — a frase pode terminar antes do limite de palavras, que é TETO e não meta.
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: "ancora_visual", "feed", "carousel".
@@ -652,6 +654,7 @@ INEDITISMO CONTROLADO:
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento, mantendo clareza, naturalidade e impacto. Ex.: "expertise" → "experiência", "briefing" → "orientação", "saúde laboral" → "saúde do trabalho", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho", "branding" → "identidade de marca", "networking" → "contatos", "feedback" → "retorno", "ROI" → "retorno do investimento".
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
+- ⚠ FECHO DO TEXTO — PROIBIDO QUALIFICADOR VAZIO: não feche (nem encha) a frase com modo — "com atenção", "com cuidado", "com qualidade", "com precisão", "com profissionalismo", "de forma consistente", "de forma ágil" — nem com finalidade genérica — "para garantir qualidade", "para chegar ao melhor resultado", "buscando excelência", "com máxima segurança". TESTE ANTES DE RESPONDER: apague as últimas 2 a 4 palavras; se nada de concreto se perder, elas não deviam estar ali. NO LUGAR, escolha uma das duas: um SEGUNDO FATO da atividade (o que se faz, quem faz, quando, onde, quanto, com o quê) ou NADA — a frase pode terminar antes do limite de palavras, que é TETO e não meta.
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: "ancora_visual", "feed", "carousel", "reels".

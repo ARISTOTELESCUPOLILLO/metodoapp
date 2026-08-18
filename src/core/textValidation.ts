@@ -39,6 +39,10 @@ export {
   checkCorpoOpeningAntes,
 } from "./captionValidation";
 
+// ── Fecho genérico (apoio, tópicos e corpo de legenda) ────────────────────────
+import { checkFechoGenerico } from "./fechoGenerico";
+export { checkFechoGenerico, FECHO_GENERICO_RULE } from "./fechoGenerico";
+
 // ── Morfologia e numérico ──────────────────────────────────────────────────────
 import { checkMorphRepetition, checkNumericClaims } from "./morphValidation";
 export { checkMorphRepetition, normalizeForCompare, checkNumericClaims } from "./morphValidation";
@@ -137,6 +141,11 @@ export function validateTexto(texto: string): string[] {
   if (dangling) motivos.push(dangling);
   const punct = checkPunctuation(texto, "texto");
   if (punct) motivos.push(punct);
+  // Rede de segurança da regra de prompt FECHO_GENERICO_RULE — o defeito só
+  // existe na saída, então é aqui que ele pode ser medido. Ver o cabeçalho de
+  // core/fechoGenerico.ts para o corpus que originou a régua.
+  const fecho = checkFechoGenerico(texto);
+  if (fecho) motivos.push(fecho);
   return motivos;
 }
 
@@ -146,6 +155,8 @@ export function validateLegenda(legenda: string): string[] {
   if (punct) motivos.push(punct);
   const structure = checkLegendaStructure(legenda);
   if (structure) motivos.push(structure);
+  const fecho = checkFechoGenerico(legenda);
+  if (fecho) motivos.push(fecho);
   return motivos;
 }
 

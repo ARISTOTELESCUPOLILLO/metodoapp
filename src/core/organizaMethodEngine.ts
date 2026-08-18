@@ -13,6 +13,7 @@ import {
 import { momentModulators, SILABA_EXCECAO_RULE } from "./mopModulators";
 import { buildRegraProfissaoRegulamentada } from "./profissaoRegulamentada";
 import { buildRegraPolaridadeKeyInfo } from "./polaridadeKeyInfo";
+import { FECHO_GENERICO_RULE } from "./fechoGenerico";
 
 export const SEQUENCE_COMPOSITION = {
   3: { estatico: 1, carrossel: 1, fechamento: 1 },
@@ -517,7 +518,8 @@ INEDITISMO CONTROLADO:
 - Alternar pergunta, afirmação, contraste, exemplo cotidiano e micro narrativa.
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 ${TECNICISMO_RULE}
-- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.${regraProfissao ? `\n\n${regraProfissao}` : ""}${regraPolaridade ? `\n\n${regraPolaridade}` : ""}
+- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
+${FECHO_GENERICO_RULE}${regraProfissao ? `\n\n${regraProfissao}` : ""}${regraPolaridade ? `\n\n${regraPolaridade}` : ""}
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.

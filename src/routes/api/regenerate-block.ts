@@ -31,6 +31,11 @@ import {
 } from "@/core/intencao";
 import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
 import { buildRegraPolaridadeKeyInfo } from "@/core/polaridadeKeyInfo";
+// Só entra em texto/legenda — o título já tem a sua própria proibição de
+// fechamento abstrato em getRule/validateTitulo, e era justamente por tê-la que
+// ele nunca caiu no defeito (ver core/fechoGenerico.ts). Sem esta regra AQUI, a
+// segunda tentativa do E3 devolveria o mesmo qualificador que a primeira.
+import { FECHO_GENERICO_RULE } from "@/core/fechoGenerico";
 import { COST_USD } from "@/lib/costs";
 import { isOfertaConcreta } from "@/core/ofertaDetection";
 
@@ -240,7 +245,7 @@ REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}${intencaoRegraOferta}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.
 PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
-${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}
+${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}${kind === "titulo" ? "" : `\n${FECHO_GENERICO_RULE}`}
 
 Retorne JSON EXATAMENTE assim:
 { "value": "novo ${rule.label} aqui, sem aspas externas" }`;

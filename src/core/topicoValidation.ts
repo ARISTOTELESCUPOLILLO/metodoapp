@@ -1,6 +1,7 @@
 // Validação e vocabulário do formato "Tópicos com ícone" (alternativa ao
 // texto de apoio corrido na PU — ver PostUnicoFormatoTexto em types.ts).
 import { truncateWords, checkDanglingEnding } from "./textWordUtils";
+import { checkFechoGenerico } from "./fechoGenerico";
 
 export const TOPICO_MAX_WORDS = 8;
 export const TOPICOS_COUNT = 3;
@@ -57,6 +58,12 @@ export function validateTopico(texto: string): string[] {
 
   const dangling = checkDanglingEnding(trimmed);
   if (dangling) motivos.push(dangling);
+
+  // Tópico é apoio como o texto corrido — cabe a mesma régua de fecho vazio
+  // (ver core/fechoGenerico.ts). Com teto de 8 palavras, um "com atenção"
+  // consome um quarto do espaço sem dizer nada.
+  const fecho = checkFechoGenerico(trimmed);
+  if (fecho) motivos.push(fecho);
 
   return motivos;
 }

@@ -119,11 +119,20 @@ export function isProfissaoRegulamentada(mainActivity?: string, companyName?: st
  * carcaça do monitor em 22/07, a logo desenhada pela IA em 27/07) — sem uma
  * alternativa, o modelo cumpre a proibição de fachada e reintroduz a promessa
  * com outras palavras.
+ *
+ * CUIDADO COM AS PALAVRAS DA SAÍDA (18/08, ao ligar core/fechoGenerico.ts): a
+ * redação original oferecia "o cuidado no processo" e "descrever o serviço com
+ * precisão" como alternativa à promessa — e "com cuidado"/"com precisão" são
+ * exatamente dois dos qualificadores vazios que a régua do fecho proíbe. Duas
+ * regras no mesmo prompt, uma mandando escrever o que a outra proíbe. Trocado
+ * por "o que se confere antes de entregar" e "em detalhe", que dizem a mesma
+ * coisa sem colidir. Vale como aviso permanente: alternativa declarada precisa
+ * ser um FATO a escrever, nunca um advérbio de qualidade.
  */
 export function buildRegraProfissaoRegulamentada(
   mainActivity?: string,
   companyName?: string,
 ): string {
   if (!isProfissaoRegulamentada(mainActivity, companyName)) return "";
-  return `- ⚠ PROFISSÃO REGULAMENTADA — PROIBIDO PROMETER RESULTADO (regra de ética profissional, vale acima de qualquer regra de persuasão acima): a atividade deste anunciante é fiscalizada por conselho (advocacia, medicina, odontologia, psicologia, contabilidade e afins), e o código de ética dela proíbe prometer, garantir ou sugerir resultado. PROIBIDO em TODOS os campos de texto (título, texto de apoio, tópicos, legenda): garantir/assegurar/prometer resultado, cura, ganho de causa, aprovação, economia ou melhora — inclusive de forma indireta e sem usar a palavra "resultado" ("você vai conseguir", "sua causa fica mais forte", "seu problema resolvido", "mais clientes todo dia", "recupere o que é seu"). PROIBIDO também: antes/depois, comparação de casos atendidos, número de vitórias/sucessos, e superlativo de comparação ("o melhor", "o mais eficaz", "líder"). O QUE ESCREVER NO LUGAR — fale do TRABALHO, nunca do efeito dele: o que se faz, o critério técnico por trás da decisão, o cuidado no processo, quem faz, a rotina, o que o cliente encontra ao chegar. Descrever o serviço com precisão é PERMITIDO e é o caminho; prometer o efeito dele não é.`;
+  return `- ⚠ PROFISSÃO REGULAMENTADA — PROIBIDO PROMETER RESULTADO (regra de ética profissional, vale acima de qualquer regra de persuasão acima): a atividade deste anunciante é fiscalizada por conselho (advocacia, medicina, odontologia, psicologia, contabilidade e afins), e o código de ética dela proíbe prometer, garantir ou sugerir resultado. PROIBIDO em TODOS os campos de texto (título, texto de apoio, tópicos, legenda): garantir/assegurar/prometer resultado, cura, ganho de causa, aprovação, economia ou melhora — inclusive de forma indireta e sem usar a palavra "resultado" ("você vai conseguir", "sua causa fica mais forte", "seu problema resolvido", "mais clientes todo dia", "recupere o que é seu"). PROIBIDO também: antes/depois, comparação de casos atendidos, número de vitórias/sucessos, e superlativo de comparação ("o melhor", "o mais eficaz", "líder"). O QUE ESCREVER NO LUGAR — fale do TRABALHO, nunca do efeito dele: o que se faz, o critério técnico por trás da decisão, o que se confere antes de entregar, quem faz, a rotina, o que o cliente encontra ao chegar. Descrever o serviço em detalhe é PERMITIDO e é o caminho; prometer o efeito dele não é.`;
 }
