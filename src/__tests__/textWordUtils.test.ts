@@ -103,3 +103,48 @@ describe("invariante — o corte não produz o que a detecção acusa", () => {
     }
   });
 });
+
+// Achado do teste ao vivo de 18/08 (caso 3 do marcador temporal): o apoio
+// "…e sempre cabe mais uma dúvida no mesmo." saiu publicado. São 14 palavras
+// exatas, e "…no mesmo encontro." cortado em 14 devolve essa frase letra por
+// letra — o corte comeu o substantivo e nem o corte nem a detecção acusaram.
+// Terceira vez que a mesma invariante é violada por um token fora das listas
+// (as duas primeiras estão no commit 9fd9333).
+describe("preposição + mesmo/mesma nunca fecha frase", () => {
+  it("acusa a frase real que foi ao ar", () => {
+    expect(
+      checkDanglingEnding(
+        "Aqui a conversa começa quando precisar e sempre cabe mais uma dúvida no mesmo.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it.each([
+    "A troca acontece no mesmo",
+    "Resolvemos tudo ao mesmo",
+    "A peça sai da mesma",
+    "Entregamos pelo mesmo",
+    "Trabalhamos do mesmo",
+  ])("acusa: %s", (t) => {
+    expect(checkDanglingEnding(t)).toBeTruthy();
+  });
+
+  it.each([
+    // uso ADVERBIAL de "mesmo" fecha frase, e a palavra antes nunca é preposição
+    "O conserto funciona mesmo",
+    "O preço é bom mesmo",
+    "A segunda pessoa faz o mesmo",
+    "Vale a pena mesmo",
+  ])("não acusa: %s", (t) => {
+    expect(checkDanglingEnding(t)).toBeNull();
+  });
+
+  it("o corte não devolve o que a detecção acusa — a invariante do 9fd9333", () => {
+    const cortado = truncateWords(
+      "Aqui a conversa começa quando precisar e sempre cabe mais uma dúvida no mesmo encontro.",
+      14,
+    );
+    expect(checkDanglingEnding(cortado)).toBeNull();
+    expect(cortado.endsWith("no mesmo")).toBe(false);
+  });
+});

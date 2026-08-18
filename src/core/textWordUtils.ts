@@ -314,6 +314,26 @@ const PREPOSICAO_ANTES_DO_QUANTIFICADOR = new Set([
   "ate",
 ]);
 
+// Determinantes que pendem pelo motivo INVERSO ao dos quantificadores acima: a
+// preposição na frente é o que os deixa incompletos, não o que os salva.
+// Achado real (teste ao vivo de 18/08, caso 3 do marcador temporal): o apoio
+// "…e sempre cabe mais uma dúvida NO MESMO." tem exatamente 14 palavras, e
+// reconstruir "…no mesmo encontro." cortado em 14 devolve essa frase letra por
+// letra. O corte comeu o substantivo, "mesmo" não estava em nenhuma lista e a
+// detecção também não acusou — publicado.
+//
+// A guarda é obrigatória porque "mesmo" tem uso ADVERBIAL que fecha frase muito
+// bem: "Funciona mesmo.", "É bom mesmo.", "Ele faz o mesmo." — nesses a palavra
+// anterior é verbo, adjetivo ou artigo, nunca preposição. Já "no mesmo", "ao
+// mesmo", "da mesma" exigem substantivo sempre.
+//
+// FICAM DE FORA, e não por esquecimento: "outro/outra/outros/outras" cairia em
+// falso positivo no idiomático "entre outros", que fecha frase; e
+// "próprio/própria", que não tem falha medida. Mesmo critério de sempre neste
+// projeto — não mexer sem falha medida, ainda mais quando o custo do engano é o
+// corte comer mais uma palavra boa.
+const DETERMINANTES_QUE_PENDEM_APOS_PREPOSICAO = new Set(["mesmo", "mesma", "mesmos", "mesmas"]);
+
 function normalizeWord(w: string): string {
   return stripAccents(String(w || "").toLowerCase()).replace(/[^\p{L}\p{N}]/gu, "");
 }
@@ -330,6 +350,10 @@ function isDanglingToken(tokens: string[], i: number): boolean {
   if (QUANTIFICADORES_SEMPRE_PENDENTES.has(palavra)) return true;
   if (QUANTIFICADORES_QUE_PEDEM_SUBSTANTIVO.has(palavra)) {
     return !PREPOSICAO_ANTES_DO_QUANTIFICADOR.has(normalizeWord(tokens[i - 1] ?? ""));
+  }
+  // Guarda INVERTIDA — ver a nota do conjunto: aqui a preposição condena.
+  if (DETERMINANTES_QUE_PENDEM_APOS_PREPOSICAO.has(palavra)) {
+    return PREPOSICAO_ANTES_DO_QUANTIFICADOR.has(normalizeWord(tokens[i - 1] ?? ""));
   }
   return false;
 }
