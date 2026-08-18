@@ -29,6 +29,7 @@ import {
   parseIntencao,
   parseTransformacao,
 } from "@/core/intencao";
+import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
 import { COST_USD } from "@/lib/costs";
 import { isOfertaConcreta } from "@/core/ofertaDetection";
 
@@ -188,6 +189,11 @@ export const Route = createFileRoute("/api/regenerate-block")({
                 apoio: null,
               })
             : "";
+          // ÉTICA PROFISSIONAL — "gerar outro texto" não pode ser a porta pela
+          // qual a promessa de resultado volta. Diferente da manifestação (que
+          // depende da flag do beta), esta regra não olha para o piloto: vale
+          // sempre que a atividade for regulamentada. Vazia para os demais.
+          const regraProfissao = buildRegraProfissaoRegulamentada(mainActivity, companyName);
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
@@ -227,7 +233,7 @@ REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}${intencaoRegraOferta}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.
 PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
-${TECNICISMO_RULE}
+${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}
 
 Retorne JSON EXATAMENTE assim:
 { "value": "novo ${rule.label} aqui, sem aspas externas" }`;

@@ -11,6 +11,7 @@ import {
   TECNICISMO_RULE,
 } from "./textValidation";
 import { momentModulators, SILABA_EXCECAO_RULE } from "./mopModulators";
+import { buildRegraProfissaoRegulamentada } from "./profissaoRegulamentada";
 
 export const SEQUENCE_COMPOSITION = {
   3: { estatico: 1, carrossel: 1, fechamento: 1 },
@@ -422,6 +423,14 @@ REGRA: cada peça cumpre a FORMA indicada acima — CTA e menção à empresa s�
   // final do prompt (mainActivity é texto livre por chamada).
   const ancoraDataLine = `Segmento: ${data.segment} | Público: ${isB2B ? "B2B" : "B2C"} | Atividade: ${mainActivity || "não informada"}`;
 
+  // ÉTICA PROFISSIONAL — decisão do Ari (18/08): quem tem conselho em cima não
+  // pode prometer resultado, e isso vale em TODA peça daquele cliente, não só
+  // na PU nem só dentro do piloto de intenção. Uma sequência MOP gera de 3 a 9
+  // peças de uma vez, então é aqui que uma promessa proibida se multiplica.
+  // String VAZIA para quem não é regulamentado — o prompt fica idêntico ao de
+  // hoje, byte a byte, e o prefixo de cache da OpenAI não se altera.
+  const regraProfissao = buildRegraProfissaoRegulamentada(mainActivity, data.companyName);
+
   const titleSyntaxRule = `11. SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL COM FUNÇÃO: qualquer classe gramatical da língua portuguesa pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, numeral, pronome ou locução. Exemplos de abertura válidos: "O melhor…", "A solução…", "A saudade…", "Decidir…", "Cuidar…", "O que define…". O título CUMPRE A FORMA do seu estágio (ver FUNÇÕES COMUNICATIVAS POR PEÇA): entrega observação, critério, prova, posicionamento ou convite — nunca descreve o leitor de fora. PROIBIDO: (a) construção passiva sem agente (ex.: "Operações sem atrasos garantidas", "Entrega sem falhas comprovada" — sem quem age); (b) abrir o título nomeando o leitor de fora — "Quem decide…", "Gestores…", "Decisores…", "A equipe…", "Quem cuida…", "Quem usa…" + verbo descritivo. VARIE o sujeito entre pessoas, conceitos abstratos, verbos substantivados e qualificadores.`;
 
   return `Você é o motor estratégico do MÉTODO OP. Retorne SOMENTE JSON válido, sem markdown, sem comentários.
@@ -501,7 +510,7 @@ INEDITISMO CONTROLADO:
 - Alternar pergunta, afirmação, contraste, exemplo cotidiano e micro narrativa.
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 ${TECNICISMO_RULE}
-- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
+- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.${regraProfissao ? `\n\n${regraProfissao}` : ""}
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.

@@ -22,6 +22,7 @@ import {
   parseIntencao,
   parseTransformacao,
 } from "@/core/intencao";
+import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
 import { COST_USD } from "@/lib/costs";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { FAIXA_ETARIA_REGISTRO } from "@/core/audienceAge";
@@ -297,6 +298,13 @@ Proibido mencionar literalmente o nome da voz no texto final.
             apoio: wantsTopicos ? "topicos" : "texto",
           });
 
+          // ÉTICA PROFISSIONAL — vale para TODA peça deste cliente, com ou sem
+          // o piloto de intenção ligado (decisão do Ari, 18/08): quem tem
+          // conselho em cima não pode prometer resultado, e isso não é recurso
+          // de composição que a flag do beta possa ligar e desligar. Vazia para
+          // quem não é regulamentado — o prompt fica idêntico ao de hoje.
+          const regraProfissao = buildRegraProfissaoRegulamentada(mainActivity, companyName);
+
           const topicIconList = TOPICO_ICON_VOCAB.join(", ");
           const topicosSchemaLines = `  "topicos": [
     { "texto": "texto do tópico 1, no MÁXIMO ${TOPICO_MAX_WORDS} palavras", "icone": "um destes: ${topicIconList}" },
@@ -425,7 +433,7 @@ ${
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ""}
 ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ""}
-${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}${intencaoRegraApoio}`;
+${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}${regraProfissao ? `\n${regraProfissao}` : ""}${intencaoRegraApoio}`;
 
           const result = await fetchOpenAIChat(apiKey, {
             model: "gpt-4.1",

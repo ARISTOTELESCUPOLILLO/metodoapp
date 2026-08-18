@@ -32,6 +32,7 @@ import {
   parseIntencao,
   parseTransformacao,
 } from "@/core/intencao";
+import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
 import type { TransformacaoPretendida } from "@/types";
 
 const HASHTAG_FALLBACK_STOPWORDS = new Set([
@@ -347,6 +348,10 @@ ${topicos.length ? `TÓPICOS ESCRITOS NA PEÇA:\n${topicos.map((t, i) => `${i + 
             transformacaoPrincipal,
             segment,
           });
+          // ÉTICA PROFISSIONAL — a legenda é o campo de texto mais longo da
+          // peça e o que mais espaço dá para a promessa de resultado entrar.
+          // Vale com ou sem o piloto ligado. Vazia para quem não é regulamentado.
+          const regraProfissao = buildRegraProfissaoRegulamentada(mainActivity, companyName);
 
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
 
@@ -369,7 +374,7 @@ Regras:${intencaoRegraLegenda}
 ${TECNICISMO_RULE}
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ""}
-${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}`;
+${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}${regraProfissao ? `\n${regraProfissao}` : ""}`;
 
           const sanitizeTag = (t: string) =>
             t
