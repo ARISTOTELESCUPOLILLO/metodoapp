@@ -114,6 +114,32 @@ export const MAX_TRANSFORMACOES_SECUNDARIAS = 2;
 // E a manifestação diz COMO a percepção se constrói, não o efeito que produz —
 // o efeito já está no rótulo da intenção. Por isso "Mostra procedência do que
 // vende" e não "Tira o receio de errar".
+//
+// ⚠ CRITÉRIO DO OBJETO (provado ao vivo em 18/08/2026 — vale para toda frase
+// nova aqui, e foi o que motivou a revisão das seis silenciosas):
+//
+//   Toda frase precisa entregar um OBJETO que caiba numa frase de 14 palavras,
+//   e o sujeito desse objeto tem de ser o ANUNCIANTE, nunca o cliente
+//   recebendo resultado.
+//
+// A prova: "Mostra constância no jeito de trabalhar" falhou 0/2 no texto de
+// apoio enquanto as duas irmãs da casa acertavam — constância é uma
+// PROPRIEDADE, e as irmãs entregavam objeto (uma pessoa, uma ação). Trocada por
+// "a rotina que se repete", a recorrência apareceu 2/2 com a MESMA
+// informação-chave. Mas saiu no sujeito errado ("todo dia VOCÊ PODE RECEBER
+// visitas" — promessa de resultado, que a régua acima proíbe e o teste
+// automatizado não pega, porque a palavra ali é "visitas"). Só com "de
+// trabalho" explícito a rotina voltou para quem presta o serviço.
+//
+// Teste do objeto, antes de escrever qualquer frase: dá para completar "vira
+// ___" com uma frase concreta de peça? "Mostra o detalhe que só quem faz
+// conhece" → vira "todo motor de 2015 tem esse mesmo vício" ✓. "Demonstra
+// domínio do ofício" → não vira nada ✗.
+//
+// As seis silenciosas revisadas por este critério em 18/08 estão marcadas com
+// "ERA ..." na própria casa. Duas ficaram de fora de propósito, por estarem no
+// meio-termo e sem falha medida: seguranca.SERVIÇOS ("Torna o método visível")
+// e autoridade.VAREJO ("Mostra o repertório de quem vive daquilo").
 export const INTENCAO_MANIFESTACAO: Record<
   IntencaoDeclarada,
   Record<Segment, Record<CamadaTransformacao, string>>
@@ -152,7 +178,10 @@ export const INTENCAO_MANIFESTACAO: Record<
     MARCA: {
       externa: "Mostra que há gente por trás, acessível",
       interna: "Mantém o mesmo jeito de aparecer",
-      silenciosa: "Sustenta consistência ao longo do tempo",
+      // ERA "Sustenta consistência ao longo do tempo" — ver a nota do CRITÉRIO
+      // DO OBJETO em confianca.SERVIÇOS.silenciosa. Objeto: o tempo de estrada
+      // ("doze anos fazendo a mesma coisa").
+      silenciosa: "Mostra há quanto tempo faz o mesmo",
     },
   },
   confianca: {
@@ -188,19 +217,30 @@ export const INTENCAO_MANIFESTACAO: Record<
     VAREJO: {
       externa: "O que está na peça está na loja",
       interna: "Mostra o movimento real do dia a dia",
-      silenciosa: "O que foi anunciado se sustenta depois",
+      // ERA "O que foi anunciado se sustenta depois" — sem objeto E prima da
+      // frase que a régua do Ari aposentou ("Cumpre o anunciado — tem,
+      // ENTREGA"): as duas empurravam o lojista a prometer política comercial.
+      // O cliente recorrente é o objeto que prova entrega sem obrigar a nada
+      // ("tem gente que compra aqui desde 2015").
+      silenciosa: "Mostra o cliente que volta sempre",
     },
     MARCA: {
       externa: "Mostra a marca no mundo real",
       interna: "Mostra coerência entre o que diz e o que faz",
-      silenciosa: "Marca presença de forma constante",
+      // ERA "Marca presença de forma constante" — presença constante é
+      // propriedade, hábito é objeto ("toda segunda tem novidade").
+      silenciosa: "Mostra o hábito que a marca repete",
     },
   },
   autoridade: {
     SERVIÇOS: {
       externa: "Responde o que o cliente não sabe a quem perguntar",
       interna: "Mostra o critério técnico por trás da decisão",
-      silenciosa: "Demonstra domínio do ofício",
+      // ERA "Demonstra domínio do ofício" — "domínio" não é objeto; o detalhe
+      // é ("todo motor de 2015 tem esse mesmo vício"). É também a mais segura
+      // das cinco para profissão regulamentada: conhecimento tácito não
+      // promete nada a ninguém.
+      silenciosa: "Mostra o detalhe que só quem faz conhece",
     },
     VAREJO: {
       externa: "Indica o item certo para cada uso",
@@ -210,7 +250,10 @@ export const INTENCAO_MANIFESTACAO: Record<
     MARCA: {
       externa: "Toma posição sobre o que importa no setor",
       interna: "Indica o que merece atenção no setor",
-      silenciosa: "Mostra repertório estético próprio",
+      // ERA "Mostra repertório estético próprio" — sem objeto, e "repertório
+      // estético" é vocabulário de agência, não do cliente. A escolha é o
+      // objeto ("escolhemos o papel mais caro de propósito").
+      silenciosa: "Mostra a escolha que só ela faria",
     },
   },
 };

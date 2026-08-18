@@ -272,7 +272,7 @@ describe("intenção — manifestação por camada", () => {
 
     expect(externa).toContain("O que está na peça está na loja");
     expect(interna).toContain("Mostra o movimento real do dia a dia");
-    expect(silenciosa).toContain("O que foi anunciado se sustenta depois");
+    expect(silenciosa).toContain("Mostra o cliente que volta sempre");
     expect(new Set([externa, interna, silenciosa]).size).toBe(3);
   });
 
@@ -287,7 +287,7 @@ describe("intenção — manifestação por camada", () => {
   it("sem transformação cai na camada silenciosa — a única que não pressupõe ação do leitor", () => {
     const semTransformacao = buildIntencaoBlock({ ...base, transformacaoPrincipal: null });
     const comPreferencia = buildIntencaoBlock({ ...base, transformacaoPrincipal: "preferencia" });
-    expect(semTransformacao).toContain("O que foi anunciado se sustenta depois");
+    expect(semTransformacao).toContain("Mostra o cliente que volta sempre");
     // Só a linha da transformação separa os dois.
     expect(semTransformacao).not.toBe(comPreferencia);
   });
