@@ -1,11 +1,17 @@
 // Utilitários de texto base — sem dependências internas (importados por captionValidation, morphValidation, titleValidation).
-// Inclui as contrações de preposição+artigo ("em"+"a/o/as/os" = "na/no/nas/nos",
-// "por"+"o/a/os/as" = "pelo/pela/pelos/pelas", "a"+"a/as" = "à/às") — sem elas,
-// truncateWords cortava em 7 palavras e deixava a frase pendurada exatamente
-// nessas formas contraídas, que checkDanglingEnding (mais abaixo, mesmo
-// arquivo) já reconhece como corte, mas truncateWords não removia sozinho.
-const TRUNCATE_TRAILING_WORDS =
-  "e|ou|mas|que|se|nem|de|da|do|das|dos|para|com|em|na|no|nas|nos|num|numa|nuns|numas|a|o|as|os|ao|aos|à|às|por|pelo|pela|pelos|pelas|pois|até|ante|após|sob|sobre|entre|contra|desde|durante|sem|via|é|foi|era|será|está|estava|ficou|parece|fica|são|eram|serão|sendo|tendo";
+//
+// 18/08 — truncateWords tinha uma lista PRÓPRIA e menor de palavras a tirar do
+// fim (só conjunção, preposição, artigo e verbo de ligação), enquanto
+// checkDanglingEnding, no mesmo arquivo, usava um conjunto bem maior. A
+// divergência já tinha cobrado um remendo (as contrações "na/no/pelo/à", que
+// o corte deixava penduradas e a detecção acusava) e cobrou de novo em
+// produção: o apoio de uma peça saiu "…chegando nos seus canais digitais
+// todos." — o texto tinha 15 palavras ("todos os dias"), o corte levou a 14 e
+// a limpeza tirou só o "os", deixando o quantificador órfão. Duas causas: o
+// quantificador não estava em lista nenhuma, e a limpeza removia UMA palavra
+// só, quando tirar uma expõe a de trás. Agora existe um critério único —
+// isDanglingToken, mais abaixo — usado pelo corte e pela detecção, e o corte
+// repete até não sobrar palavra pendurada.
 
 // Tokeniza um título tratando "R$ 120,00" como 1 palavra só (não 2) — usado
 // pelo modo de título ajustado (PU objetivo=promocao com oferta concreta,
@@ -34,17 +40,29 @@ export function truncateWords(s: string, max: number): string {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length <= max) return text.trim();
 
-  const truncated = words
-    .slice(0, max)
-    .join(" ")
-    .replace(/[,;:\-–—]+$/, "");
+  const kept = words.slice(0, max);
+  const truncated = kept.join(" ").replace(/[,;:\-–—]+$/, "");
 
   // Prefere corte em limite de frase completa dentro do trecho
   const m = truncated.match(/^(.*[.!?])\s+\S/);
   if (m) return m[1].trim();
 
-  // Fallback: remove conjunção, preposição ou verbo de ligação sobrando no final
-  return truncated.replace(new RegExp(`\\s+(${TRUNCATE_TRAILING_WORDS})\\s*$`, "i"), "").trim();
+  // Fallback: tira do fim as palavras que exigem complemento. REPETE porque
+  // tirar uma expõe a de trás ("…digitais todos os" → sai o "os", sobra
+  // "todos", que também pende). Teto de 4 pra não devorar o trecho em caso
+  // anômalo, e nunca abaixo de 1 palavra — mesmo critério e mesmo teto da
+  // poda da Sugestão (core/sugestaoValidation.ts).
+  let cut = kept.length;
+  let removidas = 0;
+  while (cut > 1 && removidas < 4 && isDanglingToken(kept, cut - 1)) {
+    cut -= 1;
+    removidas += 1;
+  }
+  return kept
+    .slice(0, cut)
+    .join(" ")
+    .replace(/[,;:\-–—]+$/, "")
+    .trim();
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -83,7 +101,7 @@ export function correctPortugueseSpelling(text: string): string {
 // artigos indefinidos, pronomes relativos/possessivos/demonstrativos,
 // advérbios comparativos pendentes, verbos auxiliares sem complemento e
 // conjunções subordinativas.
-export const DANGLING_END_WORDS = new Set([
+const DANGLING_END_WORDS_SOURCE = [
   "e",
   "ou",
   "mas",
@@ -240,7 +258,81 @@ export const DANGLING_END_WORDS = new Set([
   "todavia",
   "entretanto",
   "porém",
+];
+
+// A lista é comparada SEMPRE contra a palavra sem acento — aqui, no corte
+// acima e no consumidor de fora (core/sugestaoValidation.ts). Guardar a forma
+// acentuada e não normalizá-la na construção deixava NOVE entradas mortas,
+// que nunca batiam com nada: "até", "após", "são", "será", "serão", "tão",
+// "vão", "então" e "porém". Normalizar aqui é o que faz a lista valer o que
+// ela diz.
+export const DANGLING_END_WORDS = new Set(DANGLING_END_WORDS_SOURCE.map(stripAccents));
+
+// Quantificadores. Exigem complemento, mas nem sempre: "serve para todos" é
+// frase inteira, "canais digitais todos" é corte. O que separa os dois é a
+// preposição imediatamente antes — por isso ficam fora da lista de cima, que
+// vale sem condição. Já "cada", "qualquer" e "quaisquer" pedem substantivo em
+// qualquer posição ("para qualquer" também é corte) e não levam guarda.
+const QUANTIFICADORES_SEMPRE_PENDENTES = new Set(["cada", "qualquer", "quaisquer"]);
+const QUANTIFICADORES_QUE_PEDEM_SUBSTANTIVO = new Set([
+  "todo",
+  "toda",
+  "todos",
+  "todas",
+  "ambos",
+  "ambas",
 ]);
+const PREPOSICAO_ANTES_DO_QUANTIFICADOR = new Set([
+  "de",
+  "da",
+  "do",
+  "das",
+  "dos",
+  "para",
+  "pra",
+  "por",
+  "pelo",
+  "pela",
+  "pelos",
+  "pelas",
+  "em",
+  "na",
+  "no",
+  "nas",
+  "nos",
+  "a",
+  "ao",
+  "aos",
+  "as",
+  "com",
+  "entre",
+  "sobre",
+  "contra",
+  "apos",
+  "sem",
+  "desde",
+  "ate",
+]);
+
+function normalizeWord(w: string): string {
+  return stripAccents(String(w || "").toLowerCase()).replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+// Critério ÚNICO de "palavra que não pode fechar a frase", usado pelo corte
+// (truncateWords) e pela detecção (checkDanglingEnding). Enquanto os dois
+// tiveram listas separadas, o corte produzia exatamente aquilo que a detecção
+// depois acusava — e, quando a palavra não estava em nenhuma das duas listas,
+// saía publicado.
+function isDanglingToken(tokens: string[], i: number): boolean {
+  const palavra = normalizeWord(tokens[i] ?? "");
+  if (!palavra) return false;
+  if (DANGLING_END_WORDS.has(palavra)) return true;
+  if (QUANTIFICADORES_SEMPRE_PENDENTES.has(palavra)) return true;
+  if (QUANTIFICADORES_QUE_PEDEM_SUBSTANTIVO.has(palavra)) {
+    return !PREPOSICAO_ANTES_DO_QUANTIFICADOR.has(normalizeWord(tokens[i - 1] ?? ""));
+  }
+  return false;
+}
 
 // Consoantes finais raras em palavras nativas do português — sinal de
 // truncamento no meio de um token (ex.: "result" em vez de "resultado").
@@ -269,8 +361,10 @@ export function checkDanglingEnding(text: string): string | null {
   const last = lastToken(trimmed).replace(/[.!?,;:'"()«»“”]+$/g, "");
   if (!last) return null;
 
-  const lastNorm = stripAccents(last.toLowerCase());
-  if (DANGLING_END_WORDS.has(lastNorm)) {
+  // Passa a lista inteira de tokens: o quantificador só pende quando NÃO vem
+  // depois de preposição, e isso exige olhar a palavra anterior.
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  if (isDanglingToken(tokens, tokens.length - 1)) {
     return `termina com a palavra "${last}", que sugere frase incompleta/cortada`;
   }
 
