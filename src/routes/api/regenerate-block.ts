@@ -30,6 +30,7 @@ import {
   parseTransformacao,
 } from "@/core/intencao";
 import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
+import { buildRegraPolaridadeKeyInfo } from "@/core/polaridadeKeyInfo";
 import { COST_USD } from "@/lib/costs";
 import { isOfertaConcreta } from "@/core/ofertaDetection";
 
@@ -194,6 +195,12 @@ export const Route = createFileRoute("/api/regenerate-block")({
           // depende da flag do beta), esta regra não olha para o piloto: vale
           // sempre que a atividade for regulamentada. Vazia para os demais.
           const regraProfissao = buildRegraProfissaoRegulamentada(mainActivity, companyName);
+          // POLARIDADE DA INFORMAÇÃO-CHAVE — achado do teste R1-R4 (18/08): a
+          // informação-chave "quem escreve o texto NÃO É quem faz a arte" saiu
+          // como "todo dia traduzo sua ideia em imagem e palavra", uma pessoa só
+          // fazendo as duas coisas. A peça afirmou o OPOSTO do informado. Vazia
+          // quando a informação-chave não tem negação — o prompt fica idêntico.
+          const regraPolaridade = buildRegraPolaridadeKeyInfo(keyInfo);
 
           const apiKey = process.env.OPENAI_API_KEY_CONTENT;
           if (!apiKey) {
@@ -233,7 +240,7 @@ REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}${intencaoRegraOferta}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.
 PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
-${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}
+${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}
 
 Retorne JSON EXATAMENTE assim:
 { "value": "novo ${rule.label} aqui, sem aspas externas" }`;

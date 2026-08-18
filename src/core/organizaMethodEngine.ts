@@ -12,6 +12,7 @@ import {
 } from "./textValidation";
 import { momentModulators, SILABA_EXCECAO_RULE } from "./mopModulators";
 import { buildRegraProfissaoRegulamentada } from "./profissaoRegulamentada";
+import { buildRegraPolaridadeKeyInfo } from "./polaridadeKeyInfo";
 
 export const SEQUENCE_COMPOSITION = {
   3: { estatico: 1, carrossel: 1, fechamento: 1 },
@@ -430,6 +431,12 @@ REGRA: cada peça cumpre a FORMA indicada acima — CTA e menção à empresa s�
   // String VAZIA para quem não é regulamentado — o prompt fica idêntico ao de
   // hoje, byte a byte, e o prefixo de cache da OpenAI não se altera.
   const regraProfissao = buildRegraProfissaoRegulamentada(mainActivity, data.companyName);
+  // POLARIDADE DA INFORMAÇÃO-CHAVE — achado do teste R1-R4 (18/08): a
+  // informação-chave "quem escreve o texto NÃO É quem faz a arte" saiu
+  // como "todo dia traduzo sua ideia em imagem e palavra", uma pessoa só
+  // fazendo as duas coisas. A peça afirmou o OPOSTO do informado. Vazia
+  // quando a informação-chave não tem negação — o prompt fica idêntico.
+  const regraPolaridade = buildRegraPolaridadeKeyInfo(keyInfo);
 
   const titleSyntaxRule = `11. SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL COM FUNÇÃO: qualquer classe gramatical da língua portuguesa pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, numeral, pronome ou locução. Exemplos de abertura válidos: "O melhor…", "A solução…", "A saudade…", "Decidir…", "Cuidar…", "O que define…". O título CUMPRE A FORMA do seu estágio (ver FUNÇÕES COMUNICATIVAS POR PEÇA): entrega observação, critério, prova, posicionamento ou convite — nunca descreve o leitor de fora. PROIBIDO: (a) construção passiva sem agente (ex.: "Operações sem atrasos garantidas", "Entrega sem falhas comprovada" — sem quem age); (b) abrir o título nomeando o leitor de fora — "Quem decide…", "Gestores…", "Decisores…", "A equipe…", "Quem cuida…", "Quem usa…" + verbo descritivo. VARIE o sujeito entre pessoas, conceitos abstratos, verbos substantivados e qualificadores.`;
 
@@ -510,7 +517,7 @@ INEDITISMO CONTROLADO:
 - Alternar pergunta, afirmação, contraste, exemplo cotidiano e micro narrativa.
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 ${TECNICISMO_RULE}
-- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.${regraProfissao ? `\n\n${regraProfissao}` : ""}
+- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.${regraProfissao ? `\n\n${regraProfissao}` : ""}${regraPolaridade ? `\n\n${regraPolaridade}` : ""}
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.
