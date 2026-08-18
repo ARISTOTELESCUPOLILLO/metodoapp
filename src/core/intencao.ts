@@ -133,6 +133,13 @@ export function buildIntencaoBlock(params: IntencaoPrompt): string {
  * NÃO entra no título de propósito: o título carrega o elemento concreto da
  * informação-chave e tem a virada obrigatória a cumprir. Quem tem espaço para
  * construir percepção é o apoio, e é dele que esta regra trata.
+ *
+ * ONDE COLAR — a string começa com "\n- " e é feita para FECHAR o prompt, não
+ * para entrar no meio da lista de regras. Motivo (teste ao vivo de 17/08 à
+ * noite): esta mesma regra pegou 3/3 na legenda e 1/3 no apoio. No apoio ela
+ * vinha logo depois do limite de palavras e era seguida por ~2.000 palavras de
+ * regras do TÍTULO, todas mandando olhar para a informação-chave. Estar no
+ * bloco de regras não basta se há muita ordem concorrente DEPOIS.
  */
 export function buildIntencaoRegraApoio(params: IntencaoRegraOferta): string {
   const intencao = params.intencao;

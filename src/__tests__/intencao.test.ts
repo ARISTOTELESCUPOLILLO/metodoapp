@@ -370,7 +370,11 @@ describe("intenção — manifestação como ordem no bloco de regras", () => {
     const regra = buildIntencaoRegraApoio({ ...base, apoio: "texto" });
     expect(regra).toContain("Mostra quem faz o trabalho");
     expect(regra).toContain("REGRA QUE DECIDE ESTE TEXTO");
+    // Contrato de posição: a regra FECHA o prompt de generate-pu-copy (depois
+    // de todas as regras do título), então abre com a própria quebra de linha
+    // e não deixa nenhuma no fim. Ver o docblock do builder para o motivo.
     expect(regra.startsWith("\n- ")).toBe(true);
+    expect(regra.endsWith("\n")).toBe(false);
   });
 
   it("a camada muda a ordem dada ao apoio — é o que o teste ao vivo não produziu", () => {

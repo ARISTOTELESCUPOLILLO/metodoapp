@@ -286,6 +286,10 @@ Proibido mencionar literalmente o nome da voz no texto final.
           // idênticas em conteúdo, todas parafraseando a informação-chave. Vai
           // no bloco de regras do APOIO (nunca do título, que já tem a virada
           // obrigatória e o elemento concreto a preservar). Vazia sem intenção.
+          //
+          // POSIÇÃO: é a ÚLTIMA linha do prompt inteiro, depois de todas as
+          // regras do título — ver a nota de rodapé do userPrompt abaixo para o
+          // motivo (teste ao vivo de 17/08 à noite: 3/3 na legenda, 1/3 aqui).
           const intencaoRegraApoio = buildIntencaoRegraApoio({
             intencao,
             transformacaoPrincipal,
@@ -358,8 +362,18 @@ ${topicosAtuais.map((t, i) => `${i + 1}. ${t}`).join("\n")}
             ? `- Cada "texto" dos ${TOPICOS_COUNT} tópicos: no máximo ${TOPICO_MAX_WORDS} palavras (CONTE antes de retornar), frase direta e concreta — um ângulo, benefício ou ponto DIFERENTE em cada tópico, sem repetir a mesma ideia com palavras trocadas entre eles, sem hashtag, sem emoji, sem numeração própria (não escreva "1.", "Tópico 1" etc.).
 - Cada "icone" DEVE ser EXATAMENTE um destes termos, copiado literalmente (não traduza, não invente outro): ${topicIconList}. Escolha o mais coerente com o conteúdo de cada tópico; varie entre os ${TOPICOS_COUNT} quando fizer sentido, sem repetir o mesmo ícone à toa.`
             : `- "texto" no máximo 14 palavras (CONTE antes de retornar — 15ª palavra em diante é cortada), frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji`;
-          const textoOuTopicosRules = `${textoOuTopicosRulesBlock}${intencaoRegraApoio}`;
 
+          // ORDEM DAS REGRAS — `intencaoRegraApoio` FECHA o prompt (última
+          // linha, depois de todas as regras do título). Achado do teste ao
+          // vivo de 17/08 à noite (3 peças, Confiança × SERVIÇOS): a MESMA
+          // regra pegou 3/3 na LEGENDA e só 1/3 aqui. A diferença não é o
+          // texto, é a vizinhança — em generate-caption o bloco "Regras:" tem
+          // 7 linhas e a regra abre a lista; aqui ela vinha logo depois do
+          // limite de palavras do apoio e era seguida por ~2.000 palavras de
+          // regras do TÍTULO (ancoragem concreta, virada obrigatória, ciclo da
+          // palavra), todas mandando olhar para a informação-chave. Volume de
+          // ordem concorrente soterra ordem, mesmo quando a ordem soterrada
+          // está no bloco certo. Ver [[project-contexto-perde-para-ordem]].
           const userPrompt = `${
             tituloFixo
               ? "Você cria APENAS os tópicos de apoio que aparecerão TIPOGRAFADOS dentro de uma peça publicitária para Instagram. O TÍTULO desta peça JÁ ESTÁ DEFINIDO (ver abaixo) e não deve ser gerado nem reescrito."
@@ -375,7 +389,7 @@ ${schemaBlock}
 
 Regras:
 ${tituloRulesBlock}
-${textoOuTopicosRules}
+${textoOuTopicosRulesBlock}
 - Português brasileiro, sem inglês, sem markdown
 ${TECNICISMO_RULE}
 - Linguagem simples, natural e profissional. Ensino médio deve entender sem esforço. Evite "maximizar", "estratégias eficazes", "impacto real", "soluções digitais", "transformar seu negócio". Prefira: "melhorar", "vender", "organizar", "atender", "crescer", "mostrar".
@@ -411,7 +425,7 @@ ${
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ""}
 ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ""}
-${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}`;
+${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}${intencaoRegraApoio}`;
 
           const result = await fetchOpenAIChat(apiKey, {
             model: "gpt-4.1",
