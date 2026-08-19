@@ -7,6 +7,7 @@ export function PlanCell({
   inicio,
   mesesContrato,
   contratoFim,
+  cicloAte,
   options,
   onAssign,
   onRemove,
@@ -15,12 +16,15 @@ export function PlanCell({
   inicio: string | null;
   mesesContrato?: number;
   contratoFim?: string | null;
+  cicloAte?: string | null;
   options: Plan[];
   onAssign: () => void;
   onRemove: () => void;
 }) {
   const plan = options.find((p) => p.id === planId);
-  const periodo = plan ? planPeriodo(inicio, plan.tipo, mesesContrato, contratoFim) : "";
+  const periodo = plan
+    ? planPeriodo(inicio, plan.tipo, mesesContrato, contratoFim, cicloAte)
+    : { contrato: "", ciclo: "" };
   return (
     <div>
       {plan ? (
@@ -57,10 +61,13 @@ export function PlanCell({
               ✕
             </button>
           </div>
-          {periodo && (
+          {periodo.contrato && (
             <div style={{ fontSize: 10, color: "#64748b", marginTop: 2, lineHeight: 1.3 }}>
-              {periodo}
+              {periodo.contrato}
             </div>
+          )}
+          {periodo.ciclo && (
+            <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.3 }}>{periodo.ciclo}</div>
           )}
         </>
       ) : (

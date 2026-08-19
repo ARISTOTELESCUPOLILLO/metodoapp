@@ -105,6 +105,7 @@ export function UserTableRow({
           inicio={r.plano1_inicio}
           mesesContrato={r.plano1_meses_contrato}
           contratoFim={r.plano1_contrato_fim}
+          cicloAte={r.plano1_expira_em}
           options={mainPlans}
           onAssign={() => actions.onOpenAssignModal(r, "plano1", mainPlans)}
           onRemove={() => actions.onRemoveSlot(r.id, "plano1")}
@@ -126,6 +127,7 @@ export function UserTableRow({
           inicio={r.plano2_inicio}
           mesesContrato={r.plano2_meses_contrato}
           contratoFim={r.plano2_contrato_fim}
+          cicloAte={r.plano2_expira_em}
           options={mainPlans}
           onAssign={() => actions.onOpenAssignModal(r, "plano2", mainPlans)}
           onRemove={() => actions.onRemoveSlot(r.id, "plano2")}
@@ -147,6 +149,7 @@ export function UserTableRow({
           inicio={r.bonus_inicio}
           mesesContrato={r.bonus_meses_contrato}
           contratoFim={r.bonus_contrato_fim}
+          cicloAte={r.bonus_expira_em}
           options={bonusPlans}
           onAssign={() => actions.onOpenAssignModal(r, "bonus", bonusPlans)}
           onRemove={() => actions.onRemoveSlot(r.id, "bonus")}
