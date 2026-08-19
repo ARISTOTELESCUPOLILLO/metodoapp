@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   truncateWords,
+  checkExcessoPalavras,
   validatePieceFields,
   correctPortugueseSpelling,
   TECNICISMO_RULE,
@@ -394,7 +395,7 @@ ${topicosAtuais.map((t, i) => `${i + 1}. ${t}`).join("\n")}
           const textoOuTopicosRulesBlock = wantsTopicos
             ? `- Cada "texto" dos ${TOPICOS_COUNT} tópicos: no máximo ${TOPICO_MAX_WORDS} palavras (CONTE antes de retornar), frase direta e concreta — um ângulo, benefício ou ponto DIFERENTE em cada tópico, sem repetir a mesma ideia com palavras trocadas entre eles, sem hashtag, sem emoji, sem numeração própria (não escreva "1.", "Tópico 1" etc.).
 - Cada "icone" DEVE ser EXATAMENTE um destes termos, copiado literalmente (não traduza, não invente outro): ${topicIconList}. Escolha o mais coerente com o conteúdo de cada tópico; varie entre os ${TOPICOS_COUNT} quando fizer sentido, sem repetir o mesmo ícone à toa.`
-            : `- "texto" no máximo 14 palavras (CONTE antes de retornar — 15ª palavra em diante é cortada), frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji`;
+            : `- "texto" no máximo 14 palavras (CONTE antes de retornar — da 15ª palavra em diante o texto é REPROVADO e reescrito do zero), frase completa terminando com PONTO FINAL obrigatório, sem hashtag, sem emoji`;
 
           // ORDEM DAS REGRAS — `intencaoRegraApoio` FECHA o prompt (última
           // linha, depois de todas as regras do título). Achado do teste ao
@@ -539,7 +540,15 @@ ${FECHO_GENERICO_RULE}${intencaoRegraApoio}`;
               ? topicoFlags
               : [...validatePieceFields("copy", { titulo }, keyInfo, titleOpts), ...topicoFlags];
           } else {
-            texto = correctPortugueseSpelling(truncateWords(String(parsed.texto || ""), 14));
+            const textoBruto = String(parsed.texto || "");
+            // O CORTE DEIXOU DE SER MUDO (decisão do Ari, 19/08/2026): quando o
+            // apoio vem acima de 14 palavras, o truncamento continua acontecendo
+            // (rede de segurança), mas agora vira flag D1 — a orquestração E3
+            // pede OUTRO texto em vez de entregar uma frase que perdeu o fim.
+            // Custa uma regeneração quando dispara, e é isso que foi aceito.
+            // Só o PU: o corte do MOP nunca foi medido e fica como está.
+            const excessoApoio = checkExcessoPalavras(textoBruto, 14);
+            texto = correctPortugueseSpelling(truncateWords(textoBruto, 14));
             if (!texto)
               return Response.json({ error: "Texto vazio na resposta da IA" }, { status: 502 });
             // Garante ponto final no texto quando a IA esquece.
@@ -547,6 +556,7 @@ ${FECHO_GENERICO_RULE}${intencaoRegraApoio}`;
             // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas
             // sinalizam para a orquestração de regeneração no cliente (E3).
             flags = validatePieceFields("copy", { titulo, texto }, keyInfo, titleOpts);
+            if (excessoApoio) flags.push({ campo: "copy.texto", motivo: excessoApoio });
           }
 
           if (!isAdminUser) {

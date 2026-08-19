@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   truncateWords,
+  checkExcessoPalavras,
   validateTitulo,
   validateTexto,
   validateLegenda,
@@ -25,6 +26,8 @@ import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { hasBetaIntencao } from "@/repository/betaFlags";
 import {
   buildIntencaoBlock,
+  buildIntencaoRegraApoio,
+  buildIntencaoRegraLegenda,
   buildIntencaoRegraOferta,
   parseIntencao,
   parseTransformacao,
@@ -195,6 +198,32 @@ export const Route = createFileRoute("/api/regenerate-block")({
                 apoio: null,
               })
             : "";
+          // MANIFESTAÇÃO — "Gerar outro texto" nascia com ela (generate-pu-copy)
+          // e a perdia ao regenerar: este endpoint nunca recebeu a regra, e o
+          // alvo perceptual chegava aqui só como CONTEXTO (intencaoBlock), que é
+          // exatamente o que já tinha sido medido como insuficiente em 17/08 —
+          // ver a nota de buildIntencaoRegraApoio. NUNCA no título, pelo mesmo
+          // motivo de lá (ele tem a virada obrigatória e o elemento concreto a
+          // preservar). Vazia sem intenção, sem segmento e no MOP, que nunca
+          // manda `intencao` — nesses casos o prompt fica idêntico ao de hoje.
+          const intencaoRegraManifestacao =
+            kind === "texto"
+              ? buildIntencaoRegraApoio({
+                  intencao,
+                  transformacaoPrincipal,
+                  segment: segmentIntencao,
+                  // Mesma fonte da cláusula de tempo do generate-pu-copy: sem a
+                  // informação-chave a cláusula não entra (ver marcadorTemporal).
+                  keyInfo,
+                  apoio: "texto",
+                })
+              : kind === "legenda"
+                ? buildIntencaoRegraLegenda({
+                    intencao,
+                    transformacaoPrincipal,
+                    segment: segmentIntencao,
+                  })
+                : "";
           // ÉTICA PROFISSIONAL — "gerar outro texto" não pode ser a porta pela
           // qual a promessa de resultado volta. Diferente da manifestação (que
           // depende da flag do beta), esta regra não olha para o piloto: vale
@@ -245,7 +274,7 @@ REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}${intencaoRegraOferta}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.
 PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
-${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}${kind === "titulo" ? "" : `\n${FECHO_GENERICO_RULE}`}
+${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}${kind === "titulo" ? "" : `\n${FECHO_GENERICO_RULE}`}${intencaoRegraManifestacao}
 
 Retorne JSON EXATAMENTE assim:
 { "value": "novo ${rule.label} aqui, sem aspas externas" }`;
@@ -289,6 +318,16 @@ Retorne JSON EXATAMENTE assim:
           // NÃO é cortado aqui — cortar geraria fragmento; validateTitulo
           // abaixo flags fora da faixa de TITULO_MIN_WORDS-TITULO_MAX_WORDS
           // e o cliente (E3) tenta de novo ou aplica a limpeza determinística (E4).
+          //
+          // Mesmo conserto de generate-pu-copy.ts, e ele PRECISA existir aqui
+          // também: o texto que o usuário vê no fim sai deste endpoint, então
+          // sinalizar só na primeira geração deixaria a segunda cortar calada e
+          // devolver a mesma frase sem fim. Só PU — o corte do MOP (12 palavras)
+          // nunca foi medido e continua mudo, como sempre esteve.
+          const excessoApoio =
+            kind === "texto" && (formato || "").toLowerCase().startsWith("postunico")
+              ? checkExcessoPalavras(value, rule.max)
+              : null;
           if (kind === "texto") {
             value = truncateWords(value, rule.max);
           } else if (kind === "legenda") {
@@ -297,7 +336,7 @@ Retorne JSON EXATAMENTE assim:
 
           // D1 — heurísticas pós-geração: não bloqueiam a resposta, mas
           // sinalizam para a orquestração de regeneração no cliente (E3).
-          const motivos =
+          const motivos: string[] =
             kind === "titulo"
               ? validateTitulo(
                   value,
@@ -315,6 +354,7 @@ Retorne JSON EXATAMENTE assim:
               : kind === "texto"
                 ? validateTexto(value)
                 : validateLegenda(value);
+          if (excessoApoio) motivos.push(excessoApoio);
 
           // Debita 1 do contador regen_texto após o sucesso da geração — nunca
           // para o admin (isento do contador novo). custoUsd = proxy do "Gerar

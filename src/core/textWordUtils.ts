@@ -65,6 +65,27 @@ export function truncateWords(s: string, max: number): string {
     .trim();
 }
 
+// Motivo de reprovação para o texto que chegou ACIMA do limite e vai passar
+// pelo corte de truncateWords. Existe porque o corte é MUDO: ele devolve uma
+// frase gramatical (a poda de palavra pendurada garante isso), mas a frase pode
+// ter perdido justamente o que ia dizer — foi o caso 3 do teste de 18/08/2026,
+// em que "…sempre cabe mais uma dúvida no mesmo encontro." virou "…no mesmo."
+// e o apoio não pôde ser lido. Decisão do Ari (19/08/2026): em vez de cortar
+// calado, sinalizar para a orquestração pedir OUTRO texto — o corte continua
+// valendo como rede se a regeneração não resolver.
+//
+// Devolve null quando cabe (contrato dos demais check* deste arquivo), e a
+// contagem é a MESMA de truncateWords (split por espaço) para que nunca acuse
+// um excesso que o corte não veria, nem o contrário.
+export function checkExcessoPalavras(texto: string, max: number): string | null {
+  const palavras = String(texto ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+  if (palavras <= max) return null;
+  return `texto de apoio com ${palavras} palavras — acima do máximo de ${max}; o corte mecânico tira o fim da frase, reescreva dentro do limite`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Correção ortográfica determinística — termos que a IA por vezes escreve na
 // grafia em inglês/latim em vez do equivalente em português brasileiro (ex.:

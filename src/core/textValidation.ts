@@ -17,6 +17,7 @@ import {
 } from "./textWordUtils";
 export {
   truncateWords,
+  checkExcessoPalavras,
   correctPortugueseSpelling,
   checkDanglingEnding,
   checkPunctuation,
