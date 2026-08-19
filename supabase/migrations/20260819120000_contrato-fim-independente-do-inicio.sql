@@ -148,7 +148,7 @@ BEGIN
       SELECT limite_imagens, limite_renders, limite_geracoes, limite_regen_texto, limite_sugestoes, limite_primeira_geracao, elegivel_bonus
         INTO v_li, v_lr, v_lg, v_lrt, v_lsg, v_lpg, v_bonus FROM public.plans WHERE id = NEW.bonus_id;
       IF NOT COALESCE(v_bonus, false) THEN
-        RAISE EXCEPTION U&'Plano selecionado n\00E3o \00E9 eleg\00EDvel para b\00F4nus';
+        RAISE EXCEPTION '%', U&'Plano selecionado n\00E3o \00E9 eleg\00EDvel para b\00F4nus';
       END IF;
       NEW.bonus_imgs_limite     := COALESCE(v_li, 0);
       NEW.bonus_renders_limite  := COALESCE(v_lr, 0);
