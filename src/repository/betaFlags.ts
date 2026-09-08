@@ -28,3 +28,26 @@ export async function hasBetaIntencao(userId: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Piloto da Informação-chave Editorial (Linha Editorial + uso do objeto).
+ *
+ * Mesmo contrato de hasBetaIntencao acima, e pelo mesmo motivo: o gate de
+ * interface não basta — cada endpoint reconfere antes de usar os campos novos.
+ * Falha fechada: qualquer erro de leitura devolve false e a geração segue pelo
+ * caminho de hoje (Legacy), que é o comportamento correto para quem está fora.
+ */
+export async function hasBetaEditorial(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("beta_editorial")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error || !data) return false;
+    return data.beta_editorial === true;
+  } catch {
+    return false;
+  }
+}

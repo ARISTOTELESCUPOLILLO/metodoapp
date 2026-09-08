@@ -77,6 +77,22 @@ export async function generatePostUnicoCopy(
             avisoCoerenciaIgnorado: avisoCoerenciaIgnorado === true,
           }
         : {}),
+      // Linha Editorial (piloto). Só viaja quando a informação-chave AINDA é a
+      // proposição aceita em "Usar esta" — se o usuário editou o campo à mão
+      // depois, a escolha editorial deixa de valer sozinha (ver `proposicao` em
+      // EscolhaEditorial). Fora disso a requisição é a mesma de sempre e o
+      // servidor gera o prompt de hoje, byte a byte; ele ainda reconfere a flag
+      // antes de usar (ver generate-pu-copy.ts).
+      ...(data.editorial?.linhaEditorial &&
+      data.editorial.proposicao?.trim() === (data.keyInfo || "").trim()
+        ? {
+            editorial: {
+              linhaEditorial: data.editorial.linhaEditorial,
+              usoObjeto: data.editorial.usoObjeto ?? "auto",
+              objetoEditorial: data.editorial.objetoEditorial ?? "",
+            },
+          }
+        : {}),
     }),
   });
   if (!res.ok) {

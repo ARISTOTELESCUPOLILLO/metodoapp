@@ -1,5 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { FaixaEtaria, PostUnicoDirecao, PostUnicoFormData, PostUnicoObjetivo } from "../../types";
+import {
+  FaixaEtaria,
+  PostUnicoDirecao,
+  PostUnicoFormData,
+  PostUnicoObjetivo,
+  type LinhaEditorial,
+  type LinhaEditorialEscolha,
+  type UsoDoObjeto,
+} from "../../types";
+import { parseLinhaEditorial } from "../../domain/linhaEditorial.config";
+import { classificarFalaEditorial } from "../../core/linhaEditorialRules";
+import { EditorialControlsSection } from "./editorial/EditorialControlsSection";
 import type { PostUnicoCopy } from "../../services/postUnico";
 import { usePostUnicoCopy } from "../../hooks/usePostUnicoCopy";
 import { getAuthHeaders } from "../../services/authHeaders";
@@ -80,12 +91,37 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   // sessão, mas variem entre sessões novas (ver lensIndex em suggest-keyinfo.ts).
   const sessionSeedRef = useRef<number>(Math.floor(Math.random() * 1e9));
   const [selectedProducts, setSelectedProducts] = useState<string[]>(() => kit.products || []);
+  // ── Informação-chave Editorial (piloto, atrás de profiles.beta_editorial) ──
+  // Gate de INTERFACE: quem está fora não vê nada disso e a Sugestão segue o
+  // caminho Legacy. O gate que vale é o do backend, que reconfere a flag.
+  const editorialAtivo = profile?.beta_editorial === true;
+  const [edObjeto, setEdObjeto] = useState("");
+  const [edUso, setEdUso] = useState<UsoDoObjeto>("auto");
+  const [edLinha, setEdLinha] = useState<LinhaEditorialEscolha>("auto");
+  const [edHint, setEdHint] = useState("");
+  // Linha REALMENTE usada em cada sugestão — array paralelo a `suggestions`
+  // (mesmo índice). Paralelo em vez de trocar o tipo de `suggestions` para não
+  // mexer no contrato do painel Legacy, que continua recebendo string[].
+  const [suggestionLinhas, setSuggestionLinhas] = useState<(LinhaEditorial | null)[]>([]);
   const keyInfoCorrection = useTextCorrection();
   const dictation = useVoiceDictation((text) => {
+    // No modo editorial o microfone alimenta a PISTA, não a informação-chave —
+    // e uma fala como "outra sugestão" é COMANDO, não conteúdo (item 28). Sem
+    // essa separação, "me dê uma sugestão" viraria o assunto da peça.
+    if (editorialAtivo) {
+      const fala = classificarFalaEditorial(text);
+      if (fala.hint) setEdHint(fala.hint);
+      if (fala.tipo !== "pista") pedirSugestaoRef.current?.(fala.hint || undefined);
+      return;
+    }
     if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || "";
     const current = (data.keyInfo || "").trim();
     update("keyInfo", current ? `${current} ${text}` : text);
   }, selectedProducts);
+  // Ponte para o callback do ditado, que é criado antes de fetchSuggestion
+  // existir. Ref em vez de reordenar as declarações: mover o hook para depois
+  // da função mudaria a ordem de hooks do componente.
+  const pedirSugestaoRef = useRef<((hint?: string) => void) | null>(null);
   const { user } = useAuth();
   const impersonation = useImpersonation();
   const effectiveUserId = impersonation?.userId ?? user?.id;
@@ -132,11 +168,36 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
   useEffect(() => {
     setSuggestCount(0);
     setSuggestions([]);
+    setSuggestionLinhas([]);
     setSuggestError(null);
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
     sessionSeedRef.current = Math.floor(Math.random() * 1e9);
   }, [data.objetivo, kit.companyName]);
+
+  // RODADA (item 7 do pedido): uma rodada é o conjunto de sugestões criado para
+  // o mesmo contexto principal. Trocar objeto, modo de uso ou linha editorial
+  // muda o contexto e reinicia a contagem; trocar a PISTA não (é refinamento
+  // dentro da mesma rodada, e "outra falando de preço" tem de consumir uma das
+  // 3 posições). O objetivo da peça já reinicia pelo efeito acima.
+  // Não roda no mount: sem o guard, montar o formulário zeraria uma rodada em
+  // andamento ao voltar de outra aba.
+  const rodadaRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!editorialAtivo) return;
+    const chave = `${edObjeto}|${edUso}|${edLinha}`;
+    if (rodadaRef.current === null) {
+      rodadaRef.current = chave;
+      return;
+    }
+    if (rodadaRef.current === chave) return;
+    rodadaRef.current = chave;
+    setSuggestCount(0);
+    setSuggestions([]);
+    setSuggestionLinhas([]);
+    setSuggestError(null);
+    sessionSeedRef.current = Math.floor(Math.random() * 1e9);
+  }, [editorialAtivo, edObjeto, edUso, edLinha]);
 
   // Semeia o rodízio sintático com o histórico de rodadas ANTERIORES (outra
   // visita/mount, não só cliques dentro deste carregamento de página) — sem
@@ -200,13 +261,15 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
     }
   };
 
-  async function fetchSuggestion() {
+  async function fetchSuggestion(hintOverride?: string) {
     // suggesting precisa entrar aqui (não só no `disabled` do botão): o botão
     // "Gerar outra" some da tela só depois do próximo render, então um duplo
     // clique físico rápido pode disparar 2 chamadas antes do React remover o
     // botão — sem esse guard, as 2 chamadas usam o MESMO attempt/
     // previousSuggestions (nenhuma delas atualizou o estado ainda) e
     // pickConcreteItem, sendo determinístico, escolhe o MESMO item nas duas.
+    // O teto da rodada (suggestExhausted) vale igual para clique e para comando
+    // de voz — item 5 do pedido: "outra" falado não pode furar o limite.
     if (suggesting || suggestExhausted || hasKeyInfo) return;
     setSuggesting(true);
     setSuggestError(null);
@@ -225,7 +288,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
           segment: kit.segment,
           isPersonalBrand: kit.isPersonalBrand,
           brandVoice: kit.brandVoice || "",
-          hint: "",
+          hint: editorialAtivo ? (hintOverride ?? edHint) : "",
           mode: "postunico",
           attempt,
           sessionSeed: sessionSeedRef.current,
@@ -233,6 +296,17 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
           previousSuggestions: allSessionSuggestionsRef.current,
           selectedProducts,
           preferredSlot: puSlot,
+          // Campos do piloto editorial. Ausentes fora do beta — a requisição
+          // fica idêntica à de hoje e o servidor roda o motor Legacy.
+          ...(editorialAtivo
+            ? {
+                editorialMode: true,
+                linhaEditorial: edLinha === "auto" ? null : edLinha,
+                usoObjeto: edUso,
+                objeto: edObjeto,
+                linhasUsadas: suggestionLinhas.filter(Boolean),
+              }
+            : {}),
         }),
       });
       if (!res.ok) {
@@ -243,6 +317,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
       const newSugg = String(json.sugestao || "").trim();
       if (newSugg) {
         setSuggestions((arr) => [...arr, newSugg]);
+        setSuggestionLinhas((arr) => [...arr, parseLinhaEditorial(json.linhaEditorial)]);
         allSessionSuggestionsRef.current = [...allSessionSuggestionsRef.current, newSugg];
         pushSugestaoHistory(newSugg, effectiveUserId);
       }
@@ -253,6 +328,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
       setSuggesting(false);
     }
   }
+  pedirSugestaoRef.current = fetchSuggestion;
 
   const isNenhum = data.objetivo === "nenhum";
   // Campo de intenção declarada — piloto. Gate de INTERFACE: quem está fora não
@@ -469,7 +545,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         initialKeyInfoRef={initialKeyInfoRef}
         isAdmin={isAdmin}
         loading={loading}
-        fetchSuggestion={fetchSuggestion}
+        fetchSuggestion={() => fetchSuggestion()}
         keyInfoCorrection={keyInfoCorrection}
         dictation={dictation}
         objetivo={data.objetivo}
@@ -477,6 +553,44 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
         products={kit.products || []}
         selectedProducts={selectedProducts}
         setSelectedProducts={setSelectedProducts}
+        editorialAtivo={editorialAtivo}
+        suggestionLinhas={suggestionLinhas}
+        setSuggestionLinhas={setSuggestionLinhas}
+        onUseSuggestion={(sugg, idx) => {
+          // "USAR ESTA" (item 25): a frase vira a informação-chave E leva junto
+          // a linha editorial que a gerou, o modo de uso e o objeto — é isso que
+          // faz a perspectiva sobreviver até o prompt da peça.
+          if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || "";
+          onChange({
+            ...data,
+            keyInfo: sugg,
+            editorial: {
+              linhaEditorialEscolha: edLinha,
+              linhaEditorial: suggestionLinhas[idx] ?? null,
+              usoObjeto: edUso,
+              objetoEditorial: edObjeto,
+              proposicao: sugg,
+            },
+          });
+          setSuggestions([]);
+          setSuggestionLinhas([]);
+        }}
+        editorialControls={
+          editorialAtivo ? (
+            <EditorialControlsSection
+              products={kit.products || []}
+              objeto={edObjeto}
+              onObjetoChange={setEdObjeto}
+              usoObjeto={edUso}
+              onUsoObjetoChange={setEdUso}
+              linha={edLinha}
+              onLinhaChange={setEdLinha}
+              hint={edHint}
+              onHintChange={setEdHint}
+              disabled={suggesting || loading}
+            />
+          ) : null
+        }
       />
 
       {catalogoSemTexto && (

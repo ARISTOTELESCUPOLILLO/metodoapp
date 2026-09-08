@@ -13,6 +13,11 @@ import { usePlanSlotsCtx } from "../../../contexts/PlanSlotsContext";
 import { useAuth } from "../../../hooks/useAuth";
 import { useImpersonation } from "../../../hooks/useImpersonation";
 import { loadSugestaoHistory, pushSugestaoHistory } from "../../../utils/storage";
+import { useAppProfile } from "../../../contexts/ProfileContext";
+import type { LinhaEditorial, LinhaEditorialEscolha, UsoDoObjeto } from "../../../types";
+import { LINHA_EDITORIAL_SPEC, parseLinhaEditorial } from "../../../domain/linhaEditorial.config";
+import { classificarFalaEditorial } from "../../../core/linhaEditorialRules";
+import { EditorialControlsSection } from "../editorial/EditorialControlsSection";
 
 const KEYINFO_EXAMPLE: Record<Segment, string> = {
   SERVIÇOS:
@@ -61,6 +66,7 @@ export function KeyInfoSection({
   onOpenIdeias,
 }: Props) {
   const { selectedSlot } = usePlanSlotsCtx();
+  const { profile } = useAppProfile();
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
@@ -75,7 +81,26 @@ export function KeyInfoSection({
   const { user } = useAuth();
   const impersonation = useImpersonation();
   const effectiveUserId = impersonation?.userId ?? user?.id;
+  // ── Informação-chave Editorial (piloto, atrás de profiles.beta_editorial) ──
+  // Gate de INTERFACE. No MOP o prompt é montado no navegador
+  // (buildMetodoOpPrompt), então este é o único gate possível sem mudar o
+  // contrato de /api/generate-content — ver a nota em organizaMethodEngine.ts.
+  const editorialAtivo = profile?.beta_editorial === true;
+  const [edObjeto, setEdObjeto] = useState("");
+  const [edUso, setEdUso] = useState<UsoDoObjeto>("auto");
+  const [edLinha, setEdLinha] = useState<LinhaEditorialEscolha>("auto");
+  const [edHint, setEdHint] = useState("");
+  const [suggestionLinhas, setSuggestionLinhas] = useState<(LinhaEditorial | null)[]>([]);
+  const pedirSugestaoRef = useRef<((hint?: string) => void) | null>(null);
   const dictation = useVoiceDictation((text) => {
+    // No modo editorial o microfone alimenta a PISTA, e "outra" é COMANDO, não
+    // conteúdo (item 28 do pedido).
+    if (editorialAtivo) {
+      const fala = classificarFalaEditorial(text);
+      if (fala.hint) setEdHint(fala.hint);
+      if (fala.tipo !== "pista") pedirSugestaoRef.current?.(fala.hint || undefined);
+      return;
+    }
     if (initialKeyInfoRef.current === null) initialKeyInfoRef.current = data.keyInfo || "";
     const current = (data.keyInfo || "").trim();
     update("keyInfo", current ? `${current} ${text}` : text);
@@ -90,11 +115,33 @@ export function KeyInfoSection({
   useEffect(() => {
     setSuggestCount(0);
     setSuggestions([]);
+    setSuggestionLinhas([]);
     setSuggestError(null);
     initialKeyInfoRef.current = null;
     allSessionSuggestionsRef.current = [];
     sessionSeedRef.current = Math.floor(Math.random() * 1e9);
   }, [segment]);
+
+  // RODADA (item 7 do pedido): trocar objeto, modo de uso ou linha editorial
+  // muda o contexto principal e reinicia a contagem; trocar a PISTA não — ela é
+  // refinamento dentro da mesma rodada e consome uma das 3 posições.
+  // O guard de mount evita zerar uma rodada em andamento ao remontar a tela.
+  const rodadaRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!editorialAtivo) return;
+    const chave = `${edObjeto}|${edUso}|${edLinha}`;
+    if (rodadaRef.current === null) {
+      rodadaRef.current = chave;
+      return;
+    }
+    if (rodadaRef.current === chave) return;
+    rodadaRef.current = chave;
+    setSuggestCount(0);
+    setSuggestions([]);
+    setSuggestionLinhas([]);
+    setSuggestError(null);
+    sessionSeedRef.current = Math.floor(Math.random() * 1e9);
+  }, [editorialAtivo, edObjeto, edUso, edLinha]);
 
   // Semeia o rodízio sintático com o histórico de rodadas ANTERIORES (outra
   // visita/mount, não só cliques dentro deste carregamento de página) — sem
@@ -124,7 +171,7 @@ export function KeyInfoSection({
     }
   }, [data.keyInfo]);
 
-  async function fetchSuggestion() {
+  async function fetchSuggestion(hintOverride?: string) {
     // suggesting precisa entrar aqui (não só no `disabled` do botão): o botão
     // "Gerar outra" some da tela só depois do próximo render, então um duplo
     // clique físico rápido pode disparar 2 chamadas antes do React remover o
@@ -148,7 +195,7 @@ export function KeyInfoSection({
           segment,
           isPersonalBrand,
           audience: data.audience,
-          hint: "",
+          hint: editorialAtivo ? (hintOverride ?? edHint) : "",
           mode: "metodo",
           attempt,
           sessionSeed: sessionSeedRef.current,
@@ -157,6 +204,17 @@ export function KeyInfoSection({
           brandVoice: data.brandVoice || "",
           selectedProducts,
           preferredSlot: selectedSlot,
+          // Campos do piloto editorial. Ausentes fora do beta — a requisição
+          // fica idêntica à de hoje e o servidor roda o motor Legacy.
+          ...(editorialAtivo
+            ? {
+                editorialMode: true,
+                linhaEditorial: edLinha === "auto" ? null : edLinha,
+                usoObjeto: edUso,
+                objeto: edObjeto,
+                linhasUsadas: suggestionLinhas.filter(Boolean),
+              }
+            : {}),
         }),
       });
       if (!res.ok) {
@@ -167,6 +225,7 @@ export function KeyInfoSection({
       const newSugg = String(json.sugestao || "").trim();
       if (newSugg) {
         setSuggestions((arr) => [...arr, newSugg]);
+        setSuggestionLinhas((arr) => [...arr, parseLinhaEditorial(json.linhaEditorial)]);
         allSessionSuggestionsRef.current = [...allSessionSuggestionsRef.current, newSugg];
         pushSugestaoHistory(newSugg, effectiveUserId);
       }
@@ -177,6 +236,7 @@ export function KeyInfoSection({
       setSuggesting(false);
     }
   }
+  pedirSugestaoRef.current = fetchSuggestion;
 
   return (
     <div>
@@ -189,7 +249,9 @@ export function KeyInfoSection({
           marginBottom: 6,
         }}
       >
-        <span>Informação-chave</span>
+        {/* Item 2 do pedido: na tela, o termo técnico dá lugar à pergunta
+            que o usuário realmente responde. Internamente segue keyInfo. */}
+        <span>{editorialAtivo ? "O que comunicar" : "Informação-chave"}</span>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           <button
             type="button"
@@ -210,7 +272,7 @@ export function KeyInfoSection({
           </button>
           <button
             type="button"
-            onClick={fetchSuggestion}
+            onClick={() => fetchSuggestion()}
             disabled={suggesting || loading || hasKeyInfo || suggestExhausted}
             title={
               hasKeyInfo
@@ -267,6 +329,7 @@ export function KeyInfoSection({
               update("keyInfo", "");
               setSuggestCount(0);
               setSuggestions([]);
+              setSuggestionLinhas([]);
               setSuggestError(null);
               initialKeyInfoRef.current = null;
             }}
@@ -307,11 +370,29 @@ export function KeyInfoSection({
           )}
         </div>
       </div>
-      <ProductsChecklist
-        products={products || []}
-        selected={selectedProducts}
-        onChange={setSelectedProducts}
-      />
+      {/* No modo editorial o objeto da sequência é escolhido no seletor abaixo
+          (um item por rodada, com modo de uso declarado), então o checklist de
+          sementes do Legacy sairia sobrando. Fora do beta, nada muda. */}
+      {editorialAtivo ? (
+        <EditorialControlsSection
+          products={products || []}
+          objeto={edObjeto}
+          onObjetoChange={setEdObjeto}
+          usoObjeto={edUso}
+          onUsoObjetoChange={setEdUso}
+          linha={edLinha}
+          onLinhaChange={setEdLinha}
+          hint={edHint}
+          onHintChange={setEdHint}
+          disabled={suggesting || loading}
+        />
+      ) : (
+        <ProductsChecklist
+          products={products || []}
+          selected={selectedProducts}
+          onChange={setSelectedProducts}
+        />
+      )}
       <div style={{ position: "relative" }}>
         <textarea
           value={data.keyInfo || ""}
@@ -517,9 +598,37 @@ export function KeyInfoSection({
                       gap: 8,
                     }}
                   >
-                    {suggestions.length > 1 && (
-                      <span className="eyebrow" style={{ fontSize: 10, color: "#64748b" }}>
+                    {(suggestions.length > 1 || suggestionLinhas[idx]) && (
+                      <span
+                        className="eyebrow"
+                        style={{
+                          fontSize: 10,
+                          color: "#64748b",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          flexWrap: "wrap",
+                        }}
+                      >
                         Sugestão {idx + 1}
+                        {/* Mostrar a linha usada permite comparar abordagens sem
+                            precisar entender o método (item 23 do pedido). */}
+                        {suggestionLinhas[idx] && (
+                          <span
+                            style={{
+                              background: "#e2e8f0",
+                              color: "#0f172a",
+                              borderRadius: 999,
+                              padding: "1px 8px",
+                              fontSize: 10,
+                              fontWeight: 700,
+                              letterSpacing: "0.03em",
+                            }}
+                            title={LINHA_EDITORIAL_SPEC[suggestionLinhas[idx]!].pergunta}
+                          >
+                            {LINHA_EDITORIAL_SPEC[suggestionLinhas[idx]!].label}
+                          </span>
+                        )}
                       </span>
                     )}
                     <p
@@ -536,10 +645,24 @@ export function KeyInfoSection({
                     <button
                       type="button"
                       onClick={() => {
+                        // "USAR ESTA" (item 25): a frase vira a informação-chave
+                        // E leva junto a linha editorial que a gerou, o modo de
+                        // uso e o objeto — é isso que faz a perspectiva
+                        // sobreviver até o prompt da sequência.
                         if (initialKeyInfoRef.current === null)
                           initialKeyInfoRef.current = data.keyInfo || "";
+                        if (editorialAtivo) {
+                          update("editorial", {
+                            linhaEditorialEscolha: edLinha,
+                            linhaEditorial: suggestionLinhas[idx] ?? null,
+                            usoObjeto: edUso,
+                            objetoEditorial: edObjeto,
+                            proposicao: sugg,
+                          });
+                        }
                         update("keyInfo", sugg);
                         setSuggestions([]);
+                        setSuggestionLinhas([]);
                       }}
                       style={{
                         background: "#0f172a",
@@ -558,11 +681,16 @@ export function KeyInfoSection({
                   </div>
                 ))}
               </div>
+              {suggestExhausted && (
+                <p style={{ margin: "10px 0 0", fontSize: 12, color: "#92400e" }}>
+                  Você já recebeu {SUGGEST_MAX} sugestões. Escolha uma para continuar.
+                </p>
+              )}
               {!suggestExhausted && (
                 <div style={{ marginTop: 10 }}>
                   <button
                     type="button"
-                    onClick={fetchSuggestion}
+                    onClick={() => fetchSuggestion()}
                     disabled={suggesting || hasKeyInfo}
                     style={{
                       background: "#fff",

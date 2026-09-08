@@ -13,6 +13,14 @@ import {
   type SugestaoSegment,
   type SugestaoAudience,
 } from "@/core/sugestaoEngine";
+import { generateSugestaoEditorial } from "@/core/editorialKeyInfo";
+import {
+  parseLinhaEditorial,
+  parseUsoDoObjeto,
+  type LinhaEditorial,
+  type LinhaEditorialEscolha,
+} from "@/domain/linhaEditorial.config";
+import { hasBetaEditorial } from "@/repository/betaFlags";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/suggest-keyinfo")({
@@ -121,6 +129,79 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
             : "B2C";
 
           const brandVoice = String(body.brandVoice || "").slice(0, 80);
+
+          // ── Informação-chave Editorial (piloto) ─────────────────────────
+          // O gate de interface não basta — a rota reconfere a flag antes de
+          // trocar de motor (mesmo contrato de hasBetaIntencao em
+          // generate-pu-copy.ts). Fora do beta, `editorial` fica false e o
+          // caminho abaixo é o Legacy de sempre, byte a byte: nenhuma variável
+          // nova entra no prompt de quem está fora.
+          const editorial =
+            body.editorialMode === true ? await hasBetaEditorial(effective.userId) : false;
+
+          if (editorial) {
+            const escolha: LinhaEditorialEscolha =
+              parseLinhaEditorial(body.linhaEditorial) ?? "auto";
+            const usoObjeto = parseUsoDoObjeto(body.usoObjeto);
+            const objeto = String(body.objeto || "").slice(0, 120);
+            // Linhas já entregues NESTA rodada — o motor é puro e não guarda
+            // estado, então quem sabe o que já saiu é o cliente. Serve só ao
+            // modo "auto" (evita repetir perspectiva dentro da rodada).
+            const linhasUsadas: LinhaEditorial[] = Array.isArray(body.linhasUsadas)
+              ? body.linhasUsadas
+                  .slice(0, 5)
+                  .map((l: unknown): LinhaEditorial | null => parseLinhaEditorial(l))
+                  .filter((l: LinhaEditorial | null): l is LinhaEditorial => l !== null)
+              : [];
+
+            let resultado: { sugestao: string; linhaEditorial: LinhaEditorial };
+            try {
+              resultado = await generateSugestaoEditorial(apiKey, {
+                companyName,
+                mainActivity,
+                segment,
+                audience,
+                brandVoice,
+                isPersonalBrand,
+                mode,
+                objetivo,
+                linhaEscolhida: escolha,
+                linhasUsadas,
+                usoObjeto,
+                objeto,
+                hint,
+                attempt,
+                sessionSeed,
+                previousSuggestions: previousSugs,
+              });
+            } catch (e) {
+              const status = (e as { status?: number }).status ?? 500;
+              return Response.json({ error: (e as Error).message }, { status });
+            }
+
+            // Débito idêntico ao do caminho Legacy — 1 clique = 1 sugestão, o
+            // mesmo contador `sugestoes` e o mesmo custo. O modo editorial não
+            // cria cota nova nem escapa da existente (item 6 do pedido).
+            if (!isAdminUser) {
+              try {
+                await debitUsage(userId, 0, 0, {
+                  evento: "suggest_keyinfo",
+                  modulo: mode,
+                  sugestoes: 1,
+                  custoUsd: COST_USD.sugestao,
+                  impersonatedBy: effective.impersonatedBy,
+                  preferredSlot,
+                });
+              } catch (e) {
+                console.warn("[suggest-keyinfo] debit failed", (e as Error).message);
+              }
+            }
+
+            return Response.json({
+              sugestao: resultado.sugestao,
+              linhaEditorial: resultado.linhaEditorial,
+            });
+          }
 
           // Motor de geração puro (src/core/sugestaoEngine.ts) — extraído desta
           // rota em 06/07/2026 para ser testável fora do contexto de uma

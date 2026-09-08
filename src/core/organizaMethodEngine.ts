@@ -14,6 +14,7 @@ import { momentModulators, SILABA_EXCECAO_RULE } from "./mopModulators";
 import { buildRegraProfissaoRegulamentada } from "./profissaoRegulamentada";
 import { buildRegraPolaridadeKeyInfo } from "./polaridadeKeyInfo";
 import { FECHO_GENERICO_RULE } from "./fechoGenerico";
+import { buildRegraLinhaEditorial } from "./linhaEditorialRules";
 
 export const SEQUENCE_COMPOSITION = {
   3: { estatico: 1, carrossel: 1, fechamento: 1 },
@@ -438,6 +439,32 @@ REGRA: cada peça cumpre a FORMA indicada acima — CTA e menção à empresa s�
   // fazendo as duas coisas. A peça afirmou o OPOSTO do informado. Vazia
   // quando a informação-chave não tem negação — o prompt fica idêntico.
   const regraPolaridade = buildRegraPolaridadeKeyInfo(keyInfo);
+  // LINHA EDITORIAL (piloto, atrás de profiles.beta_editorial) — a
+  // informação-chave desta sequência nasceu de uma perspectiva declarada, e
+  // ela é a ORIGEM do eixo, não um molde que substitui a progressão.
+  // String VAZIA para quem está fora do piloto — o prompt fica idêntico ao de
+  // hoje, byte a byte, e o prefixo de cache da OpenAI não se altera.
+  //
+  // POR QUE O GATE AQUI É SÓ O CLIENTE: ao contrário do PU, o prompt do MOP é
+  // montado no NAVEGADOR (ver services/api/generateMethodContent.ts, que envia
+  // a string pronta para /api/generate-content). Não há ponto no servidor onde
+  // reconferir a flag sem mudar esse contrato — o que seria uma alteração de
+  // arquitetura fora do escopo deste piloto. O campo só existe na tela de quem
+  // está no beta; quem não está nunca preenche `data.editorial`.
+  //
+  // A regra só vale enquanto a informação-chave AINDA for a proposição aceita
+  // em "Usar esta": se o usuário editou o campo à mão depois, a escolha
+  // editorial se dissolve sozinha (ver `proposicao` em EscolhaEditorial) — sem
+  // isso, uma sequência escrita à mão herdaria a linha de uma sugestão
+  // descartada.
+  const editorialVigente =
+    data.editorial?.proposicao?.trim() === keyInfo ? data.editorial : undefined;
+  const regraEditorial = buildRegraLinhaEditorial({
+    linhaEditorial: editorialVigente?.linhaEditorial ?? null,
+    usoObjeto: editorialVigente?.usoObjeto,
+    objeto: editorialVigente?.objetoEditorial,
+    alvo: "mop",
+  });
 
   const titleSyntaxRule = `11. SUJEITO DO TÍTULO — LIBERDADE GRAMATICAL COM FUNÇÃO: qualquer classe gramatical da língua portuguesa pode exercer função de sujeito quando substantivada — substantivo (concreto ou abstrato), adjetivo, verbo no infinitivo, advérbio, numeral, pronome ou locução. Exemplos de abertura válidos: "O melhor…", "A solução…", "A saudade…", "Decidir…", "Cuidar…", "O que define…". O título CUMPRE A FORMA do seu estágio (ver FUNÇÕES COMUNICATIVAS POR PEÇA): entrega observação, critério, prova, posicionamento ou convite — nunca descreve o leitor de fora. PROIBIDO: (a) construção passiva sem agente (ex.: "Operações sem atrasos garantidas", "Entrega sem falhas comprovada" — sem quem age); (b) abrir o título nomeando o leitor de fora — "Quem decide…", "Gestores…", "Decisores…", "A equipe…", "Quem cuida…", "Quem usa…" + verbo descritivo. VARIE o sujeito entre pessoas, conceitos abstratos, verbos substantivados e qualificadores.`;
 
@@ -519,7 +546,7 @@ INEDITISMO CONTROLADO:
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 ${TECNICISMO_RULE}
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
-${FECHO_GENERICO_RULE}${regraProfissao ? `\n\n${regraProfissao}` : ""}${regraPolaridade ? `\n\n${regraPolaridade}` : ""}
+${FECHO_GENERICO_RULE}${regraProfissao ? `\n\n${regraProfissao}` : ""}${regraPolaridade ? `\n\n${regraPolaridade}` : ""}${regraEditorial ? `\n\n${regraEditorial}` : ""}
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.

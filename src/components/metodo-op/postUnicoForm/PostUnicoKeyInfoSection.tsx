@@ -7,12 +7,13 @@
 // reage a `data.keyInfo` tanto para resetar sugestões quanto para limpar o
 // copy gerado (`clearCopy`), então o estado não pôde ser isolado sem
 // duplicar esse efeito.
-import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import type { Dispatch, MutableRefObject, ReactNode, SetStateAction } from "react";
 import { Mic, Square, X } from "lucide-react";
 import { useTextCorrection } from "@/hooks/useTextCorrection";
 import { useVoiceDictation } from "@/hooks/useVoiceDictation";
 import ProductsChecklist from "../ProductsChecklist";
-import type { PostUnicoObjetivo } from "../../../types";
+import type { LinhaEditorial, PostUnicoObjetivo } from "../../../types";
+import { LINHA_EDITORIAL_SPEC } from "../../../domain/linhaEditorial.config";
 
 const SUGGEST_MAX = 3;
 
@@ -52,6 +53,17 @@ interface Props {
   products: string[];
   selectedProducts: string[];
   setSelectedProducts: (next: string[]) => void;
+  // ── Informação-chave Editorial (piloto) ──────────────────────────────────
+  // Tudo opcional: com o beta desligado nenhuma destas props é passada e o
+  // componente renderiza exatamente como hoje.
+  editorialAtivo?: boolean;
+  /** Linha editorial de cada sugestão — array paralelo a `suggestions`. */
+  suggestionLinhas?: (LinhaEditorial | null)[];
+  setSuggestionLinhas?: Dispatch<SetStateAction<(LinhaEditorial | null)[]>>;
+  /** Substitui o comportamento padrão de "Usar esta" quando presente. */
+  onUseSuggestion?: (sugg: string, idx: number) => void;
+  /** Bloco de controles editoriais, montado pelo formulário dono da rodada. */
+  editorialControls?: ReactNode;
 }
 
 export function PostUnicoKeyInfoSection({
@@ -80,6 +92,11 @@ export function PostUnicoKeyInfoSection({
   products,
   selectedProducts,
   setSelectedProducts,
+  editorialAtivo,
+  suggestionLinhas,
+  setSuggestionLinhas,
+  onUseSuggestion,
+  editorialControls,
 }: Props) {
   return (
     <div>
@@ -92,7 +109,10 @@ export function PostUnicoKeyInfoSection({
         }}
       >
         <label style={{ margin: 0 }}>
-          Informação-chave <span style={{ color: "#dc2626" }}>*</span>
+          {/* Item 2 do pedido: na tela, o termo técnico dá lugar à pergunta
+              que o usuário realmente responde. Internamente segue keyInfo. */}
+          {editorialAtivo ? "O que comunicar" : "Informação-chave"}{" "}
+          <span style={{ color: "#dc2626" }}>*</span>
         </label>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <button
@@ -170,6 +190,7 @@ export function PostUnicoKeyInfoSection({
               onKeyInfoChange("");
               setSuggestCount(0);
               setSuggestions([]);
+              setSuggestionLinhas?.([]);
               setSuggestError(null);
               initialKeyInfoRef.current = null;
             }}
@@ -210,11 +231,19 @@ export function PostUnicoKeyInfoSection({
           )}
         </div>
       </div>
-      <ProductsChecklist
-        products={products || []}
-        selected={selectedProducts}
-        onChange={setSelectedProducts}
-      />
+      {/* No modo editorial o objeto da peça é escolhido no seletor abaixo
+          (um item por rodada, com modo de uso declarado), então o checklist
+          de sementes do Legacy sairia sobrando e daria duas fontes de verdade
+          para a mesma coisa. Fora do beta, nada muda. */}
+      {editorialAtivo ? (
+        editorialControls
+      ) : (
+        <ProductsChecklist
+          products={products || []}
+          selected={selectedProducts}
+          onChange={setSelectedProducts}
+        />
+      )}
       <div style={{ position: "relative" }}>
         <textarea
           value={keyInfo}
@@ -428,9 +457,37 @@ export function PostUnicoKeyInfoSection({
                       gap: 8,
                     }}
                   >
-                    {suggestions.length > 1 && (
-                      <span className="eyebrow" style={{ fontSize: 10, color: "#64748b" }}>
+                    {(suggestions.length > 1 || suggestionLinhas?.[idx]) && (
+                      <span
+                        className="eyebrow"
+                        style={{
+                          fontSize: 10,
+                          color: "#64748b",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          flexWrap: "wrap",
+                        }}
+                      >
                         Sugestão {idx + 1}
+                        {/* Mostrar a linha usada permite comparar abordagens sem
+                            precisar entender o método (item 23 do pedido). */}
+                        {suggestionLinhas?.[idx] && (
+                          <span
+                            style={{
+                              background: "#e2e8f0",
+                              color: "#0f172a",
+                              borderRadius: 999,
+                              padding: "1px 8px",
+                              fontSize: 10,
+                              fontWeight: 700,
+                              letterSpacing: "0.03em",
+                            }}
+                            title={LINHA_EDITORIAL_SPEC[suggestionLinhas[idx]!].pergunta}
+                          >
+                            {LINHA_EDITORIAL_SPEC[suggestionLinhas[idx]!].label}
+                          </span>
+                        )}
                       </span>
                     )}
                     <p
@@ -447,6 +504,10 @@ export function PostUnicoKeyInfoSection({
                     <button
                       type="button"
                       onClick={() => {
+                        if (onUseSuggestion) {
+                          onUseSuggestion(sugg, idx);
+                          return;
+                        }
                         if (initialKeyInfoRef.current === null)
                           initialKeyInfoRef.current = keyInfo || "";
                         onKeyInfoChange(sugg);
@@ -469,6 +530,11 @@ export function PostUnicoKeyInfoSection({
                   </div>
                 ))}
               </div>
+              {suggestExhausted && (
+                <p style={{ margin: "10px 0 0", fontSize: 12, color: "#92400e" }}>
+                  Você já recebeu {SUGGEST_MAX} sugestões. Escolha uma para continuar.
+                </p>
+              )}
               {!suggestExhausted && (
                 <div style={{ marginTop: 10 }}>
                   <button

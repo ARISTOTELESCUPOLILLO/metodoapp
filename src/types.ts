@@ -84,6 +84,11 @@ export interface ContentFormData {
    *  os dois estágios sorteavam paletas DIFERENTES para a mesma peça e o prompt
    *  ia ao modelo com duas cores brigando (achado 14/08/2026). */
   accentColor?: string;
+  // ── Informação-chave Editorial (piloto, atrás de profiles.beta_editorial) ──
+  // Preenchido quando a informação-chave veio de uma sugestão editorial
+  // ("Usar esta"). Ausente fora do piloto — buildMetodoOpPrompt devolve
+  // exatamente o prompt de hoje, e o prefixo de cache não se altera.
+  editorial?: EscolhaEditorial;
 }
 
 // Leitura cênica produzida pela IA por peça — orienta a geração de imagem
@@ -211,6 +216,55 @@ export type {
 type IntencaoDeclarada = _IntencaoDeclarada;
 type TransformacaoPretendida = _TransformacaoPretendida;
 
+// Informação-chave Editorial (piloto, atrás da flag profiles.beta_editorial).
+// Só tipos — o import é `import type` dos dois lados, então a circularidade com
+// domain/linhaEditorial.config.ts (que importa PostUnicoObjetivo daqui) é
+// apagada na compilação e não existe em runtime.
+import type {
+  LinhaEditorial as _LinhaEditorial,
+  LinhaEditorialEscolha as _LinhaEditorialEscolha,
+  UsoDoObjeto as _UsoDoObjeto,
+} from "./domain/linhaEditorial.config";
+export type {
+  LinhaEditorial,
+  LinhaEditorialEscolha,
+  UsoDoObjeto,
+} from "./domain/linhaEditorial.config";
+type LinhaEditorial = _LinhaEditorial;
+type LinhaEditorialEscolha = _LinhaEditorialEscolha;
+type UsoDoObjeto = _UsoDoObjeto;
+
+/**
+ * Escolhas editoriais que acompanham uma Informação-chave nascida do modo
+ * Editorial. Compartilhado por PU e MOP — os dois recebem exatamente a mesma
+ * decisão do usuário, e é isso que faz a Linha Editorial ser origem nos dois
+ * fluxos sem duplicar campo.
+ *
+ * Ausente para quem está fora do piloto: nesse caso o prompt é idêntico ao de
+ * sempre, byte a byte.
+ */
+export interface EscolhaEditorial {
+  /** O que o usuário escolheu na tela ("auto" = motor decide). */
+  linhaEditorialEscolha?: LinhaEditorialEscolha;
+  /** A linha REALMENTE usada na sugestão aceita — é ela que vai ao prompt. */
+  linhaEditorial?: LinhaEditorial | null;
+  /** Como o objeto participa da peça. */
+  usoObjeto?: UsoDoObjeto;
+  /** Produto/Serviço/Tema escolhido. "" ou ausente quando não há. */
+  objetoEditorial?: string;
+  /**
+   * A proposição exata que o usuário aceitou em "Usar esta".
+   *
+   * POR QUE EXISTE: `editorial` vive no estado do formulário e sobrevive a
+   * "Limpar" e à edição manual do campo. Sem esta âncora, o usuário podia
+   * apagar a sugestão, escrever a própria informação-chave e a peça continuaria
+   * recebendo a regra de uma linha editorial que não gerou aquele texto.
+   * Os consumidores só aplicam a linha quando `keyInfo` ainda é ESTA frase —
+   * qualquer edição à mão dissolve a escolha sozinha, sem efeito de limpeza.
+   */
+  proposicao?: string;
+}
+
 export type PostUnicoObjetivo =
   | "promocao"
   | "homenagem"
@@ -251,6 +305,10 @@ export interface PostUnicoFormData {
   // sem estragar o denominador do índice.
   transformacaoPrincipal?: TransformacaoPretendida | null;
   transformacoesSecundarias?: TransformacaoPretendida[];
+  // ── Informação-chave Editorial (piloto, atrás de profiles.beta_editorial) ──
+  // Preenchido quando a informação-chave veio de uma sugestão editorial
+  // ("Usar esta"). Ausente fora do piloto — o prompt do PU fica idêntico.
+  editorial?: EscolhaEditorial;
 }
 
 export interface TemplateMood {

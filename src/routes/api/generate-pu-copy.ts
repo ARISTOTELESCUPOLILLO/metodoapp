@@ -15,7 +15,9 @@ import {
   debitUsage,
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
-import { hasBetaIntencao } from "@/repository/betaFlags";
+import { hasBetaIntencao, hasBetaEditorial } from "@/repository/betaFlags";
+import { buildRegraLinhaEditorial } from "@/core/linhaEditorialRules";
+import { parseLinhaEditorial, parseUsoDoObjeto } from "@/domain/linhaEditorial.config";
 import {
   buildIntencaoBlock,
   buildIntencaoRegraApoio,
@@ -318,6 +320,27 @@ Proibido mencionar literalmente o nome da voz no texto final.
           // fazendo as duas coisas. A peça afirmou o OPOSTO do informado. Vazia
           // quando a informação-chave não tem negação — o prompt fica idêntico.
           const regraPolaridade = buildRegraPolaridadeKeyInfo(keyInfo);
+          // LINHA EDITORIAL (piloto) — a informação-chave nasceu de uma
+          // perspectiva declarada, e a peça precisa continuar sendo dela. Mesmo
+          // contrato dos dois blocos acima: string VAZIA quando não há linha (ou
+          // quando o usuário está fora do beta), e aí o prompt fica idêntico ao
+          // de hoje, byte a byte. A checagem da flag é refeita aqui de propósito
+          // — o gate de interface não protege contra aba aberta há dois dias.
+          const linhaEditorial = body.editorial
+            ? (await hasBetaEditorial(userId))
+              ? parseLinhaEditorial((body.editorial as { linhaEditorial?: unknown }).linhaEditorial)
+              : null
+            : null;
+          const regraEditorial = linhaEditorial
+            ? buildRegraLinhaEditorial({
+                linhaEditorial,
+                usoObjeto: parseUsoDoObjeto((body.editorial as { usoObjeto?: unknown }).usoObjeto),
+                objeto: String(
+                  (body.editorial as { objetoEditorial?: unknown }).objetoEditorial || "",
+                ).slice(0, 120),
+                alvo: "pu",
+              })
+            : "";
           // FECHO GENÉRICO — não tem const aqui de propósito: é a constante
           // FECHO_GENERICO_RULE, colada direto no bloco de regras abaixo.
           // Achado do teste R1-R7 (18/08): quatro das sete
@@ -460,7 +483,7 @@ ${
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: a informação-chave pode conter datas ou marcos de lançamento ("a partir de", "disponível em", "começa em" etc.). IGNORE esses elementos completamente — NÃO os mencione no título nem no texto de apoio. Extraia apenas a ESSÊNCIA do serviço, da capacidade ou do posicionamento da empresa. PROIBIDO: datas, urgência, "a partir de", "em breve", "lançamento", "novo serviço". OBRIGATÓRIO: atemporalidade, autoridade de marca, posicionamento sóbrio.` : ""}
 ${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: se a informação-chave contiver datas, use-as apenas para situar a conquista ou o evento celebrado — NUNCA como gatilho de urgência, chamada para ação temporal ou linguagem de lançamento. PROIBIDO: "não perca", "somente até", "a partir de", "já disponível", urgência qualquer. O copy celebra com emoção e respeito — não pressiona.` : ""}
 ${tituloFixo || ajustePromocional ? "" : `- REGRA DE URGÊNCIA NO TÍTULO (só para "titulo", não para "texto"/"topicos"): PROIBIDO urgência temporal clichê — "hoje", "agora", "já", "última chance", "corra" (e variações), em qualquer objetivo. O título expressa valor, produto ou contexto favorável — nunca depende de urgência.`}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}
-${FECHO_GENERICO_RULE}${intencaoRegraApoio}`;
+${FECHO_GENERICO_RULE}${regraEditorial ? `\n${regraEditorial}` : ""}${intencaoRegraApoio}`;
 
           const result = await fetchOpenAIChat(apiKey, {
             model: "gpt-4.1",

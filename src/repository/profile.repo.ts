@@ -50,6 +50,9 @@ export interface Profile {
   // Piloto do campo de intenção declarada (PU) — ver repository/betaFlags.ts.
   // Ausente/false = usuário fora do beta: não vê o campo e gera igual a hoje.
   beta_intencao?: boolean | null;
+  // Piloto da Informação-chave Editorial (PU + MOP) — ver repository/betaFlags.ts.
+  // Ausente/false = fora do beta: não vê os campos e a Sugestão segue Legacy.
+  beta_editorial?: boolean | null;
   plano1_last_charged_at: string | null;
   plano2_last_charged_at: string | null;
   bonus_last_charged_at: string | null;
