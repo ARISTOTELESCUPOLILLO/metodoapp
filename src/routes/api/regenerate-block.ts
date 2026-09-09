@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  SCRIPT_MIN_WORDS,
+  SCRIPT_MAX_WORDS,
+  SCRIPT_FECHO_MIN_WORDS,
+  SCRIPT_FECHO_MAX_WORDS,
+  SCRIPT_MENSAGEM_MIN_WORDS,
+} from "@/core/scriptValidation";
+import {
   truncateWords,
   checkExcessoPalavras,
   validateTitulo,
@@ -97,10 +104,30 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: troque o sujeit
 
   // kind === 'texto'
   // Estático, Estático Final e Carrossel = 12 palavras (regra do método)
-  // Reels (script) = 25 palavras
   // PostUnico = 14 palavras
   const isPostUnico = f.startsWith("postunico");
-  const max = isReels ? 25 : isPostUnico ? 14 : 12;
+
+  // REELS é caso à parte: o "texto" dele é o ROTEIRO FALADO, e desde 09/09/2026
+  // ele tem estrutura própria (mensagem com vírgula de respiro + fecho curto,
+  // ver core/scriptValidation.ts). Este endpoint dizia só "máximo 25 palavras"
+  // — número que nem batia com a régua nova — então a reescrita corrigia o
+  // tamanho e devolvia outro roteiro sem fecho. Quem regenera precisa receber a
+  // MESMA regra de quem gera, senão o laço de correção não converge.
+  if (isReels) {
+    return {
+      label: "roteiro falado",
+      rule: `ISTO É FALA, NÃO TEXTO — será lido em voz alta por sintetizador.
+ESTRUTURA — EXATAMENTE 2 frases separadas por PONTO FINAL:
+(1) MENSAGEM: ${SCRIPT_MENSAGEM_MIN_WORDS} a 17 palavras, com PELO MENOS UMA VÍRGULA no ponto natural de respiro — é onde a voz pausa.
+(2) FECHO: ${SCRIPT_FECHO_MIN_WORDS} a ${SCRIPT_FECHO_MAX_WORDS} palavras, frase curta e separada que ENCERRA a ideia.
+TOTAL: ${SCRIPT_MIN_WORDS} a ${SCRIPT_MAX_WORDS} palavras. NUNCA exceda — conte antes de responder.
+Leia em voz alta antes de devolver: a última frase soa como ponto final de uma conversa, ou como se faltasse algo? Se faltar, não é fecho.
+A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA ATUAL: troque o sujeito OU a estrutura, não só o verbo.`,
+      max: SCRIPT_MAX_WORDS,
+    };
+  }
+
+  const max = isPostUnico ? 14 : 12;
   return {
     label: "texto de apoio",
     rule: `MÁXIMO ${max} palavras. NUNCA exceda esse limite — conte mentalmente as palavras antes de responder. Frase curta que sustente o título. Sem emoji, sem hashtag, sem aspas.

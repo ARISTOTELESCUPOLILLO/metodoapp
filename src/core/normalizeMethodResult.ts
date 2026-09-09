@@ -238,8 +238,15 @@ export function normalizeMethodResult(
           keyInfo,
         ),
       );
+      // ⚠ O SUFIXO É ".texto", NÃO ".script" — e isso não é detalhe.
+      // autoRegenerate.ts casa as flags com /^(.*)\.(titulo|texto|legenda)$/ e
+      // internamente já mapeia `texto` → `reels[i].script`. Quando esta linha
+      // emitia ".script" (09/09/2026, manhã), a régua reprovava e NINGUÉM lia:
+      // saiu um roteiro de 32 palavras em 3 frases, com a validação apontando
+      // os dois defeitos e nada agindo sobre eles. A régua estava certa; o fio
+      // é que estava solto.
       for (const motivo of validateScriptReels(r.script || ""))
-        flags.push({ campo: `reels[${i}].script`, motivo });
+        flags.push({ campo: `reels[${i}].texto`, motivo });
     });
   }
 

@@ -276,6 +276,19 @@ export async function judgeProposicaoEditorial(
         : `
 4. relevanciaOk — a frase entrega uma IDEIA, ou só descreve/nomeia uma situação sem dizer o que ela revela? Reprove quando, lida inteira, não sobrar nada que o leitor não soubesse antes.`;
 
+    // A TRANSFORMAÇÃO COLIDE COM O fatoOk POR NATUREZA. A linha PEDE que a frase
+    // afirme uma mudança no mundo ("está deixando de X e começando a Y") — e uma
+    // mudança em curso nunca é confirmável pela Atividade nem pelo nome do item.
+    // Sem esta ressalva o juiz reprovava a frase JUSTAMENTE por cumprir a linha
+    // pedida, e a Transformação virava a única linha que nunca aprovava nada.
+    // A fronteira não é "pode afirmar mudança ou não": é ONDE a mudança está
+    // situada. Tendência ampla de mercado passa; mecanismo, gatilho, ocasião ou
+    // número de dentro desta empresa continua sendo dado inventado.
+    const ressalvaTransformacao =
+      linha === "transformacao"
+        ? ` ⚠ RESSALVA DESTA LINHA: a Transformação EXIGE afirmar uma mudança em curso — os DOIS polos ("está deixando de X e começando a Y", "antes era X, hoje é Y", "vem sendo") são a própria linha editorial e NÃO contam como dado inventado, desde que enunciados como TENDÊNCIA AMPLA de mercado, de comportamento ou de tecnologia. Segue reprovado o detalhe operacional que ninguém informou: o MECANISMO ("por causa da mudança nas regras das plataformas"), o GATILHO ou a OCASIÃO ("nas reuniões de revisão do semestre"), o NÚMERO, o PRAZO e a ETAPA. Teste prático: se a afirmação vale para o setor inteiro, aprove; se ela descreve o que acontece DENTRO desta empresa, ou POR QUE a mudança aconteceu, reprove.`
+        : "";
+
     const res = await fetchOpenAIChat(
       apiKey,
       {
@@ -303,7 +316,7 @@ O que ela exige: ${spec.guia}
 FRASE A AVALIAR: "${proposicao}"
 
 Responda JSON com estas chaves booleanas e um "motivo" curto (só quando reprovar):
-1. fatoOk — a frase evita AFIRMAR como fato um dado específico sobre este produto/serviço/método que NÃO dá para confirmar pela ATIVIDADE, pelo NOME do item ou pela PISTA acima? Conta como dado inventado: descrever COMO o serviço é feito, POR QUEM, EM QUANTO TEMPO, com QUE ferramenta, ou como a alternativa/concorrência funciona — quando nada disso foi informado. Soar plausível NÃO basta. Em dúvida, false.
+1. fatoOk — a frase evita AFIRMAR como fato um dado específico sobre este produto/serviço/método que NÃO dá para confirmar pela ATIVIDADE, pelo NOME do item ou pela PISTA acima? Conta como dado inventado: descrever COMO o serviço é feito, POR QUEM, EM QUANTO TEMPO, com QUE ferramenta, ou como a alternativa/concorrência funciona — quando nada disso foi informado. Soar plausível NÃO basta. Em dúvida, false.${ressalvaTransformacao}
 2. linhaOk — a frase cumpre a linha editorial pedida acima, ou escorregou para outra? (Diagnóstico que virou conselho, Conhecimento que virou dica, Experiência que virou convite a testar, Transformação sem o ponto de partida, Decisão que empurra uma das opções.) Em dúvida, false.
 3. proposicaoOk — é uma frase que AFIRMA alguma coisa, com sujeito e predicado inteiros — e não um título, um assunto solto ou um slogan institucional?${criterioDecisao}
 5. respeitoOk — a frase evita criticar, culpar ou ridicularizar o leitor e o método que ele usa hoje ("achismo", "amadorismo", "você está perdendo dinheiro", "quem faz assim não sabe")? Apontar uma limitação de forma factual é permitido; qualificar de forma depreciativa não.
