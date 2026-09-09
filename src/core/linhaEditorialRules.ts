@@ -249,6 +249,19 @@ export function validarProposicaoEditorial(
  * a intenção editorial nem abandonar a relação central.
  */
 /**
+ * O ITEM NÃO REALIZA SOZINHO O QUE DEPENDE DO CLIENTE.
+ *
+ * Nasceu dentro do MOSTRAR NOME, onde ter o nome no título convida a fazer o
+ * produto agir. Mas o convite não vem do NOME — vem de o item ser o assunto da
+ * peça. Caso real de 09/09/2026 no modo REFERIR SEM NOME, card 5 de um
+ * carrossel: "Treinamento que sente o campo funciona" — o item ganhou uma
+ * capacidade humana e virou sujeito do resultado, exatamente o que esta regra
+ * proíbe. Ela não estava no prompt porque estava presa ao outro modo.
+ */
+const REGRA_PRODUTO_NAO_E_AGENTE = `
+- ⚠ O ITEM DESTA PEÇA NÃO É O AGENTE DO RESULTADO: a tentação é fazê-lo realizar sozinho o que depende do cliente. PROIBIDO construções como "[item] decide resultados", "[item] garante vendas", "[item] traz clientes", "[item] resolve o negócio" — não se sustentam e soam infladas. PROIBIDO TAMBÉM dar a ele capacidade humana ("[item] que sente", "[item] que entende", "[item] que escuta"): quem sente, entende e escuta é gente. O que um serviço faz é mostrar, apontar, revelar, organizar, orientar; quem decide e quem executa é o empresário. Prefira o verbo verificável ao verbo grandioso.`;
+
+/**
  * A EXCEÇÃO DA LEGENDA no modo REFERIR SEM NOME (decisão do Ari, 09/09/2026).
  *
  * O modo existe para a PEÇA não virar etiqueta: o título e o texto convidam
@@ -345,16 +358,16 @@ export function buildRegraLinhaEditorial(params: {
       ? `\n- O nome do produto é EXCEÇÃO à diversidade lexical (vence a proibição de repetir palavra de conteúdo entre títulos): ele pode e deve aparecer no título de abertura E no de fechamento. A proibição de "abertura e fechamento soarem a mesma frase" CONTINUA valendo — diferencie os dois pelo sujeito, pela estrutura sintática e pelo ângulo, nunca removendo o nome de um deles.
 - ⚠ ESTA REGRA REVOGA A "ALTERNATIVA PREFERÍVEL" DA ANCORAGEM CONCRETA DO EIXO: lá acima, na ANCORAGEM CONCRETA DO EIXO, existe a recomendação de que "uma das duas peças ancora o elemento no TEXTO (não no título), liberando o título para um ângulo totalmente distinto". Com MOSTRAR NOME ligado essa alternativa NÃO VALE — ela é o caminho fácil que faz o produto sumir do título de abertura. O nome fica nos DOIS títulos, e a diferença entre eles se constrói por sujeito, estrutura e ângulo, não deixando de nomear.
 - ⚠ TESTE DOS DOIS TÍTULOS — FAÇA ANTES DE RESPONDER: escreva o título de ABERTURA e o de FECHAMENTO um debaixo do outro e confira duas coisas. (a) Eles COMEÇAM com a mesma palavra? (b) Têm a MESMA forma, com só o verbo trocado? Se a resposta for sim para qualquer uma, você NÃO diferenciou — reescreva um dos dois. A saída é mudar o SUJEITO de um deles, mantendo o nome do produto em OUTRA posição da frase. Exemplos com um produto de OUTRO ramo, só para mostrar a mecânica — NÃO copie as palavras: ✗ "Revisão Preventiva evita paradas" / "Revisão Preventiva reduz custos" (mesmo sujeito, mesma forma, só o verbo mudou) · ✓ "Revisão Preventiva evita paradas" / "Sua frota roda com Revisão Preventiva" (o segundo troca o sujeito e leva o nome para o fim).
-- ⚠ O PRODUTO NÃO É O AGENTE DO RESULTADO: com o nome no título, a tentação é fazer o produto realizar sozinho o que depende do cliente. PROIBIDO construções como "[produto] decide resultados", "[produto] garante vendas", "[produto] traz clientes", "[produto] resolve o negócio" — não se sustentam e soam infladas. O que um serviço faz é mostrar, apontar, revelar, organizar, orientar; quem decide e quem executa é o empresário. Prefira o verbo verificável ao verbo grandioso.`
+`
       : "";
 
   const objetoLinha =
     !item || usoObjeto === "auto"
       ? ""
       : usoObjeto === "nome"
-        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}`
+        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}${REGRA_PRODUTO_NAO_E_AGENTE}`
         : usoObjeto === "sem_nome"
-          ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito NA PEÇA — nem no título, nem no texto de apoio, nem no texto da imagem, nem no roteiro falado. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.${regraNomeNaLegenda(item)}`
+          ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito NA PEÇA — nem no título, nem no texto de apoio, nem no texto da imagem, nem no roteiro falado. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.${REGRA_PRODUTO_NAO_E_AGENTE}${regraNomeNaLegenda(item)}`
           : `\n- OBJETO DESTA PEÇA — NÃO USAR: existe um item selecionado, mas ele NÃO é a âncora desta peça. PROIBIDO nomeá-lo ou tomá-lo como assunto.`;
 
   const escopo =

@@ -565,15 +565,32 @@ describe("MOSTRAR NOME — diferenciação dos dois títulos", () => {
     expect(r).not.toContain('"Quem ');
   });
 
-  it("proíbe o produto como agente do resultado", () => {
+  it("proíbe o item como agente do resultado", () => {
     const r = regra();
-    expect(r).toContain("O PRODUTO NÃO É O AGENTE DO RESULTADO");
+    expect(r).toContain("NÃO É O AGENTE DO RESULTADO");
     expect(r).toContain("garante vendas");
     // Dá o que fazer no lugar — proibição sem saída declarada já falhou antes.
     expect(r).toContain("mostrar, apontar, revelar");
   });
 
-  it("nada disso aparece nos outros modos de uso", () => {
+  // A regra do agente MUDOU DE ESCOPO em 09/09/2026 (tarde). Ela nasceu dentro
+  // do MOSTRAR NOME, mas o convite a fazer o item agir não vem do NOME — vem de
+  // ele ser o assunto da peça. Caso real no REFERIR SEM NOME, card 5 de um
+  // carrossel: "Treinamento que sente o campo funciona". A regra não estava no
+  // prompt porque estava presa ao outro modo.
+  it("a regra do agente vale também no REFERIR SEM NOME", () => {
+    const r = buildRegraLinhaEditorial({
+      linhaEditorial: "decisao",
+      usoObjeto: "sem_nome",
+      objeto: "Diagnóstico Digital",
+      alvo: "mop",
+    });
+    expect(r).toContain("NÃO É O AGENTE DO RESULTADO");
+    // A personificação é o caso que escapava da lista original de verbos.
+    expect(r).toContain("que sente");
+  });
+
+  it("o resto do MOSTRAR NOME não vaza para os outros modos", () => {
     for (const uso of ["sem_nome", "nao_usar", "auto"] as const) {
       const r = buildRegraLinhaEditorial({
         linhaEditorial: "decisao",
@@ -582,6 +599,14 @@ describe("MOSTRAR NOME — diferenciação dos dois títulos", () => {
         alvo: "mop",
       });
       expect(r, uso).not.toContain("TESTE DOS DOIS TÍTULOS");
+    }
+    for (const uso of ["nao_usar", "auto"] as const) {
+      const r = buildRegraLinhaEditorial({
+        linhaEditorial: "decisao",
+        usoObjeto: uso,
+        objeto: "Diagnóstico Digital",
+        alvo: "mop",
+      });
       expect(r, uso).not.toContain("AGENTE DO RESULTADO");
     }
   });

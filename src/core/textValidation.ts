@@ -218,6 +218,52 @@ export function validateSugestao(sugestao: string, maxWords = 7): string[] {
 // tentativas e o campo ainda reprova D1. Corta para a última frase completa
 // (se houver), remove palavra(s) final(is) que sugerem corte e repontua —
 // um título de 4 palavras limpo é melhor que um de 6 quebrado.
+// PALAVRAS QUE ABREM ORAÇÃO SUBORDINADA. Cortar um título em contagem de
+// palavras quando uma delas já abriu uma subordinada decapita a frase: sobra o
+// começo de uma oração que nunca é concluída, e o resultado passa por completo
+// em todas as checagens porque termina num substantivo.
+//
+// CASO REAL (09/09/2026, card 3 de um carrossel): "Reuniões mostram o que os
+// scripts não mostram" tinha 8 palavras e foi cortado em 6 —
+// "Reuniões mostram o que os scripts". checkDanglingEnding devolveu null e
+// validateTitulo aprovou. Não é falha das checagens: elas olham a TERMINAÇÃO, e
+// a terminação estava boa. O defeito é do corte.
+//
+// A decisão é a mesma que já foi tomada para o roteiro falado: TÍTULO INTEIRO
+// ACIMA DO LIMITE É MELHOR QUE FRAGMENTO DENTRO DELE. Isto só roda no E4, o
+// último recurso — a regeneração (E3) já tentou encurtar de verdade três vezes.
+const ABRE_SUBORDINADA = new Set([
+  "que",
+  "quem",
+  "onde",
+  "quando",
+  "quanto",
+  "quanta",
+  "quantos",
+  "quantas",
+  "cujo",
+  "cuja",
+  "cujos",
+  "cujas",
+  "porque",
+  "enquanto",
+  "embora",
+  "caso",
+  "conforme",
+  "segundo",
+]);
+
+function abreOracaoSubordinada(tokens: string[]): boolean {
+  return tokens.some((t) => {
+    const limpa = t
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z]/g, "");
+    return !!limpa && ABRE_SUBORDINADA.has(limpa);
+  });
+}
+
 export function applyDeterministicFallback(
   value: string,
   kind: "titulo" | "texto" | "legenda",
@@ -244,7 +290,7 @@ export function applyDeterministicFallback(
   if (kind === "titulo") {
     const maxWords = opts?.maxWords ?? TITULO_MAX_WORDS;
     const tokens = tituloWordTokens(text);
-    if (tokens.length > maxWords) {
+    if (tokens.length > maxWords && !abreOracaoSubordinada(tokens.slice(0, maxWords))) {
       text = tokens
         .slice(0, maxWords)
         .join(" ")
