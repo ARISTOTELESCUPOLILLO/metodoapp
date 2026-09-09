@@ -321,7 +321,8 @@ export function buildRegraLinhaEditorial(params: {
 
   const isencaoRepeticao =
     alvo === "mop"
-      ? `\n- O nome do produto é EXCEÇÃO à diversidade lexical (vence a proibição de repetir palavra de conteúdo entre títulos): ele pode e deve aparecer no título de abertura E no de fechamento. A proibição de "abertura e fechamento soarem a mesma frase" CONTINUA valendo — diferencie os dois pelo sujeito, pela estrutura sintática e pelo ângulo, nunca removendo o nome de um deles.`
+      ? `\n- O nome do produto é EXCEÇÃO à diversidade lexical (vence a proibição de repetir palavra de conteúdo entre títulos): ele pode e deve aparecer no título de abertura E no de fechamento. A proibição de "abertura e fechamento soarem a mesma frase" CONTINUA valendo — diferencie os dois pelo sujeito, pela estrutura sintática e pelo ângulo, nunca removendo o nome de um deles.
+- ⚠ ESTA REGRA REVOGA A "ALTERNATIVA PREFERÍVEL" DA ANCORAGEM CONCRETA DO EIXO: lá acima, na ANCORAGEM CONCRETA DO EIXO, existe a recomendação de que "uma das duas peças ancora o elemento no TEXTO (não no título), liberando o título para um ângulo totalmente distinto". Com MOSTRAR NOME ligado essa alternativa NÃO VALE — ela é o caminho fácil que faz o produto sumir do título de abertura. O nome fica nos DOIS títulos, e a diferença entre eles se constrói por sujeito, estrutura e ângulo, não deixando de nomear.`
       : "";
 
   const objetoLinha =

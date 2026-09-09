@@ -290,6 +290,29 @@ describe("MOSTRAR NOME — arbitragem das regras que colidem", () => {
     expect(regra).toContain("CONTINUA valendo");
   });
 
+  it("revoga a 'Alternativa preferível' que tirava o nome do título de abertura", () => {
+    // Teste real de 09/09/2026: com MOSTRAR NOME e o produto "Diagnóstico
+    // Digital", o Dia 3 nomeou ("Diagnóstico Digital vai além do papel") e o
+    // Dia 1 não ("Quando a decisão pede presença?"). A causa é uma frase do
+    // keyInfoBlock que RECOMENDA ancorar o elemento no TEXTO de uma das peças,
+    // "liberando o título" — o modelo seguiu o conselho mais antigo.
+    const regra = mopNome();
+    expect(regra).toContain("REVOGA");
+    expect(regra).toContain("ALTERNATIVA PREFERÍVEL");
+    // Cita a frase de lá para o modelo saber exatamente qual está sendo revogada.
+    expect(regra).toContain("liberando o título");
+  });
+
+  it("a revogação não existe no PU — a frase revogada é do keyInfoBlock do MOP", () => {
+    const pu = buildRegraLinhaEditorial({
+      linhaEditorial: "decisao",
+      usoObjeto: "nome",
+      objeto: "Diagnóstico Digital",
+      alvo: "pu",
+    });
+    expect(pu).not.toContain("ALTERNATIVA PREFERÍVEL");
+  });
+
   it("no PU não há cláusula de diversidade lexical (é peça única)", () => {
     const pu = buildRegraLinhaEditorial({
       linhaEditorial: "conhecimento",
