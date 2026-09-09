@@ -12,6 +12,7 @@ import {
   EDITORIAL_MIN_WORDS,
   EDITORIAL_MAX_WORDS,
 } from "../core/linhaEditorialRules";
+import { tokensDeConteudo } from "../core/sugestaoValidation";
 import { buildMetodoOpPrompt } from "../core/organizaMethodEngine";
 import type { ContentFormData } from "../types";
 
@@ -301,6 +302,48 @@ describe("MOSTRAR NOME — arbitragem das regras que colidem", () => {
     expect(pu).not.toContain("PRIMEIRO Estático");
   });
 
+  it("dá critério de encurtamento e usa os produtos irmãos como teste", () => {
+    const regra = buildRegraLinhaEditorial({
+      linhaEditorial: "diagnostico",
+      usoObjeto: "nome",
+      objeto: "Ração para cão adulto",
+      irmaos: ["Ração para gato filhote", "Vacinas para cães e gatos"],
+      alvo: "mop",
+    });
+    expect(regra).toContain("2 palavras de conteúdo");
+    expect(regra).toContain("TESTE OBRIGATÓRIO ANTES DE CORTAR");
+    // Os irmãos entram nominalmente — é o que torna o teste verificável.
+    expect(regra).toContain("Ração para gato filhote");
+    expect(regra).toContain("Vacinas para cães e gatos");
+    // E o qualificador é protegido explicitamente.
+    expect(regra).toContain("qualificador que DEFINE o produto");
+  });
+
+  it("sem irmãos cadastrados, cai num teste genérico em vez de citar lista vazia", () => {
+    const regra = buildRegraLinhaEditorial({
+      linhaEditorial: "diagnostico",
+      usoObjeto: "nome",
+      objeto: "Ração para cão adulto",
+      irmaos: [],
+      alvo: "mop",
+    });
+    expect(regra).toContain("TESTE ANTES DE CORTAR");
+    expect(regra).not.toContain("esta empresa também vende:");
+  });
+
+  it("limita a lista de irmãos para não inchar o prompt", () => {
+    const muitos = Array.from({ length: 20 }, (_, i) => `Produto ${i}`);
+    const regra = buildRegraLinhaEditorial({
+      linhaEditorial: "diagnostico",
+      usoObjeto: "nome",
+      objeto: "Ração para cão adulto",
+      irmaos: muitos,
+      alvo: "mop",
+    });
+    expect(regra).toContain("Produto 8");
+    expect(regra).not.toContain("Produto 9");
+  });
+
   it("a isenção de sílabas NÃO aparece nos outros modos de uso", () => {
     for (const uso of ["sem_nome", "nao_usar"] as const) {
       const regra = buildRegraLinhaEditorial({
@@ -387,5 +430,41 @@ describe("buildMetodoOpPrompt — regressão do piloto editorial", () => {
     );
     expect(editada).not.toContain("LINHA EDITORIAL DE ORIGEM");
     expect(editada).not.toContain("MOSTRAR NOME");
+  });
+});
+
+// ── Tokens de conteúdo: a régua que decide "nome longo" ─────────────────────
+// Calibrada contra os 97 produtos reais do banco (09/09/2026): o teto de 3
+// tokens precisa deixar passar os nomes bons de 4-5 PALAVRAS e pegar só os de
+// fato longos.
+
+describe("tokensDeConteudo", () => {
+  it("ignora artigos e preposições — palavras não são ideias", () => {
+    expect(tokensDeConteudo("Ração para cão adulto")).toEqual(["racao", "cao", "adulto"]);
+    expect(tokensDeConteudo("Vacinas para cães e gatos")).toEqual(["vacinas", "caes", "gatos"]);
+  });
+
+  it("deixa passar os nomes bons de 4 palavras do banco", () => {
+    for (const nome of [
+      "Ração para cão adulto",
+      "Ração para gato filhote",
+      "Consultoria em Marketing Digital",
+      "Curso Boneca de Pano",
+      "Vacinas para cães e gatos",
+      "Cadeira estofada de escritório",
+    ]) {
+      expect(tokensDeConteudo(nome).length, nome).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it("pega os que de fato não cabem num título", () => {
+    for (const nome of [
+      "Tráfego pago nos meios digitais",
+      "Bomba de transferência do óleo do câmbio",
+      "Ebook 6 Estilos Artísticos para Criar Conteúdo",
+      "Método OP para geração de conteúdo",
+    ]) {
+      expect(tokensDeConteudo(nome).length, nome).toBeGreaterThan(3);
+    }
   });
 });

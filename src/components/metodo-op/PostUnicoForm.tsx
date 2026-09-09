@@ -569,6 +569,7 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
               linhaEditorial: suggestionLinhas[idx] ?? null,
               usoObjeto: edUso,
               objetoEditorial: edObjeto,
+              irmaosEditorial: (kit.products || []).filter((x) => x !== edObjeto),
               proposicao: sugg,
             },
           });

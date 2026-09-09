@@ -252,9 +252,21 @@ export function buildRegraLinhaEditorial(params: {
   linhaEditorial: LinhaEditorial | null;
   usoObjeto?: UsoDoObjeto;
   objeto?: string;
+  /**
+   * Os OUTROS produtos/serviços do Kit de Marca — sem o objeto desta peça.
+   *
+   * Servem a UMA coisa: dar ao modelo um teste verificável de até onde encurtar
+   * o nome. "Ração para cão adulto" encurtado para "Ração" também serviria para
+   * "Ração para gato filhote", que está cadastrado na mesma conta — e é assim
+   * que se descobre que o corte foi longe demais. Sem a lista, "não corte
+   * demais" é conselho vago; com ela, é uma checagem que o modelo consegue
+   * fazer sozinho. Levantamento de 09/09/2026: os nomes de 4-5 palavras do
+   * banco são majoritariamente PARES que só se distinguem pelo qualificador.
+   */
+  irmaos?: string[];
   alvo: "pu" | "mop";
 }): string {
-  const { linhaEditorial, usoObjeto = "auto", objeto = "", alvo } = params;
+  const { linhaEditorial, usoObjeto = "auto", objeto = "", irmaos = [], alvo } = params;
   if (!linhaEditorial) return "";
   const spec = LINHA_EDITORIAL_SPEC[linhaEditorial];
   const item = objeto.trim();
@@ -291,7 +303,21 @@ export function buildRegraLinhaEditorial(params: {
   //     mesma frase e sugere que um deles ancore no TEXTO. Aqui os dois ancoram
   //     no título por decisão de produto, então a diferenciação passa a ser
   //     inteiramente de sujeito, estrutura e ângulo.
-  const isencaoSilabas = `\n- ⚠ NOME DE PRODUTO — ISENÇÃO DE SÍLABAS (vence a regra de sílabas quando houver conflito): as palavras de "${item}" NÃO têm teto de sílabas em nenhum campo. É nome próprio de produto/serviço, não vocabulário escolhido pelo redator: PROIBIDO trocá-lo por sinônimo mais curto, mesmo que a régua geral de 4 sílabas (ou a exceção de 5) peça. Encurtar para o NÚCLEO COMERCIAL RECONHECÍVEL é permitido e recomendado quando o nome não couber no limite de palavras (ex.: "Terno Masculino Slim Corte Italiano Microfibra Preto Ref. 4758" → "Terno Slim Preto"); trocar por outra palavra, não.`;
+  const isencaoSilabas = `\n- ⚠ NOME DE PRODUTO — ISENÇÃO DE SÍLABAS (vence a regra de sílabas quando houver conflito): as palavras de "${item}" NÃO têm teto de sílabas em nenhum campo. É nome próprio de produto/serviço, não vocabulário escolhido pelo redator: PROIBIDO trocá-lo por sinônimo mais curto, mesmo que a régua geral de 4 sílabas (ou a exceção de 5) peça. Trocar por outra palavra, nunca.`;
+
+  // COMO ENCURTAR — o nome quase nunca cabe inteiro: um título tem 6 palavras,
+  // e "Tráfego pago nos meios digitais" sozinho ocupa 5. Encurtar já era
+  // permitido; o que faltava era CRITÉRIO, e sem critério o modelo corta até a
+  // primeira palavra e troca o produto sem que a frase soe errada.
+  const listaIrmaos = irmaos
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .slice(0, 9);
+  const testeIrmaos = listaIrmaos.length
+    ? ` TESTE OBRIGATÓRIO ANTES DE CORTAR — esta empresa também vende: ${listaIrmaos.map((p) => `"${p}"`).join(", ")}. A forma encurtada que você escolheu serviria igualmente para algum desses? Se serviria, você cortou demais: devolva a palavra que distingue um do outro (ex.: "Ração para cão adulto" encurtado para "Ração" também serve para "Ração para gato filhote" — o certo é "Ração para cão" ou "Ração adulto").`
+    : ` TESTE ANTES DE CORTAR: a forma encurtada ainda deixa claro QUAL produto é, ou passaria por outro serviço que esta empresa também poderia oferecer? Se passaria, devolva a palavra que distingue.`;
+
+  const comoEncurtar = `\n- ENCURTAR O NOME — COMO: use o NÚCLEO COMERCIAL RECONHECÍVEL, no máximo 2 palavras de conteúdo (artigos e preposições — de, do, da, para, em, com — não contam). PROIBIDO descartar o qualificador que DEFINE o produto ("pago", "digital", "integrada", "adulto", "preto") só para caber: ele costuma ser a própria identidade do serviço, e sem ele a peça anuncia outro produto.${testeIrmaos}`;
 
   const isencaoRepeticao =
     alvo === "mop"
@@ -302,7 +328,7 @@ export function buildRegraLinhaEditorial(params: {
     !item || usoObjeto === "auto"
       ? ""
       : usoObjeto === "nome"
-        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.${isencaoSilabas}${isencaoRepeticao}`
+        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}`
         : usoObjeto === "sem_nome"
           ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.`
           : `\n- OBJETO DESTA PEÇA — NÃO USAR: existe um item selecionado, mas ele NÃO é a âncora desta peça. PROIBIDO nomeá-lo ou tomá-lo como assunto.`;

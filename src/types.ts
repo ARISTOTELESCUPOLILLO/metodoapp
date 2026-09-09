@@ -253,6 +253,15 @@ export interface EscolhaEditorial {
   /** Produto/Serviço/Tema escolhido. "" ou ausente quando não há. */
   objetoEditorial?: string;
   /**
+   * Os OUTROS produtos do Kit no momento do "Usar esta" — sem o escolhido.
+   *
+   * Gravados aqui (e não lidos do Kit na hora de montar o prompt) porque
+   * buildMetodoOpPrompt é motor puro e só recebe o ContentFormData: sem isso,
+   * levar a lista até lá exigiria mudar a assinatura do motor. Servem só ao
+   * teste de "encurtei demais?" da regra de MOSTRAR NOME.
+   */
+  irmaosEditorial?: string[];
+  /**
    * A proposição exata que o usuário aceitou em "Usar esta".
    *
    * POR QUE EXISTE: `editorial` vive no estado do formulário e sobrevive a

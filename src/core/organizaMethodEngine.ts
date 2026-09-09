@@ -463,6 +463,7 @@ REGRA: cada peça cumpre a FORMA indicada acima — CTA e menção à empresa s�
     linhaEditorial: editorialVigente?.linhaEditorial ?? null,
     usoObjeto: editorialVigente?.usoObjeto,
     objeto: editorialVigente?.objetoEditorial,
+    irmaos: editorialVigente?.irmaosEditorial,
     alvo: "mop",
   });
 

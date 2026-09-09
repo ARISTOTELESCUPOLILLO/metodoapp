@@ -90,6 +90,7 @@ export async function generatePostUnicoCopy(
               linhaEditorial: data.editorial.linhaEditorial,
               usoObjeto: data.editorial.usoObjeto ?? "auto",
               objetoEditorial: data.editorial.objetoEditorial ?? "",
+              irmaosEditorial: data.editorial.irmaosEditorial ?? [],
             },
           }
         : {}),

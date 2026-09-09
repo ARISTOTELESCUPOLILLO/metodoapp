@@ -338,6 +338,16 @@ Proibido mencionar literalmente o nome da voz no texto final.
                 objeto: String(
                   (body.editorial as { objetoEditorial?: unknown }).objetoEditorial || "",
                 ).slice(0, 120),
+                // Outros produtos do Kit — dão ao modelo o teste de "encurtei
+                // demais?" (ver `irmaos` em buildRegraLinhaEditorial).
+                irmaos: Array.isArray(
+                  (body.editorial as { irmaosEditorial?: unknown }).irmaosEditorial,
+                )
+                  ? ((body.editorial as { irmaosEditorial: unknown[] }).irmaosEditorial
+                      .slice(0, 9)
+                      .map((p: unknown) => String(p).slice(0, 120))
+                      .filter(Boolean) as string[])
+                  : [],
                 alvo: "pu",
               })
             : "";

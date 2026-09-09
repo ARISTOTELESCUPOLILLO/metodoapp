@@ -4,9 +4,26 @@
 import { useState } from "react";
 import type { Segment } from "../../../types";
 import { correctPortuguese } from "../../../services/textCorrection";
+import { tokensDeConteudo } from "../../../core/sugestaoValidation";
 
 export const MIN_PRODUCTS = 3;
 const MAX_PRODUCTS = 10;
+
+// Acima disto o nome não cabe no título de uma peça (6 palavras no total, e o
+// título ainda precisa DIZER alguma coisa além de nomear o produto).
+//
+// Conta TOKENS DE CONTEÚDO, não palavras: "Ração para cão adulto" tem 4
+// palavras mas 3 ideias, e é um nome bom. Levantamento dos 97 produtos reais
+// cadastrados (09/09/2026): 27% passam de 3 palavras, mas quase todos cabem em
+// 3 tokens — os que estouram são os de fato longos ("Bomba de transferência do
+// óleo do câmbio", "Ebook 6 Estilos Artísticos para Criar Conteúdo").
+//
+// É AVISO, nunca bloqueio: cortar no cadastro invalidaria um quarto do que já
+// existe, e os nomes de 4-5 palavras do banco são majoritariamente PARES que só
+// se distinguem pelo qualificador ("Ração para cão adulto" × "Ração para gato
+// filhote") — encurtar à força aproximaria justamente o que precisa ficar
+// separado.
+const MAX_TOKENS_CONFORTAVEL = 3;
 
 interface Props {
   products: string[];
@@ -82,12 +99,19 @@ export function ProductsSection({ products, segment, onProductsChange }: Props) 
           {products.map((item, i) => (
             <span
               key={i}
+              title={
+                tokensDeConteudo(item).length > MAX_TOKENS_CONFORTAVEL
+                  ? "Nome longo — nos títulos das peças ele vai aparecer encurtado."
+                  : undefined
+              }
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
                 background: "#f1f5f9",
-                border: "1px solid #e2e8f0",
+                border: `1px solid ${
+                  tokensDeConteudo(item).length > MAX_TOKENS_CONFORTAVEL ? "#fcd34d" : "#e2e8f0"
+                }`,
                 borderRadius: 999,
                 padding: "4px 6px 4px 12px",
                 fontSize: 13,
@@ -114,6 +138,30 @@ export function ProductsSection({ products, segment, onProductsChange }: Props) 
             </span>
           ))}
         </div>
+      )}
+      {/* AVISO, não bloqueio — ver a nota de MAX_TOKENS_CONFORTAVEL acima.
+          Não contradiz a orientação de ser específico logo acima: o pedido aqui
+          é cortar o RECHEIO (preposição, complemento genérico), nunca a palavra
+          que distingue um produto do irmão dele. */}
+      {products.some((p) => tokensDeConteudo(p).length > MAX_TOKENS_CONFORTAVEL) && (
+        <p
+          style={{
+            fontSize: 11,
+            color: "#92400e",
+            margin: 0,
+            lineHeight: 1.45,
+            background: "#fffbeb",
+            border: "1px solid #fde68a",
+            borderRadius: 8,
+            padding: "8px 10px",
+          }}
+        >
+          Os itens destacados em amarelo são longos para caber no título de uma peça — nas peças
+          eles vão aparecer encurtados. Se quiser controlar como, encurte aqui mantendo a palavra
+          que distingue: <strong>&quot;Bomba de transferência do óleo do câmbio&quot;</strong> →{" "}
+          <strong>&quot;Bomba de óleo&quot;</strong>. Não é obrigatório, e nomes longos continuam
+          funcionando.
+        </p>
       )}
       {products.length < MAX_PRODUCTS && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

@@ -350,6 +350,25 @@ export const ITEM_NAME_STOPWORDS = new Set([
   "aos",
 ]);
 
+/**
+ * Tokens de CONTEÚDO de um nome de item — o nome sem artigos e preposições.
+ *
+ * POR QUE EXISTE (09/09/2026): "Ração para cão adulto" tem 4 palavras mas só 3
+ * ideias — português gasta palavra em preposição. Contar palavras cruas para
+ * decidir se um nome de produto é longo demais mede a coisa errada, e o
+ * levantamento dos 97 produtos reais cadastrados mostrou o efeito: 27% passam
+ * de 3 palavras, mas quase todos cabem em 3 tokens de conteúdo.
+ *
+ * A lista de stopwords é a mesma que checkItemNameDrift já usava inline —
+ * extraída para cá para que a régua de "nome longo" e a de "nome reescrito"
+ * contem do mesmo jeito.
+ */
+export function tokensDeConteudo(nome: string): string[] {
+  return normalizeForCompare(nome || "")
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((t) => t && !ITEM_NAME_STOPWORDS.has(t));
+}
+
 export function checkWeakEnding(sugestao: string, concreteItem?: string | null): string[] {
   const motivos: string[] = [];
   // Normaliza e remove pontuação final — o fecho é avaliado pelas PALAVRAS.

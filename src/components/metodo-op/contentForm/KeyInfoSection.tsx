@@ -677,6 +677,7 @@ export function KeyInfoSection({
                                   linhaEditorial: suggestionLinhas[idx] ?? null,
                                   usoObjeto: edUso,
                                   objetoEditorial: edObjeto,
+                                  irmaosEditorial: (products || []).filter((x) => x !== edObjeto),
                                   proposicao: sugg,
                                 },
                               }
