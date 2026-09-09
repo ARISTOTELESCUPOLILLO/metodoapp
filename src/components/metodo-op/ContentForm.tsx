@@ -18,7 +18,17 @@ interface Props {
 
 export default function ContentForm({ data, onChange, onGenerate, onClear, loading }: Props) {
   const { kit } = useBrandKit();
-  const { rendersRestantes, rendersTotal, imgsRestantes, imgsTotal, geracoesRestantes, geracoesTotal, semPlano, effectiveAdmin: isAdmin, planAccess } = useAppProfile();
+  const {
+    rendersRestantes,
+    rendersTotal,
+    imgsRestantes,
+    imgsTotal,
+    geracoesRestantes,
+    geracoesTotal,
+    semPlano,
+    effectiveAdmin: isAdmin,
+    planAccess,
+  } = useAppProfile();
   const { mood, setMood: onMoodChange } = useMood();
   const segment = kit.segment;
   const isPersonalBrand = kit.isPersonalBrand;
@@ -37,6 +47,18 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
 
   const update = <K extends keyof ContentFormData>(key: K, value: ContentFormData[K]) =>
     onChange({ ...data, [key]: value });
+
+  // Vários campos num commit só. `update` remonta o objeto a partir de `data`,
+  // que vem das PROPS deste render — duas chamadas seguidas no mesmo handler
+  // leem o MESMO `data` e a segunda descarta a primeira. Não é questão de
+  // batching: props não mudam no meio de um handler.
+  //
+  // Achado real 09/09/2026: o "Usar esta" do modo editorial fazia
+  // update("editorial", …) e logo depois update("keyInfo", …) — a escolha
+  // editorial era descartada em silêncio, e nem a Linha Editorial nem o
+  // "Mostrar nome" chegavam ao prompt do MOP. Quem precisa gravar dois campos
+  // do mesmo evento usa isto, nunca dois `update`.
+  const updateMany = (patch: Partial<ContentFormData>) => onChange({ ...data, ...patch });
 
   const setMode = (mode: ContentFormData["outputMode"]) => {
     const hasFeed = mode === "feed" || mode === "feed+stories";
@@ -150,9 +172,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           Faixa etária do público
           <select
             value={data.faixaEtaria ?? ""}
-            onChange={(e) =>
-              update("faixaEtaria", (e.target.value || null) as FaixaEtaria | null)
-            }
+            onChange={(e) => update("faixaEtaria", (e.target.value || null) as FaixaEtaria | null)}
           >
             <option value="">Sem direcionamento</option>
             <option value="18-34">18 a 34 anos</option>
@@ -164,9 +184,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
           Gênero na imagem
           <select
             value={data.generoPref ?? ""}
-            onChange={(e) =>
-              update("generoPref", (e.target.value || null) as "M" | "F" | null)
-            }
+            onChange={(e) => update("generoPref", (e.target.value || null) as "M" | "F" | null)}
           >
             <option value="">Automático</option>
             <option value="M">Masculino</option>
@@ -178,6 +196,7 @@ export default function ContentForm({ data, onChange, onGenerate, onClear, loadi
       <KeyInfoSection
         data={data}
         update={update}
+        updateMany={updateMany}
         segment={segment}
         isPersonalBrand={isPersonalBrand}
         products={products}

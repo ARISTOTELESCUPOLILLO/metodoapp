@@ -259,11 +259,50 @@ export function buildRegraLinhaEditorial(params: {
   const spec = LINHA_EDITORIAL_SPEC[linhaEditorial];
   const item = objeto.trim();
 
+  // MOSTRAR NOME — decisão do Ari (09/09/2026): o nome tem de aparecer NO
+  // TÍTULO, não "no título ou no texto". Com a versão anterior o modelo cumpria
+  // a regra escondendo o nome no texto de apoio, e o painel da sequência (que
+  // mostra só títulos) parecia ignorar o produto escolhido.
+  //
+  // No MOP a exigência é no título da PRIMEIRA e da ÚLTIMA peça — as duas que a
+  // ANCORAGEM CONCRETA DO EIXO já trata como abertura e fechamento. As peças do
+  // meio ficam livres, senão a sequência vira catálogo.
+  const ondeNomear =
+    alvo === "mop"
+      ? `deve aparecer NOMEADO no TÍTULO do PRIMEIRO Estático E no TÍTULO da última peça da sequência (Reels ou Estático Final). Nas peças do meio é opcional — não repita o nome em todas, ou a sequência vira catálogo`
+      : `deve aparecer NOMEADO no TÍTULO da peça (não basta citá-lo no texto de apoio)`;
+
+  // As três colisões abaixo são reais e precisam ser resolvidas DENTRO desta
+  // regra. Ordem contraditória sem arbitragem explícita é resolvida pelo modelo
+  // ao acaso — ver [[project-contexto-perde-para-ordem]].
+  //
+  //  1. TETO DE SÍLABAS: a régua geral é 4 sílabas por palavra, com exceção de
+  //     até 5 só para "o substantivo concreto central da INFORMAÇÃO-CHAVE"
+  //     (SILABA_EXCECAO_RULE) — condição que um nome escolhido no seletor de
+  //     produto pode não satisfazer. E ela termina mandando trocar termos de 6+
+  //     sílabas por sinônimo mais curto, o que para NOME DE PRODUTO é
+  //     exatamente o proibido. Nomes reais estouram fácil: "consultoria" 5,
+  //     "contabilidade" 6, "odontologia" 6, "fisioterapia" 7.
+  //  2. DIVERSIDADE LEXICAL: o MOP proíbe repetir palavra de conteúdo entre os
+  //     títulos da sequência, com exceção do substantivo-núcleo do eixo — que
+  //     não é necessariamente o produto selecionado. Sem esta cláusula, "nomeie
+  //     na primeira e na última" briga de frente com "não repita palavra".
+  //  3. ABERTURA × FECHAMENTO: o MOP proíbe que os dois títulos soem como a
+  //     mesma frase e sugere que um deles ancore no TEXTO. Aqui os dois ancoram
+  //     no título por decisão de produto, então a diferenciação passa a ser
+  //     inteiramente de sujeito, estrutura e ângulo.
+  const isencaoSilabas = `\n- ⚠ NOME DE PRODUTO — ISENÇÃO DE SÍLABAS (vence a regra de sílabas quando houver conflito): as palavras de "${item}" NÃO têm teto de sílabas em nenhum campo. É nome próprio de produto/serviço, não vocabulário escolhido pelo redator: PROIBIDO trocá-lo por sinônimo mais curto, mesmo que a régua geral de 4 sílabas (ou a exceção de 5) peça. Encurtar para o NÚCLEO COMERCIAL RECONHECÍVEL é permitido e recomendado quando o nome não couber no limite de palavras (ex.: "Terno Masculino Slim Corte Italiano Microfibra Preto Ref. 4758" → "Terno Slim Preto"); trocar por outra palavra, não.`;
+
+  const isencaoRepeticao =
+    alvo === "mop"
+      ? `\n- O nome do produto é EXCEÇÃO à diversidade lexical (vence a proibição de repetir palavra de conteúdo entre títulos): ele pode e deve aparecer no título de abertura E no de fechamento. A proibição de "abertura e fechamento soarem a mesma frase" CONTINUA valendo — diferencie os dois pelo sujeito, pela estrutura sintática e pelo ângulo, nunca removendo o nome de um deles.`
+      : "";
+
   const objetoLinha =
     !item || usoObjeto === "auto"
       ? ""
       : usoObjeto === "nome"
-        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) deve aparecer NOMEADO no título OU no texto. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.`
+        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.${isencaoSilabas}${isencaoRepeticao}`
         : usoObjeto === "sem_nome"
           ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.`
           : `\n- OBJETO DESTA PEÇA — NÃO USAR: existe um item selecionado, mas ele NÃO é a âncora desta peça. PROIBIDO nomeá-lo ou tomá-lo como assunto.`;

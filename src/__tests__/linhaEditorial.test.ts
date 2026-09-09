@@ -220,6 +220,9 @@ describe("buildRegraLinhaEditorial", () => {
     });
     expect(nome).toContain("MOSTRAR NOME");
     expect(nome).toContain("Terno Slim Preto");
+    // Decisão do Ari (09/09): no título, não "título OU texto".
+    expect(nome).toContain("TÍTULO");
+    expect(nome).not.toContain("no título OU no texto");
 
     const semNome = buildRegraLinhaEditorial({
       linhaEditorial: "decisao",
@@ -244,6 +247,70 @@ describe("buildRegraLinhaEditorial", () => {
       alvo: "pu",
     });
     expect(auto).not.toContain("OBJETO DESTA PEÇA");
+  });
+});
+
+// ── MOSTRAR NOME: as três colisões de regra (decisão de 09/09/2026) ──────────
+
+describe("MOSTRAR NOME — arbitragem das regras que colidem", () => {
+  const mopNome = () =>
+    buildRegraLinhaEditorial({
+      linhaEditorial: "conhecimento",
+      usoObjeto: "nome",
+      objeto: "Consultoria de Comunicação Integrada",
+      alvo: "mop",
+    });
+
+  it("no MOP, exige o nome no título da PRIMEIRA e da ÚLTIMA peça", () => {
+    const regra = mopNome();
+    expect(regra).toContain("TÍTULO do PRIMEIRO Estático");
+    expect(regra).toContain("TÍTULO da última peça");
+    // As do meio ficam livres — senão a sequência vira catálogo.
+    expect(regra).toContain("peças do meio é opcional");
+  });
+
+  it("isenta o nome do teto de sílabas e proíbe a troca por sinônimo curto", () => {
+    // "consultoria" tem 5 sílabas e "comunicação" 5 — as duas estourariam a
+    // régua de 4, e a exceção de 5 vale só para o núcleo da informação-chave.
+    const regra = mopNome();
+    expect(regra).toContain("ISENÇÃO DE SÍLABAS");
+    expect(regra).toContain("vence a regra de sílabas");
+    expect(regra).toContain("Consultoria de Comunicação Integrada");
+    expect(regra).toContain("sinônimo mais curto");
+    // Encurtar para o núcleo continua permitido — é o que faz o nome caber no
+    // limite de 6 palavras do título.
+    expect(regra).toContain("NÚCLEO COMERCIAL RECONHECÍVEL");
+  });
+
+  it("no MOP, abre exceção à diversidade lexical sem liberar título repetido", () => {
+    const regra = mopNome();
+    expect(regra).toContain("EXCEÇÃO à diversidade lexical");
+    // A proibição de abertura e fechamento soarem a mesma frase CONTINUA.
+    expect(regra).toContain("CONTINUA valendo");
+  });
+
+  it("no PU não há cláusula de diversidade lexical (é peça única)", () => {
+    const pu = buildRegraLinhaEditorial({
+      linhaEditorial: "conhecimento",
+      usoObjeto: "nome",
+      objeto: "Consultoria de Comunicação Integrada",
+      alvo: "pu",
+    });
+    expect(pu).toContain("ISENÇÃO DE SÍLABAS");
+    expect(pu).not.toContain("diversidade lexical");
+    expect(pu).not.toContain("PRIMEIRO Estático");
+  });
+
+  it("a isenção de sílabas NÃO aparece nos outros modos de uso", () => {
+    for (const uso of ["sem_nome", "nao_usar"] as const) {
+      const regra = buildRegraLinhaEditorial({
+        linhaEditorial: "conhecimento",
+        usoObjeto: uso,
+        objeto: "Consultoria de Comunicação Integrada",
+        alvo: "mop",
+      });
+      expect(regra, uso).not.toContain("ISENÇÃO DE SÍLABAS");
+    }
   });
 });
 

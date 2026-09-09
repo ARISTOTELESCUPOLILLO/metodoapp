@@ -43,6 +43,8 @@ function mmss(s: number): string {
 interface Props {
   data: ContentFormData;
   update: <K extends keyof ContentFormData>(key: K, value: ContentFormData[K]) => void;
+  /** Grava varios campos num commit so — ver a nota em ContentForm.tsx. */
+  updateMany: (patch: Partial<ContentFormData>) => void;
   segment: Segment;
   isPersonalBrand?: boolean;
   products: string[];
@@ -56,6 +58,7 @@ interface Props {
 export function KeyInfoSection({
   data,
   update,
+  updateMany,
   segment,
   isPersonalBrand,
   products,
@@ -661,16 +664,24 @@ export function KeyInfoSection({
                         // sobreviver até o prompt da sequência.
                         if (initialKeyInfoRef.current === null)
                           initialKeyInfoRef.current = data.keyInfo || "";
-                        if (editorialAtivo) {
-                          update("editorial", {
-                            linhaEditorialEscolha: edLinha,
-                            linhaEditorial: suggestionLinhas[idx] ?? null,
-                            usoObjeto: edUso,
-                            objetoEditorial: edObjeto,
-                            proposicao: sugg,
-                          });
-                        }
-                        update("keyInfo", sugg);
+                        // UM commit só: dois `update` seguidos leriam o MESMO
+                        // `data` das props e o segundo descartaria o primeiro —
+                        // era esse o defeito que fazia a escolha editorial nunca
+                        // chegar ao prompt do MOP (achado 09/09/2026).
+                        updateMany({
+                          keyInfo: sugg,
+                          ...(editorialAtivo
+                            ? {
+                                editorial: {
+                                  linhaEditorialEscolha: edLinha,
+                                  linhaEditorial: suggestionLinhas[idx] ?? null,
+                                  usoObjeto: edUso,
+                                  objetoEditorial: edObjeto,
+                                  proposicao: sugg,
+                                },
+                              }
+                            : {}),
+                        });
                         setSuggestions([]);
                         setSuggestionLinhas([]);
                       }}
