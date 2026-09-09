@@ -101,9 +101,9 @@ export const LINHA_EDITORIAL_SPEC: Record<LinhaEditorial, LinhaEditorialSpec> = 
   decisao: {
     label: "Decisão",
     pergunta: "Diante disso, o que vale escolher?",
-    guia: "Ajude o público a COMPARAR e ESCOLHER — colocando duas alternativas reais lado a lado, ou nomeando o critério que separa uma da outra. A frase apresenta a escolha; ela não a faz pelo leitor nem empurra uma das opções.",
+    guia: "Ajude o público a COMPARAR e ESCOLHER. NÃO BASTA pôr duas alternativas lado a lado: a frase precisa dizer O QUE MUDA entre elas — o critério, o dado ou a consequência que separa uma da outra. A frase apresenta a escolha; ela não a faz pelo leitor nem empurra uma das opções.",
     evitar:
-      "PROIBIDO virar chamada comercial ('contrate', 'fale com a gente', 'garanta já') e PROIBIDO apresentar uma alternativa só — sem duas opções ou sem critério explícito, deixa de ser decisão e vira conselho.",
+      "PROIBIDO virar chamada comercial ('contrate', 'fale com a gente', 'garanta já') e PROIBIDO apresentar uma alternativa só. ⚠ ARMADILHA MAIS COMUM — COMPARAR CANAIS OU FORMATOS SEM DIZER O QUE ELES PRODUZEM: 'análise por e-mail × entrevista presencial', 'atendimento online × atendimento na loja', 'plano mensal × plano anual' são NOMES DE FORMATO, não critérios. Sozinhos, deixam o leitor sem nada para decidir. Diga o que cada caminho ENTREGA ou CUSTA (ex.: em vez de 'por e-mail ou presencial', 'se basta o que o cliente escreve ou se é preciso ver como ele trabalha'). Sem isso, deixa de ser decisão e vira descrição.",
     exemplo:
       "Antes de aumentar a verba, vale decidir se a campanha precisa de mais alcance ou de uma mensagem mais direta.",
   },

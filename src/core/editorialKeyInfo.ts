@@ -203,6 +203,121 @@ Retorne JSON EXATAMENTE assim:
 { "sugestao": "1 proposição, ${EDITORIAL_MIN_WORDS} a ${EDITORIAL_MAX_WORDS} palavras, sem aspas, sem hashtag, sem emoji, terminando com ponto final" }`;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Juiz da proposição editorial
+// ─────────────────────────────────────────────────────────────────────────
+//
+// POR QUE UM JUIZ PRÓPRIO, e não o do Legacy (judgeSugestaoEstrutural):
+// aquele foi calibrado para a frase CURTA de 4-9 palavras e reprovaria
+// proposições corretas. A pergunta 2 dele (`nucleoOk`) exige que o elemento
+// concreto seja o SUJEITO GRAMATICAL e reprova "a escolha DE [item]" — mas
+// "Ao escolher o Diagnóstico Digital, A DECISÃO passa por..." é exatamente a
+// forma certa de uma proposição de DECISÃO. Ligá-lo como está quebraria o modo.
+//
+// A pergunta 7 do Legacy (dado inventado) é a única que veio quase literal —
+// é a que responde ao pedido de "informação-chave mais verdadeira" (09/09/2026).
+//
+// CONTRATO igual ao do Legacy: fail-OPEN em erro técnico (rede, JSON inválido —
+// ninguém fica sem sugestão porque o juiz caiu) e fail-CLOSED em dúvida de
+// conteúdo (qualquer valor que não seja exatamente `true` reprova).
+
+export interface JuizEditorialVeredito {
+  ok: boolean;
+  motivo?: string;
+  failReason?: "falha_tecnica";
+}
+
+const JUIZ_EDITORIAL_TIMEOUT_MS = 8_000;
+
+export async function judgeProposicaoEditorial(
+  apiKey: string,
+  params: {
+    proposicao: string;
+    linha: LinhaEditorial;
+    companyName: string;
+    mainActivity: string;
+    objeto: string;
+    hint: string;
+  },
+): Promise<JuizEditorialVeredito> {
+  const { proposicao, linha, companyName, mainActivity, objeto, hint } = params;
+  const spec = LINHA_EDITORIAL_SPEC[linha];
+  try {
+    const criterioDecisao =
+      linha === "decisao"
+        ? `
+4. criterioOk — a frase diz O QUE MUDA entre as duas alternativas, ou só as NOMEIA? Reprove quando ela contrapõe CANAIS/FORMATOS sem dizer o que cada um entrega ou custa (ex.: "análise por e-mail × entrevista presencial", "atendimento online × na loja", "plano mensal × anual" — são nomes de formato, não critérios; o leitor fica sem base para decidir). Aprove quando o critério, o dado ou a consequência que separa as opções estiver dito (ex.: "se basta o que o cliente escreve ou se é preciso ver como ele trabalha").`
+        : `
+4. relevanciaOk — a frase entrega uma IDEIA, ou só descreve/nomeia uma situação sem dizer o que ela revela? Reprove quando, lida inteira, não sobrar nada que o leitor não soubesse antes.`;
+
+    const res = await fetchOpenAIChat(
+      apiKey,
+      {
+        model: "gpt-4.1",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Você é um editor rigoroso avaliando UMA frase. Responda SOMENTE com JSON válido. Em dúvida sobre qualquer critério, marque false — é preferível pedir outra frase a deixar passar uma ruim.",
+          },
+          {
+            role: "user",
+            content: `EMPRESA: ${companyName || "(não informada)"}
+ATIVIDADE: ${mainActivity || "(não informada)"}
+PRODUTO/SERVIÇO/TEMA DESTA PEÇA: ${objeto || "(nenhum)"}
+${hint ? `PISTA QUE O USUÁRIO DEU: "${hint}"\n` : ""}
+LINHA EDITORIAL PEDIDA: ${spec.label} — "${spec.pergunta}"
+O que ela exige: ${spec.guia}
+
+FRASE A AVALIAR: "${proposicao}"
+
+Responda JSON com estas chaves booleanas e um "motivo" curto (só quando reprovar):
+1. fatoOk — a frase evita AFIRMAR como fato um dado específico sobre este produto/serviço/método que NÃO dá para confirmar pela ATIVIDADE, pelo NOME do item ou pela PISTA acima? Conta como dado inventado: descrever COMO o serviço é feito, POR QUEM, EM QUANTO TEMPO, com QUE ferramenta, ou como a alternativa/concorrência funciona — quando nada disso foi informado. Soar plausível NÃO basta. Em dúvida, false.
+2. linhaOk — a frase cumpre a linha editorial pedida acima, ou escorregou para outra? (Diagnóstico que virou conselho, Conhecimento que virou dica, Experiência que virou convite a testar, Transformação sem o ponto de partida, Decisão que empurra uma das opções.) Em dúvida, false.
+3. proposicaoOk — é uma frase que AFIRMA alguma coisa, com sujeito e predicado inteiros — e não um título, um assunto solto ou um slogan institucional?${criterioDecisao}
+5. respeitoOk — a frase evita criticar, culpar ou ridicularizar o leitor e o método que ele usa hoje ("achismo", "amadorismo", "você está perdendo dinheiro", "quem faz assim não sabe")? Apontar uma limitação de forma factual é permitido; qualificar de forma depreciativa não.
+
+{"fatoOk":true,"linhaOk":true,"proposicaoOk":true,"${linha === "decisao" ? "criterioOk" : "relevanciaOk"}":true,"respeitoOk":true,"motivo":""}`,
+          },
+        ],
+        temperature: 0,
+        response_format: { type: "json_object" },
+      },
+      JUIZ_EDITORIAL_TIMEOUT_MS,
+    );
+
+    if (!res.ok) return { ok: true, failReason: "falha_tecnica" };
+    const content = res.data.choices?.[0]?.message?.content;
+    if (!content) return { ok: true, failReason: "falha_tecnica" };
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return { ok: true, failReason: "falha_tecnica" };
+    }
+
+    const quartaChave = linha === "decisao" ? "criterioOk" : "relevanciaOk";
+    const allOk =
+      parsed.fatoOk === true &&
+      parsed.linhaOk === true &&
+      parsed.proposicaoOk === true &&
+      parsed[quartaChave] === true &&
+      parsed.respeitoOk === true;
+    if (allOk) return { ok: true };
+
+    return {
+      ok: false,
+      motivo:
+        typeof parsed.motivo === "string" && parsed.motivo.trim()
+          ? parsed.motivo.trim()
+          : "o juiz reprovou a proposição (dado não confirmável, linha editorial trocada, falta de ideia ou desrespeito ao leitor) sem detalhar — reescreva ancorando só no que foi informado",
+    };
+  } catch {
+    return { ok: true, failReason: "falha_tecnica" };
+  }
+}
+
 /**
  * Gera UMA proposição editorial. Uma chamada do usuário = uma proposição
  * (item 30 do pedido) — o laço abaixo é retry de QUALIDADE sobre a mesma
@@ -280,6 +395,25 @@ export async function generateSugestaoEditorial(
       objeto: input.objeto,
       usoObjeto: input.usoObjeto,
     });
+
+    // JUIZ — só quando as checagens determinísticas passaram. Chamar o juiz
+    // sobre um candidato já reprovado gastaria uma chamada de modelo para
+    // confirmar o que a régua barata já sabe.
+    if (candidato && motivos.length === 0) {
+      const veredito = await judgeProposicaoEditorial(apiKey, {
+        proposicao: candidato,
+        linha,
+        companyName: input.companyName,
+        mainActivity: input.mainActivity,
+        objeto: input.objeto,
+        hint: input.hint,
+      });
+      if (veredito.failReason) {
+        console.warn("[editorial] juiz indisponível — seguindo sem ele");
+      } else if (!veredito.ok && veredito.motivo) {
+        motivos = [veredito.motivo];
+      }
+    }
 
     if (candidato && (melhorMotivos === null || motivos.length < melhorMotivos.length)) {
       melhor = candidato;

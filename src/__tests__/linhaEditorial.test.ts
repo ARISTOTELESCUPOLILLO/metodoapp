@@ -491,3 +491,32 @@ describe("tokensDeConteudo", () => {
     }
   });
 });
+
+// ── Linha DECISÃO: comparar formato não é comparar critério ──────────────────
+// Caso real 09/09/2026: "Ao escolher o Diagnóstico Digital, a decisão passa por
+// comparar análises feitas somente por e-mail com aquelas realizadas em
+// entrevistas presenciais." Duas alternativas, nenhum critério — o leitor não
+// tem base para decidir. A guia dizia "duas alternativas OU o critério"; o "ou"
+// tornava o critério opcional.
+
+describe("guia da linha DECISÃO", () => {
+  const decisao = LINHA_EDITORIAL_SPEC.decisao;
+
+  it("exige o que MUDA entre as alternativas, não só as alternativas", () => {
+    expect(decisao.guia).toContain("NÃO BASTA");
+    expect(decisao.guia).toContain("O QUE MUDA");
+    // O "ou" que tornava o critério opcional saiu.
+    expect(decisao.guia).not.toContain("ou nomeando o critério");
+  });
+
+  it("nomeia a armadilha de comparar canais/formatos", () => {
+    expect(decisao.evitar).toContain("CANAIS OU FORMATOS");
+    expect(decisao.evitar).toContain("e-mail");
+    expect(decisao.evitar).toContain("NOMES DE FORMATO");
+  });
+
+  it("a guia nova chega ao prompt da peça", () => {
+    const regra = buildRegraLinhaEditorial({ linhaEditorial: "decisao", alvo: "pu" });
+    expect(regra).toContain("O QUE MUDA");
+  });
+});
