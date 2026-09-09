@@ -5,6 +5,7 @@ import {
   SCRIPT_FECHO_MIN_WORDS,
   SCRIPT_FECHO_MAX_WORDS,
   SCRIPT_MENSAGEM_MIN_WORDS,
+  validateScriptReels,
 } from "@/core/scriptValidation";
 import {
   truncateWords,
@@ -272,6 +273,11 @@ export const Route = createFileRoute("/api/regenerate-block")({
           }
 
           const rule = getRule(kind, formato, ajustePromocional);
+          // O roteiro do reels anda no MESMO trilho do "texto" de apoio, e cada
+          // parada desse trilho supõe uma frase de 12 palavras: o corte mecânico
+          // logo abaixo e a régua validateTexto. Nos dois casos o roteiro sai
+          // destruído — cortar em 24 palavras decepa o fecho no meio.
+          const isReelsPeca = (formato || "").toLowerCase().startsWith("reels");
 
           // Quando o usuário regenera APENAS o texto ou a legenda, o título
           // mostrado em "VERSÃO ATUAL" é o título FINAL escolhido/editado por
@@ -355,7 +361,11 @@ Retorne JSON EXATAMENTE assim:
             kind === "texto" && (formato || "").toLowerCase().startsWith("postunico")
               ? checkExcessoPalavras(value, rule.max)
               : null;
-          if (kind === "texto") {
+          // Fala NÃO se corta a machado: parar em 24 palavras no meio da frase
+          // devolve um fragmento sem fecho — exatamente o defeito que a régua
+          // existe para pegar. O roteiro longo volta SINALIZADO logo abaixo e
+          // quem chamou tenta de novo.
+          if (kind === "texto" && !isReelsPeca) {
             value = truncateWords(value, rule.max);
           } else if (kind === "legenda") {
             value = enforceLegendaLimits(normalizeLegenda(value));
@@ -379,7 +389,9 @@ Retorne JSON EXATAMENTE assim:
                     : undefined,
                 )
               : kind === "texto"
-                ? validateTexto(value)
+                ? isReelsPeca
+                  ? validateScriptReels(value)
+                  : validateTexto(value)
                 : validateLegenda(value);
           if (excessoApoio) motivos.push(excessoApoio);
 

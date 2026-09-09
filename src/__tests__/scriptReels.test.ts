@@ -8,6 +8,7 @@ import {
 } from "../core/scriptValidation";
 import { buildMetodoOpPrompt } from "../core/organizaMethodEngine";
 import { normalizeMethodResult } from "../core/normalizeMethodResult";
+import { applyDeterministicFallback } from "../core/textValidation";
 
 // Régua do roteiro falado — nasceu do caso real de 09/09/2026 (S3C, conta
 // admin). O roteiro que saiu está no primeiro teste: 17 palavras, duas frases
@@ -187,5 +188,28 @@ describe("o fio entre a regua e o autoRegenerate", () => {
     const motivos = validateScriptReels(ROTEIRO_LONGO_REAL);
     expect(motivos.length).toBeGreaterThanOrEqual(2);
     expect(motivos.join(" ")).toContain("32 palavras");
+  });
+});
+
+describe("o trilho do texto de apoio nao serve ao roteiro", () => {
+  // Terceiro fio solto do mesmo defeito (09/09, tarde). O script viaja no
+  // trilho do campo "texto", e as tres paradas desse trilho supoem uma frase
+  // de apoio de 12 palavras:
+  //   1. regenerate-block cortava em rule.max palavras (fragmento sem fecho);
+  //   2. validava a volta com validateTexto (a regua errada);
+  //   3. a limpeza determinista corta na ultima frase completa — e um roteiro
+  //      bem-feito TEM duas frases, entao ela jogava fora justamente o fecho.
+  // Este teste trava o item 3: se alguem religar a limpeza no reels, quebra.
+  const ROTEIRO_CERTO =
+    "Quem lidera produto novo ja busca apoio antes, nao so na hora de divulgar. O proximo passo e calibrar juntos.";
+
+  it("a limpeza determinista do texto de apoio decepa o fecho do roteiro", () => {
+    const depois = applyDeterministicFallback(ROTEIRO_CERTO, "texto");
+    expect(ROTEIRO_CERTO).toContain("O proximo passo e calibrar juntos.");
+    expect(depois).not.toContain("O proximo passo e calibrar juntos.");
+  });
+
+  it("o roteiro certo passa na regua — nao ha por que limpar nada", () => {
+    expect(validateScriptReels(ROTEIRO_CERTO)).toEqual([]);
   });
 });

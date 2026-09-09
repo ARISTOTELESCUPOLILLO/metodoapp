@@ -214,8 +214,20 @@ export async function autoRegenerateFlaggedFields(
     [...grouped.values()].map(async ({ prefix, field, motivos }) => {
       const current = getField(result, prefix, field) || "";
 
+      // ⚠ A limpeza determinística (E4) NÃO serve ao roteiro do reels. Ela corta
+      // na última frase completa — e um roteiro bem-feito TEM duas frases, então
+      // o corte joga fora justamente o fecho, que é o que o vídeo mais precisa.
+      // Roteiro um pouco longo é melhor que roteiro que termina no meio da ideia:
+      // aqui fica a última tentativa inteira.
+      const isReelsPeca = /^reels\[/.test(prefix) && field === "texto";
+
       if (skipRegeneration) {
-        setField(result, prefix, field, applyDeterministicFallback(current, field));
+        setField(
+          result,
+          prefix,
+          field,
+          isReelsPeca ? current : applyDeterministicFallback(current, field),
+        );
         console.warn(
           `[autoRegenerate] >${SKIP_REGEN_THRESHOLD * 100}% das peças flagadas — limpeza determinística em ${prefix}.${field}: ${motivos.join("; ")}`,
         );
@@ -245,7 +257,12 @@ export async function autoRegenerateFlaggedFields(
           }
           motivoReprovacao = regen.flags.join("; ");
           if (attempt === MAX_ATTEMPTS) {
-            setField(result, prefix, field, applyDeterministicFallback(value, field));
+            setField(
+              result,
+              prefix,
+              field,
+              isReelsPeca ? value : applyDeterministicFallback(value, field),
+            );
             console.warn(
               `[autoRegenerate] ${prefix}.${field} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`,
             );
