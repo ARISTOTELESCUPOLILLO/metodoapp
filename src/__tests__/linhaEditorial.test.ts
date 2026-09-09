@@ -544,11 +544,24 @@ describe("MOSTRAR NOME — diferenciação dos dois títulos", () => {
     expect(r).toContain("só o verbo trocado");
   });
 
-  it("mostra o caso real como exemplo do que NÃO serve", () => {
+  it("o exemplo NÃO usa o produto real do cliente", () => {
+    // Teste real 09/09 14:46: o exemplo que eu tinha escrito usava o nome do
+    // produto do cliente, e o modelo copiou quase literal — o titulo do Dia 3
+    // saiu "Quem começa pelo Diagnóstico Digital erra?", perdendo o "menos" do
+    // exemplo e virando dúvida sobre o próprio serviço. Exemplo no prompt não é
+    // ilustração, é molde: com o nome real dentro, há o que copiar.
     const r = regra();
-    expect(r).toContain("Diagnóstico Digital guia a rota");
-    // E entrega uma saída: mudar o sujeito mantendo o nome noutra posição.
-    expect(r).toContain("Quem começa pelo Diagnóstico Digital");
+    expect(r).not.toContain("Diagnóstico Digital guia");
+    expect(r).toContain("OUTRO ramo");
+    expect(r).toContain("NÃO copie as palavras");
+  });
+
+  it("o exemplo não abre com 'Quem' — o item 11 do MOP proíbe", () => {
+    // "Quem decide…", "Quem usa…" são proibidos por nomear o leitor de fora. O
+    // detector checkObserverSubject tem lista fechada de verbos e não cobria
+    // "começa", então o exemplo antigo passava batido e ensinava o proibido.
+    const r = regra();
+    expect(r).not.toContain('"Quem ');
   });
 
   it("proíbe o produto como agente do resultado", () => {

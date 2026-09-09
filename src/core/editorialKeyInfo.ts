@@ -23,7 +23,13 @@
 
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
 import { getVoiceProfile } from "@/data/brandVoice";
-import { OPENING_LENSES, type SugestaoAudience, type SugestaoSegment } from "@/core/sugestaoEngine";
+import {
+  OPENING_LENSES,
+  classifyItemType,
+  deriveRelacaoRealComTesteDeTroca,
+  type SugestaoAudience,
+  type SugestaoSegment,
+} from "@/core/sugestaoEngine";
 import { OBJETIVO_TOM } from "@/domain/objetivo.config";
 import {
   EDITORIAL_MAX_WORDS,
@@ -118,6 +124,11 @@ export function buildEditorialPrompt(
   input: EditorialEngineInput,
   linha: LinhaEditorial,
   lente: { nome: string; guia: string },
+  /**
+   * O que o serviço realmente é, DERIVADO do nome + atividade — nunca informado
+   * pelo usuário. Ver a nota em generateSugestaoEditorial sobre por que existe.
+   */
+  relacaoReal?: string | null,
 ): string {
   const {
     companyName,
@@ -182,6 +193,13 @@ ${spec.evitar}
 Exemplo de CALIBRAÇÃO (referência interna — NÃO copie o assunto nem as palavras): "${spec.exemplo}"
 
 ${blocoUsoObjeto(objeto, usoObjeto, segment)}
+${
+  relacaoReal
+    ? `RELAÇÃO REAL JÁ IDENTIFICADA (uso interno — embasa a frase, não precisa ser citada literalmente): "${relacaoReal}".
+Ancore a proposição NESTA relação em vez de inventar o que o serviço faz. Ela é a única base concreta que você tem sobre este item: tudo que você afirmar além dela é chute.
+`
+    : ""
+}
 
 LENTE (mecanismo interno de variação — NÃO deve ser reconhecível na frase, e a palavra "${lente.nome}" não pode aparecer): ${lente.guia}
 A LINHA EDITORIAL é a direção; a LENTE é só de onde se olha. Quando as duas parecerem brigar, a LINHA EDITORIAL vence.
@@ -245,9 +263,10 @@ export async function judgeProposicaoEditorial(
     mainActivity: string;
     objeto: string;
     hint: string;
+    relacaoReal?: string | null;
   },
 ): Promise<JuizEditorialVeredito> {
-  const { proposicao, linha, companyName, mainActivity, objeto, hint } = params;
+  const { proposicao, linha, companyName, mainActivity, objeto, hint, relacaoReal } = params;
   const spec = LINHA_EDITORIAL_SPEC[linha];
   try {
     const criterioDecisao =
@@ -272,7 +291,12 @@ export async function judgeProposicaoEditorial(
             content: `EMPRESA: ${companyName || "(não informada)"}
 ATIVIDADE: ${mainActivity || "(não informada)"}
 PRODUTO/SERVIÇO/TEMA DESTA PEÇA: ${objeto || "(nenhum)"}
-${hint ? `PISTA QUE O USUÁRIO DEU: "${hint}"\n` : ""}
+${hint ? `PISTA QUE O USUÁRIO DEU: "${hint}"\n` : ""}${
+              relacaoReal
+                ? `RELAÇÃO REAL DERIVADA deste item (inferida do nome + atividade, NÃO informada pelo cliente): "${relacaoReal}"
+Use isto como base do que se pode afirmar: o que for coerente com esta relação conta como ancorado. Mas ela é INFERÊNCIA, não declaração do cliente — não autoriza detalhes novos (número, prazo, etapa, ferramenta) que nem ela nem a atividade contenham.\n`
+                : ""
+            }
 LINHA EDITORIAL PEDIDA: ${spec.label} — "${spec.pergunta}"
 O que ela exige: ${spec.guia}
 
@@ -352,11 +376,47 @@ export async function generateSugestaoEditorial(
   // virarem paráfrase uma da outra — item 33 do pedido.
   const lente = OPENING_LENSES[(input.sessionSeed + input.attempt) % OPENING_LENSES.length];
 
-  const allowedContext = [input.hint, input.mainActivity, input.companyName, input.objeto]
+  // RELAÇÃO REAL — o sistema descobrindo o que o serviço é, em vez de perguntar.
+  //
+  // Achado real 09/09/2026: o juiz reprovou 3 de 6 propostas, todas por "não há
+  // informação suficiente sobre o serviço". Ele estava certo em cada caso e
+  // errado no conjunto — o Kit guarda o NOME do produto e a atividade, e nada
+  // sobre o que cada serviço entrega. Numa linha DECISÃO, que exige nomear
+  // entre o que se escolhe, qualquer alternativa proposta seria não-confirmável.
+  //
+  // A saída NÃO foi pedir um campo novo ao usuário (decisão do Ari, e princípio
+  // já registrado: "a inteligência é interna, nunca vira caixa na tela").
+  // Reaproveita `deriveRelacaoRealComTesteDeTroca`, que já roda em produção no
+  // caminho Legacy: recebe nome + atividade e devolve a relação real do item,
+  // com o TESTE DE TROCA embutido contra generalidade ("se trocar o item por
+  // outro qualquer, a relação continuaria verdadeira? então é genérica demais").
+  //
+  // MESMO RECORTE DO LEGACY: só quando há objeto e ele NÃO é produto físico —
+  // item de VAREJO ancora a cena sozinho, serviço e tema não. gpt-4.1-mini,
+  // ~US$ 0,0004. Falha ABERTA: sem relação, o prompt fica como estava.
+  const objetoTrim = input.objeto.trim();
+  const relacaoReal =
+    objetoTrim && classifyItemType(objetoTrim) !== "VAREJO"
+      ? await deriveRelacaoRealComTesteDeTroca(
+          apiKey,
+          objetoTrim,
+          input.companyName,
+          input.mainActivity,
+          input.segment,
+        )
+      : null;
+
+  const allowedContext = [
+    input.hint,
+    input.mainActivity,
+    input.companyName,
+    input.objeto,
+    relacaoReal || "",
+  ]
     .filter(Boolean)
     .join(" ");
 
-  const basePrompt = buildEditorialPrompt(input, linha, lente);
+  const basePrompt = buildEditorialPrompt(input, linha, lente, relacaoReal);
 
   let melhor = "";
   let melhorMotivos: string[] | null = null;
@@ -417,6 +477,7 @@ export async function generateSugestaoEditorial(
         mainActivity: input.mainActivity,
         objeto: input.objeto,
         hint: input.hint,
+        relacaoReal,
       });
       veredictos.push({ ...veredito, pass });
       if (veredito.failReason) {
