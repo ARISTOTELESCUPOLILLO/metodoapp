@@ -37,6 +37,17 @@ export const SCRIPT_FECHO_MAX_WORDS = 7;
 /** A mensagem precisa de respiro escrito. */
 export const SCRIPT_MENSAGEM_MIN_WORDS = 11;
 
+/**
+ * Teto da mensagem. Existe desde 09/09/2026 (tarde): saiu um roteiro de 42
+ * palavras em 3 frases cujo FECHO estava correto (7 palavras) — só o total
+ * reprovava, e uma única reprovação genérica ("acima de 24") não diz ao modelo
+ * ONDE cortar. Ele cortava do fecho, que era a parte certa.
+ */
+export const SCRIPT_MENSAGEM_MAX_WORDS = 17;
+
+/** MENSAGEM + FECHO. A fala tem duas frases, e a terceira é sempre invasão. */
+export const SCRIPT_FRASES = 2;
+
 function contar(texto: string): number {
   return texto.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -91,10 +102,25 @@ export function validateScriptReels(script: string): string[] {
         `a última frase tem ${nFecho} palavra(s) — curta demais para soar como fecho falado`,
       );
 
+    // Duas frases, não três. O roteiro de 42 palavras de 09/09 tinha fecho
+    // correto e duas frases de mensagem empilhadas antes dele — e passava por
+    // aqui com uma queixa só, a do total. Dizer QUAL frase sobra é o que faz a
+    // reescrita cortar no lugar certo.
+    if (frases.length > SCRIPT_FRASES)
+      motivos.push(
+        `roteiro com ${frases.length} frases — a fala tem ${SCRIPT_FRASES}: uma MENSAGEM e um FECHO. Junte ou elimine o que sobra na mensagem, nunca o fecho`,
+      );
+
+    const mensagem = frases.slice(0, -1).join(" ");
+    const nMensagem = contar(mensagem);
+    if (nMensagem > SCRIPT_MENSAGEM_MAX_WORDS)
+      motivos.push(
+        `a mensagem tem ${nMensagem} palavras — acima de ${SCRIPT_MENSAGEM_MAX_WORDS}; encurte a MENSAGEM e preserve o fecho`,
+      );
+
     // Respiro escrito: sem vírgula a locução atravessa a mensagem sem pausa.
     // Só cobrado quando a mensagem é longa o suficiente para precisar de ar.
-    const mensagem = frases.slice(0, -1).join(" ");
-    if (contar(mensagem) >= SCRIPT_MENSAGEM_MIN_WORDS && !/,/.test(mensagem)) {
+    if (nMensagem >= SCRIPT_MENSAGEM_MIN_WORDS && !/,/.test(mensagem)) {
       motivos.push(
         "a mensagem não tem nenhuma vírgula — sem pausa escrita o sintetizador lê tudo corrido; inclua o respiro no ponto natural da frase",
       );

@@ -20,6 +20,7 @@ import {
   SCRIPT_FECHO_MIN_WORDS,
   SCRIPT_FECHO_MAX_WORDS,
   SCRIPT_MENSAGEM_MIN_WORDS,
+  SCRIPT_MENSAGEM_MAX_WORDS,
 } from "./scriptValidation";
 import { buildRegraLinhaEditorial } from "./linhaEditorialRules";
 
@@ -235,7 +236,7 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? "s" : ""} de produção):
 - Texto de tela em "screenText", frase curta até 7 palavras.
 - Roteiro falado (campo "script") — ISTO É FALA, NÃO TEXTO. Será lido em voz alta por sintetizador e o vídeo dura o que a fala durar. Escreva ouvindo, não lendo.
   ESTRUTURA — EXATAMENTE 2 partes, separadas por PONTO FINAL:
-  (1) MENSAGEM — ${SCRIPT_MENSAGEM_MIN_WORDS} a 17 palavras, com PELO MENOS UMA VÍRGULA no ponto natural de respiro. A vírgula NÃO é enfeite de escrita: é onde a voz PAUSA. Sem ela o sintetizador atravessa a frase inteira sem ar e a locução sai apressada.
+  (1) MENSAGEM — ${SCRIPT_MENSAGEM_MIN_WORDS} a ${SCRIPT_MENSAGEM_MAX_WORDS} palavras, com PELO MENOS UMA VÍRGULA no ponto natural de respiro. A vírgula NÃO é enfeite de escrita: é onde a voz PAUSA. Sem ela o sintetizador atravessa a frase inteira sem ar e a locução sai apressada.
   (2) FECHO — frase CURTA e SEPARADA, de ${SCRIPT_FECHO_MIN_WORDS} a ${SCRIPT_FECHO_MAX_WORDS} palavras, que ENCERRA a ideia. É onde a voz desce.
   TOTAL: ${SCRIPT_MIN_WORDS} a ${SCRIPT_MAX_WORDS} palavras → cerca de 8 segundos de locução.
   ⚠ O FECHO É A PARTE QUE MAIS FALHA — medição real de 09/09/2026: o roteiro saiu com duas frases de mensagem e NENHUM fecho, e o vídeo terminou no meio de uma ideia, sem cadência de encerramento. Antes de responder, leia o seu script EM VOZ ALTA e pergunte: a última frase soa como PONTO FINAL de uma conversa, ou como se ainda faltasse alguma coisa? Se faltar, ela não é fecho.
@@ -564,7 +565,17 @@ INEDITISMO CONTROLADO:
 - Priorizar linguagem concreta, cotidiana e específica da atividade.
 ${TECNICISMO_RULE}
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
-${FECHO_GENERICO_RULE}${regraProfissao ? `\n\n${regraProfissao}` : ""}${regraPolaridade ? `\n\n${regraPolaridade}` : ""}${regraEditorial ? `\n\n${regraEditorial}` : ""}
+${FECHO_GENERICO_RULE}${regraProfissao ? `\n\n${regraProfissao}` : ""}${regraPolaridade ? `\n\n${regraPolaridade}` : ""}${regraEditorial ? `\n\n${regraEditorial}` : ""}${
+    isVisualOrExperimentacao
+      ? ""
+      : `
+
+⚠ ÚLTIMA CHECAGEM — O CAMPO "script" DO REELS (medido em 09/09/2026, duas rodadas seguidas: 27 e 42 palavras):
+A REGRA DA FALA está declarada lá em cima, mas ela fica no MEIO do prompt e tudo o que vem depois — linha editorial, objeto, ineditismo — puxa o script para o tamanho de um texto escrito. Ela vale INTEIRA, e esta é a última palavra sobre ela.
+- EXATAMENTE 2 frases: MENSAGEM (${SCRIPT_MENSAGEM_MIN_WORDS} a ${SCRIPT_MENSAGEM_MAX_WORDS} palavras, com vírgula de respiro) e FECHO (${SCRIPT_FECHO_MIN_WORDS} a ${SCRIPT_FECHO_MAX_WORDS} palavras). TOTAL de ${SCRIPT_MIN_WORDS} a ${SCRIPT_MAX_WORDS} palavras.
+- CONTE as palavras do script antes de responder. Passou de ${SCRIPT_MAX_WORDS}? Corte da MENSAGEM. O fecho não se corta — é onde a voz desce.
+- ⚠ A LINHA EDITORIAL DEFINE O ÂNGULO DA FALA, NUNCA O TAMANHO DELA. PROIBIDO transportar a informação-chave inteira para dentro do script e pendurar um fecho no fim: a informação-chave é uma frase ESCRITA, o script é FALA, e a fala é mais curta. O script diz a MESMA ideia com as palavras de quem está falando com alguém.`
+  }
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: ${outputKeys}.

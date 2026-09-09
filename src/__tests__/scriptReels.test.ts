@@ -213,3 +213,62 @@ describe("o trilho do texto de apoio nao serve ao roteiro", () => {
     expect(validateScriptReels(ROTEIRO_CERTO)).toEqual([]);
   });
 });
+
+describe("a rodada de 42 palavras — a regua nao dizia ONDE cortar", () => {
+  // Segunda rodada real de 09/09, linha EXPERIENCIA, produto "Criacao de
+  // conteudo". O fecho estava CERTO (7 palavras) e mesmo assim o roteiro tinha
+  // 42 palavras em 3 frases: duas de mensagem empilhadas. A regua reprovava com
+  // uma queixa so — "acima de 24" — e uma queixa generica faz o modelo cortar
+  // do fecho, que era a unica parte boa.
+  const ROTEIRO_42 =
+    "Quando a escolha de criar conteudo so entra em pauta apos um alerta, a chance de retomar fluxo cai. O que mantem o ciclo e disciplina com rotina feita hoje, sem deixar brecha para amanha. Antecipe o proximo passo, nao espere travar.";
+
+  it("aponta as 3 frases e manda preservar o fecho", () => {
+    const motivos = validateScriptReels(ROTEIRO_42);
+    const texto = motivos.join(" | ");
+    expect(texto).toContain("3 frases");
+    expect(texto).toContain("nunca o fecho");
+  });
+
+  it("aponta a mensagem longa, nao so o total", () => {
+    const texto = validateScriptReels(ROTEIRO_42).join(" | ");
+    expect(texto).toContain("preserve o fecho");
+    expect(texto).toContain("42 palavras");
+  });
+});
+
+describe("a checagem final do roteiro fecha o prompt", () => {
+  // A regra da fala mora no MEIO do prompt e vem muita ordem depois dela —
+  // linha editorial, objeto, ineditismo. Pela doutrina do projeto (o ultimo a
+  // falar vence) ela perdia, e o script saia do tamanho de um texto escrito.
+  const BASE = {
+    companyName: "Empresa Teste",
+    segment: "SERVIÇOS",
+    audience: "B2C",
+    businessMoment: "consolidação",
+    keyInfo: "Atendimento com hora marcada",
+    brandVoice: "profissional e acessível",
+    outputMode: "feed",
+    sequenceSize: 3,
+    storiesDays: 1,
+    storiesQuantity: 3,
+    outputFormats: ["feed"],
+    track: "cinematica",
+    mainActivity: "Consultoria de negócios",
+    mood: "OP-01",
+  } as Parameters<typeof buildMetodoOpPrompt>[0];
+
+  it("a trilha cinematica termina com a checagem do script, depois da linha editorial", () => {
+    const prompt = buildMetodoOpPrompt(BASE);
+    const iRegra = prompt.indexOf("ÚLTIMA CHECAGEM");
+    const iFormato = prompt.indexOf("FORMATO DE SAÍDA");
+    expect(iRegra).toBeGreaterThan(-1);
+    expect(iFormato).toBeGreaterThan(iRegra);
+    expect(prompt).toContain("A LINHA EDITORIAL DEFINE O ÂNGULO DA FALA");
+  });
+
+  it("a trilha visual nao ganha a checagem — ela nao tem reels", () => {
+    const prompt = buildMetodoOpPrompt({ ...BASE, track: "visual" });
+    expect(prompt).not.toContain("ÚLTIMA CHECAGEM");
+  });
+});

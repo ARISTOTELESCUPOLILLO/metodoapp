@@ -5,6 +5,7 @@ import {
   SCRIPT_FECHO_MIN_WORDS,
   SCRIPT_FECHO_MAX_WORDS,
   SCRIPT_MENSAGEM_MIN_WORDS,
+  SCRIPT_MENSAGEM_MAX_WORDS,
   validateScriptReels,
 } from "@/core/scriptValidation";
 import {
@@ -119,7 +120,7 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: troque o sujeit
       label: "roteiro falado",
       rule: `ISTO É FALA, NÃO TEXTO — será lido em voz alta por sintetizador.
 ESTRUTURA — EXATAMENTE 2 frases separadas por PONTO FINAL:
-(1) MENSAGEM: ${SCRIPT_MENSAGEM_MIN_WORDS} a 17 palavras, com PELO MENOS UMA VÍRGULA no ponto natural de respiro — é onde a voz pausa.
+(1) MENSAGEM: ${SCRIPT_MENSAGEM_MIN_WORDS} a ${SCRIPT_MENSAGEM_MAX_WORDS} palavras, com PELO MENOS UMA VÍRGULA no ponto natural de respiro — é onde a voz pausa.
 (2) FECHO: ${SCRIPT_FECHO_MIN_WORDS} a ${SCRIPT_FECHO_MAX_WORDS} palavras, frase curta e separada que ENCERRA a ideia.
 TOTAL: ${SCRIPT_MIN_WORDS} a ${SCRIPT_MAX_WORDS} palavras. NUNCA exceda — conte antes de responder.
 Leia em voz alta antes de devolver: a última frase soa como ponto final de uma conversa, ou como se faltasse algo? Se faltar, não é fecho.

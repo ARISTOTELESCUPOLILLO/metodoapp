@@ -172,10 +172,14 @@ describe("fiação no MOP — a regra chega ao prompt da sequência", () => {
   // defeito que ela combate só existe na saída, ver core/fechoGenerico.ts), por
   // isso aparece aqui também. O que este teste continua travando é o mesmo de
   // antes: nenhuma linha em branco a mais para quem não é regulamentado.
+  // Em 09/09/2026 a CHECAGEM FINAL do roteiro falado passou a fechar o prompt
+  // nas trilhas que têm reels (ver organizaMethodEngine) — ela ocupa o lugar
+  // onde FORMATO DE SAÍDA vinha logo depois. O contrato travado aqui continua
+  // sendo o mesmo: nada de linha em branco a mais para quem não é regulamentado.
   it("o prompt de quem não é regulamentado não ganha linha em branco extra", () => {
     const prompt = buildMetodoOpPrompt({ ...base, mainActivity: "Padaria e confeitaria" });
     expect(prompt).toContain(
-      `- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.\n${FECHO_GENERICO_RULE}\n\nFORMATO DE SAÍDA:`,
+      `- Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.\n${FECHO_GENERICO_RULE}\n\n⚠ ÚLTIMA CHECAGEM`,
     );
   });
 

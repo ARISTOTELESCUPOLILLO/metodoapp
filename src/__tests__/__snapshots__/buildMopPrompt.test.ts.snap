@@ -218,6 +218,12 @@ INEDITISMO CONTROLADO:
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
 - ⚠ FECHO DO TEXTO — PROIBIDO QUALIFICADOR VAZIO: não feche (nem encha) a frase com modo — "com atenção", "com cuidado", "com qualidade", "com precisão", "com profissionalismo", "de forma consistente", "de forma ágil" — nem com finalidade genérica — "para garantir qualidade", "para chegar ao melhor resultado", "buscando excelência", "com máxima segurança". TESTE ANTES DE RESPONDER: apague as últimas 2 a 4 palavras; se nada de concreto se perder, elas não deviam estar ali. NO LUGAR, escolha uma das duas: um SEGUNDO FATO da atividade (o que se faz, quem faz, quando, onde, quanto, com o quê) ou NADA — a frase pode terminar antes do limite de palavras, que é TETO e não meta.
 
+⚠ ÚLTIMA CHECAGEM — O CAMPO "script" DO REELS (medido em 09/09/2026, duas rodadas seguidas: 27 e 42 palavras):
+A REGRA DA FALA está declarada lá em cima, mas ela fica no MEIO do prompt e tudo o que vem depois — linha editorial, objeto, ineditismo — puxa o script para o tamanho de um texto escrito. Ela vale INTEIRA, e esta é a última palavra sobre ela.
+- EXATAMENTE 2 frases: MENSAGEM (11 a 17 palavras, com vírgula de respiro) e FECHO (3 a 7 palavras). TOTAL de 18 a 24 palavras.
+- CONTE as palavras do script antes de responder. Passou de 24? Corte da MENSAGEM. O fecho não se corta — é onde a voz desce.
+- ⚠ A LINHA EDITORIAL DEFINE O ÂNGULO DA FALA, NUNCA O TAMANHO DELA. PROIBIDO transportar a informação-chave inteira para dentro do script e pendurar um fecho no fim: a informação-chave é uma frase ESCRITA, o script é FALA, e a fala é mais curta. O script diz a MESMA ideia com as palavras de quem está falando com alguém.
+
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: "ancora_visual", "feed", "carousel", "reels".
 A primeira chave do JSON DEVE ser "ancora_visual" — defina o personagem-tipo ANTES de gerar qualquer peça de conteúdo.
@@ -667,6 +673,12 @@ INEDITISMO CONTROLADO:
 - Substituir tecnicismos, estrangeirismos e jargões por palavras populares e de fácil entendimento, mantendo clareza, naturalidade e impacto. Ex.: "expertise" → "experiência", "briefing" → "orientação", "saúde laboral" → "saúde do trabalho", "otimização" → "melhoria", "engajamento" → "envolvimento", "performance" → "desempenho", "branding" → "identidade de marca", "networking" → "contatos", "feedback" → "retorno", "ROI" → "retorno do investimento".
 - Evitar clichês: descubra, saiba mais, transforme, segredo, incrível.
 - ⚠ FECHO DO TEXTO — PROIBIDO QUALIFICADOR VAZIO: não feche (nem encha) a frase com modo — "com atenção", "com cuidado", "com qualidade", "com precisão", "com profissionalismo", "de forma consistente", "de forma ágil" — nem com finalidade genérica — "para garantir qualidade", "para chegar ao melhor resultado", "buscando excelência", "com máxima segurança". TESTE ANTES DE RESPONDER: apague as últimas 2 a 4 palavras; se nada de concreto se perder, elas não deviam estar ali. NO LUGAR, escolha uma das duas: um SEGUNDO FATO da atividade (o que se faz, quem faz, quando, onde, quanto, com o quê) ou NADA — a frase pode terminar antes do limite de palavras, que é TETO e não meta.
+
+⚠ ÚLTIMA CHECAGEM — O CAMPO "script" DO REELS (medido em 09/09/2026, duas rodadas seguidas: 27 e 42 palavras):
+A REGRA DA FALA está declarada lá em cima, mas ela fica no MEIO do prompt e tudo o que vem depois — linha editorial, objeto, ineditismo — puxa o script para o tamanho de um texto escrito. Ela vale INTEIRA, e esta é a última palavra sobre ela.
+- EXATAMENTE 2 frases: MENSAGEM (11 a 17 palavras, com vírgula de respiro) e FECHO (3 a 7 palavras). TOTAL de 18 a 24 palavras.
+- CONTE as palavras do script antes de responder. Passou de 24? Corte da MENSAGEM. O fecho não se corta — é onde a voz desce.
+- ⚠ A LINHA EDITORIAL DEFINE O ÂNGULO DA FALA, NUNCA O TAMANHO DELA. PROIBIDO transportar a informação-chave inteira para dentro do script e pendurar um fecho no fim: a informação-chave é uma frase ESCRITA, o script é FALA, e a fala é mais curta. O script diz a MESMA ideia com as palavras de quem está falando com alguém.
 
 FORMATO DE SAÍDA:
 Retorne EXCLUSIVAMENTE estas chaves: "ancora_visual", "feed", "carousel", "reels".
