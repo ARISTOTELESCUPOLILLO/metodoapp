@@ -283,8 +283,9 @@ Responda JSON com estas chaves booleanas e um "motivo" curto (só quando reprova
 2. linhaOk — a frase cumpre a linha editorial pedida acima, ou escorregou para outra? (Diagnóstico que virou conselho, Conhecimento que virou dica, Experiência que virou convite a testar, Transformação sem o ponto de partida, Decisão que empurra uma das opções.) Em dúvida, false.
 3. proposicaoOk — é uma frase que AFIRMA alguma coisa, com sujeito e predicado inteiros — e não um título, um assunto solto ou um slogan institucional?${criterioDecisao}
 5. respeitoOk — a frase evita criticar, culpar ou ridicularizar o leitor e o método que ele usa hoje ("achismo", "amadorismo", "você está perdendo dinheiro", "quem faz assim não sabe")? Apontar uma limitação de forma factual é permitido; qualificar de forma depreciativa não.
+6. promessaOk — a frase evita atribuir ao produto/serviço um poder que ele não tem? Reprove quando o item aparece como AGENTE de um resultado que depende do cliente ou de outros fatores ("[produto] decide resultados", "garante vendas", "traz clientes", "resolve o negócio", "transforma a empresa"). Um serviço mostra, aponta, revela, organiza, orienta — quem decide e quem executa é o empresário. Verbo verificável passa; verbo grandioso, não.
 
-{"fatoOk":true,"linhaOk":true,"proposicaoOk":true,"${linha === "decisao" ? "criterioOk" : "relevanciaOk"}":true,"respeitoOk":true,"motivo":""}`,
+{"fatoOk":true,"linhaOk":true,"proposicaoOk":true,"${linha === "decisao" ? "criterioOk" : "relevanciaOk"}":true,"respeitoOk":true,"promessaOk":true,"motivo":""}`,
           },
         ],
         temperature: 0,
@@ -310,7 +311,8 @@ Responda JSON com estas chaves booleanas e um "motivo" curto (só quando reprova
       parsed.linhaOk === true &&
       parsed.proposicaoOk === true &&
       parsed[quartaChave] === true &&
-      parsed.respeitoOk === true;
+      parsed.respeitoOk === true &&
+      parsed.promessaOk === true;
     if (allOk) return { ok: true };
 
     return {
@@ -318,7 +320,7 @@ Responda JSON com estas chaves booleanas e um "motivo" curto (só quando reprova
       motivo:
         typeof parsed.motivo === "string" && parsed.motivo.trim()
           ? parsed.motivo.trim()
-          : "o juiz reprovou a proposição (dado não confirmável, linha editorial trocada, falta de ideia ou desrespeito ao leitor) sem detalhar — reescreva ancorando só no que foi informado",
+          : "o juiz reprovou a proposição (dado não confirmável, linha editorial trocada, falta de ideia, desrespeito ao leitor ou promessa que o serviço não cumpre) sem detalhar — reescreva ancorando só no que foi informado",
     };
   } catch {
     return { ok: true, failReason: "falha_tecnica" };

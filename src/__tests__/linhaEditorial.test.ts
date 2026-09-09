@@ -520,3 +520,76 @@ describe("guia da linha DECISÃO", () => {
     expect(regra).toContain("O QUE MUDA");
   });
 });
+
+// ── Teste real de 09/09/2026, 14:30 ──────────────────────────────────────────
+// Com MOSTRAR NOME o nome entrou nos dois títulos (a revogação funcionou), mas
+// os dois viraram a MESMA frase com o verbo trocado:
+//   "Diagnóstico Digital guia a rota" / "Diagnóstico Digital decide resultados reais"
+// que é o padrão que a regra de abertura×fechamento já proibia — e o segundo
+// ainda atribui ao serviço um poder que ele não tem.
+
+describe("MOSTRAR NOME — diferenciação dos dois títulos", () => {
+  const regra = () =>
+    buildRegraLinhaEditorial({
+      linhaEditorial: "decisao",
+      usoObjeto: "nome",
+      objeto: "Diagnóstico Digital",
+      alvo: "mop",
+    });
+
+  it("vira teste conferível, não conselho solto", () => {
+    const r = regra();
+    expect(r).toContain("TESTE DOS DOIS TÍTULOS");
+    expect(r).toContain("COMEÇAM com a mesma palavra");
+    expect(r).toContain("só o verbo trocado");
+  });
+
+  it("mostra o caso real como exemplo do que NÃO serve", () => {
+    const r = regra();
+    expect(r).toContain("Diagnóstico Digital guia a rota");
+    // E entrega uma saída: mudar o sujeito mantendo o nome noutra posição.
+    expect(r).toContain("Quem começa pelo Diagnóstico Digital");
+  });
+
+  it("proíbe o produto como agente do resultado", () => {
+    const r = regra();
+    expect(r).toContain("O PRODUTO NÃO É O AGENTE DO RESULTADO");
+    expect(r).toContain("garante vendas");
+    // Dá o que fazer no lugar — proibição sem saída declarada já falhou antes.
+    expect(r).toContain("mostrar, apontar, revelar");
+  });
+
+  it("nada disso aparece nos outros modos de uso", () => {
+    for (const uso of ["sem_nome", "nao_usar", "auto"] as const) {
+      const r = buildRegraLinhaEditorial({
+        linhaEditorial: "decisao",
+        usoObjeto: uso,
+        objeto: "Diagnóstico Digital",
+        alvo: "mop",
+      });
+      expect(r, uso).not.toContain("TESTE DOS DOIS TÍTULOS");
+      expect(r, uso).not.toContain("AGENTE DO RESULTADO");
+    }
+  });
+
+  it("NENHUMA variante da regra usa palavra banida do MOP", () => {
+    // "claro/clara" é proibida no conteúdo final (item 7 do prompt do MOP).
+    // Tê-la no texto da INSTRUÇÃO prima o modelo a usá-la — foi assim que o
+    // defeito apareceu: a variante SEM produtos irmãos dizia "deixa claro QUAL
+    // produto é". Por isso o teste varre todas as combinações, não uma só.
+    for (const uso of ["nome", "sem_nome", "nao_usar", "auto"] as const) {
+      for (const irmaos of [[], ["Consultoria em Marketing Digital"]]) {
+        for (const alvo of ["pu", "mop"] as const) {
+          const r = buildRegraLinhaEditorial({
+            linhaEditorial: "decisao",
+            usoObjeto: uso,
+            objeto: "Diagnóstico Digital",
+            irmaos,
+            alvo,
+          });
+          expect(r, `${uso}/${alvo}/irmaos:${irmaos.length}`).not.toMatch(/\bclar[oa]s?\b/i);
+        }
+      }
+    }
+  });
+});
