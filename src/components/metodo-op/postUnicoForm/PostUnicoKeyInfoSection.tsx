@@ -244,6 +244,16 @@ export function PostUnicoKeyInfoSection({
           onChange={setSelectedProducts}
         />
       )}
+      {/* No modo editorial o bloco de controles entra ENTRE o rótulo do topo e
+          o campo, e a caixa de texto ficava sem identificação — o usuário rola
+          por quatro seletores e chega num campo anônimo. Este título devolve o
+          nome ao campo, no mesmo peso visual de "Título e texto da peça".
+          Fora do beta não existe: lá o rótulo já fica colado no campo. */}
+      {editorialAtivo && (
+        <strong style={{ display: "block", marginTop: 4, marginBottom: 6 }}>
+          Informação-chave
+        </strong>
+      )}
       <div style={{ position: "relative" }}>
         <textarea
           value={keyInfo}
