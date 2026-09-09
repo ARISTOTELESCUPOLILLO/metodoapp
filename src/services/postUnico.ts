@@ -174,6 +174,19 @@ export async function generatePostUnicoCaption(
       ...(opts?.previousCaption ? { previousCaption: opts.previousCaption } : {}),
       ...(opts?.titulo ? { titulo: opts.titulo } : {}),
       ...(opts?.topicos?.length ? { topicos: opts.topicos } : {}),
+      // Objeto da peça — a legenda precisa saber o nome APENAS no modo REFERIR
+      // SEM NOME (a peça esconde, a legenda diz). Mesmo guarda do copy: a
+      // escolha editorial só vale enquanto a informação-chave for exatamente a
+      // frase aceita — se o usuário editou o campo à mão, a escolha caducou.
+      ...(data.editorial?.usoObjeto === "sem_nome" &&
+      data.editorial.proposicao?.trim() === (data.keyInfo || "").trim()
+        ? {
+            editorial: {
+              usoObjeto: data.editorial.usoObjeto,
+              objetoEditorial: data.editorial.objetoEditorial ?? "",
+            },
+          }
+        : {}),
       // Intenção declarada (piloto) — mesma regra do copy: só viaja quando há
       // intenção preenchida, senão a legenda sai idêntica à de hoje.
       ...(data.intencao

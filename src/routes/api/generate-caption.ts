@@ -25,7 +25,7 @@ import {
   OBJETIVO_CTA_FALLBACK,
   OBJETIVO_HASHTAG_FALLBACK,
 } from "@/domain/objetivo.config";
-import { hasBetaIntencao } from "@/repository/betaFlags";
+import { hasBetaIntencao, hasBetaEditorial } from "@/repository/betaFlags";
 import {
   buildIntencaoBlockLegenda,
   buildIntencaoRegraLegenda,
@@ -34,6 +34,9 @@ import {
 } from "@/core/intencao";
 import { buildRegraProfissaoRegulamentada } from "@/core/profissaoRegulamentada";
 import { buildRegraPolaridadeKeyInfo } from "@/core/polaridadeKeyInfo";
+// A legenda do Post Unico NAO nasce no mesmo prompt do titulo — por isso a
+// excecao do modo REFERIR SEM NOME precisa viajar ate aqui por conta propria.
+import { regraNomeNaLegenda } from "@/core/linhaEditorialRules";
 import { FECHO_GENERICO_RULE, checkFechoGenerico } from "@/core/fechoGenerico";
 import type { TransformacaoPretendida } from "@/types";
 
@@ -361,6 +364,19 @@ ${topicos.length ? `TÓPICOS ESCRITOS NA PEÇA:\n${topicos.map((t, i) => `${i + 
           // quando a informação-chave não tem negação — o prompt fica idêntico.
           const regraPolaridade = buildRegraPolaridadeKeyInfo(keyInfo);
 
+          // REFERIR SEM NOME: a PEÇA esconde o nome, a LEGENDA o diz. Fica vazia
+          // em qualquer outro modo, e aí o prompt de hoje sai idêntico byte a
+          // byte. A flag só é consultada quando o modo chega — quem está fora do
+          // beta não paga a consulta, e uma aba aberta há dois dias não passa.
+          const editorialBody = body.editorial as
+            | { usoObjeto?: unknown; objetoEditorial?: unknown }
+            | undefined;
+          const regraNomeLegenda =
+            String(editorialBody?.usoObjeto || "") === "sem_nome" &&
+            (await hasBetaEditorial(effective.userId))
+              ? regraNomeNaLegenda(String(editorialBody?.objetoEditorial || "").slice(0, 120))
+              : "";
+
           const userPrompt = `Gere a legenda de um post de Instagram em português brasileiro.
 
 EMPRESA: ${companyName}
@@ -382,7 +398,7 @@ Regras:${intencaoRegraLegenda}
 ${TECNICISMO_RULE}
 - Respeitar rigorosamente as normas gramaticais e ortográficas do português brasileiro: concordância nominal e verbal, pontuação correta, acentuação gráfica conforme o Acordo Ortográfico vigente. Nenhum erro de gramática, ortografia ou regência será tolerado.
 ${objetivo === "institucional" ? `- REGRA INSTITUCIONAL — ATEMPORALIDADE OBRIGATÓRIA: ignore datas e marcos temporais da informação-chave. Foque exclusivamente no SERVIÇO, na CAPACIDADE ou no POSICIONAMENTO da empresa. PROIBIDO no texto, CTA e hashtags: datas, urgência, "a partir de", "lançamento", "em breve". OBRIGATÓRIO: atemporalidade, posicionamento sóbrio, autoridade de marca.` : ""}
-${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}
+${objetivo === "homenagem" ? `- REGRA HOMENAGEM — DATAS SÃO CONTEXTO, NÃO URGÊNCIA: datas na informação-chave situam a conquista ou o evento comemorado — NUNCA geram urgência. PROIBIDO no texto, CTA e hashtags: "não perca", "somente até", "a partir de", urgência qualquer. O copy celebra com emoção — não pressiona.` : ""}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}${regraNomeLegenda}
 ${FECHO_GENERICO_RULE}`;
 
           const sanitizeTag = (t: string) =>

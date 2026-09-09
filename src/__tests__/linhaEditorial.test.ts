@@ -7,6 +7,7 @@ import {
 } from "../domain/linhaEditorial.config";
 import {
   buildRegraLinhaEditorial,
+  regraNomeNaLegenda,
   classificarFalaEditorial,
   validarProposicaoEditorial,
   EDITORIAL_MIN_WORDS,
@@ -604,5 +605,48 @@ describe("MOSTRAR NOME — diferenciação dos dois títulos", () => {
         }
       }
     }
+  });
+});
+
+describe("REFERIR SEM NOME — a legenda e a excecao", () => {
+  // Decisao do Ari (09/09/2026): o modo existe para a PECA nao virar etiqueta,
+  // mas quem le a legenda ja parou no post e precisa saber do que se trata.
+  // A peca convida pela ideia; a legenda diz o nome.
+  it("proibe o nome na peca e o exige uma vez no corpo da legenda", () => {
+    const regra = buildRegraLinhaEditorial({
+      linhaEditorial: "conhecimento",
+      usoObjeto: "sem_nome",
+      objeto: "Minicurso de vendas",
+      alvo: "mop",
+    });
+    expect(regra).toContain("NÃO pode ser escrito NA PEÇA");
+    expect(regra).toContain("A LEGENDA É A ÚNICA EXCEÇÃO");
+    expect(regra).toContain('o nome "Minicurso de vendas" DEVE aparecer escrito UMA vez');
+    expect(regra).toContain("PROIBIDO deixar o nome só na hashtag");
+  });
+
+  it("MOSTRAR NOME nao ganha a excecao — o nome ja esta no titulo", () => {
+    const regra = buildRegraLinhaEditorial({
+      linhaEditorial: "conhecimento",
+      usoObjeto: "nome",
+      objeto: "Minicurso de vendas",
+      alvo: "mop",
+    });
+    expect(regra).not.toContain("A LEGENDA É A ÚNICA EXCEÇÃO");
+  });
+
+  it("NAO USAR nao ganha a excecao — o item nao e a ancora da peca", () => {
+    const regra = buildRegraLinhaEditorial({
+      linhaEditorial: "conhecimento",
+      usoObjeto: "nao_usar",
+      objeto: "Minicurso de vendas",
+      alvo: "pu",
+    });
+    expect(regra).not.toContain("A LEGENDA É A ÚNICA EXCEÇÃO");
+  });
+
+  it("sem objeto a regra da legenda nao existe", () => {
+    expect(regraNomeNaLegenda("")).toBe("");
+    expect(regraNomeNaLegenda("   ")).toBe("");
   });
 });

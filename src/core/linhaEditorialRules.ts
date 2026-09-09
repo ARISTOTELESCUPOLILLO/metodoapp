@@ -248,6 +248,24 @@ export function validarProposicaoEditorial(
  * regra acrescenta é o LIMITE da virada: pode trocar o ângulo, não pode trocar
  * a intenção editorial nem abandonar a relação central.
  */
+/**
+ * A EXCEÇÃO DA LEGENDA no modo REFERIR SEM NOME (decisão do Ari, 09/09/2026).
+ *
+ * O modo existe para a PEÇA não virar etiqueta: o título e o texto convidam
+ * pela ideia, não pelo nome do produto. Mas quem lê a legenda já parou no post
+ * — e aí esconder o nome deixa o leitor sem saber do que a empresa está
+ * falando. A peça convida; a legenda diz do que se trata.
+ *
+ * Exportada porque a legenda do Post Único NÃO nasce no mesmo prompt do título
+ * (é o endpoint generate-caption), então a regra precisa viajar sozinha até lá.
+ * No MOP a legenda sai no mesmo JSON e ela chega junto com o resto.
+ */
+export function regraNomeNaLegenda(item: string): string {
+  const nome = (item || "").trim();
+  if (!nome) return "";
+  return `\n- ⚠ A LEGENDA É A ÚNICA EXCEÇÃO: nela o nome "${nome}" DEVE aparecer escrito UMA vez, no CORPO da legenda, dentro de uma frase, de forma natural. Quem lê a legenda já parou no post e precisa saber do que se trata. PROIBIDO deixar o nome só na hashtag ou só no CTA, e PROIBIDO repeti-lo mais de uma vez na mesma legenda.`;
+}
+
 export function buildRegraLinhaEditorial(params: {
   linhaEditorial: LinhaEditorial | null;
   usoObjeto?: UsoDoObjeto;
@@ -336,7 +354,7 @@ export function buildRegraLinhaEditorial(params: {
       : usoObjeto === "nome"
         ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}`
         : usoObjeto === "sem_nome"
-          ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.`
+          ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito NA PEÇA — nem no título, nem no texto de apoio, nem no texto da imagem, nem no roteiro falado. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.${regraNomeNaLegenda(item)}`
           : `\n- OBJETO DESTA PEÇA — NÃO USAR: existe um item selecionado, mas ele NÃO é a âncora desta peça. PROIBIDO nomeá-lo ou tomá-lo como assunto.`;
 
   const escopo =
