@@ -240,8 +240,14 @@ ${moodInstructions}${reelsLogoLine}${DEVICE_RULE_REELS}${frameRefsReinforcement}
     // da lista de palavras proibidas, onde TODOS os moods estão citados.
     variacao: { mood, seed: variacaoSeed, avatar: !!hasAvatarRef },
     format: isReels || isCover ? "reels" : "post",
-    // Capa: sem logo via IA (canvas aplica). Callers de capa não passam referenceImages
-    // (edit model ignorava o título com frame de referência).
+    // Capa: sem logo via IA (canvas aplica).
+    // ⚠ CORREÇÃO DE COMENTÁRIO (09/09/2026): a linha que estava aqui dizia
+    // "callers de capa não passam referenceImages (edit model ignorava o título
+    // com frame de referência)". Isso é FALSO desde antes dos refactors de
+    // 06-07/2026 — os dois call sites da capa (useReelsGeneration.ts) mandam o
+    // frame como referência, e é justamente disso que depende a capa ser o
+    // mesmo quadro do reels com o título por cima. O comentário desatualizado
+    // escondia o vão que causou a capa com outra personagem em 08/09/2026.
     logoDataUrl: isCover ? undefined : hasLogo ? logoDataUrl : undefined,
     referenceImages: referenceImages && referenceImages.length ? referenceImages : undefined,
   });

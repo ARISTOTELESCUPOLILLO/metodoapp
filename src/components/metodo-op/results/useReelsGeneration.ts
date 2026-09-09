@@ -111,6 +111,34 @@ export function useReelsGeneration(params: {
     setSessionImage(userId, `reels-cover:${dayNumber}`, value);
   }
 
+  // ÂNCORA DE PESSOA DA CAPA — achado real 08/09/2026 (S3C, conta admin): o
+  // frame saiu com o avatar do Kit (homem) e a capa saiu com OUTRA personagem
+  // (mulher), com o título correto. Não foi acaso do modelo: os dois call sites
+  // da capa mandavam `referenceImages` mas NENHUM dos campos de personagem, e
+  // sem eles pickImageVariationBlock cai em `pickRandom(["mulher","homem"])` —
+  // sorteio puro, sem seed — e emite uma linha que se autodeclara "GÊNERO
+  // OBRIGATÓRIO (PRECEDÊNCIA MÁXIMA, sobrepõe qualquer outra descrição)". Essa
+  // linha fecha o prompt, enquanto o bloco que manda preservar o rosto da
+  // referência fica lá em cima: é o caso literal de
+  // [[project-contexto-perde-para-ordem]] — o último a falar vence. Resultado:
+  // ~50% das capas contradiziam o frame.
+  //
+  // `hasAvatarRef` é o que fecha o buraco de verdade (zera o genderBlock na
+  // origem) e faz mais duas coisas que a capa quer: tira do pool as variações
+  // em que o rosto não domina e remove a distância de câmera mais afastada —
+  // as duas existem para não encolher a pessoa contratada, que é exatamente o
+  // que uma capa de porta-voz precisa. Os outros três são a segunda camada:
+  // se um dia a capa rodar SEM referência, eles travam o personagem em vez de
+  // deixar o sorteio decidir.
+  function coverPersonAnchor(refImage: string | null) {
+    return {
+      hasAvatarRef: !!refImage,
+      forcedGender,
+      anchoraPersonagem,
+      ancoragePapel,
+    };
+  }
+
   // Limpa blob URL ao desmontar (evita vazamento de memória).
   useEffect(() => {
     return () => {
@@ -386,6 +414,7 @@ export function useReelsGeneration(params: {
             logoDataUrl: kit.logoDataUrl,
             logoPosition: kit.logoPosition,
             referenceImages: coverRefImage ? [coverRefImage] : undefined,
+            ...coverPersonAnchor(coverRefImage),
             variacaoSeed,
           }).then(async (url) => (kit.logoDataUrl ? composeReelsPng(kit, url) : url));
 
@@ -510,6 +539,7 @@ export function useReelsGeneration(params: {
       const titleText = hook.trim();
       // Frame (previewBase sem logo) como referência → gpt-image-2/edit preserva cena + aplica título.
       // Logo aplicada por canvas após geração.
+      const coverRefImage = previewBase || preview;
       const url = await generatePostImage({
         imagePrompt: reels.imagePrompt,
         titulo: titleText,
@@ -524,7 +554,8 @@ export function useReelsGeneration(params: {
         vertical: "reels_cover",
         logoDataUrl: kit.logoDataUrl,
         logoPosition: kit.logoPosition,
-        referenceImages: previewBase || preview ? [(previewBase || preview) as string] : undefined,
+        referenceImages: coverRefImage ? [coverRefImage] : undefined,
+        ...coverPersonAnchor(coverRefImage),
         variacaoSeed,
       });
       const withLogo = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
