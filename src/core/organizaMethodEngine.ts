@@ -14,6 +14,13 @@ import { momentModulators, SILABA_EXCECAO_RULE } from "./mopModulators";
 import { buildRegraProfissaoRegulamentada } from "./profissaoRegulamentada";
 import { buildRegraPolaridadeKeyInfo } from "./polaridadeKeyInfo";
 import { FECHO_GENERICO_RULE } from "./fechoGenerico";
+import {
+  SCRIPT_MIN_WORDS,
+  SCRIPT_MAX_WORDS,
+  SCRIPT_FECHO_MIN_WORDS,
+  SCRIPT_FECHO_MAX_WORDS,
+  SCRIPT_MENSAGEM_MIN_WORDS,
+} from "./scriptValidation";
 import { buildRegraLinhaEditorial } from "./linhaEditorialRules";
 
 export const SEQUENCE_COMPOSITION = {
@@ -226,9 +233,19 @@ REELS (${comp.fechamento} guia${comp.fechamento > 1 ? "s" : ""} de produção):
 - Se a ideia envolver clientes, equipe, reunião ou atendimento, traduza visualmente para uma pessoa sozinha olhando para a câmera.
 - Campo "hook": título editorial do reels, NO MÁXIMO 6 palavras, ${SILABA_EXCECAO_RULE}. Sem ponto final — EXCETO se for pergunta (direta ou retórica): nesse caso "?" é obrigatório (ex.: "Por que isso acontece?", "O que está faltando?").
 - Texto de tela em "screenText", frase curta até 7 palavras.
-- Roteiro falado (campo "script"): ESTRUTURA em 2 partes — (1) mensagem principal de 14 a 16 palavras curtas + ponto final + (2) CTA genérico de 5 a 6 palavras. TOTAL: 19 a 22 palavras → ~7 segundos em voz.
-  CTA OBRIGATORIAMENTE GENÉRICO — varie a cada geração, escolha entre: "Fale com a gente hoje.", "Entre em contato agora.", "Venha saber mais.", "Comece ainda hoje.", "Fale conosco agora.", "Dá pra começar hoje.", "A gente te ajuda.", "Vem com a gente.", "O primeiro passo é seu.", "Bora dar o próximo passo." — ou crie outro de mesmo tom. PROIBIDO mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
-- REGRA TTS — campo "script" (será LIDO em voz alta por sintetizador): USE palavras de 1 ou 2 sílabas sempre que possível. PROIBIDO: palavras com mais de 3 sílabas, siglas em caixa alta (APP→"app", CRM→"sistema", ROI→"retorno", KPI→"meta", IA→"inteligência"), anglicismos crus (link, lead, brief, deadline, framework), abreviações (vc, tb, p/). TRADUZA termos difíceis: "consultoria"→"apoio"; "estratégia"→"plano"; "posicionamento"→"presença". Exemplo correto (21 palavras, ~7s): "Sua marca fala. Seu time entrega. Seu cliente volta. É assim que se cresce. Fale com a gente hoje." O campo "screenText" PODE conter sigla (é lido com os olhos), mas o "script" NÃO PODE — precisa fluir natural em voz alta em português brasileiro.
+- Roteiro falado (campo "script") — ISTO É FALA, NÃO TEXTO. Será lido em voz alta por sintetizador e o vídeo dura o que a fala durar. Escreva ouvindo, não lendo.
+  ESTRUTURA — EXATAMENTE 2 partes, separadas por PONTO FINAL:
+  (1) MENSAGEM — ${SCRIPT_MENSAGEM_MIN_WORDS} a 17 palavras, com PELO MENOS UMA VÍRGULA no ponto natural de respiro. A vírgula NÃO é enfeite de escrita: é onde a voz PAUSA. Sem ela o sintetizador atravessa a frase inteira sem ar e a locução sai apressada.
+  (2) FECHO — frase CURTA e SEPARADA, de ${SCRIPT_FECHO_MIN_WORDS} a ${SCRIPT_FECHO_MAX_WORDS} palavras, que ENCERRA a ideia. É onde a voz desce.
+  TOTAL: ${SCRIPT_MIN_WORDS} a ${SCRIPT_MAX_WORDS} palavras → cerca de 8 segundos de locução.
+  ⚠ O FECHO É A PARTE QUE MAIS FALHA — medição real de 09/09/2026: o roteiro saiu com duas frases de mensagem e NENHUM fecho, e o vídeo terminou no meio de uma ideia, sem cadência de encerramento. Antes de responder, leia o seu script EM VOZ ALTA e pergunte: a última frase soa como PONTO FINAL de uma conversa, ou como se ainda faltasse alguma coisa? Se faltar, ela não é fecho.
+  O FECHO NASCE DA MENSAGEM: ele conclui o que acabou de ser dito. PROIBIDO colar uma frase pronta e intercambiável que serviria para qualquer peça de qualquer empresa ("Fale com a gente hoje.", "Venha saber mais.", "Bora dar o próximo passo.") — essa é a etiqueta que faz a locução soar decepada. ${
+    comp.fechamento > 1
+      ? "Nos reels que NÃO são o último, o fecho é uma SÍNTESE que assenta a ideia, sem convite."
+      : "O fecho pode convidar ao próximo passo, desde que conclua a mensagem em vez de trocar de assunto."
+  }
+  PROIBIDO no fecho mencionar canal específico: NUNCA use as palavras site, WhatsApp, Instagram, telefone, link, e-mail, acesse, clique, siga, baixe, cadastre.
+- REGRA TTS — campo "script" (será LIDO em voz alta por sintetizador): USE palavras de 1 ou 2 sílabas sempre que possível. PROIBIDO: palavras com mais de 3 sílabas, siglas em caixa alta (APP→"app", CRM→"sistema", ROI→"retorno", KPI→"meta", IA→"inteligência"), anglicismos crus (link, lead, brief, deadline, framework), abreviações (vc, tb, p/). TRADUZA termos difíceis: "consultoria"→"apoio"; "estratégia"→"plano"; "posicionamento"→"presença". Exemplo correto (18 palavras, MENSAGEM com vírgula de respiro + FECHO curto que encerra): "Muitos cliques chegam todo dia, e quase nenhum vira conversa com o time. O número sozinho não sustenta." O campo "screenText" PODE conter sigla (é lido com os olhos), mas o "script" NÃO PODE — precisa fluir natural em voz alta em português brasileiro.
 - Retornar em "reels": [{ "sequencia": 1, "hook", "screenText", "script", "imagePrompt", "legenda": "corpo até ${LEGENDA_CORPO_MAX_WORDS} palavras + CTA até ${LEGENDA_CTA_MAX_WORDS} palavras, terminando com ${LEGENDA_HASHTAGS} hashtags em letra minúscula sem acento (ver REGRA DE LEGENDA)" }]
 ${comp.fechamento > 1 ? `- Gerar ${comp.fechamento} reels com abordagens visuais E estruturais distintas (script com sujeito/estrutura diferentes, não só troca de verbo). Convite consultivo + CTA comercial explícito SÓ no reels ${comp.fechamento} (o último); os reels anteriores fecham em síntese/direção, sem nomear a empresa.` : ""}`;
 

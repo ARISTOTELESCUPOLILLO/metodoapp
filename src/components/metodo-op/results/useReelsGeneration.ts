@@ -16,7 +16,7 @@ import { composeReelsPng, composeReelsTitlePng } from "../../../utils/canvasComp
 import { emptyImageKit } from "../../../utils/imageKitStorage";
 import { getSessionImage, setSessionImage } from "../../../utils/sessionImageCache";
 import { regenerateWithKit } from "../../../services/regenerateWithKit";
-import { burnTitleIntoVideo } from "../../../utils/burnTitleIntoVideo";
+import { burnTitleIntoVideo, trimVideoToSpeech } from "../../../utils/burnTitleIntoVideo";
 import { BRAND_ACCENT } from "../../../data/brandColors";
 import { useImageGenAlert } from "../PreImageAlert";
 
@@ -325,6 +325,8 @@ export function useReelsGeneration(params: {
     videoUrl: string;
     usedClonedVoice: boolean;
     requestedClonedVoice: boolean;
+    /** Duracao medida da FALA — o servidor mede o MP3 que ele mesmo gerou. */
+    speechSeconds: number | null;
   }> {
     const { data: sess } = await supabase.auth.getSession();
     const token = sess.session?.access_token;
@@ -362,6 +364,7 @@ export function useReelsGeneration(params: {
             videoUrl: s.videoUrl,
             usedClonedVoice: data.usedClonedVoice === true,
             requestedClonedVoice: data.requestedClonedVoice === true,
+            speechSeconds: typeof data.speechSeconds === "number" ? data.speechSeconds : null,
           };
         }
         if (s.status === "failed") throw new Error(s.error || "Geração falhou.");
@@ -374,6 +377,7 @@ export function useReelsGeneration(params: {
       videoUrl: data.videoUrl as string,
       usedClonedVoice: data.usedClonedVoice === true,
       requestedClonedVoice: data.requestedClonedVoice === true || videoMode === "kit-voz",
+      speechSeconds: typeof data.speechSeconds === "number" ? data.speechSeconds : null,
     };
   }
 
@@ -440,10 +444,42 @@ export function useReelsGeneration(params: {
       }
 
       const falUrl = videoRes.value.videoUrl;
-      falVideoUrlRef.current = falUrl; // preserva URL FAL para arquivamento
+      // ⚠ LIMITAÇÃO CONHECIDA: o arquivamento manda esta URL ao servidor, que a
+      // baixa — e blob URL local não é acessível de lá. Então o que vai para o
+      // Histórico é o vídeo ORIGINAL, sem o corte da sobra e sem o título
+      // queimado da Sinalização. Vale para o burn desde sempre e passa a valer
+      // para o corte. Resolver exige subir o blob processado para o Storage e
+      // arquivar essa URL — tarefa própria, não feita aqui.
+      falVideoUrlRef.current = falUrl;
       let finalVideoUrl = falUrl;
       setUsedClonedVoice(videoRes.value.usedClonedVoice);
       setRequestedClonedVoice(videoRes.value.requestedClonedVoice);
+
+      // APARA A SOBRA DEPOIS DA FALA — medição de 09/09/2026: 7,20 s de vídeo
+      // para 5,29 s de áudio, quase 2 s de personagem se mexendo em silêncio.
+      // `speechSeconds` é medido no servidor sobre o MP3 que ele mesmo gerou.
+      //
+      // Falha ABERTA: se o corte der errado, fica o vídeo original — ninguém
+      // perde a geração (que já foi paga) por causa de um pós-processamento.
+      const speechSeconds = videoRes.value.speechSeconds;
+      let baseVideoUrl = falUrl;
+      if (speechSeconds && speechSeconds > 0) {
+        try {
+          setBurnProgress("Ajustando o fim do vídeo…");
+          const trimmed = await trimVideoToSpeech(falUrl, speechSeconds, (msg) =>
+            setBurnProgress(msg),
+          );
+          if (burnedBlobUrlRef.current) URL.revokeObjectURL(burnedBlobUrlRef.current);
+          const trimmedUrl = URL.createObjectURL(trimmed);
+          burnedBlobUrlRef.current = trimmedUrl;
+          baseVideoUrl = trimmedUrl;
+          finalVideoUrl = trimmedUrl;
+        } catch (e) {
+          console.warn("[runGenerateVideo] corte da sobra falhou:", (e as Error).message);
+        } finally {
+          setBurnProgress(null);
+        }
+      }
 
       // Modo Sinalização: queima o screenText como overlay visual usando FFmpeg.
       // O título aparece nos primeiros 4s do vídeo (metade do reels de 8s).
@@ -453,7 +489,8 @@ export function useReelsGeneration(params: {
           const baseImg = previewBase || preview || undefined;
           const titlePng = await composeReelsTitlePng(kit, titleText, baseImg ?? undefined, mood);
           setBurnProgress("Etapa 2/2: Aplicando texto visual no vídeo…");
-          const burnedBlob = await burnTitleIntoVideo(falUrl, titlePng, 4.0, (msg) =>
+          // Queima sobre o vídeo JÁ APARADO, não sobre o original do fal.
+          const burnedBlob = await burnTitleIntoVideo(baseVideoUrl, titlePng, 4.0, (msg) =>
             setBurnProgress(`Sinalização: ${msg}`),
           );
           // Libera o blob anterior antes de criar o novo.

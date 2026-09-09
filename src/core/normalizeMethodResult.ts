@@ -1,5 +1,6 @@
 import { MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from "../types";
 import { SEQUENCE_COMPOSITION } from "./organizaMethodEngine";
+import { validateScriptReels } from "./scriptValidation";
 import {
   truncateWords,
   validatePieceFields,
@@ -229,10 +230,16 @@ export function normalizeMethodResult(
       flags.push(
         ...validatePieceFields(
           `reels[${i}]`,
-          { titulo: r.hook, texto: r.script, legenda: r.legenda },
+          // `texto` fica de fora: o script é FALA e tem régua própria (abaixo).
+          // Passá-lo como "texto" era o que existia até 09/09/2026, e cobrava
+          // dele só terminação/pontuação/fecho genérico — nenhuma contagem,
+          // nenhuma estrutura, nenhum fecho. Ver core/scriptValidation.ts.
+          { titulo: r.hook, legenda: r.legenda },
           keyInfo,
         ),
       );
+      for (const motivo of validateScriptReels(r.script || ""))
+        flags.push({ campo: `reels[${i}].script`, motivo });
     });
   }
 

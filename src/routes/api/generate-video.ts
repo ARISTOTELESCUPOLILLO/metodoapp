@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { probeAudio } from "@/lib/audioProbe.server";
 import {
   resolveEffectiveUser,
   checkBalance,
@@ -41,6 +42,30 @@ const AVATAR_MODEL = "fal-ai/kling-video/ai-avatar/v2/pro";
 
 // Fallback quando a detecção de gênero/idade falha.
 const NATIVE_VOICE_FALLBACK = "Rachel";
+
+// AJUSTES DE VOZ — antes: stability 0.7, style 0.
+//
+// Achado real 09/09/2026 (S3C da conta admin): a locução saiu plana e corrida.
+// Parte disso é o TEXTO (ver core/scriptValidation.ts), mas parte nasce aqui.
+// No ElevenLabs, `stability` alta troca variação emocional por consistência —
+// 0.7 é território de leitura uniforme —, e `style: 0` é literalmente "sem
+// exagero de estilo". Os dois juntos pedem uma leitura sem relevo, que é
+// exatamente o que se ouviu.
+//
+// 0.45 / 0.35 é expressão com lastro: ainda estável o bastante para não variar
+// timbre entre gerações, com relevo suficiente para a frase de fecho descer.
+// `speed` fica em 1.0 de propósito — a fala apressada se resolve com PAUSA
+// ESCRITA no roteiro (a vírgula que a régua nova exige), não desacelerando o
+// sintetizador, que produz arrasto artificial.
+//
+// ⚠ NÃO VALIDADO EM GERAÇÃO REAL — estes números vêm da documentação do
+// ElevenLabs e do defeito medido, não de uma peça gerada. Calibrar ouvindo.
+const VOICE_SETTINGS = {
+  stability: 0.45,
+  similarity_boost: 0.75,
+  style: 0.35,
+  use_speaker_boost: true,
+};
 
 // Mapeamento gênero+faixa → voz ElevenLabs profissional em pt-BR.
 const VOICE_MAP: Record<string, string> = {
@@ -215,7 +240,10 @@ export const Route = createFileRoute("/api/generate-video")({
             const rate = await checkRateLimit(userId);
             if (!rate.ok) {
               return Response.json(
-                { error: "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente." },
+                {
+                  error:
+                    "Limite de 15 gerações por hora atingido. Aguarde antes de tentar novamente.",
+                },
                 { status: 429 },
               );
             }
@@ -299,7 +327,7 @@ export const Route = createFileRoute("/api/generate-video")({
                 text: scriptTts,
                 model_id: "eleven_multilingual_v2",
                 language_code: "pt",
-                voice_settings: { stability: 0.7, similarity_boost: 0.75, style: 0 },
+                voice_settings: VOICE_SETTINGS,
               }),
             });
             if (!ttsRes.ok) {
@@ -338,8 +366,9 @@ export const Route = createFileRoute("/api/generate-video")({
               text: scriptTts,
               voice: ttsVoice,
               language_code: "pt",
-              stability: 0.7,
-              similarity_boost: 0.75,
+              stability: VOICE_SETTINGS.stability,
+              similarity_boost: VOICE_SETTINGS.similarity_boost,
+              style: VOICE_SETTINGS.style,
               speed: 1.0,
             });
             const tts = await falWaitResult<{ audio?: { url?: string } }>(
@@ -353,6 +382,33 @@ export const Route = createFileRoute("/api/generate-video")({
             console.log("[generate-video] elevenlabs tts ok audio_url=%s", audioUrl.slice(0, 60));
           }
 
+          // DURAÇÃO DA FALA — medida real 09/09/2026: um reels saiu com 7,20 s
+          // de vídeo para 5,29 s de áudio. Quase 2 s (27% do clipe) de
+          // personagem se mexendo em silêncio depois que a frase acabou — parte
+          // do "final sem tom de finalização" relatado.
+          //
+          // A doc do Kling afirma "output duration matches audio length"; a
+          // medição diz o contrário, e nada no fluxo lia a duração de volta. Em
+          // vez de confiar no modelo, medimos AQUI o áudio que nós mesmos
+          // geramos e mandamos o número ao cliente, que apara o vídeo com o
+          // FFmpeg que já existe (modo Sinalização).
+          //
+          // Falha FECHADA de propósito: se a medição não der, `speechSeconds`
+          // vai null e o cliente não apara nada — o vídeo sai como hoje, e
+          // ninguém fica sem vídeo por causa de um probe.
+          let speechSeconds: number | null = null;
+          try {
+            const audioRes = await fetch(audioUrl);
+            if (audioRes.ok) {
+              const bytes = new Uint8Array(await audioRes.arrayBuffer());
+              const probe = probeAudio(bytes, audioRes.headers.get("content-type") || "audio/mpeg");
+              if (probe.durationS > 0) speechSeconds = probe.durationS;
+            }
+          } catch (e) {
+            console.warn("[generate-video] probe do audio falhou:", (e as Error).message);
+          }
+          console.log("[generate-video] speechSeconds=%s", speechSeconds ?? "desconhecido");
+
           // Kling AI Avatar v2 Pro — imagem + áudio + prompt → vídeo lip-syncado com animação natural.
           // O prompt guia o modelo para movimentos expressivos além de boca/cabeça.
           // Duração do vídeo segue o áudio automaticamente.
@@ -361,8 +417,20 @@ export const Route = createFileRoute("/api/generate-video")({
           const submit = await falSubmit(AVATAR_MODEL, falKey, {
             image_url: frameUrl,
             audio_url: audioUrl,
+            // O prompt anterior mandava o personagem se mexer MENOS três vezes
+            // ("subtle head movement", "minimal hand gestures", "steady and
+            // composed") — e o Kling AI Avatar foi escolhido justamente por
+            // fazer gesto e movimento de corpo. Com tudo amortecido, sobrava a
+            // boca se mexendo sozinha num rosto congelado, que é a descrição do
+            // "biquinho" relatado em 09/09/2026.
+            //
+            // O endpoint aceita só image_url, audio_url e prompt — não há
+            // parâmetro de expressividade nem de intensidade de movimento
+            // (verificado na doc da fal.ai). Este texto é a ÚNICA alavanca de
+            // direção que temos, então ele passa a PEDIR movimento em vez de
+            // proibir, e a nomear a articulação, que antes não era mencionada.
             prompt:
-              "Professional speaker talking naturally, subtle head movement, calm and confident posture, minimal hand gestures, steady and composed.",
+              "A person speaking to camera in a natural, conversational way. Clear and relaxed mouth articulation that follows the speech, jaw moving naturally, no pursed or puckered lips. Natural blinking and small eyebrow movement that follows the meaning of the words. Gentle head motion and light shoulder movement while talking, as a real person does. Warm, engaged, confident presence.",
           });
 
           // Debita imediatamente após submit bem-sucedido.
@@ -389,6 +457,7 @@ export const Route = createFileRoute("/api/generate-video")({
             statusUrl: submit.status_url,
             responseUrl: submit.response_url,
             videoMode,
+            speechSeconds,
             usedClonedVoice: videoMode === "kit-voz",
             requestedClonedVoice: videoMode === "kit-voz",
           });

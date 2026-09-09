@@ -193,6 +193,9 @@ NEGATIVE: no legible screen content, no recognizable logo on screen, no readable
 - APENAS UMA PESSOA adulta visível em todo o quadro. Proibido grupo, reunião, plateia, cliente ao lado, reflexo de pessoa, silhueta humana ou corpo parcial no fundo.
 - Se a cena pedir várias pessoas, reunião ou atendimento, converta para UMA pessoa porta-voz sozinha, olhando para a câmera.
 - Enquadramento close-up ou meio-corpo, rosto bem visível, boca claramente enquadrada para fala.
+- ⚠ ESTA FOTO VAI SER ANIMADA (é o primeiro frame de um vídeo com sincronia labial). Duas exigências que valem MAIS que qualquer escolha de composição:
+  · ZONA DA BOCA LIVRE: PROIBIDO mão, dedo, caneta, óculos na mão, xícara, celular, microfone ou qualquer objeto na altura do queixo, da boca ou do rosto — nem encostando, nem próximo, nem em primeiro plano à frente do rosto. As mãos ficam abaixo da linha do peito ou fora do quadro. Objeto ao lado da boca obriga o modelo de animação a manter a mão coerente enquanto abre a mandíbula, e é o que produz boca deformada e movimento de "biquinho".
+  · BOCA EM REPOUSO NATURAL: lábios apenas encostados, sem pressão, mandíbula relaxada, expressão de quem vai começar a falar. PROIBIDO boca cerrada com força, lábios comprimidos, sorriso fechado tenso ou lábios franzidos — uma boca travada é o pior ponto de partida possível para a animação, porque o modelo precisa inventar a abertura inteira.
 - Imagem pura: SEM TÍTULO, sem legendas, sem letras, sem números, sem palavras desenhadas em parte alguma do quadro${reelsLogoLine ? " (a única exceção é a logomarca — veja instrução abaixo)" : ""}.
 - Composição vertical 9:16 cinematográfica (canvas 1080x1920), alta qualidade, foco nítido no rosto.
 
