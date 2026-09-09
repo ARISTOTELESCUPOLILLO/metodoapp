@@ -105,6 +105,13 @@ export interface EditorialEngineInput {
 export interface EditorialEngineResult {
   sugestao: string;
   linhaEditorial: LinhaEditorial;
+  /**
+   * Um item por chamada REAL ao juiz — devolvido para a rota persistir e
+   * permitir medir a taxa de aprovação/reprovação/fail-open em produção.
+   * Mesmo contrato de `judgeVerdicts` em generateSugestao: o motor é puro e
+   * não escreve em banco.
+   */
+  veredictos: Array<JuizEditorialVeredito & { pass: number }>;
 }
 
 export function buildEditorialPrompt(
@@ -352,6 +359,7 @@ export async function generateSugestaoEditorial(
   let melhor = "";
   let melhorMotivos: string[] | null = null;
   let motivos: string[] = [];
+  const veredictos: Array<JuizEditorialVeredito & { pass: number }> = [];
 
   for (let pass = 1; pass <= MAX_EDITORIAL_ATTEMPTS; pass++) {
     const reforco =
@@ -408,6 +416,7 @@ export async function generateSugestaoEditorial(
         objeto: input.objeto,
         hint: input.hint,
       });
+      veredictos.push({ ...veredito, pass });
       if (veredito.failReason) {
         console.warn("[editorial] juiz indisponível — seguindo sem ele");
       } else if (!veredito.ok && veredito.motivo) {
@@ -424,5 +433,5 @@ export async function generateSugestaoEditorial(
 
   // NUNCA trunca: proposição cortada perde o predicado e deixa de afirmar — o
   // defeito que este modo existe para evitar. Devolve a melhor tentativa.
-  return { sugestao: melhor, linhaEditorial: linha };
+  return { sugestao: melhor, linhaEditorial: linha, veredictos };
 }

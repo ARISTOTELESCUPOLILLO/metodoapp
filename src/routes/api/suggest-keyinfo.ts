@@ -154,7 +154,7 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
                   .filter((l: LinhaEditorial | null): l is LinhaEditorial => l !== null)
               : [];
 
-            let resultado: { sugestao: string; linhaEditorial: LinhaEditorial };
+            let resultado: Awaited<ReturnType<typeof generateSugestaoEditorial>>;
             try {
               resultado = await generateSugestaoEditorial(apiKey, {
                 companyName,
@@ -177,6 +177,31 @@ export const Route = createFileRoute("/api/suggest-keyinfo")({
             } catch (e) {
               const status = (e as { status?: number }).status ?? 500;
               return Response.json({ error: (e as Error).message }, { status });
+            }
+
+            // Observabilidade do juiz editorial — mesma tabela do juiz Legacy,
+            // mas com `mode` MARCADO ("metodo-editorial"/"postunico-editorial")
+            // para não contaminar a métrica que já existe: qualquer consulta
+            // Legacy filtra mode IN ('metodo','postunico') e continua correta.
+            // Sem isto não há como medir a taxa de reprovação do juiz — era o
+            // mesmo buraco que a migration de 13/07/2026 fechou para o Legacy.
+            // Non-fatal: falha aqui nunca invalida a sugestão já gerada.
+            if (resultado.veredictos.length > 0) {
+              try {
+                await supabaseAdmin.from("sugestao_judge_logs").insert(
+                  resultado.veredictos.map((v) => ({
+                    ok: v.ok,
+                    fail_reason: v.failReason ?? null,
+                    motivo: v.motivo ?? null,
+                    segment,
+                    mode: `${mode}-editorial`,
+                    pass: v.pass,
+                    company_name: companyName || null,
+                  })),
+                );
+              } catch (e) {
+                console.warn("[suggest-keyinfo] editorial judge log failed", (e as Error).message);
+              }
             }
 
             // Débito idêntico ao do caminho Legacy — 1 clique = 1 sugestão, o
