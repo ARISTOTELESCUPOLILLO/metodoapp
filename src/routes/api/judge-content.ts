@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getUserIdFromRequest, checkBalance, checkRateLimit } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { hasBetaEditorial } from "@/repository/betaFlags";
 import { buildCriterioEditorialJuiz } from "@/core/linhaEditorialRules";
 import { parseLinhaEditorial } from "@/domain/linhaEditorial.config";
@@ -80,6 +81,36 @@ export const Route = createFileRoute("/api/judge-content")({
                 })
               : "";
 
+          // "d2-pu" / "d2-mop", com sufixo "-editorial" quando o critério 6 está
+          // ligado. O alvo sai dos próprios itens: o PU manda um item de id
+          // "copy", o MOP manda feed/carousel/reels.
+          const alvoLog = items.some((it) => it.id === "copy") ? "pu" : "mop";
+          const modeLog = `d2-${alvoLog}${criterioEditorial ? "-editorial" : ""}`;
+          const logJuiz = async (
+            linhas: {
+              ok: boolean;
+              fail_reason?: "falha_tecnica" | null;
+              motivo?: string | null;
+              pass: number;
+            }[],
+          ) => {
+            try {
+              await supabaseAdmin.from("sugestao_judge_logs").insert(
+                linhas.map((l) => ({
+                  ok: l.ok,
+                  fail_reason: l.fail_reason ?? null,
+                  motivo: l.motivo ?? null,
+                  segment,
+                  mode: modeLog,
+                  pass: l.pass,
+                  company_name: companyName || null,
+                })),
+              );
+            } catch (e) {
+              console.warn("[judge-content] log insert failed", (e as Error).message);
+            }
+          };
+
           const itemsBlock = items
             .map((it) => {
               const campos: string[] = [];
@@ -109,7 +140,8 @@ Avalie CADA campo (titulo/texto/legenda) preenchido de cada peça segundo estes 
 5. FORÇADO/NÃO NATURAL: a frase é gramaticalmente válida mas nenhum brasileiro falaria assim — soa comprimida ou truncada para caber num limite de palavras, com concordância estranha ou conectivo faltando (ex.: "Mais olho nos seus anúncios", "Rotina de ajustes prévios conta", "Seu lucro pede olhar vivo"). Teste: leia em voz alta — se travar ou parecer tradução malfeita, reprove.${criterioEditorial ? `\n${criterioEditorial}` : ""}
 
 Retorne JSON EXATAMENTE assim, listando APENAS os campos REPROVADOS em algum critério (lista vazia se todos estiverem bons):
-{ "avaliacoes": [ { "id": "feed[0]", "campo": "titulo", "motivo": "explicação curta e específica do problema" } ] }`;
+{ "avaliacoes": [ { "id": "feed[0]", "campo": "titulo", "criterio": 3, "motivo": "explicação curta e específica do problema" } ] }
+O campo "criterio" é o NÚMERO do critério acima que motivou a reprovação — ele serve para medir qual critério pega o quê. Se mais de um se aplicar, informe o principal.`;
 
           const result = await fetchOpenAIChat(
             apiKey,
@@ -129,16 +161,26 @@ Retorne JSON EXATAMENTE assim, listando APENAS os campos REPROVADOS em algum cri
             10_000,
           );
 
+          // FAIL-OPEN registrado, como no juiz da proposição: sem isto, uma
+          // sequência de timeouts apareceria no banco como "nenhuma reprovação"
+          // e a taxa de aprovação subiria sozinha, mentindo.
           if (!result.ok) {
+            await logJuiz([{ ok: true, fail_reason: "falha_tecnica", pass: 0 }]);
             return Response.json({ error: result.error }, { status: result.status });
           }
           const content = result.data.choices?.[0]?.message?.content;
-          if (!content) return Response.json({ avaliacoes: [] });
+          if (!content) {
+            await logJuiz([{ ok: true, fail_reason: "falha_tecnica", pass: 0 }]);
+            return Response.json({ avaliacoes: [] });
+          }
 
-          let parsed: { avaliacoes?: { id?: string; campo?: string; motivo?: string }[] };
+          let parsed: {
+            avaliacoes?: { id?: string; campo?: string; motivo?: string; criterio?: unknown }[];
+          };
           try {
             parsed = JSON.parse(content);
           } catch {
+            await logJuiz([{ ok: true, fail_reason: "falha_tecnica", pass: 0 }]);
             return Response.json({ avaliacoes: [] });
           }
 
@@ -154,9 +196,37 @@ Retorne JSON EXATAMENTE assim, listando APENAS os campos REPROVADOS em algum cri
             .map((a) => ({
               id: String(a.id),
               campo: String(a.campo),
+              criterio: Number(a.criterio) >= 1 && Number(a.criterio) <= 6 ? Number(a.criterio) : 0,
               motivo: String(a.motivo).slice(0, 300),
             }))
             .slice(0, 30);
+
+          // OBSERVABILIDADE DO D2 — até 10/09/2026 este juiz rodava, corrigia e
+          // sumia sem deixar rastro: não dava para dizer se um título bom era
+          // mérito da geração ou da correção dele. O juiz da proposição
+          // editorial tem registro desde o começo; este nunca teve.
+          //
+          // Reaproveita `sugestao_judge_logs` (nenhuma migration nova), com o
+          // `mode` MARCADO — "d2-pu", "d2-mop", com sufixo "-editorial" quando o
+          // critério 6 estava ligado. Qualquer consulta antiga filtra
+          // mode IN ('metodo','postunico') e continua correta.
+          //
+          // ⚠ DUAS ESPÉCIES DE LINHA, e as duas são necessárias:
+          //  · 1 linha de RODADA (ok = não houve reprovação, pass = 0) — é o
+          //    DENOMINADOR. Sem ela só existiriam reprovações no banco e a taxa
+          //    seria incalculável.
+          //  · 1 linha por REPROVAÇÃO (ok = false), com `pass` carregando o
+          //    NÚMERO DO CRITÉRIO (1 a 6, 0 quando o modelo não informou).
+          //    É assim que se responde "quantas vezes o critério 6 pegou algo".
+          // Non-fatal: falha aqui nunca afeta a resposta já pronta.
+          await logJuiz([
+            { ok: avaliacoes.length === 0, pass: 0 },
+            ...avaliacoes.map((a) => ({
+              ok: false,
+              motivo: `${a.campo} @ ${a.id} — ${a.motivo}`.slice(0, 400),
+              pass: a.criterio,
+            })),
+          ]);
 
           return Response.json({ avaliacoes });
         } catch (e) {
