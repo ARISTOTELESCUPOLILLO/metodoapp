@@ -9,6 +9,11 @@ import { listMyGenerations, deleteGeneration } from "@/lib/assets.functions";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { MetaPublish } from "@/components/metodo-op/MetaPublish";
 import { archiveFileName } from "@/utils/file";
+import { arquivoDeVideo, compartilharVideo, podeCompartilharArquivo } from "@/utils/compartilhar";
+import { supabase } from "@/integrations/supabase/client";
+import { loadKitForUser } from "@/services/brandKit";
+import { montarReels } from "@/utils/montarReels";
+import { extrairContatoWhatsapp, TRILHA_PADRAO_URL } from "@/core/montagemReels";
 
 export const Route = createFileRoute("/historico")({
   component: () => (
@@ -203,6 +208,144 @@ async function downloadFromUrl(url: string, filename: string) {
     window.open(url, "_blank", "noopener,noreferrer");
   }
 }
+
+/**
+ * MONTAR O FILME a partir de uma peça JÁ ARQUIVADA.
+ *
+ * ⚠ POR QUE AQUI TAMBÉM: a montagem nasceu presa à geração, e refazer custava
+ * outro vídeo (US$ 1,60). No Histórico ela roda sobre o que já está guardado —
+ * o usuário monta, vê, ajusta e monta de novo, quantas vezes quiser, sem gastar
+ * nada. Foi o caminho que o Ari escolheu em 10/09/2026 depois de perder uma
+ * geração num recarregamento de página.
+ *
+ * ⚠ SEM LEGENDA, E ISSO É LIMITAÇÃO REAL: o arquivamento guarda título, legenda
+ * do post e o vídeo — mas NÃO guarda o roteiro falado, e é dele que as legendas
+ * queimadas são repartidas. Aqui sai capa, fade, trilha e assinatura. A legenda
+ * só existe no card do Reels, onde o roteiro está em mãos.
+ */
+function MontarFilmeArquivado({ gen }: { gen: Gen }) {
+  const [estado, setEstado] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [pronto, setPronto] = useState<string | null>(null);
+  // Guarda o BLOB, não só a URL: compartilhar exige um File, e reconstruí-lo a
+  // partir da URL dentro do clique quebraria o gesto que a folha de
+  // compartilhamento exige.
+  const [blobMontado, setBlobMontado] = useState<Blob | null>(null);
+
+  // A capa é o primeiro asset da peça de reels (ordem 1).
+  const capa = [...gen.assets].sort((a, b) => a.ordem - b.ordem)[0]?.url;
+  // Sufixo "mt" (montado) para o arquivo não se confundir com o MP4 cru que o
+  // botão de cima baixa.
+  const nomeDoFilme = archiveFileName({
+    tipo: gen.tipo,
+    slot: gen.slot,
+    formato: gen.formato,
+    createdAt: gen.createdAt,
+    ext: "mt.mp4",
+  });
+  if (!gen.videoUrl || !capa) return null;
+
+  async function montar() {
+    setErro(null);
+    setPronto(null);
+    try {
+      const { data: sess } = await supabase.auth.getUser();
+      const uid = sess.user?.id;
+      const kit = uid ? await loadKitForUser(uid) : null;
+      const blob = await montarReels(
+        {
+          videoUrl: gen.videoUrl!,
+          capaUrl: capa!,
+          // O roteiro não é arquivado — sem ele, não há legenda a repartir.
+          script: "",
+          falaS: null,
+          trilhaUrl: TRILHA_PADRAO_URL,
+          logoDataUrl: kit?.logoDataUrl,
+          contato: extrairContatoWhatsapp(kit?.assinatura),
+          fontFamily: kit?.fontPair || "Inter",
+        },
+        (msg) => setEstado(msg),
+      );
+      setBlobMontado(blob);
+      setPronto(URL.createObjectURL(blob));
+    } catch (e) {
+      setErro((e as Error)?.message || "erro desconhecido");
+    } finally {
+      setEstado(null);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 6, textAlign: "center" }}>
+      {pronto ? (
+        <>
+          <video
+            src={pronto}
+            controls
+            autoPlay
+            style={{ width: "100%", maxWidth: 180, borderRadius: 8, background: "#000" }}
+          />
+          <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => downloadFromUrl(pronto, nomeDoFilme)}
+              style={botaoMontar}
+            >
+              <Download size={11} /> Baixar
+            </button>
+            {/* Só aparece quando o aparelho sabe compartilhar ARQUIVO — na
+                prática, celular. É a folha do sistema, onde o WhatsApp está. */}
+            {blobMontado && podeCompartilharArquivo(arquivoDeVideo(blobMontado, nomeDoFilme)) && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const r = await compartilharVideo(
+                    arquivoDeVideo(blobMontado, nomeDoFilme),
+                    gen.titulo || undefined,
+                  );
+                  if (!r.ok && !r.cancelado) setErro(r.erro || "não foi possível compartilhar");
+                }}
+                style={{ ...botaoMontar, background: "#25D366", color: "#0b3d1f" }}
+                title="Abre a folha de compartilhamento do aparelho — WhatsApp, Instagram, e-mail."
+              >
+                ↗ Compartilhar
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <button type="button" onClick={montar} disabled={!!estado} style={botaoMontar}>
+          {estado || "🎬 Montar o filme (sem custo)"}
+        </button>
+      )}
+      {erro && (
+        <div style={{ marginTop: 4, fontSize: 10, color: "#b91c1c" }}>
+          A montagem falhou: {erro}
+        </div>
+      )}
+      {!erro && !pronto && !estado && (
+        <div style={{ marginTop: 4, fontSize: 10, color: "#64748b" }}>
+          capa + trilha + assinatura — sem legenda (o roteiro não é arquivado)
+        </div>
+      )}
+    </div>
+  );
+}
+
+const botaoMontar: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  background: "#123a63",
+  color: "#fff",
+  border: "none",
+  padding: "4px 10px",
+  borderRadius: 6,
+  fontSize: 11,
+  fontWeight: 600,
+  marginTop: 6,
+  cursor: "pointer",
+};
 
 function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: string) => void }) {
   const dias = diasRestantes(gen.expiresAt);
@@ -399,6 +542,7 @@ function GenerationCard({ gen, onAskDelete }: { gen: Gen; onAskDelete: (id: stri
           >
             <Download size={11} /> MP4
           </button>
+          <MontarFilmeArquivado gen={gen} />
         </div>
       )}
 

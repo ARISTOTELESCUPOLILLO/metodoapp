@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import type { BrandKit } from "../../../types";
 import { mopName } from "../../../utils/file";
 import type { VideoMode } from "./useReelsGeneration";
+import {
+  arquivoDeVideo,
+  compartilharVideo,
+  podeCompartilharArquivo,
+} from "../../../utils/compartilhar";
 
 interface Props {
   preview: string | null;
@@ -285,6 +290,41 @@ export function ReelsVideoSection({
                 }}
               >
                 ⬇ Baixar vídeo
+              </button>
+              {/* COMPARTILHAR o vídeo que está na tela — depois de montar, é o
+                  filme montado. Abre a folha do sistema, onde o WhatsApp está.
+                  Não existe botão de WhatsApp para ARQUIVO: os links wa.me só
+                  levam texto. Só aparece em aparelho que sabe compartilhar
+                  arquivo, na prática o celular. */}
+              <button
+                type="button"
+                className="downloadBtn"
+                style={{
+                  display: "block",
+                  marginTop: 8,
+                  textAlign: "center",
+                  width: "100%",
+                  background: "#25D366",
+                  color: "#0b3d1f",
+                }}
+                title="Abre a folha de compartilhamento do aparelho — WhatsApp, Instagram, e-mail."
+                onClick={async () => {
+                  try {
+                    const resp = await fetch(videoUrl);
+                    const file = arquivoDeVideo(await resp.blob(), videoFile);
+                    if (!podeCompartilharArquivo(file)) {
+                      toast.info("Este aparelho não compartilha arquivo. Use o botão de baixar.");
+                      return;
+                    }
+                    const r = await compartilharVideo(file);
+                    if (!r.ok && !r.cancelado)
+                      toast.error(`Não foi possível compartilhar: ${r.erro}`);
+                  } catch (e) {
+                    toast.error(`Não foi possível compartilhar: ${(e as Error).message}`);
+                  }
+                }}
+              >
+                ↗ Compartilhar (WhatsApp)
               </button>
               {coverPng && (
                 <div
