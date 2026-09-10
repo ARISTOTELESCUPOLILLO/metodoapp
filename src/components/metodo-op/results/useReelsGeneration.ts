@@ -16,7 +16,13 @@ import { composeReelsPng, composeReelsTitlePng } from "../../../utils/canvasComp
 import { emptyImageKit } from "../../../utils/imageKitStorage";
 import { getSessionImage, setSessionImage } from "../../../utils/sessionImageCache";
 import { regenerateWithKit } from "../../../services/regenerateWithKit";
-import { burnTitleIntoVideo, trimVideoToSpeech } from "../../../utils/burnTitleIntoVideo";
+import {
+  burnTitleIntoVideo,
+  trimVideoToSpeech,
+  TAIL_APOS_FALA_S,
+} from "../../../utils/burnTitleIntoVideo";
+import { montarReels } from "../../../utils/montarReels";
+import { extrairContatoWhatsapp, TRILHA_PADRAO_URL } from "../../../core/montagemReels";
 import { BRAND_ACCENT } from "../../../data/brandColors";
 import { useImageGenAlert } from "../PreImageAlert";
 
@@ -508,6 +514,41 @@ export function useReelsGeneration(params: {
           );
         }
         setBurnProgress(null);
+      }
+
+      // MONTAGEM DO FILME (10/09/2026) — capa parada, legendas queimadas, fade
+      // cruzado e assinatura com a marca e o contato. Roda no navegador, no
+      // mesmo FFmpeg do corte e do burn, e não custa API.
+      //
+      // Só entra quando há CAPA: sem ela não há abertura, e montar sem abertura
+      // não é a peça que foi combinada. Falha ABERTA — a geração já foi paga e
+      // nenhum pós-processamento pode custar a peça ao usuário.
+      const capaParaMontagem = coverRes.status === "fulfilled" ? coverRes.value : coverPng;
+      if (capaParaMontagem && videoMode !== "sinalizacao") {
+        try {
+          const montado = await montarReels(
+            {
+              videoUrl: baseVideoUrl,
+              videoS: speechSeconds && speechSeconds > 0 ? speechSeconds + TAIL_APOS_FALA_S : 0,
+              capaUrl: capaParaMontagem,
+              script: reels.script || "",
+              falaS: speechSeconds,
+              trilhaUrl: TRILHA_PADRAO_URL,
+              logoDataUrl: kit.logoDataUrl,
+              contato: extrairContatoWhatsapp(kit.assinatura),
+              fontFamily: kit.fontPair || "Inter",
+            },
+            (msg) => setBurnProgress(msg),
+          );
+          if (burnedBlobUrlRef.current) URL.revokeObjectURL(burnedBlobUrlRef.current);
+          const montadoUrl = URL.createObjectURL(montado);
+          burnedBlobUrlRef.current = montadoUrl;
+          finalVideoUrl = montadoUrl;
+        } catch (e) {
+          console.warn("[runGenerateVideo] montagem falhou:", (e as Error).message);
+        } finally {
+          setBurnProgress(null);
+        }
       }
 
       setVideoUrl(finalVideoUrl);
