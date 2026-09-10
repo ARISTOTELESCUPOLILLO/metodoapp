@@ -249,11 +249,30 @@ export async function montarReels(
     const pct = Math.round(Math.min(1, Math.max(0, progress)) * 100);
     onProgress?.(`Montando o filme… ${pct}%`);
   };
+  // ⚠ O MOTIVO REAL DA FALHA VIVE NO LOG DO FFMPEG, NÃO NA EXCEÇÃO.
+  // Na primeira tentativa do Ari (10/09) a tela mostrou "erro desconhecido":
+  // quando o grafo de filtros não fecha, o ffmpeg.wasm rejeita sem mensagem
+  // útil, enquanto o motivo ("Invalid argument", nome de stream que não existe,
+  // filtro ausente) já passou pelo log. Sem guardar essas linhas, cada tentativa
+  // custa uma ida e volta com o usuário para descobrir o óbvio.
+  const ultimasLinhas: string[] = [];
+  const aoLog = ({ message }: { message: string }) => {
+    ultimasLinhas.push(message);
+    if (ultimasLinhas.length > 40) ultimasLinhas.shift();
+  };
   ff.on("progress", aoProgresso);
+  ff.on("log", aoLog);
   try {
     await ff.exec(args);
+  } catch (e) {
+    const pista = ultimasLinhas.filter((l) => /error|invalid|no such|unable|failed/i.test(l));
+    console.error("[montarReels] FFmpeg falhou. Últimas linhas do log:", ultimasLinhas);
+    console.error("[montarReels] grafo de filtros:", f.join(";\n"));
+    const detalhe = pista.length ? pista.slice(-3).join(" | ") : (e as Error)?.message;
+    throw new Error(detalhe || "o FFmpeg não explicou o motivo (veja o console)");
   } finally {
     ff.off("progress", aoProgresso);
+    ff.off("log", aoLog);
   }
 
   const saida = (await ff.readFile("final.mp4")) as Uint8Array;

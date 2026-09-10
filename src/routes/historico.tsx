@@ -269,7 +269,9 @@ function MontarFilmeArquivado({ gen }: { gen: Gen }) {
       setBlobMontado(blob);
       setPronto(URL.createObjectURL(blob));
     } catch (e) {
-      setErro((e as Error)?.message || "erro desconhecido");
+      // Mostra qualquer coisa que venha — string, objeto, Error sem mensagem.
+      const err = e as { message?: string };
+      setErro(err?.message || String(e) || "sem mensagem (veja o console com F12)");
     } finally {
       setEstado(null);
     }
