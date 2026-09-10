@@ -31,6 +31,9 @@ interface Props {
   retryCover: () => void;
   retryingCover: boolean;
   retryVideoOnly: () => void;
+  /** Monta o filme sobre o vídeo atual — sem custo, repetível. */
+  montarFilmeAgora?: () => void;
+  montando?: boolean;
   retryingVideo: boolean;
 }
 
@@ -56,6 +59,8 @@ export function ReelsVideoSection({
   retryCover,
   retryingCover,
   retryVideoOnly,
+  montarFilmeAgora,
+  montando,
   retryingVideo,
 }: Props) {
   const videoRef = useRef<HTMLDivElement | null>(null);
@@ -192,6 +197,22 @@ export function ReelsVideoSection({
           return (
             <div ref={videoRef} className="previewWrapper" style={{ marginTop: 12 }}>
               <video src={videoUrl} controls autoPlay style={{ width: "100%", borderRadius: 12 }} />
+              {/* MONTAR O FILME — capa parada, legendas, fade e assinatura.
+                  Roda no navegador sobre o vídeo que já existe: NÃO gera nada
+                  novo e NÃO custa nada, então pode ser repetido à vontade.
+                  Fica escondido no modo Sinalização, que tem tratamento próprio. */}
+              {montarFilmeAgora && videoMode !== "sinalizacao" && (
+                <button
+                  type="button"
+                  className="downloadBtn"
+                  onClick={montarFilmeAgora}
+                  disabled={!!montando || busyVideo}
+                  title="Junta capa, legendas, trilha e assinatura no mesmo arquivo. Não gasta geração."
+                  style={{ display: "block", margin: "10px auto 0" }}
+                >
+                  {montando ? "🎬 Montando o filme…" : "🎬 Montar o filme (sem custo)"}
+                </button>
+              )}
               {/* Badges de modo e resultado real do backend. */}
               {usedClonedVoice === true && (
                 <div

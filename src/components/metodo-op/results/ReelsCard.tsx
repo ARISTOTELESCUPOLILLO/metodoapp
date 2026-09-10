@@ -98,6 +98,8 @@ export function ReelsCard({
     handleReferenceImageGenerated,
     handleGenerateVideo,
     retryVideoOnly,
+    montarFilmeAgora,
+    montando,
     retryCover,
   } = useReelsGeneration({
     reels,
@@ -324,6 +326,8 @@ export function ReelsCard({
             retryCover={retryCover}
             retryingCover={retryingCover}
             retryVideoOnly={retryVideoOnly}
+            montarFilmeAgora={montarFilmeAgora}
+            montando={montando}
             retryingVideo={retryingVideo}
           />
           <div

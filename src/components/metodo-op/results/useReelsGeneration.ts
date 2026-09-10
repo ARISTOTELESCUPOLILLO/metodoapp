@@ -94,6 +94,7 @@ export function useReelsGeneration(params: {
   const [videoStartedAt, setVideoStartedAt] = useState<number | null>(null);
   const [videoElapsed, setVideoElapsed] = useState(0);
   const [burnProgress, setBurnProgress] = useState<string | null>(null);
+  const [montando, setMontando] = useState(false);
   // Ref para limpar blob URLs de vídeos processados pelo FFmpeg (sinalização).
   const burnedBlobUrlRef = useRef<string | null>(null);
   // URL original do FAL (antes do burn) — usada para arquivamento, pois blob URLs
@@ -520,30 +521,9 @@ export function useReelsGeneration(params: {
       // não é a peça que foi combinada. Falha ABERTA — a geração já foi paga e
       // nenhum pós-processamento pode custar a peça ao usuário.
       const capaParaMontagem = coverRes.status === "fulfilled" ? coverRes.value : coverPng;
-      if (capaParaMontagem && videoMode !== "sinalizacao") {
-        try {
-          const montado = await montarReels(
-            {
-              videoUrl: baseVideoUrl,
-              capaUrl: capaParaMontagem,
-              script: reels.script || "",
-              falaS: speechSeconds,
-              trilhaUrl: TRILHA_PADRAO_URL,
-              logoDataUrl: kit.logoDataUrl,
-              contato: extrairContatoWhatsapp(kit.assinatura),
-              fontFamily: kit.fontPair || "Inter",
-            },
-            (msg) => setBurnProgress(msg),
-          );
-          if (burnedBlobUrlRef.current) URL.revokeObjectURL(burnedBlobUrlRef.current);
-          const montadoUrl = URL.createObjectURL(montado);
-          burnedBlobUrlRef.current = montadoUrl;
-          finalVideoUrl = montadoUrl;
-        } catch (e) {
-          console.warn("[runGenerateVideo] montagem falhou:", (e as Error).message);
-        } finally {
-          setBurnProgress(null);
-        }
+      if (videoMode !== "sinalizacao") {
+        const montadoUrl = await rodarMontagem(baseVideoUrl, capaParaMontagem, speechSeconds);
+        if (montadoUrl) finalVideoUrl = montadoUrl;
       }
 
       setVideoUrl(finalVideoUrl);
@@ -552,6 +532,82 @@ export function useReelsGeneration(params: {
       setBusyVideo(false);
       setVideoStartedAt(null);
       setBurnProgress(null);
+    }
+  }
+
+  /**
+   * MONTA O FILME sobre o vídeo que JÁ EXISTE — capa parada, legendas queimadas,
+   * fade cruzado e assinatura. Roda no navegador e NÃO custa nada.
+   *
+   * ⚠ POR QUE VIROU AÇÃO PRÓPRIA (10/09/2026, à noite): na primeira geração real
+   * a montagem não apareceu e o Ari não teve como saber por quê — o erro só ia
+   * para o console, e refazer significaria pagar outro vídeo (US$ 1,60). Sendo
+   * ação separada, ele reprocessa quantas vezes quiser em cima do mesmo clipe,
+   * de graça, e o erro aparece na tela.
+   *
+   * Devolve a URL do filme montado, ou null quando não deu (falha ABERTA: o
+   * vídeo de antes continua valendo).
+   */
+  async function rodarMontagem(
+    videoBase: string,
+    capa: string | null,
+    falaS: number | null,
+  ): Promise<string | null> {
+    if (!capa) {
+      setVideoError("A montagem precisa da capa, e ela ainda não foi gerada.");
+      return null;
+    }
+    try {
+      console.info("[montagem] iniciando", {
+        videoBase: videoBase.slice(0, 60),
+        temCapa: !!capa,
+        falaS,
+        contato: extrairContatoWhatsapp(kit.assinatura) || "(sem telefone na assinatura do Kit)",
+      });
+      const montado = await montarReels(
+        {
+          videoUrl: videoBase,
+          capaUrl: capa,
+          script: reels.script || "",
+          falaS,
+          trilhaUrl: TRILHA_PADRAO_URL,
+          logoDataUrl: kit.logoDataUrl,
+          contato: extrairContatoWhatsapp(kit.assinatura),
+          fontFamily: kit.fontPair || "Inter",
+        },
+        (msg) => setBurnProgress(msg),
+      );
+      const url = URL.createObjectURL(montado);
+      // O blob anterior só é liberado DEPOIS que a montagem deu certo — o vídeo
+      // de origem pode ser justamente ele (o clipe aparado).
+      if (burnedBlobUrlRef.current && burnedBlobUrlRef.current !== videoBase) {
+        URL.revokeObjectURL(burnedBlobUrlRef.current);
+      }
+      burnedBlobUrlRef.current = url;
+      console.info("[montagem] pronta");
+      return url;
+    } catch (e) {
+      const msg = (e as Error)?.message || "erro desconhecido";
+      console.error("[montagem] falhou:", e);
+      // VISÍVEL. A falha continua aberta (o vídeo de antes fica), mas silêncio
+      // fez o Ari perder uma geração inteira sem saber o motivo.
+      setVideoError(`A montagem do filme falhou: ${msg}. O vídeo sem montagem está aí.`);
+      return null;
+    } finally {
+      setBurnProgress(null);
+    }
+  }
+
+  /** Botão "Montar filme" — reprocessa o vídeo atual, sem gerar nada de novo. */
+  async function montarFilmeAgora() {
+    if (!videoUrl || busyVideo || montando) return;
+    setMontando(true);
+    setVideoError(null);
+    try {
+      const url = await rodarMontagem(videoUrl, coverPng, null);
+      if (url) setVideoUrl(url);
+    } finally {
+      setMontando(false);
     }
   }
 
@@ -653,6 +709,8 @@ export function useReelsGeneration(params: {
     videoUrl,
     usedClonedVoice,
     requestedClonedVoice,
+    montarFilmeAgora,
+    montando,
     coverPng,
     coverError,
     videoError,
