@@ -78,7 +78,15 @@ export function useReelsGeneration(params: {
     getSessionImage(userId, `reels-previewBase:${dayNumber}`),
   );
   const [busyVideo, setBusyVideo] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  // ⚠ O VÍDEO SOBREVIVE AO RECARREGAMENTO (10/09/2026, à noite).
+  // A capa já era guardada por dia; o vídeo, não — e um Ctrl+F5 apagava da tela
+  // uma geração de US$ 1,60, deixando o botão de montar sem nada para montar.
+  // O que se guarda é a URL do fal, que é http e sobrevive; blob URL morre com a
+  // aba. Ao recarregar, volta o vídeo SEM montagem, e basta apertar "Montar o
+  // filme" outra vez — isso não custa nada.
+  const [videoUrl, setVideoUrl] = useState<string | null>(() =>
+    getSessionImage(userId, `reels-video:${dayNumber}`),
+  );
   // Resultado real do backend de vídeo (lipsync efetivamente concluído ou não).
   const [usedClonedVoice, setUsedClonedVoice] = useState<boolean | null>(null);
   const [requestedClonedVoice, setRequestedClonedVoice] = useState<boolean>(false);
@@ -141,6 +149,15 @@ export function useReelsGeneration(params: {
       ancoragePapel,
     };
   }
+
+  // Depois de um F5, a ref do fal volta do que ficou guardado — sem isso o
+  // arquivamento não teria URL para mandar ao servidor.
+  useEffect(() => {
+    if (!falVideoUrlRef.current) {
+      falVideoUrlRef.current = getSessionImage(userId, `reels-video:${dayNumber}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só no mount
+  }, []);
 
   // Limpa blob URL ao desmontar (evita vazamento de memória).
   useEffect(() => {
@@ -454,6 +471,10 @@ export function useReelsGeneration(params: {
       // para o corte. Resolver exige subir o blob processado para o Storage e
       // arquivar essa URL — tarefa própria, não feita aqui.
       falVideoUrlRef.current = falUrl;
+      // Guarda por dia, como a capa: é o que faz o vídeo sobreviver ao F5.
+      setSessionImage(userId, `reels-video:${dayNumber}`, falUrl);
+      if (videoRes.value.speechSeconds)
+        setSessionImage(userId, `reels-fala:${dayNumber}`, String(videoRes.value.speechSeconds));
       let finalVideoUrl = falUrl;
       setUsedClonedVoice(videoRes.value.usedClonedVoice);
       setRequestedClonedVoice(videoRes.value.requestedClonedVoice);
@@ -604,7 +625,8 @@ export function useReelsGeneration(params: {
     setMontando(true);
     setVideoError(null);
     try {
-      const url = await rodarMontagem(videoUrl, coverPng, null);
+      const guardada = Number(getSessionImage(userId, `reels-fala:${dayNumber}`) || 0);
+      const url = await rodarMontagem(videoUrl, coverPng, guardada > 0 ? guardada : null);
       if (url) setVideoUrl(url);
     } finally {
       setMontando(false);
