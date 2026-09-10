@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { buildPostUnicoPrompt } from "../services/buildPuPrompt";
 import { buildReferences } from "../services/regenerateWithKit";
+import { arquetipoExcluiPessoa } from "../services/objetivoConfig";
 import type { BrandKit, ImageKit, PostUnicoFormData } from "../types";
 
 // CASO REAL — 09 e 10/09/2026, conta admin, Post Unico. O Ari marcou
@@ -111,5 +112,54 @@ describe("personagem sem avatar sozinho, sem nenhuma foto do Kit", () => {
     expect(p).toContain("REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA");
     expect(p).toContain("Elementos enviados:");
     expect(p).toContain("PERSONAGEM OBRIGATÓRIO");
+  });
+});
+
+describe("o conceito sorteado nao pode proibir a pessoa que foi pedida", () => {
+  // SEGUNDA causa do mesmo defeito. O sorteio do conceito nao sabia que havia
+  // personagem marcado, e alguns conceitos mandam o contrario por escrito. Como
+  // o conceito aparece MUITO depois do bloco do personagem no prompt, ele vence.
+  const SEEDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+  it("com personagem pedido, nenhum seed cai num conceito que proibe pessoa", () => {
+    for (const seed of SEEDS) {
+      const p = buildPostUnicoPrompt({
+        data,
+        kit,
+        copy: { titulo: "TITULO", texto: "Texto de apoio." },
+        references: refsDoPersonagem(KIT_VAZIO, false),
+        forcedGender: "mulher",
+        tonalidadeSeed: seed,
+      } as never);
+      const i = p.indexOf("CONCEITO DESTA GERAÇÃO");
+      expect(i, `seed ${seed}`).toBeGreaterThan(-1);
+      const conceito = p.slice(i, i + 400);
+      expect(arquetipoExcluiPessoa(conceito), `seed ${seed}: ${conceito.slice(0, 70)}`).toBe(false);
+    }
+  });
+
+  it("sem personagem nenhum, os conceitos que proibem pessoa continuam saindo", () => {
+    const conceitos = SEEDS.map((seed) => {
+      const p = buildPostUnicoPrompt({
+        data,
+        kit,
+        copy: { titulo: "TITULO", texto: "Texto de apoio." },
+        references: {},
+        tonalidadeSeed: seed,
+      } as never);
+      const i = p.indexOf("CONCEITO DESTA GERAÇÃO");
+      return p.slice(i, i + 400);
+    });
+    expect(conceitos.some((c) => arquetipoExcluiPessoa(c))).toBe(true);
+  });
+
+  it("o detector pega as tres formas de proibicao e nao pega o resto", () => {
+    expect(arquetipoExcluiPessoa("objeto isolado, sem pessoa como foco principal")).toBe(true);
+    expect(arquetipoExcluiPessoa("Sem figura humana em movimento.")).toBe(true);
+    expect(arquetipoExcluiPessoa("sem rosto, mas com identidade clara")).toBe(true);
+    expect(arquetipoExcluiPessoa("close de mao no gesto exato de decisao")).toBe(false);
+    expect(arquetipoExcluiPessoa("pessoa em posicao de decisao dentro de um ambiente real")).toBe(
+      false,
+    );
   });
 });

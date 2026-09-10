@@ -84,6 +84,28 @@ export const OBJETIVO_VISUAL_EXCLUSIONS: Record<Exclude<PostUnicoObjetivo, "nenh
     "Preservar registro real. Não inventar cena, pessoas, produto ou ambiente. PERMITIDO APENAS: melhorias técnicas de luminosidade, contraste, balanço de branco, nitidez e resolução.",
 };
 
+// ⚠ CONCEITOS QUE PROÍBEM PESSOA — e por que isto precisa existir.
+//
+// CASO REAL (09 e 10/09/2026, conta admin): com "Gerar personagem (sem avatar)"
+// marcado, duas peças seguidas saíram sem ninguém. Uma das causas era o corte do
+// bloco de referências (ver puReferencesBlock.ts); a outra é esta — o sorteio do
+// conceito não sabia que havia personagem pedido, e alguns conceitos mandam o
+// contrário, por escrito. O conceito ainda fala DEPOIS do bloco do personagem no
+// prompt (~21.000 contra ~9.500 de ~26.000 caracteres), então ele vence: o
+// último a falar vence.
+//
+// A detecção é pela PRÓPRIA FRASE do conceito, não por uma lista paralela de
+// nomes: assim um conceito novo escrito com "sem pessoa", "sem figura humana" ou
+// "sem rosto" já nasce coberto, sem ninguém precisar lembrar de cadastrá-lo em
+// dois lugares. Hoje isso pega OBJETO SIMBÓLICO e ABSTRAÇÃO CROMÁTICA
+// (oportunidade), AMBIENTE INSTITUCIONAL (aviso) e DETALHE SIMBÓLICO (homenagem).
+const FRASES_QUE_EXCLUEM_PESSOA = ["sem pessoa", "sem figura humana", "sem rosto"];
+
+export function arquetipoExcluiPessoa(arquetipo: string): boolean {
+  const t = (arquetipo || "").toLowerCase();
+  return FRASES_QUE_EXCLUEM_PESSOA.some((f) => t.includes(f));
+}
+
 // Arquétipos para a combinação mais aberta do sistema — Direção Livre + Objetivo Nenhum.
 // Ao contrário dos arquétipos por objetivo (abaixo), estes NÃO amarram a cena ao negócio:
 // servem apenas para variar a composição entre gerações sem reduzir a liberdade criativa.

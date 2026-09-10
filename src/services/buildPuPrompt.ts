@@ -39,6 +39,7 @@ import {
   OBJETIVO_TONALIDADES_ROTACAO,
   LIVRE_TONALIDADES,
   AVATAR_ROLE_BY_SEGMENT_OBJETIVO,
+  arquetipoExcluiPessoa,
 } from "./objetivoConfig";
 import { pickTonalidade, pickRotating } from "../core/colorRotation";
 import { countTituloWords } from "../core/textWordUtils";
@@ -63,11 +64,26 @@ function direcaoBlock(
   accentHex?: string,
   produtoHero?: boolean,
   lookBook?: boolean,
+  exigePersonagem?: boolean,
 ): string {
   if (direcao === "mood" && mood) {
     return `DIREÇÃO (mood ${mood} ${MOOD_NAMES[mood]}):\n${buildMoodGrammarBlock(mood, { noDeviceThisScene, tonalidadeSeed, accentHex, produtoHero, lookBook })}\n\nIMPORTANTE: esta peça é mood ${MOOD_NAMES[mood]} — NÃO use estética dos outros moods. Respeite rigorosamente a paleta, luz e composição descritas acima.\n\nPROIBIDO: aparência de Canva/template/panfleto, faixa/barra/painel de cor sólida na base ou no topo da composição (mesmo decorativa, mesmo antes de aplicar a logo), gradient banal, ícones flat, estética de stock genérico. O fundo é contínuo de borda a borda — NÃO divida a peça em blocos, faixas ou painéis de cor.`;
   }
   const obj = objetivo ?? "nenhum";
+
+  // ⚠ SORTEAR UM CONCEITO QUE PROÍBE PESSOA QUANDO O USUÁRIO PEDIU PESSOA é uma
+  // contradição dentro do mesmo prompt — e quem ganha é o conceito, que vem
+  // muito depois (ver o comentário em objetivoConfig.ts). Aqui o pool é filtrado
+  // ANTES do rodízio, então a contradição nunca chega a ser escrita.
+  // O rodízio continua determinístico sobre o pool filtrado: a variedade entre
+  // gerações se mantém, só que dentro dos conceitos que admitem alguém em cena.
+  // Se a filtragem esvaziar o pool, volta o pool inteiro — melhor um conceito em
+  // tensão do que nenhum conceito.
+  const compativeis = (pool: string[]): string[] => {
+    if (!exigePersonagem) return pool;
+    const filtrado = pool.filter((a) => !arquetipoExcluiPessoa(a));
+    return filtrado.length ? filtrado : pool;
+  };
 
   // Quando há produtos referenciados (Kit Imagem / MIX), eles já são o "conceito"
   // da geração — sortear um arquétipo adicional (ex.: RELÓGIO/TEMPO) cria um
@@ -87,7 +103,7 @@ function direcaoBlock(
     // mesmo seed com passo 1.
     const archetypeHint = hasProdutos
       ? PRODUTOS_CONCEITO_NOTE
-      : `\n\n${pickRotating(LIVRE_TOTAL_ARCHETYPES, tonalidadeSeed ?? 0, 2)}`;
+      : `\n\n${pickRotating(compativeis(LIVRE_TOTAL_ARCHETYPES), tonalidadeSeed ?? 0, 2)}`;
     return `DIREÇÃO LIVRE — SEM TEMA OU OBJETIVO PRÉ-DEFINIDO: a IA tem liberdade total e real de direção de arte — não há mood, não há objetivo, não há obrigação de literalidade com o negócio.${archetypeHint}\n\nVarie ATIVAMENTE entre abordagens possíveis: luz natural OU dramática, paleta fria OU quente, fundo claro OU escuro, composição calma OU energética, predominantemente fotográfica OU gráfica OU conceitual. Escolha uma direção com personalidade própria, ouse e vá fundo nela — o critério é qualidade editorial e impacto visual, não utilidade comercial. Resultado: arte publicitária brasileira contemporânea de alto nível editorial. PROIBIDO: aparência de Canva/template/panfleto, gradient banal, ícones flat, estética de stock genérico, fórmula default "fundo escuro + luz dourada dramática" (essa é apenas UMA das opções, não a padrão).`;
   }
 
@@ -100,7 +116,7 @@ function direcaoBlock(
   const archetypeHint = hasProdutos
     ? PRODUTOS_CONCEITO_NOTE
     : archetypes && archetypes.length
-      ? `\n\n${pickRotating(archetypes, tonalidadeSeed ?? 0, 2)}`
+      ? `\n\n${pickRotating(compativeis(archetypes), tonalidadeSeed ?? 0, 2)}`
       : "";
   const derivacaoBlock = hasProdutos
     ? ""
@@ -358,6 +374,11 @@ export function buildPostUnicoPrompt(params: {
     accent,
     produtoHero,
     !!references?.produtoVestido,
+    // Há alguém pedido nesta peça? Vale para o avatar do Kit e para o personagem
+    // inventado — os dois são pessoa, e os dois brigavam com o conceito sorteado.
+    // "Peça sem personagem" é o oposto e não filtra nada.
+    !references?.semPersonagemAtivo &&
+      (!!references?.avatar || !!references?.personagemSemAvatarAtivo),
   );
   // Quando não há personagem de referência (sem avatar e sem checkbox "personagem
   // sem avatar"), a faixaEtaria do form chega ao prompt de imagem como âncora de
