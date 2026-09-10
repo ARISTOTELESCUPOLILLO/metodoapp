@@ -1,6 +1,8 @@
 import { MethodOpResult, FeedItem, GenerationSummary, Track, ValidationFlag } from "../types";
 import { SEQUENCE_COMPOSITION } from "./organizaMethodEngine";
 import { validateScriptReels } from "./scriptValidation";
+import { checkNomeNoTitulo, TITULO_MAX_WORDS_COM_NOME } from "./linhaEditorialRules";
+import type { UsoDoObjeto } from "../domain/linhaEditorial.config";
 import {
   truncateWords,
   validatePieceFields,
@@ -64,6 +66,13 @@ export function normalizeMethodResult(
   track?: Track,
   sequenceSize?: 3 | 6 | 9,
   keyInfo?: string,
+  /**
+   * Objeto da geração no modo MOSTRAR NOME. Só chega quando a escolha editorial
+   * está vigente (a informação-chave ainda é a proposição aceita) — quem chama
+   * é que aplica essa guarda, igual ao `editorialVigente` do prompt.
+   * Sem ele, nada muda: a validação é exatamente a de sempre.
+   */
+  objetoNomeado?: { objeto: string; usoObjeto: UsoDoObjeto },
 ): MethodOpResult {
   // O JSON da IA chega como `unknown`. Esta função é a fronteira que o
   // interpreta defensivamente (guards de Array/truthiness abaixo); o cast
@@ -203,6 +212,18 @@ export function normalizeMethodResult(
   // keyInfo). Não bloqueia a entrega — fica marcada em `flags` para
   // regeneração pontual via regenerate-block (E3).
   const flags: ValidationFlag[] = [];
+
+  // As DUAS peças que precisam nomear o produto ganham uma palavra a mais de
+  // teto (7 em vez de 6): o nome cadastrado come metade do título e era isso
+  // que fazia o modelo escolher entre a frase boa e o nome. Vale só para elas —
+  // as peças do meio seguem com a régua do método.
+  const exigeNome = objetoNomeado?.usoObjeto === "nome" && !!objetoNomeado.objeto.trim();
+  const ultimoFeedIdx = feed?.length ? feed.length - 1 : -1;
+  const ultimoReelsIdx = reels?.length ? reels.length - 1 : -1;
+  const tetoNome = exigeNome ? { maxWords: TITULO_MAX_WORDS_COM_NOME } : undefined;
+  const optsFeed = (i: number) =>
+    exigeNome && (i === 0 || (ultimoReelsIdx < 0 && i === ultimoFeedIdx)) ? tetoNome : undefined;
+
   if (feed) {
     feed.forEach((item, i) => {
       flags.push(
@@ -210,6 +231,7 @@ export function normalizeMethodResult(
           `feed[${i}]`,
           { titulo: item.titulo, texto: item.texto, legenda: item.legenda },
           keyInfo,
+          optsFeed(i),
         ),
       );
     });
@@ -236,6 +258,8 @@ export function normalizeMethodResult(
           // nenhuma estrutura, nenhum fecho. Ver core/scriptValidation.ts.
           { titulo: r.hook, legenda: r.legenda },
           keyInfo,
+          // O Reels é a última peça quando existe — é ele que carrega o nome.
+          exigeNome && i === ultimoReelsIdx ? tetoNome : undefined,
         ),
       );
       // ⚠ O SUFIXO É ".texto", NÃO ".script" — e isso não é detalhe.
@@ -248,6 +272,38 @@ export function normalizeMethodResult(
       for (const motivo of validateScriptReels(r.script || ""))
         flags.push({ campo: `reels[${i}].texto`, motivo });
     });
+  }
+
+  // ESCOLHA É ESCOLHA (decisão do Ari, 10/09/2026): com MOSTRAR NOME marcado, o
+  // nome tem de chegar ao TÍTULO. No MOP a exigência é da PRIMEIRA peça e da
+  // ÚLTIMA — a mesma decisão de 09/09 que está no prompt (`ondeNomear`): as do
+  // meio ficam livres, senão a sequência vira catálogo.
+  //
+  // ⚠ Até aqui isso era só instrução dentro do prompt, e instrução perde quando
+  // o modelo acha uma frase melhor sem o nome. Agora vira flag, e a regeneração
+  // (E3) reescreve o título cobrando o nome de volta.
+  if (objetoNomeado?.usoObjeto === "nome" && objetoNomeado.objeto.trim()) {
+    const alvos: { campo: string; titulo: string; texto?: string }[] = [];
+    if (feed?.length)
+      alvos.push({ campo: "feed[0]", titulo: feed[0].titulo, texto: feed[0].texto });
+    // A última peça da sequência é o Reels quando a trilha tem um; senão, o
+    // último item do feed (o Estático Final).
+    if (reels?.length) {
+      const i = reels.length - 1;
+      alvos.push({ campo: `reels[${i}]`, titulo: reels[i].hook, texto: reels[i].script });
+    } else if (feed && feed.length > 1) {
+      const i = feed.length - 1;
+      alvos.push({ campo: `feed[${i}]`, titulo: feed[i].titulo, texto: feed[i].texto });
+    }
+    for (const alvo of alvos) {
+      const motivo = checkNomeNoTitulo({
+        titulo: alvo.titulo || "",
+        texto: alvo.texto,
+        objeto: objetoNomeado.objeto,
+        usoObjeto: "nome",
+      });
+      if (motivo) flags.push({ campo: `${alvo.campo}.titulo`, motivo });
+    }
   }
 
   // Medida C — "rótulo do leitor" (gestores/decisores/equipe/time) como

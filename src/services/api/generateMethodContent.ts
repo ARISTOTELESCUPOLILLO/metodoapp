@@ -97,7 +97,21 @@ export async function generateMethodContent(
     } catch {
       throw new Error("Resposta do gerador veio incompleta. Tente novamente.");
     }
-    const result = normalizeMethodResult(parsed, data.track, data.sequenceSize, data.keyInfo);
+    // Mesma guarda do prompt (editorialVigente): a escolha editorial só vale
+    // enquanto a informação-chave for a proposição aceita.
+    const objetoNomeado =
+      data.editorial?.usoObjeto === "nome" &&
+      data.editorial.objetoEditorial &&
+      data.editorial.proposicao?.trim() === (data.keyInfo || "").trim()
+        ? { objeto: data.editorial.objetoEditorial, usoObjeto: "nome" as const }
+        : undefined;
+    const result = normalizeMethodResult(
+      parsed,
+      data.track,
+      data.sequenceSize,
+      data.keyInfo,
+      objetoNomeado,
+    );
     return autoRegenerateFlaggedFields(result, {
       companyName: data.companyName,
       mainActivity: data.mainActivity,

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  TITULO_MAX_WORDS,
   truncateWords,
   checkExcessoPalavras,
   validatePieceFields,
@@ -16,7 +17,11 @@ import {
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
 import { hasBetaIntencao, hasBetaEditorial } from "@/repository/betaFlags";
-import { buildRegraLinhaEditorial } from "@/core/linhaEditorialRules";
+import {
+  buildRegraLinhaEditorial,
+  checkNomeNoTitulo,
+  tetoTituloPorUso,
+} from "@/core/linhaEditorialRules";
 import { parseLinhaEditorial, parseUsoDoObjeto } from "@/domain/linhaEditorial.config";
 import {
   buildIntencaoBlock,
@@ -331,13 +336,28 @@ Proibido mencionar literalmente o nome da voz no texto final.
               ? parseLinhaEditorial((body.editorial as { linhaEditorial?: unknown }).linhaEditorial)
               : null
             : null;
+          // Extraídos para variável porque agora não servem só ao prompt: o modo
+          // de uso decide o TETO do título (7 com MOSTRAR NOME) e dispara a
+          // checagem do nome na peça, lá embaixo.
+          const usoObjetoEditorial = linhaEditorial
+            ? parseUsoDoObjeto((body.editorial as { usoObjeto?: unknown }).usoObjeto)
+            : undefined;
+          const objetoEditorial = linhaEditorial
+            ? String((body.editorial as { objetoEditorial?: unknown }).objetoEditorial || "").slice(
+                0,
+                120,
+              )
+            : "";
+          // O teto do título vira variável por causa do MOSTRAR NOME: sem isso o
+          // prompt continuaria pedindo 6 e o modelo seguiria escolhendo entre a
+          // frase boa e o nome, mesmo com a validação já aceitando 7.
+          const tetoTitulo =
+            tetoTituloPorUso(usoObjetoEditorial, objetoEditorial) ?? TITULO_MAX_WORDS;
           const regraEditorial = linhaEditorial
             ? buildRegraLinhaEditorial({
                 linhaEditorial,
-                usoObjeto: parseUsoDoObjeto((body.editorial as { usoObjeto?: unknown }).usoObjeto),
-                objeto: String(
-                  (body.editorial as { objetoEditorial?: unknown }).objetoEditorial || "",
-                ).slice(0, 120),
+                usoObjeto: usoObjetoEditorial,
+                objeto: objetoEditorial,
                 // Outros produtos do Kit — dão ao modelo o teste de "encurtei
                 // demais?" (ver `irmaos` em buildRegraLinhaEditorial).
                 irmaos: Array.isArray(
@@ -376,7 +396,7 @@ Proibido mencionar literalmente o nome da voz no texto final.
           // prioriza os dados concretos, não compactação silábica).
           const tituloSchemaDesc = ajustePromocional
             ? `título de OFERTA/PROMOÇÃO, reescrevendo a informação-chave como manchete publicitária clara, no MÁXIMO ${TITULO_MAX_WORDS_AJUSTADO} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de retornar), em português brasileiro`
-            : `título curto, no MÁXIMO 6 palavras, cada palavra com no máximo 4 sílabas (exceto o substantivo concreto central da informação-chave, se houver — limitado a 5 sílabas, nunca mais), impactante, em português brasileiro`;
+            : `título curto, no MÁXIMO ${tetoTitulo} palavras, cada palavra com no máximo 4 sílabas (exceto o substantivo concreto central da informação-chave, se houver — limitado a 5 sílabas, nunca mais), impactante, em português brasileiro`;
           const schemaBlock = tituloFixo
             ? `Retorne JSON com EXATAMENTE este formato (o TÍTULO já está definido e fixo — NÃO o gere de novo, retorne APENAS os tópicos):
 {
@@ -397,7 +417,7 @@ ${topicosSchemaLines}
             ? `- ⚠ TÍTULO FIXO (DEFINIDO PELO USUÁRIO): o título FINAL desta peça é exatamente "${tituloFixo}" — ele pode ter sido escrito ou editado à mão pelo usuário depois da primeira geração. NÃO o reescreva, NÃO gere um título novo: gere APENAS os tópicos. Ele é a ÂNCORA DE SENTIDO dos tópicos abaixo.`
             : ajustePromocional
               ? `- "titulo" no máximo ${TITULO_MAX_WORDS_AJUSTADO} palavras (um valor monetário como "R$ 120,00" conta como 1 palavra — CONTE antes de retornar), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir.`
-              : `- "titulo" no máximo 6 palavras, cada palavra com no máximo 4 sílabas (ex.: "resultado" 4 sílabas ✓, "comunicação" 5 sílabas ✗ — use "contato", "presença"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 5 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 6+ sílabas devem ser trocados por sinônimo mais curto. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓`;
+              : `- "titulo" no máximo ${tetoTitulo} palavras, cada palavra com no máximo 4 sílabas (ex.: "resultado" 4 sílabas ✓, "comunicação" 5 sílabas ✗ — use "contato", "presença"), sem ponto final, sem aspas, sem emoji, sem hashtag. EXCEÇÃO AO LIMITE DE SÍLABAS (restrita): se a informação-chave contém um substantivo concreto central (produto, peça, serviço, objeto ou procedimento — ex.: "equipamento", "manutenção", "orçamento", "diagnóstico", "estratégia"), esse termo pode ter NO MÁXIMO 5 sílabas — nunca mais — quando for essencial para a clareza do título; não o troque por uma palavra genérica só para encurtar, mas termos com 6+ sílabas devem ser trocados por sinônimo mais curto. EXCEÇÃO OBRIGATÓRIA: se o título for uma pergunta (direta ou retórica), terminar com "?" — NUNCA omitir. Ex.: "Por que é assim?" ✓, "O que está faltando?" ✓`;
           // POSIÇÃO IMPORTA (achado real 22/07/2026, Ari): não bastou declarar
           // a coerência no meio das regras. No modo tituloFixo o bloco de
           // CONTEXTO terminava na INFORMAÇÃO-CHAVE — o material da PRIMEIRA
@@ -547,9 +567,17 @@ ${FECHO_GENERICO_RULE}${regraEditorial ? `\n${regraEditorial}` : ""}${intencaoRe
           // os dados torna a transcrição atraente para o modelo (achado de
           // 17/08 — "Capacete para motociclista por R$129,00 chegou agora").
           // O motivo volta ao prompt de regeneração via autoRegenerate.
+          // Com MOSTRAR NOME o teto do título sobe para 7: o nome cadastrado
+          // come metade das 6 palavras e era isso que fazia o modelo escolher
+          // entre uma frase boa e o nome (ver TITULO_MAX_WORDS_COM_NOME). O modo
+          // promocional continua mandando quando os dois coincidem — ele já tem
+          // teto maior (9) e regra própria.
+          const tetoComNome = tetoTituloPorUso(usoObjetoEditorial, objetoEditorial);
           const titleOpts = ajustePromocional
             ? { maxWords: TITULO_MAX_WORDS_AJUSTADO, skipUrgencyCheck: true, ecoKeyInfo: keyInfo }
-            : undefined;
+            : tetoComNome
+              ? { maxWords: tetoComNome }
+              : undefined;
 
           if (wantsTopicos) {
             const rawTopicos = Array.isArray(parsed.topicos) ? parsed.topicos : [];
@@ -591,6 +619,23 @@ ${FECHO_GENERICO_RULE}${regraEditorial ? `\n${regraEditorial}` : ""}${intencaoRe
             flags = validatePieceFields("copy", { titulo, texto }, keyInfo, titleOpts);
             if (excessoApoio) flags.push({ campo: "copy.texto", motivo: excessoApoio });
           }
+
+          // ESCOLHA É ESCOLHA (decisão do Ari, 10/09/2026): com MOSTRAR NOME
+          // marcado, o nome do item TEM de chegar ao título da peça. Até aqui
+          // isso era só instrução dentro do prompt — e instrução perde quando o
+          // modelo encontra uma frase melhor sem o nome (caso real: o título
+          // "Clique não é contato ainda", ótimo na linha editorial, saiu sem o
+          // produto em lugar nenhum da peça, e o juiz D2 aprovou porque ele
+          // cobra a linha, não o nome). Vale também no modo de tópicos, onde só
+          // o título existe. A flag entra em copy.titulo, que a orquestração de
+          // regeneração (E3) já sabe reescrever.
+          const nomeFaltando = checkNomeNoTitulo({
+            titulo,
+            texto,
+            objeto: objetoEditorial,
+            usoObjeto: usoObjetoEditorial,
+          });
+          if (nomeFaltando) flags.push({ campo: "copy.titulo", motivo: nomeFaltando });
 
           if (!isAdminUser) {
             try {

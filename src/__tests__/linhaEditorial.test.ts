@@ -9,6 +9,9 @@ import {
   buildRegraLinhaEditorial,
   regraNomeNaLegenda,
   buildCriterioEditorialJuiz,
+  checkNomeNoTitulo,
+  tetoTituloPorUso,
+  TITULO_MAX_WORDS_COM_NOME,
   classificarFalaEditorial,
   validarProposicaoEditorial,
   EDITORIAL_MIN_WORDS,
@@ -727,5 +730,75 @@ describe("criterio editorial do juiz D2", () => {
       expect(c, linha).toContain(LINHA_EDITORIAL_SPEC[linha].pergunta);
       expect(c, linha).toContain(LINHA_EDITORIAL_SPEC[linha].label.toUpperCase());
     }
+  });
+});
+
+describe("MOSTRAR NOME cobrado no TITULO DA PECA", () => {
+  // CASO REAL (10/09, PU, linha CONHECIMENTO, item "Consultoria de Marketing
+  // Digital"): saiu o melhor titulo da serie — "Clique nao e contato ainda" — e
+  // o nome sumiu da peca INTEIRA. O juiz D2 aprovou, e com razao: ele cobra a
+  // linha editorial, nao o nome. A checagem do nome so existia para a
+  // PROPOSICAO; do titulo em diante era instrucao dentro do prompt, e instrucao
+  // perde quando o modelo acha uma frase melhor sem o nome.
+  const OBJETO = "Consultoria de Marketing Digital";
+
+  it("reprova o titulo real que perdeu o nome, e diz que sumiu da peca", () => {
+    const motivo = checkNomeNoTitulo({
+      titulo: "Clique não é contato ainda",
+      texto: "Cliques mostram interesse. Contato verdadeiro revela quem quer conversar para valer.",
+      objeto: OBJETO,
+      usoObjeto: "nome",
+    });
+    expect(motivo).toBeTruthy();
+    expect(motivo).toContain("não aparece em lugar nenhum da peça");
+  });
+
+  it("distingue 'esta so no apoio' de 'sumiu' — sao correcoes diferentes", () => {
+    const motivo = checkNomeNoTitulo({
+      titulo: "Clique não é contato ainda",
+      texto: "A Consultoria de Marketing ajuda a entender essa diferença.",
+      objeto: OBJETO,
+      usoObjeto: "nome",
+    });
+    expect(motivo).toContain("aparece só no texto de apoio");
+    expect(motivo).toContain("TÍTULO");
+  });
+
+  it("aceita o NUCLEO COMERCIAL no titulo — encurtar e permitido", () => {
+    expect(
+      checkNomeNoTitulo({
+        titulo: "Consultoria mostra o que trava",
+        objeto: OBJETO,
+        usoObjeto: "nome",
+      }),
+    ).toBeNull();
+  });
+
+  it("nao cobra nada fora do modo MOSTRAR NOME", () => {
+    for (const uso of ["sem_nome", "nao_usar", "auto"] as const) {
+      expect(
+        checkNomeNoTitulo({ titulo: "Clique não é contato ainda", objeto: OBJETO, usoObjeto: uso }),
+        uso,
+      ).toBeNull();
+    }
+    expect(checkNomeNoTitulo({ titulo: "Qualquer", objeto: "", usoObjeto: "nome" })).toBeNull();
+  });
+
+  it("o teto do titulo sobe para 7 somente com MOSTRAR NOME", () => {
+    expect(tetoTituloPorUso("nome", OBJETO)).toBe(TITULO_MAX_WORDS_COM_NOME);
+    expect(TITULO_MAX_WORDS_COM_NOME).toBe(7);
+    expect(tetoTituloPorUso("sem_nome", OBJETO)).toBeNull();
+    expect(tetoTituloPorUso("nome", "")).toBeNull();
+  });
+
+  it("a regra do prompt declara o teto novo e diz que ele vence o 6", () => {
+    const regra = buildRegraLinhaEditorial({
+      linhaEditorial: "conhecimento",
+      usoObjeto: "nome",
+      objeto: OBJETO,
+      alvo: "mop",
+    });
+    expect(regra).toContain(`TETO DE PALAVRAS DO TÍTULO SOBE PARA ${TITULO_MAX_WORDS_COM_NOME}`);
+    expect(regra).toContain("os demais seguem com 6");
   });
 });

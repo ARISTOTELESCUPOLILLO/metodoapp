@@ -200,27 +200,91 @@ export function validarProposicaoEditorial(
   // MOSTRAR NOME é a única promessa verificável sem semântica: se o modo pede o
   // nome, ao menos o núcleo do nome cadastrado tem de aparecer.
   const objeto = (opts?.objeto || "").trim();
-  if (opts?.usoObjeto === "nome" && objeto) {
-    // O cadastro costuma ser longo ("Terno Masculino Slim Corte Italiano
-    // Microfibra Preto Ref. 4758") e o modo MOSTRAR NOME admite o NÚCLEO
-    // COMERCIAL ("Terno Slim Preto"). Por isso a checagem é de PRESENÇA DE
-    // ALGUMA palavra de conteúdo do cadastro, não da palavra mais longa: exigir
-    // a mais longa reprovava justamente o encurtamento que a regra permite.
-    // É backstop contra o nome sumir por inteiro; a fidelidade fica com o modelo.
-    const semAcento = (v: string) => v.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-    const alvo = semAcento(t);
-    const palavras = objeto
-      .split(/\s+/)
-      .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ""))
-      .filter((w) => w.replace(/[^\p{L}]/gu, "").length >= 4);
-    if (palavras.length && !palavras.some((w) => alvo.includes(semAcento(w).slice(0, 5)))) {
-      motivos.push(
-        `o modo de uso é MOSTRAR NOME, mas "${objeto}" não aparece nomeado na frase — inclua o nome (ou seu núcleo comercial reconhecível)`,
-      );
-    }
+  if (opts?.usoObjeto === "nome" && objeto && !nomeiaObjeto(t, objeto)) {
+    motivos.push(
+      `o modo de uso é MOSTRAR NOME, mas "${objeto}" não aparece nomeado na frase — inclua o nome (ou seu núcleo comercial reconhecível)`,
+    );
   }
 
   return motivos;
+}
+
+/**
+ * O nome cadastrado (ou seu núcleo comercial) aparece neste texto?
+ *
+ * O cadastro costuma ser longo ("Terno Masculino Slim Corte Italiano Microfibra
+ * Preto Ref. 4758") e o modo MOSTRAR NOME admite o NÚCLEO COMERCIAL ("Terno Slim
+ * Preto"). Por isso a checagem é de PRESENÇA DE ALGUMA palavra de conteúdo do
+ * cadastro, não da palavra mais longa: exigir a mais longa reprovava justamente
+ * o encurtamento que a regra permite (achado de 09/09/2026 — "Masculino" era a
+ * palavra cobrada). É backstop contra o nome sumir por inteiro; a fidelidade do
+ * recorte fica com o modelo.
+ */
+export function nomeiaObjeto(texto: string, objeto: string): boolean {
+  const nome = (objeto || "").trim();
+  if (!nome) return true;
+  const semAcento = (v: string) => v.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const alvo = semAcento(texto || "");
+  const palavras = nome
+    .split(/\s+/)
+    .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter((w) => w.replace(/[^\p{L}]/gu, "").length >= 4);
+  if (!palavras.length) return true;
+  return palavras.some((w) => alvo.includes(semAcento(w).slice(0, 5)));
+}
+
+/**
+ * TETO DO TÍTULO COM MOSTRAR NOME — 7 palavras (decisão do Ari, 10/09/2026).
+ *
+ * A régua do método é 6. Um nome cadastrado como "Consultoria de Marketing
+ * Digital" ocupa 4 dessas 6 sozinho, e sobram 2 para dizer alguma coisa — foi
+ * assim que o título bom da série saiu SEM o nome: não cabia. Como a exigência
+ * do nome passou a ser cobrada de verdade, o teto sobe UMA palavra, e só quando
+ * MOSTRAR NOME está ligado. Fora desse modo, a régua de 6 continua intacta.
+ */
+export const TITULO_MAX_WORDS_COM_NOME = 7;
+
+/** O teto que vale para esta peça, dado o modo de uso do objeto. */
+export function tetoTituloPorUso(
+  usoObjeto: UsoDoObjeto | undefined,
+  objeto: string,
+): number | null {
+  return usoObjeto === "nome" && (objeto || "").trim() ? TITULO_MAX_WORDS_COM_NOME : null;
+}
+
+/**
+ * ESCOLHA É ESCOLHA — o nome tem de chegar ao TÍTULO DA PEÇA (decisão do Ari,
+ * 10/09/2026).
+ *
+ * CASO REAL: linha CONHECIMENTO, MOSTRAR NOME em "Consultoria de Marketing
+ * Digital". Saiu o melhor título da série — "Clique não é contato ainda" — e o
+ * nome sumiu da peça INTEIRA, título e apoio. O juiz D2 aprovou (o registro
+ * mostra a rodada sem nenhuma reprovação), e com razão: o critério 6 cobra a
+ * LINHA EDITORIAL, não o nome.
+ *
+ * ⚠ A checagem do nome existia só para a PROPOSIÇÃO. Do título em diante a
+ * exigência vivia apenas como texto de instrução no prompt — e instrução perde
+ * quando o modelo encontra uma frase melhor sem o nome. O Ari escolheu MOSTRAR
+ * NOME; escolha do usuário não pode ser vencida por acaso de geração.
+ *
+ * Devolve motivo (string) ou null. O apoio conta como cumprimento? NÃO: a regra
+ * do prompt diz "não basta citá-lo no texto de apoio". Mas o motivo distingue os
+ * dois casos, porque "está no apoio, falta no título" e "sumiu da peça" pedem
+ * correções diferentes de quem reescreve.
+ */
+export function checkNomeNoTitulo(params: {
+  titulo: string;
+  texto?: string;
+  objeto: string;
+  usoObjeto?: UsoDoObjeto;
+}): string | null {
+  const { titulo, texto = "", objeto, usoObjeto } = params;
+  const nome = (objeto || "").trim();
+  if (usoObjeto !== "nome" || !nome) return null;
+  if (nomeiaObjeto(titulo, nome)) return null;
+  return nomeiaObjeto(texto, nome)
+    ? `o modo de uso é MOSTRAR NOME e "${nome}" aparece só no texto de apoio — ele precisa estar no TÍTULO (encurtar para o núcleo comercial é permitido; deixá-lo de fora, não)`
+    : `o modo de uso é MOSTRAR NOME, mas "${nome}" não aparece em lugar nenhum da peça — o nome (ou seu núcleo comercial reconhecível) tem de estar no TÍTULO`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -404,7 +468,8 @@ export function buildRegraLinhaEditorial(params: {
     !item || usoObjeto === "auto"
       ? ""
       : usoObjeto === "nome"
-        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}${REGRA_PRODUTO_NAO_E_AGENTE}`
+        ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.
+- ⚠ TETO DE PALAVRAS DO TÍTULO SOBE PARA ${TITULO_MAX_WORDS_COM_NOME} (vence o "máximo de 6 palavras" declarado em outras partes deste pedido, e SÓ ${alvo === "mop" ? "nos títulos que precisam nomear o item — os demais seguem com 6" : "neste título"}): o nome ocupa espaço e a frase precisa sobrar para dizer alguma coisa. Não é licença para alongar — é a margem para o nome caber sem sacrificar a ideia. Se couber em 6, melhor.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}${REGRA_PRODUTO_NAO_E_AGENTE}`
         : usoObjeto === "sem_nome"
           ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito NA PEÇA — nem no título, nem no texto de apoio, nem no texto da imagem, nem no roteiro falado. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.${REGRA_PRODUTO_NAO_E_AGENTE}${regraNomeNaLegenda(item)}`
           : `\n- OBJETO DESTA PEÇA — NÃO USAR: existe um item selecionado, mas ele NÃO é a âncora desta peça. PROIBIDO nomeá-lo ou tomá-lo como assunto.`;
