@@ -127,3 +127,40 @@ describe("curva de volume da trilha", () => {
     expect(c).toContain("(t-");
   });
 });
+
+describe("o filme cresce com o roteiro — a conta tem que escalar", () => {
+  // Observacao do Ari (10/09): "o tempo do filme vai ser maior porque o reels
+  // tem o texto". Exato — o roteiro varia de 18 a 24 palavras (scriptValidation)
+  // e a locucao varia junto. Deduzir a duracao de um exemplo antigo era o erro:
+  // a montagem MEDE o clipe. Estes casos travam a aritmetica em varios tamanhos.
+  const CASOS = [5.0, 6.4, 7.2, 8.5, 10.0];
+
+  it("o total e sempre capa + clipe + assinatura, qualquer que seja o clipe", () => {
+    for (const clipe of CASOS) {
+      const p = planejarMontagem(clipe);
+      expect(p.totalS, `clipe ${clipe}`).toBeCloseTo(CAPA_S + clipe + ASSINATURA_S, 5);
+    }
+  });
+
+  it("a assinatura acompanha o fim do filme, nunca uma marca fixa", () => {
+    for (const clipe of CASOS) {
+      const p = planejarMontagem(clipe);
+      expect(p.assinatura.opacaEm, `clipe ${clipe}`).toBeCloseTo(CAPA_S + clipe, 5);
+    }
+  });
+
+  it("a quantidade de quadros da assinatura NAO depende do clipe", () => {
+    // Ela e sempre fade + assinatura: se variasse com o clipe, o desenho e o
+    // grafo do FFmpeg discordariam sobre quantos PNGs existem.
+    const q = CASOS.map((c) => planejarMontagem(c).quadrosAssinatura);
+    expect(new Set(q).size).toBe(1);
+  });
+
+  it("roteiro mais longo estica as legendas, sem estourar a fala", () => {
+    const curto = montarLegendas("Uma frase curta aqui. Fecho.", 4);
+    const longo = montarLegendas("Uma frase curta aqui. Fecho.", 9);
+    const dur = (ls: ReturnType<typeof montarLegendas>) => ls[ls.length - 1].fim - ls[0].inicio;
+    expect(dur(longo)).toBeGreaterThan(dur(curto));
+    expect(dur(longo)).toBeCloseTo(9, 6);
+  });
+});

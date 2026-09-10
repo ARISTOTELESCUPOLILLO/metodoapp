@@ -16,11 +16,7 @@ import { composeReelsPng, composeReelsTitlePng } from "../../../utils/canvasComp
 import { emptyImageKit } from "../../../utils/imageKitStorage";
 import { getSessionImage, setSessionImage } from "../../../utils/sessionImageCache";
 import { regenerateWithKit } from "../../../services/regenerateWithKit";
-import {
-  burnTitleIntoVideo,
-  trimVideoToSpeech,
-  TAIL_APOS_FALA_S,
-} from "../../../utils/burnTitleIntoVideo";
+import { burnTitleIntoVideo, trimVideoToSpeech } from "../../../utils/burnTitleIntoVideo";
 import { montarReels } from "../../../utils/montarReels";
 import { extrairContatoWhatsapp, TRILHA_PADRAO_URL } from "../../../core/montagemReels";
 import { BRAND_ACCENT } from "../../../data/brandColors";
@@ -529,7 +525,6 @@ export function useReelsGeneration(params: {
           const montado = await montarReels(
             {
               videoUrl: baseVideoUrl,
-              videoS: speechSeconds && speechSeconds > 0 ? speechSeconds + TAIL_APOS_FALA_S : 0,
               capaUrl: capaParaMontagem,
               script: reels.script || "",
               falaS: speechSeconds,

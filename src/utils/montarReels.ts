@@ -65,11 +65,47 @@ async function bytes(url: string, oQue: string): Promise<Uint8Array> {
   }
 }
 
+/**
+ * Mede a duração REAL do clipe que vai entrar na montagem.
+ *
+ * ⚠ POR QUE MEDIR EM VEZ DE CALCULAR: a primeira versão deduzia a duração de
+ * `speechSeconds + sobra`, o número usado para APARAR o vídeo. Parece a mesma
+ * coisa e não é, em dois casos que acontecem de verdade:
+ *  · se o corte falhar (ele falha ABERTO), o vídeo que segue para a montagem é
+ *    o ORIGINAL, mais longo — e a assinatura entraria por cima do personagem
+ *    ainda falando;
+ *  · se `speechSeconds` vier nulo, a conta dava ZERO e o filme inteiro seria
+ *    cortado em 2,4 s.
+ * O roteiro tem tamanho variável, então a duração varia a cada peça: deduzir é
+ * justamente o que não se pode fazer aqui. O navegador entrega o número exato
+ * de graça.
+ */
+async function duracaoDoVideo(url: string): Promise<number> {
+  return new Promise((res, rej) => {
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.muted = true;
+    const limpar = () => {
+      v.removeAttribute("src");
+      v.load();
+    };
+    v.onloadedmetadata = () => {
+      const d = v.duration;
+      limpar();
+      if (!isFinite(d) || d <= 0) rej(new Error("duração do vídeo indisponível"));
+      else res(d);
+    };
+    v.onerror = () => {
+      limpar();
+      rej(new Error("não foi possível ler a duração do vídeo"));
+    };
+    v.src = url;
+  });
+}
+
 export interface MontagemInput {
-  /** Vídeo base — o clipe JÁ APARADO na fala. */
+  /** Vídeo base — o clipe JÁ APARADO na fala. A duração é MEDIDA, não informada. */
   videoUrl: string;
-  /** Duração desse clipe, em segundos. */
-  videoS: number;
   /** Capa gerada pelo app (data URL ou http). */
   capaUrl: string;
   /** Roteiro falado — vira legenda queimada. */
@@ -96,9 +132,14 @@ export async function montarReels(
   input: MontagemInput,
   onProgress?: (msg: string) => void,
 ): Promise<Blob> {
-  const plano = planejarMontagem(input.videoS);
-  const legendas: Legenda[] =
-    input.falaS && input.falaS > 0 ? montarLegendas(input.script, input.falaS) : [];
+  const videoS = await duracaoDoVideo(input.videoUrl);
+  const plano = planejarMontagem(videoS);
+  // A legenda acompanha a LOCUÇÃO, não o clipe: sobra de imagem depois da fala
+  // não é legenda no ar. E a fala nunca pode passar do clipe — se `speechSeconds`
+  // vier maior (medição do MP3 contra um vídeo já aparado), a última legenda
+  // ficaria além do fim do filme.
+  const falaS = input.falaS && input.falaS > 0 ? Math.min(input.falaS, videoS) : 0;
+  const legendas: Legenda[] = falaS > 0 ? montarLegendas(input.script, falaS) : [];
 
   onProgress?.("Preparando a montagem…");
   const ff = await getFfmpeg(onProgress);
