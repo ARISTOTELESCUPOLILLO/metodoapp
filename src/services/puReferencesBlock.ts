@@ -83,12 +83,28 @@ export function referencesBlock(
   if (refs.fato) elementos.push("FATO");
   if (refs.venda) elementos.push("VENDA");
   if (refs.produtos && refs.produtos.length) elementos.push("PRODUTOS");
-  if (!elementos.length) return "";
 
-  parts.push(
-    `ESTRUTURA VISUAL DA PEÇA — usar como REFERÊNCIA VISUAL (não copiar literalmente, não fazer colagem):`,
-  );
-  parts.push(`Elementos enviados: ${elementos.join(", ")}.`);
+  // ⚠ O PERSONAGEM SEM AVATAR NÃO É UMA IMAGEM — é uma pessoa inventada do zero,
+  // e por isso NUNCA aparece na lista de elementos acima, que conta fotos
+  // enviadas. Até 10/09/2026 o corte `if (!elementos.length) return ""` levava
+  // junto o bloco PERSONAGEM OBRIGATÓRIO, montado algumas linhas abaixo: quem
+  // marcava SÓ "Gerar personagem (sem avatar)", sem nada do Kit Imagem, tinha a
+  // marcação descartada em silêncio e recebia uma peça sem ninguém.
+  // Reproduzido nos dois sentidos — sem foto nenhuma o bloco sumia; bastava
+  // marcar um cenário junto para ele voltar. O personagem só sobrevivia de
+  // carona numa imagem, e é justamente o recurso de quem ainda não tem fotos
+  // no Kit. Vale em qualquer direção e qualquer objetivo.
+  const temPersonagemInventado = !refs.avatar && !!refs.personagemSemAvatarAtivo;
+  if (!elementos.length && !temPersonagemInventado) return "";
+
+  // Sem foto enviada, anunciar "estrutura visual" e "elementos enviados" seria
+  // mentira — o modelo passaria a procurar uma referência que não existe.
+  if (elementos.length) {
+    parts.push(
+      `ESTRUTURA VISUAL DA PEÇA — usar como REFERÊNCIA VISUAL (não copiar literalmente, não fazer colagem):`,
+    );
+    parts.push(`Elementos enviados: ${elementos.join(", ")}.`);
+  }
   parts.push(segmentRules(segment, !!refs.cenario, semPersonagem));
 
   if (refs.avatar) {
@@ -312,9 +328,14 @@ A imagem final deve ser reconhecidamente a MESMA cena — apenas mais clara, ní
         `NEGATIVE: detailed background, specific room interior, identifiable location behind person, lifestyle environment, sharp background, busy background, office furniture behind subject.`,
     );
   }
-  parts.push(
-    `INTEGRAÇÃO: combinar os elementos de forma natural, elegante e coerente — adapte iluminação, profundidade e atmosfera ao mood. Resultado deve parecer campanha visual profissional, não colagem.`,
-  );
+  // "Combinar os elementos" pressupõe elementos a combinar: sem foto enviada,
+  // há um personagem só, e a frase abriria espaço para o modelo inventar o
+  // resto do MIX que ninguém pediu.
+  if (elementos.length) {
+    parts.push(
+      `INTEGRAÇÃO: combinar os elementos de forma natural, elegante e coerente — adapte iluminação, profundidade e atmosfera ao mood. Resultado deve parecer campanha visual profissional, não colagem.`,
+    );
+  }
   // Reforço final repetido como ÚLTIMA linha do bloco de referências — modelos
   // de imagem tendem a dar mais peso à instrução mais recente em prompts longos.
   if (refs.produtos && refs.produtos.length >= 2) {

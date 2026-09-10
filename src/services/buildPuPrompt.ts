@@ -572,8 +572,26 @@ Hierarquia tipográfica obrigatória:
     faceNotDominant,
     data.mood,
   );
+  // O bloco de referências passou a existir também SEM foto nenhuma — quando o
+  // usuário marca só "Gerar personagem (sem avatar)". Nesse caso o cabeçalho
+  // não pode falar em "imagem de referência": não há nenhuma, e afirmá-la manda
+  // o modelo procurar o que não existe. A PRECEDÊNCIA, que é o que interessa,
+  // continua a mesma.
+  const temImagemRef = !!(
+    references?.avatar ||
+    references?.uniforme ||
+    references?.fachada ||
+    references?.cenario ||
+    references?.fato ||
+    references?.venda ||
+    references?.produtos?.length
+  );
   const referenceAnchorBlock = refsBlock
-    ? `⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito.\n${refsBlock}\n\n`
+    ? `${
+        temImagemRef
+          ? "⚠ REFERÊNCIA VISUAL ENVIADA — PRIORIDADE MÁXIMA: as instruções abaixo sobre a(s) imagem(ns) de referência têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito."
+          : "⚠ COMPOSIÇÃO DEFINIDA PELO USUÁRIO — PRIORIDADE MÁXIMA: as instruções abaixo têm PRECEDÊNCIA sobre qualquer elemento, ambiente, figurino ou personagem descrito no restante deste prompt, em caso de conflito. NÃO há imagem de referência nesta peça — a cena é criada do zero seguindo estas instruções."
+      }\n${refsBlock}\n\n`
     : "";
 
   // papelBlock usa buildSceneRoleRule() — fonte canônica em visualDirection.ts.
