@@ -266,35 +266,62 @@ export const listMyGenerations = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const ids = (gens || []).map((g) => g.id);
-    const assetsByGen: Record<string, { id: string; ordem: number; url: string }[]> = {};
-    if (ids.length) {
-      const { data: assets } = await supabaseAdmin
-        .from("user_assets")
-        .select("id, generation_id, ordem, storage_path")
-        .in("generation_id", ids)
-        .order("ordem", { ascending: true });
-      for (const a of assets || []) {
-        const url = await createSignedUrlWithRetry(a.storage_path, 60 * 30);
-        if (!url) continue;
-        (assetsByGen[a.generation_id] ||= []).push({
-          id: a.id,
-          ordem: a.ordem,
-          url,
-        });
+    const { data: assets } = ids.length
+      ? await supabaseAdmin
+          .from("user_assets")
+          .select("id, generation_id, ordem, storage_path")
+          .in("generation_id", ids)
+          .order("ordem", { ascending: true })
+      : {
+          data: [] as { id: string; generation_id: string; ordem: number; storage_path: string }[],
+        };
+
+    // ⚠ UMA CHAMADA PARA TODOS OS CAMINHOS (10/09/2026).
+    //
+    // Antes assinava um por um, em sequência: na conta do Ari isso dava 58 idas
+    // ao Storage por carregamento do Histórico — 53 imagens, depois os vídeos.
+    // E os VÍDEOS ficavam por último, então eram os primeiros a perder quando o
+    // orçamento de sub-requisições do Worker acabava. Sintoma real: a peça de
+    // Reels aparecia no Histórico com a capa e a legenda, mas SEM o vídeo — e
+    // sem vídeo não há o que montar. O erro só ia para o console do servidor.
+    //
+    // `createSignedUrls` assina uma lista inteira de uma vez. As 58 viram 1.
+    const caminhos = [
+      ...(assets || []).map((a) => a.storage_path),
+      ...(gens || []).flatMap((g) => [g.pdf_path, g.video_path].filter(Boolean) as string[]),
+    ];
+    const assinadas = new Map<string, string>();
+    if (caminhos.length) {
+      const { data: lote } = await supabaseAdmin.storage
+        .from(BUCKET)
+        .createSignedUrls(caminhos, 60 * 30);
+      for (const item of lote || []) {
+        if (item.signedUrl && item.path) assinadas.set(item.path, item.signedUrl);
       }
+      // Rede de segurança: o que o lote não assinou (objeto sumido, falha
+      // pontual) tenta de novo individualmente, sem derrubar o resto.
+      for (const p of caminhos) {
+        if (!assinadas.has(p)) {
+          const url = await createSignedUrlWithRetry(p, 60 * 30);
+          if (url) assinadas.set(p, url);
+        }
+      }
+    }
+
+    const assetsByGen: Record<string, { id: string; ordem: number; url: string }[]> = {};
+    for (const a of assets || []) {
+      const url = assinadas.get(a.storage_path);
+      if (!url) continue;
+      (assetsByGen[a.generation_id] ||= []).push({ id: a.id, ordem: a.ordem, url });
     }
 
     const pdfUrls: Record<string, string> = {};
     const videoUrls: Record<string, string> = {};
     for (const g of gens || []) {
-      if (g.pdf_path) {
-        const url = await createSignedUrlWithRetry(g.pdf_path, 60 * 30);
-        if (url) pdfUrls[g.id] = url;
-      }
-      if (g.video_path) {
-        const url = await createSignedUrlWithRetry(g.video_path, 60 * 30);
-        if (url) videoUrls[g.id] = url;
-      }
+      const pdf = g.pdf_path ? assinadas.get(g.pdf_path) : undefined;
+      if (pdf) pdfUrls[g.id] = pdf;
+      const video = g.video_path ? assinadas.get(g.video_path) : undefined;
+      if (video) videoUrls[g.id] = video;
     }
 
     return (gens || []).map((g) => ({
