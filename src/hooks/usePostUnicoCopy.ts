@@ -134,6 +134,14 @@ export function usePostUnicoCopy({
           keyInfo: data.keyInfo,
           segment: kit.segment,
           objetivo: data.objetivo,
+          // Mesma guarda do copy e da legenda: a escolha editorial só vale
+          // enquanto a informação-chave for exatamente a frase aceita. Editada
+          // à mão, a linha caducou e o juiz não deve cobrá-la.
+          editorial:
+            data.editorial?.linhaEditorial &&
+            data.editorial.proposicao?.trim() === (data.keyInfo || "").trim()
+              ? { linhaEditorial: data.editorial.linhaEditorial, alvo: "pu" as const }
+              : undefined,
         });
         if (updated) result = updated;
       } catch {

@@ -76,6 +76,15 @@ export function useMopHandlers({
           mainActivity: kit.mainActivity || "",
           keyInfo: form.keyInfo,
           segment: kit.segment,
+          // Mesma guarda de `editorialVigente` no prompt (organizaMethodEngine):
+          // a linha só vale enquanto a informação-chave for a proposição aceita.
+          // No MOP a cobrança do juiz recai só sobre a PRIMEIRA peça — a linha é
+          // origem da sequência, não molde das nove.
+          editorial:
+            form.editorial?.linhaEditorial &&
+            form.editorial.proposicao?.trim() === (form.keyInfo || "").trim()
+              ? { linhaEditorial: form.editorial.linhaEditorial, alvo: "mop" as const }
+              : undefined,
         });
         if (updated) generated = updated;
       } catch {

@@ -23,6 +23,10 @@ interface JudgeContext {
   // modo de título AJUSTADO (ver RegenContext.objetivo) quando o D2 flagar
   // algo e disparar uma regeneração. Ausente/irrelevante para MOP.
   objetivo?: string;
+  // Linha editorial da geração (piloto). Viaja só quando existe — sem ela o
+  // prompt do juiz sai idêntico ao de sempre. O campo "alvo" decide o ESCOPO da
+  // cobrança: no MOP a linha é origem, não molde (ver buildCriterioEditorialJuiz).
+  editorial?: { linhaEditorial?: string | null; alvo: "pu" | "mop" };
 }
 
 interface JudgeItem {
@@ -94,6 +98,7 @@ async function callJudgeContent(
         mainActivity: ctx.mainActivity,
         keyInfo: ctx.keyInfo,
         segment: ctx.segment,
+        ...(ctx.editorial?.linhaEditorial ? { editorial: ctx.editorial } : {}),
         items,
       }),
       signal: controller.signal,

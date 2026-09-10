@@ -8,6 +8,7 @@ import {
 import {
   buildRegraLinhaEditorial,
   regraNomeNaLegenda,
+  buildCriterioEditorialJuiz,
   classificarFalaEditorial,
   validarProposicaoEditorial,
   EDITORIAL_MIN_WORDS,
@@ -673,5 +674,58 @@ describe("REFERIR SEM NOME — a legenda e a excecao", () => {
   it("sem objeto a regra da legenda nao existe", () => {
     expect(regraNomeNaLegenda("")).toBe("");
     expect(regraNomeNaLegenda("   ")).toBe("");
+  });
+});
+
+describe("criterio editorial do juiz D2", () => {
+  // Caso real de 10/09: proposicao CONHECIMENTO impecavel e titulo
+  // "Criacao de logomarca: o que muda" — a pergunta da TRANSFORMACAO e uma
+  // formula que serve a qualquer anunciante do ramo. Nenhuma regua pegava:
+  // as validacoes deterministicas aprovaram os dois campos e o criterio 3 do
+  // juiz ("generico demais") nao pega titulo que NOMEIA o produto.
+  it("sem linha editorial, nao existe criterio nenhum", () => {
+    expect(buildCriterioEditorialJuiz({ linhaEditorial: null, alvo: "pu", numero: 6 })).toBe("");
+  });
+
+  it("no PU cobra titulo e texto, e nomeia a armadilha do 'o que muda'", () => {
+    const c = buildCriterioEditorialJuiz({
+      linhaEditorial: "conhecimento",
+      alvo: "pu",
+      numero: 6,
+    });
+    expect(c.startsWith("6. ABANDONOU A LINHA EDITORIAL")).toBe(true);
+    expect(c).toContain("CONHECIMENTO");
+    expect(c).toContain("O que é importante compreender?");
+    expect(c).toContain("Vale para o TÍTULO e para o TEXTO desta peça.");
+    expect(c).toContain('"o que muda"');
+    // Condensar continua permitido — o defeito e trocar a ideia, nao encurtar.
+    expect(c).toContain("NÃO reprove por não repetir as palavras da informação-chave");
+  });
+
+  it("no MOP cobra so a primeira peca — a linha e origem, nao molde", () => {
+    const c = buildCriterioEditorialJuiz({
+      linhaEditorial: "conhecimento",
+      alvo: "mop",
+      numero: 6,
+    });
+    expect(c).toContain("SOMENTE para o PRIMEIRO item");
+    expect(c).toContain("ORIGEM da sequência");
+    expect(c).toContain("CONTRADIZER");
+    expect(c).not.toContain("Vale para o TÍTULO e para o TEXTO desta peça.");
+  });
+
+  it("as cinco linhas produzem criterio, cada uma com a sua pergunta", () => {
+    const linhas = [
+      "diagnostico",
+      "conhecimento",
+      "experiencia",
+      "transformacao",
+      "decisao",
+    ] as const;
+    for (const linha of linhas) {
+      const c = buildCriterioEditorialJuiz({ linhaEditorial: linha, alvo: "pu", numero: 6 });
+      expect(c, linha).toContain(LINHA_EDITORIAL_SPEC[linha].pergunta);
+      expect(c, linha).toContain(LINHA_EDITORIAL_SPEC[linha].label.toUpperCase());
+    }
   });
 });

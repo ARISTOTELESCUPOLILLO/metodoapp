@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getUserIdFromRequest, checkBalance, checkRateLimit } from "@/lib/usage.server";
 import { fetchOpenAIChat } from "@/lib/openaiClient.server";
+import { hasBetaEditorial } from "@/repository/betaFlags";
+import { buildCriterioEditorialJuiz } from "@/core/linhaEditorialRules";
+import { parseLinhaEditorial } from "@/domain/linhaEditorial.config";
 
 const SEGMENT_LABEL: Record<string, string> = {
   VAREJO: "Varejo — comercialização de produtos ao consumidor final",
@@ -60,6 +63,23 @@ export const Route = createFileRoute("/api/judge-content")({
 
           const segmentBlock = segment ? `SEGMENTO: ${SEGMENT_LABEL[segment] || segment}\n` : "";
 
+          // LINHA EDITORIAL — critério 6, só existe no piloto. Chega vazio para
+          // quem está fora do beta e para geração sem linha, e aí o prompt do
+          // juiz fica idêntico ao de sempre, byte a byte. A flag só é consultada
+          // quando o cliente manda uma linha: quem está fora não paga a consulta.
+          const editorialBody = body.editorial as
+            | { linhaEditorial?: unknown; alvo?: unknown }
+            | undefined;
+          const linhaPedida = parseLinhaEditorial(editorialBody?.linhaEditorial);
+          const criterioEditorial =
+            linhaPedida && (await hasBetaEditorial(userId))
+              ? buildCriterioEditorialJuiz({
+                  linhaEditorial: linhaPedida,
+                  alvo: editorialBody?.alvo === "mop" ? "mop" : "pu",
+                  numero: 6,
+                })
+              : "";
+
           const itemsBlock = items
             .map((it) => {
               const campos: string[] = [];
@@ -81,12 +101,12 @@ CONTEXTO IMPORTANTE SOBRE A PROGRESSÃO DA SEQUÊNCIA: o Método OP constrói um
 PEÇAS:
 ${itemsBlock}
 
-Avalie CADA campo (titulo/texto/legenda) preenchido de cada peça segundo estes 5 critérios — e SOMENTE estes:
+Avalie CADA campo (titulo/texto/legenda) preenchido de cada peça segundo estes ${criterioEditorial ? 6 : 5} critérios — e SOMENTE estes:
 1. SEM SENTIDO: a frase não faz sentido lógico ou gramatical em português, mesmo que cada palavra individualmente esteja correta (ex.: combinação de palavras que não forma uma ideia coerente).
 2. PERDE RELAÇÃO COM A INFORMAÇÃO-CHAVE: aplica-se SOMENTE à peça de fechamento (ver acima) — o conteúdo não tem nenhuma relação com o negócio/oferta informada.
 3. GENÉRICO DEMAIS: o texto poderia pertencer a QUALQUER empresa de QUALQUER ramo — não diz nada específico sobre este negócio, atividade ou segmento.
 4. NÃO CONVERSA COM O SEGMENTO: o tom, vocabulário ou abordagem é incompatível com o segmento informado (ex.: linguagem de varejo popular numa marca institucional sóbria, ou vice-versa).
-5. FORÇADO/NÃO NATURAL: a frase é gramaticalmente válida mas nenhum brasileiro falaria assim — soa comprimida ou truncada para caber num limite de palavras, com concordância estranha ou conectivo faltando (ex.: "Mais olho nos seus anúncios", "Rotina de ajustes prévios conta", "Seu lucro pede olhar vivo"). Teste: leia em voz alta — se travar ou parecer tradução malfeita, reprove.
+5. FORÇADO/NÃO NATURAL: a frase é gramaticalmente válida mas nenhum brasileiro falaria assim — soa comprimida ou truncada para caber num limite de palavras, com concordância estranha ou conectivo faltando (ex.: "Mais olho nos seus anúncios", "Rotina de ajustes prévios conta", "Seu lucro pede olhar vivo"). Teste: leia em voz alta — se travar ou parecer tradução malfeita, reprove.${criterioEditorial ? `\n${criterioEditorial}` : ""}
 
 Retorne JSON EXATAMENTE assim, listando APENAS os campos REPROVADOS em algum critério (lista vazia se todos estiverem bons):
 { "avaliacoes": [ { "id": "feed[0]", "campo": "titulo", "motivo": "explicação curta e específica do problema" } ] }`;

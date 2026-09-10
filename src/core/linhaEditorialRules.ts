@@ -262,6 +262,45 @@ const REGRA_PRODUTO_NAO_E_AGENTE = `
 - ⚠ O ITEM DESTA PEÇA NÃO É O AGENTE DO RESULTADO: a tentação é fazê-lo realizar sozinho o que depende do cliente. PROIBIDO construções como "[item] decide resultados", "[item] garante vendas", "[item] traz clientes", "[item] resolve o negócio" — não se sustentam e soam infladas. PROIBIDO TAMBÉM dar a ele capacidade humana ("[item] que sente", "[item] que entende", "[item] que escuta"): quem sente, entende e escuta é gente. O que um serviço faz é mostrar, apontar, revelar, organizar, orientar; quem decide e quem executa é o empresário. Prefira o verbo verificável ao verbo grandioso.`;
 
 /**
+ * CRITÉRIO EXTRA DO JUIZ D2 — a peça continuou na linha editorial?
+ *
+ * POR QUE EXISTE (caso real de 10/09/2026, Post Único, linha CONHECIMENTO).
+ * A proposição aceita distinguia dois lados com precisão: "Reconhecimento visual
+ * imediato é quando a logomarca facilita ser encontrada; credibilidade percebida
+ * é quando ela transmite confiança ao ser vista." O título que saiu foi
+ * "Criação de logomarca: o que muda" — a pergunta da TRANSFORMAÇÃO, não a do
+ * CONHECIMENTO, e uma fórmula que serve a qualquer anunciante do ramo ("Criação
+ * de sites: o que muda" funciona igual).
+ *
+ * ⚠ NENHUMA régua pegava isso, e não por descuido: as validações determinísticas
+ * aprovaram os dois campos, e o critério 3 do juiz ("genérico demais") não pega
+ * um título que NOMEIA o produto. O que faltava era cobrar a LINHA.
+ *
+ * ⚠ O ESCOPO MUDA POR TRILHA, e isso não é detalhe:
+ *  · PU — a peça é uma só e a regra do prompt diz que ela "precisa continuar
+ *    sendo" da perspectiva da linha. Cobrança direta.
+ *  · MOP — a mesma regra do prompt diz que a linha é ORIGEM, NÃO MOLDE: só a
+ *    PRIMEIRA peça nasce da perspectiva, e as seguintes avançam pelos estágios
+ *    da progressão. Cobrar a linha nas nove reprovaria o comportamento correto.
+ *    Por isso, no MOP, só o primeiro item é cobrado; dos demais se exige apenas
+ *    que não CONTRADIGAM a proposição.
+ */
+export function buildCriterioEditorialJuiz(params: {
+  linhaEditorial: LinhaEditorial | null;
+  alvo: "pu" | "mop";
+  numero: number;
+}): string {
+  const { linhaEditorial, alvo, numero } = params;
+  if (!linhaEditorial) return "";
+  const spec = LINHA_EDITORIAL_SPEC[linhaEditorial];
+  const escopo =
+    alvo === "pu"
+      ? `Vale para o TÍTULO e para o TEXTO desta peça.`
+      : `⚠ Vale SOMENTE para o PRIMEIRO item da lista — no Método OP a linha editorial é a ORIGEM da sequência, não um molde: as peças seguintes avançam pelos estágios da progressão e NÃO devem repetir a perspectiva. Nos demais itens, reprove apenas se o campo CONTRADIZER a informação-chave.`;
+  return `${numero}. ABANDONOU A LINHA EDITORIAL: a informação-chave desta geração nasceu da linha ${spec.label.toUpperCase()} — "${spec.pergunta}". ${spec.guia} ${escopo} Reprove quando o campo troca essa perspectiva por outra (a mais comum: virar promessa de mudança, "o que muda", "o que vem por aí") ou por uma fórmula de manchete que caberia em qualquer anunciante do mesmo ramo. TESTE: troque o produto por outro do mesmo ramo — se a frase continuar funcionando igual, ela abandonou a ideia. NÃO reprove por não repetir as palavras da informação-chave: condensar é permitido, trocar a ideia não.`;
+}
+
+/**
  * A EXCEÇÃO DA LEGENDA no modo REFERIR SEM NOME (decisão do Ari, 09/09/2026).
  *
  * O modo existe para a PEÇA não virar etiqueta: o título e o texto convidam
