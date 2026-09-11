@@ -43,36 +43,36 @@ const AVATAR_MODEL = "fal-ai/kling-video/ai-avatar/v2/pro";
 // Fallback quando a detecção de gênero/idade falha.
 const NATIVE_VOICE_FALLBACK = "Rachel";
 
-// AJUSTE DA VOZ — revisto em 11/09/2026 para tirar a RESPIRAÇÃO AUDÍVEL.
+// AJUSTE DA VOZ — ESTES NÚMEROS FORAM OUVIDOS, NÃO DEDUZIDOS (11/09/2026, 21h).
 //
-// ⚠ REVERTE a aposta de 09/09 (stability 0.45 / style 0.35, "expressão com
-// lastro") e a de 11/09 de manhã (pausa escrita em vez de velocidade). As duas
-// foram na direção de mais expressão, e expressão no ElevenLabs vem junto com
-// sopro e inspiração. O que se ouviu no filme real foi isso.
+// ⚠ NÃO MEXER SEM OUVIR. Toda vez que estes valores saíram de documentação em vez
+// de escuta, o resultado piorou: 09/09 apostou em expressão (stability 0,45 /
+// style 0,35) e saiu sopro; 11/09 de manhã apostou em pausa escrita e saiu
+// inspiração alta, que o Kling animou na boca do personagem; 11/09 à tarde
+// apostou em firmeza (0,60 / 0,15) e saiu monótono, sem fechar as orações.
 //
-// O primeiro filme com pausas saiu com uma inspiração alta, que o Kling ainda
-// animou na boca do personagem: aparecia e se ouvia. Três coisas mudaram juntas,
-// porque a causa é somada:
-//  · as marcas de pausa saíram do texto — pausa longa pedida ao modelo é
-//    justamente onde ele decide tomar ar;
-//  · `stability` subiu: entrega mais firme, menos variação expressiva, e
-//    respiração é variação expressiva;
-//  · `style` desceu: estilo alto é o que puxa suspiro, ênfase e sopro.
+// O Ari gerou o mesmo roteiro no estúdio do ElevenLabs até ficar certo, e o nome
+// do arquivo trouxe a configuração: `sp100_s50_sb75_se9`. É ela que está aqui.
+// Veredito dele: "a questão não foi a voz, foi a interpretação".
+//
+// O que o conjunto diz: estabilidade no MEIO (0,50) deixa a voz subir e descer o
+// suficiente para fechar a oração no ponto final, e `style` quase ZERO (0,09)
+// tira o sopro e a ênfase teatral — que é de onde vinha a respiração.
 const VOICE_SETTINGS = {
-  stability: 0.6,
+  stability: 0.5,
   similarity_boost: 0.75,
-  style: 0.15,
+  style: 0.09,
   use_speaker_boost: true,
 };
 
 /**
- * Velocidade da locução. Abaixo de 1, a fala desacelera por inteiro.
+ * Velocidade da locução.
  *
- * ⚠ É ESTE o remédio da "fala corrida", não a pausa inserida. Pausa é silêncio
- * que o modelo preenche respirando; velocidade é a frase toda mais calma, do
- * começo ao fim, sem buraco no meio.
+ * ⚠ VOLTOU A 1,0 — a amostra aprovada foi gerada em velocidade normal (`sp100`).
+ * Desacelerar (0,92) foi tentativa minha de consertar a "fala corrida", e a fala
+ * corrida não era de velocidade: era de interpretação.
  */
-const VOICE_SPEED = 0.92;
+const VOICE_SPEED = 1.0;
 
 // Mapeamento gênero+faixa → voz ElevenLabs profissional em pt-BR.
 const VOICE_MAP: Record<string, string> = {
@@ -313,29 +313,16 @@ export const Route = createFileRoute("/api/generate-video")({
           // que o ElevenLabs adiciona quando o texto não tem um fim de frase definido.
           const scriptTts = script.trimEnd().replace(/[,;:\s]+$/, "") + ".";
 
-          // ⚠ UMA LOCUÇÃO POR FRASE — conserto de 11/09/2026, à noite.
+          // ⚠ UMA LOCUÇÃO SÓ, com o roteiro inteiro.
           //
-          // O defeito, na palavra do Ari: "quando acabou a primeira oração sem
-          // uma interpretação de fechamento, começou a outra oração com uma
-          // respiração pra dentro". As duas queixas são o MESMO defeito, e ele
-          // nasce de mandar as duas frases numa requisição só: para o modelo o
-          // enunciado não terminou no ponto final, então ele não baixa a voz —
-          // e toma ar para seguir. Essa inspiração é ÁUDIO GERADO, e o Kling
-          // anima o que o áudio faz: ela aparecia na boca do personagem.
-          //
-          // Tirar a marcação de pausa não resolveu (tentado de manhã) nem
-          // resolveria: o ar vem do PONTO FINAL, não da marcação. Gerando cada
-          // frase sozinha, cada uma acaba como quem acaba, e não existe frase
-          // seguinte para tomar fôlego.
-          //
-          // ⚠ Os pedaços são MP3 independentes e são emendados byte a byte.
-          // Quadro de MP3 é autossuficiente, então emendar funciona — mas a
-          // DURAÇÃO do arquivo emendado não se lê mais pelo cabeçalho do
-          // primeiro. Por isso cada pedaço é medido antes, e os tempos se somam.
-          const frasesDaFala = scriptTts
-            .split(/(?<=[.!?])\s+/)
-            .map((f) => f.trim())
-            .filter(Boolean);
+          // Cheguei a repartir por frase (11/09/2026, à noite) achando que a
+          // respiração e a falta de fecho nasciam de mandar as duas orações
+          // juntas. NÃO NASCIAM: o Ari gerou o mesmo roteiro no estúdio do
+          // ElevenLabs, numa requisição só, e ficou certo — "a questão não foi a
+          // voz, foi a interpretação". O que mudou foram os AJUSTES (ver
+          // VOICE_SETTINGS). A divisão saiu: replicar a configuração provada vale
+          // mais que uma engenharia que nunca foi ouvida.
+          const frasesDaFala = [scriptTts];
 
           // Como se gera UMA frase — muda com o caminho da voz, o resto é igual.
           let falarUmaFrase: (texto: string) => Promise<Buffer>;

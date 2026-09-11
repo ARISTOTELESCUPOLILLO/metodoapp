@@ -32,8 +32,9 @@
 // real veio com 14,30 s, dos quais 0,4 de capa e 2,0 de assinatura — 11,9 s de
 // fala para uma faixa de ~29 palavras, ou seja **2,44 palavras/s**, não 2,95.
 //
-// A 2,44, dez segundos são ~24 palavras. Daí a faixa de 23 a 26, que cai entre
-// 9,4 e 10,7 segundos.
+// A velocidade voltou a 1,0 depois (a amostra que o Ari aprovou no estúdio foi
+// gerada assim), o que sobe para ~2,6 palavras/s. A faixa de 23 a 26 cobre os
+// dois casos: cai entre 9 e 10,7 segundos.
 //
 // A rota de vídeo registra palavras e segundos medidos a cada geração
 // ("[generate-video] fala palavras=… speechSeconds=…"). Conferir nela antes de
