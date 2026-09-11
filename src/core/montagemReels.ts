@@ -13,11 +13,11 @@
 //   0,0 ─ 0,4   capa parada
 //   0,4 ─ 0,4+D filme com locução e legendas queimadas
 //               (D = duração do clipe já aparado na fala)
-//         ↓     0,5 s de fade cruzado, SOBREPOSTO ao fim do filme
+//         ↓     0,6 s de fade cruzado, SOBREPOSTO ao fim do filme
 //   fim ─ +2,0  assinatura em fundo preto
 //
 // ⚠ O FADE NÃO SOMA TEMPO: ele acontece POR CIMA do fim do filme, e é por isso
-// que a assinatura começa a aparecer 0,5 s antes de o filme acabar. Somar o
+// que a assinatura começa a aparecer 0,6 s antes de o filme acabar. Somar o
 // fade ao total foi o primeiro erro de conta que eu cometi ao desenhar isto.
 
 /**
@@ -40,8 +40,13 @@ export const ALTURA = 1920;
 /** Capa parada na abertura. */
 export const CAPA_S = 0.4;
 
-/** Fade cruzado entre o filme e a assinatura. Sobreposto, não somado. */
-export const TRANSICAO_S = 0.5;
+/**
+ * Fade cruzado entre o filme e a assinatura. Sobreposto, não somado.
+ *
+ * Era 0,5 s. O Ari viu o filme montado e pediu um pouco mais — 0,6 s. Passagem
+ * curta demais faz a assinatura "aparecer", e o que se quer é ela CHEGAR.
+ */
+export const TRANSICAO_S = 0.6;
 
 /** Assinatura em fundo preto, contada a partir do fim do filme. */
 export const ASSINATURA_S = 2.0;
@@ -60,8 +65,15 @@ export const TEXTO_ATRASO_S = 0.2;
 /** Duração do deslizamento do telefone. */
 export const TEXTO_ENTRADA_S = 0.4;
 
-/** Respiro entre a base da logo e o texto do contato — pedido do Ari. */
-export const RESPIRO_LOGO_TEXTO_PX = 30;
+/**
+ * Respiro entre a base da logo e o bloco do contato.
+ *
+ * O Ari pediu 30 px e, no filme montado, o texto saiu COLADO na marca. O motivo
+ * não era a conta do texto: era o ÍCONE, que sobe acima da linha das letras e
+ * comia o respiro sozinho. Agora o respiro é medido até o topo do elemento mais
+ * alto do bloco (ícone ou letra), e subiu os 15 px que ele pediu em cima disso.
+ */
+export const RESPIRO_LOGO_TEXTO_PX = 45;
 
 /** Trilha por baixo da fala e depois da fala. */
 export const TRILHA_VOL_FALA = 0.18;
@@ -86,7 +98,7 @@ export interface PlanoMontagem {
   /** O filme, deslocado pela capa. */
   filme: Cena;
   /**
-   * A assinatura, INCLUINDO os 0,5 s de fade que correm por cima do filme.
+   * A assinatura, INCLUINDO o fade que corre por cima do filme.
    * `inicio` é quando ela começa a aparecer; `opacaEm` é quando ela já cobre.
    */
   assinatura: Cena & { opacaEm: number };

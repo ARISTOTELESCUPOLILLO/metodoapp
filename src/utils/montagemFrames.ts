@@ -6,7 +6,7 @@
 // trata acento mal. Desenhar aqui é a MESMA técnica já em produção no título da
 // Sinalização (composeReelsTitlePng), e por isso já sabemos que funciona.
 //
-// ⚠ E O FADE VEM DE DENTRO DO PNG: a transição de 0,5 s não usa filtro de
+// ⚠ E O FADE VEM DE DENTRO DO PNG: a transição não usa filtro de
 // transição do FFmpeg (que depende de como o núcleo foi compilado e eu não
 // tenho como verificar offline). Em vez disso, os primeiros quadros da
 // assinatura são desenhados com opacidade crescente — o fade fica assado na
@@ -123,15 +123,36 @@ export async function desenharAssinatura(
   const fonte = opts.fontFamily || "Inter";
   const logo = opts.logoDataUrl ? await carregarImagem(opts.logoDataUrl).catch(() => null) : null;
 
-  // A logo ocupa 46% da largura — folga confortável no vertical e sem ampliar
-  // demais o arquivo do Kit, que é pequeno (420x343 na conta do Ari).
-  const logoLarg = Math.round(LARGURA * 0.46);
-  const logoAlt = logo ? Math.round((logo.naturalHeight / logo.naturalWidth) * logoLarg) : 0;
+  // ⚠ A LOGO CABE NUMA CAIXA, NÃO NUMA LARGURA (11/09/2026, Ari).
+  //
+  // A primeira versão dimensionava só pela LARGURA: 46% do quadro. Isso serve a
+  // logomarca deitada, mas numa QUADRADA — e redonda conta como quadrada — a
+  // mesma largura vira a mesma altura, e a marca fica enorme no vertical. O Ari
+  // viu exatamente isso no filme montado.
+  //
+  // Agora ela é encaixada numa caixa com teto de largura E teto de altura, e
+  // quem manda é o lado que apertar primeiro:
+  //   · deitada  → o teto de LARGURA manda, a altura sobra;
+  //   · quadrada → o teto de ALTURA manda, e ela encolhe sozinha.
+  // Os 41% já são os 46% de antes com a redução de 10% que ele pediu.
+  const maxLarg = LARGURA * 0.41;
+  const maxAlt = ALTURA * 0.19;
+  const proporcao = logo ? logo.naturalWidth / logo.naturalHeight : 1;
+  const escalaCaixa = Math.min(maxLarg, maxAlt * proporcao);
+  const logoLarg = Math.round(escalaCaixa);
+  const logoAlt = logo ? Math.round(logoLarg / proporcao) : 0;
 
   const fonteContato = Math.round(LARGURA * 0.052);
-  const alturaBloco = logoAlt + RESPIRO_LOGO_TEXTO_PX + fonteContato;
+  const raioIcone = fonteContato * 0.55;
+
+  // ⚠ O RESPIRO É MEDIDO ATÉ O TOPO DO ELEMENTO MAIS ALTO, não até a linha das
+  // letras. No primeiro filme montado o contato saiu colado na marca mesmo com
+  // 30 px declarados: o ÍCONE sobe acima das letras e comia o respiro sozinho.
+  // Quem olha vê a distância até o ícone, não até o "(" do telefone.
+  const alturaAcimaDaLinha = Math.max(raioIcone + fonteContato * 0.3, fonteContato * 0.75);
+  const alturaBloco = logoAlt + RESPIRO_LOGO_TEXTO_PX + alturaAcimaDaLinha + fonteContato * 0.25;
   const topoLogo = Math.round((ALTURA - alturaBloco) / 2);
-  const baseTexto = topoLogo + logoAlt + RESPIRO_LOGO_TEXTO_PX + fonteContato * 0.8;
+  const baseTexto = topoLogo + logoAlt + RESPIRO_LOGO_TEXTO_PX + alturaAcimaDaLinha;
 
   const saida: Uint8Array[] = [];
   for (let i = 0; i < quadros; i++) {
@@ -172,7 +193,6 @@ export async function desenharAssinatura(
         ctx.textAlign = "left";
         ctx.textBaseline = "alphabetic";
         const larguraTexto = ctx.measureText(opts.contato).width;
-        const raioIcone = fonteContato * 0.55;
         const espacoIcone = raioIcone * 2 + fonteContato * 0.35;
         const xInicio = (LARGURA - (larguraTexto + espacoIcone)) / 2;
         desenharIconeWhatsapp(

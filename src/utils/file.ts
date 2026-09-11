@@ -65,6 +65,44 @@ const FORMATO_ABREV: Record<"estatico" | "carrossel" | "estatico_final" | "reels
  * O número final identifica a ordem do card no carrossel — nos demais
  * formatos (imagem única) é sempre 1.
  */
+/**
+ * Nome do FILME MONTADO — formato, dia e título, nessa ordem.
+ *
+ * Pedido do Ari em 11/09/2026, e a razão é prática: o nome de arquivamento
+ * ("Plano1.10-09-2026_1954.rls.01.mt.mp4") diz slot e hora, que não ajudam a
+ * achar a peça numa pasta de downloads. O que ele procura é "qual peça é esta".
+ *
+ * Ex.: `reels_dia3_criacao-de-conteudo-nao-e-so-postar_11-09.mp4`
+ */
+export function nomeDoFilme(opts: {
+  formato: string;
+  dia?: number | null;
+  titulo?: string;
+  createdAt: string | Date;
+}): string {
+  const d = typeof opts.createdAt === "string" ? new Date(opts.createdAt) : opts.createdAt;
+  const p2 = (n: number) => String(n).padStart(2, "0");
+  const data = `${p2(d.getDate())}-${p2(d.getMonth() + 1)}`;
+  const slug = (opts.titulo || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    // Nome de arquivo longo demais é cortado pelo sistema e atrapalha mais do
+    // que ajuda; 6 palavras já identificam a peça.
+    .split("-")
+    .slice(0, 6)
+    .join("-");
+  const partes = [
+    (opts.formato || "peca").toLowerCase(),
+    opts.dia ? `dia${opts.dia}` : "",
+    slug,
+    data,
+  ].filter(Boolean);
+  return `${partes.join("_")}.mp4`;
+}
+
 export function archiveFileName(opts: {
   tipo: "S3V" | "PU";
   slot: "plano1" | "plano2" | "bonus";

@@ -8,7 +8,7 @@ import { AuthGate } from "@/components/app/AuthGate";
 import { listMyGenerations, deleteGeneration } from "@/lib/assets.functions";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { MetaPublish } from "@/components/metodo-op/MetaPublish";
-import { archiveFileName } from "@/utils/file";
+import { archiveFileName, nomeDoFilme } from "@/utils/file";
 import { arquivoDeVideo, compartilharVideo, podeCompartilharArquivo } from "@/utils/compartilhar";
 import { supabase } from "@/integrations/supabase/client";
 import { loadKitForUser } from "@/services/brandKit";
@@ -236,12 +236,12 @@ function MontarFilmeArquivado({ gen }: { gen: Gen }) {
   const capa = [...gen.assets].sort((a, b) => a.ordem - b.ordem)[0]?.url;
   // Sufixo "mt" (montado) para o arquivo não se confundir com o MP4 cru que o
   // botão de cima baixa.
-  const nomeDoFilme = archiveFileName({
-    tipo: gen.tipo,
-    slot: gen.slot,
+  // Nome que diz QUAL peça é — formato, dia e título (pedido do Ari, 11/09).
+  const nomeDoArquivo = nomeDoFilme({
     formato: gen.formato,
+    dia: gen.dia,
+    titulo: gen.titulo,
     createdAt: gen.createdAt,
-    ext: "mt.mp4",
   });
   if (!gen.videoUrl || !capa) return null;
 
@@ -290,19 +290,19 @@ function MontarFilmeArquivado({ gen }: { gen: Gen }) {
           <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
             <button
               type="button"
-              onClick={() => downloadFromUrl(pronto, nomeDoFilme)}
+              onClick={() => downloadFromUrl(pronto, nomeDoArquivo)}
               style={botaoMontar}
             >
               <Download size={11} /> Baixar
             </button>
             {/* Só aparece quando o aparelho sabe compartilhar ARQUIVO — na
                 prática, celular. É a folha do sistema, onde o WhatsApp está. */}
-            {blobMontado && podeCompartilharArquivo(arquivoDeVideo(blobMontado, nomeDoFilme)) && (
+            {blobMontado && podeCompartilharArquivo(arquivoDeVideo(blobMontado, nomeDoArquivo)) && (
               <button
                 type="button"
                 onClick={async () => {
                   const r = await compartilharVideo(
-                    arquivoDeVideo(blobMontado, nomeDoFilme),
+                    arquivoDeVideo(blobMontado, nomeDoArquivo),
                     gen.titulo || undefined,
                   );
                   if (!r.ok && !r.cancelado) setErro(r.erro || "não foi possível compartilhar");
