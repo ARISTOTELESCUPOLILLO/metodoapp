@@ -6,6 +6,7 @@ import {
   SCRIPT_FECHO_MAX_WORDS,
   SCRIPT_MENSAGEM_MIN_WORDS,
   SCRIPT_MENSAGEM_MAX_WORDS,
+  SCRIPT_ABERTURA_MIN_WORDS,
   validateScriptReels,
 } from "@/core/scriptValidation";
 import {
@@ -119,6 +120,8 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: troque o sujeit
     return {
       label: "roteiro falado",
       rule: `ISTO É FALA, NÃO TEXTO — será lido em voz alta por sintetizador.
+⚠ ABRA PELA AFIRMAÇÃO: os primeiros segundos decidem se a pessoa fica. PROIBIDO começar por "Quando", "Se", "Ao", "Caso", "Enquanto", "Embora", "Como", "Porque" ou por verbo no infinitivo — isso adia a ideia para a décima palavra e quem passa o dedo já foi embora. E antes da vírgula de respiro tem de haver uma afirmação que se sustenta sozinha (mínimo ${SCRIPT_ABERTURA_MIN_WORDS} palavras), nunca um advérbio solto do tipo "Agora,".
+⚠ FALE COM QUEM ASSISTE, em segunda pessoa ("seu site", "você", "sua equipe"), em vez de falar sobre terceiros. Isto NÃO autoriza julgar o leitor: nada de "você está perdendo dinheiro" ou "você faz errado".
 ESTRUTURA — EXATAMENTE 2 frases separadas por PONTO FINAL:
 (1) MENSAGEM: ${SCRIPT_MENSAGEM_MIN_WORDS} a ${SCRIPT_MENSAGEM_MAX_WORDS} palavras, com PELO MENOS UMA VÍRGULA no ponto natural de respiro — é onde a voz pausa.
 (2) FECHO: ${SCRIPT_FECHO_MIN_WORDS} a ${SCRIPT_FECHO_MAX_WORDS} palavras, frase curta e separada que ENCERRA a ideia.

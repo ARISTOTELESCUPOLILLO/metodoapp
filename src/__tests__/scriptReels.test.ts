@@ -272,3 +272,98 @@ describe("a checagem final do roteiro fecha o prompt", () => {
     expect(prompt).not.toContain("ÚLTIMA CHECAGEM");
   });
 });
+
+describe("a ideia tem que chegar cedo — retencao do reels (11/09/2026)", () => {
+  // ⚠ LEVANTAMENTO QUE ORIGINOU A REGRA: dos cinco roteiros que este sistema
+  // produziu de verdade, QUATRO comecavam por subordinada ou infinitivo e so
+  // entregavam a ideia por volta da decima palavra. O unico que abria afirmando
+  // foi o que o Ari elogiou. Em reels, os primeiros segundos decidem se a pessoa
+  // fica. Isto NAO e formula de viralizar: e a mesma frase comecando pelo que
+  // importa.
+  const ADIAM = [
+    "Quando a escolha de criar conteúdo só entra em pauta após um alerta, a chance cai. Antecipe o próximo passo.",
+    "Buscar apoio logo no começo muda tudo, porque vai direto onde decidem. Quem começa antes sai na frente.",
+    "Só repetir passo de vendas não resolve, pois cada conversa traz algo fora do previsto. É ouvindo que se evolui.",
+  ];
+
+  it("reprova as aberturas que adiam a ideia", () => {
+    for (const s of ADIAM) {
+      const motivos = validateScriptReels(s).join(" | ");
+      expect(motivos, s.slice(0, 30)).toContain("adia a ideia");
+    }
+  });
+
+  it("reprova a virgula cumprida com adverbio solto", () => {
+    // Saida real: a regua exigia virgula de respiro e o modelo cumpriu do jeito
+    // mais barato — um adverbio na frente. Quem assiste ouve "agora" e continua
+    // sem saber do que se trata.
+    const motivos = validateScriptReels(
+      "Agora, quem lidera produto novo já busca apoio para ajustar o plano. O próximo passo é calibrar juntos.",
+    ).join(" | ");
+    expect(motivos).toContain("antes da primeira vírgula");
+  });
+
+  it("aprova o roteiro que abre afirmando e fala com quem assiste", () => {
+    expect(
+      validateScriptReels(
+        "Seu site recebe muita visita, e quase nenhuma vira conversa com o time. O número sozinho não sustenta.",
+      ),
+    ).toEqual([]);
+  });
+
+  it("nao confunde abertura legitima com infinitivo", () => {
+    // "Muitos", "Seu", "Cada" abrem afirmando — nao podem ser reprovados.
+    for (const s of [
+      "Muitos cliques chegam todo dia, e quase nenhum vira conversa com o time. O número não sustenta.",
+      "Cada visita ao site custa dinheiro, e poucas viram contato de verdade. Vale olhar de perto.",
+    ]) {
+      const motivos = validateScriptReels(s).join(" | ");
+      expect(motivos, s.slice(0, 30)).not.toContain("adia a ideia");
+    }
+  });
+});
+
+describe("as tres regras novas chegam ao prompt do MOP", () => {
+  const BASE = {
+    companyName: "Empresa Teste",
+    segment: "SERVIÇOS",
+    audience: "B2C",
+    businessMoment: "consolidação",
+    keyInfo: "Atendimento com hora marcada",
+    brandVoice: "profissional e acessível",
+    outputMode: "feed",
+    sequenceSize: 3,
+    storiesDays: 1,
+    storiesQuantity: 3,
+    outputFormats: ["feed"],
+    track: "cinematica",
+    mainActivity: "Consultoria de negócios",
+    mood: "OP-01",
+  } as Parameters<typeof buildMetodoOpPrompt>[0];
+
+  it("manda abrir pela afirmacao", () => {
+    const p = buildMetodoOpPrompt(BASE);
+    expect(p).toContain("OS PRIMEIROS SEGUNDOS DECIDEM SE A PESSOA FICA");
+    expect(p).toContain("ABRA PELA AFIRMAÇÃO");
+  });
+
+  it("autoriza segunda pessoa SO no script, e nao revoga a proibicao de criticar", () => {
+    const p = buildMetodoOpPrompt(BASE);
+    expect(p).toContain("SEGUNDA PESSOA, e só aqui");
+    expect(p).toContain('vale SOMENTE para o campo "script"');
+    expect(p).toContain("NÃO REVOGA A PROIBIÇÃO DE CRITICAR O LEITOR");
+  });
+
+  it("liga a fala a capa — continua, nao repete", () => {
+    const p = buildMetodoOpPrompt(BASE);
+    expect(p).toContain("A FALA CONTINUA A CAPA, NÃO A REPETE");
+  });
+
+  it("arbitra a contradicao das silabas com o nome do produto", () => {
+    // A regra TTS proibia mais de 3 silabas e o nome cadastrado costuma ter 5+.
+    // As duas se contradiziam e o modelo decidia sozinho qual obedecer.
+    const p = buildMetodoOpPrompt(BASE);
+    expect(p).toContain("EXCEÇÃO ÚNICA, E ELA VENCE ESTE LIMITE");
+    expect(p).toContain("Fora o nome do produto, PROIBIDO");
+  });
+});

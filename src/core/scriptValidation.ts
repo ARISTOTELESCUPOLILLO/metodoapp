@@ -48,6 +48,48 @@ export const SCRIPT_MENSAGEM_MAX_WORDS = 17;
 /** MENSAGEM + FECHO. A fala tem duas frases, e a terceira é sempre invasão. */
 export const SCRIPT_FRASES = 2;
 
+/**
+ * Palavras mínimas ANTES da primeira vírgula.
+ *
+ * ⚠ A vírgula de respiro é obrigatória desde 09/09, e o modelo aprendeu a
+ * cumpri-la do jeito mais barato: pondo um advérbio solto na frente. Saiu
+ * "Agora, quem lidera produto novo já busca apoio…" — a "afirmação" antes da
+ * pausa tem UMA palavra e não diz nada. Quem assiste ouve um "agora" e continua
+ * sem saber do que se trata.
+ */
+export const SCRIPT_ABERTURA_MIN_WORDS = 5;
+
+/**
+ * Aberturas que ADIAM o ponto — o defeito de retenção medido em 11/09/2026.
+ *
+ * Levantamento dos cinco roteiros reais que o sistema produziu: QUATRO começavam
+ * com subordinada ou verbo no infinitivo, e só entregavam a ideia por volta da
+ * décima palavra ("Quando a escolha de criar conteúdo só entra em pauta após um
+ * alerta…", "Buscar apoio logo no começo muda tudo, porque…"). Em reels isso é
+ * tempo suficiente para a pessoa ir embora. O único que abria afirmando foi o
+ * que o Ari elogiou.
+ *
+ * ⚠ Isto NÃO é fórmula de viralizar. É entregar a ideia mais cedo — a frase
+ * continua sendo a mesma, só não começa pelo acessório.
+ */
+const ABERTURA_QUE_ADIA = new Set([
+  "quando",
+  "se",
+  "ao",
+  "caso",
+  "embora",
+  "enquanto",
+  "conforme",
+  "apesar",
+  "porque",
+  "como",
+  "depois",
+  "antes",
+  "sempre",
+  "toda",
+  "todo",
+]);
+
 function contar(texto: string): number {
   return texto.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -113,6 +155,31 @@ export function validateScriptReels(script: string): string[] {
 
     const mensagem = frases.slice(0, -1).join(" ");
     const nMensagem = contar(mensagem);
+
+    // ── ABERTURA: a ideia tem que chegar cedo ───────────────────────────────
+    const palavrasMsg = mensagem.split(/\s+/).filter(Boolean);
+    const primeira = (palavrasMsg[0] || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z]/g, "");
+    const segunda = (palavrasMsg[1] || "").toLowerCase().replace(/[^a-zà-ú]/gi, "");
+    // Infinitivo abrindo a frase ("Buscar apoio…", "Só repetir passo…") adia o
+    // sujeito tanto quanto uma subordinada.
+    const infinitivo = (p: string) => p.length >= 5 && /(ar|er|ir)$/.test(p);
+    if (ABERTURA_QUE_ADIA.has(primeira) || infinitivo(primeira) || infinitivo(segunda)) {
+      motivos.push(
+        `o roteiro abre com "${palavrasMsg[0]}" e adia a ideia — comece pela AFIRMAÇÃO, não pela condição nem pelo verbo no infinitivo; em reels os primeiros segundos decidem se a pessoa fica`,
+      );
+    }
+
+    // A vírgula de respiro precisa vir DEPOIS de algo que se sustenta sozinho.
+    const antesDaVirgula = mensagem.split(",")[0] || "";
+    if (/,/.test(mensagem) && contar(antesDaVirgula) < SCRIPT_ABERTURA_MIN_WORDS) {
+      motivos.push(
+        `antes da primeira vírgula há só ${contar(antesDaVirgula)} palavra(s) — a pausa tem de vir depois de uma afirmação que se sustenta sozinha, não depois de um advérbio solto`,
+      );
+    }
     if (nMensagem > SCRIPT_MENSAGEM_MAX_WORDS)
       motivos.push(
         `a mensagem tem ${nMensagem} palavras — acima de ${SCRIPT_MENSAGEM_MAX_WORDS}; encurte a MENSAGEM e preserve o fecho`,
