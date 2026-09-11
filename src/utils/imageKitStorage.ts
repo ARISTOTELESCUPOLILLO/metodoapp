@@ -22,6 +22,9 @@ export const emptyImageKit: ImageKit = {
   produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
   fato: undefined,
   venda: undefined,
+  // A trilha é ESCOLHA, não imagem — mas viaja no mesmo objeto, e some se não
+  // for carregada aqui (ver a função normalize).
+  trilha: null,
 };
 
 // Shape bruto vindo do localStorage (JSON.parse). Inclui o campo legado
@@ -36,7 +39,20 @@ type StoredImageKit = {
   produtos?: unknown;
   fato?: unknown;
   venda?: unknown;
+  trilha?: unknown;
 };
+
+/**
+ * Recria o Kit CAMPO A CAMPO a partir do que estava guardado.
+ *
+ * ⚠ Exportada para teste desde 11/09/2026, e o motivo é o defeito que ela
+ * causou: tudo que não for copiado aqui DESAPARECE. A trilha escolhida ficou de
+ * fora e o filme sairia com a padrão mesmo depois de o usuário escolher outra.
+ * Campo novo no Kit tem que passar por aqui, e o teste existe para lembrar.
+ */
+export function normalizeImageKit(kit: StoredImageKit | null | undefined): ImageKit {
+  return normalize(kit);
+}
 
 function normalize(kit: StoredImageKit | null | undefined): ImageKit {
   // Produtos
@@ -66,6 +82,11 @@ function normalize(kit: StoredImageKit | null | undefined): ImageKit {
     produtos: produtos.map((p) => (typeof p === "string" && p ? p : null)),
     fato: str(kit?.fato),
     venda: str(kit?.venda),
+    // ⚠ SEM ESTA LINHA A ESCOLHA DA TRILHA SE PERDE. A normalização recria o
+    // objeto campo a campo, então tudo que não for copiado aqui desaparece —
+    // e o filme sairia com a trilha padrão mesmo depois de o usuário escolher
+    // outra. Não é imagem, mas viaja no mesmo Kit.
+    trilha: typeof kit?.trilha === "string" ? kit.trilha : null,
   };
 }
 
@@ -78,6 +99,7 @@ function freshEmpty(): ImageKit {
     produtos: Array.from({ length: PRODUTO_SLOTS }, () => null),
     fato: undefined,
     venda: undefined,
+    trilha: null,
   };
 }
 
@@ -153,6 +175,7 @@ function normalizeRemote(remote: {
   produtos?: (string | null)[] | null;
   fato?: string | null;
   venda?: string | null;
+  trilha?: string | null;
 }): _ImageKit {
   const cenarios = (remote.cenarios || []).slice(0, CENARIO_SLOTS);
   while (cenarios.length < CENARIO_SLOTS) cenarios.push(null);
@@ -166,6 +189,7 @@ function normalizeRemote(remote: {
     produtos: produtos.map((p) => (typeof p === "string" && p ? p : null)),
     fato: remote.fato || undefined,
     venda: remote.venda || undefined,
+    trilha: remote.trilha ?? null,
   };
 }
 
