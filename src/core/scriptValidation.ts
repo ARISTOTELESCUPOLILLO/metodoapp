@@ -20,22 +20,35 @@
 // corre a 140-160 ppm; conversa natural, 160-180. A fala saiu apressada porque
 // o alvo do prompt era contagem de palavras, não tempo de fala.
 //
-// ALVO NOVO: ~8 s de locução a ~150 ppm = 20 palavras COM PAUSA ESCRITA. A
-// pausa não é enfeite — é a vírgula que faz o sintetizador respirar. Sem ela,
-// as mesmas 20 palavras saem corridas.
+// ALVO ATUAL: 10 SEGUNDOS DE LOCUÇÃO (decisão do Ari, 11/09/2026, à tarde).
+//
+// Por que subiu: com 24 palavras cabe uma afirmação e um fecho, e não cabe
+// VIRADA. Virada é o que faz alguém salvar e mandar para outra pessoa, que é o
+// que empurra o alcance para fora dos seguidores. Dez segundos dão o terceiro
+// movimento dentro da mensagem, sem virar palestra.
+//
+// A CONTA, com o único número medido de verdade: 17 palavras em 5,29 s = 3,21
+// palavras/s. A locução agora sai a 0,92 da velocidade (ver VOICE_SPEED em
+// routes/api/generate-video.ts), o que dá ~2,95 palavras/s. Dez segundos, então,
+// são cerca de 29 palavras — daí a faixa de 27 a 31.
+//
+// ⚠ A CALIBRAGEM AINDA É DE UMA MEDIÇÃO SÓ, feita com outros ajustes de voz. A
+// rota de vídeo registra palavras e segundos medidos a cada geração
+// ("[generate-video] fala palavras=… speechSeconds=…"); a próxima peça real
+// corrige esta faixa com número em vez de estimativa.
 
 import { checkDanglingEnding, checkPunctuation } from "./textWordUtils";
 
 /** Faixa de palavras do roteiro inteiro — fonte única (prompt + validação). */
-export const SCRIPT_MIN_WORDS = 18;
-export const SCRIPT_MAX_WORDS = 24;
+export const SCRIPT_MIN_WORDS = 27;
+export const SCRIPT_MAX_WORDS = 31;
 
 /** A frase de fecho é curta de propósito: é onde a voz desce. */
 export const SCRIPT_FECHO_MIN_WORDS = 3;
 export const SCRIPT_FECHO_MAX_WORDS = 7;
 
 /** A mensagem precisa de respiro escrito. */
-export const SCRIPT_MENSAGEM_MIN_WORDS = 11;
+export const SCRIPT_MENSAGEM_MIN_WORDS = 20;
 
 /**
  * Teto da mensagem. Existe desde 09/09/2026 (tarde): saiu um roteiro de 42
@@ -43,7 +56,7 @@ export const SCRIPT_MENSAGEM_MIN_WORDS = 11;
  * reprovava, e uma única reprovação genérica ("acima de 24") não diz ao modelo
  * ONDE cortar. Ele cortava do fecho, que era a parte certa.
  */
-export const SCRIPT_MENSAGEM_MAX_WORDS = 17;
+export const SCRIPT_MENSAGEM_MAX_WORDS = 25;
 
 /** MENSAGEM + FECHO. A fala tem duas frases, e a terceira é sempre invasão. */
 export const SCRIPT_FRASES = 2;
@@ -124,7 +137,7 @@ export function validateScriptReels(script: string): string[] {
     );
   if (total > SCRIPT_MAX_WORDS)
     motivos.push(
-      `roteiro com ${total} palavras — acima de ${SCRIPT_MAX_WORDS}; passa de ~10 s de locução e a fala sai corrida`,
+      `roteiro com ${total} palavras — acima de ${SCRIPT_MAX_WORDS}; passa dos ~10 s de locução que o filme comporta`,
     );
 
   const frases = frasesDoScript(t);

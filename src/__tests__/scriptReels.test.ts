@@ -39,7 +39,7 @@ describe("validateScriptReels — o caso que originou a régua", () => {
 
 describe("validateScriptReels — o que passa", () => {
   const BOM =
-    "Muitos cliques chegam todo dia, e quase nenhum vira conversa de verdade com o time. O número sozinho não sustenta.";
+    "Seu site recebe cliques todo dia, e quase nenhum deles vira uma conversa de verdade com quem atende o seu cliente. O numero sozinho nao sustenta o dia.";
 
   it("aprova roteiro com mensagem, vírgula de respiro e fecho curto", () => {
     expect(validateScriptReels(BOM)).toEqual([]);
@@ -55,7 +55,7 @@ describe("validateScriptReels — o que passa", () => {
 describe("validateScriptReels — cada defeito isolado", () => {
   it("cobra a vírgula: sem pausa escrita a locução sai corrida", () => {
     const semVirgula =
-      "Muitos cliques chegam todo dia e quase nenhum vira conversa de verdade com o time. O número sozinho não sustenta.";
+      "Seu site recebe cliques todo dia e quase nenhum deles vira uma conversa de verdade com quem atende o seu cliente. O numero sozinho nao sustenta o dia.";
     expect(validateScriptReels(semVirgula).join(" ")).toContain("nenhuma vírgula");
   });
 
@@ -67,7 +67,7 @@ describe("validateScriptReels — cada defeito isolado", () => {
 
   it("reprova roteiro longo demais para caber na locução", () => {
     const longo =
-      "Muitos cliques chegam todo dia, e quase nenhum deles vira uma conversa de verdade com o seu time comercial que atende, responde e acompanha cada pessoa. O número sozinho não sustenta.";
+      "Seu site recebe cliques todo dia, e quase nenhum deles vira uma conversa de verdade com o seu time comercial, que atende, responde e acompanha cada pessoa que aparece por ali. O numero sozinho nao sustenta o dia.";
     expect(longo.split(/\s+/).length).toBeGreaterThan(SCRIPT_MAX_WORDS);
     expect(validateScriptReels(longo).join(" ")).toContain(String(SCRIPT_MAX_WORDS));
   });
@@ -121,7 +121,7 @@ describe("prompt e validação leem o mesmo número", () => {
 // coisa, o modelo copia o exemplo e ignora a regra.
 describe("o exemplo do prompt obedece a própria régua", () => {
   const EXEMPLO =
-    "Muitos cliques chegam todo dia, e quase nenhum vira conversa com o time. O número sozinho não sustenta.";
+    "Seu site recebe cliques todo dia, e quase nenhum deles vira uma conversa de verdade com quem atende o seu cliente. O número sozinho não sustenta o dia.";
 
   it("o exemplo passa na validação", () => {
     expect(validateScriptReels(EXEMPLO)).toEqual([]);
@@ -201,7 +201,7 @@ describe("o trilho do texto de apoio nao serve ao roteiro", () => {
   //      bem-feito TEM duas frases, entao ela jogava fora justamente o fecho.
   // Este teste trava o item 3: se alguem religar a limpeza no reels, quebra.
   const ROTEIRO_CERTO =
-    "Quem lidera produto novo ja busca apoio antes, nao so na hora de divulgar. O proximo passo e calibrar juntos.";
+    "Quem lidera produto novo ja busca apoio antes, e nao so na hora de divulgar o que o time acabou de criar. O proximo passo e calibrar juntos.";
 
   it("a limpeza determinista do texto de apoio decepa o fecho do roteiro", () => {
     const depois = applyDeterministicFallback(ROTEIRO_CERTO, "texto");
@@ -306,7 +306,7 @@ describe("a ideia tem que chegar cedo — retencao do reels (11/09/2026)", () =>
   it("aprova o roteiro que abre afirmando e fala com quem assiste", () => {
     expect(
       validateScriptReels(
-        "Seu site recebe muita visita, e quase nenhuma vira conversa com o time. O número sozinho não sustenta.",
+        "Seu site recebe muita visita todo dia, e quase nenhuma delas vira uma conversa com quem atende o seu cliente. O numero sozinho nao sustenta o dia.",
       ),
     ).toEqual([]);
   });

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { comRespiro } from "@/core/falaNatural";
 import { probeAudio } from "@/lib/audioProbe.server";
 import {
   resolveEffectiveUser,
@@ -44,29 +43,36 @@ const AVATAR_MODEL = "fal-ai/kling-video/ai-avatar/v2/pro";
 // Fallback quando a detecção de gênero/idade falha.
 const NATIVE_VOICE_FALLBACK = "Rachel";
 
-// AJUSTES DE VOZ — antes: stability 0.7, style 0.
+// AJUSTE DA VOZ — revisto em 11/09/2026 para tirar a RESPIRAÇÃO AUDÍVEL.
 //
-// Achado real 09/09/2026 (S3C da conta admin): a locução saiu plana e corrida.
-// Parte disso é o TEXTO (ver core/scriptValidation.ts), mas parte nasce aqui.
-// No ElevenLabs, `stability` alta troca variação emocional por consistência —
-// 0.7 é território de leitura uniforme —, e `style: 0` é literalmente "sem
-// exagero de estilo". Os dois juntos pedem uma leitura sem relevo, que é
-// exatamente o que se ouviu.
+// ⚠ REVERTE a aposta de 09/09 (stability 0.45 / style 0.35, "expressão com
+// lastro") e a de 11/09 de manhã (pausa escrita em vez de velocidade). As duas
+// foram na direção de mais expressão, e expressão no ElevenLabs vem junto com
+// sopro e inspiração. O que se ouviu no filme real foi isso.
 //
-// 0.45 / 0.35 é expressão com lastro: ainda estável o bastante para não variar
-// timbre entre gerações, com relevo suficiente para a frase de fecho descer.
-// `speed` fica em 1.0 de propósito — a fala apressada se resolve com PAUSA
-// ESCRITA no roteiro (a vírgula que a régua nova exige), não desacelerando o
-// sintetizador, que produz arrasto artificial.
-//
-// ⚠ NÃO VALIDADO EM GERAÇÃO REAL — estes números vêm da documentação do
-// ElevenLabs e do defeito medido, não de uma peça gerada. Calibrar ouvindo.
+// O primeiro filme com pausas saiu com uma inspiração alta, que o Kling ainda
+// animou na boca do personagem: aparecia e se ouvia. Três coisas mudaram juntas,
+// porque a causa é somada:
+//  · as marcas de pausa saíram do texto — pausa longa pedida ao modelo é
+//    justamente onde ele decide tomar ar;
+//  · `stability` subiu: entrega mais firme, menos variação expressiva, e
+//    respiração é variação expressiva;
+//  · `style` desceu: estilo alto é o que puxa suspiro, ênfase e sopro.
 const VOICE_SETTINGS = {
-  stability: 0.45,
+  stability: 0.6,
   similarity_boost: 0.75,
-  style: 0.35,
+  style: 0.15,
   use_speaker_boost: true,
 };
+
+/**
+ * Velocidade da locução. Abaixo de 1, a fala desacelera por inteiro.
+ *
+ * ⚠ É ESTE o remédio da "fala corrida", não a pausa inserida. Pausa é silêncio
+ * que o modelo preenche respirando; velocidade é a frase toda mais calma, do
+ * começo ao fim, sem buraco no meio.
+ */
+const VOICE_SPEED = 0.92;
 
 // Mapeamento gênero+faixa → voz ElevenLabs profissional em pt-BR.
 const VOICE_MAP: Record<string, string> = {
@@ -311,10 +317,11 @@ export const Route = createFileRoute("/api/generate-video")({
 
           // Garante que o script termina com pontuação limpa para evitar artefato ("soluço")
           // que o ElevenLabs adiciona quando o texto não tem um fim de frase definido.
-          // RESPIRO NA FALA (11/09/2026): as pausas entram AQUI, só no caminho do
-          // TTS. O roteiro na tela e a legenda queimada continuam limpos — quem
-          // lê não vê marcação nenhuma. Ver core/falaNatural.ts.
-          const scriptTts = comRespiro(script.trimEnd().replace(/[,;:\s]+$/, "") + ".");
+          // ⚠ SEM MARCAÇÃO DE PAUSA. Chegou a existir (11/09/2026, de manhã) e
+          // saiu na mesma tarde: a pausa pedida ao modelo virou uma inspiração
+          // alta, que o Kling ainda animou na boca do personagem. O ritmo passou
+          // a vir de VOICE_SPEED, que não abre buraco para tomar fôlego.
+          const scriptTts = script.trimEnd().replace(/[,;:\s]+$/, "") + ".";
 
           if (clonedSamplePath) {
             // ElevenLabs TTS direto com voice_id clonado — gera bytes e faz upload para URL acessível pelo Kling.
@@ -331,7 +338,7 @@ export const Route = createFileRoute("/api/generate-video")({
                 text: scriptTts,
                 model_id: "eleven_multilingual_v2",
                 language_code: "pt",
-                voice_settings: VOICE_SETTINGS,
+                voice_settings: { ...VOICE_SETTINGS, speed: VOICE_SPEED },
               }),
             });
             if (!ttsRes.ok) {
@@ -373,7 +380,7 @@ export const Route = createFileRoute("/api/generate-video")({
               stability: VOICE_SETTINGS.stability,
               similarity_boost: VOICE_SETTINGS.similarity_boost,
               style: VOICE_SETTINGS.style,
-              speed: 1.0,
+              speed: VOICE_SPEED,
             });
             const tts = await falWaitResult<{ audio?: { url?: string } }>(
               ttsSubmit,
