@@ -10,9 +10,10 @@
 //
 // Duas mudanças:
 //
-//  1. O ARQUIVO .js AGORA É NOSSO. São 109 KB servidos junto com o app, na
-//     mesma origem — sem CORS, sem CDN, sem bloqueador no caminho. É justamente
-//     o arquivo que falhou.
+//  1. O ARQUIVO .js AGORA É NOSSO, E É O BUILD ESM. São 109 KB servidos junto
+//     com o app, na mesma origem. ⚠ O build TEM que ser ESM: o worker da
+//     biblioteca nasce como módulo, e worker de módulo não tem importScripts —
+//     ela importa o núcleo e lê o export default, que só o ESM tem.
 //  2. O .wasm CONTINUA VINDO DE FORA, com dois endereços em cadeia. Ele tem
 //     30,7 MB descompactados e o limite de arquivo estático do Cloudflare é
 //     25 MiB — não cabe. Então: jsdelivr primeiro, unpkg depois.
@@ -34,22 +35,22 @@ const FONTES = [
   {
     nome: "proprio+jsdelivr",
     core: "/ffmpeg/ffmpeg-core.js",
-    wasm: `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${VERSAO}/dist/umd/ffmpeg-core.wasm`,
+    wasm: `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${VERSAO}/dist/esm/ffmpeg-core.wasm`,
   },
   {
     nome: "proprio+unpkg",
     core: "/ffmpeg/ffmpeg-core.js",
-    wasm: `https://unpkg.com/@ffmpeg/core@${VERSAO}/dist/umd/ffmpeg-core.wasm`,
+    wasm: `https://unpkg.com/@ffmpeg/core@${VERSAO}/dist/esm/ffmpeg-core.wasm`,
   },
   {
     nome: "jsdelivr",
-    core: `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${VERSAO}/dist/umd/ffmpeg-core.js`,
-    wasm: `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${VERSAO}/dist/umd/ffmpeg-core.wasm`,
+    core: `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${VERSAO}/dist/esm/ffmpeg-core.js`,
+    wasm: `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${VERSAO}/dist/esm/ffmpeg-core.wasm`,
   },
   {
     nome: "unpkg",
-    core: `https://unpkg.com/@ffmpeg/core@${VERSAO}/dist/umd/ffmpeg-core.js`,
-    wasm: `https://unpkg.com/@ffmpeg/core@${VERSAO}/dist/umd/ffmpeg-core.wasm`,
+    core: `https://unpkg.com/@ffmpeg/core@${VERSAO}/dist/esm/ffmpeg-core.js`,
+    wasm: `https://unpkg.com/@ffmpeg/core@${VERSAO}/dist/esm/ffmpeg-core.wasm`,
   },
 ];
 
@@ -123,12 +124,17 @@ export async function examinarAmbiente(): Promise<string[]> {
     URL.revokeObjectURL(url);
   });
 
-  // 2. importScripts dentro do worker — é o passo exato que o FFmpeg faz.
-  await testar("importScripts no worker", async () => {
+  // 2. Importar o núcleo DENTRO de um worker de MÓDULO — o passo exato da lib.
+  //
+  // ⚠ A primeira versão deste teste criava um worker CLÁSSICO e usava
+  // `importScripts`. Ele dizia "ok" enquanto o caminho real falhava, porque em
+  // worker clássico o UMD carrega sem problema. Um exame que não reproduz a
+  // condição real é pior que exame nenhum: ele inocenta o culpado.
+  await testar("importar núcleo em worker de módulo", async () => {
     const alvo = new URL("/ffmpeg/ffmpeg-core.js", location.origin).href;
-    const codigo = `try{ importScripts(${JSON.stringify(alvo)}); self.postMessage(typeof createFFmpegCore); }catch(e){ self.postMessage("erro: "+(e&&e.message||e)); }`;
+    const codigo = `try{ const m = await import(${JSON.stringify(alvo)}); self.postMessage(typeof m.default); }catch(e){ self.postMessage("erro: "+(e&&e.message||e)); }`;
     const url = URL.createObjectURL(new Blob([codigo], { type: "text/javascript" }));
-    const w = new Worker(url);
+    const w = new Worker(url, { type: "module" });
     const r = await new Promise<string>((res, rej) => {
       const t = setTimeout(() => rej(new Error("sem resposta em 8 s")), 8000);
       w.onmessage = (ev) => {
@@ -142,7 +148,7 @@ export async function examinarAmbiente(): Promise<string[]> {
     });
     w.terminate();
     URL.revokeObjectURL(url);
-    if (r !== "function") throw new Error(`createFFmpegCore veio como "${r}"`);
+    if (r !== "function") throw new Error(`o default do núcleo veio como "${r}"`);
   });
 
   // 3. Compilar um WebAssembly mínimo (módulo vazio válido).
@@ -180,6 +186,16 @@ async function buscarNucleo(url: string): Promise<string> {
   const texto = await r.text();
   if (!texto.includes("createFFmpegCore")) {
     throw new Error("o arquivo baixado não é o núcleo do FFmpeg (resposta interceptada?)");
+  }
+  // ⚠ TEM QUE SER O BUILD ESM, E ESTA LINHA É A QUE GARANTE.
+  // O worker da biblioteca é `type: "module"`, e em worker de módulo não existe
+  // `importScripts`. Ela cai no plano B — `import()` — e lê o `.default`. O
+  // build UMD não exporta nada como módulo: `import()` devolve `{}`, o default
+  // vem `undefined` e sai "failed to import ffmpeg-core.js". Foi exatamente
+  // isso que travou o Ari em 11/09/2026, nas quatro fontes de uma vez, porque
+  // as quatro apontavam para /umd/.
+  if (!/export\s+default/.test(texto)) {
+    throw new Error("o núcleo baixado é UMD, e o worker de módulo precisa do build ESM");
   }
   return URL.createObjectURL(new Blob([texto], { type: "text/javascript" }));
 }
