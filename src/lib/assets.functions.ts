@@ -5,6 +5,12 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isAdmin } from "@/repository/authz";
 
 const BUCKET = "user-assets";
+
+// Validade dos enderecos assinados do Historico. Eram 30 minutos, e isso
+// derrubava a publicacao: a Meta BUSCA o video depois do clique, e a aba do
+// Historico costuma ficar aberta muito mais que meia hora. Seis horas cobrem
+// uma sessao de trabalho inteira.
+const VALIDADE_S = 60 * 60 * 6;
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB
 
 const FormatoEnum = z.enum(["estatico", "carrossel", "estatico_final", "reels"]);
@@ -45,6 +51,11 @@ const SaveSchema = z.object({
     .min(1)
     .max(10),
   videoUrl: z.string().url().optional(),
+  // O MP4 que esta chegando ja e o FILME MONTADO (capa, legenda, assinatura)?
+  // Sem esse aviso o Historico oferece montar de novo e a peca sai com duas
+  // capas e duas assinaturas. Vai gravado no NOME do arquivo — nao ha coluna
+  // para ele, e criar coluna nova custaria migration.
+  videoMontado: z.boolean().optional(),
   asUserId: z.string().uuid().optional(),
 });
 
@@ -150,7 +161,7 @@ export const saveGeneration = createServerFn({ method: "POST" })
             `Vídeo grande demais para arquivar (${(buf.length / 1024 / 1024).toFixed(1)} MB > 25 MB).`,
           );
         }
-        videoPath = `${targetUserId}/${gen.id}/video.mp4`;
+        videoPath = `${targetUserId}/${gen.id}/${data.videoMontado ? "filme" : "video"}.mp4`;
         const { error: vErr } = await supabaseAdmin.storage
           .from(BUCKET)
           .upload(videoPath, buf, { contentType: "video/mp4", upsert: true });
@@ -294,7 +305,7 @@ export const listMyGenerations = createServerFn({ method: "POST" })
     if (caminhos.length) {
       const { data: lote } = await supabaseAdmin.storage
         .from(BUCKET)
-        .createSignedUrls(caminhos, 60 * 30);
+        .createSignedUrls(caminhos, VALIDADE_S);
       for (const item of lote || []) {
         if (item.signedUrl && item.path) assinadas.set(item.path, item.signedUrl);
       }
@@ -302,7 +313,7 @@ export const listMyGenerations = createServerFn({ method: "POST" })
       // pontual) tenta de novo individualmente, sem derrubar o resto.
       for (const p of caminhos) {
         if (!assinadas.has(p)) {
-          const url = await createSignedUrlWithRetry(p, 60 * 30);
+          const url = await createSignedUrlWithRetry(p, VALIDADE_S);
           if (url) assinadas.set(p, url);
         }
       }
@@ -317,11 +328,14 @@ export const listMyGenerations = createServerFn({ method: "POST" })
 
     const pdfUrls: Record<string, string> = {};
     const videoUrls: Record<string, string> = {};
+    // Quem foi arquivado JA MONTADO — ver videoMontado na entrada.
+    const montados = new Set<string>();
     for (const g of gens || []) {
       const pdf = g.pdf_path ? assinadas.get(g.pdf_path) : undefined;
       if (pdf) pdfUrls[g.id] = pdf;
       const video = g.video_path ? assinadas.get(g.video_path) : undefined;
       if (video) videoUrls[g.id] = video;
+      if (g.video_path?.endsWith("/filme.mp4")) montados.add(g.id);
     }
 
     return (gens || []).map((g) => ({
@@ -336,6 +350,7 @@ export const listMyGenerations = createServerFn({ method: "POST" })
       expiresAt: g.expires_at,
       pdfUrl: pdfUrls[g.id] || null,
       videoUrl: videoUrls[g.id] || null,
+      videoMontado: montados.has(g.id),
       assets: assetsByGen[g.id] || [],
     }));
   });

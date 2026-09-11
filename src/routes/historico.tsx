@@ -8,6 +8,7 @@ import { AuthGate } from "@/components/app/AuthGate";
 import { listMyGenerations, deleteGeneration } from "@/lib/assets.functions";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { MetaPublish } from "@/components/metodo-op/MetaPublish";
+import { MetaPublishFilme } from "@/components/metodo-op/MetaPublishFilme";
 import { archiveFileName, nomeDoFilme } from "@/utils/file";
 import { arquivoDeVideo, compartilharVideo, podeCompartilharArquivo } from "@/utils/compartilhar";
 import { supabase } from "@/integrations/supabase/client";
@@ -246,7 +247,15 @@ function MontarFilmeArquivado({ gen }: { gen: Gen }) {
     titulo: gen.titulo,
     createdAt: gen.createdAt,
   });
-  if (!gen.videoUrl || !capa) return null;
+  if (!gen.videoUrl) return null;
+
+  // JA CHEGOU MONTADO (arquivado depois de 11/09/2026): nao ha o que montar, e
+  // montar de novo colaria uma segunda capa e uma segunda assinatura. Aqui so
+  // se publica.
+  if (gen.videoMontado) {
+    return <MetaPublishFilme videoUrl={gen.videoUrl} caption={gen.legenda} titulo={gen.titulo} />;
+  }
+  if (!capa) return null;
 
   async function montar() {
     setErro(null);
@@ -320,6 +329,17 @@ function MontarFilmeArquivado({ gen }: { gen: Gen }) {
               </button>
             )}
           </div>
+          {/* Publicar o FILME montado — com capa e assinatura. O publicador de
+              cima e de IMAGEM; video tem outro fluxo, com espera (ver o
+              componente). */}
+          <MetaPublishFilme
+            /* Cada montagem troca a chave: o publicador nasce de novo, sem a
+               memoria do envio e do conteiner do filme anterior. */
+            key={pronto}
+            blob={blobMontado}
+            caption={gen.legenda}
+            titulo={gen.titulo}
+          />
         </>
       ) : (
         <button type="button" onClick={montar} disabled={!!estado} style={botaoMontar}>

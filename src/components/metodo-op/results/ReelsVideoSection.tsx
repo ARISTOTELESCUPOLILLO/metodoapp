@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import type { BrandKit } from "../../../types";
 import { mopName } from "../../../utils/file";
 import type { VideoMode } from "./useReelsGeneration";
+import { MetaPublishFilme } from "../MetaPublishFilme";
 import {
   arquivoDeVideo,
   compartilharVideo,
@@ -39,6 +40,14 @@ interface Props {
   /** Monta o filme sobre o vídeo atual — sem custo, repetível. */
   montarFilmeAgora?: () => void;
   montando?: boolean;
+  /** O filme montado, para publicar. */
+  filmeMontado?: Blob | null;
+  legenda?: string;
+  tituloDaPeca?: string;
+  /** Endereco publico do filme, quando o envio ja deu certo. */
+  filmeUrlPublica?: string | null;
+  /** Quantas montagens ja houve — vira a chave do publicador. */
+  montagemN?: number;
   retryingVideo: boolean;
 }
 
@@ -66,6 +75,11 @@ export function ReelsVideoSection({
   retryVideoOnly,
   montarFilmeAgora,
   montando,
+  filmeMontado,
+  legenda,
+  tituloDaPeca,
+  filmeUrlPublica,
+  montagemN,
   retryingVideo,
 }: Props) {
   const videoRef = useRef<HTMLDivElement | null>(null);
@@ -326,6 +340,19 @@ export function ReelsVideoSection({
               >
                 ↗ Compartilhar (WhatsApp)
               </button>
+              {/* Publicar o FILME montado. So aparece depois de montado: o que
+                  vai para a Meta e o arquivo com capa, legenda e assinatura. */}
+              {filmeMontado && (
+                <MetaPublishFilme
+                  /* Filme novo, publicador novo: a chave apaga a memoria do
+                     envio e do conteiner do filme anterior. */
+                  key={montagemN}
+                  blob={filmeMontado}
+                  videoUrl={filmeUrlPublica}
+                  caption={legenda}
+                  titulo={tituloDaPeca}
+                />
+              )}
               {coverPng && (
                 <div
                   style={{

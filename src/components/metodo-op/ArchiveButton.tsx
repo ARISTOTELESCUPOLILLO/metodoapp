@@ -15,6 +15,8 @@ interface Props {
   imageDataUrls: (string | null)[];
   /** URL do MP4 final (somente reels) */
   videoUrl?: string | null;
+  /** O MP4 ja e o filme montado (capa, legenda, assinatura)? */
+  videoMontado?: boolean;
   /** Slot ativo (plano1 | plano2 | bonus). Se omitido lê window.__opSlot. */
   slot?: "plano1" | "plano2" | "bonus";
   /** Título opcional para o histórico. */
@@ -30,6 +32,7 @@ export function ArchiveButton({
   legenda,
   imageDataUrls,
   videoUrl,
+  videoMontado,
   slot,
   titulo,
   disabledReason,
@@ -55,9 +58,7 @@ export function ArchiveButton({
   // Carrossel tem várias entradas em imageDataUrls (uma por card) — precisa de
   // TODAS geradas antes de liberar, senão arquiva o carrossel pela metade.
   const ready =
-    imageDataUrls.length > 0 &&
-    imageDataUrls.every(Boolean) &&
-    (formato !== "reels" || !!videoUrl);
+    imageDataUrls.length > 0 && imageDataUrls.every(Boolean) && (formato !== "reels" || !!videoUrl);
   const disabled = !ready || state === "busy";
 
   async function handle() {
@@ -105,6 +106,7 @@ export function ArchiveButton({
             titulo: titulo || "",
             images,
             ...(videoUrl ? { videoUrl } : {}),
+            ...(videoUrl && videoMontado ? { videoMontado: true } : {}),
             ...(impersonation?.userId ? { asUserId: impersonation.userId } : {}),
           },
         });

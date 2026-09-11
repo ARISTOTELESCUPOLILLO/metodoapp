@@ -100,6 +100,9 @@ export function ReelsCard({
     retryVideoOnly,
     montarFilmeAgora,
     montando,
+    filmeMontado,
+    filmeUrlPublica,
+    montagemN,
     retryCover,
   } = useReelsGeneration({
     reels,
@@ -328,6 +331,13 @@ export function ReelsCard({
             retryVideoOnly={retryVideoOnly}
             montarFilmeAgora={montarFilmeAgora}
             montando={montando}
+            filmeMontado={filmeMontado}
+            /* A legenda e o titulo que VAO AO AR sao os da tela, ja editados e
+               com a assinatura — nao os que sairam da geracao. */
+            legenda={legenda}
+            tituloDaPeca={hook}
+            filmeUrlPublica={filmeUrlPublica}
+            montagemN={montagemN}
             retryingVideo={retryingVideo}
           />
           <div
@@ -346,9 +356,12 @@ export function ReelsCard({
               legenda={legenda}
               imageDataUrls={[coverPng || preview]}
               videoUrl={
-                // Sinalizacao: blob URL expira; usa a URL FAL original para arquivamento.
-                falVideoUrlRef.current || videoUrl
+                // O FILME MONTADO na frente: e ele que tem capa, legenda e
+                // assinatura. Sem endereco publico dele, cai na URL do FAL
+                // (video cru) — e no modo Sinalizacao a blob URL expira.
+                filmeUrlPublica || falVideoUrlRef.current || videoUrl
               }
+              videoMontado={!!filmeUrlPublica}
               titulo={hook}
               disabledReason="Gere o vídeo (e a capa) antes de arquivar"
             />

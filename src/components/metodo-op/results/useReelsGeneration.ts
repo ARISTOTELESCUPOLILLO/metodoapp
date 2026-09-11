@@ -104,6 +104,16 @@ export function useReelsGeneration(params: {
   const [videoElapsed, setVideoElapsed] = useState(0);
   const [burnProgress, setBurnProgress] = useState<string | null>(null);
   const [montando, setMontando] = useState(false);
+  // O BLOB do filme montado — o publicador precisa do arquivo, não da URL de
+  // blob: a Meta BUSCA o vídeo num endereço público, e quem sobe é ele.
+  const [filmeMontado, setFilmeMontado] = useState<Blob | null>(null);
+  // Endereco publico do filme montado. Serve a DOIS donos: o Historico, que
+  // arquiva baixando de uma URL (sem isso guardava o video CRU), e a Meta, que
+  // busca o video num endereco publico para publicar.
+  const [filmeUrlPublica, setFilmeUrlPublica] = useState<string | null>(null);
+  // Quantas montagens ja aconteceram. Vira a chave do publicador: filme novo,
+  // publicador novo, sem memoria do envio nem do conteiner do filme anterior.
+  const [montagemN, setMontagemN] = useState(0);
   // Ref para limpar blob URLs de vídeos processados pelo FFmpeg (sinalização).
   const burnedBlobUrlRef = useRef<string | null>(null);
   // URL original do FAL (antes do burn) — usada para arquivamento, pois blob URLs
@@ -249,6 +259,7 @@ export function useReelsGeneration(params: {
       updatePreview(final);
       updatePreviewBase(url); // frame limpo (sem logo) = base ideal para a capa
       setVideoUrl(null);
+      esquecerFilme();
       updateCoverPng(null);
       onImageGenerated?.();
     } catch (e) {
@@ -313,6 +324,7 @@ export function useReelsGeneration(params: {
       // url = imagem do reels antes do canvas aplicar a logo → base ideal para o /edit da capa.
       updatePreviewBase(url);
       setVideoUrl(null);
+      esquecerFilme();
       updateCoverPng(null);
       onImageGenerated?.();
     } catch (e) {
@@ -339,6 +351,7 @@ export function useReelsGeneration(params: {
       updatePreviewBase(url);
     }
     setVideoUrl(null);
+    esquecerFilme();
     updateCoverPng(null);
   }
 
@@ -404,6 +417,8 @@ export function useReelsGeneration(params: {
 
   async function runGenerateVideo() {
     if (!preview) return;
+    // Video novo, filme novo: o montado de antes nao vale mais.
+    esquecerFilme();
     setBusyVideo(true);
     setVideoStartedAt(Date.now());
     setVideoElapsed(0);
@@ -601,7 +616,15 @@ export function useReelsGeneration(params: {
         },
         (msg) => setBurnProgress(msg),
       );
+      setFilmeMontado(montado);
       const url = URL.createObjectURL(montado);
+      // Sobe o filme para ter endereco. Falha ABERTA: se o envio nao for, o
+      // filme continua tocando aqui e o arquivamento cai no video de origem.
+      // O endereco do filme ANTERIOR morre aqui. Enquanto o novo nao sobe, nao
+      // ha endereco nenhum — melhor sem endereco do que publicando o filme velho.
+      setFilmeUrlPublica(null);
+      setMontagemN((n) => n + 1);
+      void subirFilme(montado);
       // O blob anterior só é liberado DEPOIS que a montagem deu certo — o vídeo
       // de origem pode ser justamente ele (o clipe aparado).
       if (burnedBlobUrlRef.current && burnedBlobUrlRef.current !== videoBase) {
@@ -622,6 +645,47 @@ export function useReelsGeneration(params: {
     }
   }
 
+  /**
+   * ESQUECE O FILME MONTADO. Chamado sempre que o video de base muda (imagem
+   * nova, video novo): o filme de antes deixa de corresponder a peca da tela, e
+   * deixa-lo vivo faria o publicador e o arquivamento usarem o arquivo errado.
+   */
+  function esquecerFilme() {
+    setFilmeMontado(null);
+    setFilmeUrlPublica(null);
+  }
+
+  /**
+   * Da endereco publico ao filme montado (ver /api/salvar-filme).
+   * Nao derruba a montagem se falhar — so deixa o aviso no diario.
+   */
+  async function subirFilme(filme: Blob) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      const res = await fetch("/api/salvar-filme", {
+        method: "POST",
+        headers: {
+          "Content-Type": "video/mp4",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: filme,
+      });
+      const j = (await res.json()) as { url?: string; error?: string };
+      if (j.url) {
+        setFilmeUrlPublica(j.url);
+        return;
+      }
+      throw new Error(j.error || "sem motivo");
+    } catch (e) {
+      const msg = (e as Error)?.message || "erro desconhecido";
+      console.warn("[montagem] envio falhou:", msg);
+      setVideoError(
+        `O filme foi montado, mas nao consegui guarda-lo (${msg}). Da para baixar, ` +
+          "mas publicar e arquivar vao usar o video sem montagem.",
+      );
+    }
+  }
   /** Botão "Montar filme" — reprocessa o vídeo atual, sem gerar nada de novo. */
   async function montarFilmeAgora() {
     if (!videoUrl || busyVideo || montando) return;
@@ -638,6 +702,7 @@ export function useReelsGeneration(params: {
 
   async function retryVideoOnly() {
     if (!preview || retryingVideo) return;
+    esquecerFilme();
     setRetryingVideo(true);
     setVideoError(null);
     setVideoStartedAt(Date.now());
@@ -736,6 +801,9 @@ export function useReelsGeneration(params: {
     requestedClonedVoice,
     montarFilmeAgora,
     montando,
+    filmeMontado,
+    filmeUrlPublica,
+    montagemN,
     coverPng,
     coverError,
     videoError,

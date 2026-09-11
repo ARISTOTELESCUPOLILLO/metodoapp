@@ -27,6 +27,7 @@ import { Route as ApiTtsVoiceRouteImport } from './routes/api/tts-voice'
 import { Route as ApiTranscribeKeyinfoRouteImport } from './routes/api/transcribe-keyinfo'
 import { Route as ApiSupabasePdfRouteImport } from './routes/api/supabase-pdf'
 import { Route as ApiSuggestKeyinfoRouteImport } from './routes/api/suggest-keyinfo'
+import { Route as ApiSalvarFilmeRouteImport } from './routes/api/salvar-filme'
 import { Route as ApiRegenerateBlockRouteImport } from './routes/api/regenerate-block'
 import { Route as ApiLogMontagemRouteImport } from './routes/api/log-montagem'
 import { Route as ApiJudgeLogoRouteImport } from './routes/api/judge-logo'
@@ -45,7 +46,9 @@ import { Route as AuthMetaCallbackRouteImport } from './routes/auth/meta/callbac
 import { Route as ApiPublicExpireGenerationsRouteImport } from './routes/api/public/expire-generations'
 import { Route as ApiMetaTestPublishRouteImport } from './routes/api/meta/test-publish'
 import { Route as ApiMetaStatusRouteImport } from './routes/api/meta/status'
+import { Route as ApiMetaPublishReelsRouteImport } from './routes/api/meta/publish-reels'
 import { Route as ApiMetaPublishInstagramRouteImport } from './routes/api/meta/publish-instagram'
+import { Route as ApiMetaPublishFacebookVideoRouteImport } from './routes/api/meta/publish-facebook-video'
 import { Route as ApiMetaPublishFacebookRouteImport } from './routes/api/meta/publish-facebook'
 import { Route as ApiMetaPublishCarouselRouteImport } from './routes/api/meta/publish-carousel'
 import { Route as ApiMetaDisconnectRouteImport } from './routes/api/meta/disconnect'
@@ -144,6 +147,11 @@ const ApiSuggestKeyinfoRoute = ApiSuggestKeyinfoRouteImport.update({
   path: '/api/suggest-keyinfo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSalvarFilmeRoute = ApiSalvarFilmeRouteImport.update({
+  id: '/api/salvar-filme',
+  path: '/api/salvar-filme',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRegenerateBlockRoute = ApiRegenerateBlockRouteImport.update({
   id: '/api/regenerate-block',
   path: '/api/regenerate-block',
@@ -235,11 +243,22 @@ const ApiMetaStatusRoute = ApiMetaStatusRouteImport.update({
   path: '/api/meta/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetaPublishReelsRoute = ApiMetaPublishReelsRouteImport.update({
+  id: '/api/meta/publish-reels',
+  path: '/api/meta/publish-reels',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetaPublishInstagramRoute = ApiMetaPublishInstagramRouteImport.update({
   id: '/api/meta/publish-instagram',
   path: '/api/meta/publish-instagram',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetaPublishFacebookVideoRoute =
+  ApiMetaPublishFacebookVideoRouteImport.update({
+    id: '/api/meta/publish-facebook-video',
+    path: '/api/meta/publish-facebook-video',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMetaPublishFacebookRoute = ApiMetaPublishFacebookRouteImport.update({
   id: '/api/meta/publish-facebook',
   path: '/api/meta/publish-facebook',
@@ -306,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/api/judge-logo': typeof ApiJudgeLogoRoute
   '/api/log-montagem': typeof ApiLogMontagemRoute
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
+  '/api/salvar-filme': typeof ApiSalvarFilmeRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/transcribe-keyinfo': typeof ApiTranscribeKeyinfoRoute
@@ -317,7 +337,9 @@ export interface FileRoutesByFullPath {
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-carousel': typeof ApiMetaPublishCarouselRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
+  '/api/meta/publish-facebook-video': typeof ApiMetaPublishFacebookVideoRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
+  '/api/meta/publish-reels': typeof ApiMetaPublishReelsRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
   '/api/meta/test-publish': typeof ApiMetaTestPublishRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
@@ -352,6 +374,7 @@ export interface FileRoutesByTo {
   '/api/judge-logo': typeof ApiJudgeLogoRoute
   '/api/log-montagem': typeof ApiLogMontagemRoute
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
+  '/api/salvar-filme': typeof ApiSalvarFilmeRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/transcribe-keyinfo': typeof ApiTranscribeKeyinfoRoute
@@ -363,7 +386,9 @@ export interface FileRoutesByTo {
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-carousel': typeof ApiMetaPublishCarouselRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
+  '/api/meta/publish-facebook-video': typeof ApiMetaPublishFacebookVideoRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
+  '/api/meta/publish-reels': typeof ApiMetaPublishReelsRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
   '/api/meta/test-publish': typeof ApiMetaTestPublishRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
@@ -399,6 +424,7 @@ export interface FileRoutesById {
   '/api/judge-logo': typeof ApiJudgeLogoRoute
   '/api/log-montagem': typeof ApiLogMontagemRoute
   '/api/regenerate-block': typeof ApiRegenerateBlockRoute
+  '/api/salvar-filme': typeof ApiSalvarFilmeRoute
   '/api/suggest-keyinfo': typeof ApiSuggestKeyinfoRoute
   '/api/supabase-pdf': typeof ApiSupabasePdfRoute
   '/api/transcribe-keyinfo': typeof ApiTranscribeKeyinfoRoute
@@ -410,7 +436,9 @@ export interface FileRoutesById {
   '/api/meta/disconnect': typeof ApiMetaDisconnectRoute
   '/api/meta/publish-carousel': typeof ApiMetaPublishCarouselRoute
   '/api/meta/publish-facebook': typeof ApiMetaPublishFacebookRoute
+  '/api/meta/publish-facebook-video': typeof ApiMetaPublishFacebookVideoRoute
   '/api/meta/publish-instagram': typeof ApiMetaPublishInstagramRoute
+  '/api/meta/publish-reels': typeof ApiMetaPublishReelsRoute
   '/api/meta/status': typeof ApiMetaStatusRoute
   '/api/meta/test-publish': typeof ApiMetaTestPublishRoute
   '/api/public/expire-generations': typeof ApiPublicExpireGenerationsRoute
@@ -447,6 +475,7 @@ export interface FileRouteTypes {
     | '/api/judge-logo'
     | '/api/log-montagem'
     | '/api/regenerate-block'
+    | '/api/salvar-filme'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
     | '/api/transcribe-keyinfo'
@@ -458,7 +487,9 @@ export interface FileRouteTypes {
     | '/api/meta/disconnect'
     | '/api/meta/publish-carousel'
     | '/api/meta/publish-facebook'
+    | '/api/meta/publish-facebook-video'
     | '/api/meta/publish-instagram'
+    | '/api/meta/publish-reels'
     | '/api/meta/status'
     | '/api/meta/test-publish'
     | '/api/public/expire-generations'
@@ -493,6 +524,7 @@ export interface FileRouteTypes {
     | '/api/judge-logo'
     | '/api/log-montagem'
     | '/api/regenerate-block'
+    | '/api/salvar-filme'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
     | '/api/transcribe-keyinfo'
@@ -504,7 +536,9 @@ export interface FileRouteTypes {
     | '/api/meta/disconnect'
     | '/api/meta/publish-carousel'
     | '/api/meta/publish-facebook'
+    | '/api/meta/publish-facebook-video'
     | '/api/meta/publish-instagram'
+    | '/api/meta/publish-reels'
     | '/api/meta/status'
     | '/api/meta/test-publish'
     | '/api/public/expire-generations'
@@ -539,6 +573,7 @@ export interface FileRouteTypes {
     | '/api/judge-logo'
     | '/api/log-montagem'
     | '/api/regenerate-block'
+    | '/api/salvar-filme'
     | '/api/suggest-keyinfo'
     | '/api/supabase-pdf'
     | '/api/transcribe-keyinfo'
@@ -550,7 +585,9 @@ export interface FileRouteTypes {
     | '/api/meta/disconnect'
     | '/api/meta/publish-carousel'
     | '/api/meta/publish-facebook'
+    | '/api/meta/publish-facebook-video'
     | '/api/meta/publish-instagram'
+    | '/api/meta/publish-reels'
     | '/api/meta/status'
     | '/api/meta/test-publish'
     | '/api/public/expire-generations'
@@ -586,6 +623,7 @@ export interface RootRouteChildren {
   ApiJudgeLogoRoute: typeof ApiJudgeLogoRoute
   ApiLogMontagemRoute: typeof ApiLogMontagemRoute
   ApiRegenerateBlockRoute: typeof ApiRegenerateBlockRoute
+  ApiSalvarFilmeRoute: typeof ApiSalvarFilmeRoute
   ApiSuggestKeyinfoRoute: typeof ApiSuggestKeyinfoRoute
   ApiSupabasePdfRoute: typeof ApiSupabasePdfRoute
   ApiTranscribeKeyinfoRoute: typeof ApiTranscribeKeyinfoRoute
@@ -597,7 +635,9 @@ export interface RootRouteChildren {
   ApiMetaDisconnectRoute: typeof ApiMetaDisconnectRoute
   ApiMetaPublishCarouselRoute: typeof ApiMetaPublishCarouselRoute
   ApiMetaPublishFacebookRoute: typeof ApiMetaPublishFacebookRoute
+  ApiMetaPublishFacebookVideoRoute: typeof ApiMetaPublishFacebookVideoRoute
   ApiMetaPublishInstagramRoute: typeof ApiMetaPublishInstagramRoute
+  ApiMetaPublishReelsRoute: typeof ApiMetaPublishReelsRoute
   ApiMetaStatusRoute: typeof ApiMetaStatusRoute
   ApiMetaTestPublishRoute: typeof ApiMetaTestPublishRoute
   ApiPublicExpireGenerationsRoute: typeof ApiPublicExpireGenerationsRoute
@@ -732,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSuggestKeyinfoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/salvar-filme': {
+      id: '/api/salvar-filme'
+      path: '/api/salvar-filme'
+      fullPath: '/api/salvar-filme'
+      preLoaderRoute: typeof ApiSalvarFilmeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/regenerate-block': {
       id: '/api/regenerate-block'
       path: '/api/regenerate-block'
@@ -858,11 +905,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetaStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meta/publish-reels': {
+      id: '/api/meta/publish-reels'
+      path: '/api/meta/publish-reels'
+      fullPath: '/api/meta/publish-reels'
+      preLoaderRoute: typeof ApiMetaPublishReelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/publish-instagram': {
       id: '/api/meta/publish-instagram'
       path: '/api/meta/publish-instagram'
       fullPath: '/api/meta/publish-instagram'
       preLoaderRoute: typeof ApiMetaPublishInstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/publish-facebook-video': {
+      id: '/api/meta/publish-facebook-video'
+      path: '/api/meta/publish-facebook-video'
+      fullPath: '/api/meta/publish-facebook-video'
+      preLoaderRoute: typeof ApiMetaPublishFacebookVideoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/meta/publish-facebook': {
@@ -946,6 +1007,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiJudgeLogoRoute: ApiJudgeLogoRoute,
   ApiLogMontagemRoute: ApiLogMontagemRoute,
   ApiRegenerateBlockRoute: ApiRegenerateBlockRoute,
+  ApiSalvarFilmeRoute: ApiSalvarFilmeRoute,
   ApiSuggestKeyinfoRoute: ApiSuggestKeyinfoRoute,
   ApiSupabasePdfRoute: ApiSupabasePdfRoute,
   ApiTranscribeKeyinfoRoute: ApiTranscribeKeyinfoRoute,
@@ -957,7 +1019,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetaDisconnectRoute: ApiMetaDisconnectRoute,
   ApiMetaPublishCarouselRoute: ApiMetaPublishCarouselRoute,
   ApiMetaPublishFacebookRoute: ApiMetaPublishFacebookRoute,
+  ApiMetaPublishFacebookVideoRoute: ApiMetaPublishFacebookVideoRoute,
   ApiMetaPublishInstagramRoute: ApiMetaPublishInstagramRoute,
+  ApiMetaPublishReelsRoute: ApiMetaPublishReelsRoute,
   ApiMetaStatusRoute: ApiMetaStatusRoute,
   ApiMetaTestPublishRoute: ApiMetaTestPublishRoute,
   ApiPublicExpireGenerationsRoute: ApiPublicExpireGenerationsRoute,
