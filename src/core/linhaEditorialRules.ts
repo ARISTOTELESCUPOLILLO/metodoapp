@@ -322,6 +322,25 @@ export function checkNomeNoTitulo(params: {
  * capacidade humana e virou sujeito do resultado, exatamente o que esta regra
  * proíbe. Ela não estava no prompt porque estava presa ao outro modo.
  */
+/**
+ * O VERBO QUE ACOMPANHA O NOME DO ITEM.
+ *
+ * CASO REAL (11/09/2026, reels de uma S3C): saiu "Por que USAR Diagnóstico
+ * Digital?". Em português se FAZ um diagnóstico, como se faz um exame — "usar"
+ * pede ferramenta. E há um segundo erro embutido: "usar" põe o cliente operando
+ * o serviço, quando quem executa é a empresa.
+ *
+ * ⚠ NENHUMA REGRA GOVERNAVA ISSO. Havia regra para o nome aparecer no título e
+ * regra para o item não ser o agente do resultado — nada sobre a combinação
+ * verbo + item. Conferido: o prompt não usa "usar" em lugar nenhum que pudesse
+ * contaminar, então foi escolha livre do modelo, por ausência de critério.
+ *
+ * O modelo consegue decidir sozinho: o nome cadastrado quase sempre diz o que a
+ * coisa é, e a Atividade do Kit completa. Não precisa de campo novo.
+ */
+const REGRA_VERBO_DO_ITEM = `
+- ⚠ O VERBO TEM DE COMBINAR COM O QUE O ITEM É: serviço ou procedimento se FAZ, se contrata, se passa por ("fazer um diagnóstico", "passar por uma avaliação") — NUNCA "usar"; sistema, aplicativo ou ferramenta se USA ou se acessa; produto físico se TEM, se leva, se compra. ⚠ "Usar" num serviço é erro duplo: soa errado em português e ainda põe o CLIENTE operando o que quem executa é a empresa. Caso real que originou esta regra: saiu "Por que usar Diagnóstico Digital?" quando o certo é "Por que fazer Diagnóstico Digital?".`;
+
 const REGRA_PRODUTO_NAO_E_AGENTE = `
 - ⚠ O ITEM DESTA PEÇA NÃO É O AGENTE DO RESULTADO: a tentação é fazê-lo realizar sozinho o que depende do cliente. PROIBIDO construções como "[item] decide resultados", "[item] garante vendas", "[item] traz clientes", "[item] resolve o negócio" — não se sustentam e soam infladas. PROIBIDO TAMBÉM dar a ele capacidade humana ("[item] que sente", "[item] que entende", "[item] que escuta"): quem sente, entende e escuta é gente. O que um serviço faz é mostrar, apontar, revelar, organizar, orientar; quem decide e quem executa é o empresário. Prefira o verbo verificável ao verbo grandioso.`;
 
@@ -469,9 +488,9 @@ export function buildRegraLinhaEditorial(params: {
       ? ""
       : usoObjeto === "nome"
         ? `\n- OBJETO DESTA PEÇA — MOSTRAR NOME: "${item}" (ou seu núcleo comercial reconhecível) ${ondeNomear}. PROIBIDO trocá-lo por outro item da mesma categoria — encurtar o nome é permitido, mudar o produto não.
-- ⚠ TETO DE PALAVRAS DO TÍTULO SOBE PARA ${TITULO_MAX_WORDS_COM_NOME} (vence o "máximo de 6 palavras" declarado em outras partes deste pedido, e SÓ ${alvo === "mop" ? "nos títulos que precisam nomear o item — os demais seguem com 6" : "neste título"}): o nome ocupa espaço e a frase precisa sobrar para dizer alguma coisa. Não é licença para alongar — é a margem para o nome caber sem sacrificar a ideia. Se couber em 6, melhor.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}${REGRA_PRODUTO_NAO_E_AGENTE}`
+- ⚠ TETO DE PALAVRAS DO TÍTULO SOBE PARA ${TITULO_MAX_WORDS_COM_NOME} (vence o "máximo de 6 palavras" declarado em outras partes deste pedido, e SÓ ${alvo === "mop" ? "nos títulos que precisam nomear o item — os demais seguem com 6" : "neste título"}): o nome ocupa espaço e a frase precisa sobrar para dizer alguma coisa. Não é licença para alongar — é a margem para o nome caber sem sacrificar a ideia. Se couber em 6, melhor.${comoEncurtar}${isencaoSilabas}${isencaoRepeticao}${REGRA_PRODUTO_NAO_E_AGENTE}${REGRA_VERBO_DO_ITEM}`
         : usoObjeto === "sem_nome"
-          ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito NA PEÇA — nem no título, nem no texto de apoio, nem no texto da imagem, nem no roteiro falado. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.${REGRA_PRODUTO_NAO_E_AGENTE}${regraNomeNaLegenda(item)}`
+          ? `\n- OBJETO DESTA PEÇA — REFERIR SEM NOME: a peça trata de "${item}", mas o nome cadastrado NÃO pode ser escrito NA PEÇA — nem no título, nem no texto de apoio, nem no texto da imagem, nem no roteiro falado. Mantenha o vínculo por descrição (o que é, para que serve), de modo que o leitor reconheça do que se trata sem ler a etiqueta.${REGRA_PRODUTO_NAO_E_AGENTE}${REGRA_VERBO_DO_ITEM}${regraNomeNaLegenda(item)}`
           : `\n- OBJETO DESTA PEÇA — NÃO USAR: existe um item selecionado, mas ele NÃO é a âncora desta peça. PROIBIDO nomeá-lo ou tomá-lo como assunto.`;
 
   const escopo =

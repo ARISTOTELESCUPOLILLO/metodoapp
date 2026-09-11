@@ -802,3 +802,51 @@ describe("MOSTRAR NOME cobrado no TITULO DA PECA", () => {
     expect(regra).toContain("os demais seguem com 6");
   });
 });
+
+describe("o verbo tem que combinar com o que o item e", () => {
+  // CASO REAL (11/09/2026, reels de uma S3C): saiu "Por que USAR Diagnostico
+  // Digital?". Em portugues se FAZ um diagnostico, como se faz um exame —
+  // "usar" pede ferramenta. E ha um segundo erro embutido: "usar" poe o CLIENTE
+  // operando o servico, quando quem executa e a empresa.
+  //
+  // ⚠ Nenhuma regra governava isso. Havia a do nome no titulo e a do produto
+  // que nao e agente — nada sobre a combinacao verbo + item. Conferido: o prompt
+  // nao usa "usar" em lugar nenhum que pudesse contaminar, entao foi escolha
+  // livre do modelo, por ausencia de criterio.
+  const comObjeto = (uso: "nome" | "sem_nome") =>
+    buildRegraLinhaEditorial({
+      linhaEditorial: "decisao",
+      usoObjeto: uso,
+      objeto: "Diagnóstico Digital",
+      alvo: "mop",
+    });
+
+  it("a regra existe nos DOIS modos que tem objeto", () => {
+    for (const uso of ["nome", "sem_nome"] as const) {
+      expect(comObjeto(uso), uso).toContain("O VERBO TEM DE COMBINAR COM O QUE O ITEM É");
+    }
+  });
+
+  it("separa servico, ferramenta e produto fisico", () => {
+    const r = comObjeto("nome");
+    expect(r).toContain("serviço ou procedimento se FAZ");
+    expect(r).toContain("ferramenta se USA");
+    expect(r).toContain("produto físico se TEM");
+  });
+
+  it("cita o caso real, para ninguem reabrir a discussao", () => {
+    const r = comObjeto("nome");
+    expect(r).toContain("Por que usar Diagnóstico Digital?");
+    expect(r).toContain("Por que fazer Diagnóstico Digital?");
+  });
+
+  it("sem objeto selecionado a regra nao aparece", () => {
+    const r = buildRegraLinhaEditorial({
+      linhaEditorial: "decisao",
+      usoObjeto: "nao_usar",
+      objeto: "Diagnóstico Digital",
+      alvo: "mop",
+    });
+    expect(r).not.toContain("O VERBO TEM DE COMBINAR");
+  });
+});
