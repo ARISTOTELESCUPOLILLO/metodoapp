@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { comRespiro } from "@/core/falaNatural";
 import { probeAudio } from "@/lib/audioProbe.server";
 import {
   resolveEffectiveUser,
@@ -310,7 +311,10 @@ export const Route = createFileRoute("/api/generate-video")({
 
           // Garante que o script termina com pontuação limpa para evitar artefato ("soluço")
           // que o ElevenLabs adiciona quando o texto não tem um fim de frase definido.
-          const scriptTts = script.trimEnd().replace(/[,;:\s]+$/, "") + ".";
+          // RESPIRO NA FALA (11/09/2026): as pausas entram AQUI, só no caminho do
+          // TTS. O roteiro na tela e a legenda queimada continuam limpos — quem
+          // lê não vê marcação nenhuma. Ver core/falaNatural.ts.
+          const scriptTts = comRespiro(script.trimEnd().replace(/[,;:\s]+$/, "") + ".");
 
           if (clonedSamplePath) {
             // ElevenLabs TTS direto com voice_id clonado — gera bytes e faz upload para URL acessível pelo Kling.
@@ -429,8 +433,25 @@ export const Route = createFileRoute("/api/generate-video")({
             // (verificado na doc da fal.ai). Este texto é a ÚNICA alavanca de
             // direção que temos, então ele passa a PEDIR movimento em vez de
             // proibir, e a nomear a articulação, que antes não era mencionada.
+            // ⚠ AS DUAS METADES DESTE TEXTO VÊM DE DOIS DEFEITOS OPOSTOS, e por
+            // isso ele não pode ser reescrito inteiro sem cuidado.
+            //
+            // A PRIMEIRA METADE (boca e rosto) nasceu em 09/09/2026: o prompt
+            // anterior mandava se mexer MENOS em três lugares, o rosto congelava
+            // e sobrava a boca sozinha — o "biquinho". A cláusula contra lábios
+            // franzidos é o que resolveu, e ela FICA.
+            //
+            // A SEGUNDA METADE (mãos) é de 11/09/2026, e resolve o defeito
+            // contrário: o Kling gesticula a cada palavra, e o resultado parece
+            // robô acompanhando o texto. Repare que o prompt antigo não pedia
+            // gesto de mão nenhum — o excesso é comportamento do próprio modelo,
+            // e o jeito de contê-lo é dizer explicitamente onde as mãos ficam.
+            //
+            // ⚠ O Kling recebe UMA instrução para o clipe inteiro, sem linha do
+            // tempo. Não dá para sincronizar gesto com pausa: o que se consegue
+            // é inclinar o comportamento médio, não marcar o compasso.
             prompt:
-              "A person speaking to camera in a natural, conversational way. Clear and relaxed mouth articulation that follows the speech, jaw moving naturally, no pursed or puckered lips. Natural blinking and small eyebrow movement that follows the meaning of the words. Gentle head motion and light shoulder movement while talking, as a real person does. Warm, engaged, confident presence.",
+              "A person speaking to camera in a natural, conversational way. Clear and relaxed mouth articulation that follows the speech, jaw moving naturally, no pursed or puckered lips. Natural blinking and small eyebrow movement that follows the meaning of the words. Gentle head motion and light shoulder movement while talking, as a real person does. Hands rest naturally most of the time; use only a few deliberate gestures for the important ideas, never gesturing on every word. Between phrases the body settles and the hands come back to rest. Expression carries the meaning more than the hands: subtle facial expression, steady eye contact with the camera, small natural head movements. Warm, engaged, confident presence, relaxed posture, unhurried.",
           });
 
           // Debita imediatamente após submit bem-sucedido.
