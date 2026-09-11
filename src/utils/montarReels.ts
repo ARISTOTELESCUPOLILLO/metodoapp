@@ -17,6 +17,7 @@
 // utils/montagemFrames.ts). Não há dependência a verificar.
 
 import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { getAuthHeaders } from "../services/authHeaders";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import {
   ALTURA,
@@ -48,6 +49,30 @@ async function getFfmpeg(onProgress?: (msg: string) => void): Promise<FFmpeg> {
     return ff;
   })();
   return loadingPromise;
+}
+
+/**
+ * Manda o que aconteceu para o servidor, para eu poder ler sem pedir console ao
+ * usuário. Best-effort de verdade: se isto falhar, ninguém fica sabendo e o
+ * fluxo segue igual.
+ */
+async function enviarDiario(dados: {
+  onde: string;
+  mensagem: string;
+  log?: string[];
+  filtros?: string;
+  plano?: string;
+}): Promise<void> {
+  try {
+    const auth = await getAuthHeaders();
+    await fetch("/api/log-montagem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...auth },
+      body: JSON.stringify(dados),
+    });
+  } catch {
+    /* diário que atrapalha não serve para nada */
+  }
 }
 
 async function bytes(url: string, oQue: string): Promise<Uint8Array> {
@@ -129,6 +154,22 @@ export interface MontagemInput {
  * a peça ao usuário — mesma regra do corte da sobra e do burn da Sinalização.
  */
 export async function montarReels(
+  input: MontagemInput,
+  onProgress?: (msg: string) => void,
+): Promise<Blob> {
+  try {
+    return await montarReelsInterno(input, onProgress);
+  } catch (e) {
+    // O ramo do FFmpeg já mandou o diário com o log; aqui pega o resto — capa
+    // que não baixa, duração ilegível, canvas, trilha. Sem isto, metade dos
+    // motivos possíveis continuaria invisível para mim.
+    const msg = (e as Error)?.message || String(e);
+    if (!/ffmpeg/i.test(msg)) await enviarDiario({ onde: "montagem", mensagem: msg });
+    throw e;
+  }
+}
+
+async function montarReelsInterno(
   input: MontagemInput,
   onProgress?: (msg: string) => void,
 ): Promise<Blob> {
@@ -269,7 +310,16 @@ export async function montarReels(
     console.error("[montarReels] FFmpeg falhou. Últimas linhas do log:", ultimasLinhas);
     console.error("[montarReels] grafo de filtros:", f.join(";\n"));
     const detalhe = pista.length ? pista.slice(-3).join(" | ") : (e as Error)?.message;
-    throw new Error(detalhe || "o FFmpeg não explicou o motivo (veja o console)");
+    // Manda o diário para o servidor — quem usa o app não precisa abrir console
+    // nem saber o que é console (ver routes/api/log-montagem.ts).
+    await enviarDiario({
+      onde: "ffmpeg",
+      mensagem: detalhe || String(e),
+      log: ultimasLinhas,
+      filtros: f.join(";\n"),
+      plano: `clipe ${videoS.toFixed(2)}s · total ${plano.totalS.toFixed(2)}s · legendas ${legendas.length} · trilha ${temTrilha ? "sim" : "nao"} · quadros ${quadros.length}`,
+    });
+    throw new Error(detalhe || "o FFmpeg não explicou o motivo");
   } finally {
     ff.off("progress", aoProgresso);
     ff.off("log", aoLog);
