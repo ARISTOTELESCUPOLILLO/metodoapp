@@ -16,9 +16,9 @@
 // — desenhando os primeiros quadros da assinatura com opacidade crescente (ver
 // utils/montagemFrames.ts). Não há dependência a verificar.
 
-import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { getAuthHeaders } from "../services/authHeaders";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { fetchFile } from "@ffmpeg/util";
+import { obterFfmpeg, diagnosticoDaCarga } from "./ffmpegLoader";
 import {
   ALTURA,
   FPS,
@@ -30,26 +30,6 @@ import {
   type Legenda,
 } from "../core/montagemReels";
 import { desenharAssinatura, desenharLegendas } from "./montagemFrames";
-
-let ffmpegInstance: FFmpeg | null = null;
-let loadingPromise: Promise<FFmpeg> | null = null;
-
-async function getFfmpeg(onProgress?: (msg: string) => void): Promise<FFmpeg> {
-  if (ffmpegInstance) return ffmpegInstance;
-  if (loadingPromise) return loadingPromise;
-  loadingPromise = (async () => {
-    const ff = new FFmpeg();
-    onProgress?.("Carregando processador de vídeo…");
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
-    await ff.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-    });
-    ffmpegInstance = ff;
-    return ff;
-  })();
-  return loadingPromise;
-}
 
 /**
  * Manda o que aconteceu para o servidor, para eu poder ler sem pedir console ao
@@ -183,7 +163,7 @@ async function montarReelsInterno(
   const legendas: Legenda[] = falaS > 0 ? montarLegendas(input.script, falaS) : [];
 
   onProgress?.("Preparando a montagem…");
-  const ff = await getFfmpeg(onProgress);
+  const ff = await obterFfmpeg(onProgress);
 
   const [videoBytes, capaBytes] = await Promise.all([
     bytes(input.videoUrl, "o vídeo"),
@@ -317,7 +297,7 @@ async function montarReelsInterno(
       mensagem: detalhe || String(e),
       log: ultimasLinhas,
       filtros: f.join(";\n"),
-      plano: `clipe ${videoS.toFixed(2)}s · total ${plano.totalS.toFixed(2)}s · legendas ${legendas.length} · trilha ${temTrilha ? "sim" : "nao"} · quadros ${quadros.length}`,
+      plano: `clipe ${videoS.toFixed(2)}s · total ${plano.totalS.toFixed(2)}s · legendas ${legendas.length} · trilha ${temTrilha ? "sim" : "nao"} · quadros ${quadros.length} · nucleo ${diagnosticoDaCarga()?.fonte || "?"}`,
     });
     throw new Error(detalhe || "o FFmpeg não explicou o motivo");
   } finally {

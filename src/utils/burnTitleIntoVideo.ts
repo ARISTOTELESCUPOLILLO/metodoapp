@@ -1,27 +1,5 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
-
-let ffmpegInstance: FFmpeg | null = null;
-let loadingPromise: Promise<FFmpeg> | null = null;
-
-async function getFfmpeg(onProgress?: (msg: string) => void): Promise<FFmpeg> {
-  if (ffmpegInstance) return ffmpegInstance;
-  if (loadingPromise) return loadingPromise;
-
-  loadingPromise = (async () => {
-    const ff = new FFmpeg();
-    if (onProgress) onProgress("Carregando processador de vídeo...");
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
-    await ff.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-    });
-    ffmpegInstance = ff;
-    return ff;
-  })();
-
-  return loadingPromise;
-}
+import { fetchFile } from "@ffmpeg/util";
+import { obterFfmpeg } from "./ffmpegLoader";
 
 // Baixa o vídeo de forma robusta. fetchFile do ffmpeg.wasm engole erros de CORS,
 // então tentamos primeiro um fetch normal pra capturar problemas claros.
@@ -55,7 +33,7 @@ export async function burnTitleIntoVideo(
   onProgress?: (msg: string) => void,
 ): Promise<Blob> {
   const t0 = performance.now();
-  const ff = await getFfmpeg(onProgress);
+  const ff = await obterFfmpeg(onProgress);
 
   // Captura logs do ffmpeg pra diagnóstico se algo quebrar.
   const logBuffer: string[] = [];
@@ -186,7 +164,7 @@ export async function trimVideoToSpeech(
 ): Promise<Blob> {
   const t0 = performance.now();
   const cutAt = Math.max(1, speechSeconds + TAIL_APOS_FALA_S);
-  const ff = await getFfmpeg(onProgress);
+  const ff = await obterFfmpeg(onProgress);
 
   const logBuffer: string[] = [];
   const logHandler = ({ message }: { message: string }) => {
