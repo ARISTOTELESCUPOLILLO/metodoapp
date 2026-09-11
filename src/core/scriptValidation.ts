@@ -27,28 +27,30 @@
 // que empurra o alcance para fora dos seguidores. Dez segundos dão o terceiro
 // movimento dentro da mensagem, sem virar palestra.
 //
-// A CONTA, com o único número medido de verdade: 17 palavras em 5,29 s = 3,21
-// palavras/s. A locução agora sai a 0,92 da velocidade (ver VOICE_SPEED em
-// routes/api/generate-video.ts), o que dá ~2,95 palavras/s. Dez segundos, então,
-// são cerca de 29 palavras — daí a faixa de 27 a 31.
+// A CONTA, CORRIGIDA POR MEDIÇÃO (11/09/2026, à noite). A primeira faixa de 10 s
+// (27 a 31 palavras) saiu de uma estimativa de 2,95 palavras/s e ERROU: o filme
+// real veio com 14,30 s, dos quais 0,4 de capa e 2,0 de assinatura — 11,9 s de
+// fala para uma faixa de ~29 palavras, ou seja **2,44 palavras/s**, não 2,95.
 //
-// ⚠ A CALIBRAGEM AINDA É DE UMA MEDIÇÃO SÓ, feita com outros ajustes de voz. A
-// rota de vídeo registra palavras e segundos medidos a cada geração
-// ("[generate-video] fala palavras=… speechSeconds=…"); a próxima peça real
-// corrige esta faixa com número em vez de estimativa.
+// A 2,44, dez segundos são ~24 palavras. Daí a faixa de 23 a 26, que cai entre
+// 9,4 e 10,7 segundos.
+//
+// A rota de vídeo registra palavras e segundos medidos a cada geração
+// ("[generate-video] fala palavras=… speechSeconds=…"). Conferir nela antes de
+// mexer nesta faixa de novo — é o único jeito de não voltar a estimar.
 
 import { checkDanglingEnding, checkPunctuation } from "./textWordUtils";
 
 /** Faixa de palavras do roteiro inteiro — fonte única (prompt + validação). */
-export const SCRIPT_MIN_WORDS = 27;
-export const SCRIPT_MAX_WORDS = 31;
+export const SCRIPT_MIN_WORDS = 23;
+export const SCRIPT_MAX_WORDS = 26;
 
 /** A frase de fecho é curta de propósito: é onde a voz desce. */
 export const SCRIPT_FECHO_MIN_WORDS = 3;
 export const SCRIPT_FECHO_MAX_WORDS = 7;
 
 /** A mensagem precisa de respiro escrito. */
-export const SCRIPT_MENSAGEM_MIN_WORDS = 20;
+export const SCRIPT_MENSAGEM_MIN_WORDS = 17;
 
 /**
  * Teto da mensagem. Existe desde 09/09/2026 (tarde): saiu um roteiro de 42
@@ -56,7 +58,7 @@ export const SCRIPT_MENSAGEM_MIN_WORDS = 20;
  * reprovava, e uma única reprovação genérica ("acima de 24") não diz ao modelo
  * ONDE cortar. Ele cortava do fecho, que era a parte certa.
  */
-export const SCRIPT_MENSAGEM_MAX_WORDS = 25;
+export const SCRIPT_MENSAGEM_MAX_WORDS = 21;
 
 /** MENSAGEM + FECHO. A fala tem duas frases, e a terceira é sempre invasão. */
 export const SCRIPT_FRASES = 2;

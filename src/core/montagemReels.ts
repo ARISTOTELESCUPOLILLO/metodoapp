@@ -20,7 +20,6 @@
 // que a assinatura começa a aparecer 0,6 s antes de o filme acabar. Somar o
 // fade ao total foi o primeiro erro de conta que eu cometi ao desenhar isto.
 
-
 /** Quadros por segundo do filme final — o mesmo do clipe do Kling (medido). */
 export const FPS = 30;
 
@@ -66,9 +65,16 @@ export const TEXTO_ENTRADA_S = 0.4;
  */
 export const RESPIRO_LOGO_TEXTO_PX = 45;
 
-/** Trilha por baixo da fala e depois da fala. */
-export const TRILHA_VOL_FALA = 0.18;
-export const TRILHA_VOL_FINAL = 0.55;
+/**
+ * Trilha por baixo da fala e depois da fala.
+ *
+ * ⚠ 0,18 ERA ALTO DEMAIS — o Ari ouviu no primeiro filme real: "a trilha tá
+ * muito alta no fundo". Debaixo de voz, trilha e cama, nao companhia: tem de
+ * estar presente e nao disputar. 0,07 e o patamar de cama; a subida no fim,
+ * quando a voz sai, continua dando a sensacao de encerramento.
+ */
+export const TRILHA_VOL_FALA = 0.07;
+export const TRILHA_VOL_FINAL = 0.45;
 /** Tempo que a trilha leva para subir quando a locução acaba. */
 export const TRILHA_SUBIDA_S = 0.5;
 /** Desaparecimento no fim — parar a música seca soa como falha. */
@@ -126,16 +132,29 @@ export interface Legenda extends Cena {
 }
 
 /**
- * Reparte o roteiro em legendas ao longo da locução.
+ * Palavras e caracteres por pedaço de legenda.
  *
- * ⚠ POR QUE ISTO FUNCIONA SEM TRANSCRIÇÃO: o roteiro do reels tem estrutura
- * conhecida (MENSAGEM + FECHO, ver core/scriptValidation.ts) e o servidor MEDE
- * a duração real do MP3 que ele mesmo gerou. Com o texto e a duração em mãos,
- * repartir o tempo em proporção ao número de palavras erra pouco — a locução do
- * ElevenLabs tem ritmo regular. Não é legendagem por reconhecimento de fala, é
- * aritmética, e por isso não custa nada nem depende de rede.
+ * ⚠ ANTES ERA UMA LEGENDA POR FRASE, e com o roteiro de 10 segundos a primeira
+ * frase passou de vinte palavras: virou um bloco de três linhas parado na tela
+ * por quase dez segundos. O Ari disse o que faltava — "tem que aparecer e se
+ * apagar conforme o personagem fala, e assim seria sempre uma linha".
  *
- * `offsetS` desloca tudo pela capa: a fala começa quando o filme começa.
+ * Os dois tetos trabalham juntos: o de palavras dá o ritmo (troca a cada ~1,5 s)
+ * e o de caracteres garante que cabe em UMA linha, porque quatro palavras longas
+ * ocupam mais que seis curtas.
+ */
+export const LEGENDA_MAX_PALAVRAS = 4;
+export const LEGENDA_MAX_CARACTERES = 26;
+
+/**
+ * Reparte o roteiro em legendas curtas, sincronizadas com a fala.
+ *
+ * O tempo de cada pedaço é proporcional ao número de PALAVRAS dele — é a melhor
+ * aproximação que se tem sem alinhamento fonético, e erra pouco porque a fala
+ * sai em ritmo constante.
+ *
+ * ⚠ Pedaço nenhum atravessa o ponto final: o fim de frase é onde a voz desce, e
+ * a legenda tem de descer junto.
  */
 export function montarLegendas(script: string, falaS: number, offsetS = CAPA_S): Legenda[] {
   const frases = (script || "")
@@ -144,13 +163,34 @@ export function montarLegendas(script: string, falaS: number, offsetS = CAPA_S):
     .filter(Boolean);
   if (!frases.length || falaS <= 0) return [];
 
-  const palavras = frases.map((f) => f.split(/\s+/).filter(Boolean).length);
+  // Reparte cada frase em pedaços de uma linha.
+  const pedacos: string[] = [];
+  for (const frase of frases) {
+    let atual: string[] = [];
+    let letras = 0;
+    for (const palavra of frase.split(/\s+/).filter(Boolean)) {
+      const cabeEmPalavras = atual.length < LEGENDA_MAX_PALAVRAS;
+      const cabeEmLetras =
+        letras + palavra.length + (atual.length ? 1 : 0) <= LEGENDA_MAX_CARACTERES;
+      if (atual.length && (!cabeEmPalavras || !cabeEmLetras)) {
+        pedacos.push(atual.join(" "));
+        atual = [];
+        letras = 0;
+      }
+      letras += palavra.length + (atual.length ? 1 : 0);
+      atual.push(palavra);
+    }
+    if (atual.length) pedacos.push(atual.join(" "));
+  }
+  if (!pedacos.length) return [];
+
+  const palavras = pedacos.map((p) => p.split(/\s+/).filter(Boolean).length);
   const totalPalavras = palavras.reduce((a, b) => a + b, 0);
   if (!totalPalavras) return [];
 
   const legendas: Legenda[] = [];
   let t = offsetS;
-  frases.forEach((texto, i) => {
+  pedacos.forEach((texto, i) => {
     const fatia = (palavras[i] / totalPalavras) * falaS;
     legendas.push({ texto, inicio: t, fim: t + fatia });
     t += fatia;

@@ -309,57 +309,65 @@ export const Route = createFileRoute("/api/generate-video")({
           console.log("[generate-video] step=upload_frame");
           const frameUrl = await uploadFrame(imageBase64, userId);
 
-          // TTS — ramifica conforme modo e provider da voz clonada.
-          // kit-voz + chatterbox → Chatterbox com áudio de referência do usuário (zero-shot)
-          // kit-voz + legado     → ElevenLabs com voice_id armazenado no DB
-          // portugues/sinalizacao → ElevenLabs com voz preset detectada por visão
-          let audioUrl: string;
-
           // Garante que o script termina com pontuação limpa para evitar artefato ("soluço")
           // que o ElevenLabs adiciona quando o texto não tem um fim de frase definido.
-          // ⚠ SEM MARCAÇÃO DE PAUSA. Chegou a existir (11/09/2026, de manhã) e
-          // saiu na mesma tarde: a pausa pedida ao modelo virou uma inspiração
-          // alta, que o Kling ainda animou na boca do personagem. O ritmo passou
-          // a vir de VOICE_SPEED, que não abre buraco para tomar fôlego.
           const scriptTts = script.trimEnd().replace(/[,;:\s]+$/, "") + ".";
 
+          // ⚠ UMA LOCUÇÃO POR FRASE — conserto de 11/09/2026, à noite.
+          //
+          // O defeito, na palavra do Ari: "quando acabou a primeira oração sem
+          // uma interpretação de fechamento, começou a outra oração com uma
+          // respiração pra dentro". As duas queixas são o MESMO defeito, e ele
+          // nasce de mandar as duas frases numa requisição só: para o modelo o
+          // enunciado não terminou no ponto final, então ele não baixa a voz —
+          // e toma ar para seguir. Essa inspiração é ÁUDIO GERADO, e o Kling
+          // anima o que o áudio faz: ela aparecia na boca do personagem.
+          //
+          // Tirar a marcação de pausa não resolveu (tentado de manhã) nem
+          // resolveria: o ar vem do PONTO FINAL, não da marcação. Gerando cada
+          // frase sozinha, cada uma acaba como quem acaba, e não existe frase
+          // seguinte para tomar fôlego.
+          //
+          // ⚠ Os pedaços são MP3 independentes e são emendados byte a byte.
+          // Quadro de MP3 é autossuficiente, então emendar funciona — mas a
+          // DURAÇÃO do arquivo emendado não se lê mais pelo cabeçalho do
+          // primeiro. Por isso cada pedaço é medido antes, e os tempos se somam.
+          const frasesDaFala = scriptTts
+            .split(/(?<=[.!?])\s+/)
+            .map((f) => f.trim())
+            .filter(Boolean);
+
+          // Como se gera UMA frase — muda com o caminho da voz, o resto é igual.
+          let falarUmaFrase: (texto: string) => Promise<Buffer>;
+
           if (clonedSamplePath) {
-            // ElevenLabs TTS direto com voice_id clonado — gera bytes e faz upload para URL acessível pelo Kling.
+            // Voz clonada: chamada direta à API do ElevenLabs com o voice_id.
             console.log(
-              "[generate-video] step=tts provider=elevenlabs-cloned voice=%s",
+              "[generate-video] step=tts provider=elevenlabs-cloned voice=%s frases=%d",
               clonedSamplePath.slice(0, 20),
+              frasesDaFala.length,
             );
             const elKey = process.env.ELEVENLABS_API_KEY;
             if (!elKey) throw new Error("ELEVENLABS_API_KEY não configurada.");
-            const ttsRes = await fetch(`${ELEVENLABS_API}/text-to-speech/${clonedSamplePath}`, {
-              method: "POST",
-              headers: { "xi-api-key": elKey, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                text: scriptTts,
-                model_id: "eleven_multilingual_v2",
-                language_code: "pt",
-                voice_settings: { ...VOICE_SETTINGS, speed: VOICE_SPEED },
-              }),
-            });
-            if (!ttsRes.ok) {
-              const err = await ttsRes.text();
-              throw new Error(`ElevenLabs TTS clonada ${ttsRes.status}: ${err.slice(0, 200)}`);
-            }
-            const audioBytes = Buffer.from(await ttsRes.arrayBuffer());
-            const audioPath = `_temp_veo/${userId || "anon"}/${Date.now()}.mp3`;
-            const { error: upErr } = await supabaseAdmin.storage
-              .from("image-kits")
-              .upload(audioPath, audioBytes, { contentType: "audio/mpeg", upsert: true });
-            if (upErr) throw new Error(`Upload áudio TTS falhou: ${upErr.message}`);
-            const { data: audioSigned, error: signErr } = await supabaseAdmin.storage
-              .from("image-kits")
-              .createSignedUrl(audioPath, 600); // 10 min — suficiente para FAL processar
-            if (signErr || !audioSigned?.signedUrl)
-              throw new Error("Não foi possível gerar URL do áudio TTS.");
-            audioUrl = audioSigned.signedUrl;
-            console.log("[generate-video] elevenlabs cloned tts ok");
+            falarUmaFrase = async (texto: string) => {
+              const ttsRes = await fetch(`${ELEVENLABS_API}/text-to-speech/${clonedSamplePath}`, {
+                method: "POST",
+                headers: { "xi-api-key": elKey, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  text: texto,
+                  model_id: "eleven_multilingual_v2",
+                  language_code: "pt",
+                  voice_settings: { ...VOICE_SETTINGS, speed: VOICE_SPEED },
+                }),
+              });
+              if (!ttsRes.ok) {
+                const err = await ttsRes.text();
+                throw new Error(`ElevenLabs TTS clonada ${ttsRes.status}: ${err.slice(0, 200)}`);
+              }
+              return Buffer.from(await ttsRes.arrayBuffer());
+            };
           } else {
-            // ElevenLabs TTS — voz preset (nativa) ou voice_id legado (clonada antiga).
+            // Voz preset (nativa) ou voice_id legado, pela fila do fal.
             let ttsVoice: string;
             if (clonedVoiceId) {
               ttsVoice = clonedVoiceId;
@@ -370,55 +378,85 @@ export const Route = createFileRoute("/api/generate-video")({
                 : NATIVE_VOICE_FALLBACK;
             }
             console.log(
-              "[generate-video] step=tts provider=elevenlabs voice=%s",
+              "[generate-video] step=tts provider=elevenlabs voice=%s frases=%d",
               ttsVoice.slice(0, 30),
+              frasesDaFala.length,
             );
-            const ttsSubmit = await falSubmit(TTS_MODEL, falKey, {
-              text: scriptTts,
-              voice: ttsVoice,
-              language_code: "pt",
-              stability: VOICE_SETTINGS.stability,
-              similarity_boost: VOICE_SETTINGS.similarity_boost,
-              style: VOICE_SETTINGS.style,
-              speed: VOICE_SPEED,
-            });
-            const tts = await falWaitResult<{ audio?: { url?: string } }>(
-              ttsSubmit,
-              falKey,
-              90_000,
-              "tts",
-            );
-            audioUrl = tts?.audio?.url ?? "";
-            if (!audioUrl) throw new Error("ElevenLabs TTS não retornou áudio.");
-            console.log("[generate-video] elevenlabs tts ok audio_url=%s", audioUrl.slice(0, 60));
+            falarUmaFrase = async (texto: string) => {
+              const ttsSubmit = await falSubmit(TTS_MODEL, falKey, {
+                text: texto,
+                voice: ttsVoice,
+                language_code: "pt",
+                stability: VOICE_SETTINGS.stability,
+                similarity_boost: VOICE_SETTINGS.similarity_boost,
+                style: VOICE_SETTINGS.style,
+                speed: VOICE_SPEED,
+              });
+              const tts = await falWaitResult<{ audio?: { url?: string } }>(
+                ttsSubmit,
+                falKey,
+                90_000,
+                "tts",
+              );
+              const url = tts?.audio?.url ?? "";
+              if (!url) throw new Error("ElevenLabs TTS não retornou áudio.");
+              const res = await fetch(url);
+              if (!res.ok) throw new Error(`Download do áudio TTS falhou (${res.status}).`);
+              return Buffer.from(await res.arrayBuffer());
+            };
           }
+
+          // As frases são poucas (duas) e independentes — vão juntas.
+          const pedacos = await Promise.all(frasesDaFala.map((f) => falarUmaFrase(f)));
 
           // DURAÇÃO DA FALA — medida real 09/09/2026: um reels saiu com 7,20 s
           // de vídeo para 5,29 s de áudio. Quase 2 s (27% do clipe) de
-          // personagem se mexendo em silêncio depois que a frase acabou — parte
-          // do "final sem tom de finalização" relatado.
+          // personagem se mexendo em silêncio depois que a frase acabou.
           //
           // A doc do Kling afirma "output duration matches audio length"; a
           // medição diz o contrário, e nada no fluxo lia a duração de volta. Em
           // vez de confiar no modelo, medimos AQUI o áudio que nós mesmos
-          // geramos e mandamos o número ao cliente, que apara o vídeo com o
-          // FFmpeg que já existe (modo Sinalização).
+          // geramos e mandamos o número ao cliente, que apara o vídeo.
           //
           // Falha FECHADA de propósito: se a medição não der, `speechSeconds`
-          // vai null e o cliente não apara nada — o vídeo sai como hoje, e
-          // ninguém fica sem vídeo por causa de um probe.
+          // vai null e o cliente não apara nada — ninguém fica sem vídeo por
+          // causa de um probe.
           let speechSeconds: number | null = null;
           try {
-            const audioRes = await fetch(audioUrl);
-            if (audioRes.ok) {
-              const bytes = new Uint8Array(await audioRes.arrayBuffer());
-              const probe = probeAudio(bytes, audioRes.headers.get("content-type") || "audio/mpeg");
-              if (probe.durationS > 0) speechSeconds = probe.durationS;
+            let soma = 0;
+            for (const pedaco of pedacos) {
+              const probe = probeAudio(new Uint8Array(pedaco), "audio/mpeg");
+              if (probe.durationS > 0) soma += probe.durationS;
             }
+            if (soma > 0) speechSeconds = Number(soma.toFixed(3));
           } catch (e) {
             console.warn("[generate-video] probe do audio falhou:", (e as Error).message);
           }
-          console.log("[generate-video] speechSeconds=%s", speechSeconds ?? "desconhecido");
+
+          const audioBytes = Buffer.concat(pedacos);
+          const audioPath = `_temp_veo/${userId || "anon"}/${Date.now()}.mp3`;
+          const { error: upErr } = await supabaseAdmin.storage
+            .from("image-kits")
+            .upload(audioPath, audioBytes, { contentType: "audio/mpeg", upsert: true });
+          if (upErr) throw new Error(`Upload áudio TTS falhou: ${upErr.message}`);
+          const { data: audioSigned, error: signErr } = await supabaseAdmin.storage
+            .from("image-kits")
+            .createSignedUrl(audioPath, 600); // 10 min — suficiente para o fal processar
+          if (signErr || !audioSigned?.signedUrl)
+            throw new Error("Não foi possível gerar URL do áudio TTS.");
+          const audioUrl = audioSigned.signedUrl;
+
+          // Palavras + segundos medidos = palavras por segundo REAL. A faixa do
+          // roteiro (core/scriptValidation.ts) é calibrada por estimativa; é esta
+          // linha que permite corrigi-la com número de verdade.
+          const nPalavras = (script.trim().match(/\S+/g) || []).length;
+          console.log(
+            "[generate-video] fala palavras=%d frases=%d speechSeconds=%s speed=%s",
+            nPalavras,
+            frasesDaFala.length,
+            speechSeconds ?? "desconhecido",
+            VOICE_SPEED,
+          );
 
           // Kling AI Avatar v2 Pro — imagem + áudio + prompt → vídeo lip-syncado com animação natural.
           // O prompt guia o modelo para movimentos expressivos além de boca/cabeça.

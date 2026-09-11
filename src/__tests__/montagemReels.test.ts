@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   planejarMontagem,
   montarLegendas,
+  LEGENDA_MAX_PALAVRAS,
+  LEGENDA_MAX_CARACTERES,
   extrairContatoWhatsapp,
   curvaDaTrilha,
   CAPA_S,
@@ -51,16 +53,41 @@ describe("legendas repartidas pela locucao", () => {
   const SCRIPT =
     "Criar conteudo mantem a marca viva, com informacao chegando sempre. O proximo passo e comecar.";
 
-  it("uma legenda por frase, comecando quando o filme comeca", () => {
+  // ⚠ O CONTRATO MUDOU EM 11/09/2026, A NOITE. Era uma legenda por FRASE, e com
+  // o roteiro de 10 segundos a primeira frase virou um bloco de tres linhas
+  // parado na tela. Agora a legenda e repartida em pedacos de uma linha, que
+  // trocam conforme a fala anda.
+  it("reparte em pedacos de uma linha, nao em frases inteiras", () => {
     const ls = montarLegendas(SCRIPT, 6);
-    expect(ls).toHaveLength(2);
-    expect(ls[0].inicio).toBe(CAPA_S);
+    expect(ls.length).toBeGreaterThan(2);
+    for (const l of ls) {
+      expect(l.texto.split(/\s+/).length).toBeLessThanOrEqual(LEGENDA_MAX_PALAVRAS);
+      expect(l.texto.length).toBeLessThanOrEqual(LEGENDA_MAX_CARACTERES);
+    }
   });
 
-  it("a frase mais longa fica mais tempo na tela", () => {
+  it("pedaco nenhum atravessa o ponto final", () => {
     const ls = montarLegendas(SCRIPT, 6);
-    const dur = (i: number) => ls[i].fim - ls[i].inicio;
-    expect(dur(0)).toBeGreaterThan(dur(1));
+    // Ponto so e permitido na ULTIMA posicao do pedaco: e onde a voz desce.
+    for (const l of ls) {
+      const ponto = l.texto.indexOf(".");
+      if (ponto >= 0) expect(ponto).toBe(l.texto.length - 1);
+    }
+  });
+
+  it("comeca quando o filme comeca e nao deixa buraco entre os pedacos", () => {
+    const ls = montarLegendas(SCRIPT, 6);
+    expect(ls[0].inicio).toBe(CAPA_S);
+    for (let i = 1; i < ls.length; i++) expect(ls[i].inicio).toBeCloseTo(ls[i - 1].fim, 6);
+  });
+
+  it("o pedaco com mais palavras fica mais tempo na tela", () => {
+    const ls = montarLegendas(SCRIPT, 6);
+    const dur = (l: (typeof ls)[number]) => l.fim - l.inicio;
+    const palavras = (l: (typeof ls)[number]) => l.texto.split(/\s+/).length;
+    const maior = [...ls].sort((a, b) => palavras(b) - palavras(a))[0];
+    const menor = [...ls].sort((a, b) => palavras(a) - palavras(b))[0];
+    expect(dur(maior)).toBeGreaterThan(dur(menor));
   });
 
   it("a ultima legenda fecha EXATAMENTE com a fala", () => {

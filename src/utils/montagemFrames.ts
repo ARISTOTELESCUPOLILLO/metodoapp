@@ -257,8 +257,10 @@ export async function desenharLegendas(
     const topo = baseY - alturaBloco;
 
     // Tarja: mantém a legenda legível sobre qualquer cena.
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
-    const pad = corpo * 0.5;
+    // Caixa justa: com a legenda repartida em UMA linha, ela so precisa dar
+    // contraste ao texto — nao ser um painel no meio da tela.
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    const pad = corpo * 0.34;
     let maiorLinha = 0;
     for (const linha of linhas) maiorLinha = Math.max(maiorLinha, ctx.measureText(linha).width);
     const tarjaLarg = Math.min(LARGURA - 40, maiorLinha + pad * 2);
