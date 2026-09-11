@@ -20,15 +20,6 @@
 // que a assinatura começa a aparecer 0,6 s antes de o filme acabar. Somar o
 // fade ao total foi o primeiro erro de conta que eu cometi ao desenhar isto.
 
-/**
- * Trilha instrumental padrão da montagem — servida como asset estático.
- *
- * WAV de 11 s, 16 bits, 48 kHz estéreo (2 MB). É o original de 24 bits do acervo
- * do Ari, cortado no que a montagem usa e rebaixado para 16 bits. Fica em WAV
- * porque não há codificador de MP3 aqui; trocar por MP3 depois derruba para
- * ~180 KB e é uma linha.
- */
-export const TRILHA_PADRAO_URL = "/trilhas/nowhere-to-stop.wav";
 
 /** Quadros por segundo do filme final — o mesmo do clipe do Kling (medido). */
 export const FPS = 30;

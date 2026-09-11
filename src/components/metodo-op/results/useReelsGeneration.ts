@@ -18,7 +18,8 @@ import { getSessionImage, setSessionImage } from "../../../utils/sessionImageCac
 import { regenerateWithKit } from "../../../services/regenerateWithKit";
 import { burnTitleIntoVideo, trimVideoToSpeech } from "../../../utils/burnTitleIntoVideo";
 import { montarReels } from "../../../utils/montarReels";
-import { extrairContatoWhatsapp, TRILHA_PADRAO_URL } from "../../../core/montagemReels";
+import { extrairContatoWhatsapp } from "../../../core/montagemReels";
+import { arquivoDaTrilha } from "../../../domain/trilhas.config";
 import { BRAND_ACCENT } from "../../../data/brandColors";
 import { useImageGenAlert } from "../PreImageAlert";
 
@@ -591,7 +592,9 @@ export function useReelsGeneration(params: {
           capaUrl: capa,
           script: reels.script || "",
           falaS,
-          trilhaUrl: TRILHA_PADRAO_URL,
+          // A trilha é a que a marca escolheu no Kit de Imagem; "nenhuma" devolve
+          // string vazia e o filme sai só com a locução.
+          trilhaUrl: arquivoDaTrilha(imageKit?.trilha) || undefined,
           logoDataUrl: kit.logoDataUrl,
           contato: extrairContatoWhatsapp(kit.assinatura),
           fontFamily: kit.fontPair || "Inter",

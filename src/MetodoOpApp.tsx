@@ -270,6 +270,8 @@ export default function App() {
     bonusExhausted,
     bonusIsPuType,
     hasPostPlano: profileLoading ? undefined : planAccess.hasPostUnico,
+    // A montagem do filme (e a trilha) só existe na trilha cinemática.
+    temCinematica: !!planAccess.tracks.cinematica,
   };
   const postUnicoStateCtxValue = {
     visualSelection,

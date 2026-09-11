@@ -1,4 +1,10 @@
-import { createContext, useContext, type Dispatch, type SetStateAction, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  type Dispatch,
+  type SetStateAction,
+  type ReactNode,
+} from "react";
 import type { SlotInfo } from "../hooks/useProfile";
 
 export interface PlanSlotsContextValue {
@@ -14,6 +20,8 @@ export interface PlanSlotsContextValue {
   bonusExhausted: boolean;
   bonusIsPuType: boolean;
   hasPostPlano: boolean | undefined;
+  /** A conta tem trilha cinemática (S3C/S6C/S9C)? Só ela monta filme. */
+  temCinematica: boolean;
 }
 
 const PlanSlotsContext = createContext<PlanSlotsContextValue | undefined>(undefined);

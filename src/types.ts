@@ -350,6 +350,8 @@ export interface ImageKit {
   // PU com objetivo "Venda", aplicação direta sem reinvenção pela IA (mesmo
   // tratamento de "Fato").
   venda?: string;
+  /** ID da trilha escolhida para a montagem do Reels. "nenhuma" = sem música. */
+  trilha?: string | null;
 }
 
 // Seleção da Composição Visual no Post Único — diz quais elementos do Kit Imagem

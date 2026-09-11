@@ -941,6 +941,7 @@ export type Database = {
           fachada_path: string | null;
           fato_path: string | null;
           produtos_paths: string[];
+          trilha: string | null;
           updated_at: string;
           user_id: string;
           venda_path: string | null;
@@ -954,6 +955,7 @@ export type Database = {
           fachada_path?: string | null;
           fato_path?: string | null;
           produtos_paths?: string[];
+          trilha?: string | null;
           updated_at?: string;
           user_id: string;
           venda_path?: string | null;
@@ -967,6 +969,7 @@ export type Database = {
           fachada_path?: string | null;
           fato_path?: string | null;
           produtos_paths?: string[];
+          trilha?: string | null;
           updated_at?: string;
           user_id?: string;
           venda_path?: string | null;

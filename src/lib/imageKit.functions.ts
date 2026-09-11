@@ -86,7 +86,7 @@ export const loadImageKitFor = createServerFn({ method: "POST" })
     const { data: row, error } = await supabaseAdmin
       .from("user_image_kits")
       .select(
-        "avatar_path, avatar_path_2, fachada_path, fato_path, venda_path, cenarios_paths, produtos_paths",
+        "avatar_path, avatar_path_2, fachada_path, fato_path, venda_path, cenarios_paths, produtos_paths, trilha",
       )
       .eq("user_id", targetId)
       .maybeSingle();
@@ -102,6 +102,7 @@ export const loadImageKitFor = createServerFn({ method: "POST" })
         produtos: [null, null, null, null, null, null, null, null] as (string | null)[],
         fato: null,
         venda: null,
+        trilha: null,
       };
     }
 
@@ -130,6 +131,8 @@ export const loadImageKitFor = createServerFn({ method: "POST" })
       produtos: produtosUrls,
       fato: fatoUrl,
       venda: vendaUrl,
+      // ID da trilha escolhida — não é arquivo, é escolha (ver trilhas.config.ts).
+      trilha: (row.trilha as string | null) ?? null,
     };
   });
 
@@ -482,4 +485,40 @@ export const saveImageKitFor = createServerFn({ method: "POST" })
       fato: fatoUrl,
       venda: vendaUrl,
     };
+  });
+
+// ---------- TRILHA (escolha da montagem do Reels) ----------
+
+/**
+ * Grava a trilha escolhida para a montagem do filme.
+ *
+ * ⚠ Guarda só o ID de uma faixa do acervo (ou "nenhuma"): o cliente NÃO sobe
+ * música. Quem sobe arquivo próprio sobe música protegida, o Instagram silencia
+ * o post e o problema volta para a agência — ver src/domain/trilhas.config.ts.
+ *
+ * Faz upsert porque a linha do Kit pode ainda não existir: escolher trilha antes
+ * de subir qualquer foto é um caminho legítimo.
+ */
+export const saveTrilha = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        trilha: z.string().max(40),
+        asUserId: z.string().uuid().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const callerId = context.userId;
+    let targetId = data.asUserId || callerId;
+    if (targetId !== callerId) {
+      const { isAdmin } = await import("@/repository/authz");
+      if (!(await isAdmin(callerId))) targetId = callerId;
+    }
+    const { error } = await supabaseAdmin
+      .from("user_image_kits")
+      .upsert({ user_id: targetId, trilha: data.trilha }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true, trilha: data.trilha };
   });

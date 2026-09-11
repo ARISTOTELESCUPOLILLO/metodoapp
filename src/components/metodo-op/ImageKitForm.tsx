@@ -3,6 +3,11 @@ import { ImageKit } from "../../types";
 import { resizeImage, validateImageFile } from "../../utils/imageResize";
 import { PRODUTO_SLOTS, CENARIO_SLOTS } from "../../utils/imageKitStorage";
 import { VoiceBlock } from "./imageKitForm/VoiceBlock";
+import { TrilhaBlock } from "./imageKitForm/TrilhaBlock";
+import { usePlanSlotsCtx } from "../../contexts/PlanSlotsContext";
+import { useServerFn } from "@tanstack/react-start";
+import { saveTrilha } from "../../lib/imageKit.functions";
+import { useImpersonation } from "../../hooks/useImpersonation";
 
 interface Props {
   kit: ImageKit;
@@ -24,6 +29,25 @@ type SlotKind =
 export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [busySlot, setBusySlot] = useState<string | null>(null);
+  // A trilha (e a montagem do filme) só existe na trilha cinemática.
+  const { temCinematica } = usePlanSlotsCtx();
+  const gravarTrilha = useServerFn(saveTrilha);
+  const impersonation = useImpersonation();
+  const [salvandoTrilha, setSalvandoTrilha] = useState(false);
+
+  async function escolherTrilha(id: string) {
+    setSalvandoTrilha(true);
+    try {
+      await gravarTrilha({
+        data: { trilha: id, ...(impersonation?.userId ? { asUserId: impersonation.userId } : {}) },
+      });
+      onChange({ ...kit, trilha: id });
+    } catch (e) {
+      setError((e as Error)?.message || "não foi possível salvar a trilha");
+    } finally {
+      setSalvandoTrilha(false);
+    }
+  }
 
   async function handleFile(slot: SlotKind, file: File) {
     setError(null);
@@ -117,6 +141,9 @@ export default function ImageKitForm({ kit, onChange, onSave, saving, saved }: P
           onClear={() => clearSlot("avatar")}
         />
         <VoiceBlock avatarSlot={1} />
+        {temCinematica && (
+          <TrilhaBlock valor={kit.trilha} onChange={escolherTrilha} salvando={salvandoTrilha} />
+        )}
       </div>
 
       <div className="formatBox">

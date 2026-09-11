@@ -175,7 +175,7 @@ async function montarReelsInterno(
   let temTrilha = false;
   if (input.trilhaUrl) {
     try {
-      await ff.writeFile("trilha.wav", await bytes(input.trilhaUrl, "a trilha"));
+      await ff.writeFile("trilha.mp3", await bytes(input.trilhaUrl, "a trilha"));
       temTrilha = true;
     } catch (e) {
       // Trilha é enfeite: sem ela o filme sai igual, só sem música.
@@ -208,7 +208,7 @@ async function montarReelsInterno(
   args.push("-framerate", String(FPS), "-i", "sig%04d.png"); // 2
   let idx = 3;
   const idxTrilha = temTrilha ? idx++ : -1;
-  if (temTrilha) args.push("-i", "trilha.wav");
+  if (temTrilha) args.push("-i", "trilha.mp3");
   const idxLegendas: number[] = [];
   for (let i = 0; i < pngLegendas.length; i++) {
     idxLegendas.push(idx++);
@@ -311,7 +311,7 @@ async function montarReelsInterno(
   // Limpeza do sistema de arquivos virtual — sem isto, uma segunda montagem na
   // mesma sessão herda os PNGs da anterior (a sequência sig%04d é lida por
   // padrão de nome, não por lista).
-  const limpar = ["filme.mp4", "capa.png", "final.mp4", ...(temTrilha ? ["trilha.wav"] : [])];
+  const limpar = ["filme.mp4", "capa.png", "final.mp4", ...(temTrilha ? ["trilha.mp3"] : [])];
   for (let i = 0; i < quadros.length; i++) limpar.push(`sig${String(i).padStart(4, "0")}.png`);
   for (let i = 0; i < pngLegendas.length; i++) limpar.push(`leg${String(i).padStart(2, "0")}.png`);
   for (const nome of limpar) {

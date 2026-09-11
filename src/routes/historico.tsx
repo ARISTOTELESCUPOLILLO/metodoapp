@@ -13,7 +13,9 @@ import { arquivoDeVideo, compartilharVideo, podeCompartilharArquivo } from "@/ut
 import { supabase } from "@/integrations/supabase/client";
 import { loadKitForUser } from "@/services/brandKit";
 import { montarReels } from "@/utils/montarReels";
-import { extrairContatoWhatsapp, TRILHA_PADRAO_URL } from "@/core/montagemReels";
+import { extrairContatoWhatsapp } from "@/core/montagemReels";
+import { arquivoDaTrilha } from "@/domain/trilhas.config";
+import { loadImageKitFor } from "@/lib/imageKit.functions";
 
 export const Route = createFileRoute("/historico")({
   component: () => (
@@ -224,6 +226,7 @@ async function downloadFromUrl(url: string, filename: string) {
  * só existe no card do Reels, onde o roteiro está em mãos.
  */
 function MontarFilmeArquivado({ gen }: { gen: Gen }) {
+  const carregarKitImagem = useServerFn(loadImageKitFor);
   const [estado, setEstado] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [pronto, setPronto] = useState<string | null>(null);
@@ -252,6 +255,9 @@ function MontarFilmeArquivado({ gen }: { gen: Gen }) {
       const { data: sess } = await supabase.auth.getUser();
       const uid = sess.user?.id;
       const kit = uid ? await loadKitForUser(uid) : null;
+      // A trilha escolhida vive no Kit de IMAGEM; o Kit de Marca traz logo e
+      // assinatura. Falha aqui não impede a montagem — cai na trilha padrão.
+      const imagem = await carregarKitImagem().catch(() => null);
       const blob = await montarReels(
         {
           videoUrl: gen.videoUrl!,
@@ -259,7 +265,7 @@ function MontarFilmeArquivado({ gen }: { gen: Gen }) {
           // O roteiro não é arquivado — sem ele, não há legenda a repartir.
           script: "",
           falaS: null,
-          trilhaUrl: TRILHA_PADRAO_URL,
+          trilhaUrl: arquivoDaTrilha(imagem?.trilha) || undefined,
           logoDataUrl: kit?.logoDataUrl,
           contato: extrairContatoWhatsapp(kit?.assinatura),
           fontFamily: kit?.fontPair || "Inter",
