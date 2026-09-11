@@ -14,6 +14,10 @@ const LOGO_MAX_H = 108;
 const REELS_W = 1080;
 const REELS_H = 1920;
 const REELS_PAD = 150;
+// Respiro VERTICAL da capa. A grade do perfil mostra so os 1350 px centrais do
+// canvas de 1920 (recorte 4:5), ou seja, de 285 a 1635. Com 320 px de respiro a
+// logo termina por volta de 1600 — dentro do que aparece, com folga.
+const CAPA_PAD_Y = 320;
 const REELS_LOGO_MAX_W = 336;
 const REELS_LOGO_MAX_H = 132;
 
@@ -117,11 +121,12 @@ function logoCoords(
   pad: number,
   lw: number,
   lh: number,
+  padY: number = pad,
 ): { x: number; y: number } {
   const pos = position || "bottom-right";
-  if (pos === "top-center") return { x: (w - lw) / 2, y: pad };
-  if (pos === "bottom-center") return { x: (w - lw) / 2, y: h - pad - lh };
-  return { x: w - pad - lw, y: h - pad - lh };
+  if (pos === "top-center") return { x: (w - lw) / 2, y: padY };
+  if (pos === "bottom-center") return { x: (w - lw) / 2, y: h - padY - lh };
+  return { x: w - pad - lw, y: h - padY - lh };
 }
 
 // Aplica APENAS a logomarca, respeitando posição escolhida no Kit de Marca e o respiro.
@@ -133,6 +138,7 @@ async function drawLogoOnly(
   pad: number,
   maxW = LOGO_MAX_W,
   maxH = LOGO_MAX_H,
+  padY: number = pad,
 ) {
   if (!kit.logoDataUrl) return;
   try {
@@ -140,7 +146,7 @@ async function drawLogoOnly(
     const scale = Math.min(maxW / logo.width, maxH / logo.height);
     const lw = logo.width * scale;
     const lh = logo.height * scale;
-    const { x, y } = logoCoords(kit.logoPosition, w, h, pad, lw, lh);
+    const { x, y } = logoCoords(kit.logoPosition, w, h, pad, lw, lh, padY);
     ctx.drawImage(logo, x, y, lw, lh);
   } catch {
     // logo indisponível: deixa a imagem limpa
@@ -204,7 +210,21 @@ export async function composeFinalPng(
   return canvas.toDataURL("image/png");
 }
 
-export async function composeReelsPng(kit: BrandKit, baseImage?: string): Promise<string> {
+/**
+ * Monta a peca 1080x1920 com a logomarca por cima.
+ *
+ * ⚠ `capa: true` sobe a logomarca. A CAPA do reels e exibida RECORTADA na grade
+ * do perfil: o Instagram mostra so a faixa 4:5 do centro, e a logo no respiro
+ * normal de 150 px caia fora dela. Defeito real visto no perfil em 11/09/2026 —
+ * o reels publicado apareceu sem a logo e com a primeira palavra do titulo
+ * cortada. O FRAME do video nao tem esse problema (toca em 9:16 inteiro) e
+ * continua com o respiro de sempre.
+ */
+export async function composeReelsPng(
+  kit: BrandKit,
+  baseImage?: string,
+  opts?: { capa?: boolean },
+): Promise<string> {
   const w = REELS_W;
   const h = REELS_H;
   const canvas = document.createElement("canvas");
@@ -225,7 +245,16 @@ export async function composeReelsPng(kit: BrandKit, baseImage?: string): Promis
   }
 
   // Logo na posição escolhida no Kit (default: canto inferior direito) com respiro de 150px.
-  await drawLogoOnly(ctx, kit, w, h, REELS_PAD, REELS_LOGO_MAX_W, REELS_LOGO_MAX_H);
+  await drawLogoOnly(
+    ctx,
+    kit,
+    w,
+    h,
+    REELS_PAD,
+    REELS_LOGO_MAX_W,
+    REELS_LOGO_MAX_H,
+    opts?.capa ? CAPA_PAD_Y : REELS_PAD,
+  );
 
   return canvas.toDataURL("image/png");
 }

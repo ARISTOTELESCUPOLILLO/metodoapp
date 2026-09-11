@@ -315,8 +315,16 @@ A zona deve ser FUNDO NEUTRO: continuação natural da cena (céu, parede, textu
   // (ver comentário lá: travar o FIM do bloco falhou duas vezes; o que abre
   // espaço para a logomarca é declarar onde o bloco COMEÇA). Com a logo no topo
   // central, a âncora desce para depois da faixa reservada (~20% da altura).
-  const topAnchorClause =
-    pos === "top-center"
+  const topAnchorClause = isCover
+    ? // ⚠ A CAPA É RECORTADA NA GRADE DO PERFIL (achado real 11/09/2026, 18h39).
+      // O reels publicado apareceu na grade com a primeira palavra do título
+      // cortada em cima e a logomarca cortada embaixo. O Instagram mostra a capa
+      // 9:16 recortada em 4:5 no CENTRO — de 1080x1920 sobram os 1350 px do meio,
+      // ou seja, tudo o que está acima de 15% e abaixo de 85% da altura SOME.
+      // Por isso a capa tem âncora própria: mais baixa que a do post, para o
+      // título inteiro sobreviver ao recorte.
+      "ÂNCORA VERTICAL — O BLOCO COMEÇA PELO ALTO: o topo da primeira linha do título fica entre 20% e 26% da altura do canvas, e o bloco INTEIRO cresce PARA BAIXO a partir dali, terminando no MÁXIMO a 72% da altura: título em cima, texto de apoio imediatamente abaixo dele. ⚠ MOTIVO INEGOCIÁVEL: no perfil do Instagram esta capa é exibida RECORTADA no centro (só a faixa entre 15% e 85% da altura aparece) — o que passar dessas bordas é cortado e a peça chega quebrada a quem vê. PROIBIDO ancorar o bloco acima de 20% ou deixá-lo passar de 72%. Se não couber, reduza o corpo do texto — nunca desça nem suba a âncora."
+    : pos === "top-center"
       ? "ÂNCORA VERTICAL — O BLOCO COMEÇA PELO ALTO: o topo da primeira linha do título fica entre 24% e 30% da altura do canvas (a faixa da logomarca ocupa os 20% superiores — o bloco começa abaixo dela) e o bloco INTEIRO cresce PARA BAIXO a partir dali: título em cima, texto de apoio imediatamente abaixo dele. PROIBIDO centralizar o bloco verticalmente, ancorá-lo na base ou empurrá-lo para a metade inferior do quadro. Se não couber, reduza o corpo do texto — nunca desça a âncora."
       : `ÂNCORA VERTICAL — O BLOCO COMEÇA PELO ALTO: o topo da primeira linha do título fica entre 10% e 16% da altura do canvas (logo abaixo do recuo de segurança de ${safeMargin} da borda superior) e o bloco INTEIRO cresce PARA BAIXO a partir dali: título em cima, texto de apoio imediatamente abaixo dele. O espaço que sobra na parte de baixo é o espaço da LOGOMARCA, aplicada depois — é ele que não pode ser ocupado. PROIBIDO centralizar o bloco verticalmente, ancorá-lo na base ou empurrá-lo para a metade inferior do quadro. Se não couber, reduza o corpo do texto — nunca desça a âncora.`;
 

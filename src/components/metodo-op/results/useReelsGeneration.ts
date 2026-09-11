@@ -456,7 +456,10 @@ export function useReelsGeneration(params: {
             referenceImages: coverRefImage ? [coverRefImage] : undefined,
             ...coverPersonAnchor(coverRefImage),
             variacaoSeed,
-          }).then(async (url) => (kit.logoDataUrl ? composeReelsPng(kit, url) : url));
+          }).then(async (url) =>
+            // capa: true sobe a logo para dentro do recorte da grade do perfil.
+            kit.logoDataUrl ? composeReelsPng(kit, url, { capa: true }) : url,
+          );
 
       const videoPromise = submitVideoRequest();
 
@@ -777,7 +780,8 @@ export function useReelsGeneration(params: {
         ...coverPersonAnchor(coverRefImage),
         variacaoSeed,
       });
-      const withLogo = kit.logoDataUrl ? await composeReelsPng(kit, url) : url;
+      // capa: true sobe a logo para dentro do recorte da grade do perfil.
+      const withLogo = kit.logoDataUrl ? await composeReelsPng(kit, url, { capa: true }) : url;
       updateCoverPng(withLogo);
     } catch (e) {
       setCoverError((e as Error)?.message || "erro desconhecido");
