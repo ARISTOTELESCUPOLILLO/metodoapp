@@ -191,9 +191,16 @@ export function buildImagePrompt(params: {
     `- Clima/Luz: ${leituraCenica?.clima || ""}`,
     `- Composição: ${leituraCenica?.composicao || ""}`,
   ];
-  const cenaDetalhada = leituraCenica
-    ? `CENA DETALHADA:\n${cenaLinhas.join("\n")}${referenceAnchor ? "" : `\n- Referência visual adicional: ${imagePrompt}`}`
-    : `CENA FOTOGRÁFICA: ${imagePrompt}`;
+  // ⚠ NA CAPA COM FRAME DE REFERENCIA, A CENA JA ESTA DECIDIDA. Descrever a cena
+  // de novo em texto e convidar o modelo a CRIAR em vez de preservar — foi assim
+  // que a capa de 11/09 saiu com outra pessoa no mesmo escritorio. Aqui a
+  // descricao vira contexto de INTENCAO, sem personagem e sem ambiente.
+  const cenaDetalhada =
+    isCover && hasRefs
+      ? `INTENÇÃO DA CENA (a cena em si vem da imagem de referência, não daqui): ${leituraCenica?.intencao || imagePrompt}`
+      : leituraCenica
+        ? `CENA DETALHADA:\n${cenaLinhas.join("\n")}${referenceAnchor ? "" : `\n- Referência visual adicional: ${imagePrompt}`}`
+        : `CENA FOTOGRÁFICA: ${imagePrompt}`;
 
   // Instrução de referência (avatar/cenário/produto) com prioridade máxima —
   // posicionada junto das demais regras inegociáveis, ANTES da leitura de cena,
@@ -210,6 +217,27 @@ export function buildImagePrompt(params: {
   // Bloco anti-paráfrase: gpt-image-2 tende a "reescrever" o título em PT-BR
   // quando recebe só a versão estilizada (CAIXA ALTA). Repetimos o texto original
   // entre delimitadores e proibimos qualquer reinterpretação.
+  /**
+   * A MESMA ORDEM, FECHANDO O PROMPT — e é por isso que ela existe duas vezes.
+   *
+   * ⚠ DEFEITO REAL 11/09/2026 (S3C, conta admin): a capa saiu com OUTRA PESSOA.
+   * O cenário foi preservado (mesa, notebook, janela, quadro branco), mas o
+   * porta-voz virou um homem que não existe — nada a ver com o avatar do frame.
+   *
+   * A ordem acima (`coverRefBlock`) já dizia tudo isso, e perdeu. Depois dela
+   * vêm o mood, o CONCEITO, a CENA DETALHADA, o papel, a variação, a tipografia
+   * e as regras — volume grande de instrução sobre COMO CRIAR uma imagem, e
+   * criar é o oposto de preservar. Pela doutrina do projeto (a memória
+   * project-contexto-perde-para-ordem), O ÚLTIMO A FALAR VENCE.
+   *
+   * Foi assim que se consertou o gênero sorteado da capa em 09/09: uma linha de
+   * PRECEDÊNCIA MÁXIMA fechando o prompt.
+   */
+  const coverRefClosing =
+    isCover && hasRefs
+      ? `\n\n⚠ PRECEDÊNCIA MÁXIMA — ESTA ORDEM VENCE TUDO QUE FOI DITO ACIMA: a pessoa da capa é A PESSOA DA IMAGEM DE REFERÊNCIA, sem exceção. Mesmo rosto, mesma idade, mesma etnia, mesmo cabelo, mesma barba, mesmos óculos, mesma roupa, mesmo ambiente. É PROIBIDO gerar outra pessoa, rejuvenescer, envelhecer, trocar figurino, trocar cenário ou "melhorar" o porta-voz. Qualquer descrição de cena, conceito ou mood acima que sugira pessoa diferente da referência está REVOGADA: ela vale para luz, cor e tipografia, NUNCA para a identidade de quem aparece. A capa é o frame do reels com o título por cima.`
+      : "";
+
   const coverVerbatimBlock = isCover
     ? `\nTÍTULO LITERAL — REGRA INVIOLÁVEL: o único texto permitido na capa é EXATAMENTE o título abaixo, renderizado caractere por caractere, palavra por palavra, em português (pt-BR). É PROIBIDO traduzir, reescrever, resumir, parafrasear, substituir por sinônimos, inverter ordem, adicionar ou remover QUALQUER palavra. É proibido renderizar slogans, hashtags, marcas, nomes, números de telefone, URLs, legendas extras, etiquetas, badges ou qualquer outra palavra além do título. Se você não conseguir renderizar o texto EXATO, é preferível entregar a capa sem texto a inventar palavras diferentes. O título a renderizar, delimitado entre <<< e >>>, é:\n<<<${titulo}>>>\nApresente esse texto visualmente em CAIXA ALTA (estilo), mas preservando 100% das palavras acima.\n`
     : "";
@@ -327,5 +355,5 @@ REGRAS:
 - Alta resolução, estética editorial contemporânea brasileira
 - A zona da logomarca (${pos === "top-center" ? "faixa superior" : pos === "bottom-center" ? "faixa inferior" : "canto inferior direito"}) é continuação natural da cena — SEM barra, painel, badge ou bloco de cor sólida atrás da logo; legível, sem dead space.
 
-${FORBIDDEN_MOOD_WORDS}`;
+${FORBIDDEN_MOOD_WORDS}${coverRefClosing}`;
 }

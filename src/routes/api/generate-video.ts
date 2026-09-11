@@ -311,7 +311,19 @@ export const Route = createFileRoute("/api/generate-video")({
 
           // Garante que o script termina com pontuação limpa para evitar artefato ("soluço")
           // que o ElevenLabs adiciona quando o texto não tem um fim de frase definido.
-          const scriptTts = script.trimEnd().replace(/[,;:\s]+$/, "") + ".";
+          // ⚠ O FECHO TERMINA EM EXCLAMAÇÃO, e SÓ na locução (pedido do Ari,
+          // 11/09/2026, ouvindo o segundo filme): "a primeira oração fechou bem,
+          // mas na última perdeu o fechamento, parecia que ia continuar".
+          //
+          // O ponto final não basta para o modelo descer a voz na frase curta do
+          // fecho — ele a trata como se viesse mais coisa. A exclamação é a
+          // marca que o ElevenLabs lê como ENCERRAMENTO, e é o jeito mais barato
+          // de pedir cadência de fim sem mexer nos ajustes que já foram
+          // aprovados de ouvido.
+          //
+          // ⚠ SÓ AQUI. O roteiro na tela, a legenda queimada no filme e o texto
+          // da peça continuam com ponto final — quem lê não vê exclamação.
+          const scriptTts = script.trimEnd().replace(/[,;:.!?\s]+$/, "") + "!";
 
           // ⚠ UMA LOCUÇÃO SÓ, com o roteiro inteiro.
           //

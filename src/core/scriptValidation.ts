@@ -32,9 +32,12 @@
 // real veio com 14,30 s, dos quais 0,4 de capa e 2,0 de assinatura — 11,9 s de
 // fala para uma faixa de ~29 palavras, ou seja **2,44 palavras/s**, não 2,95.
 //
-// A velocidade voltou a 1,0 depois (a amostra que o Ari aprovou no estúdio foi
-// gerada assim), o que sobe para ~2,6 palavras/s. A faixa de 23 a 26 cobre os
-// dois casos: cai entre 9 e 10,7 segundos.
+// MEDIÇÃO DEFINITIVA (11/09/2026, 18h33, geração real com a voz do Kit): 24
+// palavras em 9,038 s de locução a velocidade 1,0 = 2,66 palavras/s. É o número
+// que o registro da rota devolveu, não estimativa.
+//
+// A 2,66, dez segundos são ~26,6 palavras. Daí a faixa de 25 a 28, que cai entre
+// 9,4 e 10,5 segundos.
 //
 // A rota de vídeo registra palavras e segundos medidos a cada geração
 // ("[generate-video] fala palavras=… speechSeconds=…"). Conferir nela antes de
@@ -43,15 +46,15 @@
 import { checkDanglingEnding, checkPunctuation } from "./textWordUtils";
 
 /** Faixa de palavras do roteiro inteiro — fonte única (prompt + validação). */
-export const SCRIPT_MIN_WORDS = 23;
-export const SCRIPT_MAX_WORDS = 26;
+export const SCRIPT_MIN_WORDS = 25;
+export const SCRIPT_MAX_WORDS = 28;
 
 /** A frase de fecho é curta de propósito: é onde a voz desce. */
 export const SCRIPT_FECHO_MIN_WORDS = 3;
 export const SCRIPT_FECHO_MAX_WORDS = 7;
 
 /** A mensagem precisa de respiro escrito. */
-export const SCRIPT_MENSAGEM_MIN_WORDS = 17;
+export const SCRIPT_MENSAGEM_MIN_WORDS = 19;
 
 /**
  * Teto da mensagem. Existe desde 09/09/2026 (tarde): saiu um roteiro de 42
@@ -59,7 +62,7 @@ export const SCRIPT_MENSAGEM_MIN_WORDS = 17;
  * reprovava, e uma única reprovação genérica ("acima de 24") não diz ao modelo
  * ONDE cortar. Ele cortava do fecho, que era a parte certa.
  */
-export const SCRIPT_MENSAGEM_MAX_WORDS = 21;
+export const SCRIPT_MENSAGEM_MAX_WORDS = 23;
 
 /** MENSAGEM + FECHO. A fala tem duas frases, e a terceira é sempre invasão. */
 export const SCRIPT_FRASES = 2;

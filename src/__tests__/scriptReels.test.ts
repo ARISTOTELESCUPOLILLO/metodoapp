@@ -306,7 +306,7 @@ describe("a ideia tem que chegar cedo — retencao do reels (11/09/2026)", () =>
   it("aprova o roteiro que abre afirmando e fala com quem assiste", () => {
     expect(
       validateScriptReels(
-        "Seu site recebe muita visita todo dia, e quase nenhuma delas vira conversa com quem atende o cliente. O numero sozinho nao sustenta.",
+        "Seu site recebe muita visita todo dia, e quase nenhuma delas vira uma conversa de verdade com quem atende o seu cliente. O numero sozinho nao sustenta.",
       ),
     ).toEqual([]);
   });
