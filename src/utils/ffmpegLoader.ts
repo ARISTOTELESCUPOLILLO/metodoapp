@@ -57,6 +57,116 @@ let instancia: FFmpeg | null = null;
 let carregando: Promise<FFmpeg> | null = null;
 
 /**
+ * Descreve QUALQUER coisa que tenha sido lançada.
+ *
+ * ⚠ Nem tudo que se lança é um Error com mensagem. Na primeira tentativa do Ari,
+ * as quatro fontes falharam e todas apareceram como "erro" — porque eu estava
+ * lendo só `.message`, e o que vinha não tinha mensagem. Perder a identidade do
+ * erro é perder a única pista que existe.
+ */
+function descrever(e: unknown): string {
+  if (e == null) return "lançou nada (undefined/null)";
+  if (typeof e === "string") return e;
+  const err = e as { name?: string; message?: string; type?: string };
+  const partes = [err.name, err.message, err.type].filter(Boolean);
+  if (partes.length) return partes.join(": ");
+  try {
+    const j = JSON.stringify(e);
+    if (j && j !== "{}") return j.slice(0, 200);
+  } catch {
+    /* objeto não serializável */
+  }
+  return Object.prototype.toString.call(e);
+}
+
+/**
+ * AUTOEXAME — descobre QUAL capacidade do navegador está faltando.
+ *
+ * Quando as quatro fontes falham do mesmo jeito, o problema não é a rede: é algo
+ * comum às quatro. Este exame separa os suspeitos um a um, para a próxima
+ * resposta ser um diagnóstico e não outro palpite. Roda só quando tudo já falhou.
+ */
+export async function examinarAmbiente(): Promise<string[]> {
+  const achados: string[] = [];
+  const testar = async (nome: string, fn: () => Promise<unknown> | unknown) => {
+    try {
+      await fn();
+      achados.push(`${nome}: ok`);
+    } catch (e) {
+      achados.push(`${nome}: FALHOU (${descrever(e)})`);
+    }
+  };
+
+  achados.push(`navegador: ${navigator.userAgent.slice(0, 160)}`);
+  achados.push(
+    `isolamento: ${typeof crossOriginIsolated !== "undefined" ? crossOriginIsolated : "?"}`,
+  );
+  achados.push(`SharedArrayBuffer: ${typeof SharedArrayBuffer !== "undefined"}`);
+  achados.push(`WebAssembly: ${typeof WebAssembly !== "undefined"}`);
+
+  // 1. Criar um Worker a partir de blob — extensão de privacidade costuma barrar.
+  await testar("worker de blob", async () => {
+    const url = URL.createObjectURL(new Blob(["self.postMessage(1)"], { type: "text/javascript" }));
+    const w = new Worker(url);
+    await new Promise<void>((res, rej) => {
+      const t = setTimeout(() => rej(new Error("sem resposta em 3 s")), 3000);
+      w.onmessage = () => {
+        clearTimeout(t);
+        res();
+      };
+      w.onerror = (ev) => {
+        clearTimeout(t);
+        rej(new Error(ev.message || "erro no worker"));
+      };
+    });
+    w.terminate();
+    URL.revokeObjectURL(url);
+  });
+
+  // 2. importScripts dentro do worker — é o passo exato que o FFmpeg faz.
+  await testar("importScripts no worker", async () => {
+    const alvo = new URL("/ffmpeg/ffmpeg-core.js", location.origin).href;
+    const codigo = `try{ importScripts(${JSON.stringify(alvo)}); self.postMessage(typeof createFFmpegCore); }catch(e){ self.postMessage("erro: "+(e&&e.message||e)); }`;
+    const url = URL.createObjectURL(new Blob([codigo], { type: "text/javascript" }));
+    const w = new Worker(url);
+    const r = await new Promise<string>((res, rej) => {
+      const t = setTimeout(() => rej(new Error("sem resposta em 8 s")), 8000);
+      w.onmessage = (ev) => {
+        clearTimeout(t);
+        res(String(ev.data));
+      };
+      w.onerror = (ev) => {
+        clearTimeout(t);
+        rej(new Error(ev.message || "erro no worker"));
+      };
+    });
+    w.terminate();
+    URL.revokeObjectURL(url);
+    if (r !== "function") throw new Error(`createFFmpegCore veio como "${r}"`);
+  });
+
+  // 3. Compilar um WebAssembly mínimo (módulo vazio válido).
+  await testar("WebAssembly", async () => {
+    const vazio = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
+    await WebAssembly.instantiate(vazio);
+  });
+
+  // 4. Alcançar o núcleo próprio e o wasm do CDN.
+  await testar("baixar núcleo próprio", async () => {
+    const r = await fetch("/ffmpeg/ffmpeg-core.js");
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const t = await r.text();
+    if (!t.includes("createFFmpegCore")) throw new Error("conteúdo não é o núcleo");
+  });
+  await testar("alcançar o wasm (jsdelivr)", async () => {
+    const r = await fetch(FONTES[0].wasm, { method: "GET", headers: { Range: "bytes=0-1023" } });
+    if (!r.ok && r.status !== 206) throw new Error(`HTTP ${r.status}`);
+  });
+
+  return achados;
+}
+
+/**
  * Busca o núcleo e CONFERE que é mesmo ele.
  *
  * ⚠ A conferência não é preciosismo: quando um proxy, um portal de wi-fi ou um
@@ -113,7 +223,7 @@ export async function obterFfmpeg(onProgress?: (msg: string) => void): Promise<F
         }
         return ff;
       } catch (e) {
-        tentativas.push(`${fonte.nome}: ${(e as Error)?.message || "erro"}`);
+        tentativas.push(`${fonte.nome}: ${descrever(e)}`);
         // Instância que falhou não se reaproveita: o worker dela já morreu.
         try {
           ff.terminate();
@@ -123,7 +233,13 @@ export async function obterFfmpeg(onProgress?: (msg: string) => void): Promise<F
       }
     }
     carregando = null;
-    throw new Error(`não foi possível carregar o processador de vídeo — ${tentativas.join(" | ")}`);
+    // Tudo falhou: o autoexame diz QUAL capacidade está faltando, e o resultado
+    // vai junto no erro para chegar ao diário sem depender do console.
+    const exame = await examinarAmbiente().catch(() => ["autoexame falhou"]);
+    console.error("[ffmpeg] autoexame do ambiente:", exame);
+    throw new Error(
+      `não foi possível carregar o processador de vídeo — ${tentativas.join(" | ")} :: EXAME ${exame.join(" | ")}`,
+    );
   })();
 
   return carregando;
