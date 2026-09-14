@@ -33,7 +33,7 @@ import {
   debitUsage,
 } from "@/lib/usage.server";
 import { isAdmin as checkIsAdmin } from "@/repository/authz";
-import { hasBetaIntencao } from "@/repository/betaFlags";
+import { hasBetaEditorial, hasBetaIntencao } from "@/repository/betaFlags";
 import {
   buildIntencaoBlock,
   buildIntencaoRegraApoio,
@@ -51,6 +51,8 @@ import { buildRegraPolaridadeKeyInfo } from "@/core/polaridadeKeyInfo";
 import { FECHO_GENERICO_RULE } from "@/core/fechoGenerico";
 import { COST_USD } from "@/lib/costs";
 import { isOfertaConcreta } from "@/core/ofertaDetection";
+import { checkNomeNoTitulo, tetoTituloPorUso } from "@/core/linhaEditorialRules";
+import { parseUsoDoObjeto } from "@/domain/linhaEditorial.config";
 
 type Kind = "titulo" | "texto" | "legenda";
 
@@ -60,6 +62,8 @@ function getRule(
   kind: Kind,
   formato: string,
   ajustePromocional: boolean,
+  /** Teto do título quando MOSTRAR NOME exige o nome (7). Ausente = régua do método. */
+  maxTituloComNome?: number | null,
 ): { label: string; rule: string; max: number } {
   const f = (formato || "").toLowerCase();
   const isCarrossel = f.startsWith("carrossel");
@@ -96,7 +100,9 @@ A NOVA VERSÃO PRECISA SER REALMENTE DIFERENTE DA VERSÃO ATUAL: mude a ordem, a
         max,
       };
     }
-    const max = TITULO_MAX_WORDS; // mesma fonte de verdade de validateTitulo — evita gerar título que o D1 reprova de cara
+    // Mesma fonte de verdade de validateTitulo — evita gerar título que o D1
+    // reprova de cara. Sobe para 7 só quando o nome do item é obrigatório.
+    const max = maxTituloComNome ?? TITULO_MAX_WORDS;
     return {
       label: "título",
       rule: `MÁXIMO ${max} palavras, cada palavra com NO MÁXIMO 4 sílabas (ex.: "resultado" ✓, "comunicação" ✗ → use "mensagem"). NUNCA exceda esses limites — conte as palavras e as sílabas antes de responder. Direto, com tensão ou benefício claro. Sem emoji, sem hashtag, sem aspas. Sem ponto final — EXCETO se o título for uma pergunta (direta ou retórica): nesse caso o "?" é OBRIGATÓRIO. Ex. corretos: "Por que isso acontece?" / "O que está faltando?" — Ex. errados: "Por que isso acontece" / "O que está faltando."
@@ -276,7 +282,34 @@ export const Route = createFileRoute("/api/regenerate-block")({
             );
           }
 
-          const rule = getRule(kind, formato, ajustePromocional);
+          // MOSTRAR NOME NO TÍTULO NOVO (14/09/2026). Este endpoint é por onde
+          // passa TODO título que não é o da primeira geração: a correção
+          // automática, a do modo de tópicos e o botão "Gerar outro". Ele nunca
+          // soube do nome escolhido — recebia no máximo o motivo da reprovação
+          // — e pedia 6 palavras. Com "Tráfego Pago Digital" ocupando 3 delas,
+          // o título novo largava o nome de novo e passava sem conferência.
+          // Mesmo gate de generate-pu-copy.ts: a flag do beta é reconferida
+          // aqui, porque a interface não protege contra aba aberta há dias.
+          const nomeEditorial =
+            kind === "titulo" && body.nomeNoTitulo && (await hasBetaEditorial(effective.userId))
+              ? {
+                  usoObjeto: parseUsoDoObjeto(body.nomeNoTitulo.usoObjeto),
+                  objeto: String(body.nomeNoTitulo.objetoEditorial || "")
+                    .slice(0, 120)
+                    .trim(),
+                }
+              : null;
+          const tetoComNome = nomeEditorial
+            ? tetoTituloPorUso(nomeEditorial.usoObjeto, nomeEditorial.objeto)
+            : null;
+          // A ordem FECHA o prompt: o último a falar vence (memória
+          // project-contexto-perde-para-ordem). No meio, perdia para "troque o
+          // sujeito ou a estrutura", que é justamente o convite a largar o nome.
+          const regraNomeNoTitulo = tetoComNome
+            ? `\n⚠ MOSTRAR NOME — ESCOLHA DO USUÁRIO, OBRIGATÓRIA E INEGOCIÁVEL: o título TEM de conter o nome "${nomeEditorial!.objeto}" (inteiro, ou seu núcleo comercial reconhecível). Deixá-lo de fora REPROVA o título, por melhor que a frase fique. O limite deste título é ${tetoComNome} palavras exatamente para o nome caber — conte o nome dentro delas.\n`
+            : "";
+
+          const rule = getRule(kind, formato, ajustePromocional, tetoComNome);
           // O roteiro do reels anda no MESMO trilho do "texto" de apoio, e cada
           // parada desse trilho supõe uma frase de 12 palavras: o corte mecânico
           // logo abaixo e a régua validateTexto. Nos dois casos o roteiro sai
@@ -311,7 +344,7 @@ REGRA DO ${rule.label.toUpperCase()}: ${rule.rule}${intencaoRegraOferta}
 
 PROIBIDO ABSOLUTO usar as palavras: "clareza", "claro", "claras", "claros", "impacto", "impactos", "impactar", "impactante", "instante", "instantes", "instantâneo", "fragmento", "fragmentos", "fragmentado", "desvio", "desvios", "desviar", "silêncio", "silêncios", "silencioso", "silenciosa", "silenciar", "OP-01", "OP-02", "OP-03", "OP-04", "OP-05", "OP-06", "mood". São códigos internos do sistema. Use sinônimos/perífrases.
 PROIBIDO repetir a mesma palavra OU qualquer derivação morfológica da mesma raiz (ex.: ligar / ligando / ligado / ligue — todas proibidas juntas no mesmo texto) em frases próximas ou consecutivas. Use sinônimos ou reformule completamente. Ex. a evitar: "O digital traz mais alcance. Quer mais? Venha saber mais." — correto: "O digital amplia seu alcance. Quer crescer? Conheça nossa solução."
-${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}${kind === "titulo" ? "" : `\n${FECHO_GENERICO_RULE}`}${intencaoRegraManifestacao}
+${TECNICISMO_RULE}${regraProfissao ? `\n${regraProfissao}` : ""}${regraPolaridade ? `\n${regraPolaridade}` : ""}${kind === "titulo" ? "" : `\n${FECHO_GENERICO_RULE}`}${intencaoRegraManifestacao}${regraNomeNoTitulo}
 
 Retorne JSON EXATAMENTE assim:
 { "value": "novo ${rule.label} aqui, sem aspas externas" }`;
@@ -390,7 +423,9 @@ Retorne JSON EXATAMENTE assim:
                         // o defeito continuou (ver checkEcoKeyInfo).
                         ecoKeyInfo: keyInfo,
                       }
-                    : undefined,
+                    : tetoComNome
+                      ? { maxWords: tetoComNome }
+                      : undefined,
                 )
               : kind === "texto"
                 ? isReelsPeca
@@ -398,6 +433,17 @@ Retorne JSON EXATAMENTE assim:
                   : validateTexto(value)
                 : validateLegenda(value);
           if (excessoApoio) motivos.push(excessoApoio);
+          // A conferência que faltava: sem ela o título novo sem o nome voltava
+          // limpo, e quem chamou aceitava. Com ela, a tentativa seguinte recebe
+          // o motivo e sabe o que corrigir.
+          if (nomeEditorial) {
+            const nomeFaltando = checkNomeNoTitulo({
+              titulo: value,
+              objeto: nomeEditorial.objeto,
+              usoObjeto: nomeEditorial.usoObjeto,
+            });
+            if (nomeFaltando) motivos.push(nomeFaltando);
+          }
 
           // Debita 1 do contador regen_texto após o sucesso da geração — nunca
           // para o admin (isento do contador novo). custoUsd = proxy do "Gerar

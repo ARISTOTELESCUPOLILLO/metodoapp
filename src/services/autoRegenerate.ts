@@ -7,7 +7,7 @@
 // Se a 2ª tentativa ainda reprovar, aplica a limpeza determinística (E4).
 
 import { MethodOpResult, ValidationFlag } from "../types";
-import { regenerateBlockWithFlags } from "./regenerateBlock";
+import { regenerateBlockWithFlags, tetoDaLimpeza, type RegenContext } from "./regenerateBlock";
 import { applyDeterministicFallback } from "../core/textValidation";
 import { isOfertaConcreta } from "../core/ofertaDetection";
 import type { IntencaoDeclarada, TransformacaoPretendida } from "../domain/intencao";
@@ -28,6 +28,8 @@ interface AutoRegenContext {
   intencao?: IntencaoDeclarada | null;
   transformacaoPrincipal?: TransformacaoPretendida | null;
   segment?: string;
+  // MOSTRAR NOME (PU) — ver RegenContext.nomeNoTitulo em regenerateBlock.ts.
+  nomeNoTitulo?: RegenContext["nomeNoTitulo"];
 }
 
 const MAX_ATTEMPTS = 2;
@@ -137,6 +139,7 @@ export async function autoRegenerateFlaggedPostUnico(
             intencao: ctx.intencao ?? null,
             transformacaoPrincipal: ctx.transformacaoPrincipal ?? null,
             segment: ctx.segment,
+            nomeNoTitulo: ctx.nomeNoTitulo ?? null,
           });
           value = regen.value;
           if (!regen.flags || regen.flags.length === 0) {
@@ -146,14 +149,15 @@ export async function autoRegenerateFlaggedPostUnico(
           }
           motivoReprovacao = regen.flags.join("; ");
           if (attempt === MAX_ATTEMPTS) {
-            const ajustePromocional =
-              field === "titulo" &&
-              ctx.objetivo === "promocao" &&
-              isOfertaConcreta(ctx.keyInfo || "");
             const fallback = applyDeterministicFallback(
               value,
               field,
-              ajustePromocional ? { maxWords: 9 } : undefined,
+              tetoDaLimpeza({
+                kind: field,
+                objetivo: ctx.objetivo,
+                keyInfo: ctx.keyInfo,
+                nomeNoTitulo: ctx.nomeNoTitulo,
+              }),
             );
             if (field === "titulo") titulo = fallback;
             else texto = fallback;

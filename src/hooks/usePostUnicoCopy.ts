@@ -5,6 +5,7 @@ import { regenerateBlockClean } from "../services/regenerateBlock";
 import { autoRegenerateFlaggedPostUnico } from "../services/autoRegenerate";
 import { judgeAndRegeneratePostUnico } from "../services/judgeContent";
 import { checkCoerencia } from "../core/intencao";
+import { nomeExigidoNoTitulo } from "../core/linhaEditorialRules";
 
 interface Params {
   data: PostUnicoFormData;
@@ -102,6 +103,9 @@ export function usePostUnicoCopy({
               intencao: data.intencao ?? null,
               transformacaoPrincipal: data.transformacaoPrincipal ?? null,
               segment: kit.segment,
+              // MOSTRAR NOME: sem isto o titulo novo nao sabia qual nome carregar
+              // nem que podia ter 7 palavras, e largava o nome de novo.
+              nomeNoTitulo: nomeExigidoNoTitulo(data.editorial, data.keyInfo),
             });
             if (regenerado.trim()) titulo = regenerado;
           } catch {
@@ -125,6 +129,7 @@ export function usePostUnicoCopy({
           intencao: data.intencao ?? null,
           transformacaoPrincipal: data.transformacaoPrincipal ?? null,
           segment: kit.segment,
+          nomeNoTitulo: nomeExigidoNoTitulo(data.editorial, data.keyInfo),
         },
       );
       try {
@@ -222,6 +227,9 @@ export function usePostUnicoCopy({
         intencao: data.intencao ?? null,
         transformacaoPrincipal: data.transformacaoPrincipal ?? null,
         segment: kit.segment,
+        // O botão "Gerar outro" também é caminho de título novo — sem o nome,
+        // a sugestão oferecida ao usuário desobedecia a escolha dele.
+        nomeNoTitulo: isTitulo ? nomeExigidoNoTitulo(data.editorial, data.keyInfo) : null,
       });
       const trimmed = next.trim();
       if (trimmed) {

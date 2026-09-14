@@ -9,7 +9,11 @@ import {
   type UsoDoObjeto,
 } from "../../types";
 import { parseLinhaEditorial } from "../../domain/linhaEditorial.config";
-import { classificarFalaEditorial } from "../../core/linhaEditorialRules";
+import {
+  classificarFalaEditorial,
+  nomeExigidoNoTitulo,
+  TITULO_MAX_WORDS_COM_NOME,
+} from "../../core/linhaEditorialRules";
 import { EditorialControlsSection } from "./editorial/EditorialControlsSection";
 import type { PostUnicoCopy } from "../../services/postUnico";
 import { usePostUnicoCopy } from "../../hooks/usePostUnicoCopy";
@@ -631,6 +635,9 @@ export default function PostUnicoForm({ data, onChange, onGenerate, onClear, loa
           keyInfo={data.keyInfo}
           formatoTexto={data.formatoTexto}
           onFormatoTextoChange={(v) => update("formatoTexto", v)}
+          tetoTituloComNome={
+            nomeExigidoNoTitulo(data.editorial, data.keyInfo) ? TITULO_MAX_WORDS_COM_NOME : null
+          }
         />
       )}
 

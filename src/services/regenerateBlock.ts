@@ -2,6 +2,8 @@ import { applyDeterministicFallback } from "../core/textValidation";
 import { isOfertaConcreta } from "../core/ofertaDetection";
 import { getAuthHeaders } from "./authHeaders";
 import type { IntencaoDeclarada, TransformacaoPretendida } from "../domain/intencao";
+import type { UsoDoObjeto } from "../domain/linhaEditorial.config";
+import { tetoTituloPorUso } from "../core/linhaEditorialRules";
 
 export type RegenKind = "titulo" | "texto" | "legenda";
 
@@ -29,6 +31,26 @@ export interface RegenContext {
   transformacaoPrincipal?: TransformacaoPretendida | null;
   // Natureza do negócio = segmento do Kit de Marca (não há campo novo).
   segment?: string;
+  // MOSTRAR NOME (PU). Sem isto o título novo não sabia qual nome carregar nem
+  // que podia ter 7 palavras — ver nomeExigidoNoTitulo em core/linhaEditorialRules.ts.
+  nomeNoTitulo?: { usoObjeto: UsoDoObjeto; objetoEditorial: string } | null;
+}
+
+/** Teto de palavras da limpeza determinística (E4) para um título. */
+export function tetoDaLimpeza(ctx: {
+  kind: RegenKind;
+  objetivo?: string;
+  keyInfo?: string;
+  nomeNoTitulo?: RegenContext["nomeNoTitulo"];
+}): { maxWords: number } | undefined {
+  if (ctx.kind !== "titulo") return undefined;
+  if (ctx.objetivo === "promocao" && isOfertaConcreta(ctx.keyInfo || "")) return { maxWords: 9 };
+  // Sem este caso a limpeza cortava em 6 um título de 7 que CARREGAVA o nome —
+  // e o corte levava justamente as palavras do fim, onde o nome costuma ficar.
+  const teto = ctx.nomeNoTitulo
+    ? tetoTituloPorUso(ctx.nomeNoTitulo.usoObjeto, ctx.nomeNoTitulo.objetoEditorial)
+    : null;
+  return teto ? { maxWords: teto } : undefined;
 }
 
 export interface RegenResult {
@@ -80,13 +102,7 @@ export async function regenerateBlockClean(ctx: RegenContext): Promise<string> {
       console.warn(
         `[regenerateBlockClean] ${ctx.kind} reprovado após ${MAX_ATTEMPTS} tentativas — limpeza determinística aplicada. Motivos: ${motivoReprovacao}`,
       );
-      const ajustePromocional =
-        ctx.kind === "titulo" && ctx.objetivo === "promocao" && isOfertaConcreta(ctx.keyInfo || "");
-      return applyDeterministicFallback(
-        value,
-        ctx.kind,
-        ajustePromocional ? { maxWords: 9 } : undefined,
-      );
+      return applyDeterministicFallback(value, ctx.kind, tetoDaLimpeza(ctx));
     }
   }
   return value;

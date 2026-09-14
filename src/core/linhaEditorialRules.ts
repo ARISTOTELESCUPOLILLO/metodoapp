@@ -245,6 +245,39 @@ export function nomeiaObjeto(texto: string, objeto: string): boolean {
 export const TITULO_MAX_WORDS_COM_NOME = 7;
 
 /** O teto que vale para esta peça, dado o modo de uso do objeto. */
+/**
+ * O NOME QUE O TÍTULO TEM DE CARREGAR — ou null quando não há exigência.
+ *
+ * ⚠ POR QUE EXISTE (14/09/2026): a primeira geração da PU cobrava o nome, mas
+ * todo caminho de "título novo" o esquecia. No modo de tópicos o servidor
+ * flagava a falta do nome, pedia um título novo SEM dizer qual nome nem liberar
+ * as 7 palavras, e aceitava a resposta sem conferir. "Tráfego Pago Digital"
+ * ocupava 3 das 6 palavras, e o modelo largava o nome de novo. Esta função é a
+ * fonte única da condição, para que a geração, a correção automática, o botão
+ * "Gerar outro" e o contador da tela olhem a MESMA coisa.
+ *
+ * Mesma guarda de services/postUnico.ts: a escolha editorial só vale enquanto a
+ * informação-chave for exatamente a proposição aceita. Editada à mão, caducou.
+ */
+export function nomeExigidoNoTitulo(
+  editorial:
+    | {
+        linhaEditorial?: unknown;
+        usoObjeto?: UsoDoObjeto;
+        objetoEditorial?: string;
+        proposicao?: string;
+      }
+    | undefined
+    | null,
+  keyInfo: string | undefined,
+): { usoObjeto: UsoDoObjeto; objetoEditorial: string } | null {
+  if (!editorial?.linhaEditorial) return null;
+  if ((editorial.proposicao || "").trim() !== (keyInfo || "").trim()) return null;
+  const objeto = (editorial.objetoEditorial || "").trim();
+  if (editorial.usoObjeto !== "nome" || !objeto) return null;
+  return { usoObjeto: "nome", objetoEditorial: objeto };
+}
+
 export function tetoTituloPorUso(
   usoObjeto: UsoDoObjeto | undefined,
   objeto: string,

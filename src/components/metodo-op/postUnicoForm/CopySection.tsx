@@ -59,6 +59,8 @@ interface Props {
   keyInfo: string;
   formatoTexto?: PostUnicoFormatoTexto;
   onFormatoTextoChange: (v: PostUnicoFormatoTexto) => void;
+  /** 7 quando MOSTRAR NOME exige o nome no título; ausente = régua normal. */
+  tetoTituloComNome?: number | null;
 }
 
 export function CopySection({
@@ -89,16 +91,19 @@ export function CopySection({
   keyInfo,
   formatoTexto,
   onFormatoTextoChange,
+  tetoTituloComNome,
 }: Props) {
   const wantsTopicos = TOPICOS_OBJETIVOS.has(objetivo);
   const copyTCorrection = useTextCorrection();
   const copyXCorrection = useTextCorrection();
   // Mesma heurística usada em generate-pu-copy.ts/regenerate-block.ts: título
   // ajustado (até 9 palavras) só em Promoção com oferta concreta no keyInfo.
+  // Com MOSTRAR NOME o teto é 7 (o nome ocupa palavras). O contador mostrava 6
+  // e sinalizava em amarelo um título certo que carregava o nome.
   const tituloMaxWords =
     objetivo === "promocao" && isOfertaConcreta(keyInfo || "")
       ? TITULO_MAX_WORDS_AJUSTADO
-      : TITULO_MAX_WORDS;
+      : (tetoTituloComNome ?? TITULO_MAX_WORDS);
 
   return (
     <div
