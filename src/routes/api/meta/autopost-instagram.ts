@@ -1,10 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { META_VERSION, pollContainerStatus } from "@/lib/meta.server";
+import { getUserIdFromRequest } from "@/lib/usage.server";
+import { isAdmin } from "@/repository/authz";
 
 export const Route = createFileRoute("/api/meta/autopost-instagram")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Publica no Instagram DA AGÊNCIA com o token de sistema — só admin.
+        // Auditoria 14/09/2026: a rota não tinha autenticação nenhuma, e
+        // qualquer POST anônimo publicava no perfil. O app não chama esta rota
+        // (os botões usam publish-instagram, com login e conexão do usuário).
+        const userId = await getUserIdFromRequest(request);
+        if (!userId)
+          return Response.json({ success: false, error: "Não autenticado" }, { status: 401 });
+        if (!(await isAdmin(userId)))
+          return Response.json({ success: false, error: "Acesso negado" }, { status: 403 });
+
         const token = process.env.ACCESS_TOKEN;
         const igId = process.env.IG_BUSINESS_ID;
 

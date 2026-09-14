@@ -9,6 +9,8 @@ import {
 import { COST_USD } from "@/lib/costs";
 import { sanitizarVariacaoTelemetria } from "@/core/variacaoTelemetria";
 import { getEmailFromJwt } from "@/lib/meta.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { isFalQueueUrl, signFalTicket, verifyFalTicket } from "@/lib/falTicket.server";
 
 // Provedor: FAL (queue API).
 // Modelos:
@@ -104,17 +106,15 @@ type StartBody = {
   logoDataUrl?: string;
   referenceImages?: string[];
   preferredSlot?: string;
+  /** Slot a debitar no RESULT (preferido ou o ativo na tela). Vai para o ticket. */
+  debitSlot?: string;
   modulo?: string;
 };
 
 type StatusBody = {
   action: "status" | "result";
-  statusUrl?: string;
-  responseUrl?: string;
-  requestId?: string;
-  modelPath?: string;
-  modulo?: string;
-  preferredSlot?: string;
+  /** Ticket assinado devolvido pelo START — única fonte de URL/modelo/slot. */
+  ticket?: string;
   /** Telemetria da variação visual desta peça — mood, posição na fila, avatar e
    *  os eixos de câmera sorteados. Montada no cliente, SANEADA aqui antes de
    *  virar linha no banco (ver sanitizarVariacaoTelemetria). */
@@ -170,11 +170,16 @@ export const Route = createFileRoute("/api/generate-image")({
 
           // === STATUS ===
           if (action === "status") {
-            const { statusUrl } = body as StatusBody;
-            if (!statusUrl) {
-              return Response.json({ error: "statusUrl obrigatório" }, { status: 400 });
+            // URL, modelo e slot vêm do ticket assinado no START — nunca do
+            // navegador (ver lib/falTicket.server.ts).
+            const ticket = await verifyFalTicket((body as StatusBody).ticket, effective.userId);
+            if (!ticket) {
+              return Response.json(
+                { error: "Geração inválida ou expirada. Atualize a página e gere de novo." },
+                { status: 400 },
+              );
             }
-            const res = await fetch(statusUrl, {
+            const res = await fetch(ticket.statusUrl, {
               headers: { Authorization: `Key ${falKey}` },
             });
             const txt = await res.text();
@@ -200,11 +205,14 @@ export const Route = createFileRoute("/api/generate-image")({
 
           // === RESULT ===
           if (action === "result") {
-            const { responseUrl } = body as StatusBody;
-            if (!responseUrl) {
-              return Response.json({ error: "responseUrl obrigatório" }, { status: 400 });
+            const ticket = await verifyFalTicket((body as StatusBody).ticket, effective.userId);
+            if (!ticket) {
+              return Response.json(
+                { error: "Geração inválida ou expirada. Atualize a página e gere de novo." },
+                { status: 400 },
+              );
             }
-            const res = await fetch(responseUrl, {
+            const res = await fetch(ticket.responseUrl, {
               headers: { Authorization: `Key ${falKey}` },
             });
             const txt = await res.text();
@@ -232,14 +240,38 @@ export const Route = createFileRoute("/api/generate-image")({
               );
             }
 
-            // Debita 1 imagem — effective já foi validado no início do handler.
+            // O mesmo job só é debitado UMA vez: buscar o resultado de novo
+            // (retry do navegador, F5) devolve a imagem sem cobrar outra vez.
+            // ⚠ `slot <> 'sem-plano'`: debitUsage grava o log MESMO quando a RPC
+            // recusa o débito (slot='sem-plano'). Sem esse filtro, a 2ª chamada
+            // acharia essa linha e entregaria a imagem de graça.
+            const { data: jaDebitado, error: idemErr } = await supabaseAdmin
+              .from("usage_logs")
+              .select("id")
+              .eq("user_id", ticket.uid)
+              .eq("evento", "image.generate")
+              .eq("payload->>request_id", ticket.requestId)
+              .neq("slot", "sem-plano")
+              .limit(1);
+            if (idemErr) {
+              console.error("[generate-image] checagem de débito repetido falhou", idemErr.message);
+              return Response.json(
+                { error: "Não foi possível confirmar o débito. Tente novamente." },
+                { status: 503 },
+              );
+            }
+            if (jaDebitado && jaDebitado.length > 0) {
+              return Response.json({ dataUrl: imgUrl, imageUrl: imgUrl, contentType });
+            }
+
+            // Debita 1 imagem — tudo o que decide o débito (usuário, modelo/custo,
+            // slot, módulo) vem do ticket assinado. Se o débito falhar, a imagem
+            // NÃO é entregue (antes o erro virava console.warn e a peça saía de graça).
             try {
               const statusBody = body as StatusBody;
-              const isEdit = statusBody.modelPath?.includes("/edit") ?? false;
-              const moduloReq = statusBody.modulo || "metodo-op";
-              const slotPref =
-                (statusBody.preferredSlot as "plano1" | "plano2" | "bonus" | undefined) ??
-                undefined;
+              const isEdit = ticket.modelPath.includes("/edit");
+              const moduloReq = ticket.modulo;
+              const slotPref = ticket.slot;
               // O que o rodízio sorteou nesta imagem — mood, posição na fila,
               // avatar e eixos de câmera. Sem isso, "as peças estão repetitivas"
               // é impressão sobre um punhado de imagens vistas, e nenhuma
@@ -255,7 +287,8 @@ export const Route = createFileRoute("/api/generate-image")({
                 // na hora de comparar (ver CONTAS_TESTE_FLARE).
                 payload: {
                   provider: "fal",
-                  ...(statusBody.modelPath ? { modelo: statusBody.modelPath } : {}),
+                  request_id: ticket.requestId,
+                  modelo: ticket.modelPath,
                   ...(variacao ? { variacao } : {}),
                 },
                 custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
@@ -263,7 +296,11 @@ export const Route = createFileRoute("/api/generate-image")({
                 preferredSlot: slotPref,
               });
             } catch (e) {
-              console.warn("[debit_usage image]", (e as Error).message);
+              console.error("[debit_usage image] débito recusado", (e as Error).message);
+              return Response.json(
+                { error: balanceFailMessage("limit_exceeded") },
+                { status: 402 },
+              );
             }
 
             // Retorna a URL CDN diretamente — o browser faz o download e converte
@@ -375,18 +412,38 @@ export const Route = createFileRoute("/api/generate-image")({
           } catch {
             /* keep default */
           }
-          if (!submit.request_id || !submit.status_url || !submit.response_url) {
+          if (
+            !submit.request_id ||
+            !isFalQueueUrl(submit.status_url) ||
+            !isFalQueueUrl(submit.response_url)
+          ) {
             return Response.json(
               { error: "Resposta do FAL sem request_id/status_url/response_url." },
               { status: 502 },
             );
           }
 
-          return Response.json({
+          // O slot do débito é o que o navegador usaria no RESULT (preferido ou,
+          // na falta dele, o slot ativo na tela) — mas fica gravado AQUI, assinado.
+          const debitSlotRaw = (body as StartBody).debitSlot ?? startSlot;
+          const debitSlot =
+            debitSlotRaw === "plano1" || debitSlotRaw === "plano2" || debitSlotRaw === "bonus"
+              ? debitSlotRaw
+              : undefined;
+          const ticket = await signFalTicket({
+            uid: effective.userId,
             requestId: submit.request_id,
             modelPath: `fal:${modelPath}`,
             statusUrl: submit.status_url,
             responseUrl: submit.response_url,
+            ...(debitSlot ? { slot: debitSlot } : {}),
+            modulo: startModulo || "metodo-op",
+          });
+
+          return Response.json({
+            requestId: submit.request_id,
+            modelPath: `fal:${modelPath}`,
+            ticket,
           });
         } catch (e) {
           const msg = (e as Error).message || "Erro inesperado.";

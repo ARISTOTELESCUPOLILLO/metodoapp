@@ -257,13 +257,19 @@ export const Route = createFileRoute("/api/generate-video")({
           }
 
           // Pré-checagem de saldo (1 render). Usa usuário efetivo (teste quando admin impersona).
+          // Falha FECHADA: é o endpoint mais caro do sistema — se não deu para
+          // confirmar o saldo, não gera (antes o erro era só logado e seguia).
           try {
             const { ok, reason } = await checkBalance(userId, 0, 1);
             if (!ok) {
               return Response.json({ error: balanceFailMessage(reason) }, { status: 402 });
             }
           } catch (e) {
-            console.warn("[balance pre-check video]", (e as Error).message);
+            console.error("[balance pre-check video]", (e as Error).message);
+            return Response.json(
+              { error: "Não foi possível confirmar o saldo. Tente novamente." },
+              { status: 503 },
+            );
           }
 
           // Resolve voz clonada para o modo kit-voz.
@@ -513,7 +519,13 @@ export const Route = createFileRoute("/api/generate-video")({
                 impersonatedBy,
               });
             } catch (e) {
-              console.warn("[debit_usage video]", (e as Error).message);
+              // Débito recusado: o vídeo NÃO é entregue (sem statusUrl/responseUrl
+              // o navegador não tem como buscá-lo). Antes o erro era só logado.
+              console.error("[debit_usage video] débito recusado", (e as Error).message);
+              return Response.json(
+                { error: balanceFailMessage("limit_exceeded") },
+                { status: 402 },
+              );
             }
           }
 

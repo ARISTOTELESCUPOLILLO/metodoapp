@@ -18,8 +18,8 @@ export function setCurrentDebitSlot(slot: string | undefined) {
 type StartResp = {
   requestId?: string;
   modelPath?: string;
-  statusUrl?: string;
-  responseUrl?: string;
+  /** Ticket assinado pelo servidor — STATUS e RESULT só aceitam o que vem nele. */
+  ticket?: string;
   error?: string;
 };
 type StatusResp = { status?: string; error?: string };
@@ -77,29 +77,13 @@ function friendlyError(status: number, raw: string, fallback: string): string {
 class DownstreamGenerationError extends Error {}
 
 async function pollAndFetchResult(opts: {
-  requestId: string;
-  modelPath?: string;
-  statusUrl?: string;
-  responseUrl?: string;
-  modulo?: string;
-  preferredSlot?: string;
+  ticket: string;
   variacao?: VariacaoTelemetria;
   maxMs: number;
   pollMs: number;
   onProgress?: (status: string) => void;
 }): Promise<string> {
-  const {
-    requestId,
-    modelPath,
-    statusUrl,
-    responseUrl,
-    modulo,
-    preferredSlot,
-    variacao,
-    maxMs,
-    pollMs,
-    onProgress,
-  } = opts;
+  const { ticket, variacao, maxMs, pollMs, onProgress } = opts;
 
   const t0 = Date.now();
   let lastStatus = "IN_QUEUE";
@@ -107,12 +91,7 @@ async function pollAndFetchResult(opts: {
   const MAX_CONSECUTIVE_FAILURES = 5;
   while (Date.now() - t0 < maxMs) {
     await new Promise((r) => setTimeout(r, pollMs));
-    const st = await postJson<StatusResp>({
-      action: "status",
-      statusUrl,
-      requestId,
-      modelPath,
-    });
+    const st = await postJson<StatusResp>({ action: "status", ticket });
     if (!st.ok) {
       // 4xx fora 429 = abortar imediatamente
       if (st.status >= 400 && st.status < 500 && st.status !== 429) {
@@ -142,11 +121,8 @@ async function pollAndFetchResult(opts: {
 
   const rr = await postJson<ResultResp>({
     action: "result",
-    responseUrl,
-    requestId,
-    modelPath,
-    modulo: modulo || "metodo-op",
-    ...(preferredSlot ? { preferredSlot } : {}),
+    // Módulo e slot do débito já estão no ticket (gravados no START).
+    ticket,
     // Vai junto do RESULT, não do START, porque é no RESULT que o servidor
     // debita a imagem e grava a linha em usage_logs — o START não escreve log.
     // Efeito colateral desejado: a telemetria só existe para imagem que ficou
@@ -154,6 +130,11 @@ async function pollAndFetchResult(opts: {
     ...(variacao ? { variacao } : {}),
   });
   const rawUrl = rr.data.dataUrl || rr.data.imageUrl;
+  // 4xx do RESULT (débito recusado, ticket inválido) NÃO é falha do fal.ai:
+  // não pode cair no retry, que resubmeteria uma geração paga do zero.
+  if (!rr.ok && rr.status >= 400 && rr.status < 500) {
+    throw new Error(rr.data.error || `Falha ao concluir a geração (${rr.status}).`);
+  }
   if (!rr.ok || !rawUrl) {
     throw new DownstreamGenerationError(
       friendlyError(rr.status, rr.raw, rr.data.error || "Imagem ausente na resposta."),
@@ -237,6 +218,7 @@ export async function generateImageAsync(params: {
     console.warn("[imageGeneration] logo descartada no preparo (formato não suportado)");
   }
 
+  const slotToDebit = preferredSlot ?? _currentDebitSlot;
   const startBody = {
     action: "start",
     prompt,
@@ -245,8 +227,9 @@ export async function generateImageAsync(params: {
     referenceImages: refsSmall.length ? refsSmall : undefined,
     modulo: modulo || "metodo-op",
     ...(preferredSlot ? { preferredSlot } : {}),
+    // Slot a debitar no RESULT — o servidor grava no ticket assinado.
+    ...(slotToDebit ? { debitSlot: slotToDebit } : {}),
   };
-  const slotToDebit = preferredSlot ?? _currentDebitSlot;
 
   // 1 retry automático quando a geração falha no downstream (fal.ai/OpenAI) depois
   // de já ter passado pelo START — resubmete o job inteiro do zero (ver
@@ -260,7 +243,7 @@ export async function generateImageAsync(params: {
       await new Promise((r) => setTimeout(r, 3000));
       start = await postJson<StartResp>(startBody);
     }
-    if (!start.ok || !start.data.requestId) {
+    if (!start.ok || !start.data.requestId || !start.data.ticket) {
       throw new Error(
         friendlyError(start.status, start.raw, start.data.error || "Falha ao iniciar a geração."),
       );
@@ -269,12 +252,7 @@ export async function generateImageAsync(params: {
     try {
       // 2) POLL + 3) RESULT
       return await pollAndFetchResult({
-        requestId: start.data.requestId,
-        modelPath: start.data.modelPath,
-        statusUrl: start.data.statusUrl,
-        responseUrl: start.data.responseUrl,
-        modulo,
-        preferredSlot: slotToDebit,
+        ticket: start.data.ticket,
         variacao: variacaoMeta,
         maxMs,
         pollMs,
