@@ -77,7 +77,12 @@ function truncatePromptSafe(text: string, max: number): string {
  * (conferidos na documentação da fal em 14/09), por isso só o caminho muda.
  * Para DESLIGAR o teste: esvaziar CONTAS_TESTE_FLARE.
  */
-const CONTAS_TESTE_FLARE = new Set(["acupolillo1@gmail.com"]);
+// DESLIGADO em 14/09/2026, à tarde: a edição do Flare copiou a pose, a roupa e o
+// enquadramento da foto do avatar e ignorou câmera, luz do mood e a posição do
+// título (IMPACTO saiu com o título em coluna à direita). Desligado para o Ari
+// gerar a MESMA PU no gpt-image-2 e confirmar que a causa é o modelo.
+// Para religar: recolocar "acupolillo1@gmail.com" no conjunto.
+const CONTAS_TESTE_FLARE = new Set<string>([]);
 const MODULOS_TESTE_FLARE = new Set(["pu"]);
 
 function usaFlare(
