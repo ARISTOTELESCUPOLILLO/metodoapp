@@ -8,6 +8,7 @@ import {
 } from "@/lib/usage.server";
 import { COST_USD } from "@/lib/costs";
 import { sanitizarVariacaoTelemetria } from "@/core/variacaoTelemetria";
+import { getEmailFromJwt } from "@/lib/meta.server";
 
 // Provedor: FAL (queue API).
 // Modelos:
@@ -55,6 +56,42 @@ function truncatePromptSafe(text: string, max: number): string {
   return `${head}${separator}${protectedTail}`;
 }
 
+/**
+ * TESTE DO GPT IMAGE 2.5 FLARE — só a conta do Ari, só a trilha PU (14/09/2026).
+ *
+ * ⚠ É UM TESTE, NÃO UMA TROCA. Todo cliente continua no gpt-image-2, e o próprio
+ * Ari também continua nele no MOP e quando atua como outra conta. O motor de
+ * imagem foi afinado por meses para o gpt-image-2 (título literal, zona da logo,
+ * física da tela, câmera dos moods) — nada disso foi revalidado no Flare.
+ *
+ * O que o teste precisa responder, e por quê:
+ *  · a fal descreve o edit do Flare como "muda só o que foi pedido, mantém pessoa,
+ *    composição e fundo". Na PU o edit é usado para CRIAR cena nova a partir das
+ *    fotos do Kit — se ele for conservador demais, devolve a foto do Kit quase
+ *    igual em vez de compor a peça. É o risco principal;
+ *  · "medium" não é o mesmo degrau nos dois modelos: no preço, o medium do Flare
+ *    custa um quinto do medium do gpt-image-2 (US$ 0,010 × US$ 0,054 em
+ *    1024x1536). O Ari escolheu medium mesmo assim.
+ *
+ * Os campos de entrada e o formato da resposta são iguais aos do gpt-image-2
+ * (conferidos na documentação da fal em 14/09), por isso só o caminho muda.
+ * Para DESLIGAR o teste: esvaziar CONTAS_TESTE_FLARE.
+ */
+const CONTAS_TESTE_FLARE = new Set(["acupolillo1@gmail.com"]);
+const MODULOS_TESTE_FLARE = new Set(["pu"]);
+
+function usaFlare(
+  request: Request,
+  effective: { impersonatedBy?: string },
+  modulo: string | undefined,
+): boolean {
+  // Atuando como outra conta, a peça é DO CLIENTE — fica no modelo de produção.
+  if (effective.impersonatedBy) return false;
+  if (!modulo || !MODULOS_TESTE_FLARE.has(modulo)) return false;
+  const email = getEmailFromJwt(request);
+  return !!email && CONTAS_TESTE_FLARE.has(email);
+}
+
 type StartBody = {
   action?: "start";
   prompt: string;
@@ -62,6 +99,7 @@ type StartBody = {
   logoDataUrl?: string;
   referenceImages?: string[];
   preferredSlot?: string;
+  modulo?: string;
 };
 
 type StatusBody = {
@@ -208,7 +246,13 @@ export const Route = createFileRoute("/api/generate-image")({
               await debitUsage(effective.userId, 1, 0, {
                 evento: "image.generate",
                 modulo: moduloReq,
-                payload: { provider: "fal", ...(variacao ? { variacao } : {}) },
+                // `modelo` separa as imagens do teste do Flare das do gpt-image-2
+                // na hora de comparar (ver CONTAS_TESTE_FLARE).
+                payload: {
+                  provider: "fal",
+                  ...(statusBody.modelPath ? { modelo: statusBody.modelPath } : {}),
+                  ...(variacao ? { variacao } : {}),
+                },
                 custoUsd: isEdit ? COST_USD.image_edit : COST_USD.image_base,
                 impersonatedBy: effective.impersonatedBy,
                 preferredSlot: slotPref,
@@ -230,6 +274,7 @@ export const Route = createFileRoute("/api/generate-image")({
             logoDataUrl,
             referenceImages,
             preferredSlot: startSlot,
+            modulo: startModulo,
           } = body as StartBody;
           if (!prompt) {
             return Response.json({ error: "prompt obrigatório" }, { status: 400 });
@@ -267,7 +312,14 @@ export const Route = createFileRoute("/api/generate-image")({
           const allRefs = [...refsRaw, ...(safeLogo ? [safeLogo] : [])].slice(0, 16);
 
           const useEdit = allRefs.length > 0;
-          const modelPath = useEdit ? "openai/gpt-image-2/edit" : "openai/gpt-image-2";
+          const flare = usaFlare(request, effective, startModulo);
+          const modelPath = flare
+            ? useEdit
+              ? "openai/gpt-image-2.5/flare/edit"
+              : "openai/gpt-image-2.5/flare/text-to-image"
+            : useEdit
+              ? "openai/gpt-image-2/edit"
+              : "openai/gpt-image-2";
 
           const safePrompt = truncatePromptSafe(prompt, FAL_PROMPT_MAX_CHARS);
           if (safePrompt.length !== prompt.length) {
