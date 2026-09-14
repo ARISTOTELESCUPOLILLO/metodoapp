@@ -183,7 +183,8 @@ export async function desenharAssinatura(
     }
 
     if (opts.contato) {
-      const tTexto = tCena - LOGO_ENTRADA_S - TEXTO_ATRASO_S;
+      // Contado do INÍCIO da entrada da marca, não do fim (ver TEXTO_ATRASO_S).
+      const tTexto = tCena - TEXTO_ATRASO_S;
       const p = easeOut(tTexto / TEXTO_ENTRADA_S);
       if (p > 0) {
         const desloc = (1 - p) * fonteContato * 1.2; // desliza de baixo

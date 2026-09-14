@@ -45,12 +45,15 @@ export const ASSINATURA_S = 2.0;
 export const LOGO_ENTRADA_S = 0.7;
 
 /**
- * O telefone entra DEPOIS que a marca assenta.
+ * Quando o telefone começa a entrar, contado do INÍCIO da entrada da marca.
  *
- * Decisão de acabamento: o olho termina de ler a marca e só então o contato
- * aparece. Entrando junto, os dois disputam a mesma fração de segundo.
+ * ⚠ ERA contado do FIM da entrada da marca (0,7 s + 0,2 s), e no filme real de
+ * 14/09/2026 o número só ficava inteiro no último meio segundo — não dava tempo
+ * de ler. O Ari pediu para adiantar. Agora o contato sobe enquanto a marca ainda
+ * assenta: os dois não disputam porque a marca já está quase no lugar, e o
+ * número fica legível por mais de um segundo.
  */
-export const TEXTO_ATRASO_S = 0.2;
+export const TEXTO_ATRASO_S = 0.3;
 
 /** Duração do deslizamento do telefone. */
 export const TEXTO_ENTRADA_S = 0.4;

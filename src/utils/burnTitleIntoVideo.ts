@@ -1,5 +1,6 @@
 import { fetchFile } from "@ffmpeg/util";
 import { obterFfmpeg } from "./ffmpegLoader";
+import { TRANSICAO_S } from "../core/montagemReels";
 
 // Baixa o vídeo de forma robusta. fetchFile do ffmpeg.wasm engole erros de CORS,
 // então tentamos primeiro um fetch normal pra capturar problemas claros.
@@ -138,7 +139,19 @@ export async function burnTitleIntoVideo(
 
 // Margem depois do fim da fala: sem ela o corte fica colado no último fonema e
 // soa amputado; com muito mais que isto volta o silencio que estamos tirando.
-export const TAIL_APOS_FALA_S = 0.35;
+const RESPIRO_APOS_FALA_S = 0.35;
+
+/**
+ * Quanto de clipe fica depois da última palavra.
+ *
+ * ⚠ SOMA O FADE (achado real 14/09/2026): "o corte foi feito bem em cima e a
+ * transição pegou um pouco a fala". O fade para a assinatura corre POR CIMA dos
+ * últimos TRANSICAO_S segundos do clipe (ver core/montagemReels.ts). Com só
+ * 0,35 s de sobra, os 0,6 s de fade comiam as últimas sílabas. Agora a sobra
+ * cobre o fade inteiro e ainda deixa o respiro — o fade escurece imagem parada
+ * depois da fala, nunca a fala.
+ */
+export const TAIL_APOS_FALA_S = TRANSICAO_S + RESPIRO_APOS_FALA_S;
 
 /**
  * Apara o video no fim da FALA.
